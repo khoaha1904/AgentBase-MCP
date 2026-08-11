@@ -1,0 +1,20 @@
+.DS_Store
+.cache/
+.local/
+coverage/
+dist/
+node_modules/
+test-results/
+tmp/
+
+# Local credentials and configuration must never enter the repository.
+.env
+.env.*
+
+# Local detailed graphs are disposable machine state, not shared knowledge.
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+local-graphs/
