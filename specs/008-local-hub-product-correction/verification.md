@@ -1,6 +1,6 @@
 # Verification: Local-First AgentBase Product Correction
 
-**Date:** 2026-08-12
+**Date:** 2026-08-13
 **Scope:** Corrected offline application, local Hub lifecycle, schema catalog,
 publication/synchronization simulations and additive migration tooling. Real
 canonical-directory, GitHub and Hub-data mutations remain unexecuted approval
@@ -73,11 +73,18 @@ token was used in verification.
   `35d4628d902e293273b7ac29f2b015c94c679d81` has correct 2026 author/commit
   timestamps, and `/home/khoa/workspace/AgentBase/AgentBase-MCP` was created as
   a clean independent clone at the same commit. The original development
-  worktree remains present and clean.
+  worktree remains present and clean. After the migration receipt commit, both
+  worktrees were fast-forwarded to
+  `638840bd164a407a0e8956b46febf4614aad7f7b`; `npm ci` reported zero known
+  vulnerabilities and the canonical clone independently passed the complete
+  215-test repository gate.
 - T042: separately approve GitHub identity/remotes and installed MCP cutover.
   Read-only lookup found no `khoaha1904/AgentBase-Hub` repository on 2026-08-13;
   the existing private repository remains `khoaha1904/knowledger-hub` with
-  default branch `main`.
+  default branch `main`. No `khoaha1904/AgentBase-MCP` repository exists either.
+  The current Codex host reports no configured MCP servers, so its exact
+  launcher rollback value is “no AgentBase entry”; a later cutover must add a
+  new entry rather than overwrite an undiscovered one.
 - T041: after T042 admits the official remote, clone it into the canonical local
   AgentBase-Hub directory without modifying the dirty legacy Hub worktree.
 - T043–T044: locally accept the governed deletion of qualification-only old Hub
