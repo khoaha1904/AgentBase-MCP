@@ -89,7 +89,7 @@
 
 ## Phase 8: Hub data correction and closure
 
-- [ ] T043 Prepare, inspect and locally accept a governed deletion of qualification-only `repositories/agentbase-next` from AgentBase-Hub without inventing replacement product knowledge
+- [x] T043 Prepare, inspect and locally accept a governed deletion of qualification-only `repositories/agentbase-next` from AgentBase-Hub without inventing replacement product knowledge
 - [ ] T044 With separate owner authorization, publish the Hub data-correction commit through one PR and record exact refs/receipt in `specs/008-local-hub-product-correction/verification.md`
 - [x] T045 [P] Update the coding-agent MCP guidance so code questions prefer Code Graph and business/system questions prefer local Hub in `.agents/skills/use-codebase-memory/SKILL.md` and relevant README sections
 - [x] T046 Run focused core/provider/app/migration suites and token/naming audits; record results in `specs/008-local-hub-product-correction/verification.md`
