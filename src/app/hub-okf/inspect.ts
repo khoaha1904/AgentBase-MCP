@@ -6,7 +6,7 @@ import type { ProposalDiffEntry } from "../../core/knowledge/index.ts";
 
 export type HubLifecycleEntry = Readonly<{
   path: string;
-  change: ProposalDiffEntry["change"] | "conflict" | "supersession";
+  change: ProposalDiffEntry["change"] | "conflict" | "supersession" | "deleted-agentbase-index";
   allowed: boolean;
   reason?: string;
   previousConceptId?: string;
@@ -58,6 +58,7 @@ export function inspectHubProposal(
     preserved: 0,
     "deleted-agentbase-draft": 0,
     "prohibited-deletion": 0,
+    "deleted-agentbase-index": 0,
     conflict: 0,
     supersession: 0,
   };

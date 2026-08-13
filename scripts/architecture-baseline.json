@@ -16,14 +16,14 @@
     },
     "src/app/hub-okf/runtime-actions.ts": {
       "kind": "cohesive-hotspot",
-      "approvedBy": "AgentBase product owner, 2026-08-12",
-      "reason": "This file is the application composition root that wires one admitted local Hub into the user-facing action set.",
+      "approvedBy": "AgentBase product owner, 2026-08-13 T043",
+      "reason": "This file is the application composition root that wires one admitted local Hub into the user-facing action set, including exact configured checkout identity at finalize.",
       "reviewWhen": "Runtime action families gain independent lifecycles or the application composition boundary changes.",
       "ceilings": {
-        "lines": 126,
-        "bytes": 5302,
+        "lines": 128,
+        "bytes": 5337,
         "maxLine": 118,
-        "density": 45,
+        "density": 44,
         "localImports": 14
       }
     }

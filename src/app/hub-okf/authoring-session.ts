@@ -92,14 +92,22 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
   return session;
 }
 
-export function readHubAuthoringSession(stateRoot: string, sessionId: string): HubAuthoringSession {
+export function readHubAuthoringSession(
+  stateRoot: string,
+  sessionId: string,
+  expectedCheckoutRoot: string,
+): HubAuthoringSession {
   if (!/^hub-session-[a-f0-9]{24}$/.test(sessionId)) throw new Error("Hub authoring session ID is invalid");
   const root = path.join(path.resolve(stateRoot), "sessions", sessionId);
   const value = JSON.parse(fs.readFileSync(path.join(root, "session.json"), "utf8")) as HubAuthoringSession;
+  const checkoutRoot = path.resolve(value.checkoutRoot);
+  const expected = path.resolve(expectedCheckoutRoot);
   if (value.formatVersion !== 1 || value.id !== sessionId || path.resolve(value.root) !== root
     || path.resolve(value.baseRoot) !== path.join(root, "base")
     || path.resolve(value.bundleRoot) !== path.join(root, "bundle")
-    || !path.resolve(value.checkoutRoot).startsWith(`${path.resolve(stateRoot)}${path.sep}`)) {
+    || !path.isAbsolute(value.checkoutRoot) || checkoutRoot !== expected
+    || !fs.existsSync(checkoutRoot) || fs.lstatSync(checkoutRoot).isSymbolicLink()
+    || !fs.statSync(checkoutRoot).isDirectory()) {
     throw new Error("Hub authoring session state is invalid");
   }
   return value;
@@ -108,8 +116,9 @@ export function readHubAuthoringSession(stateRoot: string, sessionId: string): H
 export function finalizeHubAuthoringSession(
   stateRoot: string,
   sessionId: string,
+  expectedCheckoutRoot: string,
 ): Readonly<{ proposal: HubProposal; inspection: HubProposalInspection }> {
-  const session = readHubAuthoringSession(stateRoot, sessionId);
+  const session = readHubAuthoringSession(stateRoot, sessionId, expectedCheckoutRoot);
   const staging = path.join(path.resolve(stateRoot), "proposals", `.staging-${session.id}`);
   privateDirectory(path.dirname(staging));
   if (fs.existsSync(staging)) fs.rmSync(staging, { recursive: true, force: true });

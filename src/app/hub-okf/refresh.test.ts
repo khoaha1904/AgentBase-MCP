@@ -86,6 +86,32 @@ test("[AB-HUB-007] refresh requires an existing subject", () => {
   } finally { current.cleanup(); }
 });
 
+test("[AB-HUB-007] refresh may remove one wholly AgentBase-owned subject and its exact root link", () => {
+  const current = fixture();
+  try {
+    fs.rmSync(path.join(current.authored, "repositories/acme"), { recursive: true });
+    fs.mkdirSync(path.join(current.authored, "repositories/acme"), { recursive: true });
+    current.write(current.authored, "index.md", "---\nokf_version: '0.2'\n---\n\n# Hub\n");
+    fs.rmSync(path.join(current.base, "repositories/acme/reviewed.md"));
+    const result = prepareRefreshHubProposal(options(current));
+    assert.equal(result.inspection.applicable, true);
+    assert.equal(result.inspection.counts["deleted-agentbase-index"], 1);
+    assert.equal(result.inspection.counts["deleted-agentbase-draft"], 2);
+    assert.equal(result.inspection.counts.modified, 1);
+  } finally { current.cleanup(); }
+});
+
+test("[AB-HUB-007] whole-subject refresh protects reviewed content and unrelated root edits", () => {
+  const current = fixture();
+  try {
+    fs.rmSync(path.join(current.authored, "repositories/acme"), { recursive: true });
+    current.write(current.authored, "index.md", "---\nokf_version: '0.2'\n---\n\n# Rewritten\n");
+    assert.throws(() => prepareRefreshHubProposal(options(current)), /protected content: repositories\/acme\/reviewed.md/);
+    fs.rmSync(path.join(current.base, "repositories/acme/reviewed.md"));
+    assert.throws(() => prepareRefreshHubProposal(options(current)), /only remove its exact root index link/);
+  } finally { current.cleanup(); }
+});
+
 test("[AB-HUB-007] prior generated prose cannot become independent evidence", () => {
   const current = fixture();
   try {

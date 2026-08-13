@@ -51,7 +51,58 @@ function copyAuthored(source: string, target: string): void {
   fs.cpSync(source, target, { recursive: true, errorOnExist: true, force: false });
 }
 
-function protectBase(options: PrepareRefreshHubOptions, bundleRoot: string): HubLifecycleEntry[] {
+function rootIndexWithoutSubject(source: string, subjectDirectory: string): string {
+  let removed = 0;
+  const lines = source.split("\n").filter((line) => {
+    const target = line.match(/^\s*\*\s+\[[^\]]+\]\(([^)\s]+)(?:\s+"[^"]*")?\)(?:\s+-\s+.+)?\s*$/)?.[1];
+    if (!target) return true;
+    const clean = target.split("#")[0]?.split("?")[0];
+    const resolved = clean?.endsWith("/") ? `${path.posix.normalize(clean)}index.md` : path.posix.normalize(clean ?? "");
+    if (resolved !== `${subjectDirectory}/index.md`) return true;
+    removed += 1;
+    return false;
+  });
+  if (!removed) throw new Error("whole-subject refresh requires an exact root index link to the subject");
+  return lines.join("\n").replace(/\n{2,}$/, "\n");
+}
+
+function subjectRemovalEntries(
+  options: PrepareRefreshHubOptions,
+  bundleRoot: string,
+): readonly HubLifecycleEntry[] | undefined {
+  const authored = loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true });
+  if (authored.files.some((relative) => relative.startsWith(`${options.subjectDirectory}/`))) return undefined;
+  const base = loadOkfBundle(options.hubBundleRoot);
+  const subjectFiles = base.files.filter((relative) => relative.startsWith(`${options.subjectDirectory}/`));
+  for (const relative of subjectFiles) {
+    if (path.posix.basename(relative) === "index.md") continue;
+    const concept = base.concepts.get(relative.endsWith(".md") ? relative.slice(0, -3) : "");
+    if (!concept || !isMutableAgentBaseDraft(concept)) {
+      throw new Error(`whole-subject refresh cannot delete protected content: ${relative}`);
+    }
+  }
+  const expectedRootIndex = rootIndexWithoutSubject(
+    fs.readFileSync(path.join(options.hubBundleRoot, "index.md"), "utf8"),
+    options.subjectDirectory,
+  );
+  if (fs.readFileSync(path.join(bundleRoot, "index.md"), "utf8") !== expectedRootIndex) {
+    throw new Error("whole-subject refresh may only remove its exact root index link");
+  }
+  return subjectFiles
+    .filter((relative) => path.posix.basename(relative) === "index.md")
+    .map((relative) => ({
+      path: relative,
+      change: "deleted-agentbase-index" as const,
+      allowed: true,
+      reason: "reserved index removed with an explicitly authored AgentBase-owned subject deletion",
+    }));
+}
+
+function protectBase(
+  options: PrepareRefreshHubOptions,
+  bundleRoot: string,
+  removal: readonly HubLifecycleEntry[] | undefined,
+): HubLifecycleEntry[] {
   const base = loadOkfBundle(options.hubBundleRoot);
   const authored = loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true });
   const conflicts: HubLifecycleEntry[] = [];
@@ -63,7 +114,8 @@ function protectBase(options: PrepareRefreshHubOptions, bundleRoot: string): Hub
     const proposed = authored.files.includes(relative) ? bytes(bundleRoot, relative) : undefined;
     const changed = !proposed || !bytes(options.hubBundleRoot, relative).equals(proposed);
     const index = path.posix.basename(relative) === "index.md";
-    if (!changed || (withinSubject && (mutable || index))) continue;
+    const rootIndexRemoval = Boolean(removal && relative === "index.md");
+    if (!changed || rootIndexRemoval || (withinSubject && (mutable || index))) continue;
     writeBytes(bundleRoot, relative, bytes(options.hubBundleRoot, relative));
     if (withinSubject) conflicts.push({
       path: relative,
@@ -145,6 +197,7 @@ export function prepareRefreshHubProposal(options: PrepareRefreshHubOptions): Pr
   const selected = selectOkfConceptSchemas(options.signals).map((item) => item.type);
   const seed = `${options.baseCommit}\0${options.evidenceDigest}\0${options.subjectDirectory}\0refresh`;
   const proposalId = `proposal-${createHash("sha256").update(seed).digest("hex").slice(0, 24)}`;
+  const removal = subjectRemovalEntries(options, options.authoredBundleRoot);
   prepareBundleProposal({
     currentBundleRoot: options.hubBundleRoot,
     proposalRoot: options.proposalRoot,
@@ -154,7 +207,7 @@ export function prepareRefreshHubProposal(options: PrepareRefreshHubOptions): Pr
   });
   const bundleRoot = path.join(options.proposalRoot, "bundle");
   copyAuthored(options.authoredBundleRoot, bundleRoot);
-  const conflicts = protectBase(options, bundleRoot);
+  const conflicts = protectBase(options, bundleRoot, removal);
   let validation = validateBundleProposal(options.hubBundleRoot, options.proposalRoot);
   const unknownConflicts = restoreUnknownFieldConflicts(
     options,
@@ -169,7 +222,7 @@ export function prepareRefreshHubProposal(options: PrepareRefreshHubOptions): Pr
   const diff = diffBundleProposal(options.hubBundleRoot, options.proposalRoot);
   const lifecycle = classifyLifecycle(
     diff.entries,
-    [...conflicts, ...unknownConflicts, ...supersessionEntries(options, bundleRoot)],
+    [...conflicts, ...unknownConflicts, ...(removal ?? []), ...supersessionEntries(options, bundleRoot)],
   );
   const inspection = inspectHubProposal(lifecycle, {
     baseRoot: options.hubBundleRoot,

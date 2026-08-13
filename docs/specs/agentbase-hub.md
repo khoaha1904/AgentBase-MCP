@@ -23,6 +23,12 @@ commit and makes no Hub commit or remote write. After authoring, validation and
 inspection, `accept` commits the exact reviewed tree once to local Hub `main`.
 Acceptance performs no fetch, push or GitHub API request.
 
+A `refresh` may remove an entire subject only when the authored workspace
+deletes that subject, every non-index file in it is a mutable AgentBase draft,
+and the root index changes solely by removing the exact link to that subject.
+Reserved indexes and reviewed or externally owned knowledge remain protected
+in every other case.
+
 ### AB-LOCAL-HUB-003 — Stable proposal commits
 
 Every accepted commit records stable proposal ID, mode, subject, source and

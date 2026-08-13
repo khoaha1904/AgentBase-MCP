@@ -66,7 +66,9 @@ export function createHubRuntimeActions(
         sourceRepositoryId: session.sourceRepositoryId,
       };
     },
-    async finalize(sessionId) { return finalizeHubAuthoringSession(stateRoot, sessionId); },
+    async finalize(sessionId) {
+      return finalizeHubAuthoringSession(stateRoot, sessionId, configuration.localRoot);
+    },
     async inspect(proposalId) {
       const root = proposalRoot(stateRoot, proposalId);
       return {

@@ -10,7 +10,7 @@ import { readHubProposalState } from "./proposal-state.ts";
 
 test("[AB-HUB-003..008] agent authors in a prepared workspace then finalizes an immutable proposal", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "hub-authoring-session-"));
-  const stateRoot = path.join(root, "state"), checkout = path.join(stateRoot, "checkout", "owned");
+  const stateRoot = path.join(root, "state"), checkout = path.join(root, "persistent-hub");
   try {
     fs.mkdirSync(path.join(checkout, ".git"), { recursive: true });
     const session = beginHubAuthoringSession({
@@ -34,7 +34,11 @@ test("[AB-HUB-003..008] agent authors in a prepared workspace then finalizes an 
       + "sources:\n  - resource: repository://repository-acme-aaaaaaaaaaaa/README.md#L1-L1\n"
       + "---\n\n# Purpose\n\nAcme.\n";
     fs.writeFileSync(path.join(session.bundleRoot, "repositories/acme/repository.md"), concept);
-    const result = finalizeHubAuthoringSession(stateRoot, session.id);
+    assert.throws(
+      () => finalizeHubAuthoringSession(stateRoot, session.id, path.join(root, "wrong-hub")),
+      /session state is invalid/,
+    );
+    const result = finalizeHubAuthoringSession(stateRoot, session.id, checkout);
     const proposalRoot = path.join(stateRoot, "proposals", result.proposal.id);
     assert.equal(readHubProposalState(proposalRoot).phase, "prepared");
     assert.equal(result.inspection.counts.created, 3);
@@ -45,7 +49,7 @@ test("[AB-HUB-003..008] agent authors in a prepared workspace then finalizes an 
 
 test("[AB-HUB-008][AB-HUB-014] failed finalize leaves the workspace repairable", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "hub-authoring-retry-"));
-  const stateRoot = path.join(root, "state"), checkout = path.join(stateRoot, "checkout", "owned");
+  const stateRoot = path.join(root, "state"), checkout = path.join(root, "persistent-hub");
   try {
     fs.mkdirSync(checkout, { recursive: true });
     const session = beginHubAuthoringSession({
@@ -56,7 +60,7 @@ test("[AB-HUB-008][AB-HUB-014] failed finalize leaves the workspace repairable",
       signals: ["repository"], selectedSchemas: ["Repository"],
       createdAt: "2026-08-12T00:00:00Z",
     });
-    assert.throws(() => finalizeHubAuthoringSession(stateRoot, session.id), /0.2/);
+    assert.throws(() => finalizeHubAuthoringSession(stateRoot, session.id, checkout), /0.2/);
     assert.equal(fs.existsSync(session.bundleRoot), true);
     assert.equal(fs.existsSync(path.join(stateRoot, "proposals", `.staging-${session.id}`)), false);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
