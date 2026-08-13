@@ -1,0 +1,126 @@
+{
+  "formatVersion": 1,
+  "capturedAt": "2026-08-12",
+  "provider": {
+    "package": "codebase-memory-mcp",
+    "packageVersion": "0.10.1",
+    "packageIntegrity": "sha512-/O013R5oM9dBLRzLbzOnhj8hAcFITbaTRUPrfqeFsj2DJADaogPnuTk3yNVorazpOmTmOk9pi+nFtkKsmX+Aog==",
+    "release": "https://github.com/DeusData/codebase-memory-mcp/releases/tag/v0.10.1",
+    "archive": "codebase-memory-mcp-linux-amd64-portable.tar.gz",
+    "archiveSha256": "97c6580a13d772d040e936584f3c5234586ab03f31a77354af8a763851a39a7f",
+    "executableSha256": "3380cf3b868d749c63f564e7c6b81381a140942ec42253f785e158ab5144064f",
+    "reportedVersion": "codebase-memory-mcp 0.10.1",
+    "platform": "linux",
+    "architecture": "x64",
+    "invocationMode": "package-private-native-one-shot-cli"
+  },
+  "bootstrap": {
+    "dependencyPinnedExactly": true,
+    "npmInstallScriptApproval": "codebase-memory-mcp@0.10.1",
+    "globalPathLookup": false,
+    "nativeInstallOrConfigInvoked": false,
+    "packagePrivateExecutable": "<agentbase-package>/node_modules/codebase-memory-mcp/bin/codebase-memory-mcp"
+  },
+  "workspace": {
+    "sourceFixture": "fixtures/typescript-modular-monolith",
+    "disposableRepository": "<temporary-spike>/repo",
+    "cacheRoot": "<temporary-spike>/cache/cbm",
+    "allowedRoot": "<temporary-spike>/repo",
+    "project": "agentbase-typescript-fixture",
+    "indexMode": "fast",
+    "persistence": false
+  },
+  "admissionAttempts": [
+    {
+      "cache": "provider-default",
+      "result": "rejected-before-index",
+      "diagnostic": "cache-private"
+    },
+    {
+      "cache": "XDG_CACHE_HOME override",
+      "result": "rejected-before-index",
+      "diagnostic": "cache-private",
+      "limitation": "v0.10.1 does not use XDG_CACHE_HOME for its canonical cache root"
+    },
+    {
+      "cache": "explicit owner-private CBM_CACHE_DIR",
+      "result": "accepted",
+      "diagnostic": null
+    }
+  ],
+  "acceptedIndex": {
+    "nodes": 55,
+    "edges": 76,
+    "files": 12,
+    "skippedCount": 0,
+    "parsePartialCount": 0,
+    "notIndexedFilesCount": 0,
+    "artifactPresent": false,
+    "durationMsObservedApproximate": 11200
+  },
+  "sourceMutation": {
+    "beforeAfterHashesEqual": true,
+    "created": [],
+    "modified": [],
+    "deleted": [],
+    "trackedPersistenceArtifactCreated": false,
+    "hashes": {
+      "fixture.json": "1443097da6b93c7453efea156dd28b3241e21be1c145982405182440fa3b5747",
+      "src/app/cli.ts": "72a133a9f219dc3f96892a5f0e8bcf58671fd2709c26f68348f8527230a97009",
+      "src/app/index.ts": "b6f0b40f660021d2198851943fc9c23c5becb74a069ce4f7a78ccb993dbf7dbf",
+      "src/app/inspect.ts": "ed93840cf79abb1c2fa529376bb3c3a45d75e93bd40afbb0552090099247823e",
+      "src/app/report.ts": "5ff271c4ec5f66994e0a1a89d380861f2154323e87344210ddf3e5b8ad8529f3",
+      "src/catalog/format.ts": "eb16754990b951f6b3fa200fc696143421cde393e97af12ce754167abc76368a",
+      "src/catalog/index.ts": "758c7846802f091c5eab21c881454d86fcfa8712c3eec92ffa5bac854d0ce319",
+      "src/catalog/models.ts": "a82869c56653b0bb8f1c46853616b7cd09379701e54188f8492b172eb78c1f98",
+      "src/catalog/repository.ts": "46e09c8e366939b83c4e98f735894f43df16df05c65625e11c515c642596d1a1",
+      "src/workspace/index.ts": "a35fc5c2dd51486256580c58b444ffef29866dfdb89b5d22c2b6f8a0052f2c05",
+      "src/workspace/paths.ts": "378cb8b48bf6605346c3c42b1a45a7ce20ad4b3865d64f7aacb51dfa64c6c919",
+      "src/workspace/policy.ts": "bb91c814bad2c286e3132c8408c8a3228aaca13a60f9a0b6ff2206ba3d07226e",
+      "src/workspace/state.ts": "97cd4ad2b35f8edb5e48821ab7ce6475662953431410f31442ad30d42cb73306"
+    }
+  },
+  "cacheMutation": {
+    "privateModes": {
+      "directories": "0700",
+      "files": "0600"
+    },
+    "acceptedProjectDatabase": {
+      "path": "agentbase-typescript-fixture.db",
+      "bytes": 2162688
+    },
+    "configDatabase": {
+      "path": "_config.db",
+      "bytes": 12288
+    },
+    "providerLogExcludedFromFixtures": true
+  },
+  "lifecycle": {
+    "temporaryWorkerHintObserved": true,
+    "standingProviderProcessesAfterCommands": 0,
+    "daemonOrWatcherActivatedByAgentBase": false,
+    "commandsWaitedForExit": true
+  },
+  "responses": [
+    "responses/index.json",
+    "responses/architecture.json",
+    "responses/search-inspect-workspace.json",
+    "responses/trace-inspect-workspace.json",
+    "responses/snippet-inspect-workspace.json",
+    "responses/snippet-resolve-workspace.json",
+    "responses/snippet-list-modules.json",
+    "responses/error-invalid-direction.json"
+  ],
+  "sanitization": {
+    "absoluteRepositoryRoot": "<temporary-spike>/repo",
+    "absolutePackageRoot": "<agentbase-package>",
+    "timestampsAndPidsRemoved": true,
+    "rawProviderLogsRetained": false
+  },
+  "limitations": [
+    "Cold one-shot query startup was approximately 9 seconds on this machine because each command started and stopped its temporary coordination process.",
+    "The provider response uses qualified names tied to the explicit stable project name; AgentBase must not derive shared identity from a random checkout directory.",
+    "get_code_snippet returns an absolute file_path; AgentBase must verify containment and emit a repository-relative path.",
+    "The spike validates Linux x64 package bootstrap and runtime behavior; other supported npm platforms remain offline contract cases until exercised."
+  ]
+}

@@ -1,9 +1,20 @@
 # Current Capability
 
-Active capability: [`001-clean-foundation`](001-clean-foundation/spec.md)
+Active capability: [`008-local-hub-product-correction`](008-local-hub-product-correction/spec.md)
 
-Current checkpoint: product direction and repository context are recorded. The
-next session should confirm acceptance criteria, complete technical planning and
-implement only the first foundation slice.
+Most recent completed: [`007-agentbase-hub-pr-lifecycle`](007-agentbase-hub-pr-lifecycle/spec.md)
 
-No runtime implementation or external engine integration is currently accepted.
+Capability 003 promotes one short-lived stdio provider session per explicit
+evidence round after three alternating real pairs showed full normalized parity,
+clean lifecycle behavior and a `4.656x` median improvement. One-shot remains
+explicit rollback. No daemon, watcher or automatic refresh was added.
+
+Capability 004 adds one small private freshness receipt: reuse the existing
+graph when source/provider identity is unchanged, otherwise delegate exactly one
+refresh to Codebase Memory. It deliberately excludes a watcher, daemon and any
+AgentBase-owned incremental graph algorithm.
+
+Capability 005 adds a thin real stdio MCP and concise skill shim around the
+exact managed provider. One client connection binds lazily to one explicitly
+selected repository, exposes 12 safe upstream-compatible tools and excludes
+global installation, source persistence, recursive discovery and OKF behavior.

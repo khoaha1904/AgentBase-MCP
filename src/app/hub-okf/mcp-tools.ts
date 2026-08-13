@@ -1,0 +1,184 @@
+import type { CallToolResult } from "@modelcontextprotocol/server";
+
+export const HUB_OKF_TOOLS = [
+  {
+    name: "prepare_hub_okf",
+    description: "Prepare a local new or refresh AgentBase Hub OKF proposal without publishing.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        mode: { type: "string", enum: ["new", "refresh"] },
+        source_repository: { type: "string", minLength: 1 },
+        evidence_digest: { type: "string", pattern: "^sha256:[a-f0-9]{64}$" },
+        subject_directory: { type: "string", pattern: "^repositories/[a-z0-9][a-z0-9-]{0,99}$" },
+        signals: { type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: 64 },
+      },
+      required: ["mode", "source_repository", "evidence_digest", "subject_directory", "signals"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "finalize_hub_okf_proposal",
+    description: "Validate and lock an authored Hub workspace into one immutable local proposal.",
+    inputSchema: {
+      type: "object",
+      properties: { session_id: { type: "string", pattern: "^hub-session-[a-f0-9]{24}$" } },
+      required: ["session_id"], additionalProperties: false,
+    },
+  },
+  {
+    name: "inspect_hub_okf_proposal",
+    description: "Inspect one immutable local Hub proposal and its bounded full diff.",
+    inputSchema: {
+      type: "object",
+      properties: { transaction_id: { type: "string", minLength: 1 } },
+      required: ["transaction_id"], additionalProperties: false,
+    },
+  },
+  {
+    name: "accept_hub_okf_proposal",
+    description: "Accept exactly one reviewed proposal as a local AgentBase-Hub main commit without remote publication.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        proposal_id: { type: "string", minLength: 1 },
+        proposal_digest: { type: "string", pattern: "^sha256:[a-f0-9]{64}$" },
+      },
+      required: ["proposal_id", "proposal_digest"], additionalProperties: false,
+    },
+  },
+  {
+    name: "search_hub_okf",
+    description: "Search bounded accepted knowledge at the current local AgentBase-Hub main commit.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", minLength: 1, maxLength: 256 },
+        limit: { type: "integer", minimum: 1, maximum: 100 },
+      },
+      required: ["query"], additionalProperties: false,
+    },
+  },
+  {
+    name: "read_hub_okf_concept",
+    description: "Read one exact Markdown path from accepted local AgentBase-Hub knowledge.",
+    inputSchema: {
+      type: "object",
+      properties: { path: { type: "string", minLength: 1, maxLength: 512 } },
+      required: ["path"], additionalProperties: false,
+    },
+  },
+  {
+    name: "list_pending_hub_okf",
+    description: "List ordered accepted local proposal commits not yet admitted in remote main.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+  },
+  {
+    name: "submit_hub_okf_proposals",
+    description: "Publish one dependency-safe pending proposal prefix through one branch and pull request.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        proposal_ids: {
+          type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: 100,
+        },
+      },
+      required: ["proposal_ids"], additionalProperties: false,
+    },
+  },
+  {
+    name: "synchronize_hub_okf",
+    description: "Fetch remote main and transactionally replay remaining accepted local proposals.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+  },
+  {
+    name: "recover_hub_okf",
+    description: "Recover one exact interrupted Hub transaction without resetting accepted commits.",
+    inputSchema: {
+      type: "object",
+      properties: { proposal_id: { type: "string", minLength: 1 } },
+      required: ["proposal_id"], additionalProperties: false,
+    },
+  },
+] as const;
+
+export type HubOkfToolName = typeof HUB_OKF_TOOLS[number]["name"];
+export type HubToolActions = Readonly<{
+  prepare(input: Readonly<{
+    mode: "new" | "refresh";
+    sourceRepository: string;
+    evidenceDigest: string;
+    subjectDirectory: string;
+    signals: readonly string[];
+  }>): Promise<unknown>;
+  finalize(sessionId: string): Promise<unknown>;
+  inspect(proposalId: string): Promise<unknown>;
+  accept(proposalId: string, proposalDigest: string): Promise<unknown>;
+  search(query: string, limit?: number): Promise<unknown>;
+  read(relativePath: string): Promise<unknown>;
+  listPending(): Promise<unknown>;
+  submitMany(proposalIds: readonly string[]): Promise<unknown>;
+  synchronize(): Promise<unknown>;
+  recover(proposalId: string): Promise<unknown>;
+}>;
+
+function result(value: unknown, isError = false): CallToolResult {
+  return { content: [{ type: "text", text: JSON.stringify(value) }], ...(isError ? { isError: true } : {}) };
+}
+
+function required(args: Readonly<Record<string, unknown>>, key: string): string {
+  const value = args[key];
+  if (typeof value !== "string" || !value) throw new Error(`${key} is required`);
+  return value;
+}
+
+export async function callHubOkfTool(
+  name: HubOkfToolName,
+  args: Readonly<Record<string, unknown>>,
+  actions?: HubToolActions,
+): Promise<CallToolResult> {
+  try {
+    if (!actions) throw new Error("AgentBase Hub runtime is not configured");
+    if (name === "prepare_hub_okf") {
+      const mode = required(args, "mode");
+      if (mode !== "new" && mode !== "refresh") throw new Error("mode must be new or refresh");
+      return result(await actions.prepare({
+        mode,
+        sourceRepository: required(args, "source_repository"),
+        evidenceDigest: required(args, "evidence_digest"),
+        subjectDirectory: required(args, "subject_directory"),
+        signals: Array.isArray(args.signals) && args.signals.every((signal) => typeof signal === "string")
+          ? args.signals as string[]
+          : (() => { throw new Error("signals must be a string list"); })(),
+      }));
+    }
+    if (name === "finalize_hub_okf_proposal") return result(await actions.finalize(required(args, "session_id")));
+    if (name === "search_hub_okf") {
+      const limit = args.limit;
+      if (limit !== undefined && (!Number.isInteger(limit) || Number(limit) < 1 || Number(limit) > 100)) {
+        throw new Error("limit must be an integer from 1 to 100");
+      }
+      return result(await actions.search(required(args, "query"), limit as number | undefined));
+    }
+    if (name === "read_hub_okf_concept") return result(await actions.read(required(args, "path")));
+    if (name === "list_pending_hub_okf") return result(await actions.listPending());
+    if (name === "submit_hub_okf_proposals") {
+      if (!Array.isArray(args.proposal_ids)
+        || !args.proposal_ids.length
+        || !args.proposal_ids.every((value) => typeof value === "string" && value.length > 0)) {
+        throw new Error("proposal_ids must be a non-empty string list");
+      }
+      return result(await actions.submitMany(args.proposal_ids as string[]));
+    }
+    if (name === "synchronize_hub_okf") return result(await actions.synchronize());
+    if (name === "recover_hub_okf") return result(await actions.recover(required(args, "transaction_id")));
+    const proposalId = required(args, "proposal_id");
+    if (name === "inspect_hub_okf_proposal") return result(await actions.inspect(proposalId));
+    if (name === "accept_hub_okf_proposal") {
+      return result(await actions.accept(proposalId, required(args, "proposal_digest")));
+    }
+    throw new Error(`unsupported Hub action: ${name}`);
+  } catch (error) {
+    return result({ error: error instanceof Error ? error.message : "Hub action failed" }, true);
+  }
+}

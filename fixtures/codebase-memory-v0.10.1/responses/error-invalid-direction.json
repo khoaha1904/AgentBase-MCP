@@ -1,0 +1,12 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "invalid direction \"outgoing\" — use \"inbound\" (callers), \"outbound\" (callees), or \"both\""
+    }
+  ],
+  "structuredContent": {
+    "error": "invalid direction \"outgoing\" — use \"inbound\" (callers), \"outbound\" (callees), or \"both\""
+  },
+  "isError": true
+}

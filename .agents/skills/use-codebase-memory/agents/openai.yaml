@@ -1,0 +1,4 @@
+interface:
+  display_name: "Use Codebase Memory"
+  short_description: "Navigate code through the managed graph"
+  default_prompt: "Use $use-codebase-memory to inspect this repository through the managed code graph."

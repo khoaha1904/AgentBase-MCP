@@ -1,0 +1,11 @@
+{
+  "name": "listModules",
+  "qualified_name": "agentbase-typescript-fixture.src.catalog.repository.listModules",
+  "label": "Function",
+  "file_path": "src/catalog/repository.ts",
+  "start_line": 3,
+  "end_line": 5,
+  "source": "export function listModules(): readonly CatalogEntry[] {\n  return [{ name: \"catalog\", publicPath: \"src/catalog/index.ts\" }];\n}\n",
+  "callers": 1,
+  "callees": 0
+}

@@ -1,0 +1,22 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"project\":\"agentbase-typescript-fixture\",\"skipped_count\":0,\"parse_partial_count\":0,\"not_indexed_files_count\":0,\"nodes\":55,\"edges\":76,\"expected_nodes\":55,\"expected_edges\":76,\"adr_present\":false,\"artifact_present\":false,\"status\":\"indexed\"}"
+    }
+  ],
+  "structuredContent": {
+    "project": "agentbase-typescript-fixture",
+    "skipped_count": 0,
+    "parse_partial_count": 0,
+    "not_indexed_files_count": 0,
+    "nodes": 55,
+    "edges": 76,
+    "expected_nodes": 55,
+    "expected_edges": 76,
+    "adr_present": false,
+    "artifact_present": false,
+    "status": "indexed"
+  },
+  "isError": false
+}

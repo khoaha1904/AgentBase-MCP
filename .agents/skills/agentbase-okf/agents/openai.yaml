@@ -1,0 +1,4 @@
+interface:
+  display_name: "AgentBase OKF Author"
+  short_description: "Author and validate AgentBase OKF proposals"
+  default_prompt: "Use $agentbase-okf to turn bounded repository evidence into a linked OKF proposal."

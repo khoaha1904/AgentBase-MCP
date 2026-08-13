@@ -1,6 +1,7 @@
 # ADR 0003: Use a Managed, Pinned Code Intelligence Provider
 
-- **Status:** Proposed; engine choice requires benchmark acceptance
+- **Status:** Accepted ownership model; Codebase Memory conformance remains under
+  Capability 002 evaluation
 - **Date:** 2026-08-11
 
 ## Context
@@ -20,10 +21,17 @@ AgentBase manages its supported executable and versioned cache without changing
 or silently reusing a user's global installation. A new provider version builds
 new state, passes conformance, then switches atomically with rollback retained.
 
+For the first provider, AgentBase pins the official
+`codebase-memory-mcp@0.10.1` npm package exactly. The dependency's maintained
+wrapper owns checksum-verified platform bootstrap into its private package
+directory; AgentBase owns selection, admission, invocation and upgrade policy.
+Users do not provide an executable path.
+
 ## Consequences
 
 - Upstream improvements can be adopted without coupling OKF to upstream schema.
 - Two installations may coexist safely.
-- Distribution, licensing, integrity and process lifecycle need explicit work.
+- Package integrity, native identity, licensing and process lifecycle remain
+  explicit conformance work.
 - The adapter must expose capabilities and limitations rather than pretending
   all providers behave identically.

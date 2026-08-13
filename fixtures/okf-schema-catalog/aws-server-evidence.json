@@ -1,0 +1,20 @@
+{
+  "sourceRepositoryId": "repository-orders-aaaaaaaaaaaa",
+  "signals": [
+    "http server",
+    "server entry point or listener evidence",
+    "aws lambda function CreateOrder",
+    "aws lambda function CancelOrder",
+    "Lambda resource or runtime identity",
+    "aws sqs queue orders-events",
+    "SQS resource identity",
+    "producer or consumer evidence"
+  ],
+  "instances": [
+    { "type": "Server", "slug": "orders-api" },
+    { "type": "AWS Lambda", "slug": "create-order" },
+    { "type": "AWS Lambda", "slug": "cancel-order" },
+    { "type": "AWS SQS Queue", "slug": "orders-events" }
+  ],
+  "mustNotCreate": ["Repository", "Service", "API Endpoint", "Event", "Database Table", "Queue", "Terraform Module"]
+}

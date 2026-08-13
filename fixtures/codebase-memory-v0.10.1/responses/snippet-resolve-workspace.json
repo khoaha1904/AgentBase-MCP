@@ -1,0 +1,11 @@
+{
+  "name": "resolveWorkspace",
+  "qualified_name": "agentbase-typescript-fixture.src.workspace.paths.resolveWorkspace",
+  "label": "Function",
+  "file_path": "src/workspace/paths.ts",
+  "start_line": 3,
+  "end_line": 6,
+  "source": "export function resolveWorkspace(path: string): string {\n  if (!allowWorkspace(path)) throw new Error(\"Workspace path is not allowed\");\n  return path;\n}\n",
+  "callers": 1,
+  "callees": 1
+}

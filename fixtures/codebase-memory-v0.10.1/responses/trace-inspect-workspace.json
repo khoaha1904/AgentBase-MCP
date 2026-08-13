@@ -1,0 +1,28 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"function\":\"inspectWorkspace\",\"direction\":\"outbound\",\"mode\":\"calls\",\"callees_total\":2,\"callees\":{\"cols\":[\"name\",\"hop\"],\"groups\":[{\"qn_prefix\":\"agentbase-typescript-fixture.src.workspace.paths\",\"rows\":[[\"resolveWorkspace\",1]]},{\"qn_prefix\":\"agentbase-typescript-fixture.src.catalog.repository\",\"rows\":[[\"listModules\",1]]}]}}"
+    }
+  ],
+  "structuredContent": {
+    "function": "inspectWorkspace",
+    "direction": "outbound",
+    "mode": "calls",
+    "callees_total": 2,
+    "callees": {
+      "cols": ["name", "hop"],
+      "groups": [
+        {
+          "qn_prefix": "agentbase-typescript-fixture.src.workspace.paths",
+          "rows": [["resolveWorkspace", 1]]
+        },
+        {
+          "qn_prefix": "agentbase-typescript-fixture.src.catalog.repository",
+          "rows": [["listModules", 1]]
+        }
+      ]
+    }
+  },
+  "isError": false
+}
