@@ -1,16 +1,14 @@
 # AgentBase-MCP Session Handoff
 
-- **Prepared:** 2026-08-12
+- **Prepared:** 2026-08-13
 - **Application:** `AgentBase-MCP`
 - **OKF repository:** `AgentBase-Hub`
-- **Current checkout:** temporary rebuild source; not product identity
-- **Active capability:** `008-local-hub-product-correction`
-- **Most recent completed:** `007-agentbase-hub-pr-lifecycle` (publication
-  mechanics retained, temporary-workspace lifecycle superseded)
-- **Current state:** product definition and implementation are being corrected
-  around immediately queryable local Hub commits
-- **Next checkpoint:** complete and verify offline local accept/query, concrete
-  schema, batch publication and synchronization behavior
+- **Current checkout:** canonical `AgentBase-MCP`
+- **Active capability:** None
+- **Most recent completed:** `008-local-hub-product-correction`
+- **Current state:** corrected local Hub, schema, installer, repository migration
+  and real publication/synchronization lifecycle are complete
+- **Next checkpoint:** owner selects the next product slice
 
 ## Session checkpoint
 
@@ -271,20 +269,17 @@ candidate patterns, not automatic mandates for future repositories.
 
 ## Next action
 
-Capability 008's implementation and canonical repository migration are
-complete through the local Hub correction and installer slice; the canonical
-gate passes 232 tests. Do not fragment cohesive files merely to satisfy architecture
-metrics: split only across distinct responsibilities, otherwise retain one
-exact owner-reviewed non-growing mark. T040 is complete: the source was
-stabilized at `35d4628d902e293273b7ac29f2b015c94c679d81` and the independent
-canonical `/home/khoa/workspace/AgentBase/AgentBase-MCP` clone was created.
-The official private GitHub repositories are now `khoaha1904/AgentBase-MCP` and
-`khoaha1904/AgentBase-Hub`; both canonical local clones exist, and Codex has one
-enabled `agentbase` STDIO entry without a stored token value. Migration bug
-`hub-migration-remote-identity` was fixed and verified against the real local
-Hub. T043's governed deletion of qualification-only
-`repositories/agentbase-next` is accepted locally as pending proposal
-`73420160d16893b75470d1f2`.
+Capability 008 is complete and `specs/CURRENT.md` is closed. The canonical gate
+passes 232 tests with 0 architecture errors and five reviewed warnings. Do not
+fragment cohesive files merely to satisfy architecture metrics: split only
+across distinct responsibilities, otherwise retain one exact owner-reviewed
+non-growing mark.
+
+The official private repositories and local clones are
+`khoaha1904/AgentBase-MCP` and `khoaha1904/AgentBase-Hub`. Codex has one enabled
+`agentbase` STDIO entry; client registration remains deliberately deferred in
+the installer contract. The dirty legacy Hub and historical repositories remain
+untouched references.
 
 Root `install.sh` now prepares dependencies and offers Codex/Claude Code
 multi-selection, while truthfully reporting registration as deferred and
@@ -294,16 +289,13 @@ process token and otherwise admits that file. Tests cover paste, Backspace,
 interruption, non-interactive behavior, permissions, symlinks, malformed files,
 preservation and precedence.
 
-The owner ran `./install.sh` interactively and the global credential passed
-metadata-only admission without exposing its value. T044/T055 then published
-the sole pending correction through deterministic branch
-`agentbase/publish-2ad361aa321cf89e3243db4e` and
-[AgentBase-Hub PR #4](https://github.com/khoaha1904/AgentBase-Hub/pull/4).
-Remote `main` remains at `587a91e676104e0cd58889acb938ca2b44a350d2`;
-the branch head is the exact reviewed local commit
-`a86fbb57cdd15090740e6f2445a11c62692d8a92`. AgentBase-MCP did not merge.
+The owner merged [AgentBase-Hub PR #4](https://github.com/khoaha1904/AgentBase-Hub/pull/4).
+Explicit synchronization recognized proposal `73420160d16893b75470d1f2`,
+advanced local Hub `main` to remote merge head
+`9fcb2aec8790fcfe31f30354c09ac51a0d65fc92` and left zero pending proposals.
+Local search no longer returns the qualification-only `agentbase-next` subject.
+No token value or legacy `.env` was read.
 
-Next, the owner merges PR #4. Then run explicit Hub synchronization, complete
-T047's final quickstart/canonical reconciliation and close `specs/CURRENT.md`
-only if no remaining work is found. Agents never read or migrate the legacy
-`.env`.
+No implementation task remains. Start the next owner-selected behavior as a new
+numbered capability; the current living contracts under `docs/specs/` remain
+authoritative.

@@ -1,8 +1,8 @@
 # Current Capability
 
-Active capability: [`008-local-hub-product-correction`](008-local-hub-product-correction/spec.md)
+Active capability: None
 
-Most recent completed: [`007-agentbase-hub-pr-lifecycle`](007-agentbase-hub-pr-lifecycle/spec.md)
+Most recent completed: [`008-local-hub-product-correction`](008-local-hub-product-correction/spec.md)
 
 Capability 003 promotes one short-lived stdio provider session per explicit
 evidence round after three alternating real pairs showed full normalized parity,

@@ -3,8 +3,8 @@
 **Date:** 2026-08-13
 **Scope:** Corrected application, local Hub lifecycle, schema catalog,
 publication/synchronization simulations, completed canonical repository/
-launcher migration and local Hub data correction. Remote publication remains
-the separately authorized T044 checkpoint.
+launcher migration, installer credential boundary and completed real Hub data
+correction lifecycle.
 
 ## Canonical offline gate
 
@@ -63,13 +63,17 @@ token was used in verification.
 - FR-001–014 and FR-017–019 have implementation and offline acceptance evidence.
 - FR-015–016 have report-first tooling, completed additive migration and exact
   rollback receipts for T040–T042.
+- FR-020–025 have installer interaction, private global storage, runtime
+  admission and recovery evidence.
 - SC-001–005 pass their named end-to-end or real-Git simulations.
 - SC-006 passes active naming guards; the remaining historical rebuild-name
   occurrence is explicitly labeled evidence in `docs/handoff.md`.
 - SC-007 passes with no unreviewed architecture exception, no metric-driven
   fragments and no real GitHub dependency.
+- SC-008 passes every client-selection and credential-lifecycle fixture without
+  client-configuration mutation or token disclosure.
 
-## Remaining owner checkpoints
+## Real qualification and closure
 
 - T040 completed on 2026-08-13: source stabilization commit
   `35d4628d902e293273b7ac29f2b015c94c679d81` has correct 2026 author/commit
@@ -149,8 +153,20 @@ token was used in verification.
   The receipt is local mode `0600` and contains no credential.
 - Independent remote-ref inspection confirmed the publication branch at the
   reviewed proposal commit while remote `main` remained exactly at the admitted
-  base. AgentBase-MCP did not merge or write remote `main`. The proposal remains
-  locally pending until PR #4 is merged and explicit synchronization recognizes
-  it.
-- T047 remains: after the owner merges PR #4, run synchronization and the final
-  real quickstart/canonical reconciliation before closing the active capability.
+  base. AgentBase-MCP did not merge or write remote `main`.
+- The owner merged PR #4. Explicit synchronization `sync-msr3vsov` fetched
+  remote head `9fcb2aec8790fcfe31f30354c09ac51a0d65fc92`, recognized proposal
+  `73420160d16893b75470d1f2`, found zero remaining proposals/rebased commits and
+  atomically advanced local active `main` to that exact head. Local and remote
+  tracking refs match, the worktree is clean, pending inventory is empty and a
+  local Hub search for `agentbase-next` returns no result.
+- T047 completed all quickstart evidence: offline real-Git journeys cover local
+  accept, schema selection, batch publication and recovery; real migration
+  preflight remained report-only and preserved the dirty legacy Hub; the owner
+  completed interactive installation; real publication/synchronization passed;
+  and the final canonical gate passed 232/232 tests with 0 architecture errors
+  and the same five reviewed warnings.
+- Final reconciliation checked FR-001–025, SC-001–008, all 21 acceptance
+  scenarios, the seven plan decision groups and all five constitution
+  principles. Convergence found no missing, partial, contradictory or
+  unrequested implementation work and appended no tasks.
