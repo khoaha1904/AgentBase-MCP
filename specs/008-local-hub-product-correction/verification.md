@@ -135,9 +135,22 @@ token was used in verification.
 - Remote rollback: rename `AgentBase-Hub` back to `knowledger-hub`, restore MCP
   canonical origin to `/home/khoa/workspace/AgentBase/agentbase-next`, and
   delete the newly created remote MCP repository only if explicitly authorized.
-- T044 remains: separately authorize publication of the pending Hub correction
-  through one PR. Authorization exists, but execution waits for the owner to run
-  the interactive installer and create the global credential without exposing
-  its value to the agent.
-- T047: run the real quickstart/migration journeys and close the active
-  capability only after the authorized checkpoints above are complete.
+- T044 and T055 completed on 2026-08-13 after the owner ran the interactive
+  installer. Admission inspected only credential path metadata: the global file
+  was a regular owner file at mode `0600` under an owner directory at mode
+  `0700`; no token bytes were read, logged or passed as a CLI argument.
+- The official `submit` action selected the sole dependency-safe pending prefix
+  containing proposal `73420160d16893b75470d1f2`. Publication receipt
+  `2ad361aa321cf89e3243db4e` records remote base
+  `587a91e676104e0cd58889acb938ca2b44a350d2`, deterministic branch
+  `agentbase/publish-2ad361aa321cf89e3243db4e`, exact head
+  `a86fbb57cdd15090740e6f2445a11c62692d8a92` and
+  [AgentBase-Hub PR #4](https://github.com/khoaha1904/AgentBase-Hub/pull/4).
+  The receipt is local mode `0600` and contains no credential.
+- Independent remote-ref inspection confirmed the publication branch at the
+  reviewed proposal commit while remote `main` remained exactly at the admitted
+  base. AgentBase-MCP did not merge or write remote `main`. The proposal remains
+  locally pending until PR #4 is merged and explicit synchronization recognizes
+  it.
+- T047 remains: after the owner merges PR #4, run synchronization and the final
+  real quickstart/canonical reconciliation before closing the active capability.

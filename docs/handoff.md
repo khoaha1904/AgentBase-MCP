@@ -294,6 +294,16 @@ process token and otherwise admits that file. Tests cover paste, Backspace,
 interruption, non-interactive behavior, permissions, symlinks, malformed files,
 preservation and precedence.
 
-T044 publication is authorized but waits for the owner to run `./install.sh`
-interactively; agents never read or migrate the legacy `.env`. Do not close
-`specs/CURRENT.md` until T044, T055 and T047 are complete.
+The owner ran `./install.sh` interactively and the global credential passed
+metadata-only admission without exposing its value. T044/T055 then published
+the sole pending correction through deterministic branch
+`agentbase/publish-2ad361aa321cf89e3243db4e` and
+[AgentBase-Hub PR #4](https://github.com/khoaha1904/AgentBase-Hub/pull/4).
+Remote `main` remains at `587a91e676104e0cd58889acb938ca2b44a350d2`;
+the branch head is the exact reviewed local commit
+`a86fbb57cdd15090740e6f2445a11c62692d8a92`. AgentBase-MCP did not merge.
+
+Next, the owner merges PR #4. Then run explicit Hub synchronization, complete
+T047's final quickstart/canonical reconciliation and close `specs/CURRENT.md`
+only if no remaining work is found. Agents never read or migrate the legacy
+`.env`.
