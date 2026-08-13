@@ -4,6 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { createHubIdentity } from "../src/core/hub/index.ts";
+
 const GIT_ENVIRONMENT = {
   PATH: "/usr/bin:/bin",
   LANG: "C.UTF-8",
@@ -87,13 +89,11 @@ export function createCanonicalMcp({ source, target, expectedHead }) {
   return inspectRepository(destination);
 }
 
-export function createCanonicalHub({ remote, target }) {
-  if (!/^(?:https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\.git|git@github\.com:[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\.git)$/.test(remote)) {
-    throw new Error("AgentBase-Hub remote must be one exact GitHub repository URL");
-  }
+export function createCanonicalHub({ repository, target }, gitRunner = git) {
+  const remote = createHubIdentity(repository, "main").canonicalHttpsUrl;
   const destination = assertCanonicalTarget(target, "AgentBase-Hub");
   fs.mkdirSync(path.dirname(destination), { recursive: true });
-  git(path.dirname(destination), ["clone", "--branch", "main", "--single-branch", remote, destination], "clone canonical AgentBase-Hub");
+  gitRunner(path.dirname(destination), ["clone", "--branch", "main", "--single-branch", remote, destination], "clone canonical AgentBase-Hub");
   return inspectRepository(destination);
 }
 
@@ -138,7 +138,7 @@ export function main(args = process.argv.slice(2)) {
     return 0;
   }
   if (command === "create-hub") {
-    const report = createCanonicalHub({ remote: options["--hub-remote"] ?? "", target: hubTarget });
+    const report = createCanonicalHub({ repository: options["--hub-repository"] ?? "", target: hubTarget });
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
     return 0;
   }

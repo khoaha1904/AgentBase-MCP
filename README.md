@@ -212,7 +212,7 @@ fresh clone:
 
 ```bash
 node scripts/migrate-product-repositories.mjs create-hub \
-  --hub-remote git@github.com:<owner>/AgentBase-Hub.git
+  --hub-repository <owner>/AgentBase-Hub
 ```
 
 These commands do not rename GitHub repositories, rewrite remotes, repoint an

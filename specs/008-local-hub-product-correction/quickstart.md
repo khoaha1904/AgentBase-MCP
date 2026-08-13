@@ -67,8 +67,9 @@ node scripts/migrate-product-repositories.mjs report
 ```
 
 Do not run `create-mcp` until the source worktree is stabilized as one reviewed
-commit. Do not run `create-hub` until the exact official GitHub remote is
-admitted. Before installed-MCP cutover, record the old launcher executable,
+commit. Do not run `create-hub` until the exact official GitHub repository
+identity is admitted; the command derives the same canonical HTTPS remote used
+by runtime admission. Before installed-MCP cutover, record the old launcher executable,
 arguments and environment-key names (never token values); rollback restores
 those exact values. Before any remote rewrite, record both fetch and push URLs;
 rollback restores them with `git remote set-url` and `--push` respectively.

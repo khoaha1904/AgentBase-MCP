@@ -84,8 +84,8 @@
 - [x] T038 [US5] Implement report-first additive canonical directory migration in `scripts/migrate-product-repositories.mjs`
 - [x] T039 [US5] Add exact launcher/remotes/rollback qualification steps to `specs/008-local-hub-product-correction/quickstart.md` and `README.md`
 - [x] T040 [US5] After owner approval, stabilize the current source commit and create `/home/khoa/workspace/AgentBase/AgentBase-MCP` without deleting or modifying `/home/khoa/workspace/AgentBase/agentbase-next`
-- [ ] T041 [US5] After T042 admits the official remote, clone it into `/home/khoa/workspace/AgentBase/AgentBase-Hub` without modifying `/home/khoa/workspace/AgentBase/agentbase-hub`
-- [ ] T042 [US5] With separate external approval, create/rename GitHub repositories, update canonical remotes and repoint the installed MCP while recording exact rollback values
+- [x] T041 [US5] After T042 admits the official remote, clone it into `/home/khoa/workspace/AgentBase/AgentBase-Hub` without modifying `/home/khoa/workspace/AgentBase/agentbase-hub`
+- [x] T042 [US5] With separate external approval, create/rename GitHub repositories, update canonical remotes and repoint the installed MCP while recording exact rollback values
 
 ## Phase 8: Hub data correction and closure
 

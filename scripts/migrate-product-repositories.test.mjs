@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { createCanonicalMcp, inspectRepository } from "./migrate-product-repositories.mjs";
+import { createCanonicalHub, createCanonicalMcp, inspectRepository } from "./migrate-product-repositories.mjs";
 
 function git(root, args) {
   const result = spawnSync("/usr/bin/git", args, { cwd: root, encoding: "utf8" });
@@ -65,5 +65,40 @@ test("[AB-MIGRATION-001] collisions, symlink sources and wrong canonical names f
     fs.symlinkSync(current.source, link);
     assert.throws(() => createCanonicalMcp({ source: link, target: current.target, expectedHead: current.head }), /non-symlink/);
     assert.equal(fs.existsSync(current.target), false);
+  } finally { fs.rmSync(current.root, { recursive: true, force: true }); }
+});
+
+test("[AB-MIGRATION-001] canonical Hub clone uses the runtime-admitted HTTPS identity", () => {
+  const current = fixture();
+  const hubSource = path.join(current.root, "hub-source");
+  const hubTarget = path.join(current.root, "AgentBase-Hub");
+  fs.mkdirSync(hubSource);
+  git(hubSource, ["init", "-b", "main"]);
+  git(hubSource, ["config", "user.name", "Test"]);
+  git(hubSource, ["config", "user.email", "test@agentbase.local"]);
+  fs.writeFileSync(path.join(hubSource, "index.md"), "# Hub\n");
+  git(hubSource, ["add", "index.md"]);
+  git(hubSource, ["commit", "-m", "hub base"]);
+  try {
+    const clone = (cwd, args) => {
+      const requestedRemote = args.at(-2);
+      assert.equal(requestedRemote, "https://github.com/acme/AgentBase-Hub.git");
+      git(cwd, [...args.slice(0, -2), hubSource, args.at(-1)]);
+      git(hubTarget, ["remote", "set-url", "origin", requestedRemote]);
+    };
+    const report = createCanonicalHub({ repository: "acme/AgentBase-Hub", target: hubTarget }, clone);
+    assert.ok(report.remotes.every((remote) => remote.includes("https://github.com/acme/AgentBase-Hub.git")));
+  } finally { fs.rmSync(current.root, { recursive: true, force: true }); }
+});
+
+test("[AB-MIGRATION-001] canonical Hub rejects raw remote authority before mutation", () => {
+  const current = fixture();
+  const hubTarget = path.join(current.root, "AgentBase-Hub");
+  try {
+    assert.throws(
+      () => createCanonicalHub({ repository: "git@github.com:acme/AgentBase-Hub.git", target: hubTarget }),
+      /owner\/name/,
+    );
+    assert.equal(fs.existsSync(hubTarget), false);
   } finally { fs.rmSync(current.root, { recursive: true, force: true }); }
 });

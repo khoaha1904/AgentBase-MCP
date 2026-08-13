@@ -1,10 +1,9 @@
 # Verification: Local-First AgentBase Product Correction
 
 **Date:** 2026-08-13
-**Scope:** Corrected offline application, local Hub lifecycle, schema catalog,
-publication/synchronization simulations and additive migration tooling. Real
-canonical-directory, GitHub and Hub-data mutations remain unexecuted approval
-checkpoints T040–T044.
+**Scope:** Corrected application, local Hub lifecycle, schema catalog,
+publication/synchronization simulations and completed canonical repository/
+launcher migration. Governed Hub data correction/publication remains T043–T044.
 
 ## Canonical offline gate
 
@@ -14,7 +13,7 @@ checkpoints T040–T044.
   naming guards;
 - TypeScript typecheck: pass;
 - architecture: 0 errors and 4 visible warnings;
-- tests: **215 passed, 0 failed**;
+- tests: **217 passed, 0 failed**;
 - `git diff --check`: pass;
 - no real GitHub request or mutation is required by the gate.
 
@@ -59,8 +58,8 @@ token was used in verification.
 ## Requirement reconciliation
 
 - FR-001–014 and FR-017–019 have implementation and offline acceptance evidence.
-- FR-015–016 have report-first, additive migration tooling and rollback steps;
-  the actual authorized migrations remain T040–T042.
+- FR-015–016 have report-first tooling, completed additive migration and exact
+  rollback receipts for T040–T042.
 - SC-001–005 pass their named end-to-end or real-Git simulations.
 - SC-006 passes active naming guards; the remaining historical rebuild-name
   occurrence is explicitly labeled evidence in `docs/handoff.md`.
@@ -78,16 +77,32 @@ token was used in verification.
   `638840bd164a407a0e8956b46febf4614aad7f7b`; `npm ci` reported zero known
   vulnerabilities and the canonical clone independently passed the complete
   215-test repository gate.
-- T042: separately approve GitHub identity/remotes and installed MCP cutover.
-  Read-only lookup found no `khoaha1904/AgentBase-Hub` repository on 2026-08-13;
-  the existing private repository remains `khoaha1904/knowledger-hub` with
-  default branch `main`. No `khoaha1904/AgentBase-MCP` repository exists either.
-  The current Codex host reports no configured MCP servers, so its exact
-  launcher rollback value is “no AgentBase entry”; a later cutover must add a
-  new entry rather than overwrite an undiscovered one.
-- T041: after T042 admits the official remote, clone it into the canonical local
-  AgentBase-Hub directory without modifying the dirty legacy Hub worktree.
-- T043–T044: locally accept the governed deletion of qualification-only old Hub
-  data, then separately approve its publication PR.
+- T042 completed with owner approval on 2026-08-13. A new private
+  `khoaha1904/AgentBase-MCP` repository was created and its `main` initially
+  received exact commit `7f1a0bf325785deab5fc3956ad4f85881fcb3bd4`.
+  Private `khoaha1904/knowledger-hub` was renamed to
+  `khoaha1904/AgentBase-Hub`; five branches and PR #1 open / #2–#3 merged were
+  preserved. Canonical MCP `origin` changed from the local development source
+  to `git@github.com:khoaha1904/AgentBase-MCP.git`.
+- The current Codex host had no MCP entries before cutover. It now has enabled
+  STDIO entry `agentbase`, launching canonical `src/cli.ts mcp` with the exact
+  canonical working directory and Hub identity/root. It forwards only the
+  `AGENTBASE_HUB_GITHUB_TOKEN` variable name; no token value was read or stored.
+  Exact launcher rollback is `codex mcp remove agentbase`.
+- T041 completed at canonical Hub commit
+  `587a91e676104e0cd58889acb938ca2b44a350d2`. The clone is clean, its local
+  `main` equals `origin/main`, and its canonical origin is
+  `https://github.com/khoaha1904/AgentBase-Hub.git`. The dirty legacy Hub
+  worktree was not modified.
+- Cutover exposed and verified bug `hub-migration-remote-identity`: raw SSH
+  migration input could create a clone rejected by runtime. Migration now
+  accepts `owner/name`, derives runtime's canonical HTTPS URL and rejects raw
+  URL authority before mutation. The real STDIO query lists 26 tools and
+  successfully searches local Hub; the full gate passes 217/217.
+- Remote rollback: rename `AgentBase-Hub` back to `knowledger-hub`, restore MCP
+  canonical origin to `/home/khoa/workspace/AgentBase/agentbase-next`, and
+  delete the newly created remote MCP repository only if explicitly authorized.
+- T043–T044 remain: locally accept the governed deletion of qualification-only
+  old Hub data, then separately approve its publication PR.
 - T047: run the real quickstart/migration journeys and close the active
   capability only after the authorized checkpoints above are complete.
