@@ -69,9 +69,17 @@ token was used in verification.
 
 ## Remaining owner checkpoints
 
-- T040–T041: stabilize the source and create canonical local AgentBase-MCP and
-  AgentBase-Hub directories without modifying their source worktrees.
+- T040 completed on 2026-08-13: source stabilization commit
+  `35d4628d902e293273b7ac29f2b015c94c679d81` has correct 2026 author/commit
+  timestamps, and `/home/khoa/workspace/AgentBase/AgentBase-MCP` was created as
+  a clean independent clone at the same commit. The original development
+  worktree remains present and clean.
 - T042: separately approve GitHub identity/remotes and installed MCP cutover.
+  Read-only lookup found no `khoaha1904/AgentBase-Hub` repository on 2026-08-13;
+  the existing private repository remains `khoaha1904/knowledger-hub` with
+  default branch `main`.
+- T041: after T042 admits the official remote, clone it into the canonical local
+  AgentBase-Hub directory without modifying the dirty legacy Hub worktree.
 - T043–T044: locally accept the governed deletion of qualification-only old Hub
   data, then separately approve its publication PR.
 - T047: run the real quickstart/migration journeys and close the active

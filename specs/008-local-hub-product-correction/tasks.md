@@ -83,8 +83,8 @@
 - [x] T037 [P] [US5] Add migration preflight, collision, dirty-source preservation and independent-Git-state tests in `scripts/migrate-product-repositories.test.mjs`
 - [x] T038 [US5] Implement report-first additive canonical directory migration in `scripts/migrate-product-repositories.mjs`
 - [x] T039 [US5] Add exact launcher/remotes/rollback qualification steps to `specs/008-local-hub-product-correction/quickstart.md` and `README.md`
-- [ ] T040 [US5] After owner approval, stabilize the current source commit and create `/home/khoa/workspace/AgentBase/AgentBase-MCP` without deleting or modifying `/home/khoa/workspace/AgentBase/agentbase-next`
-- [ ] T041 [US5] After owner approval, clone the admitted remote into `/home/khoa/workspace/AgentBase/AgentBase-Hub` without modifying `/home/khoa/workspace/AgentBase/agentbase-hub`
+- [x] T040 [US5] After owner approval, stabilize the current source commit and create `/home/khoa/workspace/AgentBase/AgentBase-MCP` without deleting or modifying `/home/khoa/workspace/AgentBase/agentbase-next`
+- [ ] T041 [US5] After T042 admits the official remote, clone it into `/home/khoa/workspace/AgentBase/AgentBase-Hub` without modifying `/home/khoa/workspace/AgentBase/agentbase-hub`
 - [ ] T042 [US5] With separate external approval, create/rename GitHub repositories, update canonical remotes and repoint the installed MCP while recording exact rollback values
 
 ## Phase 8: Hub data correction and closure
@@ -102,7 +102,10 @@
 - US2 can proceed after foundations and may run alongside US1.
 - US3 depends on accepted local commits from US1.
 - US4 depends on pending/publication identity from US3.
-- US5 code/preflight can begin after foundations, but real T040–T042 require the application to be green and separate owner approvals.
+- US5 code/preflight can begin after foundations. T040 requires the application
+  to be green and owner approval; T042 then admits the official GitHub identity
+  before T041 can clone the canonical Hub. External and launcher changes retain
+  separate owner approval.
 - Hub data correction uses the corrected local lifecycle; T044 is separately authorized and never implicit in offline verification.
 
 ## Parallel opportunities

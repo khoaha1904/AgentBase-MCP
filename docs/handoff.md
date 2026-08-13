@@ -274,8 +274,12 @@ candidate patterns, not automatic mandates for future repositories.
 Capability 008's offline implementation is complete and the canonical gate
 passes 215 tests. Do not fragment cohesive files merely to satisfy architecture
 metrics: split only across distinct responsibilities, otherwise retain one
-exact owner-reviewed non-growing mark. The next work requires explicit owner
-checkpoints: stabilize/create canonical local repositories (T040–T041), then
-separately authorize GitHub/launcher cutover (T042) and governed Hub data
+exact owner-reviewed non-growing mark. T040 is complete: the source was
+stabilized at `35d4628d902e293273b7ac29f2b015c94c679d81` and the independent
+canonical `/home/khoa/workspace/AgentBase/AgentBase-MCP` clone was created.
+Read-only GitHub lookup found no official `khoaha1904/AgentBase-Hub` repository;
+the private remote is still named `khoaha1904/knowledger-hub`. The next separate
+owner checkpoint is T042 (official GitHub identity/remotes and launcher), which
+must precede T041's canonical Hub clone, followed by governed Hub data
 correction/publication (T043–T044). Do not close `specs/CURRENT.md` until those
 authorized journeys and T047 are complete.
