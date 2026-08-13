@@ -17,13 +17,14 @@ export type AgentBaseMcpServer = Readonly<{
 
 export function createAgentBaseMcpServer(options: GatewaySessionOptions & Readonly<{ hubActions?: HubToolActions }>): AgentBaseMcpServer {
   const gateway = new GatewaySession(options);
+  const hubActions = options.hubActions ?? tryCreateHubRuntimeActions();
   const server = new McpServer({ name: "agentbase-codebase-memory", version: "0.0.0" });
   for (const tool of HUB_OKF_TOOLS) {
     server.registerTool(tool.name, { description: tool.description, inputSchema: fromJsonSchema(tool.inputSchema) },
       async (argumentsValue): Promise<CallToolResult> => callHubOkfTool(
         tool.name as HubOkfToolName,
         argumentsValue as Record<string, unknown>,
-        options.hubActions,
+        hubActions,
       ));
   }
   for (const tool of OKF_SCHEMA_TOOLS) {

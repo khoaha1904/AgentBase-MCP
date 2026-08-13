@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-import { createHubProposal, type HubIdentity, type HubProposal } from "../../core/hub/index.ts";
+import { createHubProposal, type AnyHubProposal, type HubIdentity, type HubProposal, type LocalOnlyHubProposal } from "../../core/hub/index.ts";
 import {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
   diffBundleProposal,
@@ -30,11 +30,14 @@ export type PrepareRefreshHubOptions = Readonly<{
   supersessions?: readonly HubSupersession[];
   createdAt: string;
 }>;
+export type PrepareRefreshLocalHubOptions = Omit<PrepareRefreshHubOptions, "hub"> & Readonly<{ localHubId: string }>;
 export type PreparedRefreshHubProposal = Readonly<{
   proposal: HubProposal;
   inspection: HubProposalInspection;
   bundleRoot: string;
 }>;
+export type PreparedRefreshLocalHubProposal = Omit<PreparedRefreshHubProposal, "proposal"> & Readonly<{ proposal: LocalOnlyHubProposal }>;
+type AnyRefreshOptions = PrepareRefreshHubOptions | PrepareRefreshLocalHubOptions;
 
 function bytes(root: string, relative: string): Buffer {
   return fs.readFileSync(path.join(root, ...relative.split("/")));
@@ -67,7 +70,7 @@ function rootIndexWithoutSubject(source: string, subjectDirectory: string): stri
 }
 
 function subjectRemovalEntries(
-  options: PrepareRefreshHubOptions,
+  options: AnyRefreshOptions,
   bundleRoot: string,
 ): readonly HubLifecycleEntry[] | undefined {
   const authored = loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true });
@@ -99,7 +102,7 @@ function subjectRemovalEntries(
 }
 
 function protectBase(
-  options: PrepareRefreshHubOptions,
+  options: AnyRefreshOptions,
   bundleRoot: string,
   removal: readonly HubLifecycleEntry[] | undefined,
 ): HubLifecycleEntry[] {
@@ -128,7 +131,7 @@ function protectBase(
 }
 
 function restoreUnknownFieldConflicts(
-  options: PrepareRefreshHubOptions,
+  options: AnyRefreshOptions,
   bundleRoot: string,
   failures: readonly string[],
 ): HubLifecycleEntry[] {
@@ -148,7 +151,7 @@ function restoreUnknownFieldConflicts(
 }
 
 function supersessionEntries(
-  options: PrepareRefreshHubOptions,
+  options: AnyRefreshOptions,
   bundleRoot: string,
 ): HubLifecycleEntry[] {
   const base = loadOkfBundle(options.hubBundleRoot);
@@ -176,7 +179,7 @@ function classifyLifecycle(
   return [...byPath.values()];
 }
 
-function validateChangedSchemas(options: PrepareRefreshHubOptions, bundleRoot: string): void {
+function validateChangedSchemas(options: AnyRefreshOptions, bundleRoot: string): void {
   const base = loadOkfBundle(options.hubBundleRoot);
   const proposed = loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true });
   const selected = new Set(selectOkfConceptSchemas(options.signals).map((item) => item.type));
@@ -191,7 +194,11 @@ function validateChangedSchemas(options: PrepareRefreshHubOptions, bundleRoot: s
   if (failures.length) throw new Error(`Hub refresh failed schema validation: ${failures.join("; ")}`);
 }
 
-export function prepareRefreshHubProposal(options: PrepareRefreshHubOptions): PreparedRefreshHubProposal {
+export function prepareRefreshHubProposal(options: PrepareRefreshHubOptions): PreparedRefreshHubProposal;
+export function prepareRefreshHubProposal(options: PrepareRefreshLocalHubOptions): PreparedRefreshLocalHubProposal;
+export function prepareRefreshHubProposal(
+  options: PrepareRefreshHubOptions | PrepareRefreshLocalHubOptions,
+): Omit<PreparedRefreshHubProposal, "proposal"> & Readonly<{ proposal: AnyHubProposal }> {
   if (!/^repositories\/[a-z0-9][a-z0-9-]{0,99}$/.test(options.subjectDirectory)) throw new Error("invalid Hub subject");
   if (!fs.existsSync(path.join(options.hubBundleRoot, options.subjectDirectory))) throw new Error("refresh subject is absent; use new");
   const selected = selectOkfConceptSchemas(options.signals).map((item) => item.type);
@@ -230,10 +237,9 @@ export function prepareRefreshHubProposal(options: PrepareRefreshHubOptions): Pr
   });
   const digestHex = createHash("sha256").update(JSON.stringify(inspection.entries)).digest("hex");
   const diffDigest = `sha256:${digestHex}`;
-  const proposal = createHubProposal({
-    mode: "refresh",
+  const common = {
+    mode: "refresh" as const,
     subject: options.subjectDirectory,
-    hub: options.hub,
     baseCommit: options.baseCommit,
     sourceRepositoryId: options.sourceRepositoryId,
     evidenceDigest: options.evidenceDigest,
@@ -241,7 +247,10 @@ export function prepareRefreshHubProposal(options: PrepareRefreshHubOptions): Pr
     selectedSchemas: selected,
     treeDigest: diff.proposedTreeDigest,
     diffDigest,
-  });
+  };
+  const proposal = "hub" in options
+    ? createHubProposal({ ...common, hub: options.hub })
+    : createHubProposal({ ...common, localHubId: options.localHubId });
   writeHubProposalState(options.proposalRoot, proposal);
   return { proposal, inspection, bundleRoot };
 }

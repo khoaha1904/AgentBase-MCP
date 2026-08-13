@@ -1,13 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import type { HubProposal } from "../../core/hub/index.ts";
+import type { AnyHubProposal } from "../../core/hub/index.ts";
 
 export type HubMutationLock = Readonly<{ root: string; ownerId: string }>;
 
 const statePath = (proposalRoot: string) => path.join(proposalRoot, "hub-proposal.json");
 
-export function writeHubProposalState(proposalRoot: string, proposal: HubProposal): void {
+export function writeHubProposalState(proposalRoot: string, proposal: AnyHubProposal): void {
   fs.mkdirSync(proposalRoot, { recursive: true, mode: 0o700 });
   const target = statePath(proposalRoot);
   const temporary = `${target}.tmp`;
@@ -15,12 +15,14 @@ export function writeHubProposalState(proposalRoot: string, proposal: HubProposa
   fs.renameSync(temporary, target);
 }
 
-export function readHubProposalState(proposalRoot: string): HubProposal {
-  const value = JSON.parse(fs.readFileSync(statePath(proposalRoot), "utf8")) as HubProposal;
+export function readHubProposalState(proposalRoot: string): AnyHubProposal {
+  const value = JSON.parse(fs.readFileSync(statePath(proposalRoot), "utf8")) as AnyHubProposal;
   if (!value.id || !value.branch || !["prepared", "committed", "pushed", "pr-opened"].includes(value.phase)) {
     throw new Error("Hub proposal state is invalid");
   }
-  if (!/^[a-f0-9]{24}$/.test(value.id) || value.branch !== `agentbase/okf-${value.id}` || value.branch === value.hub.targetBranch) {
+  if (!/^[a-f0-9]{24}$/.test(value.id) || value.branch !== `agentbase/okf-${value.id}`
+    || ("hub" in value && value.hub && value.branch === value.hub.targetBranch)
+    || (!("hub" in value) && !/^[a-f0-9]{24}$/.test(value.localHubId))) {
     throw new Error("Hub proposal branch identity is invalid");
   }
   return value;

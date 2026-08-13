@@ -173,6 +173,29 @@ export async function listFirstParentCommits(root: string, baseExclusive: string
   return result.stdout.trim().split("\n").filter(Boolean).map((commit) => { assertObjectId(commit, "pending commit"); return commit; });
 }
 
+export async function listRemoteRefs(
+  repositoryUrl: string,
+  cwd: string,
+  token: string,
+  runner: (request: GitRequest) => Promise<GitOutput> = runGit,
+): Promise<readonly Readonly<{ ref: string; commit: string }>[]> {
+  if (!/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\.git$/.test(repositoryUrl)) {
+    throw new Error("remote ref discovery requires a canonical GitHub HTTPS URL");
+  }
+  const result = await runner({
+    args: ["ls-remote", "--refs", repositoryUrl], cwd,
+    operation: "inspect remote Hub refs", token, maximumOutputBytes: 1024 * 1024,
+  });
+  if (!result.stdout.trim()) return [];
+  return result.stdout.trim().split("\n").map((line) => {
+    const [commit, ref, extra] = line.split(/\s+/);
+    if (extra || !commit || !/^[a-f0-9]{40}$/.test(commit) || !ref || !/^refs\/(?:heads|tags)\/[A-Za-z0-9._/-]+$/.test(ref)) {
+      throw new Error("remote Hub ref inventory is invalid");
+    }
+    return { ref, commit };
+  });
+}
+
 export async function readCommitMessage(root: string, commit: string): Promise<string> {
   assertOwnedRepositoryRoot(root);
   assertObjectId(commit, "commit");

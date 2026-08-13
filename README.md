@@ -4,15 +4,14 @@ AgentBase-MCP is the local application coding agents use for two complementary
 knowledge surfaces:
 
 1. a repository-local Code Graph for source structure, symbols and call paths;
-2. a local AgentBase-Hub clone for reviewed Google OKF business, system and
+2. an optional local AgentBase-Hub working tree for reviewed Google OKF business, system and
    cross-repository knowledge.
 
 AgentBase-MCP owns graph access, evidence investigation, concrete OKF authoring
 schemas, local Hub lifecycle, query, publication and synchronization.
-AgentBase-Hub stores only OKF Markdown and ordinary Git history. The current
-checkout is the rebuild source until the separately qualified additive move to
-the canonical `AgentBase-MCP` directory; its directory name is not a product or
-generated OKF subject.
+AgentBase-Hub stores only OKF Markdown and ordinary Git history. This canonical
+`AgentBase-MCP` checkout is the application source; its directory name never
+becomes a generated OKF subject.
 
 ## Start a session
 
@@ -45,7 +44,7 @@ reported as **deferred** in this slice: the installer does not edit either
 client's configuration yet.
 
 Optional Hub-token input shows one `*` per accepted character so pasted input
-is visible without printing the token. Empty Enter keeps local-only operation.
+is visible without printing the token. Empty Enter keeps tokenless local operation.
 When supplied, the token is stored outside Git at
 `$XDG_CONFIG_HOME/agentbase-mcp/env`, falling back to
 `~/.config/agentbase-mcp/env`, with private permissions. A prior credential is
@@ -163,35 +162,44 @@ results remain private working context and are not OKF.
 ## AgentBase-Hub actions
 
 Creating or refreshing OKF is a user-triggered action. The corrected lifecycle
-is `prepare` -> author/review -> `accept` into local Hub `main` -> query locally.
-Accepted proposal commits may accumulate across repositories. A later explicit
-submit selects a safe pending prefix, creates one remote branch and opens one
-PR. After merge, explicit synchronization fetches remote `main` and safely
-rebases any remaining pending proposals.
+is `configure when first needed` -> `prepare` -> author/review -> `accept` into
+local Hub `main` -> query locally. Installation does not choose, clone or create
+a Hub, and Code Graph remains fully usable while Hub status is `unconfigured`.
 
-The operator-owned runtime must provide:
+On the first Hub-dependent OKF action, explicitly attach an existing GitHub Hub
+or create a new local-only Hub. The latter creates only a private local Git base
+with explanatory `README.md` and root `index.md`; it has no remote. Accepted
+proposal commits may accumulate and remain queryable across repositories.
 
-- `AGENTBASE_HUB_REPOSITORY` as one exact GitHub `owner/name`;
-- `AGENTBASE_HUB_TARGET_BRANCH=main`;
-- `AGENTBASE_HUB_LOCAL_ROOT` as the absolute persistent clone; and
-- `AGENTBASE_HUB_GITHUB_TOKEN` through the MCP process environment when remote
-  publication or synchronization is needed.
+When publishing a new local Hub for the first time, create an empty GitHub
+repository yourself and supply its exact HTTPS URL. Preview and then choose:
+
+- `all-to-main`: put base and all current knowledge on initial remote `main`;
+- `base-to-main-knowledge-pr` (recommended): put only base on initial `main`
+  and all accumulated knowledge on one branch/PR.
+
+The choice is never automatic. AgentBase-MCP never creates the GitHub repository.
+After bootstrap, later submit/synchronization follows the normal PR lifecycle.
 
 Use a fine-grained token restricted to the exact Hub with Metadata read,
 Contents read/write and Pull requests read/write. Do not put the token in chat,
 CLI arguments, Git URLs or repository files. The Hub tools do not expose merge,
 force, target override, settings or branch deletion controls.
 
-The MCP uses a persistent operator-private AgentBase-Hub clone. Preparing and
-accepting local knowledge do not need a GitHub write. The token is used only by
-explicit remote publication and synchronization. With missing Hub
-configuration, Hub actions fail visibly while schema and Code Graph tools
-continue to work. AgentBase-MCP does not add a second model or copy raw graph
-records into OKF.
+The MCP uses one owner-private global configuration at
+`$XDG_CONFIG_HOME/agentbase-mcp/hub.json` (or `~/.config/...`) and the single
+global token installed separately. Preparing, accepting and querying local
+knowledge do not need GitHub access. Attach/bootstrap failures preserve local
+work and explain which token access must be updated. AgentBase-MCP does not add
+a second model or copy raw graph records into OKF.
 
 The equivalent explicit CLI family is:
 
 ```bash
+node src/cli.ts okf hub status
+node src/cli.ts okf hub configure --mode new
+node src/cli.ts okf hub configure --mode existing \
+  --url https://github.com/<owner>/<hub>
 node src/cli.ts okf hub prepare --mode new --repo /absolute/source \
   --subject repositories/<slug> --signals repository,service \
   --evidence sha256:<digest>
@@ -199,15 +207,21 @@ node src/cli.ts okf hub finalize --session <id>
 node src/cli.ts okf hub inspect --proposal <id>
 node src/cli.ts okf hub accept --proposal <id> --digest sha256:<reviewed-diff-digest>
 node src/cli.ts okf hub pending
+node src/cli.ts okf hub bootstrap-preview \
+  --url https://github.com/<owner>/<empty-hub> \
+  --mode base-to-main-knowledge-pr
+node src/cli.ts okf hub bootstrap \
+  --url https://github.com/<owner>/<empty-hub> \
+  --mode base-to-main-knowledge-pr
 node src/cli.ts okf hub submit --proposals <id-1>,<id-2>
 node src/cli.ts okf hub synchronize
 node src/cli.ts okf hub recover --transaction <id>
 ```
 
 These corrected actions are implemented and covered by offline real-Git/fake-
-GitHub journeys under Capability 008. The living contract under
+GitHub journeys under Capabilities 008 and 009. The living contract under
 `docs/specs/agentbase-hub.md` is authoritative. No command merges a PR or writes
-remote `main`. Real GitHub
+remote `main` except the explicit first bootstrap into an empty repository. Real GitHub
 qualification remains separately authorized; canonical verification uses fake
 HTTP and disposable local Git state.
 

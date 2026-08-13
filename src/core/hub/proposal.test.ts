@@ -33,3 +33,17 @@ test("[AB-LOCAL-HUB-003][AB-LOCAL-HUB-005][AB-LOCAL-HUB-006] local proposals hav
   assert.deepEqual(assertDependencySafePrefix([first, second], [first.id]), [first]);
   assert.throws(() => assertDependencySafePrefix([first, second], [second.id]), /contiguous/);
 });
+
+test("[AB-HUB-SETUP-007][AB-HUB-SETUP-008] prepared local-only proposal uses stable local authority", () => {
+  const input = {
+    mode: "new" as const, subject: "repositories/acme", localHubId: "1".repeat(24), baseCommit: "a".repeat(40),
+    sourceRepositoryId: "repository-acme-aaaaaaaaaaaa", evidenceDigest: `sha256:${"c".repeat(64)}`,
+    schemaVersion: "2.0.0", selectedSchemas: ["Repository"], treeDigest: `sha256:${"d".repeat(64)}`,
+    diffDigest: `sha256:${"e".repeat(64)}`,
+  };
+  const proposal = createHubProposal(input);
+  assert.equal(proposal.localHubId, input.localHubId);
+  assert.equal("hub" in proposal, false);
+  assert.equal(createHubProposal(input).id, proposal.id);
+  assert.throws(() => createHubProposal({ ...input, localHubId: "short" }), /localHubId/);
+});

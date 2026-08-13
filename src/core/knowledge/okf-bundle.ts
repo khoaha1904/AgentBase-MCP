@@ -123,6 +123,7 @@ export function loadOkfBundle(root: string, options: LoadOkfBundleOptions = {}):
   let okfVersion: string | undefined;
   for (const relative of files.filter((file) => file.endsWith(".md"))) {
     const source = utf8(fs.readFileSync(path.join(absoluteRoot, ...relative.split("/"))), relative);
+    if (relative === "README.md") continue;
     const basename = path.posix.basename(relative);
     if (basename === "index.md") {
       const version = validateIndex(relative, source);

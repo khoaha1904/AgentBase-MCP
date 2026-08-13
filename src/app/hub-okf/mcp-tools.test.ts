@@ -5,6 +5,10 @@ import { callHubOkfTool, HUB_OKF_TOOLS, type HubToolActions } from "./mcp-tools.
 
 function actions(events: string[]): HubToolActions {
   return {
+    async status() { events.push("status"); return { kind: "unconfigured" }; },
+    async configure(input) { events.push(`configure:${input.mode}`); return input; },
+    async previewBootstrap(url, mode) { events.push(`preview:${url}:${mode}`); return { mode }; },
+    async bootstrap(url, mode) { events.push(`bootstrap:${url}:${mode}`); return { mode }; },
     async prepare(input) { events.push(`prepare:${input.mode}:${input.sourceRepository}`); return { id: "p1" }; },
     async finalize(id) { events.push(`finalize:${id}`); return { id: "p1" }; },
     async inspect(id) { events.push(`inspect:${id}`); return { id }; },
@@ -22,6 +26,7 @@ test("[AB-HUB-001..003] Hub MCP schemas contain no authority or credential overr
   const schemas = JSON.stringify(HUB_OKF_TOOLS);
   for (const forbidden of ["token", "remote", "target", "force", "merge"]) assert.doesNotMatch(schemas, new RegExp(`\"${forbidden}\"`));
   assert.deepEqual(HUB_OKF_TOOLS.map((tool) => tool.name), [
+    "get_hub_status", "configure_hub", "preview_hub_bootstrap", "bootstrap_hub",
     "prepare_hub_okf", "finalize_hub_okf_proposal", "inspect_hub_okf_proposal",
     "accept_hub_okf_proposal", "search_hub_okf", "read_hub_okf_concept",
     "list_pending_hub_okf", "submit_hub_okf_proposals", "synchronize_hub_okf", "recover_hub_okf",
@@ -41,6 +46,18 @@ test("[AB-LOCAL-HUB-002][AB-LOCAL-HUB-006] MCP routes explicit prepare and batch
   assert.equal(prepared.isError, undefined);
   assert.equal(submitted.isError, undefined);
   assert.deepEqual(events, ["prepare:new:/source", "submit:p1,p2"]);
+});
+
+test("[AB-HUB-SETUP-002][AB-HUB-SETUP-003][AB-HUB-SETUP-010] MCP routes explicit setup and bootstrap choices", async () => {
+  const events: string[] = [], current = actions(events);
+  await callHubOkfTool("get_hub_status", {}, current);
+  await callHubOkfTool("configure_hub", { mode: "new" }, current);
+  await callHubOkfTool("preview_hub_bootstrap", {
+    repository_url: "https://github.com/acme/Hub", mode: "base-to-main-knowledge-pr",
+  }, current);
+  assert.deepEqual(events, ["status", "configure:new", "preview:https://github.com/acme/Hub:base-to-main-knowledge-pr"]);
+  const invalid = await callHubOkfTool("configure_hub", { mode: "existing" }, current);
+  assert.equal(invalid.isError, true);
 });
 
 test("[AB-LOCAL-HUB-002][AB-LOCAL-HUB-004] MCP routes local accept, search and read separately", async () => {

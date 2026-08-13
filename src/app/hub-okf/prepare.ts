@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-import { createHubProposal, type HubIdentity, type HubProposal } from "../../core/hub/index.ts";
+import { createHubProposal, type AnyHubProposal, type HubIdentity, type HubProposal, type LocalOnlyHubProposal } from "../../core/hub/index.ts";
 import {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
   diffBundleProposal,
@@ -27,7 +27,9 @@ export type PrepareNewHubOptions = Readonly<{
   signals: readonly string[];
   createdAt: string;
 }>;
+export type PrepareNewLocalHubOptions = Omit<PrepareNewHubOptions, "hub"> & Readonly<{ localHubId: string }>;
 export type PreparedHubProposal = Readonly<{ proposal: HubProposal; diff: ProposalDiff; bundleRoot: string }>;
+export type PreparedLocalHubProposal = Readonly<{ proposal: LocalOnlyHubProposal; diff: ProposalDiff; bundleRoot: string }>;
 
 function safeSubject(value: string): void {
   if (!/^repositories\/[a-z0-9][a-z0-9-]{0,99}$/.test(value)) throw new Error("new Hub subject must be a normalized repositories/<slug> directory");
@@ -38,7 +40,11 @@ function copyBundle(source: string, target: string): void {
   fs.cpSync(source, target, { recursive: true, errorOnExist: true, force: false });
 }
 
-export function prepareNewHubProposal(options: PrepareNewHubOptions): PreparedHubProposal {
+export function prepareNewHubProposal(options: PrepareNewHubOptions): PreparedHubProposal;
+export function prepareNewHubProposal(options: PrepareNewLocalHubOptions): PreparedLocalHubProposal;
+export function prepareNewHubProposal(
+  options: PrepareNewHubOptions | PrepareNewLocalHubOptions,
+): Readonly<{ proposal: AnyHubProposal; diff: ProposalDiff; bundleRoot: string }> {
   safeSubject(options.subjectDirectory);
   if (fs.existsSync(path.join(options.hubBundleRoot, options.subjectDirectory))) throw new Error("new Hub subject already exists; use refresh");
   const selected = selectOkfConceptSchemas(options.signals).map((item) => item.type);
@@ -78,10 +84,9 @@ export function prepareNewHubProposal(options: PrepareNewHubOptions): PreparedHu
   });
   if (!diff.applicable || invalid) throw new Error(`new Hub proposal contains an out-of-scope change${invalid ? `: ${invalid.path}` : ""}`);
   const diffDigest = `sha256:${createHash("sha256").update(JSON.stringify(diff.entries)).digest("hex")}`;
-  const proposal = createHubProposal({
-    mode: "new",
+  const common = {
+    mode: "new" as const,
     subject: options.subjectDirectory,
-    hub: options.hub,
     baseCommit: options.baseCommit,
     sourceRepositoryId: options.sourceRepositoryId,
     evidenceDigest: options.evidenceDigest,
@@ -89,7 +94,10 @@ export function prepareNewHubProposal(options: PrepareNewHubOptions): PreparedHu
     selectedSchemas: selected,
     treeDigest: diff.proposedTreeDigest,
     diffDigest,
-  });
+  };
+  const proposal = "hub" in options
+    ? createHubProposal({ ...common, hub: options.hub })
+    : createHubProposal({ ...common, localHubId: options.localHubId });
   writeHubProposalState(options.proposalRoot, proposal);
   return { proposal, diff, bundleRoot };
 }

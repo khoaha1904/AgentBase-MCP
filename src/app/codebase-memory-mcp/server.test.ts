@@ -7,7 +7,7 @@ import test from "node:test";
 import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 
 import type { ScopedSession } from "../../providers/codebase-memory/index.ts";
-import { HUB_OKF_TOOLS } from "../hub-okf/index.ts";
+import { createHubRuntimeActions, HUB_OKF_TOOLS } from "../hub-okf/index.ts";
 import { createAgentBaseMcpServer } from "./server.ts";
 import { SAFE_TOOLS } from "./tool-manifest.ts";
 import { OKF_SCHEMA_TOOLS } from "./okf-schema-tools.ts";
@@ -20,6 +20,7 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010] official client lists and
   const current = createAgentBaseMcpServer({
     projectRoot: "/agentbase",
     stateRoot: state,
+    hubActions: createHubRuntimeActions({ HOME: state, XDG_CONFIG_HOME: path.join(state, "config") }, path.join(state, "hub-runtime")),
     providerFactory: async () => ({
       pid: 991,
       tools: SAFE_TOOLS,
@@ -39,7 +40,13 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010] official client lists and
       tools.tools.map((tool) => tool.name),
       [...HUB_OKF_TOOLS, ...OKF_SCHEMA_TOOLS, ...SAFE_TOOLS].map((tool) => tool.name),
     );
-    const unconfiguredHub = await client.callTool({ name: "inspect_hub_okf_proposal", arguments: { proposal_id: "p1" } });
+    const hubStatus = await client.callTool({ name: "get_hub_status", arguments: {} });
+    assert.equal(hubStatus.isError, undefined);
+    assert.match(hubStatus.content[0]?.type === "text" ? hubStatus.content[0].text : "", /unconfigured/);
+    const unconfiguredHub = await client.callTool({ name: "prepare_hub_okf", arguments: {
+      mode: "new", source_repository: repo, evidence_digest: `sha256:${"a".repeat(64)}`,
+      subject_directory: "repositories/acme", signals: ["repository"],
+    } });
     assert.equal(unconfiguredHub.isError, true);
     const schemas = await client.callTool({ name: "list_okf_schemas", arguments: {} });
     assert.equal(schemas.isError, undefined);

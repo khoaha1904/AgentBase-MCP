@@ -4,7 +4,7 @@ import path from "node:path";
 import {
   createLocalProposal,
   HUB_PROPOSAL_TRAILERS,
-  type LocalHubState,
+  type AdmittedLocalHubState,
   type LocalProposal,
 } from "../../core/hub/index.ts";
 import { computeOkfTreeDigest, loadOkfBundle, readProposalMetadata } from "../../core/knowledge/index.ts";
@@ -18,7 +18,7 @@ import {
 
 export type AcceptHubOptions = Readonly<{
   stateRoot: string;
-  localHub: LocalHubState;
+  localHub: AdmittedLocalHubState;
   proposalRoot: string;
   expectedDiffDigest: string;
   git?: (request: GitRequest) => Promise<GitOutput>;
@@ -66,6 +66,14 @@ async function exactCommit(git: (request: GitRequest) => Promise<GitOutput>, roo
 export async function acceptHubProposal(options: AcceptHubOptions): Promise<LocalProposal> {
   const git = options.git ?? runGit;
   const proposal = readHubProposalState(options.proposalRoot);
+  if (options.localHub.kind === "local-only") {
+    if (!("localHubId" in proposal) || proposal.localHubId !== options.localHub.localHubId || "hub" in proposal) {
+      throw new Error("reviewed proposal does not belong to the active local-only Hub");
+    }
+  } else if (!("hub" in proposal) || !proposal.hub || proposal.hub.repository !== options.localHub.hub.repository
+    || proposal.hub.targetBranch !== options.localHub.hub.targetBranch) {
+    throw new Error("reviewed proposal does not belong to the active remote Hub");
+  }
   if (proposal.phase !== "prepared") throw new Error("only a prepared reviewed proposal can be accepted locally");
   if (proposal.diffDigest !== options.expectedDiffDigest) throw new Error("review confirmation does not match proposal diff");
   if (proposal.baseCommit !== options.localHub.activeHead) throw new Error("local Hub advanced after proposal review");

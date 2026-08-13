@@ -14,6 +14,7 @@ const REQUIRED_LOCAL_HUB_IDS = Array.from({ length: 11 }, (_, index) => `AB-LOCA
 const REQUIRED_SCHEMA_IDS = Array.from({ length: 9 }, (_, index) => `AB-SCHEMA-${String(index + 1).padStart(3, "0")}`);
 const REQUIRED_QUERY_IDS = ["AB-QUERY-001"];
 const REQUIRED_INSTALL_IDS = Array.from({ length: 6 }, (_, index) => `AB-INSTALL-${String(index + 1).padStart(3, "0")}`);
+const REQUIRED_HUB_SETUP_IDS = Array.from({ length: 17 }, (_, index) => `AB-HUB-SETUP-${String(index + 1).padStart(3, "0")}`);
 const UNRESOLVED = /\b(?:NEEDS CLARIFICATION|TODO|TKTK)\b|\?\?\?|<placeholder>/i;
 const ACTIVE_NAMING_RULES = [
   { code: "SPEC-TEMP-PRODUCT-NAME", pattern: /^#\s+AgentBase Next\b/im, message: "README must use the official AgentBase-MCP product name" },
@@ -56,7 +57,7 @@ export function checkSpecifications(root) {
 
   for (const [label, source, requirements] of [
     ["product identity", productLiving, [...REQUIRED_PRODUCT_IDS, ...REQUIRED_MIGRATION_IDS]],
-    ["local Hub", hubLiving, [...REQUIRED_LOCAL_HUB_IDS, ...REQUIRED_QUERY_IDS]],
+    ["local Hub", hubLiving, [...REQUIRED_LOCAL_HUB_IDS, ...REQUIRED_QUERY_IDS, ...REQUIRED_HUB_SETUP_IDS]],
     ["OKF schema catalog", schemaLiving, REQUIRED_SCHEMA_IDS],
     ["installation", installationLiving, REQUIRED_INSTALL_IDS],
   ]) {

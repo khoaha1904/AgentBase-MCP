@@ -1,6 +1,48 @@
 import type { CallToolResult } from "@modelcontextprotocol/server";
+import type { BootstrapMode } from "./bootstrap.ts";
 
 export const HUB_OKF_TOOLS = [
+  {
+    name: "get_hub_status",
+    description: "Report whether AgentBase-MCP has no Hub, a local-only Hub, or an attached remote Hub.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+  },
+  {
+    name: "configure_hub",
+    description: "Attach an existing AgentBase-Hub or create a new local-only Hub when OKF is first requested.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        mode: { type: "string", enum: ["existing", "new"] },
+        repository_url: { type: "string", minLength: 1 },
+      },
+      required: ["mode"], additionalProperties: false,
+    },
+  },
+  {
+    name: "preview_hub_bootstrap",
+    description: "Preview the exact base and knowledge commits for first publication to an empty GitHub repository.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        repository_url: { type: "string", minLength: 1 },
+        mode: { type: "string", enum: ["all-to-main", "base-to-main-knowledge-pr"] },
+      },
+      required: ["repository_url", "mode"], additionalProperties: false,
+    },
+  },
+  {
+    name: "bootstrap_hub",
+    description: "Publish a local-only Hub to an explicitly supplied empty GitHub repository using the reviewed mode.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        repository_url: { type: "string", minLength: 1 },
+        mode: { type: "string", enum: ["all-to-main", "base-to-main-knowledge-pr"] },
+      },
+      required: ["repository_url", "mode"], additionalProperties: false,
+    },
+  },
   {
     name: "prepare_hub_okf",
     description: "Prepare a local new or refresh AgentBase Hub OKF proposal without publishing.",
@@ -104,6 +146,10 @@ export const HUB_OKF_TOOLS = [
 
 export type HubOkfToolName = typeof HUB_OKF_TOOLS[number]["name"];
 export type HubToolActions = Readonly<{
+  status(): Promise<unknown>;
+  configure(input: Readonly<{ mode: "existing" | "new"; repositoryUrl?: string }>): Promise<unknown>;
+  previewBootstrap(repositoryUrl: string, mode: BootstrapMode): Promise<unknown>;
+  bootstrap(repositoryUrl: string, mode: BootstrapMode): Promise<unknown>;
   prepare(input: Readonly<{
     mode: "new" | "refresh";
     sourceRepository: string;
@@ -139,6 +185,25 @@ export async function callHubOkfTool(
 ): Promise<CallToolResult> {
   try {
     if (!actions) throw new Error("AgentBase Hub runtime is not configured");
+    if (name === "get_hub_status") return result(await actions.status());
+    if (name === "configure_hub") {
+      const mode = required(args, "mode");
+      if (mode !== "existing" && mode !== "new") throw new Error("mode must be existing or new");
+      const repositoryUrl = args.repository_url;
+      if (mode === "existing" && (typeof repositoryUrl !== "string" || !repositoryUrl)) {
+        throw new Error("repository_url is required when attaching an existing Hub");
+      }
+      if (mode === "new" && repositoryUrl !== undefined) throw new Error("repository_url is not accepted for a new local-only Hub");
+      return result(await actions.configure({ mode, ...(typeof repositoryUrl === "string" ? { repositoryUrl } : {}) }));
+    }
+    if (name === "preview_hub_bootstrap" || name === "bootstrap_hub") {
+      const mode = required(args, "mode");
+      if (mode !== "all-to-main" && mode !== "base-to-main-knowledge-pr") throw new Error("bootstrap mode is invalid");
+      const repositoryUrl = required(args, "repository_url");
+      return result(name === "preview_hub_bootstrap"
+        ? await actions.previewBootstrap(repositoryUrl, mode)
+        : await actions.bootstrap(repositoryUrl, mode));
+    }
     if (name === "prepare_hub_okf") {
       const mode = required(args, "mode");
       if (mode !== "new" && mode !== "refresh") throw new Error("mode must be new or refresh");
@@ -171,7 +236,7 @@ export async function callHubOkfTool(
       return result(await actions.submitMany(args.proposal_ids as string[]));
     }
     if (name === "synchronize_hub_okf") return result(await actions.synchronize());
-    if (name === "recover_hub_okf") return result(await actions.recover(required(args, "transaction_id")));
+    if (name === "recover_hub_okf") return result(await actions.recover(required(args, "proposal_id")));
     const proposalId = required(args, "proposal_id");
     if (name === "inspect_hub_okf_proposal") return result(await actions.inspect(proposalId));
     if (name === "accept_hub_okf_proposal") {

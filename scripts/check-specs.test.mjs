@@ -20,7 +20,10 @@ function fixture() {
   const refreshIds = Array.from({ length: 12 }, (_, index) => `- **AB-REFRESH-${String(index + 1).padStart(3, "0")}**: fixture`).join("\n");
   const mcpIds = Array.from({ length: 14 }, (_, index) => `- **AB-MCP-${String(index + 1).padStart(3, "0")}**: fixture`).join("\n");
   const productIds = Array.from({ length: 5 }, (_, index) => `- **AB-PRODUCT-${String(index + 1).padStart(3, "0")}**: fixture`).join("\n");
-  const hubIds = Array.from({ length: 11 }, (_, index) => `- **AB-LOCAL-HUB-${String(index + 1).padStart(3, "0")}**: fixture`).join("\n");
+  const hubIds = [
+    ...Array.from({ length: 11 }, (_, index) => `- **AB-LOCAL-HUB-${String(index + 1).padStart(3, "0")}**: fixture`),
+    ...Array.from({ length: 17 }, (_, index) => `- **AB-HUB-SETUP-${String(index + 1).padStart(3, "0")}**: fixture`),
+  ].join("\n");
   const installIds = Array.from({ length: 6 }, (_, index) => `- **AB-INSTALL-${String(index + 1).padStart(3, "0")}**: fixture`).join("\n");
   const schemaIds = Array.from({ length: 9 }, (_, index) => `- **AB-SCHEMA-${String(index + 1).padStart(3, "0")}**: fixture`).join("\n");
   write(root, "AGENTS.md", ["docs/handoff.md", "docs/product/vision.md", "docs/ARCHITECTURE.md", "docs/specs/project-foundation.md", "docs/specs/local-code-intelligence.md", "docs/specs/single-repository-okf.md", "docs/specs/product-identity.md", "docs/specs/agentbase-hub.md", "docs/specs/okf-schema-catalog.md", "docs/specs/installation.md", "specs/CURRENT.md"].join("\n"));

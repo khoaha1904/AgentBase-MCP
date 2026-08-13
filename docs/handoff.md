@@ -5,10 +5,10 @@
 - **OKF repository:** `AgentBase-Hub`
 - **Current checkout:** canonical `AgentBase-MCP`
 - **Active capability:** None
-- **Most recent completed:** `008-local-hub-product-correction`
-- **Current state:** corrected local Hub, schema, installer, repository migration
-  and real publication/synchronization lifecycle are complete
-- **Next checkpoint:** owner selects the next product slice
+- **Most recent completed:** `009-lazy-hub-bootstrap`
+- **Current state:** lazy optional Hub setup, local-only knowledge and first
+  remote bootstrap are implemented and canonically verified
+- **Next checkpoint:** owner reviews the completed capability and selects the next slice
 
 ## Session checkpoint
 
@@ -269,8 +269,11 @@ candidate patterns, not automatic mandates for future repositories.
 
 ## Next action
 
-Capability 008 is complete and `specs/CURRENT.md` is closed. The canonical gate
-passes 232 tests with 0 architecture errors and five reviewed warnings. Do not
+Capability 009 is complete. Its product direction is: install only the one global
+token; keep Code Graph independent; ask for existing-vs-new Hub only when OKF
+first needs one; allow a local-only base plus knowledge history; and bootstrap
+a user-created empty GitHub repository under one explicit mode. AgentBase-MCP
+does not create GitHub repositories. Do not
 fragment cohesive files merely to satisfy architecture metrics: split only
 across distinct responsibilities, otherwise retain one exact owner-reviewed
 non-growing mark.
@@ -296,6 +299,6 @@ advanced local Hub `main` to remote merge head
 Local search no longer returns the qualification-only `agentbase-next` subject.
 No token value or legacy `.env` was read.
 
-No implementation task remains. Start the next owner-selected behavior as a new
-numbered capability; the current living contracts under `docs/specs/` remain
-authoritative.
+Capability 009 implementation artifacts live under
+`specs/009-lazy-hub-bootstrap/`; its living requirements are
+`AB-HUB-SETUP-001..017` in `docs/specs/agentbase-hub.md`.

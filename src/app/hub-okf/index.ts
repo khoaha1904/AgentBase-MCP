@@ -1,5 +1,22 @@
 export const HUB_OKF_CAPABILITY = "agentbase-hub-okf" as const;
-export { loadHubConfiguration, type HubConfiguration } from "./configuration.ts";
+export { loadHubConfiguration, resolveHubConfiguration, type HubConfiguration, type OptionalHubConfiguration } from "./configuration.ts";
+export {
+  globalHubConfigurationPath,
+  readPersistedHubConfiguration,
+  replacePersistedHubConfiguration,
+  writePersistedHubConfiguration,
+  type PersistedHubConfiguration,
+  type PersistedLocalHubConfiguration,
+  type PersistedRemoteHubConfiguration,
+} from "./configuration-file.ts";
+export { attachExistingHub, createLocalHub, normalizeGitHubHubUrl, type HubSetupResult } from "./setup.ts";
+export {
+  executeHubBootstrap,
+  previewHubBootstrap,
+  type BootstrapMode,
+  type HubBootstrapIntent,
+  type HubBootstrapReceipt,
+} from "./bootstrap.ts";
 export { checkoutHub, type GitRunner, type HubCheckout } from "./checkout.ts";
 export { prepareNewHubProposal, type PreparedHubProposal, type PrepareNewHubOptions } from "./prepare.ts";
 export {

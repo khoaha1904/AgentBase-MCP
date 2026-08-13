@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 
-import { loadHubConfiguration } from "./configuration.ts";
+import { loadHubConfiguration, resolveHubConfiguration } from "./configuration.ts";
 
 test("[AB-LOCAL-HUB-001] Hub configuration derives its only admitted remote and local clone", () => {
   const configuration = loadHubConfiguration({
@@ -40,5 +40,12 @@ test("[AB-INSTALL-006] Hub configuration admits the global credential fallback",
       AGENTBASE_HUB_LOCAL_ROOT: "/private/AgentBase-Hub",
     });
     assert.equal(configuration.token, "global-secret");
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test("[AB-HUB-SETUP-001][AB-HUB-SETUP-002] missing Hub configuration is an admitted state", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "hub-configuration-absent-"));
+  try {
+    assert.deepEqual(resolveHubConfiguration({ HOME: root, XDG_CONFIG_HOME: path.join(root, "config") }), { kind: "unconfigured" });
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });

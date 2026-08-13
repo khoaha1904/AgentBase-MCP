@@ -27,7 +27,7 @@
     },
     {
       "root": "src/core/hub",
-      "responsibility": "provider-neutral AgentBase-Hub identity, local proposal ancestry, publication and synchronization transitions",
+      "responsibility": "provider-neutral optional AgentBase-Hub identity, base and knowledge ancestry, publication and synchronization transitions",
       "public": ["src/core/hub/index.ts"]
     },
     {
@@ -46,7 +46,7 @@
     },
     {
       "root": "src/providers/github-hub",
-      "responsibility": "bounded Git, worktree and GitHub transport for one admitted AgentBase-Hub",
+      "responsibility": "bounded Git, worktree, empty-ref discovery and GitHub transport for one optional admitted AgentBase-Hub",
       "public": ["src/providers/github-hub/index.ts"]
     },
     {
@@ -72,7 +72,7 @@
     },
     {
       "root": "src/app/hub-okf",
-      "responsibility": "explicit AgentBase-Hub prepare, accept, local query, pending publication, synchronization and recovery workflows",
+      "responsibility": "lazy AgentBase-Hub setup, local OKF lifecycle, first bootstrap, publication, query, synchronization and recovery workflows",
       "public": ["src/app/hub-okf/index.ts"]
     }
   ]

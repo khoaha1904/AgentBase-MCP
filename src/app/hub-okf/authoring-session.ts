@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-import type { HubIdentity, HubProposal } from "../../core/hub/index.ts";
-import { inspectHubProposal, type HubProposalInspection } from "./inspect.ts";
+import type { AnyHubProposal, HubIdentity } from "../../core/hub/index.ts";
+import { inspectHubProposal, type HubLifecycleEntry, type HubProposalInspection } from "./inspect.ts";
 import { prepareNewHubProposal } from "./prepare.ts";
 import { prepareRefreshHubProposal, type HubSupersession } from "./refresh.ts";
 
@@ -11,7 +11,8 @@ export type HubAuthoringSession = Readonly<{
   formatVersion: 1;
   id: string;
   mode: "new" | "refresh";
-  hub: HubIdentity;
+  hub?: HubIdentity;
+  localHubId?: string;
   baseCommit: string;
   sourceRepositoryId: string;
   evidenceDigest: string;
@@ -29,7 +30,8 @@ export type HubAuthoringSession = Readonly<{
 export type BeginHubAuthoringOptions = Readonly<{
   stateRoot: string;
   mode: "new" | "refresh";
-  hub: HubIdentity;
+  hub?: HubIdentity;
+  localHubId?: string;
   baseCommit: string;
   checkoutRoot: string;
   sourceRepositoryId: string;
@@ -61,7 +63,9 @@ function copyCheckout(source: string, target: string): void {
 }
 
 export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): HubAuthoringSession {
-  const seed = [options.mode, options.hub.repository, options.baseCommit, options.sourceRepositoryId,
+  const authority = options.hub?.repository ?? options.localHubId;
+  if (!authority || (!options.hub && !/^[a-f0-9]{24}$/.test(options.localHubId ?? ""))) throw new Error("Hub authoring authority is invalid");
+  const seed = [options.mode, authority, options.baseCommit, options.sourceRepositoryId,
     options.evidenceDigest, options.subjectDirectory].join("\0");
   const id = `hub-session-${createHash("sha256").update(seed).digest("hex").slice(0, 24)}`;
   const root = path.join(path.resolve(options.stateRoot), "sessions", id);
@@ -74,7 +78,7 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
     formatVersion: 1,
     id,
     mode: options.mode,
-    hub: options.hub,
+    ...(options.hub ? { hub: options.hub } : { localHubId: options.localHubId! }),
     baseCommit: options.baseCommit,
     sourceRepositoryId: options.sourceRepositoryId,
     evidenceDigest: options.evidenceDigest,
@@ -107,7 +111,8 @@ export function readHubAuthoringSession(
     || path.resolve(value.bundleRoot) !== path.join(root, "bundle")
     || !path.isAbsolute(value.checkoutRoot) || checkoutRoot !== expected
     || !fs.existsSync(checkoutRoot) || fs.lstatSync(checkoutRoot).isSymbolicLink()
-    || !fs.statSync(checkoutRoot).isDirectory()) {
+    || !fs.statSync(checkoutRoot).isDirectory()
+    || (!value.hub && !/^[a-f0-9]{24}$/.test(value.localHubId ?? ""))) {
     throw new Error("Hub authoring session state is invalid");
   }
   return value;
@@ -117,13 +122,12 @@ export function finalizeHubAuthoringSession(
   stateRoot: string,
   sessionId: string,
   expectedCheckoutRoot: string,
-): Readonly<{ proposal: HubProposal; inspection: HubProposalInspection }> {
+): Readonly<{ proposal: AnyHubProposal; inspection: HubProposalInspection }> {
   const session = readHubAuthoringSession(stateRoot, sessionId, expectedCheckoutRoot);
   const staging = path.join(path.resolve(stateRoot), "proposals", `.staging-${session.id}`);
   privateDirectory(path.dirname(staging));
   if (fs.existsSync(staging)) fs.rmSync(staging, { recursive: true, force: true });
   const common = {
-    hub: session.hub,
     baseCommit: session.baseCommit,
     sourceRepositoryId: session.sourceRepositoryId,
     hubBundleRoot: session.baseRoot,
@@ -134,18 +138,29 @@ export function finalizeHubAuthoringSession(
     signals: session.signals,
     createdAt: session.createdAt,
   };
-  let finalized: ReturnType<typeof prepareNewHubProposal> | ReturnType<typeof prepareRefreshHubProposal>;
+  let finalized: Readonly<{
+    proposal: AnyHubProposal;
+    bundleRoot: string;
+    inspection?: HubProposalInspection;
+    diff?: Readonly<{ entries: readonly HubLifecycleEntry[] }>;
+  }>;
   try {
-    finalized = session.mode === "new"
-      ? prepareNewHubProposal(common)
-      : prepareRefreshHubProposal({ ...common, supersessions: session.supersessions });
+    if (session.hub) {
+      finalized = session.mode === "new"
+        ? prepareNewHubProposal({ ...common, hub: session.hub })
+        : prepareRefreshHubProposal({ ...common, hub: session.hub, supersessions: session.supersessions });
+    } else {
+      const localHubId = session.localHubId!;
+      finalized = session.mode === "new"
+        ? prepareNewHubProposal({ ...common, localHubId })
+        : prepareRefreshHubProposal({ ...common, localHubId, supersessions: session.supersessions });
+    }
   } catch (error) {
     fs.rmSync(staging, { recursive: true, force: true });
     throw error;
   }
-  const inspection = "inspection" in finalized
-    ? finalized.inspection
-    : inspectHubProposal(finalized.diff.entries, { baseRoot: session.baseRoot, proposedRoot: finalized.bundleRoot });
+  const inspection = finalized.inspection
+    ?? inspectHubProposal(finalized.diff!.entries, { baseRoot: session.baseRoot, proposedRoot: finalized.bundleRoot });
   fs.cpSync(session.baseRoot, path.join(staging, "base"), { recursive: true, errorOnExist: true, force: false });
   fs.writeFileSync(path.join(staging, "inspection.json"), `${JSON.stringify(inspection, null, 2)}\n`, { mode: 0o600 });
   fs.writeFileSync(path.join(staging, "runtime.json"), `${JSON.stringify({ checkoutRoot: session.checkoutRoot })}\n`, { mode: 0o600 });

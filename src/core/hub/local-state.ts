@@ -4,12 +4,27 @@ import type { HubIdentity } from "./identity.ts";
 import { HubValidationError } from "./identity.ts";
 
 export type LocalHubState = Readonly<{
+  kind?: "remote";
   root: string;
   hub: HubIdentity;
+  localHubId?: string;
+  baseCommit?: string;
   remoteBase: string;
   activeHead: string;
   catalogVersion: string;
 }>;
+
+export type LocalOnlyHubState = Readonly<{
+  kind: "local-only";
+  root: string;
+  localHubId: string;
+  baseCommit: string;
+  remoteBase: string;
+  activeHead: string;
+  catalogVersion: string;
+}>;
+
+export type AdmittedLocalHubState = LocalHubState | LocalOnlyHubState;
 
 export type LocalHubOwnerLock = Readonly<{
   ownerId: string;
@@ -39,6 +54,17 @@ export function createLocalHubState(input: LocalHubState): LocalHubState {
   if (input.hub.targetBranch !== "main") throw new HubValidationError("HUB_TARGET_INVALID", "AgentBase-Hub target branch must be main");
   assertCommit(input.remoteBase, "remoteBase");
   assertCommit(input.activeHead, "activeHead");
+  if (!/^\d+\.\d+\.\d+$/.test(input.catalogVersion)) throw new HubValidationError("HUB_CATALOG_INVALID", "catalogVersion must be semantic version");
+  return { ...input, root: path.resolve(input.root) };
+}
+
+export function createLocalOnlyHubState(input: LocalOnlyHubState): LocalOnlyHubState {
+  if (!path.isAbsolute(input.root)) throw new HubValidationError("HUB_ROOT_INVALID", "local Hub root must be absolute");
+  if (!/^[a-f0-9]{24}$/.test(input.localHubId)) throw new HubValidationError("HUB_LOCAL_ID_INVALID", "local Hub ID must be 24 lowercase hex");
+  assertCommit(input.baseCommit, "baseCommit");
+  assertCommit(input.remoteBase, "remoteBase");
+  assertCommit(input.activeHead, "activeHead");
+  if (input.remoteBase !== input.baseCommit) throw new HubValidationError("HUB_BASE_INVALID", "local-only pending baseline must equal the Hub base");
   if (!/^\d+\.\d+\.\d+$/.test(input.catalogVersion)) throw new HubValidationError("HUB_CATALOG_INVALID", "catalogVersion must be semantic version");
   return { ...input, root: path.resolve(input.root) };
 }

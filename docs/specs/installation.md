@@ -22,6 +22,10 @@ Empty Enter completes interactive preparation without an empty credential.
 Non-interactive installation prepares code without client selection, waiting
 for input or persisting an ambient token.
 
+Installation never asks for, derives or creates an AgentBase-Hub. Hub selection
+is deferred until the first Hub-dependent OKF action; Code Graph remains usable
+with no Hub configuration.
+
 ### AB-INSTALL-004 — One global private credential
 
 An explicitly entered token is atomically stored at

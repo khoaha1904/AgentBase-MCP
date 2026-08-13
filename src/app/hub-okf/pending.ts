@@ -1,4 +1,4 @@
-import type { LocalHubState } from "../../core/hub/index.ts";
+import type { AdmittedLocalHubState } from "../../core/hub/index.ts";
 import { HUB_PROPOSAL_TRAILERS } from "../../core/hub/index.ts";
 import { runGit, type GitOutput, type GitRequest } from "../../providers/github-hub/index.ts";
 
@@ -33,7 +33,7 @@ function required(values: ReadonlyMap<string, string>, key: string, commit: stri
 }
 
 export async function listPendingHubProposals(
-  localHub: LocalHubState,
+  localHub: AdmittedLocalHubState,
   git: PendingGit = runGit,
 ): Promise<readonly PendingHubProposal[]> {
   const ancestry = await git({

@@ -8,6 +8,7 @@ import {
   assertCleanGitTree,
   createCandidateWorktree,
   listFirstParentCommits,
+  listRemoteRefs,
   readCommitMessage,
   readExactRef,
   removeCandidateWorktree,
@@ -45,6 +46,25 @@ test("Git environment is allowlisted and disables ambient configuration", () => 
   assert.ok(SAFE_GIT_OPTIONS.includes("protocol.ext.allow=never"));
   assert.ok(SAFE_GIT_OPTIONS.includes("protocol.file.allow=never"));
   assert.ok(SAFE_GIT_OPTIONS.includes("submodule.recurse=false"));
+});
+
+test("[AB-HUB-SETUP-009][AB-HUB-SETUP-015] remote ref discovery is exact, bounded and credential-free", async () => {
+  const calls: unknown[] = [];
+  const refs = await listRemoteRefs("https://github.com/acme/Hub.git", process.cwd(), "token-canary", async (request) => {
+    calls.push(request);
+    return { stdout: `${"a".repeat(40)}\trefs/heads/main\n${"b".repeat(40)}\trefs/tags/v1\n`, stderr: "" };
+  });
+  assert.deepEqual(refs, [
+    { commit: "a".repeat(40), ref: "refs/heads/main" },
+    { commit: "b".repeat(40), ref: "refs/tags/v1" },
+  ]);
+  assert.equal(JSON.stringify(calls).includes("token-canary"), true);
+  assert.equal(String((calls[0] as { args: readonly string[] }).args.join(" ")).includes("token-canary"), false);
+  assert.deepEqual(await listRemoteRefs("https://github.com/acme/Hub.git", process.cwd(), "x", async () => ({ stdout: "", stderr: "" })), []);
+  await assert.rejects(listRemoteRefs("https://evil.example/acme/Hub.git", process.cwd(), "x"), /canonical/);
+  await assert.rejects(listRemoteRefs("https://github.com/acme/Hub.git", process.cwd(), "x", async () => ({
+    stdout: `${"a".repeat(40)}\trefs/pull/1/head\n`, stderr: "",
+  })), /inventory/);
 });
 
 test("bounded Git output and errors never echo a token canary", async () => {

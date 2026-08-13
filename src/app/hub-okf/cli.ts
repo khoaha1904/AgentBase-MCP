@@ -34,7 +34,22 @@ export async function executeHubCli(
     const [command, ...rest] = args;
     const values = flags(rest);
     let output: unknown;
-    if (command === "prepare") {
+    if (command === "status") output = await actions.status();
+    else if (command === "configure") {
+      const mode = required(values, "--mode");
+      if (mode !== "existing" && mode !== "new") throw new Error("--mode must be existing or new");
+      const repositoryUrl = values["--url"];
+      if (mode === "existing" && !repositoryUrl) throw new Error("--url is required for an existing Hub");
+      if (mode === "new" && repositoryUrl) throw new Error("--url is not accepted for a new local-only Hub");
+      output = await actions.configure({ mode, ...(repositoryUrl ? { repositoryUrl } : {}) });
+    } else if (command === "bootstrap-preview" || command === "bootstrap") {
+      const mode = required(values, "--mode");
+      if (mode !== "all-to-main" && mode !== "base-to-main-knowledge-pr") throw new Error("--mode is invalid");
+      const repositoryUrl = required(values, "--url");
+      output = command === "bootstrap-preview"
+        ? await actions.previewBootstrap(repositoryUrl, mode)
+        : await actions.bootstrap(repositoryUrl, mode);
+    } else if (command === "prepare") {
       const mode = required(values, "--mode");
       if (mode !== "new" && mode !== "refresh") throw new Error("--mode must be new or refresh");
       output = await actions.prepare({
@@ -57,7 +72,10 @@ export async function executeHubCli(
       output = await actions.submitMany(required(values, "--proposals").split(",").filter(Boolean));
     } else if (command === "synchronize") output = await actions.synchronize();
     else if (command === "recover") output = await actions.recover(required(values, "--transaction"));
-    else throw new Error("Hub command must be prepare, finalize, inspect, accept, search, read, pending, submit, synchronize or recover");
+    else throw new Error(
+      "Hub command must be status, configure, bootstrap-preview, bootstrap, prepare, finalize, inspect, "
+      + "accept, search, read, pending, submit, synchronize or recover",
+    );
     writeOutput(`${JSON.stringify(output, null, 2)}\n`);
     return 0;
   } catch (error) {

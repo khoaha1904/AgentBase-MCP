@@ -140,7 +140,9 @@ function admitPullRequest(proposal: HubProposal, pull: GitHubPullRequest, commit
 
 export async function submitHubProposal(options: SubmitHubOptions): Promise<HubPublicationReceipt> {
   checkpoint(options.signal);
-  let proposal = readHubProposalState(options.proposalRoot);
+  const stored = readHubProposalState(options.proposalRoot);
+  if (!("hub" in stored) || !stored.hub) throw new Error("local-only Hub proposal requires first bootstrap before submission");
+  let proposal: HubProposal = stored;
   if (proposal.diffDigest !== options.expectedDiffDigest) throw new Error("review confirmation does not match proposal diff");
   const bundleRoot = path.join(options.proposalRoot, "bundle");
   if (computeOkfTreeDigest(bundleRoot) !== proposal.treeDigest) throw new Error("reviewed proposal bytes changed after inspection");

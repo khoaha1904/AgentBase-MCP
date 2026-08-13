@@ -6,6 +6,10 @@ import { executeHubCli } from "./cli.ts";
 
 function actions(events: string[]): HubToolActions {
   return {
+    async status() { events.push("status"); return { kind: "unconfigured" }; },
+    async configure(input) { events.push(`configure:${input.mode}`); return input; },
+    async previewBootstrap(url, mode) { events.push(`preview:${url}:${mode}`); return { mode }; },
+    async bootstrap(url, mode) { events.push(`bootstrap:${url}:${mode}`); return { mode }; },
     async prepare(input) { events.push(`prepare:${input.mode}`); return { id: "p1" }; },
     async finalize(id) { events.push(`finalize:${id}`); return { id: "p1" }; },
     async inspect(id) { events.push(`inspect:${id}`); return { id }; },
@@ -28,6 +32,14 @@ test("[AB-LOCAL-HUB-006] CLI routes explicit Hub batch publication", async () =>
   assert.equal(code, 0);
   assert.deepEqual(events, ["submit:p1,p2"]);
   assert.equal(errors.length, 0);
+});
+
+test("[AB-HUB-SETUP-002][AB-HUB-SETUP-010] CLI routes status and reviewed bootstrap mode", async () => {
+  const events: string[] = [];
+  assert.equal(await executeHubCli(["status"], actions(events), () => {}, () => {}), 0);
+  assert.equal(await executeHubCli(["bootstrap-preview", "--url", "https://github.com/acme/Hub", "--mode", "base-to-main-knowledge-pr"],
+    actions(events), () => {}, () => {}), 0);
+  assert.deepEqual(events, ["status", "preview:https://github.com/acme/Hub:base-to-main-knowledge-pr"]);
 });
 
 test("[AB-LOCAL-HUB-002][AB-LOCAL-HUB-004] CLI routes local accept and query actions", async () => {

@@ -3,6 +3,7 @@ export {
   assertCleanGitTree,
   createCandidateWorktree,
   listFirstParentCommits,
+  listRemoteRefs,
   readCommitMessage,
   readExactRef,
   removeCandidateWorktree,

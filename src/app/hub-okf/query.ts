@@ -6,11 +6,11 @@ import {
   type HubSearchOptions,
 } from "../../core/knowledge/index.ts";
 import { runGit, type GitOutput, type GitRequest } from "../../providers/github-hub/index.ts";
-import type { LocalHubState } from "../../core/hub/index.ts";
+import type { AdmittedLocalHubState } from "../../core/hub/index.ts";
 
 export type HubQueryGit = (request: GitRequest) => Promise<GitOutput>;
 
-function reader(localHub: LocalHubState, git: HubQueryGit): HubQueryReader {
+function reader(localHub: AdmittedLocalHubState, git: HubQueryGit): HubQueryReader {
   return {
     commit: localHub.activeHead,
     async listMarkdownPaths() {
@@ -35,7 +35,7 @@ function reader(localHub: LocalHubState, git: HubQueryGit): HubQueryReader {
 }
 
 export function searchActiveHub(
-  localHub: LocalHubState,
+  localHub: AdmittedLocalHubState,
   query: string,
   options: HubSearchOptions = {},
   git: HubQueryGit = runGit,
@@ -44,7 +44,7 @@ export function searchActiveHub(
 }
 
 export function readActiveHubConcept(
-  localHub: LocalHubState,
+  localHub: AdmittedLocalHubState,
   relativePath: string,
   git: HubQueryGit = runGit,
 ): Promise<HubQueryMatch> {

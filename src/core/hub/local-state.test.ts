@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { createHubIdentity } from "./identity.ts";
-import { advanceSynchronization, createLocalHubOwnerLock, createLocalHubState } from "./local-state.ts";
+import { advanceSynchronization, createLocalHubOwnerLock, createLocalHubState, createLocalOnlyHubState } from "./local-state.ts";
 
 test("[AB-LOCAL-HUB-001][AB-LOCAL-HUB-011] admits exact local main state and serialized owner", () => {
   const state = createLocalHubState({
@@ -14,6 +14,15 @@ test("[AB-LOCAL-HUB-001][AB-LOCAL-HUB-011] admits exact local main state and ser
   assert.equal(createLocalHubOwnerLock({ ownerId: "accept:12345678", operation: "accept", acquiredAt: "2026-08-12T00:00:00Z" }).operation, "accept");
   assert.throws(() => createLocalHubState({ ...state, root: "relative" }), /absolute/);
   assert.throws(() => createLocalHubOwnerLock({ ownerId: "short", operation: "accept", acquiredAt: "now" }), /owner/);
+});
+
+test("[AB-HUB-SETUP-002][AB-HUB-SETUP-007] local-only state binds exact Hub and base identity without a remote", () => {
+  const state = createLocalOnlyHubState({ kind: "local-only", root: "/private/local-hub", localHubId: "1".repeat(24),
+    baseCommit: "a".repeat(40), remoteBase: "a".repeat(40), activeHead: "b".repeat(40), catalogVersion: "2.0.0" });
+  assert.equal(state.localHubId, "1".repeat(24));
+  assert.equal("hub" in state, false);
+  assert.throws(() => createLocalOnlyHubState({ ...state, remoteBase: "c".repeat(40) }), /base/);
+  assert.throws(() => createLocalOnlyHubState({ ...state, localHubId: "short" }), /local Hub ID/);
 });
 
 test("[AB-LOCAL-HUB-008] synchronization preserves original head through conflict and validation", () => {

@@ -28,11 +28,10 @@ export type LocalProposal = Readonly<{
   acceptedAt: string;
   publicationState: LocalProposalPublicationState;
 }>;
-export type HubProposal = Readonly<{
+type HubProposalFields = Readonly<{
   id: string;
   mode: "new" | "refresh";
   subject: string;
-  hub: HubIdentity;
   baseCommit: string;
   sourceRepositoryId: string;
   evidenceDigest: string;
@@ -45,6 +44,9 @@ export type HubProposal = Readonly<{
   commit?: string;
   pullRequest?: Readonly<{ number: number; url: string }>;
 }>;
+export type HubProposal = HubProposalFields & Readonly<{ hub: HubIdentity; localHubId?: string }>;
+export type LocalOnlyHubProposal = HubProposalFields & Readonly<{ localHubId: string; hub?: never }>;
+export type AnyHubProposal = HubProposal | LocalOnlyHubProposal;
 function hex(value: string, label: string): void {
   if (!/^[a-f0-9]{40}$/.test(value)) {
     throw new HubValidationError("HUB_IDENTITY_INVALID", `${label} must be 40 lowercase hex`);
@@ -55,7 +57,11 @@ function digest(value: string, label: string): void {
     throw new HubValidationError("HUB_DIGEST_INVALID", `${label} must be a SHA-256 digest`);
   }
 }
-export function createHubProposal(input: Omit<HubProposal, "id" | "branch" | "phase">): HubProposal {
+type RemoteProposalInput = Omit<HubProposal, "id" | "branch" | "phase">;
+type LocalProposalInput = Omit<LocalOnlyHubProposal, "id" | "branch" | "phase">;
+export function createHubProposal(input: RemoteProposalInput): HubProposal;
+export function createHubProposal(input: LocalProposalInput): LocalOnlyHubProposal;
+export function createHubProposal(input: RemoteProposalInput | LocalProposalInput): AnyHubProposal {
   hex(input.baseCommit, "baseCommit");
   if (!/^repository-[a-z0-9-]+-[a-f0-9]{12}$/.test(input.sourceRepositoryId)) {
     throw new HubValidationError("HUB_SOURCE_INVALID", "sourceRepositoryId must be a normalized AgentBase repository identity");
@@ -66,11 +72,14 @@ export function createHubProposal(input: Omit<HubProposal, "id" | "branch" | "ph
   if (!/^(?:repositories|relationships|capabilities)\/[a-z0-9][a-z0-9./-]*$/.test(input.subject) || input.subject.includes("..")) {
     throw new HubValidationError("HUB_SUBJECT_INVALID", "proposal subject must be a normalized Hub path");
   }
+  if (!("hub" in input) && !/^[a-f0-9]{24}$/.test(input.localHubId)) {
+    throw new HubValidationError("HUB_LOCAL_ID_INVALID", "localHubId must be 24 lowercase hex");
+  }
   const normalized = { ...input, selectedSchemas: [...input.selectedSchemas].sort() };
   const id = createHash("sha256").update(JSON.stringify(normalized)).digest("hex").slice(0, 24);
   return { ...normalized, id, branch: `agentbase/okf-${id}`, phase: "prepared" };
 }
-export function advanceHubProposal(proposal: HubProposal, phase: HubProposalPhase, values: Partial<HubProposal> = {}): HubProposal {
+export function advanceHubProposal<T extends AnyHubProposal>(proposal: T, phase: HubProposalPhase, values: Partial<T> = {}): T {
   const order: HubProposalPhase[] = ["prepared", "committed", "pushed", "pr-opened"];
   const current = order.indexOf(proposal.phase), next = order.indexOf(phase);
   if (next < current || next > current + 1) throw new HubValidationError("HUB_PHASE_INVALID", "invalid Hub proposal transition");
@@ -78,7 +87,7 @@ export function advanceHubProposal(proposal: HubProposal, phase: HubProposalPhas
     throw new HubValidationError("HUB_COMMIT_MISSING", "publication phase requires exact commit");
   }
   if (values.commit) hex(values.commit, "commit");
-  return { ...proposal, ...values, phase };
+  return { ...proposal, ...values, phase } as T;
 }
 
 export function createLocalProposal(input: Omit<LocalProposal, "publicationState">): LocalProposal {

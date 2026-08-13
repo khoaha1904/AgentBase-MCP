@@ -200,6 +200,17 @@ concept catalog. Common provenance and draft rules remain internal; public
 schemas represent useful types such as Server, AWS Lambda and AWS SQS Queue.
 Catalog schemas are neither MCP argument schemas nor provider graph schemas.
 
+Capability `009-lazy-hub-bootstrap` makes absence of a Hub a valid application
+state. `src/app/hub-okf` owns one private global non-secret configuration,
+staged existing-Hub attachment, local-only base initialization and checkpointed
+first bootstrap. Core Hub state distinguishes stable local base/knowledge
+identity from optional remote authority; the GitHub provider adds only bounded
+empty-ref discovery. Code Graph composition does not depend on any Hub state.
+The user creates the remote repository and explicitly selects either exact
+all-history `main` bootstrap or base `main` plus one knowledge PR. These remain
+one cohesive Hub lifecycle responsibility rather than separate metric-driven
+modules.
+
 The accepted fixture promotion measured a `4.656x` median improvement with
 normalized parity and clean cleanup. That result justifies this lifecycle on
 the exercised host; it is not a large-repository throughput or resource claim.
