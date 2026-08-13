@@ -5,6 +5,7 @@ import { spawn } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
 import { globalHubCredentialPath, loadGlobalHubToken, writeGlobalHubToken } from "../src/app/hub-okf/credential-file.ts";
+import { registerClients } from "./client-registration.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "..");
 
@@ -113,13 +114,14 @@ export async function runInstaller(options = {}) {
   const output = options.output ?? process.stdout;
   const environment = options.environment ?? process.env;
   const runDependencyInstall = options.runDependencyInstall ?? installDependencies;
+  const runClientRegistration = options.runClientRegistration ?? registerClients;
   const parsed = parseArgs(args);
   await runDependencyInstall();
   const interactive = Boolean(input.isTTY && output.isTTY && typeof input.setRawMode === "function");
   if (!interactive) {
     output.write("Code prepared. Client selection and credential input skipped in non-interactive mode.\n");
-    output.write("MCP registration: deferred.\n");
-    return { clients: [], credential: "skipped", registration: "deferred" };
+    output.write("MCP registration: skipped.\n");
+    return { clients: [], credential: "skipped", registration: "skipped" };
   }
 
   const reader = new CharacterReader(input);
@@ -141,9 +143,16 @@ export async function runInstaller(options = {}) {
         ? writeGlobalHubToken(token, environment, { replace: parsed.replaceToken })
         : credentialExists ? "preserved" : "skipped";
     }
-    output.write(`Selected clients: ${clients.join(", ")}. MCP registration: deferred.\n`);
+    const registration = await runClientRegistration({
+      clients,
+      repositoryRoot,
+      nodeExecutable: process.execPath,
+      environment,
+    });
+    const detail = clients.map((client) => `${client}=${registration.clients[client]}`).join(", ");
+    output.write(`Selected clients: ${clients.join(", ")}. MCP registration: ${detail}.\n`);
     output.write(`Credential: ${credential}.\n`);
-    return { clients, credential, registration: "deferred" };
+    return { clients, credential, registration };
   } finally {
     input.setRawMode(false);
   }

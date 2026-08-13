@@ -7,6 +7,11 @@ import { test } from "node:test";
 
 import { runInstaller } from "./install.mjs";
 
+const register = async ({ clients }) => ({
+  status: "registered",
+  clients: Object.fromEntries(clients.map((client) => [client, "registered"])),
+});
+
 class TestInput extends PassThrough {
   isTTY = true;
   rawModes = [];
@@ -38,7 +43,7 @@ test("[AB-INSTALL-001..004][SC-008] multi-select and masked paste prepare a cred
     const claudeBefore = fs.readFileSync(path.join(current.home, ".claude", "settings.json"));
     const pending = runInstaller({
       args: [], input, output: captured.stream, environment: current.environment,
-      runDependencyInstall: async () => undefined,
+      runDependencyInstall: async () => undefined, runClientRegistration: register,
     });
     input.end("12\nabc\n");
     const result = await pending;
@@ -46,7 +51,7 @@ test("[AB-INSTALL-001..004][SC-008] multi-select and masked paste prepare a cred
     assert.equal(result.credential, "created");
     assert.match(captured.read(), /\*\*\*/);
     assert.equal(captured.read().includes("abc"), false);
-    assert.match(captured.read(), /registration: deferred/);
+    assert.match(captured.read(), /codex=registered, claude-code=registered/);
     assert.deepEqual(fs.readFileSync(path.join(current.home, ".codex", "config.toml")), codexBefore);
     assert.deepEqual(fs.readFileSync(path.join(current.home, ".claude", "settings.json")), claudeBefore);
     assert.deepEqual(input.rawModes, [true, false]);
@@ -56,7 +61,7 @@ test("[AB-INSTALL-001..004][SC-008] multi-select and masked paste prepare a cred
 test("[AB-INSTALL-002][AB-INSTALL-003] Backspace updates the mask and empty input stays local-only", async () => {
   const current = fixture(), input = new TestInput(), captured = output();
   try {
-    const pending = runInstaller({ args: [], input, output: captured.stream, environment: current.environment, runDependencyInstall: async () => undefined });
+    const pending = runInstaller({ args: [], input, output: captured.stream, environment: current.environment, runDependencyInstall: async () => undefined, runClientRegistration: register });
     input.end("1\nabc\u007fd\n");
     const result = await pending;
     assert.equal(result.credential, "created");
@@ -64,7 +69,7 @@ test("[AB-INSTALL-002][AB-INSTALL-003] Backspace updates the mask and empty inpu
 
     fs.rmSync(path.join(current.environment.XDG_CONFIG_HOME, "agentbase-mcp"), { recursive: true });
     const emptyInput = new TestInput(), emptyOutput = output();
-    const empty = runInstaller({ args: [], input: emptyInput, output: emptyOutput.stream, environment: current.environment, runDependencyInstall: async () => undefined });
+    const empty = runInstaller({ args: [], input: emptyInput, output: emptyOutput.stream, environment: current.environment, runDependencyInstall: async () => undefined, runClientRegistration: register });
     emptyInput.end("2\n\n");
     assert.equal((await empty).credential, "skipped");
     assert.equal(fs.existsSync(path.join(current.environment.XDG_CONFIG_HOME, "agentbase-mcp", "env")), false);
@@ -77,7 +82,7 @@ test("[AB-INSTALL-002][AB-INSTALL-005] interruption restores terminal and preser
     const credential = path.join(current.environment.XDG_CONFIG_HOME, "agentbase-mcp", "env");
     fs.mkdirSync(path.dirname(credential), { recursive: true, mode: 0o700 });
     fs.writeFileSync(credential, "AGENTBASE_HUB_GITHUB_TOKEN=stable\n", { mode: 0o600 });
-    const pending = runInstaller({ args: ["--replace-token"], input, output: captured.stream, environment: current.environment, runDependencyInstall: async () => undefined });
+    const pending = runInstaller({ args: ["--replace-token"], input, output: captured.stream, environment: current.environment, runDependencyInstall: async () => undefined, runClientRegistration: register });
     input.end("1\nnew\u0003");
     await assert.rejects(pending, /cancelled/);
     assert.equal(fs.readFileSync(credential, "utf8"), "AGENTBASE_HUB_GITHUB_TOKEN=stable\n");
@@ -88,7 +93,7 @@ test("[AB-INSTALL-002][AB-INSTALL-005] interruption restores terminal and preser
 test("[AB-INSTALL-002] EOF restores terminal state and writes no partial credential", async () => {
   const current = fixture(), input = new TestInput(), captured = output();
   try {
-    const pending = runInstaller({ args: [], input, output: captured.stream, environment: current.environment, runDependencyInstall: async () => undefined });
+    const pending = runInstaller({ args: [], input, output: captured.stream, environment: current.environment, runDependencyInstall: async () => undefined, runClientRegistration: register });
     input.end("1\npartial");
     await assert.rejects(pending, /cancelled/);
     assert.deepEqual(input.rawModes, [true, false]);
@@ -103,7 +108,7 @@ test("[AB-INSTALL-004][AB-INSTALL-006] installer rejects an unsafe existing cred
     const credential = path.join(current.environment.XDG_CONFIG_HOME, "agentbase-mcp", "env");
     fs.mkdirSync(path.dirname(credential), { recursive: true, mode: 0o700 });
     fs.writeFileSync(credential, "AGENTBASE_HUB_GITHUB_TOKEN=unsafe\n", { mode: 0o644 });
-    const pending = runInstaller({ args: [], input, output: captured.stream, environment: current.environment, runDependencyInstall: async () => undefined });
+    const pending = runInstaller({ args: [], input, output: captured.stream, environment: current.environment, runDependencyInstall: async () => undefined, runClientRegistration: register });
     input.end("1\n");
     await assert.rejects(pending, /unsafe permissions/);
     assert.equal(captured.read().includes("preserved"), false);
@@ -123,8 +128,25 @@ test("[AB-INSTALL-003][AB-INSTALL-005] non-interactive mode never prompts or per
     });
     assert.deepEqual(result.clients, []);
     assert.equal(result.credential, "skipped");
+    assert.equal(result.registration, "skipped");
     assert.equal(installs, 1);
     assert.equal(captured.read().includes("ambient-canary"), false);
     assert.equal(fs.existsSync(path.join(current.environment.XDG_CONFIG_HOME, "agentbase-mcp", "env")), false);
+  } finally { current.cleanup(); }
+});
+
+test("[AB-INSTALL-016] accepted credential survives a later client-registration failure", async () => {
+  const current = fixture(), input = new TestInput(), captured = output();
+  try {
+    const pending = runInstaller({
+      args: [], input, output: captured.stream, environment: current.environment,
+      runDependencyInstall: async () => undefined,
+      runClientRegistration: async () => { throw new Error("registration fixture failure"); },
+    });
+    input.end("1\nstable-token\n");
+    await assert.rejects(pending, /registration fixture failure/);
+    assert.equal(fs.readFileSync(path.join(current.environment.XDG_CONFIG_HOME, "agentbase-mcp", "env"), "utf8"), "AGENTBASE_HUB_GITHUB_TOKEN=stable-token\n");
+    assert.equal(captured.read().includes("stable-token"), false);
+    assert.deepEqual(input.rawModes, [true, false]);
   } finally { current.cleanup(); }
 });

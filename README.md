@@ -39,9 +39,17 @@ npm run verify
 ```
 
 The installer prepares exact dependencies, then in an interactive terminal lets
-you select Codex, Claude Code or both. Client registration is deliberately
-reported as **deferred** in this slice: the installer does not edit either
-client's configuration yet.
+you select Codex, Claude Code or both. It registers one user-global `agentbase`
+stdio MCP in exactly the selected clients, bound to this checkout by absolute
+Node and `src/cli.ts mcp` paths. An exact rerun is a no-op. A same-name entry
+with different transport, command or arguments stops before mutation; remove or
+rename that entry deliberately, then retry.
+
+Selecting both clients is transactional. If either add or verification fails,
+entries newly added by that run are removed from every selected client. An
+interrupted run recovers before a later registration; unresolved concurrent
+changes are preserved and reported through private recovery state. Moving this
+checkout requires deliberate removal and registration from the new path.
 
 Optional Hub-token input shows one `*` per accepted character so pasted input
 is visible without printing the token. Empty Enter keeps tokenless local operation.
@@ -64,9 +72,11 @@ then the accepted relevant neighborhood and its quality evidence. It uses only
 explicit fake data: it does not parse the fixture, access credentials or start
 Codebase Memory.
 
-`npm run verify` is the canonical offline gate. It replays sanitized provider
-fixtures and does not execute the native binary, use a model, read credentials
-or access the network.
+`npm run verify` is the canonical offline gate. Installer coverage uses isolated
+homes and deterministic Codex/Claude doubles, so it never changes installed
+client configuration. The broader gate replays sanitized provider fixtures and
+does not execute the native graph binary, use a model, read credentials or
+access the network.
 
 ## Observe code explicitly
 

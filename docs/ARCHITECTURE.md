@@ -211,6 +211,16 @@ all-history `main` bootstrap or base `main` plus one knowledge PR. These remain
 one cohesive Hub lifecycle responsibility rather than separate metric-driven
 modules.
 
+Capability `010-client-mcp-registration` completes the root installer with an
+explicit user-global `agentbase` stdio registration for Codex, Claude Code or
+both. `scripts/install.mjs` retains terminal, dependency and credential flow;
+one cohesive `scripts/client-registration.mjs` owner holds the two concrete
+client descriptions and their shared preflight/add/verify/rollback lifecycle.
+It uses supported client management commands, binds an absolute checkout, does
+not place the Hub token in client configuration, rejects same-name conflicts and
+recovers selected clients as one transaction. Canonical tests use isolated homes
+and fake CLIs; real installed-client mutation remains a separate owner action.
+
 The accepted fixture promotion measured a `4.656x` median improvement with
 normalized parity and clean cleanup. That result justifies this lifecycle on
 the exercised host; it is not a large-repository throughput or resource claim.

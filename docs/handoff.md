@@ -269,28 +269,32 @@ candidate patterns, not automatic mandates for future repositories.
 
 ## Next action
 
-Capability 009 is complete. Its product direction is: install only the one global
-token; keep Code Graph independent; ask for existing-vs-new Hub only when OKF
-first needs one; allow a local-only base plus knowledge history; and bootstrap
-a user-created empty GitHub repository under one explicit mode. AgentBase-MCP
-does not create GitHub repositories. Do not
+Capabilities 009 and 010 are complete. Installation now optionally stores the
+one global token and transactionally registers the current checkout in selected
+Codex/Claude Code clients; it still does not choose a Hub. Code Graph remains
+independent, while the first Hub-dependent OKF action asks existing-vs-new and a
+new local Hub later bootstraps only to a user-created empty GitHub repository
+under one explicit mode. AgentBase-MCP does not create GitHub repositories. Do not
 fragment cohesive files merely to satisfy architecture metrics: split only
 across distinct responsibilities, otherwise retain one exact owner-reviewed
 non-growing mark.
 
 The official private repositories and local clones are
-`khoaha1904/AgentBase-MCP` and `khoaha1904/AgentBase-Hub`. Codex has one enabled
-`agentbase` STDIO entry; client registration remains deliberately deferred in
-the installer contract. The dirty legacy Hub and historical repositories remain
-untouched references.
+`khoaha1904/AgentBase-MCP` and `khoaha1904/AgentBase-Hub`. Capability 010 now
+implements user-global `agentbase` STDIO registration for selected Codex and/or
+Claude Code clients. Existing exact entries are no-ops; conflicts fail before
+mutation and multi-client failure rolls back newly added entries. The dirty
+legacy Hub and historical repositories remain untouched references.
 
-Root `install.sh` now prepares dependencies and offers Codex/Claude Code
-multi-selection, while truthfully reporting registration as deferred and
-editing neither client. Optional Hub-token entry masks each character and
-writes one atomic owner-private global credential. Runtime prefers an explicit
-process token and otherwise admits that file. Tests cover paste, Backspace,
-interruption, non-interactive behavior, permissions, symlinks, malformed files,
-preservation and precedence.
+Root `install.sh` prepares dependencies, offers Codex/Claude Code multi-selection
+and performs verified user-scope registration against the current absolute
+checkout. Optional Hub-token entry masks each character and writes one atomic
+owner-private global credential independently of registration rollback. Runtime
+prefers an explicit process token and otherwise admits that file. Tests cover
+selection, exact rerun, conflict, missing clients, partial failure, interruption,
+concurrency, rollback, paste, Backspace, non-interactive behavior, permissions,
+symlinks, malformed files, preservation and precedence without touching real
+client homes.
 
 The owner merged [AgentBase-Hub PR #4](https://github.com/khoaha1904/AgentBase-Hub/pull/4).
 Explicit synchronization recognized proposal `73420160d16893b75470d1f2`,
@@ -302,3 +306,9 @@ No token value or legacy `.env` was read.
 Capability 009 implementation artifacts live under
 `specs/009-lazy-hub-bootstrap/`; its living requirements are
 `AB-HUB-SETUP-001..017` in `docs/specs/agentbase-hub.md`.
+
+Capability 010 implementation artifacts live under
+`specs/010-client-mcp-registration/`; its living requirements are
+`AB-INSTALL-007..017` in `docs/specs/installation.md`. Canonical verification
+uses isolated fake clients. A real user-home registration has not been executed
+by this capability and remains an explicit owner smoke action.

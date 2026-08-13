@@ -2,7 +2,7 @@
 
 Active capability: None
 
-Most recent completed: [`009-lazy-hub-bootstrap`](009-lazy-hub-bootstrap/spec.md)
+Most recent completed: [`010-client-mcp-registration`](010-client-mcp-registration/spec.md)
 
 Capability 003 promotes one short-lived stdio provider session per explicit
 evidence round after three alternating real pairs showed full normalized parity,
