@@ -74,7 +74,27 @@ arguments and environment-key names (never token values); rollback restores
 those exact values. Before any remote rewrite, record both fetch and push URLs;
 rollback restores them with `git remote set-url` and `--push` respectively.
 
-## 6. Canonical gate
+## 6. Installer and global credential
+
+Run `./install.sh` in an interactive terminal against disposable XDG and client
+config roots during verification.
+
+Expected:
+
+- Codex, Claude Code or both can be selected;
+- the summary labels actual client registration as deferred and neither client
+  configuration changes;
+- pasted token input prints one `*` per accepted character and never the token;
+- empty Enter completes local-only setup without an empty credential;
+- a supplied token creates only the exact global credential with directory
+  mode `0700` and file mode `0600`;
+- an existing credential is byte-preserved unless `--replace-token` is explicit;
+- process environment token takes precedence over the admitted global file.
+
+Non-interactive verification must not wait for input or persist an ambient
+token. Do not use a real token in the canonical test gate.
+
+## 7. Canonical gate
 
 Run:
 

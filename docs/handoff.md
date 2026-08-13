@@ -272,7 +272,8 @@ candidate patterns, not automatic mandates for future repositories.
 ## Next action
 
 Capability 008's implementation and canonical repository migration are
-complete through T042; the canonical gate passes 217 tests. Do not fragment cohesive files merely to satisfy architecture
+complete through the local Hub correction and installer slice; the canonical
+gate passes 232 tests. Do not fragment cohesive files merely to satisfy architecture
 metrics: split only across distinct responsibilities, otherwise retain one
 exact owner-reviewed non-growing mark. T040 is complete: the source was
 stabilized at `35d4628d902e293273b7ac29f2b015c94c679d81` and the independent
@@ -281,6 +282,18 @@ The official private GitHub repositories are now `khoaha1904/AgentBase-MCP` and
 `khoaha1904/AgentBase-Hub`; both canonical local clones exist, and Codex has one
 enabled `agentbase` STDIO entry without a stored token value. Migration bug
 `hub-migration-remote-identity` was fixed and verified against the real local
-Hub. Next, T043 may locally accept the governed deletion of qualification-only
-`repositories/agentbase-next`; T044 remote publication still requires separate
-authorization. Do not close `specs/CURRENT.md` until T044 and T047 are complete.
+Hub. T043's governed deletion of qualification-only
+`repositories/agentbase-next` is accepted locally as pending proposal
+`73420160d16893b75470d1f2`.
+
+Root `install.sh` now prepares dependencies and offers Codex/Claude Code
+multi-selection, while truthfully reporting registration as deferred and
+editing neither client. Optional Hub-token entry masks each character and
+writes one atomic owner-private global credential. Runtime prefers an explicit
+process token and otherwise admits that file. Tests cover paste, Backspace,
+interruption, non-interactive behavior, permissions, symlinks, malformed files,
+preservation and precedence.
+
+T044 publication is authorized but waits for the owner to run `./install.sh`
+interactively; agents never read or migrate the legacy `.env`. Do not close
+`specs/CURRENT.md` until T044, T055 and T047 are complete.

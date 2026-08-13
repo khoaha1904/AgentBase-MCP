@@ -14,7 +14,7 @@ the separately authorized T044 checkpoint.
   naming guards;
 - TypeScript typecheck: pass;
 - architecture: 0 errors and 5 visible warnings;
-- tests: **219 passed, 0 failed**;
+- tests: **232 passed, 0 failed**;
 - `git diff --check`: pass;
 - no real GitHub request or mutation is required by the gate.
 
@@ -121,10 +121,23 @@ token was used in verification.
 - Remote Hub `main` remains exactly
   `587a91e676104e0cd58889acb938ca2b44a350d2`; T043 performed no Hub fetch,
   push, PR or GitHub API action.
+- FR-020–025 / SC-008 installer evidence passes. `./install.sh` prepares exact
+  dependencies and supports Codex, Claude Code or combined selection while
+  reporting registration as deferred and leaving client configurations
+  untouched. Masked paste, Backspace, empty skip, Ctrl+C restoration,
+  non-interactive operation, XDG/fallback storage, `0700`/`0600` admission,
+  symlink/malformed rejection, preserve/explicit-replace and runtime environment
+  precedence are covered by 13 new requirement-linked tests.
+- A real non-interactive `./install.sh </dev/null` run completed `npm ci`, found
+  zero known vulnerabilities, skipped client/token input, wrote no credential
+  and reported deferred registration. The canonical gate then passed 232/232
+  with 0 architecture errors and the same five visible review warnings.
 - Remote rollback: rename `AgentBase-Hub` back to `knowledger-hub`, restore MCP
   canonical origin to `/home/khoa/workspace/AgentBase/agentbase-next`, and
   delete the newly created remote MCP repository only if explicitly authorized.
 - T044 remains: separately authorize publication of the pending Hub correction
-  through one PR.
+  through one PR. Authorization exists, but execution waits for the owner to run
+  the interactive installer and create the global credential without exposing
+  its value to the agent.
 - T047: run the real quickstart/migration journeys and close the active
   capability only after the authorized checkpoints above are complete.

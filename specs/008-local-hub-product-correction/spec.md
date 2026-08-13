@@ -19,6 +19,12 @@
 - Remote publication never writes directly to remote `main` and never merges a PR.
 - After remote merge, local synchronization fetches and safely rebases remaining pending proposals.
 - The schema catalog contains concrete OKF concept types such as Lambda, SQS and Server where evidence supports them; schemas are not one-per-repository checklists.
+- Installation lets the user select Codex, Claude Code or both, but the current
+  slice only reports the selection and does not claim either client was configured.
+- Interactive token entry shows one `*` per accepted character. Empty Enter
+  skips token setup and leaves remote Hub actions unavailable.
+- A supplied token is stored outside repositories in one owner-private global
+  credential file; existing bytes are preserved unless replacement is explicit.
 
 ## User Scenarios & Testing
 
@@ -101,6 +107,43 @@ The owner and future agents work from clearly named canonical repositories and d
 2. **Given** user-owned dirty legacy worktrees, **When** canonical directories are created, **Then** those worktrees are not cleaned, reset, overwritten or deleted.
 3. **Given** an explicit source repository name, **When** OKF is created, **Then** the Hub subject uses that admitted source identity and never the MCP application's temporary directory name by accident.
 
+---
+
+### User Story 6 - Prepare a local multi-client installation (Priority: P1)
+
+A user runs one installer, selects Codex, Claude Code or both, prepares the
+current AgentBase-MCP code, and optionally enters the dedicated Hub token. Token
+entry displays masked progress, persists safely outside Git, and becomes
+available to the current CLI and future MCP launcher. Until client integration
+is complete, the installer clearly reports registration as deferred and changes
+neither client's configuration.
+
+**Why this priority**: Remote Hub publication is blocked without durable token
+delivery, while a misleading partial client installation would create a larger
+configuration and security failure.
+
+**Independent Test**: Run the installer against disposable config and client
+homes with fake command boundaries; select each valid client combination,
+exercise masked/empty/existing/replacement token paths, and prove exact global
+bytes and permissions while both client configurations remain unchanged.
+
+**Acceptance Scenarios**:
+
+1. **Given** an interactive terminal, **When** the user selects one or both
+   clients and pastes a token, **Then** each accepted token character produces
+   one `*`, no token character is printed, and one private global credential is written.
+2. **Given** no token is configured, **When** the user presses Enter at the token
+   prompt, **Then** installation completes in local-only mode without creating
+   an empty credential file.
+3. **Given** an existing credential file, **When** installation runs normally,
+   **Then** the file remains byte-identical; replacement requires an explicit option.
+4. **Given** any client selection in this initial slice, **When** installation
+   completes, **Then** the summary names the selection and says registration is
+   deferred, with zero Codex or Claude Code configuration mutations.
+5. **Given** a valid global credential file, **When** a current Hub CLI action
+   or future MCP process starts without a token in its environment, **Then** it
+   can use the global token; an explicit process token takes precedence.
+
 ### Edge Cases
 
 - The local Hub is absent, corrupt, on the wrong remote or contains a symlinked control path.
@@ -111,6 +154,11 @@ The owner and future agents work from clearly named canonical repositories and d
 - Several source repositories use the same display name but different source identities.
 - Concrete schema evidence is incomplete, contradictory or belongs to two repositories.
 - Canonical target directories already exist or a source worktree contains uncommitted user changes.
+- Interactive input is pasted in one chunk, contains backspace, is interrupted,
+  or reaches end-of-input before Enter.
+- The global credential path has unsafe permissions, is a symlink, contains an
+  unknown key, or an atomic replacement is interrupted.
+- Installation runs without an interactive terminal.
 
 ## Requirements
 
@@ -135,6 +183,12 @@ The owner and future agents work from clearly named canonical repositories and d
 - **FR-017 / AB-LOCAL-HUB-009**: All local accept, publish, synchronize and recovery operations MUST reject wrong remote identity, unsafe paths, unadmitted dirty Hub state and ambiguous commit ancestry before mutation.
 - **FR-018 / AB-LOCAL-HUB-010**: Canonical offline verification MUST cover local acceptance, pending queries, multi-proposal publication, synchronization, conflicts, interruption recovery, concrete schema selection and naming guards without requiring a real GitHub mutation.
 - **FR-019 / AB-LOCAL-HUB-011**: Local Hub accept, publication and synchronization mutations MUST be serialized under one owner lock; concurrent or manually dirty state MUST fail before ref or working-tree mutation.
+- **FR-020 / AB-INSTALL-001**: The installer MUST present a multi-selection for Codex, Claude Code or both and MUST report selected clients without mutating either client configuration until that integration is explicitly completed.
+- **FR-021 / AB-INSTALL-002**: Interactive token entry MUST display one `*` for each accepted non-control character, support pasted input, make Backspace remove the last accepted character and mask, never display token characters, and restore terminal input state after completion, interruption, EOF or failure.
+- **FR-022 / AB-INSTALL-003**: Empty token input MUST complete installation in local-only mode without creating an empty credential; non-interactive installation MUST prepare code without client selection, waiting for input or silently persisting an ambient token.
+- **FR-023 / AB-INSTALL-004**: A supplied token MUST be written atomically to `$XDG_CONFIG_HOME/agentbase-mcp/env`, falling back to `~/.config/agentbase-mcp/env`, under a `0700` directory and `0600` regular non-symlink file containing only the admitted token key.
+- **FR-024 / AB-INSTALL-005**: Existing credential bytes MUST remain unchanged by default; replacement requires an explicit user option and any failed replacement MUST preserve the prior file.
+- **FR-025 / AB-INSTALL-006**: AgentBase-MCP runtime MUST prefer a non-empty process token, otherwise admit the exact global credential file, and MUST reject symlinks, unsafe permissions, unknown keys or malformed content without exposing secret bytes.
 
 ### Key Entities
 
@@ -146,6 +200,8 @@ The owner and future agents work from clearly named canonical repositories and d
 - **Schema Catalog**: Versioned AgentBase-MCP authoring definitions for concrete OKF concept types.
 - **Source Subject**: Stable admitted repository or domain identity to which evidence and canonical concepts belong.
 - **Synchronization Transaction**: Recoverable state transition from one admitted remote/local ancestry to another.
+- **Installer Client Selection**: One or both supported coding clients chosen for a future registration step; it is not evidence that registration occurred.
+- **Global Credential File**: Owner-private external configuration containing only the dedicated Hub token assignment.
 
 ## Success Criteria
 
@@ -158,6 +214,7 @@ The owner and future agents work from clearly named canonical repositories and d
 - **SC-005**: A fixture with two Lambdas, one SQS queue and one server produces only applicable concrete concept types, multiple files from repeated types, and zero placeholder concepts for unused schemas.
 - **SC-006**: Active documentation, configuration fixtures and generated-subject tests contain zero accidental `agentbase-next` or `knowledger-hub` product identities.
 - **SC-007**: The canonical repository gate passes all requirement-linked tests with no unreviewed architecture exception, no metric-driven file fragmentation and no real GitHub dependency.
+- **SC-008**: Every Codex/Claude Code selection combination completes without changing either client configuration, while masked, skipped, preserved and explicitly replaced credential journeys produce zero token disclosure and exact expected global file state.
 
 ## Assumptions
 
@@ -167,6 +224,10 @@ The owner and future agents work from clearly named canonical repositories and d
 - Concrete catalog types will evolve version by version; the first corrected set is a useful software/AWS baseline, not a universal taxonomy.
 - Existing `agentbase-next` and dirty `agentbase-hub` directories remain migration sources/references until the owner approves cleanup after canonical repositories are verified.
 - Renaming GitHub repositories is desirable for official identity but is an external administrative migration, not implied by approving application code implementation.
+- Client selection is forward-compatible UI in this slice; actual Codex and
+  Claude Code registration requires a later approved contract.
+- Showing one mask character per token character intentionally reveals token
+  length, as accepted by the owner, while hiding token contents.
 
 ## Explicit non-goals
 
@@ -176,3 +237,6 @@ The owner and future agents work from clearly named canonical repositories and d
 - Creating every catalog type or directory for every repository.
 - Automatically resolving semantic Git conflicts.
 - Deleting old directories or rewriting shared Git history during the initial correction.
+- Editing Codex or Claude Code configuration, claiming client installation
+  success, or automatically migrating the legacy repository `.env` in the
+  initial installer slice.

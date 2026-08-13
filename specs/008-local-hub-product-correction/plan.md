@@ -15,6 +15,10 @@ published proposals and transactionally rebases the remainder. Replace the
 generic producer catalog with a versioned concrete-schema catalog selected from
 Code Graph and related evidence. Finish with reversible canonical repository
 and remote naming migrations to AgentBase-MCP and AgentBase-Hub.
+Add an honest first installer slice that prepares repository dependencies,
+captures a future Codex/Claude Code selection without configuring either
+client, and stores one optional Hub token in a private global file consumed by
+the current runtime.
 
 ## Technical Context
 
@@ -32,7 +36,7 @@ and remote naming migrations to AgentBase-MCP and AgentBase-Hub.
 
 **Performance Goals**: Local pending/list/read operations remain bounded by the selected Hub paths and complete without network; no repository-scale latency claim until measured
 
-**Constraints**: Preserve dirty legacy worktrees; no force push, direct remote-main write, implicit merge, raw graph publication, secret persistence, silent reset or semantic conflict auto-resolution
+**Constraints**: Preserve dirty legacy worktrees; no force push, direct remote-main write, implicit merge, raw graph publication, repository-local secret persistence, silent reset or semantic conflict auto-resolution; global credential writes are explicit, atomic and owner-private
 
 **Scale/Scope**: One owned local Hub clone, ordered proposal commits from many source repositories, one publication transaction at a time, concrete software/AWS schema baseline
 
@@ -80,9 +84,11 @@ specs/008-local-hub-product-correction/
 ├── contracts/
 │   ├── mcp-tools.md
 │   ├── local-hub-git.md
+│   ├── installer.md
 │   └── repository-migration.md
 ├── checklists/
 │   ├── requirements.md
+│   ├── installer-security.md
 │   └── lifecycle-migration.md
 └── tasks.md
 ```
@@ -103,6 +109,7 @@ src/providers/github-hub/
   github-api.ts           # existing exact ref/PR boundary
 
 src/app/hub-okf/
+  credential-file.ts      # exact global token-file admission for runtime
   local-hub.ts            # persistent clone admission and clean-tree guard
   accept.ts               # exact reviewed tree -> local main proposal commit
   pending.ts              # ancestry-derived pending proposal inventory
@@ -114,6 +121,9 @@ src/app/hub-okf/
 
 scripts/
   migrate-product-repositories.mjs  # preflight/report and explicitly approved canonical copy/clone
+  install.mjs                       # testable interaction and global credential writer
+
+install.sh                          # stable user entrypoint into the installer
 ```
 
 **Structure Decision**: Preserve the modular monolith and existing capability
@@ -122,6 +132,11 @@ schema/query policy; `providers/github-hub` remains the only Git/GitHub process
 boundary; `app/hub-okf` composes local lifecycle. Repository-directory migration
 is an explicit script because it affects workspace paths rather than runtime
 knowledge behavior.
+
+The root installer is a thin stable entrypoint; interaction and filesystem
+policy live in one testable Node script. Runtime credential admission stays in
+`app/hub-okf` because only remote Hub actions consume the token. No new
+dependency, daemon or client-specific provider is introduced.
 
 ## Implementation phases
 
@@ -209,6 +224,24 @@ knowledge behavior.
 6. Keep old directories and old remote redirect available through a documented
    rollback window. Deletion is a later explicit cleanup, not part of migration.
 
+### Phase G — Honest installer and global credential
+
+1. Add a root `install.sh` entrypoint that runs the repository-owned installer.
+2. Present a terminal multi-selection for Codex, Claude Code or both. Retain the
+   selection only for the completion summary and label client registration as deferred.
+3. Prepare repository dependencies, then prompt interactively for the Hub token
+   with one visible `*` per accepted character. Empty Enter selects local-only
+   operation; non-interactive execution never prompts.
+4. Write only `AGENTBASE_HUB_GITHUB_TOKEN` to the XDG/fallback global credential
+   file through an atomic `0700` directory / `0600` file transition. Preserve an
+   existing file unless `--replace-token` is explicit.
+5. Load that exact file at the Hub runtime boundary only when the process
+   environment lacks a token. Reject symlinks, unsafe modes, unknown fields and
+   malformed bytes without echoing content.
+6. Prove client config non-mutation, masked paste/skip/interruption behavior,
+   credential preservation/replacement, precedence and runtime consumption with
+   offline `node:test` fixtures.
+
 ## Rollback boundaries
 
 - **Before local accept**: remove only owned proposal workspace; Hub unchanged.
@@ -222,9 +255,15 @@ knowledge behavior.
 - **During GitHub rename/config migration**: record old/new remote identity and
   launcher configuration before mutation; revert those exact settings if the
   canonical installation fails qualification.
+- **During credential setup**: a failed first write leaves no credential; a
+  failed explicit replacement preserves the previous file. Client
+  configurations remain outside the mutation set for this slice.
 
 ## Complexity Tracking
 
 No constitution violation or architecture exception is requested. The added
 local lifecycle files split distinct responsibilities that already exist in the
 product contract; they do not introduce a service, daemon or new dependency.
+The owner explicitly approved global token persistence and masked length
+feedback. The design bounds both behaviors to one exact credential and retains
+environment precedence; actual client registration remains deferred.

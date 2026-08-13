@@ -13,6 +13,7 @@ const REQUIRED_MIGRATION_IDS = ["AB-MIGRATION-001", "AB-MIGRATION-002"];
 const REQUIRED_LOCAL_HUB_IDS = Array.from({ length: 11 }, (_, index) => `AB-LOCAL-HUB-${String(index + 1).padStart(3, "0")}`);
 const REQUIRED_SCHEMA_IDS = Array.from({ length: 9 }, (_, index) => `AB-SCHEMA-${String(index + 1).padStart(3, "0")}`);
 const REQUIRED_QUERY_IDS = ["AB-QUERY-001"];
+const REQUIRED_INSTALL_IDS = Array.from({ length: 6 }, (_, index) => `AB-INSTALL-${String(index + 1).padStart(3, "0")}`);
 const UNRESOLVED = /\b(?:NEEDS CLARIFICATION|TODO|TKTK)\b|\?\?\?|<placeholder>/i;
 const ACTIVE_NAMING_RULES = [
   { code: "SPEC-TEMP-PRODUCT-NAME", pattern: /^#\s+AgentBase Next\b/im, message: "README must use the official AgentBase-MCP product name" },
@@ -37,6 +38,7 @@ export function checkSpecifications(root) {
   const productLiving = read(root, "docs/specs/product-identity.md");
   const hubLiving = read(root, "docs/specs/agentbase-hub.md");
   const schemaLiving = read(root, "docs/specs/okf-schema-catalog.md");
+  const installationLiving = read(root, "docs/specs/installation.md");
   const packageSource = read(root, "package.json");
 
   if (!agentGuide) errors.push({ code: "SPEC-GUIDE-MISSING", message: "AGENTS.md is required" });
@@ -45,7 +47,8 @@ export function checkSpecifications(root) {
       "docs/handoff.md", "docs/product/vision.md", "docs/ARCHITECTURE.md",
       "docs/specs/project-foundation.md", "docs/specs/local-code-intelligence.md",
       "docs/specs/single-repository-okf.md", "docs/specs/product-identity.md",
-      "docs/specs/agentbase-hub.md", "docs/specs/okf-schema-catalog.md", "specs/CURRENT.md",
+      "docs/specs/agentbase-hub.md", "docs/specs/okf-schema-catalog.md",
+      "docs/specs/installation.md", "specs/CURRENT.md",
     ]) {
       if (!agentGuide.includes(route)) errors.push({ code: "SPEC-ROUTE-MISSING", message: `AGENTS.md does not route to ${route}` });
     }
@@ -55,6 +58,7 @@ export function checkSpecifications(root) {
     ["product identity", productLiving, [...REQUIRED_PRODUCT_IDS, ...REQUIRED_MIGRATION_IDS]],
     ["local Hub", hubLiving, [...REQUIRED_LOCAL_HUB_IDS, ...REQUIRED_QUERY_IDS]],
     ["OKF schema catalog", schemaLiving, REQUIRED_SCHEMA_IDS],
+    ["installation", installationLiving, REQUIRED_INSTALL_IDS],
   ]) {
     if (!source) errors.push({ code: "SPEC-PRODUCT-LIVING-MISSING", message: `${label} living contract is required` });
     else for (const requirement of requirements) {

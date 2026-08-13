@@ -93,7 +93,25 @@
 - [ ] T044 With separate owner authorization, publish the Hub data-correction commit through one PR and record exact refs/receipt in `specs/008-local-hub-product-correction/verification.md`
 - [x] T045 [P] Update the coding-agent MCP guidance so code questions prefer Code Graph and business/system questions prefer local Hub in `.agents/skills/use-codebase-memory/SKILL.md` and relevant README sections
 - [x] T046 Run focused core/provider/app/migration suites and token/naming audits; record results in `specs/008-local-hub-product-correction/verification.md`
-- [ ] T047 Run every quickstart journey and `npm run verify`, reconcile FR-001..019 and SC-001..007, then close `specs/CURRENT.md` only when no implementation or authorized migration task remains
+- [ ] T047 Run every quickstart journey and `npm run verify`, reconcile FR-001..025 and SC-001..008, then close `specs/CURRENT.md` only when no implementation or authorized migration task remains
+
+## Phase 9: User Story 6 — Prepare a local multi-client installation (P1)
+
+**Goal**: Prepare the checkout and one optional global Hub credential while
+truthfully deferring Codex and Claude Code MCP registration.
+
+**Independent Test**: Exercise all client selections and credential lifecycle
+paths against disposable config/client homes; prove masked feedback, exact
+permissions/runtime admission and zero client-config mutation.
+
+- [x] T048 [P] [US6] Add global credential path, parse, precedence, permission, symlink and redaction tests in `src/app/hub-okf/credential-file.test.ts` and `src/app/hub-okf/configuration.test.ts`
+- [x] T049 [P] [US6] Add installer multi-selection, masked paste/backspace/interrupt, non-interactive, preservation and replacement tests in `scripts/install.test.mjs`
+- [x] T050 [US6] Implement exact global credential admission in `src/app/hub-okf/credential-file.ts` and compose it privately in `src/app/hub-okf/configuration.ts`
+- [x] T051 [US6] Implement the testable installer interaction, atomic credential writer and deferred-client summary in `scripts/install.mjs`
+- [x] T052 [US6] Add the stable executable entrypoint and repository dependency preparation in `install.sh` without client configuration mutation
+- [x] T053 [US6] Document installation, local-only skip, explicit replacement and deferred client registration in `README.md` and `specs/008-local-hub-product-correction/quickstart.md`
+- [x] T054 [US6] Run focused installer/runtime security journeys and `npm run verify`, then record FR-020..025 and SC-008 evidence in `specs/008-local-hub-product-correction/verification.md`
+- [ ] T055 [US6] After owner runs the interactive installer, resume separately authorized T044 publication without reading or logging the token
 
 ## Dependencies and execution order
 
@@ -107,6 +125,9 @@
   before T041 can clone the canonical Hub. External and launcher changes retain
   separate owner approval.
 - Hub data correction uses the corrected local lifecycle; T044 is separately authorized and never implicit in offline verification.
+- US6 may be implemented independently of Hub content, but T048–T054 must
+  complete before the interactive credential run and T044 publication. T047
+  remains the final closure task despite its earlier stable task ID.
 
 ## Parallel opportunities
 
@@ -116,6 +137,8 @@
 - US3 pending and publication tests (T025, T026) are parallel.
 - US4 recognition and recovery tests (T031, T032) are parallel.
 - Migration rehearsal (T037–T039) is independent of real external cutover.
+- Installer credential/runtime tests (T048, T049) touch separate owners and may
+  be drafted in parallel before their implementation tasks.
 
 ## Implementation strategy
 
@@ -125,3 +148,5 @@
 4. Add transactional synchronization/recovery.
 5. Qualify naming migration additively, then request separate approval for filesystem, GitHub and launcher cutovers.
 6. Correct current Hub data through the new governed lifecycle, not by direct remote-main editing.
+7. Add the honest installer slice, then use its explicit credential setup to
+   unblock the already-authorized Hub publication checkpoint.

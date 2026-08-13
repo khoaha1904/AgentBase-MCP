@@ -89,6 +89,25 @@ Common rules are reusable catalog definitions but not emitted concept types.
 Queries reject an unadmitted/dirty active tree and never read unaccepted authoring
 workspaces as active knowledge.
 
+## InstallerClientSelection
+
+- selected clients: `codex`, `claude-code`, or both
+- registration state: `deferred` in this capability
+- completion summary
+
+Selection is ephemeral in the initial slice and never changes a client config.
+
+## GlobalHubCredential
+
+- exact key: `AGENTBASE_HUB_GITHUB_TOKEN`
+- non-empty opaque token value
+- resolved XDG/fallback path
+- owner-private directory and file modes
+- source precedence: process environment, then admitted global file
+
+The value is never included in receipts, summaries, errors or test output.
+Creation and explicit replacement are atomic; skipped entry has no empty state.
+
 ## State transitions
 
 ```text

@@ -21,8 +21,9 @@ function fixture() {
   const mcpIds = Array.from({ length: 14 }, (_, index) => `- **AB-MCP-${String(index + 1).padStart(3, "0")}**: fixture`).join("\n");
   const productIds = Array.from({ length: 5 }, (_, index) => `- **AB-PRODUCT-${String(index + 1).padStart(3, "0")}**: fixture`).join("\n");
   const hubIds = Array.from({ length: 11 }, (_, index) => `- **AB-LOCAL-HUB-${String(index + 1).padStart(3, "0")}**: fixture`).join("\n");
+  const installIds = Array.from({ length: 6 }, (_, index) => `- **AB-INSTALL-${String(index + 1).padStart(3, "0")}**: fixture`).join("\n");
   const schemaIds = Array.from({ length: 9 }, (_, index) => `- **AB-SCHEMA-${String(index + 1).padStart(3, "0")}**: fixture`).join("\n");
-  write(root, "AGENTS.md", ["docs/handoff.md", "docs/product/vision.md", "docs/ARCHITECTURE.md", "docs/specs/project-foundation.md", "docs/specs/local-code-intelligence.md", "docs/specs/single-repository-okf.md", "docs/specs/product-identity.md", "docs/specs/agentbase-hub.md", "docs/specs/okf-schema-catalog.md", "specs/CURRENT.md"].join("\n"));
+  write(root, "AGENTS.md", ["docs/handoff.md", "docs/product/vision.md", "docs/ARCHITECTURE.md", "docs/specs/project-foundation.md", "docs/specs/local-code-intelligence.md", "docs/specs/single-repository-okf.md", "docs/specs/product-identity.md", "docs/specs/agentbase-hub.md", "docs/specs/okf-schema-catalog.md", "docs/specs/installation.md", "specs/CURRENT.md"].join("\n"));
   write(root, "specs/CURRENT.md", "Active capability: [foundation](001-clean-foundation/spec.md)\n");
   write(root, "specs/001-clean-foundation/spec.md", "# Active foundation\n");
   write(root, "docs/specs/project-foundation.md", `${ids}\n`);
@@ -30,6 +31,7 @@ function fixture() {
   write(root, "docs/specs/local-code-intelligence.md", `${graphIds}\n${refreshIds}\n${mcpIds}\n`);
   write(root, "docs/specs/product-identity.md", `${productIds}\nAB-MIGRATION-001\nAB-MIGRATION-002\n`);
   write(root, "docs/specs/agentbase-hub.md", `${hubIds}\nAB-QUERY-001\n`);
+  write(root, "docs/specs/installation.md", installIds);
   write(root, "docs/specs/okf-schema-catalog.md", `${schemaIds}\n`);
   write(root, "README.md", "# AgentBase-MCP\n");
   write(root, "package.json", '{"name":"fixture"}\n');

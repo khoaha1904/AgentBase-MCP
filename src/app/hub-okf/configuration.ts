@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { createHubIdentity, type HubIdentity } from "../../core/hub/index.ts";
+import { loadGlobalHubToken } from "./credential-file.ts";
 
 export type HubConfiguration = Readonly<{
   hub: HubIdentity;
@@ -21,7 +22,7 @@ export function loadHubConfiguration(environment: NodeJS.ProcessEnv): HubConfigu
   if (fs.existsSync(localRoot) && fs.lstatSync(localRoot).isSymbolicLink()) {
     throw new Error("Hub local root cannot be a symlink");
   }
-  const token = environment.AGENTBASE_HUB_GITHUB_TOKEN;
+  const token = loadGlobalHubToken(environment);
   return {
     hub: createHubIdentity(repository, targetBranch),
     localRoot,

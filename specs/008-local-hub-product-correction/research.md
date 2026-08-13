@@ -120,3 +120,28 @@ migration gives an exact rollback path.
   object/state mistakes and ambiguous ownership.
 - Delete old repositories after copy: rejected until canonical qualification and
   an explicit later cleanup approval.
+
+## Decision 8 — Installer separates credential readiness from client registration
+
+**Decision**: Provide one multi-client installer surface now, but make Codex and
+Claude Code selection informational until their registration contracts are
+complete. The useful initial slice prepares the checkout and explicitly stores
+one optional Hub token in an XDG-scoped owner-private file. A runtime environment
+token continues to override the file.
+
+**Rationale**: The user needs durable credential delivery to exercise current
+Hub publication, but reporting an incomplete client integration as installed
+would create configuration drift. A fixed external file also avoids repository
+secrets and repeated shell exports.
+
+**Alternatives considered**:
+
+- Store token in the MCP repository `.env`: rejected because it can be committed
+  and is not global across launchers.
+- Put the literal token in Codex or Claude configuration: rejected because it
+  duplicates the secret across clients and couples storage to unfinished integrations.
+- Auto-import the legacy `.env`: rejected because implicit secret migration and
+  its broad permissions are not an accepted installation action.
+- Hide all token input feedback: rejected because the owner requires visible
+  confirmation that pasted input was accepted; one `*` per character is the
+  explicit length-disclosure tradeoff.

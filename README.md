@@ -34,10 +34,31 @@ Current accepted behavior lives under `docs/specs/`. Numbered directories under
 Prerequisite: Node.js `>=24.12 <25`.
 
 ```bash
-npm install
+./install.sh
 npm run demo
 npm run verify
 ```
+
+The installer prepares exact dependencies, then in an interactive terminal lets
+you select Codex, Claude Code or both. Client registration is deliberately
+reported as **deferred** in this slice: the installer does not edit either
+client's configuration yet.
+
+Optional Hub-token input shows one `*` per accepted character so pasted input
+is visible without printing the token. Empty Enter keeps local-only operation.
+When supplied, the token is stored outside Git at
+`$XDG_CONFIG_HOME/agentbase-mcp/env`, falling back to
+`~/.config/agentbase-mcp/env`, with private permissions. A prior credential is
+preserved; replace it only through:
+
+```bash
+./install.sh --replace-token
+```
+
+A non-interactive run prepares dependencies without prompting, selecting a
+client or persisting an ambient token. AgentBase-MCP prefers an explicit process
+token and otherwise reads the admitted global file. Never put the token in this
+repository, chat, command arguments or client configuration.
 
 The demo prints a normalized map for the checked-in 12-file TypeScript fixture,
 then the accepted relevant neighborhood and its quality evidence. It uses only
