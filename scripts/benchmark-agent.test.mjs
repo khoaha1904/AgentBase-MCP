@@ -5,7 +5,8 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 
-import { buildCodexArgs, renderAgentPrompt, runAgentRepository } from "./benchmark-agent.mjs";
+import { buildCodexArgs, portableAgentText, renderAgentPrompt, runAgentRepository } from "./benchmark-agent.mjs";
+import * as benchmarkAgent from "./benchmark-agent.mjs";
 
 test("[AB-BENCH-002][AB-BENCH-003] Codex invocation is ephemeral, isolated and requires AgentBase MCP", () => {
   const args = buildCodexArgs({ workspace: "/result/workspace", finalMessage: "/result/final.md", model: "model-x", reasoningEffort: "medium" });
@@ -20,9 +21,51 @@ test("[AB-BENCH-002][AB-BENCH-003] Codex invocation is ephemeral, isolated and r
   assert.equal(args.at(-1), "-");
 });
 
+test("[AB-BENCH-010][AB-BENCH-011] direct invocation omits AgentBase MCP while MCP remains required", () => {
+  const common = { workspace: "/result/workspace", finalMessage: "/result/final.md", model: "model-x", reasoningEffort: "medium" };
+  const mcp = buildCodexArgs({ ...common, arm: "mcp" });
+  const direct = buildCodexArgs({ ...common, arm: "direct" });
+  assert.ok(mcp.some((arg) => arg.startsWith("mcp_servers.agentbase.")));
+  assert.equal(direct.some((arg) => arg.startsWith("mcp_servers.agentbase.")), false);
+});
+
+test("[AB-BENCH-012][AB-BENCH-013][AB-BENCH-014] event summary uses final usage and preserves unknown fields", () => {
+  const summary = benchmarkAgent.summarizeAgentEvents([
+    JSON.stringify({ type: "turn.completed", usage: { input_tokens: 5, output_tokens: 2 } }),
+    "{malformed",
+    JSON.stringify({ type: "item.completed", item: { type: "mcp_tool_call", tool: "query", status: "completed" } }),
+    JSON.stringify({ type: "item.completed", item: { type: "mcp_tool_call", tool: "query", status: "completed" } }),
+    JSON.stringify({ type: "item.completed", item: { type: "command_execution", status: "completed" } }),
+    JSON.stringify({ type: "turn.completed", usage: { input_tokens: 10 } }),
+  ].join("\n"));
+  assert.deepEqual(summary.usage, {
+    inputTokens: 10,
+    cachedInputTokens: null,
+    cacheWriteInputTokens: null,
+    uncachedInputTokens: null,
+    outputTokens: null,
+    reasoningOutputTokens: null,
+  });
+  assert.deepEqual(summary.activity, {
+    mcpToolCalls: 2,
+    commandExecutions: 1,
+    observedSourceReadBytes: null,
+    limitation: "event trace does not prove complete source-read volume",
+  });
+});
+
 test("[AB-BENCH-001][AB-BENCH-007] prompt rendering is exact and rejects missing inputs", () => {
   assert.equal(renderAgentPrompt("{{A}}/{{B}}", { A: "one", B: "two" }), "one/two");
   assert.throws(() => renderAgentPrompt("{{MISSING}}", {}), /prompt value is missing/);
+});
+
+test("[AB-BENCH-007][AB-BENCH-012] captured agent text removes task and home-local roots", () => {
+  const repository = path.join(os.homedir(), "source");
+  const workspace = path.join(os.tmpdir(), "output");
+  assert.equal(
+    portableAgentText(`${repository} ${workspace} ${path.join(os.homedir(), ".codex", "skill.md")}`, { repository, workspace }),
+    "<SOURCE_ROOT> <OUTPUT_ROOT> <HOME>/.codex/skill.md",
+  );
 });
 
 test("[AB-BENCH-002][AB-BENCH-006][AB-BENCH-007] fake Codex run captures artifacts and preserves source", () => {
@@ -57,6 +100,46 @@ for (const tool of ["index_repository", "list_okf_schemas", "select_okf_schemas"
     assert.equal(result.outcome, "succeeded");
     assert.equal(spawnSync("git", ["-C", source, "status", "--porcelain"], { encoding: "utf8" }).stdout, "");
     for (const artifact of ["run.json", "prompt.md", "agent-events.jsonl", "agent-final.md", "okf/index.md"]) assert.ok(fs.existsSync(path.join(resultRoot, artifact)));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("[AB-BENCH-010][AB-BENCH-012] fake direct run has no MCP requirement and retains measurements", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-direct-benchmark-"));
+  try {
+    const source = path.join(root, "source");
+    fs.mkdirSync(source);
+    fs.writeFileSync(path.join(source, "README.md"), "unchanged\n");
+    for (const args of [["init"], ["config", "user.name", "Benchmark"], ["config", "user.email", "benchmark@example.invalid"], ["add", "."], ["commit", "-m", "fixture"]]) {
+      assert.equal(spawnSync("git", ["-C", source, ...args], { encoding: "utf8" }).status, 0);
+    }
+    const fake = path.join(root, "fake-codex.mjs");
+    fs.writeFileSync(fake, `#!/usr/bin/env node
+import fs from "node:fs";
+import path from "node:path";
+if (process.argv[2] === "--version") { console.log("fake-codex 1.0.0"); process.exit(0); }
+const args = process.argv.slice(2);
+if (args.some((arg) => arg.startsWith("mcp_servers.agentbase."))) process.exit(9);
+const workspace = args[args.indexOf("--cd") + 1];
+const finalMessage = args[args.indexOf("--output-last-message") + 1];
+fs.mkdirSync(path.join(workspace, "okf"));
+fs.writeFileSync(path.join(workspace, "okf", "index.md"), ["---", 'okf_version: "0.2"', "---", "", "# Empty", ""].join(String.fromCharCode(10)));
+fs.writeFileSync(finalMessage, "done");
+console.log(JSON.stringify({ type: "turn.completed", usage: { input_tokens: 20, output_tokens: 4 } }));
+`);
+    fs.chmodSync(fake, 0o755);
+    const commit = spawnSync("git", ["-C", source, "rev-parse", "HEAD"], { encoding: "utf8" }).stdout.trim();
+    const result = runAgentRepository({
+      manifest: { suite: "test", catalogVersion: "3.0.0", promptVersion: "okf-author-v1", agent: { executable: fake, version: "fake-codex 1.0.0", model: "fake", reasoningEffort: "medium", timeoutMs: 10_000 } },
+      entry: { id: "fixture", kind: "test", path: "fixture", commit }, repository: source,
+      root: path.join(root, "result"), executable: fake, arm: "direct",
+    });
+    assert.equal(result.outcome, "succeeded");
+    assert.equal(result.arm, "direct");
+    assert.deepEqual(result.requiredToolUsage, {});
+    assert.equal(result.usage.inputTokens, 20);
+    assert.equal(result.usage.cachedInputTokens, null);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

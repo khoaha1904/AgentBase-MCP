@@ -24,11 +24,21 @@ export function renderAgentPrompt(template, values) {
   });
 }
 
-export function buildCodexArgs({ workspace, finalMessage, model, reasoningEffort }) {
-  return [
+export function portableAgentText(value, { repository, workspace }) {
+  return value.split(repository).join("<SOURCE_ROOT>")
+    .split(workspace).join("<OUTPUT_ROOT>")
+    .split(projectRoot).join("<AGENTBASE_ROOT>")
+    .split(os.homedir()).join("<HOME>");
+}
+
+export function buildCodexArgs({ workspace, finalMessage, model, reasoningEffort, arm = "mcp" }) {
+  if (!["mcp", "direct"].includes(arm)) throw new Error(`unknown benchmark arm: ${arm}`);
+  const args = [
     "--ask-for-approval", "never", "exec", "--ephemeral", "--json", "--ignore-user-config", "--skip-git-repo-check", "--sandbox", "workspace-write",
     "--model", model, "--cd", workspace, "--output-last-message", finalMessage,
     "--config", `model_reasoning_effort=${toml(reasoningEffort)}`,
+  ];
+  if (arm === "mcp") args.push(
     "--config", `mcp_servers.agentbase.command=${toml(process.execPath)}`,
     "--config", `mcp_servers.agentbase.args=${toml([path.join(projectRoot, "src", "cli.ts"), "mcp"])}`,
     "--config", `mcp_servers.agentbase.cwd=${toml(projectRoot)}`,
@@ -36,20 +46,61 @@ export function buildCodexArgs({ workspace, finalMessage, model, reasoningEffort
     "--config", `mcp_servers.agentbase.default_tools_approval_mode=${toml("approve")}`,
     "--config", "mcp_servers.agentbase.startup_timeout_sec=30",
     "--config", "mcp_servers.agentbase.tool_timeout_sec=180",
-    "-",
-  ];
+  );
+  args.push("-");
+  return args;
 }
 
-function toolUsage(events) {
+function token(value) {
+  return Number.isFinite(value) && value >= 0 ? value : null;
+}
+
+export function summarizeAgentEvents(events) {
   const completed = new Set();
+  let mcpToolCalls = 0;
+  let commandExecutions = 0;
+  let usage = null;
   for (const line of events.split("\n")) {
     try {
       const event = JSON.parse(line);
       const item = event?.item;
-      if (event?.type === "item.completed" && item?.type === "mcp_tool_call"
-        && item?.status === "completed" && typeof item?.tool === "string") completed.add(item.tool);
+      if (event?.type === "item.completed" && item?.status === "completed") {
+        if (item?.type === "mcp_tool_call" && typeof item?.tool === "string") {
+          completed.add(item.tool);
+          mcpToolCalls += 1;
+        }
+        if (item?.type === "command_execution") commandExecutions += 1;
+      }
+      if (event?.type === "turn.completed" && event.usage && typeof event.usage === "object") {
+        const inputTokens = token(event.usage.input_tokens);
+        const cachedInputTokens = token(event.usage.cached_input_tokens);
+        usage = {
+          inputTokens,
+          cachedInputTokens,
+          cacheWriteInputTokens: token(event.usage.cache_write_input_tokens),
+          uncachedInputTokens: inputTokens !== null && cachedInputTokens !== null && inputTokens >= cachedInputTokens
+            ? inputTokens - cachedInputTokens : null,
+          outputTokens: token(event.usage.output_tokens),
+          reasoningOutputTokens: token(event.usage.reasoning_output_tokens),
+        };
+      }
     } catch { /* Preserve malformed trace for diagnostics; it cannot prove tool success. */ }
   }
+  return {
+    usage,
+    activity: {
+      mcpToolCalls,
+      commandExecutions,
+      observedSourceReadBytes: null,
+      limitation: "event trace does not prove complete source-read volume",
+    },
+    completedTools: [...completed].sort(),
+  };
+}
+
+function toolUsage(completedTools, arm) {
+  if (arm === "direct") return {};
+  const completed = new Set(completedTools);
   return Object.fromEntries(requiredTools.map((tool) => [tool, completed.has(tool)]));
 }
 
@@ -61,7 +112,10 @@ function validateAgentWorkspace(workspace) {
   if (!fs.statSync(path.join(workspace, "okf")).isDirectory()) throw new Error("agent output okf is not a directory");
 }
 
-export function runAgentRepository({ manifest, entry, repository, root, executable = manifest.agent.executable }) {
+export function runAgentRepository({
+  manifest, entry, repository, root, executable = manifest.agent.executable, arm = "mcp",
+}) {
+  if (!["mcp", "direct"].includes(arm)) throw new Error(`unknown benchmark arm: ${arm}`);
   const version = spawnSync(executable, ["--version"], { encoding: "utf8", timeout: 10_000 });
   const actualVersion = version.status === 0 ? version.stdout.trim() : "";
   if (actualVersion !== manifest.agent.version) {
@@ -70,8 +124,10 @@ export function runAgentRepository({ manifest, entry, repository, root, executab
   fs.mkdirSync(root, { recursive: true });
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-okf-benchmark-"));
   const startedAt = new Date().toISOString();
+  const startedMs = Date.now();
   const source = discoverRepositorySourceState(repository, startedAt);
-  const template = fs.readFileSync(path.join(projectRoot, "benchmark", "prompts", `${manifest.promptVersion}.md`), "utf8");
+  const promptVersion = arm === "direct" ? "okf-author-direct-v1" : manifest.promptVersion;
+  const template = fs.readFileSync(path.join(projectRoot, "benchmark", "prompts", `${promptVersion}.md`), "utf8");
   const prompt = renderAgentPrompt(template, {
     SOURCE_ROOT: repository,
     OUTPUT_ROOT: workspace,
@@ -91,12 +147,13 @@ export function runAgentRepository({ manifest, entry, repository, root, executab
   const run = {
     suite: manifest.suite,
     repository: entry.id,
+    arm,
     kind: entry.kind,
     fixturePath: entry.path,
     fixtureCommit: entry.commit,
     sourceRepositoryId: source.repositoryId,
     catalogVersion: manifest.catalogVersion,
-    promptVersion: manifest.promptVersion,
+    promptVersion,
     promptDigest: `sha256:${createHash("sha256").update(portablePrompt).digest("hex")}`,
     agent: { ...manifest.agent, executable, actualVersion },
     startedAt,
@@ -104,7 +161,9 @@ export function runAgentRepository({ manifest, entry, repository, root, executab
     outcome: "running",
   };
   writeJson(path.join(root, "run.json"), run);
-  const args = buildCodexArgs({ workspace, finalMessage, model: manifest.agent.model, reasoningEffort: manifest.agent.reasoningEffort });
+  const args = buildCodexArgs({
+    workspace, finalMessage, model: manifest.agent.model, reasoningEffort: manifest.agent.reasoningEffort, arm,
+  });
   const result = spawnSync(executable, args, {
     cwd: projectRoot,
     input: prompt,
@@ -112,7 +171,7 @@ export function runAgentRepository({ manifest, entry, repository, root, executab
     timeout: manifest.agent.timeoutMs,
     maxBuffer: 50 * 1024 * 1024,
   });
-  const portable = (value) => value.split(repository).join("<SOURCE_ROOT>").split(workspace).join("<OUTPUT_ROOT>").split(projectRoot).join("<AGENTBASE_ROOT>");
+  const portable = (value) => portableAgentText(value, { repository, workspace });
   fs.writeFileSync(eventsFile, portable(result.stdout || ""));
   if (fs.existsSync(finalMessage)) fs.writeFileSync(finalMessage, portable(fs.readFileSync(finalMessage, "utf8")));
   if (result.stderr) fs.writeFileSync(path.join(root, "agent-stderr.txt"), portable(result.stderr.slice(0, 1024 * 1024)));
@@ -128,14 +187,24 @@ export function runAgentRepository({ manifest, entry, repository, root, executab
   } catch (error) {
     failure = error instanceof Error ? error.message : "unknown agent failure";
   }
-  const usage = toolUsage(result.stdout || "");
+  const summary = summarizeAgentEvents(result.stdout || "");
+  const usage = toolUsage(summary.completedTools, arm);
+  const directMcpFailure = arm === "direct" && summary.activity.mcpToolCalls
+    ? ["direct arm unexpectedly observed MCP tool calls"] : [];
   const completed = {
     ...run,
     completedAt: new Date().toISOString(),
+    elapsedMs: Date.now() - startedMs,
     outcome: failure ? "failed" : "succeeded",
     process: { exitCode: result.status, signal: result.signal, error: result.error?.message ?? null },
+    usage: summary.usage,
+    activity: summary.activity,
     requiredToolUsage: usage,
-    failures: [...(failure ? [failure] : []), ...Object.entries(usage).filter(([, used]) => !used).map(([tool]) => `required MCP tool not observed: ${tool}`)],
+    failures: [
+      ...(failure ? [failure] : []),
+      ...directMcpFailure,
+      ...Object.entries(usage).filter(([, used]) => !used).map(([tool]) => `required MCP tool not observed: ${tool}`),
+    ],
   };
   if (completed.failures.length) completed.outcome = "failed";
   writeJson(path.join(root, "run.json"), completed);

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -11,9 +12,11 @@ import {
   validateAgentBaseDraft,
   validateConceptAgainstSchema,
 } from "../src/core/knowledge/index.ts";
+import { discoverRepositorySourceState } from "../src/app/repository-okf/index.ts";
 
 const projectRoot = path.resolve(import.meta.dirname, "..");
 const runIdPattern = /^\d{4}-\d{2}-\d{2}T\d{6}Z$/;
+const authoringGoal = "okf-v0.2-semantic-authoring-v1";
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, "utf8"));
@@ -57,6 +60,84 @@ export function utcRunId() {
 export function resultRoot(suite, repository, runId) {
   if (!runIdPattern.test(runId)) throw new Error(`invalid UTC run ID: ${runId}`);
   return path.join(projectRoot, "benchmark", "results", suite, repository, runId);
+}
+
+function fileDigest(file) {
+  return `sha256:${createHash("sha256").update(fs.readFileSync(file)).digest("hex")}`;
+}
+
+export async function runPairRepository({
+  manifest, entry, repository, root, pairId, executable = manifest.agent.executable,
+}) {
+  if (fs.existsSync(root)) throw new Error(`${entry.id}: result already exists for ${pairId}`);
+  const startedAt = new Date().toISOString();
+  const fixtureSource = discoverRepositorySourceState(repository, startedAt);
+  const expectationFile = path.join(manifest.root, entry.expectation);
+  const pair = {
+    suite: manifest.suite,
+    repository: entry.id,
+    pairId,
+    status: "running",
+    startedAt,
+    completedAt: null,
+    commonInputs: {
+      fixtureCommit: entry.commit,
+      sourceRepositoryId: fixtureSource.repositoryId,
+      fixtureDirty: fixtureSource.dirty,
+      fixtureDirtyDigest: fixtureSource.dirtyDigest,
+      expectationDigest: fileDigest(expectationFile),
+      catalogVersion: manifest.catalogVersion,
+      authoringGoal,
+      provider: manifest.agent.provider ?? "codex-cli",
+      agentVersion: manifest.agent.version,
+      model: manifest.agent.model,
+      reasoningEffort: manifest.agent.reasoningEffort,
+    },
+    agentBaseSource: discoverRepositorySourceState(projectRoot, startedAt),
+    arms: {
+      mcp: { path: "mcp", outcome: "pending", failures: [] },
+      direct: { path: "direct", outcome: "pending", failures: [] },
+    },
+    failures: [],
+  };
+  fs.mkdirSync(root, { recursive: true });
+  writeJson(path.join(root, "pair.json"), pair);
+  const { runAgentRepository } = await import("./benchmark-agent.mjs");
+  const failedArm = (arm, failure) => {
+    const armRoot = path.join(root, arm);
+    const result = {
+      suite: manifest.suite,
+      repository: entry.id,
+      arm,
+      outcome: "failed",
+      usage: null,
+      activity: null,
+      failures: [failure],
+    };
+    fs.mkdirSync(armRoot, { recursive: true });
+    writeJson(path.join(armRoot, "run.json"), result);
+    return result;
+  };
+  for (const arm of ["mcp", "direct"]) {
+    const armRoot = path.join(root, arm);
+    let result;
+    const currentSource = discoverRepositorySourceState(repository);
+    if (currentSource.commit !== fixtureSource.commit || currentSource.dirty !== fixtureSource.dirty
+      || currentSource.dirtyDigest !== fixtureSource.dirtyDigest) {
+      result = failedArm(arm, `source repository changed before ${arm} arm`);
+    } else try {
+      result = runAgentRepository({ manifest, entry, repository, root: armRoot, executable, arm });
+    } catch (error) {
+      const failure = error instanceof Error ? error.message : "unknown arm failure";
+      result = failedArm(arm, failure);
+    }
+    pair.arms[arm] = { path: arm, outcome: result.outcome, failures: result.failures };
+  }
+  pair.failures = Object.entries(pair.arms).flatMap(([arm, result]) =>
+    result.outcome === "succeeded" ? [] : result.failures.map((failure) => `${arm} arm: ${failure}`));
+  if (pair.failures.length) pair.status = "incomplete";
+  writeJson(path.join(root, "pair.json"), pair);
+  return pair;
 }
 
 function selectedRepositories(manifest, repository) {
@@ -194,17 +275,20 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId) {
 }
 
 function reportFor(entry, run, metrics) {
+  const agent = run.agent ? `${run.agent.model} via ${run.agent.actualVersion}` : "unavailable";
+  const catalogPrompt = run.catalogVersion && run.promptVersion
+    ? `${run.catalogVersion} / ${run.promptVersion}` : "unavailable";
   if (run.outcome !== "succeeded") {
     return `# ${entry.id} — agent OKF benchmark\n\n`
-      + `- Agent: \`${run.agent.model}\` via \`${run.agent.actualVersion}\`\n`
-      + `- Catalog/prompt: \`${run.catalogVersion}\` / \`${run.promptVersion}\`\n`
+      + `- Agent: ${agent}\n`
+      + `- Catalog/prompt: ${catalogPrompt}\n`
       + `- Agent outcome: failed\n- OKF validation: failed\n`
-      + `- Semantic metrics: not scored because the required MCP lifecycle failed\n`
+      + `- Semantic metrics: not scored because the ${run.arm ?? "mcp"} arm lifecycle failed\n`
       + `\n## Validation failures\n\n${metrics.validation.failures.map((item) => `- ${item}`).join("\n")}\n`;
   }
   return `# ${entry.id} — agent OKF benchmark\n\n`
-    + `- Agent: \`${run.agent.model}\` via \`${run.agent.actualVersion}\`\n`
-    + `- Catalog/prompt: \`${run.catalogVersion}\` / \`${run.promptVersion}\`\n`
+    + `- Agent: ${agent}\n`
+    + `- Catalog/prompt: ${catalogPrompt}\n`
     + `- Agent outcome: ${run.outcome}\n`
     + `- OKF validation: ${metrics.validation.passed ? "passed" : "failed"}\n`
     + `- Concept precision / recall: ${metrics.conceptPrecisionPercent}% / ${metrics.conceptRecallPercent}%\n`
@@ -238,6 +322,50 @@ function invalidMetrics(suite, repository, runId, error) {
   };
 }
 
+function efficiencyFor(run) {
+  if (!run) return null;
+  return {
+    elapsedMs: Number.isFinite(run.elapsedMs) ? run.elapsedMs : null,
+    inputTokens: run.usage?.inputTokens ?? null,
+    cachedInputTokens: run.usage?.cachedInputTokens ?? null,
+    cacheWriteInputTokens: run.usage?.cacheWriteInputTokens ?? null,
+    uncachedInputTokens: run.usage?.uncachedInputTokens ?? null,
+    outputTokens: run.usage?.outputTokens ?? null,
+    reasoningOutputTokens: run.usage?.reasoningOutputTokens ?? null,
+  };
+}
+
+export function createPairComparison({ pair, runs, metrics }) {
+  const failures = [];
+  for (const arm of ["mcp", "direct"]) {
+    const run = runs[arm];
+    if (!run) failures.push(`${arm} arm run is missing`);
+    else if (run.outcome !== "succeeded") failures.push(`${arm} arm did not succeed: ${run.failures?.join("; ") || "unknown failure"}`);
+    if (!metrics[arm]) failures.push(`${arm} arm metrics are unavailable`);
+    if (run && !run.usage) failures.push(`${arm} arm token usage is unavailable`);
+    if (run && !Number.isFinite(run.elapsedMs)) failures.push(`${arm} arm elapsed time is unavailable`);
+  }
+  const efficiency = {
+    mcp: efficiencyFor(runs.mcp),
+    direct: efficiencyFor(runs.direct),
+    delta: {},
+  };
+  for (const field of ["elapsedMs", "inputTokens", "cachedInputTokens", "cacheWriteInputTokens", "uncachedInputTokens", "outputTokens", "reasoningOutputTokens"]) {
+    const mcp = efficiency.mcp?.[field];
+    const direct = efficiency.direct?.[field];
+    if (Number.isFinite(mcp) && Number.isFinite(direct)) efficiency.delta[field] = mcp - direct;
+  }
+  return {
+    suite: pair.suite,
+    repository: pair.repository,
+    pairId: pair.pairId,
+    completeness: { status: failures.length ? "incomplete" : "complete", failures },
+    quality: { mcp: metrics.mcp ?? null, direct: metrics.direct ?? null },
+    efficiency,
+    activity: { mcp: runs.mcp?.activity ?? null, direct: runs.direct?.activity ?? null },
+  };
+}
+
 export function loadScorableBundle(root) {
   try {
     return loadOkfBundle(root, { requireAgentBaseRootIndex: true });
@@ -267,6 +395,108 @@ export function loadScorableBundle(root) {
   }
 }
 
+function finalizeArmRoot({ manifest, entry, root, runId }) {
+  let runData;
+  try {
+    runData = readJson(path.join(root, "run.json"));
+  } catch (error) {
+    return { run: null, metrics: null, failure: `run artifact is unavailable: ${error instanceof Error ? error.message : "unknown error"}` };
+  }
+  const fail = (failure) => {
+    const metrics = invalidMetrics(manifest.suite, entry.id, runId, failure);
+    writeJson(path.join(root, "metrics.json"), metrics);
+    fs.writeFileSync(path.join(root, "report.md"), reportFor(entry, runData, metrics));
+    return { run: runData, metrics: null, failure };
+  };
+  if (runData.outcome !== "succeeded") return fail(`agent run failed: ${runData.failures?.join("; ") || "unknown failure"}`);
+  if (runData.catalogVersion !== manifest.catalogVersion) return fail("catalog version changed");
+  for (const required of ["prompt.md", "agent-events.jsonl", "agent-final.md", "okf"]) {
+    if (!fs.existsSync(path.join(root, required))) return fail(`missing agent artifact ${required}`);
+  }
+  const expectation = readJson(path.join(manifest.root, entry.expectation));
+  let metrics;
+  try {
+    const bundle = loadScorableBundle(path.join(root, "okf"));
+    metrics = {
+      suite: manifest.suite,
+      repository: entry.id,
+      runId,
+      arm: runData.arm ?? "mcp",
+      ...scoreSemanticBenchmark(expectation, bundle, runData.sourceRepositoryId),
+      okfTreeDigest: bundle.treeDigest,
+    };
+  } catch (error) {
+    metrics = invalidMetrics(manifest.suite, entry.id, runId, error instanceof Error ? error.message : "unknown error");
+  }
+  writeJson(path.join(root, "metrics.json"), metrics);
+  fs.writeFileSync(path.join(root, "report.md"), reportFor(entry, runData, metrics));
+  return { run: runData, metrics, failure: null };
+}
+
+function pairReportFor(comparison) {
+  const quality = (arm) => {
+    const metrics = comparison.quality[arm];
+    return metrics
+      ? `- ${arm}: validation ${metrics.validation.passed ? "passed" : "failed"}; concept P/R ${metrics.conceptPrecisionPercent}%/${metrics.conceptRecallPercent}%; schema P/R ${metrics.schemaPrecisionPercent}%/${metrics.schemaRecallPercent}%; metadata ${metrics.metadataCompletenessPercent}%; provenance ${metrics.provenanceCoveragePercent}%; relationships ${metrics.relationshipCoveragePercent}%`
+      : `- ${arm}: unavailable`;
+  };
+  const efficiency = (arm) => {
+    const item = comparison.efficiency[arm];
+    return item
+      ? `- ${arm}: ${item.inputTokens ?? "n/a"} input (${item.cachedInputTokens ?? "n/a"} cached, ${item.uncachedInputTokens ?? "n/a"} uncached); ${item.outputTokens ?? "n/a"} output; ${item.reasoningOutputTokens ?? "n/a"} reasoning; ${item.elapsedMs ?? "n/a"} ms`
+      : `- ${arm}: unavailable`;
+  };
+  const failures = comparison.completeness.failures.length
+    ? `\n## Incomplete evidence\n\n${comparison.completeness.failures.map((item) => `- ${item}`).join("\n")}\n` : "";
+  return `# ${comparison.repository} — AgentBase context A/B\n\n`
+    + `- Status: ${comparison.completeness.status}\n`
+    + "- Interpretation: quality and efficiency are independent; this report declares no overall winner.\n"
+    + "\n## Quality\n\n"
+    + `${quality("mcp")}\n${quality("direct")}\n`
+    + "\n## Efficiency\n\n"
+    + `${efficiency("mcp")}\n${efficiency("direct")}\n`
+    + `- Delta convention: MCP minus direct. ${JSON.stringify(comparison.efficiency.delta)}\n`
+    + "\n## Investigation activity\n\n"
+    + "- Counts are directly observed events, not proof of complete source-read volume.\n"
+    + failures;
+}
+
+export function comparePairRepository({ manifest, entry, repository, root, pairId }) {
+  const pair = readJson(path.join(root, "pair.json"));
+  const identityFailures = [];
+  if (pair.suite !== manifest.suite || pair.repository !== entry.id || pair.pairId !== pairId) {
+    identityFailures.push("pair identity does not match requested suite, repository and pair ID");
+  }
+  if (pair.commonInputs.fixtureCommit !== entry.commit) identityFailures.push("fixture commit changed");
+  if (pair.commonInputs.expectationDigest !== fileDigest(path.join(manifest.root, entry.expectation))) {
+    identityFailures.push("expectation changed");
+  }
+  if (pair.commonInputs.catalogVersion !== manifest.catalogVersion) identityFailures.push("catalog version changed");
+  if (pair.commonInputs.authoringGoal !== authoringGoal) identityFailures.push("authoring goal changed");
+  if (pair.commonInputs.agentVersion !== manifest.agent.version) identityFailures.push("agent version changed");
+  if (pair.commonInputs.model !== manifest.agent.model || pair.commonInputs.reasoningEffort !== manifest.agent.reasoningEffort) {
+    identityFailures.push("agent model or reasoning effort changed");
+  }
+  const finalized = Object.fromEntries(["mcp", "direct"].map((arm) => [
+    arm,
+    finalizeArmRoot({ manifest, entry, root: path.join(root, arm), runId: pairId }),
+  ]));
+  const comparison = createPairComparison({
+    pair,
+    runs: { mcp: finalized.mcp.run, direct: finalized.direct.run },
+    metrics: { mcp: finalized.mcp.metrics, direct: finalized.direct.metrics },
+  });
+  comparison.completeness.failures.push(...identityFailures);
+  if (identityFailures.length) comparison.completeness.status = "incomplete";
+  writeJson(path.join(root, "comparison.json"), comparison);
+  fs.writeFileSync(path.join(root, "report.md"), pairReportFor(comparison));
+  pair.status = comparison.completeness.status;
+  pair.completedAt = new Date().toISOString();
+  pair.failures = comparison.completeness.failures;
+  writeJson(path.join(root, "pair.json"), pair);
+  return comparison;
+}
+
 async function run(suite, repository, requestedRunId) {
   const manifest = manifestFor(suite);
   const runId = requestedRunId || utcRunId();
@@ -288,37 +518,58 @@ async function run(suite, repository, requestedRunId) {
   if (summaries.some((item) => item.outcome !== "succeeded")) process.exitCode = 1;
 }
 
+async function pair(suite, repository, requestedPairId) {
+  if (!repository) throw new Error("paired benchmark requires one repository");
+  const manifest = manifestFor(suite);
+  const pairId = requestedPairId || utcRunId();
+  const [entry] = selectedRepositories(manifest, repository);
+  const source = fixtureFor(entry);
+  const result = await runPairRepository({
+    manifest,
+    entry,
+    repository: source,
+    root: resultRoot(suite, entry.id, pairId),
+    pairId,
+  });
+  process.stdout.write(`${JSON.stringify({ suite, repository, pairId, status: result.status, arms: result.arms }, null, 2)}\n`);
+  if (result.status === "incomplete") process.exitCode = 1;
+}
+
 function finalize(suite, runId, repository) {
   const manifest = manifestFor(suite);
   const summaries = [];
   for (const entry of selectedRepositories(manifest, repository)) {
     fixtureFor(entry);
     const root = resultRoot(suite, entry.id, runId);
-    const runData = readJson(path.join(root, "run.json"));
-    if (runData.outcome !== "succeeded") throw new Error(`${entry.id}: agent run did not succeed`);
-    if (runData.catalogVersion !== manifest.catalogVersion) throw new Error(`${entry.id}: catalog version changed`);
-    for (const required of ["prompt.md", "agent-events.jsonl", "agent-final.md", "okf"]) {
-      if (!fs.existsSync(path.join(root, required))) throw new Error(`${entry.id}: missing agent artifact ${required}`);
-    }
-    const expectation = readJson(path.join(manifest.root, entry.expectation));
-    let metrics;
-    try {
-      const bundle = loadScorableBundle(path.join(root, "okf"));
-      metrics = { suite, repository: entry.id, runId, ...scoreSemanticBenchmark(expectation, bundle, runData.sourceRepositoryId), okfTreeDigest: bundle.treeDigest };
-    } catch (error) {
-      metrics = invalidMetrics(suite, entry.id, runId, error instanceof Error ? error.message : "unknown error");
-    }
-    writeJson(path.join(root, "metrics.json"), metrics);
-    fs.writeFileSync(path.join(root, "report.md"), reportFor(entry, runData, metrics));
-    summaries.push(metrics);
+    const result = finalizeArmRoot({ manifest, entry, root, runId });
+    if (result.failure) throw new Error(`${entry.id}: ${result.failure}`);
+    summaries.push(result.metrics);
   }
   process.stdout.write(`${JSON.stringify({ suite, runId, repositories: summaries }, null, 2)}\n`);
   if (summaries.some((item) => !item.validation.passed)) process.exitCode = 1;
 }
 
+function compare(suite, pairId, repository) {
+  if (!repository) throw new Error("paired comparison requires one repository");
+  const manifest = manifestFor(suite);
+  const [entry] = selectedRepositories(manifest, repository);
+  const source = fixtureFor(entry);
+  const comparison = comparePairRepository({
+    manifest,
+    entry,
+    repository: source,
+    root: resultRoot(suite, entry.id, pairId),
+    pairId,
+  });
+  process.stdout.write(`${JSON.stringify(comparison, null, 2)}\n`);
+  if (comparison.completeness.status !== "complete") process.exitCode = 1;
+}
+
 function usage() {
   process.stderr.write("Usage: npm run benchmark:okf -- run <suite> [repository] [UTC-run-id]\n"
-    + "       npm run benchmark:okf -- finalize <suite> <UTC-run-id> [repository]\n");
+    + "       npm run benchmark:okf -- finalize <suite> <UTC-run-id> [repository]\n"
+    + "       npm run benchmark:okf -- pair <suite> <repository> [UTC-pair-id]\n"
+    + "       npm run benchmark:okf -- compare <suite> <UTC-pair-id> <repository>\n");
   process.exitCode = 2;
 }
 
@@ -328,6 +579,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
     if (extra.length || !suite) usage();
     else if (command === "run") await run(suite, first, second);
     else if (command === "finalize" && first) finalize(suite, first, second);
+    else if (command === "pair" && first) await pair(suite, first, second);
+    else if (command === "compare" && first && second) compare(suite, first, second);
     else usage();
   } catch (error) {
     process.stderr.write(`OKF benchmark failed: ${error instanceof Error ? error.message : "unknown error"}\n`);

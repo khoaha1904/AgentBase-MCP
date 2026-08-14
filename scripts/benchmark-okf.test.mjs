@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
 
 import { parseConceptDocument } from "../src/core/knowledge/index.ts";
+import * as benchmarkOkf from "./benchmark-okf.mjs";
 import { loadScorableBundle, scoreSemanticBenchmark } from "./benchmark-okf.mjs";
 
 const repositoryId = "repository-example-aaaaaaaaaaaa";
@@ -37,6 +39,73 @@ const expectation = {
   ],
   relationships: [{ from: "primary-lambda", to: "orders-table", kind: "accesses" }],
 };
+
+function pairHarness({
+  failMcp = false,
+  timeoutMcp = false,
+  omitMcpOutput = false,
+  malformedDirectUsage = false,
+  driftMcp = false,
+} = {}) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-pair-benchmark-"));
+  const source = path.join(root, "source");
+  const suiteRoot = path.join(root, "suite");
+  const expected = path.join(suiteRoot, "expected");
+  const log = path.join(root, "calls.log");
+  fs.mkdirSync(source);
+  fs.mkdirSync(expected, { recursive: true });
+  fs.writeFileSync(path.join(source, "README.md"), "unchanged\n");
+  fs.writeFileSync(path.join(expected, "fixture.json"), JSON.stringify({ concepts: [], relationships: [] }));
+  for (const args of [["init"], ["config", "user.name", "Benchmark"], ["config", "user.email", "benchmark@example.invalid"], ["add", "."], ["commit", "-m", "fixture"]]) {
+    assert.equal(spawnSync("git", ["-C", source, ...args], { encoding: "utf8" }).status, 0);
+  }
+  const fake = path.join(root, "fake-codex.mjs");
+  fs.writeFileSync(fake, [
+    "#!/usr/bin/env node",
+    'import fs from "node:fs";',
+    'import path from "node:path";',
+    'if (process.argv[2] === "--version") { console.log("fake-codex 1.0.0"); process.exit(0); }',
+    "const args = process.argv.slice(2);",
+    'const mcp = args.some((arg) => arg.startsWith("mcp_servers.agentbase."));',
+    "const log = " + JSON.stringify(log) + ";",
+    'fs.appendFileSync(log, (mcp ? "mcp" : "direct") + String.fromCharCode(10));',
+    failMcp ? 'if (mcp) { console.error("mcp failed"); process.exit(7); }' : "",
+    timeoutMcp ? "if (mcp) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);" : "",
+    'const workspace = args[args.indexOf("--cd") + 1];',
+    'const finalMessage = args[args.indexOf("--output-last-message") + 1];',
+    omitMcpOutput ? 'if (!mcp) fs.mkdirSync(path.join(workspace, "okf"));' : 'fs.mkdirSync(path.join(workspace, "okf"));',
+    omitMcpOutput ? 'if (!mcp) fs.writeFileSync(path.join(workspace, "okf", "index.md"), ["---", "okf_version: " + String.fromCharCode(34) + "0.2" + String.fromCharCode(34), "---", "", "# Empty", ""].join(String.fromCharCode(10)));' : 'fs.writeFileSync(path.join(workspace, "okf", "index.md"), ["---", "okf_version: " + String.fromCharCode(34) + "0.2" + String.fromCharCode(34), "---", "", "# Empty", ""].join(String.fromCharCode(10)));',
+    omitMcpOutput ? 'if (!mcp) fs.writeFileSync(finalMessage, "done");' : 'fs.writeFileSync(finalMessage, "done");',
+    driftMcp ? 'if (mcp) fs.writeFileSync(' + JSON.stringify(path.join(source, "README.md")) + ', "changed");' : "",
+    'if (mcp) for (const tool of ["index_repository", "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept"]) console.log(JSON.stringify({ type: "item.completed", item: { type: "mcp_tool_call", tool, status: "completed" } }));',
+    malformedDirectUsage ? 'if (!mcp) console.log("{malformed"); else console.log(JSON.stringify({ type: "turn.completed", usage: { input_tokens: 10, cached_input_tokens: 2, output_tokens: 4, reasoning_output_tokens: 1 } }));' : 'console.log(JSON.stringify({ type: "turn.completed", usage: { input_tokens: mcp ? 10 : 20, cached_input_tokens: 2, output_tokens: 4, reasoning_output_tokens: 1 } }));',
+  ].join("\n"));
+  fs.chmodSync(fake, 0o755);
+  const commit = spawnSync("git", ["-C", source, "rev-parse", "HEAD"], { encoding: "utf8" }).stdout.trim();
+  return {
+    root, source, log, result: path.join(root, "result"), executable: fake,
+    manifest: {
+      suite: "test-suite", root: suiteRoot, catalogVersion: "3.0.0", promptVersion: "okf-author-v1",
+      agent: { executable: fake, version: "fake-codex 1.0.0", model: "fake", reasoningEffort: "medium", timeoutMs: timeoutMcp ? 150 : 10_000 },
+    },
+    entry: { id: "fixture", kind: "test", path: "fixture", commit, expectation: "expected/fixture.json" },
+  };
+}
+
+function sampleMetrics(precision) {
+  return {
+    validation: { passed: true, failures: [] },
+    conceptPrecisionPercent: precision,
+    conceptRecallPercent: 100,
+    schemaPrecisionPercent: precision,
+    schemaRecallPercent: 100,
+    metadataCompletenessPercent: 100,
+    provenanceCoveragePercent: 100,
+    relationshipCoveragePercent: 100,
+    unexpectedConcepts: [],
+    unexpectedRelationships: [],
+  };
+}
 
 test("[AB-BENCH-004][AB-BENCH-005] complete semantic OKF receives separate perfect metrics", () => {
   const result = scoreSemanticBenchmark(expectation, fixtureBundle(), repositoryId);
@@ -83,4 +152,152 @@ test("[AB-BENCH-005][AB-BENCH-006] invalid index fails conformance without hidin
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
+});
+
+test("[AB-BENCH-009][AB-BENCH-010][AB-BENCH-011][AB-BENCH-017] paired invocation shares inputs and isolates sequential arms", async (t) => {
+  const harness = pairHarness();
+  t.after(() => fs.rmSync(harness.root, { recursive: true, force: true }));
+  const pair = await benchmarkOkf.runPairRepository({
+    manifest: harness.manifest,
+    entry: harness.entry,
+    repository: harness.source,
+    root: harness.result,
+    executable: harness.executable,
+    pairId: "2026-08-15T000000Z",
+  });
+  assert.deepEqual(fs.readFileSync(harness.log, "utf8").trim().split("\n"), ["mcp", "direct"]);
+  assert.equal(pair.commonInputs.fixtureCommit, harness.entry.commit);
+  assert.equal(pair.commonInputs.model, "fake");
+  assert.equal(pair.commonInputs.reasoningEffort, "medium");
+  assert.equal(typeof pair.commonInputs.expectationDigest, "string");
+  assert.equal(typeof pair.agentBaseSource.dirty, "boolean");
+  assert.equal(pair.arms.mcp.outcome, "succeeded");
+  assert.equal(pair.arms.direct.outcome, "succeeded");
+  assert.equal(JSON.parse(fs.readFileSync(path.join(harness.result, "mcp", "run.json"))).arm, "mcp");
+  assert.equal(JSON.parse(fs.readFileSync(path.join(harness.result, "direct", "run.json"))).arm, "direct");
+  assert.equal(spawnSync("git", ["-C", harness.source, "status", "--porcelain"], { encoding: "utf8" }).stdout, "");
+  const comparison = benchmarkOkf.comparePairRepository({
+    manifest: harness.manifest,
+    entry: harness.entry,
+    repository: harness.source,
+    root: harness.result,
+    pairId: "2026-08-15T000000Z",
+  });
+  assert.equal(comparison.completeness.status, "complete");
+  assert.ok(fs.existsSync(path.join(harness.result, "comparison.json")));
+  assert.ok(fs.existsSync(path.join(harness.result, "report.md")));
+  await assert.rejects(() => benchmarkOkf.runPairRepository({
+    manifest: harness.manifest,
+    entry: harness.entry,
+    repository: harness.source,
+    root: harness.result,
+    executable: harness.executable,
+    pairId: "2026-08-15T000000Z",
+  }), /result already exists/);
+});
+
+test("[AB-BENCH-013][AB-BENCH-014][AB-BENCH-015] comparison keeps quality and efficiency separate without a winner", () => {
+  const comparison = benchmarkOkf.createPairComparison({
+    pair: { suite: "test", repository: "fixture", pairId: "2026-08-15T000000Z" },
+    runs: {
+      mcp: {
+        outcome: "succeeded", elapsedMs: 80,
+        usage: { inputTokens: 100, cachedInputTokens: 70, cacheWriteInputTokens: 0, uncachedInputTokens: 30, outputTokens: 10, reasoningOutputTokens: 2 },
+        activity: { mcpToolCalls: 5, commandExecutions: 1, observedSourceReadBytes: null, limitation: "unknown" },
+      },
+      direct: {
+        outcome: "succeeded", elapsedMs: 100,
+        usage: { inputTokens: 160, cachedInputTokens: 80, cacheWriteInputTokens: null, uncachedInputTokens: 80, outputTokens: 12, reasoningOutputTokens: 3 },
+        activity: { mcpToolCalls: 0, commandExecutions: 4, observedSourceReadBytes: null, limitation: "unknown" },
+      },
+    },
+    metrics: { mcp: sampleMetrics(90), direct: sampleMetrics(80) },
+  });
+  assert.equal(comparison.completeness.status, "complete");
+  assert.equal(comparison.quality.mcp.conceptPrecisionPercent, 90);
+  assert.equal(comparison.quality.direct.conceptPrecisionPercent, 80);
+  assert.equal(comparison.efficiency.delta.inputTokens, -60);
+  assert.equal(comparison.efficiency.delta.elapsedMs, -20);
+  assert.equal("cacheWriteInputTokens" in comparison.efficiency.delta, false);
+  assert.equal(comparison.activity.mcp.mcpToolCalls, 5);
+  assert.equal(JSON.stringify(comparison).includes("winner"), false);
+});
+
+test("[AB-BENCH-016][AB-BENCH-017] first-arm failure still runs the direct arm and yields incomplete evidence", async (t) => {
+  const harness = pairHarness({ failMcp: true });
+  t.after(() => fs.rmSync(harness.root, { recursive: true, force: true }));
+  const pair = await benchmarkOkf.runPairRepository({
+    manifest: harness.manifest,
+    entry: harness.entry,
+    repository: harness.source,
+    root: harness.result,
+    executable: harness.executable,
+    pairId: "2026-08-15T000001Z",
+  });
+  assert.deepEqual(fs.readFileSync(harness.log, "utf8").trim().split("\n"), ["mcp", "direct"]);
+  assert.equal(pair.status, "incomplete");
+  assert.equal(pair.arms.mcp.outcome, "failed");
+  assert.equal(pair.arms.direct.outcome, "succeeded");
+  assert.ok(fs.existsSync(path.join(harness.result, "mcp", "run.json")));
+  assert.ok(fs.existsSync(path.join(harness.result, "direct", "run.json")));
+  const comparison = benchmarkOkf.comparePairRepository({
+    manifest: harness.manifest,
+    entry: harness.entry,
+    repository: harness.source,
+    root: harness.result,
+    pairId: "2026-08-15T000001Z",
+  });
+  assert.equal(comparison.completeness.status, "incomplete");
+  assert.match(comparison.completeness.failures.join("\n"), /mcp arm/);
+  assert.ok(fs.existsSync(path.join(harness.result, "comparison.json")));
+});
+
+test("[AB-BENCH-016][AB-BENCH-017] timeout, missing output and malformed usage retain honest partial pairs", async (t) => {
+  for (const [name, options] of [
+    ["timeout", { timeoutMcp: true }],
+    ["missing-output", { omitMcpOutput: true }],
+    ["malformed-usage", { malformedDirectUsage: true }],
+  ]) {
+    await t.test(name, async (t) => {
+      const harness = pairHarness(options);
+      t.after(() => fs.rmSync(harness.root, { recursive: true, force: true }));
+      await benchmarkOkf.runPairRepository({
+        manifest: harness.manifest,
+        entry: harness.entry,
+        repository: harness.source,
+        root: harness.result,
+        executable: harness.executable,
+        pairId: "2026-08-15T000002Z",
+      });
+      assert.equal(fs.readFileSync(harness.log, "utf8").includes("direct"), true);
+      const comparison = benchmarkOkf.comparePairRepository({
+        manifest: harness.manifest,
+        entry: harness.entry,
+        repository: harness.source,
+        root: harness.result,
+        pairId: "2026-08-15T000002Z",
+      });
+      assert.equal(comparison.completeness.status, "incomplete");
+      assert.equal(spawnSync("git", ["-C", harness.source, "status", "--porcelain"], { encoding: "utf8" }).stdout, "");
+    });
+  }
+});
+
+test("[AB-BENCH-009][AB-BENCH-016] source drift blocks a contaminated second execution but retains its failure evidence", async (t) => {
+  const harness = pairHarness({ driftMcp: true });
+  t.after(() => fs.rmSync(harness.root, { recursive: true, force: true }));
+  const pair = await benchmarkOkf.runPairRepository({
+    manifest: harness.manifest,
+    entry: harness.entry,
+    repository: harness.source,
+    root: harness.result,
+    executable: harness.executable,
+    pairId: "2026-08-15T000003Z",
+  });
+  assert.equal(pair.status, "incomplete");
+  assert.match(pair.arms.mcp.failures.join("\n"), /source repository changed/);
+  assert.equal(pair.arms.direct.outcome, "failed");
+  assert.deepEqual(fs.readFileSync(harness.log, "utf8").trim().split("\n"), ["mcp"]);
+  assert.match(pair.arms.direct.failures.join("\n"), /source repository changed before direct arm/);
+  assert.ok(fs.existsSync(path.join(harness.result, "direct", "run.json")));
 });

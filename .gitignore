@@ -36,3 +36,8 @@ local-graphs/
 # okf/ directory itself remains visible to Git.
 .agentbase-okf-next-*/
 .agentbase-okf-backup-*/
+
+# Superseded documentation is kept locally for reference. Current, portable
+# documentation lives in the tracked files directly under docs/ and
+# docs/contracts/; Git history remains the shared archive.
+docs/.archived/

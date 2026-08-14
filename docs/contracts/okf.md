@@ -1,0 +1,98 @@
+# Evidence and OKF contract
+
+Current contract for explicit observations, repository-local OKF proposals and
+the AgentBase concept schema catalog. Google OKF v0.2 is the portable format;
+AgentBase lifecycle fields and types are producer conventions.
+
+Normative OKF source is pinned to commit
+`3fcbb9f828c2f23d109c855ee403c3a4c81f3a96`:
+<https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/3fcbb9f828c2f23d109c855ee403c3a4c81f3a96/okf/SPEC.md>.
+
+## Repository proposal lifecycle
+
+- **AB-MVP-008** — The current host coding agent performs synthesis through the
+  repository `agentbase-okf` skill; AgentBase adds no model SDK or model key.
+- **AB-MVP-009** — `okf prepare` byte-copies current knowledge into an isolated
+  proposal and never mutates the shared `okf/` bundle.
+- **AB-MVP-010, AB-MVP-011** — Concept files have bounded parseable YAML
+  frontmatter and non-empty `type`; reserved files follow OKF v0.2, root
+  `index.md` declares `okf_version: "0.2"`, IDs are bundle-relative paths and
+  ordinary Markdown links provide progressive disclosure.
+- **AB-MVP-012** — New generated concepts are honest drafts with
+  `generated.by: agentbase/<version>`, meaningful generation time, normalized
+  sources and no invented verification.
+- **AB-MVP-013** — Unknown types/extensions round-trip; broken links warn rather
+  than authorize invented concepts.
+- **AB-MVP-014** — Previous generated knowledge may guide continuity but is not
+  independent evidence and cannot increase trust by repetition.
+- **AB-MVP-015** — Finalization binds base/evidence/tree digests, validates
+  conformance/producer rules and reports created, modified, preserved, allowed
+  owned-draft deletions and prohibited deletions.
+- **AB-MVP-016** — Durable correction/defer is a linked `Maintainer Guidance`
+  concept authored by `human:<id>`, never a hidden sidecar or text marker.
+- **AB-MVP-017** — A stable defer remains active until the same maintainer
+  directive is removed or explicitly set to `reopen`.
+- **AB-MVP-018** — Only an explicit unverified `agentbase/` draft is mutable;
+  every other concept is protected byte-for-byte and unknown values survive
+  owned-draft rewrites.
+- **AB-MVP-019** — Apply rejects stale base, changed generated tree, invalid
+  proposal, protected mutation and prohibited deletion; only an explicitly
+  diffed owned-draft deletion is allowed.
+- **AB-MVP-020** — State changes use one repository-local atomic lock, a complete
+  sibling next bundle and phase manifest with deterministic checkpoint recovery.
+- **AB-MVP-021** — The accepted 12-file rehearsal proves five facts within
+  three source files, linked drafts, guidance/defer, allowed deletion, stale
+  rejection and recovery.
+- **AB-MVP-022** — Graph/direct-source comparison may record time, presented
+  context, fact coverage and correction count; no unmeasured speed threshold is
+  a product claim.
+
+## Explicit observations
+
+- **AB-OBS-001, AB-OBS-004** — `observe` is a separate user action for one
+  repository/symbol. It never starts implicitly and never creates, validates,
+  changes or applies OKF; OKF needs another explicit command.
+- **AB-OBS-002** — Exact managed Codebase Memory owns indexing, graph structure,
+  graph semantics and graph queries; AgentBase owns no parallel canonical graph.
+- **AB-OBS-003** — Only normalized evidence crosses the bridge: exact engine and
+  source identity, bounded queries, facts, relative sources, completeness,
+  limitations and digest. Provider-private graph records do not.
+- **AB-OBS-005** — Equivalent evidence has stable order/digest; source or engine
+  changes remain visible.
+- **AB-OBS-006** — Invalid input, provider failure, source mutation or cleanup
+  failure returns a distinct failure and no partial observation.
+- **AB-OBS-007** — Observation preserves package-private admission, private
+  cache, bounded process/session, source integrity and confirmed cleanup.
+
+## Concrete schema catalog
+
+- **AB-SCHEMA-001** — MCP exposes one explicit catalog version and target OKF
+  version. Every schema gives purpose, specificity, evidence criteria, path hint,
+  required frontmatter, body guidance, limitations and allowed links.
+- **AB-SCHEMA-002** — Selection is advisory and matches graph plus authorized
+  manifests, infrastructure, documentation and source evidence; it exposes
+  matched/missing evidence and never fabricates a fact.
+- **AB-SCHEMA-003** — Create only observed useful instances and required indexes.
+  One schema may yield many concepts and unused schemas yield no scaffolds.
+- **AB-SCHEMA-004** — Validation layers base OKF conformance, common AgentBase
+  draft/provenance rules and the selected concrete schema. Missing evidence is a
+  limitation or failure, never a placeholder claim.
+- **AB-SCHEMA-005, AB-SCHEMA-006** — Unknown OKF types/extensions remain valid
+  and protected. The catalog is distinct from MCP input schemas and provider
+  graph schemas; raw graph data is never copied wholesale into Hub.
+- **AB-SCHEMA-007** — The corrected concrete vocabulary contains Repository,
+  Service, Server, API Endpoint, Event, Database Table, Queue, AWS Lambda, AWS
+  SQS Queue, Terraform Module, Business Flow, Cross-Repository Relationship,
+  Open Question and Maintainer Guidance.
+- **AB-SCHEMA-008** — Selection deterministically prefers the most-specific type
+  actually supported by evidence; repeated instances remain separate concepts.
+- **AB-SCHEMA-009** — Concrete concepts preserve provenance and important
+  uncertainty. Cross-repository relationships need evidence for both endpoints
+  and the relationship.
+- **AB-SCHEMA-010** — Current catalog `3.0.0` provides bounded investigation,
+  semantic metadata, relationship and optional-enrichment guidance. AWS Lambda,
+  Terraform and Business Flow guidance connects identity and infrastructure to
+  runtime and observable outcomes.
+- **AB-SCHEMA-011** — Guidance distinguishes evidence-required metadata from
+  optional enrichment; absent or contradictory evidence never authorizes an
+  invented value.
