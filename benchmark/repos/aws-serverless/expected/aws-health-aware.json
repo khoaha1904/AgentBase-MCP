@@ -1,0 +1,48 @@
+{
+  "repository": "aws-health-aware",
+  "concepts": [
+    {
+      "key": "terraform-deploy-aha",
+      "identityTerms": ["terraform", "deployment"],
+      "type": "Terraform Module",
+      "requiredMetadata": ["module_root", "managed_resources"],
+      "requiredSourcePaths": ["terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf"]
+    },
+    {
+      "key": "aha-lambda-function-primary-region",
+      "identityTerms": ["scheduled", "lambda"],
+      "type": "AWS Lambda",
+      "requiredMetadata": ["business_purpose", "resource_name", "runtime", "handler"],
+      "requiredSourcePaths": ["terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf", "handler.py"]
+    },
+    {
+      "key": "aha-dynamodb-table",
+      "identityTerms": ["state", "table"],
+      "type": "Database Table",
+      "requiredMetadata": ["resource_name", "keys"],
+      "requiredSourcePaths": ["terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf"]
+    },
+    {
+      "key": "aha-lambda-schedule-primary-region",
+      "identityTerms": ["minute", "schedule"],
+      "type": "Event",
+      "requiredMetadata": ["trigger"],
+      "requiredSourcePaths": ["terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf"]
+    },
+    {
+      "key": "aws-health-alerting-flow",
+      "identityTerms": ["alert", "processing"],
+      "type": "Business Flow",
+      "requiredMetadata": ["business_purpose", "trigger", "outcome"],
+      "requiredSourcePaths": ["terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf", "handler.py"]
+    }
+  ],
+  "relationships": [
+    { "from": "terraform-deploy-aha", "to": "aha-lambda-function-primary-region", "kind": "declares" },
+    { "from": "terraform-deploy-aha", "to": "aha-dynamodb-table", "kind": "declares" },
+    { "from": "terraform-deploy-aha", "to": "aha-lambda-schedule-primary-region", "kind": "declares" },
+    { "from": "aha-lambda-schedule-primary-region", "to": "aha-lambda-function-primary-region", "kind": "triggers" },
+    { "from": "aha-lambda-function-primary-region", "to": "aha-dynamodb-table", "kind": "accesses" },
+    { "from": "aws-health-alerting-flow", "to": "aha-lambda-function-primary-region", "kind": "step" }
+  ]
+}

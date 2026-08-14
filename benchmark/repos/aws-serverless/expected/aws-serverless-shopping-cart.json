@@ -1,0 +1,47 @@
+{
+  "repository": "aws-serverless-shopping-cart",
+  "concepts": [
+    {
+      "key": "post-cart-migrate",
+      "identityTerms": ["cart", "migrate"],
+      "type": "API Endpoint",
+      "requiredMetadata": ["method", "route", "handler"],
+      "requiredSourcePaths": ["backend/shoppingcart-service.yaml", "frontend/src/backend/api.js"]
+    },
+    {
+      "key": "migrate-cart-function",
+      "identityTerms": ["migrate", "function"],
+      "type": "AWS Lambda",
+      "requiredMetadata": ["business_purpose", "resource_name", "runtime", "handler"],
+      "requiredSourcePaths": ["backend/shoppingcart-service.yaml", "backend/shopping-cart-service/migrate_cart.py"]
+    },
+    {
+      "key": "dynamodb-shopping-cart-table",
+      "identityTerms": ["cart", "table"],
+      "type": "Database Table",
+      "requiredMetadata": ["resource_name", "keys"],
+      "requiredSourcePaths": ["backend/shoppingcart-service.yaml", "backend/shopping-cart-service/migrate_cart.py"]
+    },
+    {
+      "key": "cart-delete-sqs-queue",
+      "identityTerms": ["cart", "queue"],
+      "type": "AWS SQS Queue",
+      "requiredMetadata": ["resource_name"],
+      "requiredSourcePaths": ["backend/shoppingcart-service.yaml", "backend/shopping-cart-service/migrate_cart.py"]
+    },
+    {
+      "key": "authenticated-cart-migration",
+      "identityTerms": ["authenticated", "migration"],
+      "type": "Business Flow",
+      "requiredMetadata": ["business_purpose", "trigger", "outcome"],
+      "requiredSourcePaths": ["frontend/src/backend/api.js", "backend/shopping-cart-service/migrate_cart.py"]
+    }
+  ],
+  "relationships": [
+    { "from": "post-cart-migrate", "to": "migrate-cart-function", "kind": "handled-by" },
+    { "from": "migrate-cart-function", "to": "dynamodb-shopping-cart-table", "kind": "accesses" },
+    { "from": "migrate-cart-function", "to": "cart-delete-sqs-queue", "kind": "accesses" },
+    { "from": "authenticated-cart-migration", "to": "post-cart-migrate", "kind": "step" },
+    { "from": "authenticated-cart-migration", "to": "migrate-cart-function", "kind": "step" }
+  ]
+}

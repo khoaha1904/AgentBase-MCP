@@ -8,10 +8,15 @@ function body(value: ReturnType<typeof callOkfSchemaTool>) {
   return JSON.parse(first.type === "text" ? first.text : "") as Record<string, unknown>;
 }
 
-test("[AB-SCHEMA-001..003][AB-SCHEMA-006..009] MCP lists, reads and selects concrete versioned schemas", () => {
+test("[AB-SCHEMA-001..003][AB-SCHEMA-006..011] MCP lists, reads and selects concrete versioned schemas", () => {
   assert.deepEqual(OKF_SCHEMA_TOOLS.map((tool) => tool.name), ["list_okf_schemas", "get_okf_schema", "select_okf_schemas", "validate_okf_concept"]);
-  assert.equal(body(callOkfSchemaTool("list_okf_schemas", {})).catalogVersion, "2.0.0");
-  assert.equal((body(callOkfSchemaTool("get_okf_schema", { type: "AWS Lambda" })).schema as { type: string }).type, "AWS Lambda");
+  assert.equal(body(callOkfSchemaTool("list_okf_schemas", {})).catalogVersion, "3.0.0");
+  const lambda = body(callOkfSchemaTool("get_okf_schema", { type: "AWS Lambda" })).schema as {
+    type: string; investigationQuestions: string[]; metadataGuidance: { field: string }[];
+  };
+  assert.equal(lambda.type, "AWS Lambda");
+  assert.ok(lambda.investigationQuestions.length >= 6);
+  assert.ok(lambda.metadataGuidance.some((item) => item.field === "handler"));
   const selected = body(callOkfSchemaTool("select_okf_schemas", { signals: ["terraform module", "aws sqs queue"] }));
   assert.equal(selected.advisory, true);
   assert.deepEqual((selected.recommendations as { type: string }[]).map((item) => item.type), ["AWS SQS Queue", "Terraform Module"]);

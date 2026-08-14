@@ -4,13 +4,25 @@ import test from "node:test";
 import { getOkfConceptSchema, listOkfConceptSchemas, selectOkfConceptSchemas, validateConceptAgainstSchema } from "./schema-catalog.ts";
 import { parseConceptDocument } from "./okf-document.ts";
 
-test("[AB-SCHEMA-001][AB-SCHEMA-006][AB-SCHEMA-007] catalog 2.0 exposes concrete authoring types", () => {
+test("[AB-SCHEMA-001][AB-SCHEMA-006][AB-SCHEMA-007] catalog 3.0 exposes concrete authoring types", () => {
   assert.deepEqual(listOkfConceptSchemas().map((item) => item.type), [
     "Repository", "Service", "Server", "API Endpoint", "Event", "Database Table", "Queue",
     "AWS Lambda", "AWS SQS Queue", "Terraform Module", "Business Flow",
     "Cross-Repository Relationship", "Open Question", "Maintainer Guidance",
   ]);
   assert.equal(getOkfConceptSchema("AWS Lambda")?.directoryHint, "repositories/<repository>/infrastructure/aws/lambda/<slug>.md");
+});
+
+test("[AB-SCHEMA-010][AB-SCHEMA-011] AWS and business schemas guide evidence-led investigation", () => {
+  const lambda = getOkfConceptSchema("AWS Lambda");
+  assert.ok(lambda?.investigationQuestions.some((question) => question.includes("business purpose")));
+  assert.deepEqual(lambda?.metadataGuidance.filter((item) => item.requiredWhenSupported).map((item) => item.field), [
+    "business_purpose", "resource_name", "runtime", "handler",
+  ]);
+  assert.ok(lambda?.relationshipGuidance.some((item) => item.kind === "accesses" && item.targetTypes.includes("Database Table")));
+  assert.ok(getOkfConceptSchema("Terraform Module")?.relationshipGuidance.some((item) => item.kind === "declares"));
+  assert.ok(getOkfConceptSchema("Business Flow")?.metadataGuidance.some((item) => item.field === "outcome"));
+  assert.match(lambda?.limitationGuidance ?? "", /never invent/);
 });
 
 test("[AB-SCHEMA-002][AB-SCHEMA-008] selection is sparse and prefers specific supported types", () => {

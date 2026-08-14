@@ -1,45 +1,48 @@
-# OKF repository benchmarks
+# Agent-driven OKF benchmarks
 
-This directory keeps repeatable, reviewable OKF baselines. It is not a source
-repository cache and it does not contain disposable Code Graph databases.
+This directory measures whether a real host coding agent can use AgentBase MCP
+graph and schema tools to investigate pinned repositories and author useful
+Google OKF v0.2. It does not treat manually authored Markdown as an agent run.
 
 ```text
 benchmark/
-  repos/<suite>/manifest.json
+  prompts/<version>.md
+  repos/<suite>/
+    manifest.json
+    expected/<repository>.json
   results/<suite>/<repository>/<UTC-run-id>/
     run.json
-    observation.json | observation-error.txt
-    claims.json
+    prompt.md
+    agent-events.jsonl
+    agent-final.md
     okf/
     metrics.json
     report.md
 ```
 
-The manifest pins each local fixture by path and Git commit. A run refuses a
-missing, dirty, or differently pinned fixture so comparisons keep the same
-input. The source repositories remain outside this repository and are never
-copied into benchmark results.
+The detailed Codebase Memory graph stays private and disposable. Each agent run
+indexes once through the AgentBase MCP and may inspect repository source, docs
+and Git history when graph evidence is incomplete. Source fixtures are pinned,
+clean and read-only to the agent sandbox.
 
-Start one run:
-
-```bash
-npm run benchmark:okf -- start aws-serverless
-```
-
-The command records the normalized `observe` output for every repository and
-prints the shared UTC run ID. The authoring agent then writes an evidence-only
-OKF v0.2 bundle and `claims.json` in each printed result directory. Each
-expected claim must be marked `supported`, `missing`, or `incorrect`; a
-supported claim names its concept and whether its evidence came from the
-normalized observation or direct source inspection.
-
-Finalize and compare the run:
+Run one explicit model-backed benchmark:
 
 ```bash
-npm run benchmark:okf -- finalize aws-serverless <UTC-run-id>
+npm run benchmark:okf -- run aws-serverless aws-health-aware
 ```
 
-Finalization validates the OKF bundle, calculates semantic and
-observation-backed coverage, then writes `metrics.json` and `report.md`.
-Historical results are committed so a later implementation can be compared
-against the same pinned repositories and expected claims.
+The command prints the UTC run ID. Finalization is deterministic and model-free:
+
+```bash
+npm run benchmark:okf -- finalize aws-serverless <UTC-run-id> aws-health-aware
+```
+
+Expectations do not prescribe prose or agent slugs. Bounded identity terms and
+evidence match concept instances; the scorer then evaluates concrete schema
+choices, required semantic metadata, source provenance and directed concept
+relationships. Reports keep separate precision, recall,
+metadata, provenance, relationship and OKF-conformance metrics so shallow valid
+Markdown cannot appear perfect.
+
+`npm run verify` uses a fake Codex process and never invokes a model. Real runs
+use existing host Codex authentication; AgentBase does not read or persist it.

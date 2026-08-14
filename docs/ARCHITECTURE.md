@@ -228,6 +228,14 @@ hierarchy without a TUI dependency or alternate screen. Cyan is supplemental;
 pointer, checkbox and text outcomes preserve meaning in no-color/narrow/plain
 fallbacks. Dependency, credential and client transaction authority is unchanged.
 
+Capability `012-agent-okf-benchmark` keeps model execution outside mandatory
+runtime and canonical verification. `scripts/benchmark-agent.mjs` owns one
+bounded Codex process and source-immutability check; `scripts/benchmark-okf.mjs`
+owns deterministic semantic scoring. Both reuse public repository source state
+and core OKF/schema entrypoints. The agent receives the normal AgentBase stdio
+MCP surface; no model SDK, provider abstraction, raw graph export or shared-Hub
+mutation is introduced.
+
 The accepted fixture promotion measured a `4.656x` median improvement with
 normalized parity and clean cleanup. That result justifies this lifecycle on
 the exercised host; it is not a large-repository throughput or resource claim.

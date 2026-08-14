@@ -19,8 +19,9 @@ Read these files in order before interpreting a task:
 9. `docs/specs/product-identity.md`
 10. `docs/specs/okf-schema-catalog.md`
 11. `docs/specs/agentbase-hub.md`
-12. `docs/specs/installation.md`
-13. `specs/CURRENT.md`
+12. `docs/specs/agent-okf-benchmark.md`
+13. `docs/specs/installation.md`
+14. `specs/CURRENT.md`
 
 Then inspect Git status. The latest user request and live repository state have
 priority over stale planning prose.

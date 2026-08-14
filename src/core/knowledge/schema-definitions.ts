@@ -1,50 +1,7 @@
-export type OkfConceptSchema = Readonly<{
-  type: string;
-  purpose: string;
-  directoryHint: string;
-  specificity: number;
-  fallbackType?: string;
-  selectWhen: readonly string[];
-  evidenceRequirements: readonly string[];
-  requiredFrontmatter: readonly string[];
-  recommendedSections: readonly string[];
-  allowedLinks: readonly string[];
-  limitationGuidance: string;
-}>;
+import { defineSchema, type OkfConceptSchema } from "./schema-definition-builder.ts";
+import { INFRASTRUCTURE_SCHEMAS } from "./schema-infrastructure-definitions.ts";
 
-type SchemaOptions = Readonly<{
-  fallbackType?: string;
-  requiredFrontmatter?: readonly string[];
-}>;
-
-const generatedEvidence = ["title", "description", "generated", "sources"];
-const limitations = "State missing or contradictory evidence explicitly; never invent semantic fields.";
-
-function defineSchema(
-  type: string,
-  purpose: string,
-  directoryHint: string,
-  specificity: number,
-  selectWhen: readonly string[],
-  evidenceRequirements: readonly string[],
-  recommendedSections: readonly string[],
-  allowedLinks: readonly string[],
-  options: SchemaOptions = {},
-): OkfConceptSchema {
-  return {
-    type,
-    purpose,
-    directoryHint,
-    specificity,
-    selectWhen,
-    evidenceRequirements,
-    recommendedSections,
-    allowedLinks,
-    ...(options.fallbackType ? { fallbackType: options.fallbackType } : {}),
-    requiredFrontmatter: options.requiredFrontmatter ?? generatedEvidence,
-    limitationGuidance: limitations,
-  };
-}
+export type { OkfConceptSchema } from "./schema-definition-builder.ts";
 
 export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
   defineSchema(
@@ -86,6 +43,18 @@ export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
     ["method/protocol and handler evidence"],
     ["# Contract", "# Handler", "# Failure Behavior"],
     ["Service", "Server", "Business Flow", "Event"],
+    {
+      investigationQuestions: [
+        "What method and route are exposed?", "Which concrete handler receives the request?",
+        "Which caller or client uses this endpoint?",
+      ],
+      metadataGuidance: [
+        { field: "method", evidence: "route or infrastructure declaration", requiredWhenSupported: true },
+        { field: "route", evidence: "route or client call", requiredWhenSupported: true },
+        { field: "handler", evidence: "route-to-handler declaration", requiredWhenSupported: true },
+      ],
+      relationshipGuidance: [{ kind: "handled-by", targetTypes: ["Service", "AWS Lambda", "Server"], evidence: "route declaration resolving the handler" }],
+    },
   ),
   defineSchema(
     "Event",
@@ -96,6 +65,11 @@ export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
     ["event name and producer or consumer evidence"],
     ["# Meaning", "# Producers", "# Consumers"],
     ["Service", "Queue", "AWS SQS Queue", "Business Flow"],
+    {
+      investigationQuestions: ["What produces this event?", "What consumes it?", "What schedule or event pattern triggers it?"],
+      metadataGuidance: [{ field: "trigger", evidence: "schedule, event pattern or producer call", requiredWhenSupported: true }],
+      relationshipGuidance: [{ kind: "triggers", targetTypes: ["AWS Lambda", "Service", "Business Flow"], evidence: "event target or consumer binding" }],
+    },
   ),
   defineSchema(
     "Database Table",
@@ -106,6 +80,17 @@ export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
     ["table identity or schema evidence"],
     ["# Data", "# Ownership", "# Access"],
     ["Service", "Server", "Business Flow"],
+    {
+      investigationQuestions: ["What is the table identity and key/schema?", "Which runtime reads or writes it?", "How is its name passed to the runtime?"],
+      metadataGuidance: [
+        { field: "resource_name", evidence: "infrastructure or schema declaration", requiredWhenSupported: true },
+        { field: "keys", evidence: "table schema declaration", requiredWhenSupported: false },
+      ],
+      relationshipGuidance: [{
+        kind: "accessed-by", targetTypes: ["AWS Lambda", "Service", "Server"],
+        evidence: "runtime database operation plus configuration binding",
+      }],
+    },
   ),
   defineSchema(
     "Queue",
@@ -117,47 +102,7 @@ export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
     ["# Messages", "# Producers", "# Consumers"],
     ["Service", "Event", "Business Flow"],
   ),
-  defineSchema(
-    "AWS Lambda",
-    "A concrete AWS Lambda function and its triggers/dependencies",
-    "repositories/<repository>/infrastructure/aws/lambda/<slug>.md",
-    80,
-    ["aws lambda", "lambda function", "aws_lambda_function"],
-    ["Lambda resource or runtime identity"],
-    ["# Function", "# Triggers", "# Permissions", "# Limitations"],
-    ["Service", "API Endpoint", "Event", "AWS SQS Queue", "Terraform Module", "Cross-Repository Relationship"],
-  ),
-  defineSchema(
-    "AWS SQS Queue",
-    "A concrete Amazon SQS queue and message relationships",
-    "repositories/<repository>/infrastructure/aws/sqs/<slug>.md",
-    80,
-    ["aws sqs", "sqs queue", "aws_sqs_queue"],
-    ["SQS resource identity", "producer or consumer evidence"],
-    ["# Queue", "# Messages", "# Producers", "# Consumers", "# Limitations"],
-    ["AWS Lambda", "Service", "Event", "Terraform Module", "Cross-Repository Relationship"],
-    { fallbackType: "Queue" },
-  ),
-  defineSchema(
-    "Terraform Module",
-    "A reusable Terraform module and its infrastructure contract",
-    "repositories/<repository>/infrastructure/terraform/<slug>.md",
-    60,
-    ["terraform module", "module block", "terraform"],
-    ["module source or module root evidence"],
-    ["# Purpose", "# Inputs", "# Outputs", "# Resources"],
-    ["AWS Lambda", "AWS SQS Queue", "Server", "Cross-Repository Relationship"],
-  ),
-  defineSchema(
-    "Business Flow",
-    "A business/system behavior spanning technical concepts",
-    "flows/<slug>.md",
-    50,
-    ["business flow", "user journey", "workflow", "end-to-end flow"],
-    ["trigger", "observable outcome", "supporting system evidence"],
-    ["# Trigger", "# Outcome", "# Flow", "# Failure and Recovery"],
-    ["Repository", "Service", "API Endpoint", "Event", "Queue", "AWS Lambda", "AWS SQS Queue"],
-  ),
+  ...INFRASTRUCTURE_SCHEMAS,
   defineSchema(
     "Cross-Repository Relationship",
     "An evidence-bearing relationship between concepts owned by different repositories",

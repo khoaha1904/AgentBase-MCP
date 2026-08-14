@@ -1,5 +1,5 @@
 {
-  "catalogVersion": "2.0.0",
+  "catalogVersion": "3.0.0",
   "cases": [
     { "type": "Repository", "signals": ["repository", "admitted repository identity"] },
     { "type": "Service", "signals": ["service", "service boundary or deployment identity"] },

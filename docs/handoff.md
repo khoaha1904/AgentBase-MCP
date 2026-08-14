@@ -4,12 +4,12 @@
 - **Application:** `AgentBase-MCP`
 - **OKF repository:** `AgentBase-Hub`
 - **Current checkout:** canonical `AgentBase-MCP`
-- **Active capability:** None
-- **Most recent completed:** `011-installer-terminal-ui`
-- **Current state:** lazy optional Hub setup, transactional client registration
-  and the installer terminal UI are implemented and canonically verified
-- **Next checkpoint:** owner accepts or adjusts the recommended Capability 012
-  Terraform-backed AWS observation defaults before specification
+- **Active capability:** none
+- **Most recent completed:** `012-agent-okf-benchmark`
+- **Current state:** agent-driven AWS OKF benchmark, schema catalog `3.0.0`,
+  isolated Codex runner and semantic scorer are implemented and verified
+- **Next checkpoint:** owner review of the Terraform baseline before choosing
+  the first prompt, schema, conformance or provenance improvement
 
 ## Session checkpoint
 
@@ -174,7 +174,8 @@ Read these files fully:
 7. `docs/specs/observations.md`
 8. `docs/specs/okf-schema-catalog.md`
 9. `docs/specs/agentbase-hub.md`
-10. `specs/CURRENT.md`
+10. `docs/specs/agent-okf-benchmark.md`
+11. `specs/CURRENT.md`
 
 Read the completed `001-clean-foundation` feature artifacts or reference
 documents only when the current decision needs historical evidence.
@@ -320,6 +321,15 @@ quiet dependency work, exposes the three setup actions, supports Up/Down, Space
 and Enter multi-selection, labels token/registration outcomes and restores the
 cursor/raw terminal on every path. Cyan is the primary accent but pointer,
 checkbox and text semantics survive no-color, narrow and dumb terminals.
+
+Capability 012 replaces the manual AWS baseline with an actual Codex agent
+using AgentBase MCP graph and schema tools. Real Terraform run
+`2026-08-14T113246Z` found all five expected semantic concepts and scored 83%
+concept/schema precision, 100% recall, 100% metadata, 86% provenance and 100%
+expected relationships. It remains a deliberately non-passing baseline because
+the root index violates the strict OKF heading/link grammar. Two earlier failed
+runs preserve the MCP approval diagnosis. Full evidence is in
+[`specs/012-agent-okf-benchmark/verification.md`](../specs/012-agent-okf-benchmark/verification.md).
 
 The generic ordinary-repository journey remains valid lifecycle smoke evidence,
 but it is not representative enough to choose the next AgentBase capability. A

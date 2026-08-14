@@ -2,7 +2,7 @@
 
 - **Status:** Active
 - **Established by:** Capability `006-explicit-observation-command`; corrected by Capability `008-local-hub-product-correction`
-- **Last updated:** 2026-08-12
+- **Last updated:** 2026-08-14
 
 Google OKF v0.2 intentionally has no fixed taxonomy. AgentBase-MCP therefore
 owns a versioned authoring catalog for concrete OKF concept types. These are
@@ -68,3 +68,18 @@ Every AgentBase-authored concrete concept preserves evidence provenance and
 states important gaps or uncertainty. Required semantic fields cannot be
 invented merely to satisfy a schema. Cross-repository relationships require
 evidence for both endpoints and the relationship itself.
+
+### AB-SCHEMA-010 — Investigation guidance
+
+Catalog `3.0.0` adds bounded investigation questions, semantic metadata
+guidance, relationship guidance and optional enrichment to concrete schemas.
+AWS Lambda guidance covers business purpose, resource identity, runtime,
+handler resolution, triggers, dependencies and material permissions. Terraform
+and Business Flow guidance connects infrastructure resources to runtime and
+observable outcomes.
+
+### AB-SCHEMA-011 — Required evidence versus enrichment
+
+Metadata guidance marks fields required when evidence supports them and names
+the evidence needed. Optional enrichment remains distinguishable. Missing or
+contradictory evidence is a limitation and never authorizes an invented value.
