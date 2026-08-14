@@ -1,0 +1,8 @@
+{
+  "claims": [
+    { "id": "terraform-defines-primary-lambda", "status": "supported", "concept": "infrastructure/aws/lambda/primary-aha", "evidence": "direct-source" },
+    { "id": "lambda-resolves-handler-main", "status": "supported", "concept": "infrastructure/aws/lambda/primary-aha", "evidence": "direct-source" },
+    { "id": "lambda-depends-on-dynamodb", "status": "supported", "concept": "infrastructure/aws/lambda/primary-aha", "evidence": "direct-source" },
+    { "id": "eventbridge-targets-lambda", "status": "supported", "concept": "events/aha-primary-schedule", "evidence": "direct-source" }
+  ]
+}

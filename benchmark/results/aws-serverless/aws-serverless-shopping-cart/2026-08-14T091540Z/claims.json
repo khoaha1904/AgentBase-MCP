@@ -1,0 +1,9 @@
+{
+  "claims": [
+    { "id": "frontend-posts-cart-migrate", "status": "supported", "concept": "flows/cart-migration", "evidence": "direct-source" },
+    { "id": "sam-route-targets-migrate-lambda", "status": "supported", "concept": "api/post-cart-migrate", "evidence": "direct-source" },
+    { "id": "lambda-resolves-migrate-handler", "status": "supported", "concept": "infrastructure/aws/lambda/migrate-cart", "evidence": "direct-source" },
+    { "id": "handler-uses-dynamodb", "status": "supported", "concept": "data/tables/shopping-cart", "evidence": "direct-source" },
+    { "id": "handler-publishes-delete-queue", "status": "supported", "concept": "infrastructure/aws/sqs/cart-delete", "evidence": "direct-source" }
+  ]
+}

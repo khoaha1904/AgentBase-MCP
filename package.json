@@ -19,6 +19,7 @@
     "demo": "node src/cli.ts",
     "integration:codebase-memory": "node src/cli.ts codebase-memory:integration",
     "benchmark:codebase-memory": "node src/cli.ts codebase-memory:benchmark",
+    "benchmark:okf": "node scripts/benchmark-okf.mjs",
     "check": "npm run spec:check && npm run typecheck && npm run architecture:check && npm test",
     "verify": "npm run check && git diff --check"
   },

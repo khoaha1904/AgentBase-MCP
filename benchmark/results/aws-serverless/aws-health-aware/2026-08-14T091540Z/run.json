@@ -1,0 +1,16 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-health-aware",
+  "kind": "terraform-serverless",
+  "fixturePath": "../fixtures/source-repos/aws-health-polyrepo/aws-health-aware",
+  "fixtureCommit": "928494c70a904a65b877d426516882397541eafd",
+  "sourceRepositoryId": "repository-aws-health-aware-779eb7e1bc7a",
+  "observationTarget": "AHA-LambdaFunction-PrimaryRegion",
+  "startedAt": "2026-08-14T09:15:40.849Z",
+  "completedAt": "2026-08-14T09:15:57.371Z",
+  "observation": {
+    "outcome": "failed",
+    "exitCode": 1,
+    "factCount": 0
+  }
+}

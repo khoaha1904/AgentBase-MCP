@@ -1,0 +1,23 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-serverless-shopping-cart",
+  "runId": "2026-08-14T091540Z",
+  "observation": {
+    "outcome": "succeeded",
+    "exitCode": 0,
+    "factCount": 10
+  },
+  "expectedClaims": 5,
+  "supportedClaims": 5,
+  "missingClaims": 0,
+  "incorrectClaims": 0,
+  "semanticCoveragePercent": 100,
+  "observationBackedClaims": 0,
+  "observationBackedCoveragePercent": 0,
+  "conceptCount": 5,
+  "okfTreeDigest": "sha256:55c3ca878e079310aa182ac9caeacacc3bc638698e3dabe6a50ef32d020aa814",
+  "validation": {
+    "passed": true,
+    "failures": []
+  }
+}

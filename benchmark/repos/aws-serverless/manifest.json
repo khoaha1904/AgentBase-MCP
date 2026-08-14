@@ -1,0 +1,33 @@
+{
+  "suite": "aws-serverless",
+  "version": 1,
+  "repositories": [
+    {
+      "id": "aws-health-aware",
+      "kind": "terraform-serverless",
+      "path": "../fixtures/source-repos/aws-health-polyrepo/aws-health-aware",
+      "commit": "928494c70a904a65b877d426516882397541eafd",
+      "observationTarget": "AHA-LambdaFunction-PrimaryRegion",
+      "expectedClaims": [
+        { "id": "terraform-defines-primary-lambda", "description": "Terraform defines the primary AWS Lambda." },
+        { "id": "lambda-resolves-handler-main", "description": "The Terraform handler reference resolves to Python handler.main." },
+        { "id": "lambda-depends-on-dynamodb", "description": "The primary Lambda is configured with and depends on DynamoDB." },
+        { "id": "eventbridge-targets-lambda", "description": "An EventBridge schedule targets the primary Lambda." }
+      ]
+    },
+    {
+      "id": "aws-serverless-shopping-cart",
+      "kind": "sam-backend-vue-frontend",
+      "path": "../fixtures/source-repos/multiservice-feasibility/aws-serverless-shopping-cart",
+      "commit": "66a863f1b7a2a7f319adddce6a55e090ce9f6734",
+      "observationTarget": "get_product_from_external_service",
+      "expectedClaims": [
+        { "id": "frontend-posts-cart-migrate", "description": "The frontend posts to /cart/migrate." },
+        { "id": "sam-route-targets-migrate-lambda", "description": "SAM maps POST /cart/migrate to MigrateCartFunction." },
+        { "id": "lambda-resolves-migrate-handler", "description": "MigrateCartFunction resolves to migrate_cart.lambda_handler." },
+        { "id": "handler-uses-dynamodb", "description": "The migration handler reads and updates the cart DynamoDB table." },
+        { "id": "handler-publishes-delete-queue", "description": "The migration handler publishes old cart items to the delete SQS queue." }
+      ]
+    }
+  ]
+}
