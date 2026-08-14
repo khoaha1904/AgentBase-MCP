@@ -1,5 +1,7 @@
 # Ordinary-Repository Product Dogfood
 
+> **Planning status:** Superseded as the basis for Capability 012 by the AWS/Terraform qualification in [`2026-08-14-aws-terraform-dogfood.md`](2026-08-14-aws-terraform-dogfood.md). This remains valid smoke evidence for the generic local lifecycle only.
+
 - **Date:** 2026-08-14
 - **Source:** `telecodex` at commit `e5d23062f82e7d5ffde4e0b5cd210ab47d938778` with an admitted dirty-source digest
 - **Mode:** real managed Codebase Memory provider plus isolated local-only AgentBase-Hub

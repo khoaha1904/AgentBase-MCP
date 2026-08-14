@@ -9,7 +9,7 @@
 - **Current state:** lazy optional Hub setup, transactional client registration
   and the installer terminal UI are implemented and canonically verified
 - **Next checkpoint:** owner accepts or adjusts the recommended Capability 012
-  evidence-grounding defaults before specification
+  Terraform-backed AWS observation defaults before specification
 
 ## Session checkpoint
 
@@ -321,11 +321,13 @@ and Enter multi-selection, labels token/registration outcomes and restores the
 cursor/raw terminal on every path. Cyan is the primary accent but pointer,
 checkbox and text semantics survive no-color, narrow and dumb terminals.
 
-An ordinary-repository dogfood journey then completed real observation, isolated
-local-only Hub creation, proposal finalization, inspection, acceptance, search
-and pending inventory without network or credentials. It also found that the
-requested exported symbol produced no source-backed graph facts, caller signals
-could select an unsupported Service schema, and the authoring skill did not state
-the nested-index frontmatter rule directly. Evidence and recommended Capability
-012 defaults are recorded in
-[`docs/product/evidence/2026-08-14-ordinary-repository-dogfood.md`](product/evidence/2026-08-14-ordinary-repository-dogfood.md).
+The generic ordinary-repository journey remains valid lifecycle smoke evidence,
+but it is not representative enough to choose the next AgentBase capability. A
+replacement AWS qualification used real Terraform serverless and SAM plus Vue
+repositories. Raw Codebase Memory found the Terraform resources, Python handler,
+frontend call and route, while the normalized observation layer failed because
+it applies function-only tracing and does not join the IaC resources to handlers.
+The existing OKF catalog successfully validated and queried a manually grounded
+Terraform module, Lambda, DynamoDB table and EventBridge schedule. Evidence and
+recommended Capability 012 defaults are in
+[`docs/product/evidence/2026-08-14-aws-terraform-dogfood.md`](product/evidence/2026-08-14-aws-terraform-dogfood.md).

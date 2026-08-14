@@ -78,7 +78,7 @@ work without AI-heavy investigation or cloud credentials.
 
 ## Phase 3: Observation bridge
 
-**Status:** In progress; explicit observation and schema-catalog slice complete, ordinary-repository grounding gap recorded (2026-08-14)
+**Status:** In progress; explicit observation and schema-catalog slice complete, Terraform/AWS grounding gap recorded (2026-08-14)
 
 - Define stable observation schema, provenance and analyzer identity.
 - Select a deliberately narrow first observation family.
