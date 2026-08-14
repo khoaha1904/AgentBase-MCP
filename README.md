@@ -51,6 +51,12 @@ interrupted run recovers before a later registration; unresolved concurrent
 changes are preserved and reported through private recovery state. Moving this
 checkout requires deliberate removal and registration from the new path.
 
+Interactive setup uses an inline AgentBase-MCP terminal UI: cyan-accented brand
+and three setup actions, Up/Down to move, Space to select multiple clients and
+Enter to continue. Pointer and `[x]` state remain readable with `NO_COLOR`;
+narrow and dumb terminals use compact/plain fallbacks. Successful dependency
+preparation stays quiet, while failures remain visible and actionable.
+
 Optional Hub-token input shows one `*` per accepted character so pasted input
 is visible without printing the token. Empty Enter keeps tokenless local operation.
 When supplied, the token is stored outside Git at

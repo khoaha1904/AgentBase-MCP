@@ -13,7 +13,7 @@ const REQUIRED_MIGRATION_IDS = ["AB-MIGRATION-001", "AB-MIGRATION-002"];
 const REQUIRED_LOCAL_HUB_IDS = Array.from({ length: 11 }, (_, index) => `AB-LOCAL-HUB-${String(index + 1).padStart(3, "0")}`);
 const REQUIRED_SCHEMA_IDS = Array.from({ length: 9 }, (_, index) => `AB-SCHEMA-${String(index + 1).padStart(3, "0")}`);
 const REQUIRED_QUERY_IDS = ["AB-QUERY-001"];
-const REQUIRED_INSTALL_IDS = Array.from({ length: 17 }, (_, index) => `AB-INSTALL-${String(index + 1).padStart(3, "0")}`);
+const REQUIRED_INSTALL_IDS = Array.from({ length: 24 }, (_, index) => `AB-INSTALL-${String(index + 1).padStart(3, "0")}`);
 const REQUIRED_HUB_SETUP_IDS = Array.from({ length: 17 }, (_, index) => `AB-HUB-SETUP-${String(index + 1).padStart(3, "0")}`);
 const UNRESOLVED = /\b(?:NEEDS CLARIFICATION|TODO|TKTK)\b|\?\?\?|<placeholder>/i;
 const ACTIVE_NAMING_RULES = [

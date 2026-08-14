@@ -2,7 +2,7 @@
 
 ## Current correction: AgentBase-MCP and local AgentBase-Hub
 
-**Status:** In progress (Capability 008)
+**Status:** Complete through Capabilities 008 and 009 (2026-08-13)
 
 - Make official product identity and ownership explicit.
 - Accept reviewed OKF as immediately queryable commits on local Hub `main`.
@@ -31,6 +31,8 @@ Exit: a new session can implement a focused capability without reading legacy
 code, and architecture rules fail automatically when violated.
 
 ## Phase 1: Single-repository walking skeleton
+
+**Status:** Complete (Capability 002, 2026-08-12)
 
 - Capture actual Codebase Memory `v0.10.1` one-shot output and mutation behavior
   before shaping the adapter.
@@ -85,7 +87,7 @@ Exit: a source revision produces reviewable, reproducible observation batches.
 
 ## Phase 4: Governed OKF lifecycle
 
-**Status:** Local-first correction in progress (Capability 008)
+**Status:** In progress; local-first lifecycle and lazy setup slices complete through Capability 009
 
 - Propose OKF changes against existing knowledge.
 - Allow incomplete or partially wrong drafts without blocking the build.

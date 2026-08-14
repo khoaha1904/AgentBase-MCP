@@ -1,14 +1,15 @@
 # AgentBase-MCP Session Handoff
 
-- **Prepared:** 2026-08-13
+- **Prepared:** 2026-08-14
 - **Application:** `AgentBase-MCP`
 - **OKF repository:** `AgentBase-Hub`
 - **Current checkout:** canonical `AgentBase-MCP`
 - **Active capability:** None
-- **Most recent completed:** `009-lazy-hub-bootstrap`
-- **Current state:** lazy optional Hub setup, local-only knowledge and first
-  remote bootstrap are implemented and canonically verified
-- **Next checkpoint:** owner reviews the completed capability and selects the next slice
+- **Most recent completed:** `011-installer-terminal-ui`
+- **Current state:** lazy optional Hub setup, transactional client registration
+  and the installer terminal UI are implemented and canonically verified
+- **Next checkpoint:** run one ordinary-repository product dogfood journey before
+  selecting the next capability
 
 ## Session checkpoint
 
@@ -269,7 +270,7 @@ candidate patterns, not automatic mandates for future repositories.
 
 ## Next action
 
-Capabilities 009 and 010 are complete. Installation now optionally stores the
+Capabilities 009, 010 and 011 are complete. Installation now optionally stores the
 one global token and transactionally registers the current checkout in selected
 Codex/Claude Code clients; it still does not choose a Hub. Code Graph remains
 independent, while the first Hub-dependent OKF action asks existing-vs-new and a
@@ -312,3 +313,10 @@ Capability 010 implementation artifacts live under
 `AB-INSTALL-007..017` in `docs/specs/installation.md`. Canonical verification
 uses isolated fake clients. A real user-home registration has not been executed
 by this capability and remains an explicit owner smoke action.
+
+Capability 011 replaces the numeric installer prompt with a dependency-free
+inline TUI reviewed by a terminal UX specialist. It renders AgentBase-MCP before
+quiet dependency work, exposes the three setup actions, supports Up/Down, Space
+and Enter multi-selection, labels token/registration outcomes and restores the
+cursor/raw terminal on every path. Cyan is the primary accent but pointer,
+checkbox and text semantics survive no-color, narrow and dumb terminals.

@@ -221,6 +221,13 @@ not place the Hub token in client configuration, rejects same-name conflicts and
 recovers selected clients as one transaction. Canonical tests use isolated homes
 and fake CLIs; real installed-client mutation remains a separate owner action.
 
+Capability `011-installer-terminal-ui` keeps terminal presentation in the
+existing cohesive installer owner. It adds capability-aware inline rendering,
+logical arrow/Space key input, bounded picker redraw and a three-action result
+hierarchy without a TUI dependency or alternate screen. Cyan is supplemental;
+pointer, checkbox and text outcomes preserve meaning in no-color/narrow/plain
+fallbacks. Dependency, credential and client transaction authority is unchanged.
+
 The accepted fixture promotion measured a `4.656x` median improvement with
 normalized parity and clean cleanup. That result justifies this lifecycle on
 the exercised host; it is not a large-repository throughput or resource claim.

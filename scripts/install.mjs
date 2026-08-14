@@ -40,6 +40,19 @@ class CharacterReader {
       return character;
     }
   }
+
+  async key() {
+    const character = await this.next();
+    if (character === undefined) return "eof";
+    if (character === "\u0003") return "cancel";
+    if (character !== "\u001b") return character;
+    const bracket = await this.next();
+    if (bracket !== "[") return "unknown";
+    const direction = await this.next();
+    if (direction === "A") return "up";
+    if (direction === "B") return "down";
+    return "unknown";
+  }
 }
 
 function parseArgs(args) {
@@ -54,26 +67,86 @@ function pathPresent(target) {
   catch (error) { if (error?.code === "ENOENT") return false; throw error; }
 }
 
-function selectionLabel(selected) {
-  return `Codex [${selected.has("codex") ? "x" : " "}], Claude Code [${selected.has("claude-code") ? "x" : " "}]`;
+function terminalCapabilities(output, environment) {
+  const ansi = environment.TERM !== "dumb";
+  const color = ansi && !("NO_COLOR" in environment);
+  const unicode = /utf-?8/i.test(environment.LC_ALL || environment.LC_CTYPE || environment.LANG || "UTF-8");
+  const width = Number.isInteger(output.columns) ? output.columns : 80;
+  return { ansi, color, unicode, narrow: width < 48, width };
 }
 
-async function readClientSelection(reader, output) {
-  const selected = new Set();
-  output.write("Select clients: press 1 for Codex, 2 for Claude Code, then Enter.\n");
-  output.write(`${selectionLabel(selected)}\n`);
-  while (true) {
-    const character = await reader.next();
-    if (character === undefined || character === "\u0003") throw new InstallerCancelled();
-    if (character === "1") selected.has("codex") ? selected.delete("codex") : selected.add("codex");
-    else if (character === "2") selected.has("claude-code") ? selected.delete("claude-code") : selected.add("claude-code");
-    else if (character === "\n" || character === "\r") {
-      reader.endedLine(character);
-      if (selected.size) return [...selected];
-      output.write("Select at least one client.\n");
-      continue;
-    } else continue;
-    output.write(`${selectionLabel(selected)}\n`);
+function ui(capabilities) {
+  const accent = (value) => capabilities.color ? `\u001b[1;36m${value}\u001b[0m` : value;
+  const bold = (value) => capabilities.color ? `\u001b[1m${value}\u001b[0m` : value;
+  return {
+    accent, bold,
+    brand: capabilities.unicode ? "◆" : "*",
+    success: capabilities.unicode ? "✓" : "OK",
+    pending: capabilities.unicode ? "◇" : "-",
+    pointer: capabilities.unicode ? "›" : ">",
+    arrow: capabilities.unicode ? "→" : ">",
+  };
+}
+
+function renderHeader(output, capabilities) {
+  const glyph = ui(capabilities), divider = "─".repeat(Math.max(12, Math.min(56, capabilities.width - 1)));
+  output.write(`${glyph.accent(`${glyph.brand} AgentBase-MCP`)}\n`);
+  output.write(`${capabilities.narrow ? "Local code intelligence + shared knowledge" : "  Local code intelligence and shared knowledge"}\n`);
+  if (!capabilities.narrow) output.write(`${glyph.accent(divider)}\n`);
+  output.write(`Setup: Clients ${glyph.arrow} GitHub access ${glyph.arrow} Registration\n\n`);
+}
+
+function step(output, capabilities, number, title, description) {
+  const glyph = ui(capabilities);
+  output.write(`${glyph.accent(`${number}/3`)}  ${glyph.bold(title)}\n`);
+  if (description) output.write(`${capabilities.narrow ? "" : "     "}${description}\n`);
+}
+
+function pickerLines(capabilities, selected, focused, message) {
+  const glyph = ui(capabilities), items = [{ id: "codex", label: "Codex" }, { id: "claude-code", label: "Claude Code" }];
+  const indent = capabilities.narrow ? "" : "     ";
+  return [
+    `${indent}↑/↓ Move   Space Select   Enter Continue`,
+    "",
+    ...items.map((item, index) => {
+      const pointer = index === focused ? glyph.pointer : " ";
+      const line = `${indent}${pointer}  [${selected.has(item.id) ? "x" : " "}] ${item.label}`;
+      return index === focused ? glyph.accent(line) : line;
+    }),
+    ...(message ? ["", `${indent}! ${message}`] : []),
+  ];
+}
+
+function writePicker(output, capabilities, lines, previousCount = 0) {
+  if (capabilities.ansi && previousCount) output.write(`\u001b[${previousCount}A`);
+  for (const line of lines) output.write(`${capabilities.ansi ? "\u001b[2K" : ""}${line}\n`);
+}
+
+async function readClientSelection(reader, output, capabilities) {
+  const items = ["codex", "claude-code"], selected = new Set();
+  let focused = 0, message = "", rendered = 0;
+  step(output, capabilities, 1, "Choose clients", "Select where AgentBase-MCP should be available.");
+  if (capabilities.ansi) output.write("\u001b[?25l");
+  try {
+    let lines = pickerLines(capabilities, selected, focused, message);
+    writePicker(output, capabilities, lines); rendered = lines.length;
+    while (true) {
+      const key = await reader.key();
+      if (key === "eof" || key === "cancel") throw new InstallerCancelled();
+      if (key === "up" || key === "down") focused = (focused + (key === "up" ? -1 : 1) + items.length) % items.length;
+      else if (key === " " || key === "1" || key === "2") {
+        if (key === "1" || key === "2") focused = Number(key) - 1;
+        const id = items[focused]; selected.has(id) ? selected.delete(id) : selected.add(id); message = "";
+      } else if (key === "\n" || key === "\r") {
+        reader.endedLine(key);
+        if (selected.size) return items.filter((id) => selected.has(id));
+        message = "Select at least one client.";
+      } else continue;
+      lines = pickerLines(capabilities, selected, focused, message);
+      writePicker(output, capabilities, lines, rendered); rendered = lines.length;
+    }
+  } finally {
+    if (capabilities.ansi) output.write("\u001b[?25h");
   }
 }
 
@@ -100,7 +173,7 @@ async function readMaskedToken(reader, output) {
 
 function installDependencies() {
   return new Promise((resolve, reject) => {
-    const child = spawn("npm", ["ci"], { cwd: repositoryRoot, stdio: "inherit", shell: false });
+    const child = spawn("npm", ["ci", "--no-fund"], { cwd: repositoryRoot, stdio: ["ignore", "ignore", "ignore"], shell: false });
     child.once("error", () => reject(new Error("dependency installation could not start")));
     child.once("exit", (code, signal) => code === 0
       ? resolve()
@@ -116,19 +189,24 @@ export async function runInstaller(options = {}) {
   const runDependencyInstall = options.runDependencyInstall ?? installDependencies;
   const runClientRegistration = options.runClientRegistration ?? registerClients;
   const parsed = parseArgs(args);
-  await runDependencyInstall();
   const interactive = Boolean(input.isTTY && output.isTTY && typeof input.setRawMode === "function");
   if (!interactive) {
-    output.write("Code prepared. Client selection and credential input skipped in non-interactive mode.\n");
-    output.write("MCP registration: skipped.\n");
+    await runDependencyInstall();
+    output.write("AgentBase-MCP: code prepared; interactive client registration skipped.\n");
     return { clients: [], credential: "skipped", registration: "skipped" };
   }
 
+  const capabilities = terminalCapabilities(output, environment), glyph = ui(capabilities);
+  renderHeader(output, capabilities);
+  output.write(`${glyph.pending} Preparing dependencies...\n`);
+  await runDependencyInstall();
+  output.write(`${glyph.accent(glyph.success)} Dependencies ready\n\n`);
   const reader = new CharacterReader(input);
   input.setRawMode(true);
   input.resume();
   try {
-    const clients = await readClientSelection(reader, output);
+    const clients = await readClientSelection(reader, output, capabilities);
+    output.write(`${glyph.accent(glyph.success)} Clients selected: ${clients.map((client) => client === "codex" ? "Codex" : "Claude Code").join(", ")}\n\n`);
     const credentialPath = globalHubCredentialPath(environment);
     const credentialExists = pathPresent(credentialPath);
     if (credentialExists) {
@@ -138,20 +216,33 @@ export async function runInstaller(options = {}) {
     }
     let credential = "preserved";
     if (!credentialExists || parsed.replaceToken) {
+      step(output, capabilities, 2, "GitHub access", "Used later to read or publish an AgentBase-Hub.");
       const token = await readMaskedToken(reader, output);
       credential = token
         ? writeGlobalHubToken(token, environment, { replace: parsed.replaceToken })
         : credentialExists ? "preserved" : "skipped";
+    } else {
+      step(output, capabilities, 2, "GitHub access", "Used later to read or publish an AgentBase-Hub.");
+      output.write(`${glyph.accent(glyph.success)} Existing GitHub token preserved\n`);
     }
+    output.write("\n");
+    step(output, capabilities, 3, "Connect clients", "Register AgentBase-MCP in the selected coding clients.");
+    output.write(`${glyph.pending} Registering AgentBase-MCP...\n`);
     const registration = await runClientRegistration({
       clients,
       repositoryRoot,
       nodeExecutable: process.execPath,
       environment,
     });
-    const detail = clients.map((client) => `${client}=${registration.clients[client]}`).join(", ");
-    output.write(`Selected clients: ${clients.join(", ")}. MCP registration: ${detail}.\n`);
-    output.write(`Credential: ${credential}.\n`);
+    output.write(`\n${glyph.accent(glyph.success)} ${glyph.bold("AgentBase-MCP is ready")}\n\n`);
+    for (const client of clients) {
+      const label = client === "codex" ? "Codex" : "Claude Code";
+      const result = registration.clients[client] === "already-registered" ? "Already connected" : "Connected";
+      output.write(`  ${label.padEnd(13)} ${result}\n`);
+    }
+    const tokenResult = credential === "created" ? "Saved securely" : credential === "preserved" ? "Preserved" : "Skipped";
+    output.write(`  ${"GitHub token".padEnd(13)} ${tokenResult}\n\n`);
+    output.write(`${glyph.bold("Next")}\n  Open a new ${clients.map((client) => client === "codex" ? "Codex" : "Claude Code").join(" or ")} session to load AgentBase-MCP.\n`);
     return { clients, credential, registration };
   } finally {
     input.setRawMode(false);
@@ -162,7 +253,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   try {
     await runInstaller();
   } catch (error) {
-    process.stderr.write(`AgentBase-MCP installation failed: ${error instanceof Error ? error.message : "unknown error"}\n`);
+    const message = error instanceof Error ? error.message : "unknown error";
+    if (error instanceof InstallerCancelled) process.stderr.write("\nSetup cancelled. No new client registration was kept.\n");
+    else process.stderr.write(`\n✗ Setup could not finish\n  Reason  ${message}\n  Run ./install.sh again after correcting the issue.\n`);
     process.exitCode = 1;
   }
 }

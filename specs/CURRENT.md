@@ -2,7 +2,7 @@
 
 Active capability: None
 
-Most recent completed: [`010-client-mcp-registration`](010-client-mcp-registration/spec.md)
+Most recent completed: [`011-installer-terminal-ui`](011-installer-terminal-ui/spec.md)
 
 Capability 003 promotes one short-lived stdio provider session per explicit
 evidence round after three alternating real pairs showed full normalized parity,

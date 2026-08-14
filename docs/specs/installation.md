@@ -105,3 +105,43 @@ the token never enters a client MCP entry.
 Canonical verification covers selections, reruns, conflicts, failures,
 interruption, rollback and concurrency with isolated homes and deterministic
 client doubles. It never mutates real installed-client configuration.
+
+### AB-INSTALL-018 — Branded setup hierarchy
+
+Interactive installation presents AgentBase-MCP identity and the ordered
+Clients, optional GitHub access and Registration actions before client choice.
+
+### AB-INSTALL-019 — Keyboard multi-selection
+
+ANSI-capable terminals use Up/Down focus, Space toggle and Enter continuation.
+At least one client is required and selected clients return in stable display
+order. Plain terminals retain an append-only keyboard fallback.
+
+### AB-INSTALL-020 — Color-independent state
+
+Focus, selection, validation and outcomes use text or symbols in addition to the
+cyan accent. No required meaning depends on color.
+
+### AB-INSTALL-021 — Terminal fallbacks
+
+Narrow and no-color terminals retain required labels, controls and state. Dumb
+and non-interactive terminals emit no ANSI cursor or color sequences;
+non-interactive installation remains mutation-free.
+
+### AB-INSTALL-022 — Action and completion clarity
+
+GitHub access and registration are labeled as setup actions. Completion maps
+provider results to readable client outcomes and directs the user to start a new
+selected client session.
+
+### AB-INSTALL-023 — Existing safety preserved
+
+Richer rendering preserves per-character masking, paste, Backspace,
+Enter-to-skip, credential independence, transaction recovery, secret-free errors
+and terminal restoration.
+
+### AB-INSTALL-024 — Deterministic terminal evidence
+
+Canonical tests cover combined and chunked arrow sequences, multi-select,
+empty validation, color/narrow/dumb fallbacks, token/result states and
+non-interactive output without changing real client configuration.
