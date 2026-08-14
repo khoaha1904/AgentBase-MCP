@@ -8,8 +8,8 @@
 - **Most recent completed:** `011-installer-terminal-ui`
 - **Current state:** lazy optional Hub setup, transactional client registration
   and the installer terminal UI are implemented and canonically verified
-- **Next checkpoint:** run one ordinary-repository product dogfood journey before
-  selecting the next capability
+- **Next checkpoint:** owner accepts or adjusts the recommended Capability 012
+  evidence-grounding defaults before specification
 
 ## Session checkpoint
 
@@ -320,3 +320,12 @@ quiet dependency work, exposes the three setup actions, supports Up/Down, Space
 and Enter multi-selection, labels token/registration outcomes and restores the
 cursor/raw terminal on every path. Cyan is the primary accent but pointer,
 checkbox and text semantics survive no-color, narrow and dumb terminals.
+
+An ordinary-repository dogfood journey then completed real observation, isolated
+local-only Hub creation, proposal finalization, inspection, acceptance, search
+and pending inventory without network or credentials. It also found that the
+requested exported symbol produced no source-backed graph facts, caller signals
+could select an unsupported Service schema, and the authoring skill did not state
+the nested-index frontmatter rule directly. Evidence and recommended Capability
+012 defaults are recorded in
+[`docs/product/evidence/2026-08-14-ordinary-repository-dogfood.md`](product/evidence/2026-08-14-ordinary-repository-dogfood.md).
