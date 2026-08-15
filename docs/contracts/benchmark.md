@@ -239,9 +239,23 @@ Retained v3 traces show 20 schema/validation calls for Health Aware and 27 for
 shopping cart. The immutable v4 workflow keeps the shared authoring contract but
 uses one selected-schema guidance call and whole-bundle validation calls. Fake
 execution proves the required batch lifecycle and records argument/result bytes.
-Initial catalog-3.0.0 runs reduced these calls to two on both repositories.
-Health Aware remained reviewable; shopping cart exposed a general contiguous-
-phrase selector fault and is retained as invalid evidence. Catalog 3.1.0 fixes
-natural word-order selection without fixture rules; corrected model evidence is
-required before capability completion. Token/time remain supporting telemetry,
-not a substitute for evidence quality.
+Initial catalog-3.0.0 runs reduced these calls to two on both repositories, but
+shopping cart exposed a general natural-phrase selector fault and is retained as
+invalid evidence. Catalog 3.1.0 fixes separated evidence-word selection without
+fixture rules.
+
+Corrected runs `aws-health-aware/2026-08-15T083649Z` and
+`aws-serverless-shopping-cart/2026-08-15T083940Z` are both reviewable, have 100%
+recognized-schema agreement and contain no contradicted reference concepts or
+relationships. Health confirms 60% of reference concepts and 50% of reference
+relationships; shopping cart confirms 80% and 60%, including the concrete AWS
+SQS Queue that previously failed. Shopping also contains 16 unjudged concepts
+and 33 unjudged relationships requiring human review. These non-exhaustive
+coverage diagnostics are lower than retained v3 measurements, so batching does
+not establish better discovery quality.
+
+Both corrected runs use two authoring/schema-validation calls, reductions of
+90% and 93% from v3. Health records 506,541 input tokens and 155,919 ms; shopping
+records 808,385 input tokens and 290,240 ms. Call reduction proves interaction
+batching only. Token/time remain supporting telemetry and do not outweigh
+evidence coverage, unresolved knowledge or later owner review.

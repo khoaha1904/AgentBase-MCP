@@ -45,21 +45,19 @@ is the portable archive.
 
 ## Current checkpoint
 
-- Active capability: `015-batch-okf-authoring`.
-- Most recent completed capability: `014-benchmark-authoring-quality`.
+- Active capability: none.
+- Most recent completed capability: `015-batch-okf-authoring`.
 - Canonical offline verification is green with 296 tests.
 - The unchanged v3 workflow produced reviewable MCP drafts on Health Aware and
   shopping cart, so evidence-first quality is ready for human review.
-- MCP used 210,649 and 466,574 more input tokens than direct. Retained traces
-  show 20 and 27 schema/validation calls respectively, repeatedly carrying
-  catalog guidance and full concept content through model context.
 - Capability 015 batches selected schema guidance and whole-bundle validation.
-  Immutable v4 reduced authoring calls to two on both initial model runs. One
-  shopping-cart schema contradiction exposed general phrase-matching brittleness;
-  catalog 3.1.0 corrects natural evidence selection without repository answers.
-  Corrected model-backed evidence is next. Token/time remain supporting telemetry.
+  Corrected catalog-3.1.0 runs are reviewable on both repositories with no
+  contradicted concepts or relationships and two authoring calls each. Their
+  reference coverage is incomplete and lower than retained v3 measurements, so
+  no quality or token-saving improvement is claimed from batching alone.
 
-Question management and external evidence enrichment remain future direction.
+Question management and external evidence enrichment remain the next product
+direction for retaining and resolving missing or unjudged knowledge.
 
 ## Superseded assumptions
 

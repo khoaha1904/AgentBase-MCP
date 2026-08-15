@@ -79,3 +79,46 @@ Table, API Endpoint and Business Flow rather than generic Queue.
 
 `npm run verify` passed with 296 tests, 0 failures, 0 architecture errors and
 six unchanged reviewed architecture warnings before the correction commit.
+
+## Corrected v4 evidence
+
+Catalog 3.1.0 was committed before either corrected run. Both runs used the
+same immutable v4 prompt and completed one schema-guidance call plus one bundle
+validation call.
+
+| Quality evidence | Health Aware `2026-08-15T083649Z` | Shopping cart `2026-08-15T083940Z` |
+|---|---:|---:|
+| Assessment | reviewable | reviewable |
+| Reference concepts | 60% | 80% |
+| Recognized schema agreement | 100% | 100% |
+| Metadata completeness | 67% | 77% |
+| Provenance coverage | 57% | 60% |
+| Reference relationships | 50% | 60% |
+| Contradicted concepts / relationships | 0 / 0 | 0 / 0 |
+| Unjudged concepts / relationships | 0 / 2 | 16 / 33 |
+
+Shopping now authors the concrete AWS SQS Queue and related Lambda concepts;
+the catalog-3.0.0 contradiction is fixed. Its 16 unjudged concepts and 33
+unjudged relationships are valid unmatched output, not automatically confirmed
+knowledge. Health leaves two reference concepts and three reference
+relationships missing. Both are acceptable incomplete drafts for review, but
+this evidence does not establish a coverage improvement over v3.
+
+| Interaction evidence | Health Aware | Shopping cart |
+|---|---:|---:|
+| v3 authoring/schema validation calls | 20 | 27 |
+| corrected v4 calls | 2 | 2 |
+| Reduction | 90% | 93% |
+| v4 supplied / result payload | 6,001 / 6,972 bytes | 20,654 / 14,208 bytes |
+| v4 input tokens | 506,541 | 808,385 |
+| v4 elapsed | 155,919 ms | 290,240 ms |
+
+Call reduction proves only the intended interaction batching. Token and elapsed
+values vary in opposite directions across the two repositories and are retained
+as supporting telemetry. They do not compensate for missing evidence or prove
+product quality. The machine-readable lifecycle for unresolved and unjudged
+knowledge remains a separate future capability.
+
+Final `npm run verify`: 296 tests, 0 failures, 0 architecture errors and six
+unchanged reviewed architecture warnings. Both corrected artifact trees pass
+JSON parsing and local-path/credential-pattern scans.
