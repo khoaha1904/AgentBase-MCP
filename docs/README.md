@@ -45,9 +45,10 @@ is the portable archive.
 
 ## Current checkpoint
 
-- Active capability: none.
-- Most recent completed capability: `017-scalable-hub-navigation`.
-- Canonical offline verification is green with 330 tests.
+- Active capability: `018-confirmed-domain-navigation`; most recent completed
+  capability: `017-scalable-hub-navigation`.
+- The capability 018 implementation is committed through `3bbbb9d`. Its last
+  full offline verification is green with 339 tests.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.
@@ -61,15 +62,19 @@ is the portable archive.
 - Re-ingest continuity contains only that source repository's prior concepts,
   canonical subject, immediate neighbors and navigation paths; changed-set
   validation does not receive the whole Hub.
-- The benchmark quality model, with active V9 prompt guidance and catalog
+- The benchmark quality model, with catalog
   5.0.0 relationship semantics, separates
   validity, owner-review usefulness, non-exhaustive coverage and token/time
   telemetry. Three-source offline qualification retains
   frontend, backend and infrastructure evidence in one canonical system graph.
-- Shopping Cart V9 run `2026-08-15T163041Z` is valid and reviewable: all seven
-  reference concepts and all six canonical relationship probes matched with
-  100% schema agreement. Its unresolved TTL provenance and optional enrichment
-  remain visible for owner review in open Hub PR #7 rather than being guessed.
+- Confirmed Domain authoring now carries explicit owner evidence, produces
+  Commerce → Shopping Cart navigation and protects existing shared index lines
+  from replacement, deletion, reordering or restyling.
+- Shopping Cart V11 run `2026-08-15T172701Z` is valid and reviewable with all
+  eight reference concepts found and 100% schema agreement. It remains at an
+  explicit review breakpoint because the conflicting cart-retention TTL claims
+  are not visible with evidence in an authored `Limitations` section. Its result
+  is uncommitted, and open Hub PR #7 remains the earlier V9 proposal.
 
 Question management and external evidence enrichment remain the next product
 direction for retaining and resolving missing or unjudged knowledge.

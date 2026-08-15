@@ -35,9 +35,20 @@
 
 - [x] T013 Add immutable V10 confirmed-Domain prompts and manifest input in `benchmark/prompts/`, `benchmark/repos/aws-serverless/manifest.json` and `scripts/benchmark-agent.test.mjs`
 - [x] T014 Run focused checks, `npm run verify` and commit the offline implementation phase
-- [ ] T015 Run the real Shopping Cart V10 qualification and commit immutable evidence under `benchmark/results/`
+- [x] T015 Run the real Shopping Cart V10 qualification and commit immutable evidence under `benchmark/results/`
 - [ ] T016 Rebuild the Shopping Cart proposal from remote Hub `main`, replace PR #7 with one unmerged PR and record it in `docs/contracts/benchmark.md`
 - [ ] T017 Complete `specs/018-confirmed-domain-navigation/verification.md`, `docs/README.md`, `specs/CURRENT.md`, run `npm run verify` and commit completion
+
+### Qualification review checkpoint
+
+- V10 is retained as invalid evidence in commit `68a00a8`; it exposed a generic
+  OKF list-marker error rather than a repository-specific knowledge gap.
+- V11 corrected only that generic grammar rule. Run `2026-08-15T172701Z` is
+  valid and reviewable, but owner review remains `needs_revision` because the
+  TTL source conflict is absent from the authored `Limitations` evidence.
+- Stop here for owner review. Do not start V12 or T016 implicitly. The owner must
+  first decide whether V11 is accepted or whether one explicitly bounded
+  conflict-retention improvement is required.
 
 ## Dependencies
 
