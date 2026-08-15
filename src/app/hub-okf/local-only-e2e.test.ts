@@ -42,8 +42,9 @@ test("[AB-HUB-SETUP-006..008][SC-003] local-only Hub accepts, queries and invent
     }
     const pending = await actions.listPending() as readonly unknown[];
     assert.equal(pending.length, 2);
-    const matches = await actions.search("Repo 2") as readonly { path: string }[];
-    assert.equal(matches.some((match) => match.path === "repositories/repo-2/repository.md"), true);
+    const searched = await actions.search("Repo 2") as { status: string; matches: readonly { path: string }[] };
+    assert.equal(searched.status, "ok");
+    assert.equal(searched.matches.some((match) => match.path === "repositories/repo-2/repository.md"), true);
     assert.equal((await runGit({ args: ["remote"], cwd: configured.localRoot, operation: "verify no local Hub remote" })).stdout, "");
     await assert.rejects(actions.submitMany(["x"]), /first bootstrap/);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }

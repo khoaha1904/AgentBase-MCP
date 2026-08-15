@@ -21,12 +21,12 @@
 
 ## Phase 3: Progressive domain retrieval
 
-- [ ] T012 [P] [US1] Add ranked domain search, ambiguity and bounded traversal tests in `src/core/knowledge/hub-query.test.ts`
-- [ ] T013 [P] [US4] Add accepted-commit MCP/CLI contract tests in `src/app/hub-okf/query.test.ts`, `mcp-tools.test.ts` and `cli.test.ts`
-- [ ] T014 [US1] Implement transient concept summaries, Domain reachability, deterministic ranking and bounded traversal in `src/core/knowledge/hub-query.ts`
-- [ ] T015 [US1] Expose scoped search and traversal from exact accepted commits in `src/app/hub-okf/query.ts`, `runtime-actions.ts`, `mcp-tools.ts`, `cli.ts` and public entrypoints
-- [ ] T016 [US4] Update progressive root/Domain/System authoring policy in `.agents/skills/agentbase-okf/SKILL.md` and `docs/contracts/hub.md`
-- [ ] T017 [US1] Run focused/full verification and commit the retrieval phase
+- [x] T012 [P] [US1] Add ranked domain search, ambiguity and bounded traversal tests in `src/core/knowledge/hub-query.test.ts`
+- [x] T013 [P] [US4] Add accepted-commit MCP/CLI contract tests in `src/app/hub-okf/query.test.ts`, `mcp-tools.test.ts` and `cli.test.ts`
+- [x] T014 [US1] Implement transient concept summaries, Domain reachability, deterministic ranking and bounded traversal in `src/core/knowledge/hub-query.ts`
+- [x] T015 [US1] Expose scoped search and traversal from exact accepted commits in `src/app/hub-okf/query.ts`, `runtime-actions.ts`, `mcp-tools.ts`, `cli.ts` and public entrypoints
+- [x] T016 [US4] Update progressive root/Domain/System authoring policy in `.agents/skills/agentbase-okf/SKILL.md` and `docs/contracts/hub.md`
+- [x] T017 [US1] Run focused/full verification and commit the retrieval phase
 
 ## Phase 4: Bounded continuity and changed-set validation
 

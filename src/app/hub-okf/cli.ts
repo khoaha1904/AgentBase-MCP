@@ -65,7 +65,25 @@ export async function executeHubCli(
       output = await actions.accept(required(values, "--proposal"), required(values, "--digest"));
     } else if (command === "search") {
       const limit = values["--limit"] === undefined ? undefined : Number(values["--limit"]);
-      output = await actions.search(required(values, "--query"), limit);
+      const global = values["--global"];
+      if (global !== undefined && global !== "true" && global !== "false") throw new Error("--global must be true or false");
+      output = await actions.search(required(values, "--query"), {
+        ...(values["--domain"] ? { domain: values["--domain"] } : {}),
+        ...(values["--types"] ? { types: values["--types"].split(",").filter(Boolean) } : {}),
+        ...(global === undefined ? {} : { global: global === "true" }),
+        ...(limit === undefined ? {} : { limit }),
+      });
+    } else if (command === "traverse") {
+      const direction = values["--direction"];
+      if (direction !== undefined && direction !== "outbound" && direction !== "inbound" && direction !== "both") {
+        throw new Error("--direction must be outbound, inbound or both");
+      }
+      output = await actions.traverse(required(values, "--start"), {
+        ...(direction ? { direction } : {}),
+        ...(values["--kinds"] ? { kinds: values["--kinds"].split(",").filter(Boolean) } : {}),
+        ...(values["--depth"] ? { maxDepth: Number(values["--depth"]) } : {}),
+        ...(values["--limit"] ? { limit: Number(values["--limit"]) } : {}),
+      });
     } else if (command === "read") output = await actions.read(required(values, "--path"));
     else if (command === "pending") output = await actions.listPending();
     else if (command === "submit") {
@@ -74,7 +92,7 @@ export async function executeHubCli(
     else if (command === "recover") output = await actions.recover(required(values, "--transaction"));
     else throw new Error(
       "Hub command must be status, configure, bootstrap-preview, bootstrap, prepare, finalize, inspect, "
-      + "accept, search, read, pending, submit, synchronize or recover",
+      + "accept, search, traverse, read, pending, submit, synchronize or recover",
     );
     writeOutput(`${JSON.stringify(output, null, 2)}\n`);
     return 0;

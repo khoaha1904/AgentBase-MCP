@@ -7,6 +7,7 @@
 - `query`: required literal query text;
 - `domain`: optional exact Domain identity or path;
 - `types`: optional bounded exact type list;
+- `global`: optional explicit permission for a bounded cross-Domain search;
 - `limit`: optional result bound.
 
 It returns either bounded exact-commit matches or `scope_required` with Domain

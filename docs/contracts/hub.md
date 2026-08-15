@@ -48,6 +48,20 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-QUERY-001** — Code questions primarily use Code Graph; business/system/
   cross-repository questions primarily use local Hub; combined answers retain
   both source kinds and limitations.
+- **AB-QUERY-002** — Accepted-Hub search supports exact Domain and type scopes,
+  ranks identity/path/title/type/description before body matches, and returns
+  Domain clarification candidates instead of bodies when an unscoped broad term
+  spans several Domains. Exact identity/path and explicit bounded global search
+  remain available.
+- **AB-QUERY-003** — Accepted canonical relationships can be traversed outbound,
+  inbound or both with predicate, depth and node bounds. Inbound traversal is a
+  transient reverse view of the one stored evidenced edge.
+- **AB-QUERY-004** — Search and traversal identify one exact accepted commit and
+  return bounded typed summaries, paths and evidenced edges. Parsing creates no
+  durable index, cache, graph database or second knowledge source.
+- **AB-QUERY-005** — Root navigation links bounded Domain and fallback System/
+  Repository entrypoints. Domain concepts navigate Systems and critical flows;
+  System concepts navigate useful entities without copying their knowledge.
 
 ## Lazy setup and first bootstrap
 

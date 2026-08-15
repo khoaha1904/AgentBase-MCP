@@ -1,6 +1,8 @@
 import type { CallToolResult } from "@modelcontextprotocol/server";
 import { HUB_PROPOSAL_SUBJECT_PATTERN } from "../../core/hub/index.ts";
+import type { HubSearchOptions, HubTraversalOptions } from "../../core/knowledge/index.ts";
 import type { BootstrapMode } from "./bootstrap.ts";
+import { HUB_OKF_QUERY_TOOLS } from "./mcp-query-tools.ts";
 
 export const HUB_OKF_TOOLS = [
   {
@@ -94,18 +96,7 @@ export const HUB_OKF_TOOLS = [
       required: ["proposal_id", "proposal_digest"], additionalProperties: false,
     },
   },
-  {
-    name: "search_hub_okf",
-    description: "Search bounded accepted knowledge at the current local AgentBase-Hub main commit.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        query: { type: "string", minLength: 1, maxLength: 256 },
-        limit: { type: "integer", minimum: 1, maximum: 100 },
-      },
-      required: ["query"], additionalProperties: false,
-    },
-  },
+  ...HUB_OKF_QUERY_TOOLS,
   {
     name: "read_hub_okf_concept",
     description: "Read one exact Markdown path from accepted local AgentBase-Hub knowledge.",
@@ -165,7 +156,8 @@ export type HubToolActions = Readonly<{
   finalize(sessionId: string): Promise<unknown>;
   inspect(proposalId: string): Promise<unknown>;
   accept(proposalId: string, proposalDigest: string): Promise<unknown>;
-  search(query: string, limit?: number): Promise<unknown>;
+  search(query: string, options?: HubSearchOptions): Promise<unknown>;
+  traverse(start: string, options?: HubTraversalOptions): Promise<unknown>;
   read(relativePath: string): Promise<unknown>;
   listPending(): Promise<unknown>;
   submitMany(proposalIds: readonly string[]): Promise<unknown>;
@@ -181,6 +173,15 @@ function required(args: Readonly<Record<string, unknown>>, key: string): string 
   const value = args[key];
   if (typeof value !== "string" || !value) throw new Error(`${key} is required`);
   return value;
+}
+
+function optionalStringList(args: Readonly<Record<string, unknown>>, key: string): readonly string[] | undefined {
+  const value = args[key];
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || !value.length || !value.every((item) => typeof item === "string" && item.length > 0)) {
+    throw new Error(`${key} must be a non-empty string list`);
+  }
+  return value as string[];
 }
 
 export async function callHubOkfTool(
@@ -228,7 +229,34 @@ export async function callHubOkfTool(
       if (limit !== undefined && (!Number.isInteger(limit) || Number(limit) < 1 || Number(limit) > 100)) {
         throw new Error("limit must be an integer from 1 to 100");
       }
-      return result(await actions.search(required(args, "query"), limit as number | undefined));
+      if (args.global !== undefined && typeof args.global !== "boolean") throw new Error("global must be a boolean");
+      const types = optionalStringList(args, "types");
+      return result(await actions.search(required(args, "query"), {
+        ...(typeof args.domain === "string" ? { domain: args.domain } : {}),
+        ...(types ? { types } : {}),
+        ...(typeof args.global === "boolean" ? { global: args.global } : {}),
+        ...(limit === undefined ? {} : { limit: limit as number }),
+      }));
+    }
+    if (name === "traverse_hub_okf") {
+      const direction = args.direction;
+      if (direction !== undefined && direction !== "outbound" && direction !== "inbound" && direction !== "both") {
+        throw new Error("direction must be outbound, inbound or both");
+      }
+      const maxDepth = args.max_depth, limit = args.limit;
+      if (maxDepth !== undefined && (!Number.isInteger(maxDepth) || Number(maxDepth) < 1 || Number(maxDepth) > 3)) {
+        throw new Error("max_depth must be an integer from 1 to 3");
+      }
+      if (limit !== undefined && (!Number.isInteger(limit) || Number(limit) < 1 || Number(limit) > 100)) {
+        throw new Error("limit must be an integer from 1 to 100");
+      }
+      const kinds = optionalStringList(args, "kinds");
+      return result(await actions.traverse(required(args, "start"), {
+        ...(typeof direction === "string" ? { direction } : {}),
+        ...(kinds ? { kinds } : {}),
+        ...(maxDepth === undefined ? {} : { maxDepth: maxDepth as number }),
+        ...(limit === undefined ? {} : { limit: limit as number }),
+      }));
     }
     if (name === "read_hub_okf_concept") return result(await actions.read(required(args, "path")));
     if (name === "list_pending_hub_okf") return result(await actions.listPending());

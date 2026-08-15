@@ -14,7 +14,8 @@ function actions(events: string[]): HubToolActions {
     async finalize(id) { events.push(`finalize:${id}`); return { id: "p1" }; },
     async inspect(id) { events.push(`inspect:${id}`); return { id }; },
     async accept(id, digest) { events.push(`accept:${id}:${digest}`); return { id }; },
-    async search(query, limit) { events.push(`search:${query}:${limit ?? "default"}`); return []; },
+    async search(query, options) { events.push(`search:${query}:${JSON.stringify(options ?? {})}`); return []; },
+    async traverse(start, options) { events.push(`traverse:${start}:${JSON.stringify(options ?? {})}`); return []; },
     async read(relativePath) { events.push(`read:${relativePath}`); return { path: relativePath }; },
     async listPending() { events.push("pending"); return []; },
     async submitMany(ids) { events.push(`submit:${ids.join(",")}`); return { number: 2 }; },
@@ -48,8 +49,17 @@ test("[AB-LOCAL-HUB-002][AB-LOCAL-HUB-004] CLI routes local accept and query act
     ["accept", "--proposal", "p1", "--digest", `sha256:${"a".repeat(64)}`],
     actions(events), () => {}, () => {},
   ), 0);
-  assert.equal(await executeHubCli(["search", "--query", "orders", "--limit", "3"], actions(events), () => {}, () => {}), 0);
-  assert.deepEqual(events, [`accept:p1:sha256:${"a".repeat(64)}`, "search:orders:3"]);
+  assert.equal(await executeHubCli([
+    "search", "--query", "orders", "--domain", "domains/commerce", "--types", "System,Component", "--limit", "3",
+  ], actions(events), () => {}, () => {}), 0);
+  assert.equal(await executeHubCli([
+    "traverse", "--start", "systems/orders", "--direction", "both", "--depth", "2",
+  ], actions(events), () => {}, () => {}), 0);
+  assert.deepEqual(events, [
+    `accept:p1:sha256:${"a".repeat(64)}`,
+    'search:orders:{"domain":"domains/commerce","types":["System","Component"],"limit":3}',
+    'traverse:systems/orders:{"direction":"both","maxDepth":2}',
+  ]);
 });
 
 test("[AB-HUB-001][AB-HUB-002][AB-HUB-011] CLI rejects authority and credential flags", async () => {

@@ -12,7 +12,7 @@ import { admitPersistentLocalHub } from "./local-hub.ts";
 import type { HubToolActions } from "./mcp-tools.ts";
 import { readHubProposalState } from "./proposal-state.ts";
 import { recoverSynchronizationTransaction } from "./recovery.ts";
-import { readActiveHubConcept, searchActiveHub } from "./query.ts";
+import { readActiveHubConcept, searchActiveHub, traverseActiveHub } from "./query.ts";
 import { listPendingHubProposals } from "./pending.ts";
 import { publishPendingHubProposals } from "./publish.ts";
 import { synchronizeLocalHub } from "./synchronize.ts";
@@ -56,13 +56,16 @@ export function createHubRuntimeActions(
     }
     return configuration;
   };
+  const admit = async () => {
+    const configuration = configured();
+    return configuration.kind === "remote"
+      ? admitPersistentLocalHub(configuration) : admitPersistentLocalHub(configuration);
+  };
   return {
     async status() {
       const configuration = current();
       if (configuration.kind === "unconfigured") return { kind: "unconfigured", setupChoices: ["existing", "new"] };
-      const localHub = configuration.kind === "remote"
-        ? await admitPersistentLocalHub(configuration)
-        : await admitPersistentLocalHub(configuration);
+      const localHub = await admit();
       const pending = await listPendingHubProposals(localHub);
       return { kind: configuration.kind, localHubId: configuration.localHubId, localRoot: configuration.localRoot,
         baseCommit: configuration.baseCommit, activeHead: localHub.activeHead, pendingCount: pending.length,
@@ -81,9 +84,7 @@ export function createHubRuntimeActions(
       }
       const source = discoverRepositorySourceState(input.sourceRepository);
       const configuration = configured();
-      const localHub = configuration.kind === "remote"
-        ? await admitPersistentLocalHub(configuration)
-        : await admitPersistentLocalHub(configuration);
+      const localHub = await admit();
       const selectedSchemas = selectOkfConceptSchemas(input.signals).map((item) => item.type);
       const session = beginHubAuthoringSession({
         stateRoot,
@@ -118,10 +119,7 @@ export function createHubRuntimeActions(
       };
     },
     async accept(proposalId, proposalDigest) {
-      const configuration = configured();
-      const localHub = configuration.kind === "remote"
-        ? await admitPersistentLocalHub(configuration)
-        : await admitPersistentLocalHub(configuration);
+      const localHub = await admit();
       return acceptHubProposal({
         stateRoot,
         localHub,
@@ -129,25 +127,20 @@ export function createHubRuntimeActions(
         expectedDiffDigest: proposalDigest,
       });
     },
-    async search(query, limit) {
-      const configuration = configured();
-      const localHub = configuration.kind === "remote"
-        ? await admitPersistentLocalHub(configuration)
-        : await admitPersistentLocalHub(configuration);
-      return searchActiveHub(localHub, query, limit === undefined ? {} : { limit });
+    async search(query, options) {
+      const localHub = await admit();
+      return searchActiveHub(localHub, query, options);
+    },
+    async traverse(start, options) {
+      const localHub = await admit();
+      return traverseActiveHub(localHub, start, options);
     },
     async read(relativePath) {
-      const configuration = configured();
-      const localHub = configuration.kind === "remote"
-        ? await admitPersistentLocalHub(configuration)
-        : await admitPersistentLocalHub(configuration);
+      const localHub = await admit();
       return readActiveHubConcept(localHub, relativePath);
     },
     async listPending() {
-      const configuration = configured();
-      const localHub = configuration.kind === "remote"
-        ? await admitPersistentLocalHub(configuration)
-        : await admitPersistentLocalHub(configuration);
+      const localHub = await admit();
       return listPendingHubProposals(localHub);
     },
     async submitMany(proposalIds) {

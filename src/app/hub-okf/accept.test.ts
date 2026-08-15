@@ -80,8 +80,8 @@ test("[AB-LOCAL-HUB-002][AB-LOCAL-HUB-003] accept advances local main once with 
       { ...current.localHub, activeHead: accepted.acceptedCommit },
       "Orders repository",
     );
-    assert.equal(matches[0]?.commit, accepted.acceptedCommit);
-    assert.equal(matches[0]?.path, "repositories/orders/repository.md");
+    assert.equal(matches.commit, accepted.acceptedCommit);
+    assert.equal(matches.status === "ok" ? matches.matches[0]?.path : undefined, "repositories/orders/repository.md");
   } finally { fs.rmSync(current.root, { recursive: true, force: true }); }
 });
 

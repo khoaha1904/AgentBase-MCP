@@ -4,9 +4,16 @@ export {
   normalizeHubConceptPath,
   readHubConcept,
   searchHubConcepts,
+  traverseHubConcepts,
+  type HubConceptSummary,
   type HubQueryMatch,
   type HubQueryReader,
+  type HubSearchMatch,
   type HubSearchOptions,
+  type HubSearchResult,
+  type HubTraversalEdge,
+  type HubTraversalOptions,
+  type HubTraversalResult,
 } from "./hub-query.ts";
 export {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,

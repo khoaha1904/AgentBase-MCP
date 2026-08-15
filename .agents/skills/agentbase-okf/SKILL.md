@@ -22,9 +22,9 @@ repository as read-only.
    lifecycle, failure/operational boundary, audience or important graph role.
    Do not turn every route, handler, function or infrastructure block into a
    concept merely because it is concrete.
-5. Update the root `index.md` with `okf_version: "0.2"` and ordinary Markdown
-   links for progressive disclosure. Consume an existing valid `log.md`; do not
-   generate one for this MVP.
+5. Keep navigation progressive. The root `index.md` carries `okf_version:
+   "0.2"` and links only existing Domain, System and Repository entrypoint
+   indexes. Consume an existing valid `log.md`; do not generate one.
 6. Run AgentBase validation and diff. Repair only proposal files. Present
    warnings, limitations, and the complete diff to the maintainer.
 7. Stop before apply unless the maintainer explicitly authorizes applying that
@@ -62,6 +62,22 @@ For every new or modified AgentBase concept:
   express containment and implementation through prose and links;
 - never duplicate a component, interface, flow or resource beneath both a
   system and repository tree.
+
+## Navigation rules
+
+- Keep one canonical concept file; indexes link to it and never copy it.
+- Root navigation grows with Domain and fallback entrypoints, not every entity.
+- A Domain concept links its Systems and critical Business Flows. A System
+  concept links the components, interfaces, flows, resources and infrastructure
+  needed to understand that system.
+- When Domain evidence is absent, use bounded System and Repository indexes;
+  never invent a Domain merely to satisfy the layout.
+- Prefer domain-scoped Hub search for broad terms. An exact concept, resource or
+  repository identity is already sufficient scope. Ask the maintainer to choose
+  a Domain when search reports `scope_required`; use explicit global search only
+  when the maintainer wants cross-domain results.
+- Use bounded relationship traversal for impact and producer/consumer questions.
+  Traverse inbound edges through MCP rather than persisting inverse duplicates.
 
 ## Boundary rules
 

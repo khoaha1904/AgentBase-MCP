@@ -13,7 +13,8 @@ function actions(events: string[]): HubToolActions {
     async finalize(id) { events.push(`finalize:${id}`); return { id: "p1" }; },
     async inspect(id) { events.push(`inspect:${id}`); return { id }; },
     async accept(id, digest) { events.push(`accept:${id}:${digest}`); return { id }; },
-    async search(query, limit) { events.push(`search:${query}:${limit ?? "default"}`); return []; },
+    async search(query, options) { events.push(`search:${query}:${JSON.stringify(options ?? {})}`); return []; },
+    async traverse(start, options) { events.push(`traverse:${start}:${JSON.stringify(options ?? {})}`); return []; },
     async read(relativePath) { events.push(`read:${relativePath}`); return { path: relativePath }; },
     async listPending() { events.push("pending"); return []; },
     async submitMany(ids) { events.push(`submit:${ids.join(",")}`); return { number: 1 }; },
@@ -28,7 +29,7 @@ test("[AB-HUB-001..003] Hub MCP schemas contain no authority or credential overr
   assert.deepEqual(HUB_OKF_TOOLS.map((tool) => tool.name), [
     "get_hub_status", "configure_hub", "preview_hub_bootstrap", "bootstrap_hub",
     "prepare_hub_okf", "finalize_hub_okf_proposal", "inspect_hub_okf_proposal",
-    "accept_hub_okf_proposal", "search_hub_okf", "read_hub_okf_concept",
+    "accept_hub_okf_proposal", "search_hub_okf", "traverse_hub_okf", "read_hub_okf_concept",
     "list_pending_hub_okf", "submit_hub_okf_proposals", "synchronize_hub_okf", "recover_hub_okf",
   ]);
 });
@@ -65,11 +66,17 @@ test("[AB-LOCAL-HUB-002][AB-LOCAL-HUB-004] MCP routes local accept, search and r
   await callHubOkfTool("accept_hub_okf_proposal", {
     proposal_id: "p1", proposal_digest: `sha256:${"c".repeat(64)}`,
   }, current);
-  await callHubOkfTool("search_hub_okf", { query: "orders", limit: 5 }, current);
+  await callHubOkfTool("search_hub_okf", {
+    query: "orders", domain: "domains/commerce", types: ["System"], limit: 5,
+  }, current);
+  await callHubOkfTool("traverse_hub_okf", {
+    start: "systems/orders", direction: "inbound", kinds: ["part-of"], max_depth: 2, limit: 10,
+  }, current);
   await callHubOkfTool("read_hub_okf_concept", { path: "repositories/orders/repository.md" }, current);
   assert.deepEqual(events, [
     `accept:p1:sha256:${"c".repeat(64)}`,
-    "search:orders:5",
+    'search:orders:{"domain":"domains/commerce","types":["System"],"limit":5}',
+    'traverse:systems/orders:{"direction":"inbound","kinds":["part-of"],"maxDepth":2,"limit":10}',
     "read:repositories/orders/repository.md",
   ]);
 });

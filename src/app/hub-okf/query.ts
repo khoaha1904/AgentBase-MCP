@@ -1,9 +1,13 @@
 import {
   readHubConcept,
   searchHubConcepts,
+  traverseHubConcepts,
   type HubQueryMatch,
   type HubQueryReader,
   type HubSearchOptions,
+  type HubSearchResult,
+  type HubTraversalOptions,
+  type HubTraversalResult,
 } from "../../core/knowledge/index.ts";
 import { runGit, type GitOutput, type GitRequest } from "../../providers/github-hub/index.ts";
 import type { AdmittedLocalHubState } from "../../core/hub/index.ts";
@@ -39,8 +43,17 @@ export function searchActiveHub(
   query: string,
   options: HubSearchOptions = {},
   git: HubQueryGit = runGit,
-): Promise<readonly HubQueryMatch[]> {
+): Promise<HubSearchResult> {
   return searchHubConcepts(reader(localHub, git), query, options);
+}
+
+export function traverseActiveHub(
+  localHub: AdmittedLocalHubState,
+  start: string,
+  options: HubTraversalOptions = {},
+  git: HubQueryGit = runGit,
+): Promise<HubTraversalResult> {
+  return traverseHubConcepts(reader(localHub, git), start, options);
 }
 
 export function readActiveHubConcept(
