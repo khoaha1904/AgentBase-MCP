@@ -85,3 +85,25 @@ test("new preparation admits a selected cross-repository relationship outside th
     assert.equal(result.diff.entries.some((entry) => entry.path === "relationships/acme-billing.md"), true);
   } finally { current.cleanup(); }
 });
+
+test("[AB-LOCAL-HUB-012] new preparation uses a logical canonical subject and current-source concepts", () => {
+  const current = fixture();
+  try {
+    fs.rmSync(current.authored, { recursive: true });
+    fs.mkdirSync(path.join(current.authored, "components"), { recursive: true });
+    fs.writeFileSync(path.join(current.authored, "index.md"), "---\nokf_version: '0.2'\n---\n\n# Knowledge\n\n* [Cart service](components/cart-service.md)\n");
+    fs.writeFileSync(path.join(current.authored, "components/cart-service.md"),
+      "---\ntype: Service\ntitle: Cart service\ndescription: Owns cart behavior\nstatus: draft\n"
+      + "generated: { by: 'agentbase/0.0.0', at: '2026-08-12T00:00:00Z' }\n"
+      + "sources:\n  - resource: repository://repository-acme-aaaaaaaaaaaa/src/cart.ts#L1-L2\n"
+      + "---\n\n# Responsibility\n\nOwns carts.\n");
+    const result = prepareNewHubProposal({
+      hub: createHubIdentity("agentbase/hub", "main"), baseCommit: BASE_COMMIT, sourceRepositoryId: SOURCE_ID,
+      hubBundleRoot: current.base, authoredBundleRoot: current.authored,
+      proposalRoot: current.proposal, subjectDirectory: "components/cart-service",
+      evidenceDigest: EVIDENCE, signals: ["service"], createdAt: "2026-08-12T00:00:00Z",
+    });
+    assert.equal(result.proposal.subject, "components/cart-service");
+    assert.equal(result.diff.entries.some((entry) => entry.path === "components/cart-service.md"), true);
+  } finally { current.cleanup(); }
+});

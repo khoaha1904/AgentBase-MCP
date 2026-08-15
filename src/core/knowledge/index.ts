@@ -18,10 +18,12 @@ export {
   type OkfSchemaSelection,
 } from "./schema-catalog.ts";
 export {
+  conceptReferencesRepository,
   createRepositorySourceResource,
   OkfValidationError,
   parseConceptDocument,
   renderConceptDocument,
+  repositorySourceResources,
   validateAgentBaseDraft,
   type ConceptDocument,
   type OkfFrontmatter,

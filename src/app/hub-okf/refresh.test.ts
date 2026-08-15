@@ -122,3 +122,52 @@ test("[AB-HUB-007] prior generated prose cannot become independent evidence", ()
     assert.throws(() => prepareRefreshHubProposal(options(current)), /continuity context/);
   } finally { current.cleanup(); }
 });
+
+test("[AB-LOCAL-HUB-012][AB-LOCAL-HUB-013] another repository enriches one canonical concept and additive navigation", () => {
+  const current = fixture();
+  try {
+    const sourceB = "repository-web-bbbbbbbbbbbb";
+    current.write(current.base, "systems/shopping-cart.md", draft("Shopping cart", "# System\n\nBefore."));
+    current.write(current.base, "components/cart-service.md", draft("Cart service", "# Responsibility\n\nBackend.")
+      .replace("sources:\n", "sources:\n  - id: frontend\n    resource: repository://repository-web-bbbbbbbbbbbb/src/cart.ts#L1-L2\n"));
+    fs.rmSync(current.authored, { recursive: true });
+    fs.cpSync(current.base, current.authored, { recursive: true });
+    current.write(current.authored, "index.md", fs.readFileSync(path.join(current.base, "index.md"), "utf8")
+      + "\n* [Shopping cart](systems/shopping-cart.md) - system\n");
+    current.write(current.authored, "components/cart-service.md", draft("Cart service", "# Responsibility\n\nFrontend and backend.")
+      .replace("sources:\n", "sources:\n  - id: frontend\n    resource: repository://repository-web-bbbbbbbbbbbb/src/cart.ts#L1-L2\n"));
+    const result = prepareRefreshHubProposal({
+      ...options(current), sourceRepositoryId: sourceB, subjectDirectory: "systems/shopping-cart",
+    });
+    const enriched = fs.readFileSync(path.join(result.bundleRoot, "components/cart-service.md"), "utf8");
+    assert.match(enriched, /Frontend and backend/);
+    assert.match(enriched, /repository-web-bbbbbbbbbbbb/);
+    assert.match(enriched, /repository-acme-aaaaaaaaaaaa/);
+    assert.match(fs.readFileSync(path.join(result.bundleRoot, "index.md"), "utf8"), /systems\/shopping-cart\.md/);
+  } finally { current.cleanup(); }
+});
+
+test("[AB-LOCAL-HUB-013] cross-source refresh preserves foreign evidence and non-additive indexes", () => {
+  const current = fixture();
+  try {
+    current.write(current.base, "systems/shopping-cart.md", draft("Shopping cart", "# System\n\nBefore."));
+    current.write(current.base, "components/cart-service.md", draft("Cart service", "# Responsibility\n\nBackend.")
+      .replace("sources:\n", "sources:\n  - resource: repository://repository-web-bbbbbbbbbbbb/src/cart.ts#L1-L2\n"));
+    fs.rmSync(current.authored, { recursive: true });
+    fs.cpSync(current.base, current.authored, { recursive: true });
+    current.write(current.authored, "components/cart-service.md", draft("Cart service", "# Responsibility\n\nLost frontend evidence."));
+    current.write(current.authored, "index.md", "---\nokf_version: '0.2'\n---\n\n# Rewritten\n");
+    const result = prepareRefreshHubProposal({
+      ...options(current), subjectDirectory: "systems/shopping-cart",
+    });
+    assert.equal(
+      fs.readFileSync(path.join(result.bundleRoot, "components/cart-service.md"), "utf8"),
+      fs.readFileSync(path.join(current.base, "components/cart-service.md"), "utf8"),
+    );
+    assert.equal(
+      fs.readFileSync(path.join(result.bundleRoot, "index.md"), "utf8"),
+      fs.readFileSync(path.join(current.base, "index.md"), "utf8"),
+    );
+    assert.equal(result.inspection.counts.conflict >= 2, true);
+  } finally { current.cleanup(); }
+});

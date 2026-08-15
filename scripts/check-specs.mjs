@@ -29,7 +29,7 @@ const REQUIREMENT_GROUPS = [
   ["observations", "docs/contracts/okf.md", ids("AB-OBS", 7), "SPEC-OKF-LIVING-MISSING", "SPEC-OBS-ID-MISSING"],
   ["schema catalog", "docs/contracts/okf.md", ids("AB-SCHEMA", 15), "SPEC-OKF-LIVING-MISSING", "SPEC-SCHEMA-ID-MISSING"],
   ["product", "docs/PRODUCT.md", [...ids("AB-PRODUCT", 5), ...ids("AB-MIGRATION", 2)], "SPEC-PRODUCT-LIVING-MISSING", "SPEC-PRODUCT-ID-MISSING"],
-  ["local Hub", "docs/contracts/hub.md", [...ids("AB-LOCAL-HUB", 11), "AB-QUERY-001", ...ids("AB-HUB-SETUP", 17)], "SPEC-HUB-LIVING-MISSING", "SPEC-HUB-ID-MISSING"],
+  ["local Hub", "docs/contracts/hub.md", [...ids("AB-LOCAL-HUB", 13), "AB-QUERY-001", ...ids("AB-HUB-SETUP", 17)], "SPEC-HUB-LIVING-MISSING", "SPEC-HUB-ID-MISSING"],
   ["installation", "docs/contracts/installation.md", ids("AB-INSTALL", 24), "SPEC-INSTALL-LIVING-MISSING", "SPEC-INSTALL-ID-MISSING"],
   ["benchmark", "docs/contracts/benchmark.md", ids("AB-BENCH", 35), "SPEC-BENCH-LIVING-MISSING", "SPEC-BENCH-ID-MISSING"],
 ];

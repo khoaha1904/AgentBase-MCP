@@ -1,4 +1,5 @@
 import type { CallToolResult } from "@modelcontextprotocol/server";
+import { HUB_PROPOSAL_SUBJECT_PATTERN } from "../../core/hub/index.ts";
 import type { BootstrapMode } from "./bootstrap.ts";
 
 export const HUB_OKF_TOOLS = [
@@ -52,7 +53,11 @@ export const HUB_OKF_TOOLS = [
         mode: { type: "string", enum: ["new", "refresh"] },
         source_repository: { type: "string", minLength: 1 },
         evidence_digest: { type: "string", pattern: "^sha256:[a-f0-9]{64}$" },
-        subject_directory: { type: "string", pattern: "^repositories/[a-z0-9][a-z0-9-]{0,99}$" },
+        subject_directory: {
+          type: "string",
+          pattern: HUB_PROPOSAL_SUBJECT_PATTERN.source,
+          description: "Logical proposal focus; source repository identity and changed concept paths remain independent.",
+        },
         signals: { type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: 64 },
       },
       required: ["mode", "source_repository", "evidence_digest", "subject_directory", "signals"],

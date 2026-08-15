@@ -153,7 +153,7 @@ export async function createLocalHub(
     await git({ args: ["init", "--initial-branch=main"], cwd: staging, operation: "initialize local AgentBase-Hub" });
     const readme = "# AgentBase-Hub\n\n"
       + "This is an OKF knowledge repository created and managed locally by AgentBase-MCP.\n\n"
-      + "Accepted knowledge is stored as linked Markdown concepts under `repositories/`, `relationships/` and `capabilities/`. "
+      + "Accepted knowledge is stored once per entity as a linked canonical OKF graph. "
       + "The root `index.md` is the progressive-disclosure entrypoint.\n";
     fs.writeFileSync(path.join(staging, "README.md"), readme);
     fs.writeFileSync(path.join(staging, "index.md"), "---\nokf_version: \"0.2\"\n---\n\n# AgentBase-Hub\n");

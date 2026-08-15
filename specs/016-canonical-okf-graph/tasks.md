@@ -11,11 +11,11 @@
 
 ## Phase 2: Canonical proposal lifecycle
 
-- [ ] T005 [US2] Add requirement-linked cross-root and cross-source lifecycle tests in `src/app/hub-okf/prepare.test.ts` and `refresh.test.ts`
-- [ ] T006 [US2] Admit logical canonical subjects in `src/core/hub/proposal.ts` and `src/app/hub-okf/mcp-tools.ts`
-- [ ] T007 [US2] Decouple refresh mutation from the subject subtree while preserving foreign evidence and protected bytes in `src/app/hub-okf/refresh.ts`
-- [ ] T008 [US2] Update current Hub contract in `docs/contracts/hub.md`
-- [ ] T009 [US2] Run canonical verification and commit the proposal lifecycle phase
+- [x] T005 [US2] Add requirement-linked cross-root and cross-source lifecycle tests in `src/app/hub-okf/prepare.test.ts` and `refresh.test.ts`
+- [x] T006 [US2] Admit logical canonical subjects in `src/core/hub/proposal.ts` and `src/app/hub-okf/mcp-tools.ts`
+- [x] T007 [US2] Decouple refresh mutation from the subject subtree while preserving foreign evidence and protected bytes in `src/app/hub-okf/refresh.ts`
+- [x] T008 [US2] Update current Hub contract in `docs/contracts/hub.md`
+- [x] T009 [US2] Run canonical verification and commit the proposal lifecycle phase
 
 ## Phase 3: System-centered authoring
 

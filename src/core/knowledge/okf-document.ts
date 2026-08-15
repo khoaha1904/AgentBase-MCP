@@ -163,6 +163,20 @@ function mapping(value: OkfValue | undefined): Readonly<{ [key: string]: OkfValu
     : undefined;
 }
 
+export function repositorySourceResources(concept: ConceptDocument): readonly string[] {
+  const sources = concept.frontmatter.sources;
+  if (!Array.isArray(sources)) return [];
+  return sources.flatMap((source) => {
+    const resource = mapping(source)?.resource;
+    return typeof resource === "string" && resource.startsWith("repository://") ? [resource] : [];
+  });
+}
+
+export function conceptReferencesRepository(concept: ConceptDocument, repositoryId: string): boolean {
+  const prefix = `repository://${repositoryId}/`;
+  return repositorySourceResources(concept).some((resource) => resource.startsWith(prefix));
+}
+
 function validRepositoryResource(value: string): boolean {
   const match = value.match(/^repository:\/\/(repository-[a-z0-9-]+-[a-f0-9]{12})\/(.+)#L(\d+)-L(\d+)$/);
   if (!match?.[2] || !match[3] || !match[4]) return false;

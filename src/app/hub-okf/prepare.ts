@@ -2,9 +2,13 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-import { createHubProposal, type AnyHubProposal, type HubIdentity, type HubProposal, type LocalOnlyHubProposal } from "../../core/hub/index.ts";
+import {
+  createHubProposal, isHubProposalSubject, type AnyHubProposal, type HubIdentity,
+  type HubProposal, type LocalOnlyHubProposal,
+} from "../../core/hub/index.ts";
 import {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
+  conceptReferencesRepository,
   diffBundleProposal,
   loadOkfBundle,
   prepareBundleProposal,
@@ -32,7 +36,11 @@ export type PreparedHubProposal = Readonly<{ proposal: HubProposal; diff: Propos
 export type PreparedLocalHubProposal = Readonly<{ proposal: LocalOnlyHubProposal; diff: ProposalDiff; bundleRoot: string }>;
 
 function safeSubject(value: string): void {
-  if (!/^repositories\/[a-z0-9][a-z0-9-]{0,99}$/.test(value)) throw new Error("new Hub subject must be a normalized repositories/<slug> directory");
+  if (!isHubProposalSubject(value)) throw new Error("new Hub subject must be a normalized canonical concept path");
+}
+
+function subjectExists(root: string, subject: string): boolean {
+  return fs.existsSync(path.join(root, subject)) || fs.existsSync(path.join(root, `${subject}.md`));
 }
 
 function copyBundle(source: string, target: string): void {
@@ -46,7 +54,7 @@ export function prepareNewHubProposal(
   options: PrepareNewHubOptions | PrepareNewLocalHubOptions,
 ): Readonly<{ proposal: AnyHubProposal; diff: ProposalDiff; bundleRoot: string }> {
   safeSubject(options.subjectDirectory);
-  if (fs.existsSync(path.join(options.hubBundleRoot, options.subjectDirectory))) throw new Error("new Hub subject already exists; use refresh");
+  if (subjectExists(options.hubBundleRoot, options.subjectDirectory)) throw new Error("new Hub subject already exists; use refresh");
   const selected = selectOkfConceptSchemas(options.signals).map((item) => item.type);
   const authored = loadOkfBundle(options.authoredBundleRoot, { requireAgentBaseRootIndex: true });
   const base = loadOkfBundle(options.hubBundleRoot);
@@ -55,6 +63,9 @@ export function prepareNewHubProposal(
       throw new Error(`authored concept requires unselected schema: ${concept.type}`);
     }
     if (!base.concepts.has(concept.conceptId)) {
+      if (!conceptReferencesRepository(concept, options.sourceRepositoryId)) {
+        throw new Error(`authored concept does not cite the proposal source repository: ${concept.path}`);
+      }
       const failures = validateConceptAgainstSchema(concept);
       if (failures.length) throw new Error(`authored concept failed schema validation: ${failures.join("; ")}`);
     }

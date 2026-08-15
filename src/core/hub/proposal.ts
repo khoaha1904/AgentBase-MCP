@@ -12,6 +12,18 @@ export const HUB_PROPOSAL_TRAILERS = {
   catalog: "AgentBase-Schema-Catalog",
 } as const;
 
+const HUB_SUBJECT_ROOTS = [
+  "domains", "systems", "components", "interfaces", "flows", "resources",
+  "infrastructure", "deployments", "repositories", "relationships", "capabilities",
+] as const;
+export const HUB_PROPOSAL_SUBJECT_PATTERN = new RegExp(
+  `^(?:${HUB_SUBJECT_ROOTS.join("|")})/[a-z0-9][a-z0-9./-]*$`,
+);
+
+export function isHubProposalSubject(value: string): boolean {
+  return HUB_PROPOSAL_SUBJECT_PATTERN.test(value) && !value.includes("..");
+}
+
 export type LocalProposal = Readonly<{
   id: string;
   mode: "new" | "refresh";
@@ -69,7 +81,7 @@ export function createHubProposal(input: RemoteProposalInput | LocalProposalInpu
   digest(input.evidenceDigest, "evidenceDigest");
   digest(input.treeDigest, "treeDigest");
   digest(input.diffDigest, "diffDigest");
-  if (!/^(?:repositories|relationships|capabilities)\/[a-z0-9][a-z0-9./-]*$/.test(input.subject) || input.subject.includes("..")) {
+  if (!isHubProposalSubject(input.subject)) {
     throw new HubValidationError("HUB_SUBJECT_INVALID", "proposal subject must be a normalized Hub path");
   }
   if (!("hub" in input) && !/^[a-f0-9]{24}$/.test(input.localHubId)) {
@@ -92,7 +104,7 @@ export function advanceHubProposal<T extends AnyHubProposal>(proposal: T, phase:
 
 export function createLocalProposal(input: Omit<LocalProposal, "publicationState">): LocalProposal {
   if (!/^[a-f0-9]{24}$/.test(input.id)) throw new HubValidationError("HUB_PROPOSAL_ID_INVALID", "proposal ID must be 24 lowercase hex");
-  if (!/^(?:repositories|relationships|capabilities)\/[a-z0-9][a-z0-9./-]*$/.test(input.subject) || input.subject.includes("..")) {
+  if (!isHubProposalSubject(input.subject)) {
     throw new HubValidationError("HUB_SUBJECT_INVALID", "proposal subject must be a normalized Hub path");
   }
   hex(input.parentCommit, "parentCommit");

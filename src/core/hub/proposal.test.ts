@@ -18,6 +18,8 @@ test("[AB-HUB-005][AB-HUB-012][AB-HUB-013] proposal identity and phases are dete
   assert.equal(advanceHubProposal(committed, "pushed").phase, "pushed");
   assert.throws(() => advanceHubProposal(first, "pushed", { commit: "b".repeat(40) }));
   assert.throws(() => createHubProposal({ ...input, diffDigest: "raw-hex" }), /SHA-256/);
+  assert.equal(createHubProposal({ ...input, subject: "systems/shopping-cart" }).subject, "systems/shopping-cart");
+  assert.throws(() => createHubProposal({ ...input, subject: "questions/unresolved" }), /normalized Hub path/);
 });
 
 test("[AB-LOCAL-HUB-003][AB-LOCAL-HUB-005][AB-LOCAL-HUB-006] local proposals have portable trailers and safe prefix selection", () => {

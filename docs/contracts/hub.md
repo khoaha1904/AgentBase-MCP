@@ -36,6 +36,15 @@ queries and ordinary coding never create Hub state, commits or publication.
   fake GitHub HTTP, never a real repository.
 - **AB-LOCAL-HUB-011** — Accept, publication, synchronization and recovery share
   one atomic owner lock; cancellation never silently resets or drops knowledge.
+- **AB-LOCAL-HUB-012** — A proposal subject is a logical canonical review focus,
+  while `sourceRepositoryId` independently records the evidence source. New
+  selected concepts may be created across canonical entity roots; their paths
+  are not forced beneath the repository concept.
+- **AB-LOCAL-HUB-013** — Refresh may change an unverified AgentBase draft across
+  canonical roots only when the proposed concept cites the current source and
+  retains exact foreign-repository source resources. Protected bytes remain
+  unchanged, and shared indexes may only add navigation without rewriting
+  existing nonblank lines.
 - **AB-QUERY-001** — Code questions primarily use Code Graph; business/system/
   cross-repository questions primarily use local Hub; combined answers retain
   both source kinds and limitations.

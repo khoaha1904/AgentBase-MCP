@@ -2,20 +2,25 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-import { createHubProposal, type AnyHubProposal, type HubIdentity, type HubProposal, type LocalOnlyHubProposal } from "../../core/hub/index.ts";
+import {
+  createHubProposal, isHubProposalSubject, type AnyHubProposal, type HubIdentity,
+  type HubProposal, type LocalOnlyHubProposal,
+} from "../../core/hub/index.ts";
 import {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
+  conceptReferencesRepository,
   diffBundleProposal,
   isMutableAgentBaseDraft,
   loadOkfBundle,
   prepareBundleProposal,
+  repositorySourceResources,
   selectOkfConceptSchemas,
   validateConceptAgainstSchema,
   validateBundleProposal,
+  type ConceptDocument,
 } from "../../core/knowledge/index.ts";
 import { inspectHubProposal, type HubLifecycleEntry, type HubProposalInspection } from "./inspect.ts";
 import { writeHubProposalState } from "./proposal-state.ts";
-
 export type HubSupersession = Readonly<{ previousConceptId: string; replacementConceptId: string }>;
 export type PrepareRefreshHubOptions = Readonly<{
   hub: HubIdentity;
@@ -42,7 +47,6 @@ type AnyRefreshOptions = PrepareRefreshHubOptions | PrepareRefreshLocalHubOption
 function bytes(root: string, relative: string): Buffer {
   return fs.readFileSync(path.join(root, ...relative.split("/")));
 }
-
 function writeBytes(root: string, relative: string, content: Buffer): void {
   const target = path.join(root, ...relative.split("/"));
   fs.mkdirSync(path.dirname(target), { recursive: true, mode: 0o700 });
@@ -52,6 +56,32 @@ function writeBytes(root: string, relative: string, content: Buffer): void {
 function copyAuthored(source: string, target: string): void {
   fs.rmSync(target, { recursive: true, force: true });
   fs.cpSync(source, target, { recursive: true, errorOnExist: true, force: false });
+}
+function subjectExists(root: string, subject: string): boolean {
+  return fs.existsSync(path.join(root, subject)) || fs.existsSync(path.join(root, `${subject}.md`));
+}
+
+function withinSubject(relative: string, subject: string): boolean {
+  return relative === `${subject}.md` || relative.startsWith(`${subject}/`);
+}
+function preservesLines(previous: Buffer, proposed: Buffer): boolean {
+  const retained = previous.toString("utf8").split(/\r?\n/).filter((line) => line.trim());
+  const next = proposed.toString("utf8").split(/\r?\n/).filter((line) => line.trim());
+  let cursor = 0;
+  for (const line of next) if (line === retained[cursor]) cursor += 1;
+  return cursor === retained.length;
+}
+
+function preservesForeignSources(
+  previous: ConceptDocument,
+  proposed: ConceptDocument,
+  sourceRepositoryId: string,
+): boolean {
+  const currentPrefix = `repository://${sourceRepositoryId}/`;
+  const next = new Set(repositorySourceResources(proposed));
+  return repositorySourceResources(previous)
+    .filter((resource) => !resource.startsWith(currentPrefix))
+    .every((resource) => next.has(resource));
 }
 
 function rootIndexWithoutSubject(source: string, subjectDirectory: string): string {
@@ -74,9 +104,10 @@ function subjectRemovalEntries(
   bundleRoot: string,
 ): readonly HubLifecycleEntry[] | undefined {
   const authored = loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true });
-  if (authored.files.some((relative) => relative.startsWith(`${options.subjectDirectory}/`))) return undefined;
+  if (authored.files.some((relative) => withinSubject(relative, options.subjectDirectory))) return undefined;
   const base = loadOkfBundle(options.hubBundleRoot);
   const subjectFiles = base.files.filter((relative) => relative.startsWith(`${options.subjectDirectory}/`));
+  if (!subjectFiles.length) return undefined;
   for (const relative of subjectFiles) {
     if (path.posix.basename(relative) === "index.md") continue;
     const concept = base.concepts.get(relative.endsWith(".md") ? relative.slice(0, -3) : "");
@@ -110,7 +141,7 @@ function protectBase(
   const authored = loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true });
   const conflicts: HubLifecycleEntry[] = [];
   for (const relative of base.files) {
-    const withinSubject = relative.startsWith(`${options.subjectDirectory}/`);
+    const inSubject = withinSubject(relative, options.subjectDirectory);
     const conceptId = relative.endsWith(".md") ? relative.slice(0, -3) : "";
     const concept = base.concepts.get(conceptId);
     const mutable = Boolean(concept && isMutableAgentBaseDraft(concept));
@@ -118,13 +149,22 @@ function protectBase(
     const changed = !proposed || !bytes(options.hubBundleRoot, relative).equals(proposed);
     const index = path.posix.basename(relative) === "index.md";
     const rootIndexRemoval = Boolean(removal && relative === "index.md");
-    if (!changed || rootIndexRemoval || (withinSubject && (mutable || index))) continue;
+    const proposedConcept = authored.concepts.get(conceptId);
+    const currentSourceContribution = Boolean(
+      concept && proposedConcept
+      && conceptReferencesRepository(proposedConcept, options.sourceRepositoryId)
+      && preservesForeignSources(concept, proposedConcept, options.sourceRepositoryId),
+    );
+    const additiveIndex = Boolean(index && proposed && preservesLines(bytes(options.hubBundleRoot, relative), proposed));
+    const ownedDeletion = Boolean(mutable && !proposed && inSubject);
+    if (!changed || rootIndexRemoval || ownedDeletion || (mutable && currentSourceContribution)
+      || (index && (inSubject || additiveIndex))) continue;
     writeBytes(bundleRoot, relative, bytes(options.hubBundleRoot, relative));
-    if (withinSubject) conflicts.push({
+    if (changed) conflicts.push({
       path: relative,
       change: "conflict",
       allowed: true,
-      reason: "authored refresh contradicted protected Hub bytes; existing bytes were preserved",
+      reason: "authored refresh contradicted protected or foreign-source Hub bytes; existing bytes were preserved",
     });
   }
   return conflicts;
@@ -186,10 +226,13 @@ function validateChangedSchemas(options: AnyRefreshOptions, bundleRoot: string):
   const failures = [...proposed.concepts.values()].flatMap((concept) => {
     const previous = base.concepts.get(concept.conceptId);
     if (previous && bytes(options.hubBundleRoot, previous.path).equals(bytes(bundleRoot, concept.path))) return [];
+    const sourceFailure = !conceptReferencesRepository(concept, options.sourceRepositoryId)
+      ? [`${concept.path}: changed concept must cite proposal source repository ${options.sourceRepositoryId}`]
+      : [];
     const selectionFailure = !previous && !selected.has(concept.type)
       ? [`${concept.path}: authored concept requires unselected schema ${concept.type}`]
       : [];
-    return [...selectionFailure, ...validateConceptAgainstSchema(concept)];
+    return [...sourceFailure, ...selectionFailure, ...validateConceptAgainstSchema(concept)];
   });
   if (failures.length) throw new Error(`Hub refresh failed schema validation: ${failures.join("; ")}`);
 }
@@ -199,8 +242,8 @@ export function prepareRefreshHubProposal(options: PrepareRefreshLocalHubOptions
 export function prepareRefreshHubProposal(
   options: PrepareRefreshHubOptions | PrepareRefreshLocalHubOptions,
 ): Omit<PreparedRefreshHubProposal, "proposal"> & Readonly<{ proposal: AnyHubProposal }> {
-  if (!/^repositories\/[a-z0-9][a-z0-9-]{0,99}$/.test(options.subjectDirectory)) throw new Error("invalid Hub subject");
-  if (!fs.existsSync(path.join(options.hubBundleRoot, options.subjectDirectory))) throw new Error("refresh subject is absent; use new");
+  if (!isHubProposalSubject(options.subjectDirectory)) throw new Error("invalid Hub subject");
+  if (!subjectExists(options.hubBundleRoot, options.subjectDirectory)) throw new Error("refresh subject is absent; use new");
   const selected = selectOkfConceptSchemas(options.signals).map((item) => item.type);
   const seed = `${options.baseCommit}\0${options.evidenceDigest}\0${options.subjectDirectory}\0refresh`;
   const proposalId = `proposal-${createHash("sha256").update(seed).digest("hex").slice(0, 24)}`;
