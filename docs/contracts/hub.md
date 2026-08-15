@@ -45,6 +45,11 @@ queries and ordinary coding never create Hub state, commits or publication.
   retains exact foreign-repository source resources. Protected bytes remain
   unchanged, and shared indexes may only add navigation without rewriting
   existing nonblank lines.
+- **AB-LOCAL-HUB-014** — Prepare reports exact-base bounded continuity:
+  current-source summaries, the logical subject when resolved, one-hop
+  neighbors and relevant navigation paths with explicit omitted counts. The
+  complete checkout remains lifecycle state and is not serialized as authoring
+  context.
 - **AB-QUERY-001** — Code questions primarily use Code Graph; business/system/
   cross-repository questions primarily use local Hub; combined answers retain
   both source kinds and limitations.

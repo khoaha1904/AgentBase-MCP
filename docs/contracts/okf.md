@@ -138,6 +138,9 @@ Normative OKF source is pinned to commit
   contiguous order, exact endpoints, one canonical action, sync/async mode and
   evidence. Invalid endpoints, modes, evidence or known-schema predicates fail
   authoring validation.
+- **AB-SCHEMA-021** — `validate_okf_changes` accepts 1–64 full changed concepts
+  and at most 512 unchanged identity/path/type target summaries. Validation has
+  no dependency on total Hub size and receives no unchanged concept body.
 - **AB-SCHEMA-022** — Architecture nodes and useful knowledge units are not
   forced into one technology-shaped granularity. Operationally independent
   Lambda/workers remain concepts; implementation-only handlers stay in their

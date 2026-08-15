@@ -3,17 +3,19 @@ import {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
   getOkfConceptSchema,
   listOkfConceptSchemas,
+  normalizeHubConceptPath,
   parseConceptDocument,
   selectOkfConceptSchemas,
   validateAgentBaseDraft,
   validateConceptAgainstSchema,
   validateOkfRelationships,
   type ConceptDocument,
+  type OkfRelationshipTarget,
 } from "../../core/knowledge/index.ts";
 
 export const OKF_SCHEMA_TOOL_NAMES = [
   "list_okf_schemas", "get_okf_schema", "select_okf_schemas", "validate_okf_concept", "validate_okf_relationships",
-  "get_okf_authoring_schemas", "validate_okf_bundle",
+  "get_okf_authoring_schemas", "validate_okf_bundle", "validate_okf_changes",
 ] as const;
 export type OkfSchemaToolName = typeof OKF_SCHEMA_TOOL_NAMES[number];
 
@@ -34,6 +36,19 @@ const conceptSetInputSchema = {
     },
   },
   required: ["concepts"], additionalProperties: false,
+} as const;
+
+const targetSummarySchema = {
+  type: "array", maxItems: 512,
+  items: {
+    type: "object",
+    properties: {
+      identity: { type: "string", minLength: 1, maxLength: 256 },
+      path: { type: "string", minLength: 1, maxLength: 1024 },
+      type: { type: "string", minLength: 1, maxLength: 256 },
+    },
+    required: ["identity", "path", "type"], additionalProperties: false,
+  },
 } as const;
 
 export const OKF_SCHEMA_TOOLS = [
@@ -95,6 +110,15 @@ export const OKF_SCHEMA_TOOLS = [
     description: "Validate draft policy, known schemas and cross-document relationships for a bounded supplied OKF bundle in one call.",
     inputSchema: conceptSetInputSchema,
   },
+  {
+    name: "validate_okf_changes",
+    description: "Validate changed OKF concepts against bounded unchanged target summaries without supplying the whole Hub.",
+    inputSchema: {
+      type: "object",
+      properties: { changes: conceptSetInputSchema.properties.concepts, targets: targetSummarySchema },
+      required: ["changes", "targets"], additionalProperties: false,
+    },
+  },
 ] as const;
 
 function result(value: unknown, isError = false): CallToolResult {
@@ -105,20 +129,59 @@ type SuppliedConcept = Readonly<{ identity: string; path: string; content: strin
 type ParsedSuppliedConcept = Readonly<{ item: SuppliedConcept; concept: ConceptDocument }>
   | Readonly<{ item: SuppliedConcept; error: string }>;
 
-function suppliedConcepts(args: Readonly<Record<string, unknown>>): Readonly<{ entries?: SuppliedConcept[]; error?: string }> {
-  const supplied = args.concepts;
+function suppliedConcepts(args: Readonly<Record<string, unknown>>, key = "concepts"): Readonly<{ entries?: SuppliedConcept[]; error?: string }> {
+  const supplied = args[key];
   const valid = Array.isArray(supplied) && supplied.length >= 1 && supplied.length <= 64
     && supplied.every((item) => item && typeof item === "object" && !Array.isArray(item)
       && typeof item.identity === "string" && item.identity.length >= 1 && item.identity.length <= 256
       && typeof item.path === "string" && item.path.length >= 1 && item.path.length <= 1024
       && typeof item.content === "string" && item.content.length >= 1
       && Buffer.byteLength(item.content) <= 262144);
-  if (!valid) return { error: "concepts must be a bounded list of identity, path and content strings" };
+  if (!valid) return { error: `${key} must be a bounded list of identity, path and content strings` };
   const entries = supplied as SuppliedConcept[];
   if (entries.reduce((bytes, item) => bytes + Buffer.byteLength(item.content), 0) > 4 * 1024 * 1024) {
     return { error: "concept content exceeds 4194304 bytes" };
   }
   return { entries };
+}
+
+function suppliedTargets(args: Readonly<Record<string, unknown>>): Readonly<{ entries?: OkfRelationshipTarget[]; error?: string }> {
+  const supplied = args.targets;
+  const validPath = (value: string) => {
+    try { return normalizeHubConceptPath(value) === value; } catch { return false; }
+  };
+  const valid = Array.isArray(supplied) && supplied.length <= 512
+    && supplied.every((item) => item && typeof item === "object" && !Array.isArray(item)
+      && typeof item.identity === "string" && item.identity.length >= 1 && item.identity.length <= 256
+      && typeof item.path === "string" && item.path.length >= 1 && item.path.length <= 1024 && validPath(item.path)
+      && typeof item.type === "string" && item.type.length >= 1 && item.type.length <= 256);
+  return valid ? { entries: supplied as OkfRelationshipTarget[] }
+    : { error: "targets must be a bounded list of identity, path and type strings" };
+}
+
+function validateBundle(entries: readonly SuppliedConcept[], targets: readonly OkfRelationshipTarget[] = []): CallToolResult {
+  const parsed: ParsedSuppliedConcept[] = entries.map((item) => {
+    try { return { item, concept: parseConceptDocument(item.path, item.content) }; }
+    catch (error) { return { item, error: error instanceof Error ? error.message : "concept parsing failed" }; }
+  });
+  const concepts = parsed.map((entry) => {
+    if ("error" in entry) return {
+      identity: entry.item.identity, path: entry.item.path, valid: false,
+      failures: [`${entry.item.path}: ${entry.error}`],
+    };
+    const failures = [...validateAgentBaseDraft(entry.concept), ...validateConceptAgainstSchema(entry.concept)];
+    return { identity: entry.item.identity, path: entry.item.path, type: entry.concept.type,
+      knownSchema: Boolean(getOkfConceptSchema(entry.concept.type)), valid: failures.length === 0, failures };
+  });
+  const parsedConcepts = parsed.flatMap((entry) => "concept" in entry
+    ? [{ identity: entry.item.identity, concept: entry.concept }] : []);
+  const relationshipValidation = parsedConcepts.length === entries.length
+    ? validateOkfRelationships(parsedConcepts, { targets, strictSourceIdentities: new Set(parsedConcepts.map((item) => item.identity)) })
+    : { failures: [] as readonly string[], relationships: [], flowSteps: [], warnings: [] as readonly string[] };
+  const valid = concepts.every((concept) => concept.valid) && relationshipValidation.failures.length === 0;
+  return result({ valid, concepts, relationshipFailures: relationshipValidation.failures,
+    relationshipWarnings: relationshipValidation.warnings, relationships: relationshipValidation.relationships,
+    flowSteps: relationshipValidation.flowSteps, relationshipValidationSkipped: parsedConcepts.length !== entries.length }, !valid);
 }
 
 export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record<string, unknown>>): CallToolResult {
@@ -164,44 +227,14 @@ export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record
         advisory: true,
       });
     }
-    if (name === "validate_okf_relationships" || name === "validate_okf_bundle") {
-      const supplied = suppliedConcepts(args);
+    if (name === "validate_okf_relationships" || name === "validate_okf_bundle" || name === "validate_okf_changes") {
+      const supplied = suppliedConcepts(args, name === "validate_okf_changes" ? "changes" : "concepts");
       if (!supplied.entries) return result({ error: supplied.error }, true);
       const entries = supplied.entries;
-      if (name === "validate_okf_bundle") {
-        const parsed: ParsedSuppliedConcept[] = entries.map((item) => {
-          try { return { item, concept: parseConceptDocument(item.path, item.content) }; }
-          catch (error) {
-            return { item, error: error instanceof Error ? error.message : "concept parsing failed" };
-          }
-        });
-        const concepts = parsed.map((entry) => {
-          if ("error" in entry) return {
-            identity: entry.item.identity, path: entry.item.path, valid: false,
-            failures: [`${entry.item.path}: ${entry.error}`],
-          };
-          const failures = [...validateAgentBaseDraft(entry.concept), ...validateConceptAgainstSchema(entry.concept)];
-          return {
-            identity: entry.item.identity, path: entry.item.path, type: entry.concept.type,
-            knownSchema: Boolean(getOkfConceptSchema(entry.concept.type)), valid: failures.length === 0, failures,
-          };
-        });
-        const parsedConcepts = parsed.flatMap((entry) => "concept" in entry
-          ? [{ identity: entry.item.identity, concept: entry.concept }]
-          : []);
-        const relationshipValidation = parsedConcepts.length === entries.length
-          ? validateOkfRelationships(parsedConcepts, { strictSourceIdentities: new Set(parsedConcepts.map((item) => item.identity)) })
-          : { failures: [] as readonly string[], relationships: [], flowSteps: [], warnings: [] as readonly string[] };
-        const valid = concepts.every((concept) => concept.valid) && relationshipValidation.failures.length === 0;
-        return result({
-          valid,
-          concepts,
-          relationshipFailures: relationshipValidation.failures,
-          relationshipWarnings: relationshipValidation.warnings,
-          relationships: relationshipValidation.relationships,
-          flowSteps: relationshipValidation.flowSteps,
-          relationshipValidationSkipped: parsedConcepts.length !== entries.length,
-        }, !valid);
+      if (name === "validate_okf_bundle" || name === "validate_okf_changes") {
+        const targets = name === "validate_okf_changes" ? suppliedTargets(args) : { entries: [] as OkfRelationshipTarget[] };
+        if (!targets.entries) return result({ error: targets.error }, true);
+        return validateBundle(entries, targets.entries);
       }
       const concepts = entries.map((item) => ({
         identity: item.identity,

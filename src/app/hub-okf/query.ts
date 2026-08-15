@@ -1,9 +1,12 @@
 import {
+  buildHubContinuity,
   readHubConcept,
   searchHubConcepts,
   traverseHubConcepts,
   type HubQueryMatch,
   type HubQueryReader,
+  type HubContinuityManifest,
+  type HubContinuityOptions,
   type HubSearchOptions,
   type HubSearchResult,
   type HubTraversalOptions,
@@ -54,6 +57,16 @@ export function traverseActiveHub(
   git: HubQueryGit = runGit,
 ): Promise<HubTraversalResult> {
   return traverseHubConcepts(reader(localHub, git), start, options);
+}
+
+export function buildActiveHubContinuity(
+  localHub: AdmittedLocalHubState,
+  sourceRepositoryId: string,
+  subjectDirectory: string,
+  options: HubContinuityOptions = {},
+  git: HubQueryGit = runGit,
+): Promise<HubContinuityManifest> {
+  return buildHubContinuity(reader(localHub, git), sourceRepositoryId, subjectDirectory, options);
 }
 
 export function readActiveHubConcept(

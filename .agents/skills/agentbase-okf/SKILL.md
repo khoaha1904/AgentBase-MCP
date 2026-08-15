@@ -12,8 +12,10 @@ repository as read-only.
 ## Workflow
 
 1. Read the proposal metadata and bounded repository evidence before authoring.
-2. Read copied existing concepts as continuity context. Never cite previous
-   generated prose as independent evidence.
+2. Read prior concept bodies only at the exact `currentSource`, `subject`,
+   `neighbors` and `navigationPaths` named by the prepare result's continuity
+   manifest. The full copied Hub is lifecycle state, not authoring context.
+   Never cite previous generated prose as independent evidence.
 3. Preserve every existing file byte-for-byte unless it is an explicit
    unverified `agentbase/` draft. When new evidence conflicts with protected
    knowledge, keep the protected bytes and report the unresolved conflict.
@@ -25,8 +27,10 @@ repository as read-only.
 5. Keep navigation progressive. The root `index.md` carries `okf_version:
    "0.2"` and links only existing Domain, System and Repository entrypoint
    indexes. Consume an existing valid `log.md`; do not generate one.
-6. Run AgentBase validation and diff. Repair only proposal files. Present
-   warnings, limitations, and the complete diff to the maintainer.
+6. Validate created/modified concepts with `validate_okf_changes`, supplying
+   only their full Markdown plus unchanged target summaries from continuity or
+   exact search/traversal. Then run AgentBase final validation and diff. Repair
+   only proposal files. Present warnings, limitations, and the complete diff.
 7. Stop before apply unless the maintainer explicitly authorizes applying that
    exact validated proposal.
 
@@ -123,7 +127,9 @@ and existing logs as protected. Do not rewrite them for style or normalization.
 
 ## Validation boundary
 
-Use the repository's `okf validate` and `okf diff` stages. A successful
-validation locks the generated tree digest; any later edit requires validation
-again. Do not bypass stale-base, protected-content, source-path, producer-policy,
-or conformance failures.
+Use changed-set MCP validation during authoring, then the repository's final
+`okf validate` and `okf diff` stages. Final validation remains local lifecycle
+protection over exact disk state; it is not a reason to send the full Hub into
+the model context. A successful validation locks the generated tree digest; any
+later edit requires validation again. Do not bypass stale-base,
+protected-content, source-path, producer-policy, or conformance failures.

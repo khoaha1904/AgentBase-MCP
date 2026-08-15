@@ -16,6 +16,11 @@ export {
   type HubTraversalResult,
 } from "./hub-query.ts";
 export {
+  buildHubContinuity,
+  type HubContinuityManifest,
+  type HubContinuityOptions,
+} from "./hub-continuity.ts";
+export {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
   getOkfConceptSchema,
   listOkfConceptSchemas,

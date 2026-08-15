@@ -11,7 +11,7 @@ function body(value: ReturnType<typeof callOkfSchemaTool>) {
 test("[AB-SCHEMA-001..003][AB-SCHEMA-006..011] MCP lists, reads and selects concrete versioned schemas", () => {
   assert.deepEqual(OKF_SCHEMA_TOOLS.map((tool) => tool.name), [
     "list_okf_schemas", "get_okf_schema", "select_okf_schemas", "validate_okf_concept", "validate_okf_relationships",
-    "get_okf_authoring_schemas", "validate_okf_bundle",
+    "get_okf_authoring_schemas", "validate_okf_bundle", "validate_okf_changes",
   ]);
   assert.equal(body(callOkfSchemaTool("list_okf_schemas", {})).catalogVersion, "5.0.0");
   const lambda = body(callOkfSchemaTool("get_okf_schema", { type: "AWS Lambda" })).schema as {
@@ -116,4 +116,33 @@ test("[AB-SCHEMA-014] MCP validates concept policy and relationships in one boun
     concepts: [{ identity: "large", path: "large.md", content: "x".repeat(262145) }],
   });
   assert.equal(oversized.isError, true);
+});
+
+test("[AB-SCHEMA-021] changed-set validation uses unchanged summaries instead of the whole Hub", () => {
+  const lambda = [
+    "---", "title: Worker", "description: Processes orders.", "type: AWS Lambda", "status: draft",
+    "generated: { by: agentbase/0.0.0, at: 2026-08-15T00:00:00Z }", "sources:", "  - id: table-read",
+    "    resource: repository://repository-orders-aaaaaaaaaaaa/src/worker.ts#L1-L10",
+    "relationships:", "  - { kind: reads-from, target: data/orders, evidence: [table-read] }",
+    "---", "", "Uses the [orders table](../data/orders.md).", "",
+  ].join("\n");
+  const changes = [{ identity: "components/worker", path: "components/worker.md", content: lambda }];
+  const targets = [
+    { identity: "data/orders", path: "data/orders.md", type: "Database Table" },
+    ...Array.from({ length: 100 }, (_, index) => ({
+      identity: `unrelated/${index}`, path: `unrelated/${index}.md`, type: "Custom Type",
+    })),
+  ];
+  const valid = callOkfSchemaTool("validate_okf_changes", { changes, targets });
+  assert.equal(valid.isError, undefined);
+  assert.equal(body(valid).valid, true);
+  const missing = callOkfSchemaTool("validate_okf_changes", { changes, targets: targets.slice(1) });
+  assert.equal(missing.isError, true);
+  assert.match((body(missing).relationshipFailures as string[]).join("\n"), /missing concept data\/orders/);
+  const excessive = callOkfSchemaTool("validate_okf_changes", {
+    changes, targets: Array.from({ length: 513 }, (_, index) => ({
+      identity: `${index}`, path: `${index}.md`, type: "Custom Type",
+    })),
+  });
+  assert.equal(excessive.isError, true);
 });

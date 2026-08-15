@@ -12,7 +12,7 @@ import { admitPersistentLocalHub } from "./local-hub.ts";
 import type { HubToolActions } from "./mcp-tools.ts";
 import { readHubProposalState } from "./proposal-state.ts";
 import { recoverSynchronizationTransaction } from "./recovery.ts";
-import { readActiveHubConcept, searchActiveHub, traverseActiveHub } from "./query.ts";
+import { buildActiveHubContinuity, readActiveHubConcept, searchActiveHub, traverseActiveHub } from "./query.ts";
 import { listPendingHubProposals } from "./pending.ts";
 import { publishPendingHubProposals } from "./publish.ts";
 import { synchronizeLocalHub } from "./synchronize.ts";
@@ -85,6 +85,7 @@ export function createHubRuntimeActions(
       const source = discoverRepositorySourceState(input.sourceRepository);
       const configuration = configured();
       const localHub = await admit();
+      const continuity = await buildActiveHubContinuity(localHub, source.repositoryId, input.subjectDirectory);
       const selectedSchemas = selectOkfConceptSchemas(input.signals).map((item) => item.type);
       const session = beginHubAuthoringSession({
         stateRoot,
@@ -105,6 +106,7 @@ export function createHubRuntimeActions(
         baseCommit: session.baseCommit,
         selectedSchemas: session.selectedSchemas,
         sourceRepositoryId: session.sourceRepositoryId,
+        continuity,
       };
     },
     async finalize(sessionId) {

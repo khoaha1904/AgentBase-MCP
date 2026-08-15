@@ -30,12 +30,12 @@
 
 ## Phase 4: Bounded continuity and changed-set validation
 
-- [ ] T018 [P] [US3] Add changed concepts plus target-summary tests in `src/app/codebase-memory-mcp/okf-schema-tools.test.ts`
-- [ ] T019 [P] [US3] Add bounded continuity manifest tests in `src/app/hub-okf/authoring-session.test.ts` and `runtime-actions.test.ts`
-- [ ] T020 [US3] Implement `validate_okf_changes` without a total-Hub dependency in `src/app/codebase-memory-mcp/okf-schema-tools.ts` and core relationship validation
-- [ ] T021 [US3] Build exact-base bounded continuity summaries in `src/app/hub-okf/authoring-session.ts`, `runtime-actions.ts` and query ownership
-- [ ] T022 [US3] Update MCP/Hub contracts and authoring prompt to consume the manifest and changed-set validator in `docs/contracts/okf.md`, `docs/contracts/hub.md` and `benchmark/prompts/`
-- [ ] T023 [US3] Run focused/full verification and commit the bounded re-ingest phase
+- [x] T018 [P] [US3] Add changed concepts plus target-summary tests in `src/app/codebase-memory-mcp/okf-schema-tools.test.ts`
+- [x] T019 [P] [US3] Add bounded continuity manifest tests in core query ownership and `runtime-actions.test.ts`
+- [x] T020 [US3] Implement `validate_okf_changes` without a total-Hub dependency in `src/app/codebase-memory-mcp/okf-schema-tools.ts` and core relationship validation
+- [x] T021 [US3] Build exact-base bounded continuity summaries in core query ownership and `runtime-actions.ts`
+- [x] T022 [US3] Update MCP/Hub contracts and authoring prompt to consume the manifest and changed-set validator in `docs/contracts/okf.md`, `docs/contracts/hub.md` and `benchmark/prompts/`
+- [x] T023 [US3] Run focused/full verification and commit the bounded re-ingest phase
 
 ## Phase 5: Scale and Shopping Cart qualification
 
