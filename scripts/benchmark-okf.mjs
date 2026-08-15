@@ -7,6 +7,7 @@ import { pathToFileURL } from "node:url";
 
 import {
   computeOkfTreeDigest,
+  getOkfConceptSchema,
   loadOkfBundle,
   parseConceptDocument,
   validateAgentBaseDraft,
@@ -17,6 +18,10 @@ import { discoverRepositorySourceState } from "../src/app/repository-okf/index.t
 const projectRoot = path.resolve(import.meta.dirname, "..");
 const runIdPattern = /^\d{4}-\d{2}-\d{2}T\d{6}Z$/;
 const authoringGoal = "okf-v0.2-semantic-authoring-v1";
+const assessmentLimitations = [
+  "Deterministic source-path checks do not prove that authored claims are semantically supported; human review is required.",
+  "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept.",
+];
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, "utf8"));
@@ -88,6 +93,10 @@ export async function runPairRepository({
       expectationDigest: fileDigest(expectationFile),
       catalogVersion: manifest.catalogVersion,
       authoringGoal,
+      promptVersions: {
+        mcp: manifest.promptVersion,
+        direct: manifest.directPromptVersion ?? "okf-author-direct-v1",
+      },
       provider: manifest.agent.provider ?? "codex-cli",
       agentVersion: manifest.agent.version,
       model: manifest.agent.model,
@@ -184,15 +193,52 @@ function resolvedLinks(concept, bundle) {
   return targets;
 }
 
-function relationships(concept, bundle) {
+function inspectRelationships(concept, bundle, conceptsByKey) {
   const links = resolvedLinks(concept, bundle);
   const declared = Array.isArray(concept.frontmatter.relationships) ? concept.frontmatter.relationships : [];
-  return declared.flatMap((relationship) => {
+  const values = [];
+  const failures = [];
+  for (const relationship of declared) {
     if (!relationship || typeof relationship !== "object" || Array.isArray(relationship)
-      || typeof relationship.kind !== "string" || typeof relationship.target !== "string"
-      || !links.has(relationship.target)) return [];
-    return [`${concept.frontmatter.benchmark_key}|${relationship.kind}|${relationship.target}`];
-  });
+      || typeof relationship.kind !== "string" || typeof relationship.target !== "string") {
+      failures.push(`${concept.path}: relationship declaration is malformed`);
+      continue;
+    }
+    const target = conceptsByKey.get(relationship.target);
+    if (!target) {
+      failures.push(`${concept.path}: relationship ${relationship.kind} targets missing concept ${relationship.target}`);
+      continue;
+    }
+    if (!links.has(relationship.target)) {
+      failures.push(`${concept.path}: relationship ${relationship.kind} -> ${relationship.target} has no resolving Markdown link`);
+      continue;
+    }
+    const sourceSchema = getOkfConceptSchema(concept.type);
+    const supported = sourceSchema?.relationshipGuidance.some((guidance) =>
+      guidance.kind === relationship.kind && guidance.targetTypes.includes(target.type));
+    if (sourceSchema && !supported) {
+      failures.push(`${concept.path}: relationship ${relationship.kind} -> ${relationship.target} is unsupported by ${concept.type} schema guidance`);
+      continue;
+    }
+    values.push(`${concept.frontmatter.benchmark_key}|${relationship.kind}|${relationship.target}`);
+  }
+  return { values, failures };
+}
+
+export function createAuthoringAssessment({
+  actualConcepts, validationFailures, contradictionFailures, relationshipIntegrityFailures,
+}) {
+  const hardFailures = [
+    ...validationFailures,
+    ...(actualConcepts > 0 ? [] : ["OKF output contains no concept documents"]),
+    ...contradictionFailures,
+    ...relationshipIntegrityFailures,
+  ];
+  return {
+    status: hardFailures.length ? "invalid" : "reviewable",
+    hardFailures: [...new Set(hardFailures)],
+    limitations: assessmentLimitations,
+  };
 }
 
 export function scoreSemanticBenchmark(expectation, bundle, repositoryId) {
@@ -221,11 +267,17 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId) {
         .filter((value) => typeof value === "string").join(" ").toLowerCase();
       const identity = `${primaryIdentity} ${concept.body}`.toLowerCase();
       const terms = item.identityTerms.map((term) => term.toLowerCase());
-      if (!terms.every((term) => identity.includes(term))) return [];
       const evidence = sourcePaths(concept, repositoryId);
       const evidenceMatches = item.requiredSourcePaths.filter((required) => evidence.includes(required)).length;
       const primaryMatches = terms.filter((term) => primaryIdentity.includes(term)).length;
-      return [{ key, concept, score: (primaryMatches * 100) + evidenceMatches }];
+      const allTermsMatch = terms.every((term) => identity.includes(term));
+      const schemaMatches = concept.type === item.type;
+      if (!allTermsMatch && !(schemaMatches && evidenceMatches)) return [];
+      return [{
+        key,
+        concept,
+        score: (schemaMatches ? 10_000 : 0) + (allTermsMatch ? 1_000 : 0) + (primaryMatches * 100) + evidenceMatches,
+      }];
     }).sort((left, right) => right.score - left.score || left.key.localeCompare(right.key));
     if (ranked[0]) {
       assignments.set(item.key, ranked[0].concept);
@@ -233,7 +285,19 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId) {
     }
   }
   const matchedKeys = [...assignments.keys()];
-  const correctSchemas = matchedKeys.filter((key) => assignments.get(key).type === expected.get(key).type).length;
+  const confirmedConcepts = [];
+  const contradictedConcepts = [];
+  for (const key of matchedKeys) {
+    const concept = assignments.get(key);
+    const item = expected.get(key);
+    if (concept.type === item.type) confirmedConcepts.push(concept.frontmatter.benchmark_key);
+    else contradictedConcepts.push({
+      actual: concept.frontmatter.benchmark_key,
+      expected: key,
+      actualType: concept.type,
+      expectedType: item.type,
+    });
+  }
   let metadataPresent = 0;
   let metadataRequired = 0;
   let evidencePresent = 0;
@@ -247,30 +311,64 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId) {
     const paths = sourcePaths(concept, repositoryId);
     evidencePresent += item.requiredSourcePaths.filter((required) => paths.includes(required)).length;
   }
-  const actualRelationships = new Set([...actual.values()].flatMap((concept) => relationships(concept, bundle)));
-  const expectedRelationships = new Set(expectation.relationships.flatMap((item) => {
+  const relationshipInspections = [...actual.values()].map((concept) => inspectRelationships(concept, bundle, actual));
+  const relationshipIntegrityFailures = relationshipInspections.flatMap((item) => item.failures);
+  const actualRelationships = new Set(relationshipInspections.flatMap((item) => item.values));
+  const mappedExpectedRelationships = new Map(expectation.relationships.map((item) => {
     const from = assignments.get(item.from)?.frontmatter.benchmark_key;
     const to = assignments.get(item.to)?.frontmatter.benchmark_key;
-    return typeof from === "string" && typeof to === "string" ? [`${from}|${item.kind}|${to}`] : [];
+    const reference = `${item.from}|${item.kind}|${item.to}`;
+    const authored = typeof from === "string" && typeof to === "string" ? `${from}|${item.kind}|${to}` : null;
+    return [reference, authored];
   }));
-  const relationshipMatches = [...expectedRelationships].filter((item) => actualRelationships.has(item)).length;
-  const unexpectedConcepts = [...actual.keys()].filter((key) => !usedActual.has(key));
-  const unexpectedRelationships = [...actualRelationships].filter((item) => !expectedRelationships.has(item));
+  const confirmedRelationships = [];
+  const missingReferenceRelationships = [];
+  const confirmedAuthoredRelationships = new Set();
+  for (const [reference, authored] of mappedExpectedRelationships) {
+    if (authored && actualRelationships.has(authored)) {
+      confirmedRelationships.push(reference);
+      confirmedAuthoredRelationships.add(authored);
+    } else missingReferenceRelationships.push(reference);
+  }
+  const unjudgedConcepts = [...actual.keys()].filter((key) => !usedActual.has(key));
+  const missingReferenceConcepts = [...expected.keys()].filter((key) => !assignments.has(key));
+  const unjudgedRelationships = [...actualRelationships].filter((item) => !confirmedAuthoredRelationships.has(item));
   const percent = (part, total) => total ? Math.round((part / total) * 100) : 100;
-  return {
+  const contradictionFailures = contradictedConcepts.map((item) =>
+    `Reference ${item.expected} matched ${item.actual} but expected schema ${item.expectedType}, found ${item.actualType}`);
+  const metrics = {
     expectedConcepts: expected.size,
     actualConcepts: actual.size,
     matchedConcepts: matchedKeys.length,
-    conceptPrecisionPercent: percent(matchedKeys.length, actual.size),
-    conceptRecallPercent: percent(matchedKeys.length, expected.size),
-    schemaPrecisionPercent: percent(correctSchemas, actual.size),
-    schemaRecallPercent: percent(correctSchemas, expected.size),
+    referenceConceptCoveragePercent: percent(matchedKeys.length, expected.size),
+    recognizedSchemaAgreementPercent: percent(confirmedConcepts.length, matchedKeys.length),
     metadataCompletenessPercent: percent(metadataPresent, metadataRequired),
     provenanceCoveragePercent: percent(evidencePresent, evidenceRequired),
-    relationshipCoveragePercent: percent(relationshipMatches, expectedRelationships.size),
-    unexpectedConcepts,
-    unexpectedRelationships,
+    referenceRelationshipCoveragePercent: percent(confirmedRelationships.length, expectation.relationships.length),
+    classifications: {
+      concepts: {
+        confirmed: confirmedConcepts,
+        contradicted: contradictedConcepts,
+        unjudged: unjudgedConcepts,
+        missingReference: missingReferenceConcepts,
+      },
+      relationships: {
+        confirmed: confirmedRelationships,
+        contradicted: [],
+        unjudged: unjudgedRelationships,
+        missingReference: missingReferenceRelationships,
+      },
+    },
     validation: { passed: failures.length === 0, failures },
+  };
+  return {
+    ...metrics,
+    authoringAssessment: createAuthoringAssessment({
+      actualConcepts: actual.size,
+      validationFailures: failures,
+      contradictionFailures,
+      relationshipIntegrityFailures,
+    }),
   };
 }
 
@@ -283,42 +381,57 @@ function reportFor(entry, run, metrics) {
       + `- Agent: ${agent}\n`
       + `- Catalog/prompt: ${catalogPrompt}\n`
       + `- Agent outcome: failed\n- OKF validation: failed\n`
+      + `- Authoring assessment: invalid\n`
       + `- Semantic metrics: not scored because the ${run.arm ?? "mcp"} arm lifecycle failed\n`
-      + `\n## Validation failures\n\n${metrics.validation.failures.map((item) => `- ${item}`).join("\n")}\n`;
+      + `\n## Hard failures\n\n${metrics.authoringAssessment.hardFailures.map((item) => `- ${item}`).join("\n")}\n`
+      + `\n## Limitations\n\n${metrics.authoringAssessment.limitations.map((item) => `- ${item}`).join("\n")}\n`;
   }
   return `# ${entry.id} — agent OKF benchmark\n\n`
     + `- Agent: ${agent}\n`
     + `- Catalog/prompt: ${catalogPrompt}\n`
     + `- Agent outcome: ${run.outcome}\n`
     + `- OKF validation: ${metrics.validation.passed ? "passed" : "failed"}\n`
-    + `- Concept precision / recall: ${metrics.conceptPrecisionPercent}% / ${metrics.conceptRecallPercent}%\n`
-    + `- Schema precision / recall: ${metrics.schemaPrecisionPercent}% / ${metrics.schemaRecallPercent}%\n`
+    + `- Authoring assessment: ${metrics.authoringAssessment.status}\n`
+    + `- Reference concept coverage: ${metrics.referenceConceptCoveragePercent}%\n`
+    + `- Recognized schema agreement: ${metrics.recognizedSchemaAgreementPercent}%\n`
     + `- Metadata completeness: ${metrics.metadataCompletenessPercent}%\n`
     + `- Provenance coverage: ${metrics.provenanceCoveragePercent}%\n`
-    + `- Relationship coverage: ${metrics.relationshipCoveragePercent}%\n`
-    + `- Unexpected concepts / relationships: ${metrics.unexpectedConcepts.length} / ${metrics.unexpectedRelationships.length}\n`
-    + (metrics.validation.failures.length ? `\n## Validation failures\n\n${metrics.validation.failures.map((item) => `- ${item}`).join("\n")}\n` : "");
+    + `- Reference relationship coverage: ${metrics.referenceRelationshipCoveragePercent}%\n`
+    + `- Unjudged concepts / relationships: ${metrics.classifications.concepts.unjudged.length} / ${metrics.classifications.relationships.unjudged.length}\n`
+    + `- Missing reference concepts / relationships: ${metrics.classifications.concepts.missingReference.length} / ${metrics.classifications.relationships.missingReference.length}\n`
+    + (metrics.authoringAssessment.hardFailures.length
+      ? `\n## Hard failures\n\n${metrics.authoringAssessment.hardFailures.map((item) => `- ${item}`).join("\n")}\n` : "")
+    + `\n## Limitations\n\n${metrics.authoringAssessment.limitations.map((item) => `- ${item}`).join("\n")}\n`;
 }
 
 function invalidMetrics(suite, repository, runId, error) {
-  return {
+  const metrics = {
     suite,
     repository,
     runId,
     expectedConcepts: 0,
     actualConcepts: 0,
     matchedConcepts: 0,
-    conceptPrecisionPercent: 0,
-    conceptRecallPercent: 0,
-    schemaPrecisionPercent: 0,
-    schemaRecallPercent: 0,
+    referenceConceptCoveragePercent: 0,
+    recognizedSchemaAgreementPercent: 0,
     metadataCompletenessPercent: 0,
     provenanceCoveragePercent: 0,
-    relationshipCoveragePercent: 0,
-    unexpectedConcepts: [],
-    unexpectedRelationships: [],
+    referenceRelationshipCoveragePercent: 0,
+    classifications: {
+      concepts: { confirmed: [], contradicted: [], unjudged: [], missingReference: [] },
+      relationships: { confirmed: [], contradicted: [], unjudged: [], missingReference: [] },
+    },
     validation: { passed: false, failures: [`OKF bundle could not be loaded: ${error}`] },
     okfTreeDigest: null,
+  };
+  return {
+    ...metrics,
+    authoringAssessment: createAuthoringAssessment({
+      actualConcepts: 0,
+      validationFailures: metrics.validation.failures,
+      contradictionFailures: [],
+      relationshipIntegrityFailures: [],
+    }),
   };
 }
 
@@ -437,7 +550,7 @@ function pairReportFor(comparison) {
   const quality = (arm) => {
     const metrics = comparison.quality[arm];
     return metrics
-      ? `- ${arm}: validation ${metrics.validation.passed ? "passed" : "failed"}; concept P/R ${metrics.conceptPrecisionPercent}%/${metrics.conceptRecallPercent}%; schema P/R ${metrics.schemaPrecisionPercent}%/${metrics.schemaRecallPercent}%; metadata ${metrics.metadataCompletenessPercent}%; provenance ${metrics.provenanceCoveragePercent}%; relationships ${metrics.relationshipCoveragePercent}%`
+      ? `- ${arm}: assessment ${metrics.authoringAssessment?.status ?? "invalid"}; validation ${metrics.validation.passed ? "passed" : "failed"}; reference concepts ${metrics.referenceConceptCoveragePercent}%; recognized schemas ${metrics.recognizedSchemaAgreementPercent}%; metadata ${metrics.metadataCompletenessPercent}%; provenance ${metrics.provenanceCoveragePercent}%; reference relationships ${metrics.referenceRelationshipCoveragePercent}%; unjudged concepts/relationships ${metrics.classifications?.concepts.unjudged.length ?? 0}/${metrics.classifications?.relationships.unjudged.length ?? 0}`
       : `- ${arm}: unavailable`;
   };
   const efficiency = (arm) => {
@@ -451,6 +564,7 @@ function pairReportFor(comparison) {
   return `# ${comparison.repository} — AgentBase context A/B\n\n`
     + `- Status: ${comparison.completeness.status}\n`
     + "- Interpretation: quality and efficiency are independent; this report declares no overall winner.\n"
+    + "- Limitation: deterministic source-path checks cannot prove semantic support; human review is required. Reference expectations are non-exhaustive.\n"
     + "\n## Quality\n\n"
     + `${quality("mcp")}\n${quality("direct")}\n`
     + "\n## Efficiency\n\n"
@@ -481,6 +595,13 @@ export function comparePairRepository({ manifest, entry, repository, root, pairI
     arm,
     finalizeArmRoot({ manifest, entry, root: path.join(root, arm), runId: pairId }),
   ]));
+  if (pair.commonInputs.promptVersions) {
+    for (const arm of ["mcp", "direct"]) {
+      if (finalized[arm].run?.promptVersion !== pair.commonInputs.promptVersions[arm]) {
+        identityFailures.push(`${arm} prompt identity does not match paired input`);
+      }
+    }
+  }
   const comparison = createPairComparison({
     pair,
     runs: { mcp: finalized.mcp.run, direct: finalized.direct.run },
@@ -546,7 +667,7 @@ function finalize(suite, runId, repository) {
     summaries.push(result.metrics);
   }
   process.stdout.write(`${JSON.stringify({ suite, runId, repositories: summaries }, null, 2)}\n`);
-  if (summaries.some((item) => !item.validation.passed)) process.exitCode = 1;
+  if (summaries.some((item) => item.authoringAssessment.status === "invalid")) process.exitCode = 1;
 }
 
 function compare(suite, pairId, repository) {

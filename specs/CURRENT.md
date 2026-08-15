@@ -1,8 +1,9 @@
 # Current capability
 
-Active capability: None
+Active capability: [`014-benchmark-authoring-quality`](014-benchmark-authoring-quality/spec.md)
 
 Most recent completed: [`013-benchmark-context-ab`](013-benchmark-context-ab/spec.md)
 
-Current product checkpoint and next decision are recorded once in
-`docs/README.md`.
+Capability 014 corrects evidence-first scoring without exposing gold
+expectations. Retained v2 evidence found a general missing relationship-link
+check, so the capability remains active before heterogeneous model execution.

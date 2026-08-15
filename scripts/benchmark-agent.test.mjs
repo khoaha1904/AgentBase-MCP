@@ -59,6 +59,25 @@ test("[AB-BENCH-001][AB-BENCH-007] prompt rendering is exact and rejects missing
   assert.throws(() => renderAgentPrompt("{{MISSING}}", {}), /prompt value is missing/);
 });
 
+test("[AB-BENCH-018][AB-BENCH-019][AB-BENCH-022][AB-BENCH-024] v2 prompts share quality rules without gold answers", () => {
+  const prompts = path.resolve(import.meta.dirname, "..", "benchmark", "prompts");
+  const mcp = fs.readFileSync(path.join(prompts, "okf-author-v2.md"), "utf8");
+  const direct = fs.readFileSync(path.join(prompts, "okf-author-direct-v2.md"), "utf8");
+  const shared = (value) => value.split("## Shared authoring contract\n")[1]?.split("## Arm-specific workflow\n")[0];
+  assert.ok(shared(mcp));
+  assert.equal(shared(mcp), shared(direct));
+  for (const rule of [
+    'okf_version: "0.2"', "stable resource or business behavior", "most concrete supported",
+    "relationship guidance", "frontmatter", "Markdown link", "exact line spans", "limitations",
+  ]) assert.ok(shared(mcp).includes(rule), rule);
+  for (const goldOnly of ["aha-primary-region-lambda", "deploy_aha/variables.tf", "declares|aha-primary-region-lambda"]) {
+    assert.equal(mcp.includes(goldOnly), false, goldOnly);
+    assert.equal(direct.includes(goldOnly), false, goldOnly);
+  }
+  assert.equal(fs.existsSync(path.join(prompts, "okf-author-v1.md")), true);
+  assert.equal(fs.existsSync(path.join(prompts, "okf-author-direct-v1.md")), true);
+});
+
 test("[AB-BENCH-007][AB-BENCH-012] captured agent text removes task and home-local roots", () => {
   const repository = path.join(os.homedir(), "source");
   const workspace = path.join(os.tmpdir(), "output");

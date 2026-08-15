@@ -1,0 +1,52 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-health-aware",
+  "arm": "mcp",
+  "kind": "terraform-serverless",
+  "fixturePath": "../fixtures/source-repos/aws-health-polyrepo/aws-health-aware",
+  "fixtureCommit": "928494c70a904a65b877d426516882397541eafd",
+  "sourceRepositoryId": "repository-aws-health-aware-779eb7e1bc7a",
+  "catalogVersion": "3.0.0",
+  "promptVersion": "okf-author-v2",
+  "promptDigest": "sha256:b361411751af942f8b7fe3301a876359989157732cd98549631664dfc15f9740",
+  "agent": {
+    "provider": "codex-cli",
+    "executable": "codex",
+    "version": "codex-cli 0.147.0",
+    "model": "gpt-5.6-terra",
+    "reasoningEffort": "medium",
+    "timeoutMs": 900000,
+    "actualVersion": "codex-cli 0.147.0"
+  },
+  "startedAt": "2026-08-14T18:46:44.714Z",
+  "completedAt": "2026-08-14T18:50:45.941Z",
+  "outcome": "succeeded",
+  "elapsedMs": 241227,
+  "process": {
+    "exitCode": 0,
+    "signal": null,
+    "error": null
+  },
+  "usage": {
+    "inputTokens": 964879,
+    "cachedInputTokens": 892672,
+    "cacheWriteInputTokens": 0,
+    "uncachedInputTokens": 72207,
+    "outputTokens": 9540,
+    "reasoningOutputTokens": 2511
+  },
+  "activity": {
+    "mcpToolCalls": 28,
+    "commandExecutions": 21,
+    "observedSourceReadBytes": null,
+    "limitation": "event trace does not prove complete source-read volume"
+  },
+  "requiredToolUsage": {
+    "index_repository": true,
+    "list_okf_schemas": true,
+    "select_okf_schemas": true,
+    "get_okf_schema": true,
+    "validate_okf_concept": true
+  },
+  "failures": []
+}

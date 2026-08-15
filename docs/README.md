@@ -45,9 +45,9 @@ is the portable archive.
 
 ## Current checkpoint
 
-- Active capability: none.
+- Active capability: `014-benchmark-authoring-quality`.
 - Most recent completed capability: `013-benchmark-context-ab`.
-- Canonical offline verification is green with 282 tests.
+- Canonical offline verification was green with 283 tests before capability 014.
 - Real pair `aws-health-aware/2026-08-14T181910Z` compares the current MCP
   workflow with direct source reading on the same pinned model and task.
 - MCP was 50 seconds faster and used 36% fewer output tokens, but total input
@@ -57,10 +57,15 @@ is the portable archive.
   recall, 40% schema recall, 25% metadata, 29% provenance and 0% expected
   relationships. Both bundles failed OKF conformance.
 
-The next product checkpoint is a bounded authoring-quality improvement:
-strict root-index conformance, expected concept/schema adherence and required
-relationship guidance. Repeat paired runs before making an efficiency claim or
-expanding to the second repository.
+Capability 014 remains active under an owner-amended evidence-first plan. The
+scorer now uses `reviewable`/`invalid` and treats gold expectations as
+non-exhaustive. Deterministic re-scoring found one real v2 MCP hard failure: the
+Lambda declares a Terraform `declared-by` relationship without the required
+resolving Markdown link. Missing Business Flow coverage is diagnostic, but the
+broken relationship mirror keeps this retained artifact invalid. Shopping-cart
+model execution is deferred until that general workflow gap is addressed. MCP
+used 440,523 more input tokens than direct, so no context-saving claim exists.
+Question management and external evidence enrichment remain future direction.
 
 ## Superseded assumptions
 

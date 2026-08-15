@@ -92,3 +92,20 @@ first bootstrap into a user-created empty repository under a reviewed mode.
 - Automatic publication, merge or GitHub repository creation.
 - A complete universal ontology or one file/directory per schema.
 - Model SDKs, model credential storage or real model calls in canonical tests.
+
+## Future direction: governed unresolved questions
+
+This is recorded product intent, not current behavior or an accepted storage/
+permission contract. When an authoring agent cannot establish a fact, a future
+AgentBase workflow should retain a structured unresolved question with candidate
+answers (possibly empty), evidence still needed and resolution state. AgentBase
+skills will use the `abs-*` prefix; a future `/abs-questions` flow should let a
+human list, answer, reject or enrich pending questions and then propose bounded
+OKF updates without silently changing accepted knowledge.
+
+Some questions may identify external evidence that could resolve repository or
+cross-repository resource identity, such as AWS account, region, deployed name
+or ARN. Any future AWS CLI use must be separately specified and explicitly
+authorized as bounded read-only evidence collection, must not store credentials
+or secrets in Hub and must preserve source/time provenance. Exact canonical
+resource identity can support cross-repository links; same-name guesses cannot.

@@ -85,32 +85,55 @@ function pairHarness({
   return {
     root, source, log, result: path.join(root, "result"), executable: fake,
     manifest: {
-      suite: "test-suite", root: suiteRoot, catalogVersion: "3.0.0", promptVersion: "okf-author-v1",
+      suite: "test-suite", root: suiteRoot, catalogVersion: "3.0.0",
+      promptVersion: "okf-author-v2", directPromptVersion: "okf-author-direct-v2",
       agent: { executable: fake, version: "fake-codex 1.0.0", model: "fake", reasoningEffort: "medium", timeoutMs: timeoutMcp ? 150 : 10_000 },
     },
     entry: { id: "fixture", kind: "test", path: "fixture", commit, expectation: "expected/fixture.json" },
   };
 }
 
-function sampleMetrics(precision) {
+function sampleMetrics(status = "reviewable") {
   return {
     validation: { passed: true, failures: [] },
-    conceptPrecisionPercent: precision,
-    conceptRecallPercent: 100,
-    schemaPrecisionPercent: precision,
-    schemaRecallPercent: 100,
+    authoringAssessment: { status, hardFailures: [], limitations: [] },
+    referenceConceptCoveragePercent: 100,
+    recognizedSchemaAgreementPercent: 100,
     metadataCompletenessPercent: 100,
     provenanceCoveragePercent: 100,
-    relationshipCoveragePercent: 100,
-    unexpectedConcepts: [],
-    unexpectedRelationships: [],
+    referenceRelationshipCoveragePercent: 100,
+    classifications: {
+      concepts: { confirmed: [], contradicted: [], unjudged: [], missingReference: [] },
+      relationships: { confirmed: [], contradicted: [], unjudged: [], missingReference: [] },
+    },
   };
 }
+
+test("[AB-BENCH-023] authoring assessment gates hard failures, not completeness", () => {
+  assert.equal(benchmarkOkf.createAuthoringAssessment({
+    actualConcepts: 1,
+    validationFailures: [],
+    contradictionFailures: [],
+    relationshipIntegrityFailures: [],
+  }).status, "reviewable");
+
+  for (const [name, input] of [
+    ["empty output", { actualConcepts: 0, validationFailures: [], contradictionFailures: [], relationshipIntegrityFailures: [] }],
+    ["conformance", { actualConcepts: 1, validationFailures: ["bad index"], contradictionFailures: [], relationshipIntegrityFailures: [] }],
+    ["contradiction", { actualConcepts: 1, validationFailures: [], contradictionFailures: ["wrong schema"], relationshipIntegrityFailures: [] }],
+    ["relationship", { actualConcepts: 1, validationFailures: [], contradictionFailures: [], relationshipIntegrityFailures: ["broken target"] }],
+  ]) {
+    const assessment = benchmarkOkf.createAuthoringAssessment(input);
+    assert.equal(assessment.status, "invalid", name);
+    assert.ok(assessment.hardFailures.length > 0, name);
+  }
+});
 
 test("[AB-BENCH-004][AB-BENCH-005] complete semantic OKF receives separate perfect metrics", () => {
   const result = scoreSemanticBenchmark(expectation, fixtureBundle(), repositoryId);
   assert.equal(result.validation.passed, true);
-  for (const field of ["conceptPrecisionPercent", "conceptRecallPercent", "schemaPrecisionPercent", "schemaRecallPercent", "metadataCompletenessPercent", "provenanceCoveragePercent", "relationshipCoveragePercent"]) {
+  assert.equal(result.authoringAssessment.status, "reviewable");
+  for (const field of ["referenceConceptCoveragePercent", "recognizedSchemaAgreementPercent", "metadataCompletenessPercent", "provenanceCoveragePercent", "referenceRelationshipCoveragePercent"]) {
     assert.equal(result[field], 100, field);
   }
 });
@@ -118,15 +141,17 @@ test("[AB-BENCH-004][AB-BENCH-005] complete semantic OKF receives separate perfe
 test("[AB-BENCH-005] shallow valid Markdown loses metadata without hiding conformance", () => {
   const result = scoreSemanticBenchmark(expectation, fixtureBundle({ shallow: true }), repositoryId);
   assert.equal(result.validation.passed, true);
-  assert.equal(result.conceptRecallPercent, 100);
+  assert.equal(result.authoringAssessment.status, "reviewable");
+  assert.equal(result.referenceConceptCoveragePercent, 100);
   assert.equal(result.metadataCompletenessPercent, 20);
 });
 
-test("[AB-BENCH-005] unexpected concepts reduce precision and remain visible", () => {
+test("[AB-BENCH-026][AB-BENCH-027] non-reference concepts are unjudged, not false", () => {
   const result = scoreSemanticBenchmark(expectation, fixtureBundle({ unexpected: true }), repositoryId);
-  assert.equal(result.conceptRecallPercent, 100);
-  assert.equal(result.conceptPrecisionPercent, 67);
-  assert.deepEqual(result.unexpectedConcepts, ["extra"]);
+  assert.equal(result.referenceConceptCoveragePercent, 100);
+  assert.equal(result.authoringAssessment.status, "reviewable");
+  assert.deepEqual(result.classifications.concepts.unjudged, ["extra"]);
+  assert.equal("conceptPrecisionPercent" in result, false);
 });
 
 test("[AB-BENCH-004][AB-BENCH-005] semantic identity matching does not hide a wrong schema", () => {
@@ -135,10 +160,71 @@ test("[AB-BENCH-004][AB-BENCH-005] semantic identity matching does not hide a wr
     concepts: [{ key: "canonical-lambda", identityTerms: ["scheduled", "lambda"], type: "AWS Lambda", requiredMetadata: [], requiredSourcePaths: ["infra.tf"] }],
     relationships: [],
   }, { concepts: new Map([["worker", worker]]), warnings: [] }, repositoryId);
-  assert.equal(result.conceptRecallPercent, 100);
-  assert.equal(result.conceptPrecisionPercent, 100);
-  assert.equal(result.schemaRecallPercent, 0);
-  assert.deepEqual(result.unexpectedConcepts, []);
+  assert.equal(result.referenceConceptCoveragePercent, 100);
+  assert.equal(result.recognizedSchemaAgreementPercent, 0);
+  assert.equal(result.authoringAssessment.status, "invalid");
+  assert.deepEqual(result.classifications.concepts.contradicted, [{
+    actual: "custom-worker", expected: "canonical-lambda", actualType: "Service", expectedType: "AWS Lambda",
+  }]);
+});
+
+test("[AB-BENCH-004][AB-BENCH-005] schema and evidence outrank a greedy identity collision", () => {
+  const lambda = concept("lambda.md", "AWS Lambda", "aha-lambda-function", {}, ["infra.tf", "handler.py"], [], "Alert processing runtime.");
+  const schedule = concept("schedule.md", "Event", "aha-lambda-schedule", {}, ["infra.tf"], [], "Scheduled Lambda invocation runs every minute.");
+  const result = scoreSemanticBenchmark({
+    concepts: [
+      { key: "primary-lambda", identityTerms: ["scheduled", "lambda"], type: "AWS Lambda", requiredMetadata: [], requiredSourcePaths: ["infra.tf", "handler.py"] },
+      { key: "primary-schedule", identityTerms: ["minute", "schedule"], type: "Event", requiredMetadata: [], requiredSourcePaths: ["infra.tf"] },
+      { key: "alert-flow", identityTerms: ["alert", "processing"], type: "Business Flow", requiredMetadata: [], requiredSourcePaths: ["handler.py"] },
+    ],
+    relationships: [],
+  }, { concepts: new Map([["lambda", lambda], ["schedule", schedule]]), warnings: [] }, repositoryId);
+  assert.equal(result.referenceConceptCoveragePercent, 67);
+  assert.equal(result.recognizedSchemaAgreementPercent, 100);
+  assert.equal(result.authoringAssessment.status, "reviewable");
+  assert.deepEqual(result.classifications.concepts.missingReference, ["alert-flow"]);
+});
+
+test("[AB-BENCH-021][AB-BENCH-023] declared relationships require target, link and schema guidance", () => {
+  for (const [name, lambda] of [
+    ["missing target", concept("lambda.md", "AWS Lambda", "primary-lambda", {}, ["infra.tf"], [{ kind: "accesses", target: "ghost" }], "Uses [ghost](ghost.md).")],
+    ["missing Markdown link", concept("lambda.md", "AWS Lambda", "primary-lambda", {}, ["infra.tf"], [{ kind: "accesses", target: "orders-table" }])],
+    ["unsupported schema relation", concept("lambda.md", "AWS Lambda", "primary-lambda", {}, ["infra.tf"], [{ kind: "triggers", target: "orders-table" }], "Uses [orders](table.md).")],
+  ]) {
+    const table = concept("table.md", "Database Table", "orders-table", {}, ["infra.tf"]);
+    const result = scoreSemanticBenchmark(expectation, {
+      concepts: new Map([["lambda", lambda], ["table", table]]), warnings: [],
+    }, repositoryId);
+    assert.equal(result.authoringAssessment.status, "invalid", name);
+    assert.match(result.authoringAssessment.hardFailures.join("\n"), /relationship/i, name);
+  }
+});
+
+test("[AB-BENCH-026] linked relationships from an unknown Google OKF type stay unjudged", () => {
+  const custom = concept("custom.md", "Custom Runtime", "custom-runtime", {}, ["custom.ts"], [
+    { kind: "uses", target: "orders-table" },
+  ], "Uses [orders](table.md). ");
+  const table = concept("table.md", "Database Table", "orders-table", {}, ["infra.tf"]);
+  const result = scoreSemanticBenchmark({ concepts: [], relationships: [] }, {
+    concepts: new Map([["custom", custom], ["table", table]]), warnings: [],
+  }, repositoryId);
+  assert.equal(result.authoringAssessment.status, "reviewable");
+  assert.deepEqual(result.classifications.relationships.unjudged, ["custom-runtime|uses|orders-table"]);
+});
+
+test("[AB-BENCH-027] missing reference coverage stays diagnostic below 80 percent", () => {
+  const one = concept("lambda.md", "AWS Lambda", "primary-lambda", {}, ["infra.tf"]);
+  const result = scoreSemanticBenchmark({
+    concepts: [
+      expectation.concepts[0], expectation.concepts[1],
+      { key: "third", type: "Service", requiredMetadata: ["owner"], requiredSourcePaths: ["third.ts"] },
+      { key: "fourth", type: "Event", requiredMetadata: [], requiredSourcePaths: ["fourth.ts"] },
+    ],
+    relationships: [],
+  }, { concepts: new Map([["lambda", one]]), warnings: [] }, repositoryId);
+  assert.equal(result.referenceConceptCoveragePercent, 25);
+  assert.equal(result.provenanceCoveragePercent, 20);
+  assert.equal(result.authoringAssessment.status, "reviewable");
 });
 
 test("[AB-BENCH-005][AB-BENCH-006] invalid index fails conformance without hiding scorable concepts", () => {
@@ -169,6 +255,9 @@ test("[AB-BENCH-009][AB-BENCH-010][AB-BENCH-011][AB-BENCH-017] paired invocation
   assert.equal(pair.commonInputs.fixtureCommit, harness.entry.commit);
   assert.equal(pair.commonInputs.model, "fake");
   assert.equal(pair.commonInputs.reasoningEffort, "medium");
+  assert.deepEqual(pair.commonInputs.promptVersions, {
+    mcp: "okf-author-v2", direct: "okf-author-direct-v2",
+  });
   assert.equal(typeof pair.commonInputs.expectationDigest, "string");
   assert.equal(typeof pair.agentBaseSource.dirty, "boolean");
   assert.equal(pair.arms.mcp.outcome, "succeeded");
@@ -186,6 +275,10 @@ test("[AB-BENCH-009][AB-BENCH-010][AB-BENCH-011][AB-BENCH-017] paired invocation
   assert.equal(comparison.completeness.status, "complete");
   assert.ok(fs.existsSync(path.join(harness.result, "comparison.json")));
   assert.ok(fs.existsSync(path.join(harness.result, "report.md")));
+  const report = fs.readFileSync(path.join(harness.result, "report.md"), "utf8");
+  assert.ok(report.indexOf("assessment") < report.indexOf("## Efficiency"));
+  assert.match(report, /human review/i);
+  assert.match(report, /declares no overall winner/);
   await assert.rejects(() => benchmarkOkf.runPairRepository({
     manifest: harness.manifest,
     entry: harness.entry,
@@ -211,11 +304,11 @@ test("[AB-BENCH-013][AB-BENCH-014][AB-BENCH-015] comparison keeps quality and ef
         activity: { mcpToolCalls: 0, commandExecutions: 4, observedSourceReadBytes: null, limitation: "unknown" },
       },
     },
-    metrics: { mcp: sampleMetrics(90), direct: sampleMetrics(80) },
+    metrics: { mcp: sampleMetrics(), direct: sampleMetrics("invalid") },
   });
   assert.equal(comparison.completeness.status, "complete");
-  assert.equal(comparison.quality.mcp.conceptPrecisionPercent, 90);
-  assert.equal(comparison.quality.direct.conceptPrecisionPercent, 80);
+  assert.equal(comparison.quality.mcp.authoringAssessment.status, "reviewable");
+  assert.equal(comparison.quality.direct.authoringAssessment.status, "invalid");
   assert.equal(comparison.efficiency.delta.inputTokens, -60);
   assert.equal(comparison.efficiency.delta.elapsedMs, -20);
   assert.equal("cacheWriteInputTokens" in comparison.efficiency.delta, false);

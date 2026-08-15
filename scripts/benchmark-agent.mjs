@@ -126,7 +126,9 @@ export function runAgentRepository({
   const startedAt = new Date().toISOString();
   const startedMs = Date.now();
   const source = discoverRepositorySourceState(repository, startedAt);
-  const promptVersion = arm === "direct" ? "okf-author-direct-v1" : manifest.promptVersion;
+  const promptVersion = arm === "direct"
+    ? (manifest.directPromptVersion ?? "okf-author-direct-v1")
+    : manifest.promptVersion;
   const template = fs.readFileSync(path.join(projectRoot, "benchmark", "prompts", `${promptVersion}.md`), "utf8");
   const prompt = renderAgentPrompt(template, {
     SOURCE_ROOT: repository,

@@ -58,12 +58,30 @@ AgentBase MCP configuration. `compare` reports existing semantic metrics,
 tokens and elapsed time side by side. Deltas are MCP minus direct; no overall
 winner is generated.
 
+Both v2 prompts share the same general authoring contract without receiving the
+gold expectation. The MCP arm additionally uses graph/schema/validation tools;
+the direct arm investigates source without them. Prompt behavior is immutable:
+new rules require a new prompt identity, while v1 files remain historical.
+
 Expectations do not prescribe prose or agent slugs. Bounded identity terms and
 evidence match concept instances; the scorer then evaluates concrete schema
 choices, required semantic metadata, source provenance and directed concept
-relationships. Reports keep separate precision, recall,
-metadata, provenance, relationship and OKF-conformance metrics so shallow valid
-Markdown cannot appear perfect.
+relationships. Expectations are non-exhaustive probes: recognized items are
+classified as confirmed or contradicted, valid output outside the reference is
+unjudged, and absent probes are missing reference knowledge. Reference concept,
+metadata, provenance and relationship coverage remain diagnostics; they do not
+claim the reference is a complete repository inventory.
+
+Each arm declares an authoring assessment of `reviewable` or `invalid`.
+Lifecycle/conformance failures, empty output, unsafe provenance, known schema
+contradictions and malformed, broken or schema-unsupported relationships are
+invalid. Missing concepts, metadata, evidence or relationships do not invalidate
+an otherwise evidence-backed draft, even below 80%; they remain visible for
+human review and later enrichment.
+
+Deterministic source-path checks prove that a cited path is present in the
+curated probe, not that every authored sentence is semantically supported.
+Reports state this limitation and require human review.
 
 Token values come from the final completed-turn event emitted by the pinned
 Codex CLI. Missing fields stay unavailable. MCP and shell-command counts are

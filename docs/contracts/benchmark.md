@@ -17,9 +17,9 @@ benchmarks.
 - **AB-BENCH-004** — Expectations define semantic concept identity, concrete
   schema, required metadata/evidence paths and directed relationships without
   prescribing prose, paths or slugs.
-- **AB-BENCH-005** — Finalization reports OKF conformance, concept/schema
-  precision and recall, metadata completeness, provenance, relationship coverage
-  and unexpected output separately.
+- **AB-BENCH-005** — Finalization reports OKF conformance, non-exhaustive
+  concept/relationship classifications, recognized-schema agreement, reference
+  coverage, metadata completeness and provenance separately.
 - **AB-BENCH-006** — Each run starts/ends on the same clean pinned source;
   missing output, agent/MCP failure, timeout, malformed artifacts or source drift
   fails visibly and cannot produce a passing result.
@@ -54,6 +54,42 @@ benchmarks.
 - **AB-BENCH-017** — Paired lifecycle, isolation, measurement and recovery are
   covered offline with a fake executable. A real pair remains an explicit
   opt-in product-evidence command.
+- **AB-BENCH-018** — Both arms receive one equivalent general authoring contract
+  for sparse identity, concrete schema choice, metadata, normalized provenance,
+  linked relationships and final consistency review.
+- **AB-BENCH-019** — The authoring contract defines root `index.md` as only
+  `okf_version: "0.2"` frontmatter, one heading and Markdown list entries that
+  link to authored concepts; arbitrary root prose is forbidden.
+- **AB-BENCH-020** — Before writing, the agent identifies candidates at stable
+  resource or business-behavior granularity, chooses the most concrete
+  supported type and omits speculative or duplicate concepts.
+- **AB-BENCH-021** — Every candidate is assessed against applicable relationship
+  guidance. Supported relationships appear in both frontmatter and a resolving
+  Markdown link; unsupported gaps remain visible rather than invented.
+- **AB-BENCH-022** — Agent-visible inputs never expose benchmark expectations,
+  expected keys, types, paths or relationships.
+- **AB-BENCH-023** — Each scored arm declares `reviewable` or `invalid`.
+  Lifecycle/conformance failure, empty output, unsafe provenance, a recognized
+  identity with a contradictory schema, or a malformed, broken or
+  schema-unsupported authored relationship is invalid. Missing reference
+  concepts, metadata, provenance or relationships remain diagnostics and never
+  become invalid solely because coverage is low.
+- **AB-BENCH-024** — Changed prompt behavior receives a new immutable prompt
+  identity; historical prompts and recorded results remain unchanged.
+- **AB-BENCH-025** — Equivalent v2 behavior is proven with fake paired execution
+  before real opt-in pairs on at least two structurally different repositories.
+  Assessment precedes efficiency interpretation and never becomes an automatic
+  overall winner.
+- **AB-BENCH-026** — Curated expectations are non-exhaustive. Recognized output
+  is classified as confirmed or contradicted; valid unmatched output is
+  unjudged; absent probes are missing reference knowledge.
+- **AB-BENCH-027** — Reference concept, metadata, provenance and relationship
+  coverage are diagnostics only. No completeness percentage is an authoring
+  pass/fail threshold.
+- **AB-BENCH-028** — Token and elapsed-time efficiency remain separate from OKF
+  authoring quality; neither implies the other.
+- **AB-BENCH-029** — Reports state that deterministic path matching cannot prove
+  semantic support for every claim and that human review is required.
 
 ## Context A/B interpretation
 
@@ -111,7 +147,32 @@ good enough for a trustworthy authoring workflow.
 
 The direct arm's 100% relationship coverage is conditional on its two matched
 concepts and sits beside seven unexpected concepts and eight unexpected
-relationships; it is not evidence of complete relationship understanding. The
-next bounded improvement should address strict root-index conformance, expected
-concept identity/schema adherence and required relationship guidance, then
-repeat paired runs before any efficiency claim.
+relationships; it is not evidence of complete relationship understanding.
+
+Capability 014 introduces immutable `okf-author-v2` and
+`okf-author-direct-v2` prompts with an equivalent general quality contract. It
+does not expose gold expectations or add an MCP tool. Its evidence-first
+assessment rejects proven authoring faults while retaining incomplete,
+source-backed drafts for human review.
+
+## First v2 authoring-quality evidence
+
+Pair `aws-health-aware/2026-08-14T184644Z` completed on the same fixture, CLI,
+model and effort. Under the corrected evidence-first scorer, MCP is conformant,
+confirms four of five reference concepts with 100% recognized-schema agreement,
+provides 75% metadata, 71% reference provenance and confirms five of six
+reference relationships. The missing Business Flow is only a diagnostic gap.
+However, its Lambda declares `declared-by` without a resolving Markdown link,
+so the arm is correctly `invalid` under AB-BENCH-021/023. Direct is invalid
+because its bundle is non-conformant and contains recognized schema
+contradictions; unmatched authored concepts and relationships remain unjudged
+instead of being counted as false positives.
+
+MCP used 964,879 input tokens versus direct's 524,356 and took 241,227 ms versus
+166,371 ms. v2 provides no context-token or elapsed-time saving evidence. The
+remaining MCP gap is one missing evidence-supported Business Flow: the agent
+authored a Repository concept instead, so the flow's metadata, cross-file
+provenance and expected flow relationship were absent. Deterministic checks do
+not prove semantic support for every authored claim; human review is still
+required. The shopping-cart model pair is deferred until the general bundle
+consistency gap is fixed; no fixture-specific hint is justified.
