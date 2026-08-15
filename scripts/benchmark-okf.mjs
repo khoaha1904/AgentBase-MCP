@@ -7,6 +7,7 @@ import { pathToFileURL } from "node:url";
 
 import {
   computeOkfTreeDigest,
+  getOkfConceptSchema,
   loadOkfBundle,
   parseConceptDocument,
   validateAgentBaseDraft,
@@ -244,6 +245,11 @@ export function assessOwnerReviewUsefulness(concepts) {
       findings.push(`${concept.path}: canonical ${concept.type} identity is nested under a repository`);
     }
     if (!usefulBody(concept)) findings.push(`${concept.path}: Markdown body lacks reviewable substance`);
+    const schema = getOkfConceptSchema(concept.type);
+    if (schema?.recommendedSections.some((section) => /limitations/i.test(section))
+      && !/^#{1,6}\s+Limitations\s*$/im.test(concept.body)) {
+      findings.push(`${concept.path}: owner review needs an explicit Limitations section`);
+    }
     const title = typeof concept.frontmatter.title === "string" ? concept.frontmatter.title.trim().toLowerCase() : "";
     if (!title) continue;
     const key = `${concept.type}|${title}`;
@@ -277,6 +283,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
     else actual.set(key, concept);
   }
   const expected = new Map(expectation.concepts.map((item) => [item.key, item]));
+  const strictSemanticAnchors = expectation.version === 5;
   const assignments = new Map();
   const usedActual = new Set();
   for (const item of expectation.concepts) {
@@ -296,7 +303,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
       const primaryMatches = terms.filter((term) => primaryIdentity.includes(term)).length;
       const allTermsMatch = terms.every((term) => identity.includes(term));
       const schemaMatches = concept.type === item.type;
-      if (!allTermsMatch && !(schemaMatches && evidenceMatches)) return [];
+      if (strictSemanticAnchors ? !allTermsMatch : (!allTermsMatch && !(schemaMatches && evidenceMatches))) return [];
       return [{
         key,
         concept,

@@ -183,6 +183,29 @@ test("[AB-BENCH-037] pinned source paths and line spans are verified when the re
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
+test("[AB-BENCH-037] v5 never matches a probe from shared schema and manifest evidence alone", () => {
+  const unrelated = concept("components/billing.md", "Service", null, {}, ["template.yaml"], [],
+    "# Responsibility\n\nProcesses billing records with an independently owned runtime boundary.\n\n# Limitations\n\nIts external owner is not evidenced.");
+  const result = scoreSemanticBenchmark({
+    version: 5,
+    concepts: [{
+      key: "cart-service", identityTerms: ["shopping", "cart"], type: "Service",
+      requiredMetadata: [], requiredSourcePaths: ["template.yaml"],
+    }],
+    relationships: [],
+  }, { concepts: new Map([[unrelated.conceptId, unrelated]]), warnings: [] }, repositoryId);
+  assert.equal(result.referenceConceptCoveragePercent, 0);
+  assert.deepEqual(result.classifications.concepts.unjudged, ["components/billing"]);
+});
+
+test("[AB-BENCH-037] boundary schemas surface a missing Limitations section for owner review", () => {
+  const system = concept("systems/cart.md", "System", null, {}, ["README.md"], [],
+    "# Purpose\n\nThis system description is substantial enough to explain the stable cart capability and its cooperating parts.");
+  const result = assessOwnerReviewUsefulness(new Map([[system.conceptId, system]]));
+  assert.equal(result.status, "needs_revision");
+  assert.match(result.findings.join("\n"), /Limitations/);
+});
+
 test("[AB-BENCH-005] shallow valid Markdown loses metadata without hiding conformance", () => {
   const result = scoreSemanticBenchmark(expectation, fixtureBundle({ shallow: true }), repositoryId);
   assert.equal(result.validation.passed, true);

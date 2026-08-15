@@ -1,4 +1,5 @@
 {
+  "version": 5,
   "repository": "aws-health-aware",
   "concepts": [
     {

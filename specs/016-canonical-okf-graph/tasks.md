@@ -48,3 +48,8 @@ T001–T004 → T005–T009 → T010–T015 → T016–T022 → T023–T025.
 
 US2 establishes safe cross-source mutation before US1 emits canonical concepts;
 US3 then measures the accepted behavior.
+
+## Phase 6: Convergence
+
+- [x] T026 Require V5 semantic anchors instead of shared-schema/source fallback per AB-BENCH-037 (partial)
+- [x] T027 Assess explicit limitations for boundary types that require them per AB-BENCH-037 (partial)
