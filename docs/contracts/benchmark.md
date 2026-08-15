@@ -296,3 +296,11 @@ evidenced Business Flow and omitted one required Limitations section, so it was
 not publishable. Immutable V7 adds the general boundary rule that implementation
 concepts do not replace behavior concepts and requires schema-recommended
 Limitations sections; it does not name a fixture or expected identity.
+
+V7 Shopping Cart run `2026-08-15T102132Z` is conformant, reviewable and
+`useful_for_owner_review`. Its 12-concept canonical graph confirms all seven
+semantic probes with 100% recognized-schema agreement and no contradiction.
+Metadata, reference provenance and relationship coverage are 25%, 64% and 43%;
+these remain visible diagnostics, not evidence that missing knowledge is known.
+The run used 690,476 input tokens (623,616 cached), 8,998 output tokens and
+213,567 ms. No token-efficiency claim follows from this single MCP arm.

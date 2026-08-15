@@ -47,7 +47,7 @@ is the portable archive.
 
 - Active capability: none.
 - Most recent completed capability: `016-canonical-okf-graph`.
-- Canonical offline verification is green with 311 tests.
+- Canonical offline verification is green with 313 tests.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.
@@ -58,8 +58,10 @@ is the portable archive.
   validity, owner-review usefulness, non-exhaustive coverage and token/time
   telemetry. Three-source offline qualification retains
   frontend, backend and infrastructure evidence in one canonical system graph.
-- No V5 real-model result is claimed yet; a real run remains an explicit next
-  evidence step after the offline behavior is accepted.
+- Shopping Cart run `2026-08-15T102132Z` is conformant, reviewable and
+  `useful_for_owner_review`: all seven semantic probes matched with 100% schema
+  agreement. Its incomplete metadata/provenance/relationship coverage remains
+  visible for owner review rather than becoming a completeness gate.
 
 Question management and external evidence enrichment remain the next product
 direction for retaining and resolving missing or unjudged knowledge.

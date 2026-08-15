@@ -24,7 +24,7 @@ Limitations section surface its absence to owner review.
 
 `npm run verify`
 
-Final result: specification checks, TypeScript, architecture checks and all 311
+Final result: specification checks, TypeScript, architecture checks and all 313
 offline tests passed. Architecture reported only the seven retained review
 warnings and no errors.
 
@@ -34,8 +34,9 @@ warnings and no errors.
   because its root index used unsupported hyphen bullets. Immutable V6 corrects
   that prompt ambiguity; its rerun passed conformance but replaced an evidenced
   Business Flow with a Lambda and omitted one Limitations section. Immutable V7
-  adds the general behavior-boundary and recommended-section rules; a valid
-  rerun is still required.
+  adds the general behavior-boundary and recommended-section rules. V7 run
+  `2026-08-15T102132Z` is conformant, reviewable and useful for owner review;
+  incomplete coverage remains diagnostic.
 - Reference coverage remains non-exhaustive and cannot prove semantic truth.
 - Question persistence, `/abs-questions`, AWS CLI authority and cloud resource
   enrichment remain future capabilities.
