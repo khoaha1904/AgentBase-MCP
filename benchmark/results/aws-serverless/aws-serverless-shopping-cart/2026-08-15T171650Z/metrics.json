@@ -1,0 +1,96 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-serverless-shopping-cart",
+  "runId": "2026-08-15T171650Z",
+  "arm": "mcp",
+  "expectedConcepts": 8,
+  "actualConcepts": 14,
+  "matchedConcepts": 8,
+  "referenceConceptCoveragePercent": 100,
+  "recognizedSchemaAgreementPercent": 100,
+  "metadataCompletenessPercent": 75,
+  "provenanceCoveragePercent": 73,
+  "referenceRelationshipCoveragePercent": 100,
+  "conflictVisibilityPercent": 0,
+  "classifications": {
+    "concepts": {
+      "confirmed": [
+        "domains/commerce",
+        "systems/serverless-shopping-cart",
+        "components/cart-service",
+        "interfaces/cart-api",
+        "infrastructure/cart-sam-template",
+        "resources/cart-table",
+        "resources/cart-cleanup-queue",
+        "flows/anonymous-cart-migration"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "components/cart-cleanup-worker",
+        "components/cart-quantity-aggregator",
+        "components/product-mock-service",
+        "flows/cart-quantity-aggregation",
+        "interfaces/product-api",
+        "repositories/aws-serverless-shopping-cart"
+      ],
+      "missingReference": []
+    },
+    "relationships": {
+      "confirmed": [
+        "shopping-cart-system|part-of|commerce-domain",
+        "shopping-cart-service|part-of|shopping-cart-system",
+        "shopping-cart-api|part-of|shopping-cart-system",
+        "shopping-cart-infrastructure|part-of|shopping-cart-system",
+        "dynamodb-shopping-cart-table|declared-by|shopping-cart-infrastructure",
+        "cart-delete-sqs-queue|declared-by|shopping-cart-infrastructure",
+        "authenticated-cart-migration|part-of|shopping-cart-system"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "components/cart-cleanup-worker|part-of|components/cart-service",
+        "components/cart-cleanup-worker|triggered-by|resources/cart-cleanup-queue",
+        "components/cart-cleanup-worker|writes-to|resources/cart-table",
+        "components/cart-cleanup-worker|declared-by|infrastructure/cart-sam-template",
+        "components/cart-quantity-aggregator|part-of|components/cart-service",
+        "components/cart-quantity-aggregator|writes-to|resources/cart-table",
+        "components/cart-quantity-aggregator|declared-by|infrastructure/cart-sam-template",
+        "components/cart-service|provides|interfaces/cart-api",
+        "components/cart-service|implemented-in|repositories/aws-serverless-shopping-cart",
+        "components/product-mock-service|part-of|systems/serverless-shopping-cart",
+        "components/product-mock-service|provides|interfaces/product-api",
+        "components/product-mock-service|implemented-in|repositories/aws-serverless-shopping-cart",
+        "flows/cart-quantity-aggregation|part-of|systems/serverless-shopping-cart",
+        "infrastructure/cart-sam-template|implemented-in|repositories/aws-serverless-shopping-cart",
+        "interfaces/cart-api|implemented-in|repositories/aws-serverless-shopping-cart",
+        "interfaces/product-api|part-of|systems/serverless-shopping-cart",
+        "interfaces/product-api|implemented-in|repositories/aws-serverless-shopping-cart",
+        "resources/cart-cleanup-queue|part-of|systems/serverless-shopping-cart",
+        "resources/cart-table|part-of|systems/serverless-shopping-cart"
+      ],
+      "missingReference": []
+    }
+  },
+  "validation": {
+    "passed": false,
+    "failures": [
+      "OKF conformance failed: domains/index.md: invalid index line: - [Commerce](commerce.md)"
+    ]
+  },
+  "ownerReview": {
+    "status": "needs_revision",
+    "findings": [
+      "cart-retention-ttl: source conflict is not visible with its evidence in a Limitations section"
+    ]
+  },
+  "authoringAssessment": {
+    "status": "invalid",
+    "hardFailures": [
+      "OKF conformance failed: domains/index.md: invalid index line: - [Commerce](commerce.md)"
+    ],
+    "limitations": [
+      "Deterministic source-path checks do not prove that authored claims are semantically supported; human review is required.",
+      "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept."
+    ]
+  },
+  "okfTreeDigest": "sha256:33732c7bfca72250553ff60d82043e691152f789df42beed7b75f6c90d20a376"
+}
