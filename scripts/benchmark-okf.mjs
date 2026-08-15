@@ -7,11 +7,11 @@ import { pathToFileURL } from "node:url";
 
 import {
   computeOkfTreeDigest,
-  getOkfConceptSchema,
   loadOkfBundle,
   parseConceptDocument,
   validateAgentBaseDraft,
   validateConceptAgainstSchema,
+  validateOkfRelationships,
 } from "../src/core/knowledge/index.ts";
 import { discoverRepositorySourceState } from "../src/app/repository-okf/index.ts";
 
@@ -180,51 +180,6 @@ function invalidRepositorySources(concept, repositoryId) {
     && !source.resource.startsWith(prefix)).length;
 }
 
-function resolvedLinks(concept, bundle) {
-  const targets = new Set();
-  for (const match of concept.body.matchAll(/(?<!!)\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)) {
-    const raw = match[1]?.split("#")[0]?.split("?")[0];
-    if (!raw || !raw.endsWith(".md")) continue;
-    const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(concept.path), raw));
-    const target = [...bundle.concepts.values()].find((item) => item.path === resolved);
-    const key = target?.frontmatter.benchmark_key;
-    if (typeof key === "string") targets.add(key);
-  }
-  return targets;
-}
-
-function inspectRelationships(concept, bundle, conceptsByKey) {
-  const links = resolvedLinks(concept, bundle);
-  const declared = Array.isArray(concept.frontmatter.relationships) ? concept.frontmatter.relationships : [];
-  const values = [];
-  const failures = [];
-  for (const relationship of declared) {
-    if (!relationship || typeof relationship !== "object" || Array.isArray(relationship)
-      || typeof relationship.kind !== "string" || typeof relationship.target !== "string") {
-      failures.push(`${concept.path}: relationship declaration is malformed`);
-      continue;
-    }
-    const target = conceptsByKey.get(relationship.target);
-    if (!target) {
-      failures.push(`${concept.path}: relationship ${relationship.kind} targets missing concept ${relationship.target}`);
-      continue;
-    }
-    if (!links.has(relationship.target)) {
-      failures.push(`${concept.path}: relationship ${relationship.kind} -> ${relationship.target} has no resolving Markdown link`);
-      continue;
-    }
-    const sourceSchema = getOkfConceptSchema(concept.type);
-    const supported = sourceSchema?.relationshipGuidance.some((guidance) =>
-      guidance.kind === relationship.kind && guidance.targetTypes.includes(target.type));
-    if (sourceSchema && !supported) {
-      failures.push(`${concept.path}: relationship ${relationship.kind} -> ${relationship.target} is unsupported by ${concept.type} schema guidance`);
-      continue;
-    }
-    values.push(`${concept.frontmatter.benchmark_key}|${relationship.kind}|${relationship.target}`);
-  }
-  return { values, failures };
-}
-
 export function createAuthoringAssessment({
   actualConcepts, validationFailures, contradictionFailures, relationshipIntegrityFailures,
 }) {
@@ -311,9 +266,10 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId) {
     const paths = sourcePaths(concept, repositoryId);
     evidencePresent += item.requiredSourcePaths.filter((required) => paths.includes(required)).length;
   }
-  const relationshipInspections = [...actual.values()].map((concept) => inspectRelationships(concept, bundle, actual));
-  const relationshipIntegrityFailures = relationshipInspections.flatMap((item) => item.failures);
-  const actualRelationships = new Set(relationshipInspections.flatMap((item) => item.values));
+  const relationshipValidation = validateOkfRelationships([...actual].map(([identity, concept]) => ({ identity, concept })));
+  const relationshipIntegrityFailures = relationshipValidation.failures;
+  const actualRelationships = new Set(relationshipValidation.relationships.map((item) =>
+    `${item.source}|${item.kind}|${item.target}`));
   const mappedExpectedRelationships = new Map(expectation.relationships.map((item) => {
     const from = assignments.get(item.from)?.frontmatter.benchmark_key;
     const to = assignments.get(item.to)?.frontmatter.benchmark_key;

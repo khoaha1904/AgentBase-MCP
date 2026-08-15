@@ -57,5 +57,7 @@ Reports present:
 
 ## Prompt contract
 
-v2 prompts remain immutable and general. A prompt version changes only for a
-general evidence-backed deficiency, never to reveal or imply a fixture answer.
+v2 prompts remain immutable historical evidence. The proven missing-link gap
+uses v3. Its MCP workflow calls bounded relationship-set validation after
+per-concept validation; the direct workflow retains equivalent shared rules
+without MCP access. Neither prompt may reveal or imply a fixture answer.

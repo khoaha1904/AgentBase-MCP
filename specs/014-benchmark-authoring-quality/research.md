@@ -30,14 +30,18 @@ supports every prose sentence.
 second source of hallucination. Claim-level human gold would be expensive and
 still non-exhaustive. Human review remains explicit.
 
-## Decision: reuse v2 before changing prompts
+## Decision: v2 exposed a general cross-document validation gap
 
-**Rationale**: The v2 MCP bundle is conformant, schema-correct for recognized
-concepts and relationship-consistent. Its failure came from the scoring goal,
-not evidence that the general prompt needs a repository answer.
+**Rationale**: The v2 MCP bundle is conformant and schema-correct for recognized
+concepts, but one declared relationship lacks its required Markdown link.
+Per-concept validation could not see the target set, so the authoring workflow
+needs deterministic relationship-set validation rather than stronger fixture
+wording.
 
-**Alternatives considered**: v3 was rejected until a general prompt deficiency
-appears across unlike fixtures.
+**Alternatives considered**: Ignoring the missing link would weaken the accepted
+contract. Letting MCP read an arbitrary output directory would broaden local
+authority. A bounded caller-supplied content set keeps validation deterministic
+and portable.
 
 ## Decision: use the existing second fixture
 

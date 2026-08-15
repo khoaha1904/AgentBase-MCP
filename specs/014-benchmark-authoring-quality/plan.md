@@ -7,14 +7,15 @@
 Replace the implemented all-metrics-at-80% readiness gate with a deterministic
 `reviewable`/`invalid` assessment. Structural, provenance, relationship and known
 contradiction failures remain hard gates; missing non-exhaustive reference
-coverage becomes diagnostic. Re-score the retained v2 evidence, then use the
-same v2 prompt on the existing structurally different shopping-cart fixture.
-Do not add fixture hints, question storage, AWS access, dependencies or MCP tools.
+coverage becomes diagnostic. Re-score the retained v2 evidence, add one bounded
+content-only relationship-set validator for the proven cross-document gap, then
+exercise the same immutable v3 behavior on both structurally different fixtures.
+Do not add fixture hints, question storage, AWS access or dependencies.
 
 ## Technical Context
 
-**Language/Version**: Node.js 24 JavaScript benchmark scripts and JSON/Markdown
-artifacts
+**Language/Version**: Node.js 24 TypeScript runtime plus JavaScript benchmark
+scripts and JSON/Markdown artifacts
 
 **Primary Dependencies**: Existing Node.js standard library and AgentBase OKF
 parser/schema catalog only
@@ -35,8 +36,8 @@ and report regressions honestly
 **Constraints**: No gold leakage, no fixture-specific prompt, no automatic OKF
 acceptance, no external authority, no historical raw-agent-output rewrite
 
-**Scale/Scope**: One scorer/report owner, existing v2 prompts, two pinned
-structurally different repositories
+**Scale/Scope**: One core relationship validator, one MCP tool adapter, scorer
+reuse, immutable v3 prompts and two pinned structurally different repositories
 
 ## Constitution Check
 
@@ -44,15 +45,17 @@ structurally different repositories
   evidence and explicitly limits what deterministic scoring can prove.
 - **Local-First Explicit Authority — PASS**: all canonical checks are offline;
   one new model run remains opt-in and no AWS/cloud authority is added.
-- **Agent-Navigable Ownership — PASS**: benchmark scoring remains in
-  `scripts/benchmark-okf.mjs` with colocated tests.
+- **Agent-Navigable Ownership — PASS**: generic relationship validation belongs
+  to `core/knowledge`; MCP exposure remains in `app/codebase-memory-mcp`; the
+  benchmark consumes the public core entrypoint.
 - **Cumulative Knowledge — PASS**: raw prompts, traces and authored OKF remain
   immutable; only deterministic derived metrics may be regenerated visibly.
 - **Specification and Verification — PASS**: owner amendments are captured in
   active capability 014 before the new implementation slice.
 
-Post-design re-check: **PASS**. No dependency, provider, process lifecycle,
-credential, migration or architecture exception is planned.
+Post-design re-check: **PASS**. The safe MCP surface gains one bounded
+content-only tool; no dependency, provider, credential, migration, persistence
+or arbitrary filesystem authority is added.
 
 ## Project Structure
 
@@ -61,9 +64,13 @@ scripts/
 ├── benchmark-okf.mjs          # classification, assessment and reports
 └── benchmark-okf.test.mjs     # hard-gate and non-exhaustive-reference tests
 
+src/
+├── core/knowledge/             # reusable relationship-set validation
+└── app/codebase-memory-mcp/    # bounded MCP tool adapter
+
 benchmark/
-├── prompts/okf-author-v2.md
-├── prompts/okf-author-direct-v2.md
+├── prompts/okf-author-v3.md
+├── prompts/okf-author-direct-v3.md
 ├── repos/aws-serverless/expected/
 └── results/aws-serverless/<repository>/<run-id>/
 
@@ -72,9 +79,9 @@ docs/
 └── contracts/benchmark.md     # living behavior after acceptance
 ```
 
-**Structure Decision**: Reuse the scorer and existing fixtures. No new runtime
-module or prompt version is justified unless a general failure appears on both
-offline evidence and the unlike repository.
+**Structure Decision**: The retained v2 bundle proves the general failure. Reuse
+one core validator from both scorer and MCP rather than maintaining benchmark-
+only relationship logic. Historical prompts and raw results remain immutable.
 
 ## Design
 
@@ -122,16 +129,34 @@ pair status using the accepted scorer. Record that the scoring contract changed.
 
 ### 5. Heterogeneity evidence
 
-First prove all assessment branches offline. Re-score `aws-health-aware` and
-confirm it becomes reviewable with incomplete coverage visible. Then run the
-same immutable v2 MCP/direct pair on `aws-serverless-shopping-cart`. If it fails,
-fix only a general hard-gate/tool issue reproducible without fixture answers.
+First prove all assessment branches offline. Retain the exact v2 Health Aware
+failure, then run the same immutable v3 MCP/direct pair on Health Aware and
+shopping cart. If either fails, fix only a general hard-gate/tool issue
+reproducible without fixture answers.
 
 ### 6. Efficiency boundary
 
 Always retain usage and elapsed evidence. Compare efficiency only alongside
 quality status. This capability may conclude “quality reviewable, efficiency not
 good enough”; it does not optimize tool payloads.
+
+### 7. General relationship-set validation
+
+Accept a bounded array of `{ identity, path, content }`; never accept an output
+directory or read caller-selected files. Parse content with existing OKF bounds,
+require unique identities, and check each declared relationship against the
+target identity/path, Markdown resolution and known source-schema guidance.
+Unknown schemas remain portable and their linked relationships are not rejected.
+
+Expose this as `validate_okf_relationships`. The v3 MCP prompt calls it once
+after per-concept validation and repairs failures. Benchmark lifecycle requires
+the call. The direct arm receives the same shared rules but no MCP capability.
+
+### 8. v3 heterogeneous evidence
+
+After offline verification and a phase commit, run fresh v3 pairs for Health
+Aware and shopping cart. Preserve exact quality/efficiency evidence and stop on
+another general hard failure instead of tuning repository answers.
 
 ## Complexity Tracking
 

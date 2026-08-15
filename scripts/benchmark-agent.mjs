@@ -8,6 +8,7 @@ import { discoverRepositorySourceState } from "../src/app/repository-okf/index.t
 
 const projectRoot = path.resolve(import.meta.dirname, "..");
 const requiredTools = ["index_repository", "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept"];
+const v3RequiredTools = [...requiredTools, "validate_okf_relationships"];
 
 function writeJson(file, value) {
   fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
@@ -98,10 +99,11 @@ export function summarizeAgentEvents(events) {
   };
 }
 
-function toolUsage(completedTools, arm) {
+function toolUsage(completedTools, arm, promptVersion) {
   if (arm === "direct") return {};
   const completed = new Set(completedTools);
-  return Object.fromEntries(requiredTools.map((tool) => [tool, completed.has(tool)]));
+  const required = promptVersion === "okf-author-v3" ? v3RequiredTools : requiredTools;
+  return Object.fromEntries(required.map((tool) => [tool, completed.has(tool)]));
 }
 
 function validateAgentWorkspace(workspace) {
@@ -190,7 +192,7 @@ export function runAgentRepository({
     failure = error instanceof Error ? error.message : "unknown agent failure";
   }
   const summary = summarizeAgentEvents(result.stdout || "");
-  const usage = toolUsage(summary.completedTools, arm);
+  const usage = toolUsage(summary.completedTools, arm, promptVersion);
   const directMcpFailure = arm === "direct" && summary.activity.mcpToolCalls
     ? ["direct arm unexpectedly observed MCP tool calls"] : [];
   const completed = {

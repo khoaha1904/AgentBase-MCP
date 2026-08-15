@@ -31,6 +31,12 @@ export {
 } from "./okf-document.ts";
 export { computeOkfTreeDigest, loadOkfBundle, type LoadOkfBundleOptions, type OkfBundle } from "./okf-bundle.ts";
 export {
+  validateOkfRelationships,
+  type OkfRelationshipConcept,
+  type OkfRelationshipValidation,
+  type ValidatedOkfRelationship,
+} from "./okf-relationships.ts";
+export {
   diffBundleProposal,
   isMutableAgentBaseDraft,
   prepareBundleProposal,

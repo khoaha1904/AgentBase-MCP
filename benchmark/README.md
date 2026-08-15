@@ -58,10 +58,11 @@ AgentBase MCP configuration. `compare` reports existing semantic metrics,
 tokens and elapsed time side by side. Deltas are MCP minus direct; no overall
 winner is generated.
 
-Both v2 prompts share the same general authoring contract without receiving the
-gold expectation. The MCP arm additionally uses graph/schema/validation tools;
-the direct arm investigates source without them. Prompt behavior is immutable:
-new rules require a new prompt identity, while v1 files remain historical.
+Both v3 prompts share the same general authoring contract without receiving the
+gold expectation. The MCP arm additionally uses graph/schema tools plus bounded
+content-only relationship-set validation; the direct arm investigates source
+without them. Prompt behavior is immutable: new rules require a new identity,
+while v1/v2 files remain historical.
 
 Expectations do not prescribe prose or agent slugs. Bounded identity terms and
 evidence match concept instances; the scorer then evaluates concrete schema

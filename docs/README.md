@@ -63,8 +63,9 @@ non-exhaustive. Deterministic re-scoring found one real v2 MCP hard failure: the
 Lambda declares a Terraform `declared-by` relationship without the required
 resolving Markdown link. Missing Business Flow coverage is diagnostic, but the
 broken relationship mirror keeps this retained artifact invalid. Shopping-cart
-model execution is deferred until that general workflow gap is addressed. MCP
-used 440,523 more input tokens than direct, so no context-saving claim exists.
+model execution is deferred until the new content-only relationship validator
+and immutable v3 workflow pass offline verification. MCP used 440,523 more input
+tokens than direct, so no context-saving claim exists.
 Question management and external evidence enrichment remain future direction.
 
 ## Superseded assumptions

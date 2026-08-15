@@ -90,6 +90,13 @@ benchmarks.
   authoring quality; neither implies the other.
 - **AB-BENCH-029** — Reports state that deterministic path matching cannot prove
   semantic support for every claim and that human review is required.
+- **AB-BENCH-030** — MCP relationship-set validation accepts only a bounded
+  caller-supplied `{ identity, path, content }` set. It reads no caller-selected
+  output directory and checks unique identities, declared targets, resolving
+  Markdown links and known-schema guidance.
+- **AB-BENCH-031** — v3 MCP arms must complete relationship-set validation after
+  authoring and repair failures. Direct arms retain the equivalent shared
+  contract without receiving AgentBase MCP capability.
 
 ## Context A/B interpretation
 
@@ -175,4 +182,6 @@ authored a Repository concept instead, so the flow's metadata, cross-file
 provenance and expected flow relationship were absent. Deterministic checks do
 not prove semantic support for every authored claim; human review is still
 required. The shopping-cart model pair is deferred until the general bundle
-consistency gap is fixed; no fixture-specific hint is justified.
+consistency gap is fixed; no fixture-specific hint is justified. Immutable v3
+prompts add only a required bounded relationship-set validation step to the MCP
+workflow.

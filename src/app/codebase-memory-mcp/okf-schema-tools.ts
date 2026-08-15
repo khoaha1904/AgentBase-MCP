@@ -7,10 +7,11 @@ import {
   selectOkfConceptSchemas,
   validateAgentBaseDraft,
   validateConceptAgainstSchema,
+  validateOkfRelationships,
 } from "../../core/knowledge/index.ts";
 
 export const OKF_SCHEMA_TOOL_NAMES = [
-  "list_okf_schemas", "get_okf_schema", "select_okf_schemas", "validate_okf_concept",
+  "list_okf_schemas", "get_okf_schema", "select_okf_schemas", "validate_okf_concept", "validate_okf_relationships",
 ] as const;
 export type OkfSchemaToolName = typeof OKF_SCHEMA_TOOL_NAMES[number];
 
@@ -50,6 +51,28 @@ export const OKF_SCHEMA_TOOLS = [
       required: ["path", "content"], additionalProperties: false,
     },
   },
+  {
+    name: "validate_okf_relationships",
+    description: "Validate cross-document OKF relationship targets, Markdown links and known-schema guidance from bounded supplied content.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        concepts: {
+          type: "array", minItems: 1, maxItems: 64,
+          items: {
+            type: "object",
+            properties: {
+              identity: { type: "string", minLength: 1, maxLength: 256 },
+              path: { type: "string", minLength: 1, maxLength: 1024 },
+              content: { type: "string", minLength: 1, maxLength: 262144 },
+            },
+            required: ["identity", "path", "content"], additionalProperties: false,
+          },
+        },
+      },
+      required: ["concepts"], additionalProperties: false,
+    },
+  },
 ] as const;
 
 function result(value: unknown, isError = false): CallToolResult {
@@ -81,6 +104,24 @@ export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record
         recommendations: selectOkfConceptSchemas(args.signals as string[]),
         advisory: true,
       });
+    }
+    if (name === "validate_okf_relationships") {
+      const supplied = args.concepts;
+      const valid = Array.isArray(supplied) && supplied.length >= 1 && supplied.length <= 64
+        && supplied.every((item) => item && typeof item === "object" && !Array.isArray(item)
+          && typeof item.identity === "string" && Boolean(item.identity)
+          && typeof item.path === "string" && Boolean(item.path)
+          && typeof item.content === "string" && Boolean(item.content));
+      if (!valid) return result({ error: "concepts must be a bounded list of identity, path and content strings" }, true);
+      const entries = supplied as { identity: string; path: string; content: string }[];
+      if (entries.reduce((bytes, item) => bytes + Buffer.byteLength(item.content), 0) > 4 * 1024 * 1024) {
+        return result({ error: "concept content exceeds 4194304 bytes" }, true);
+      }
+      const validation = validateOkfRelationships(entries.map((item) => ({
+        identity: item.identity,
+        concept: parseConceptDocument(item.path, item.content),
+      })));
+      return result({ valid: validation.failures.length === 0, ...validation }, validation.failures.length > 0);
     }
     if (typeof args.path !== "string" || typeof args.content !== "string") {
       return result({ error: "path and content must be strings" }, true);

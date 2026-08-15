@@ -96,3 +96,8 @@ Normative OKF source is pinned to commit
 - **AB-SCHEMA-011** — Guidance distinguishes evidence-required metadata from
   optional enrichment; absent or contradictory evidence never authorizes an
   invented value.
+- **AB-SCHEMA-012** — MCP validates a bounded caller-supplied concept set without
+  reading caller-selected filesystem paths. Each supplied relationship identity
+  is unique; every declared target exists, has a resolving Markdown link and,
+  for a known source schema, follows its relationship guidance. Unknown OKF
+  schemas remain valid and their linked relationships remain unjudged.

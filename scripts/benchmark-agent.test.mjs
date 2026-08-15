@@ -59,10 +59,10 @@ test("[AB-BENCH-001][AB-BENCH-007] prompt rendering is exact and rejects missing
   assert.throws(() => renderAgentPrompt("{{MISSING}}", {}), /prompt value is missing/);
 });
 
-test("[AB-BENCH-018][AB-BENCH-019][AB-BENCH-022][AB-BENCH-024] v2 prompts share quality rules without gold answers", () => {
+test("[AB-BENCH-018][AB-BENCH-019][AB-BENCH-022][AB-BENCH-024][AB-BENCH-031] v3 prompts share quality rules without gold answers", () => {
   const prompts = path.resolve(import.meta.dirname, "..", "benchmark", "prompts");
-  const mcp = fs.readFileSync(path.join(prompts, "okf-author-v2.md"), "utf8");
-  const direct = fs.readFileSync(path.join(prompts, "okf-author-direct-v2.md"), "utf8");
+  const mcp = fs.readFileSync(path.join(prompts, "okf-author-v3.md"), "utf8");
+  const direct = fs.readFileSync(path.join(prompts, "okf-author-direct-v3.md"), "utf8");
   const shared = (value) => value.split("## Shared authoring contract\n")[1]?.split("## Arm-specific workflow\n")[0];
   assert.ok(shared(mcp));
   assert.equal(shared(mcp), shared(direct));
@@ -74,8 +74,12 @@ test("[AB-BENCH-018][AB-BENCH-019][AB-BENCH-022][AB-BENCH-024] v2 prompts share 
     assert.equal(mcp.includes(goldOnly), false, goldOnly);
     assert.equal(direct.includes(goldOnly), false, goldOnly);
   }
+  assert.match(mcp, /validate_okf_relationships/);
+  assert.equal(direct.includes("validate_okf_relationships"), false);
   assert.equal(fs.existsSync(path.join(prompts, "okf-author-v1.md")), true);
   assert.equal(fs.existsSync(path.join(prompts, "okf-author-direct-v1.md")), true);
+  assert.equal(fs.existsSync(path.join(prompts, "okf-author-v2.md")), true);
+  assert.equal(fs.existsSync(path.join(prompts, "okf-author-direct-v2.md")), true);
 });
 
 test("[AB-BENCH-007][AB-BENCH-012] captured agent text removes task and home-local roots", () => {
@@ -107,16 +111,17 @@ const finalMessage = args[args.indexOf("--output-last-message") + 1];
 fs.mkdirSync(path.join(workspace, "okf"));
 fs.writeFileSync(path.join(workspace, "okf", "index.md"), "---\\nokf_version: \\\"0.2\\\"\\n---\\n\\n# Empty\\n");
 fs.writeFileSync(finalMessage, "done\\n");
-for (const tool of ["index_repository", "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept"]) console.log(JSON.stringify({ type: "item.completed", item: { type: "mcp_tool_call", tool, status: "completed" } }));
+for (const tool of ["index_repository", "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept", "validate_okf_relationships"]) console.log(JSON.stringify({ type: "item.completed", item: { type: "mcp_tool_call", tool, status: "completed" } }));
 `);
     fs.chmodSync(fake, 0o755);
     const commit = spawnSync("git", ["-C", source, "rev-parse", "HEAD"], { encoding: "utf8" }).stdout.trim();
     const resultRoot = path.join(root, "result");
     const result = runAgentRepository({
-      manifest: { suite: "test", catalogVersion: "3.0.0", promptVersion: "okf-author-v1", agent: { executable: fake, version: "fake-codex 1.0.0", model: "fake", reasoningEffort: "medium", timeoutMs: 10_000 } },
+      manifest: { suite: "test", catalogVersion: "3.0.0", promptVersion: "okf-author-v3", agent: { executable: fake, version: "fake-codex 1.0.0", model: "fake", reasoningEffort: "medium", timeoutMs: 10_000 } },
       entry: { id: "fixture", kind: "test", path: "fixture", commit }, repository: source, root: resultRoot, executable: fake,
     });
     assert.equal(result.outcome, "succeeded");
+    assert.equal(result.requiredToolUsage.validate_okf_relationships, true);
     assert.equal(spawnSync("git", ["-C", source, "status", "--porcelain"], { encoding: "utf8" }).stdout, "");
     for (const artifact of ["run.json", "prompt.md", "agent-events.jsonl", "agent-final.md", "okf/index.md"]) assert.ok(fs.existsSync(path.join(resultRoot, artifact)));
   } finally {

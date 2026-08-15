@@ -1,5 +1,21 @@
 # Verification: Benchmark Authoring Quality
 
+## v3 relationship-validator phase
+
+- Date: 2026-08-15
+- Focused: `node --test --experimental-strip-types scripts/benchmark-agent.test.mjs scripts/benchmark-okf.test.mjs src/core/knowledge/okf-relationships.test.ts src/app/codebase-memory-mcp/okf-schema-tools.test.ts src/app/codebase-memory-mcp/server.test.ts`
+- Result: 32 tests passed, 0 failed.
+- Canonical: `npm run verify`
+- Result: specification checks and typecheck passed; architecture reported 0
+  errors and 6 unchanged warnings; 292 tests passed, 0 failed; diff check passed.
+- The new MCP tool accepts only bounded `{ identity, path, content }` values and
+  exposes no output-directory or arbitrary filesystem-read argument.
+- Core and MCP tests cover valid relationships, duplicate identity, missing
+  target, missing Markdown link, known-schema mismatch and portable unknown
+  schemas. The benchmark scorer now uses the same core validator.
+- v3 MCP lifecycle requires an observed `validate_okf_relationships` call;
+  v1/v2 identities remain historical and direct v3 receives no MCP capability.
+
 ## Offline gate
 
 - Date: 2026-08-15

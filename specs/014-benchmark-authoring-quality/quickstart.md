@@ -12,7 +12,7 @@ Expected:
 - invalid lifecycle, empty, conformance, policy, provenance, relationship and
   known-schema fixtures fail with exact hard failures;
 - incomplete coverage and unjudged valid output remain reviewable;
-- v2 prompts contain no fixture answers;
+- v3 prompts contain no fixture answers and MCP requires relationship-set validation;
 - quality and efficiency remain separate.
 
 ## Retained evidence
@@ -23,8 +23,8 @@ Regenerate deterministic derived metrics only:
 npm run benchmark:okf -- compare aws-serverless 2026-08-14T184644Z aws-health-aware
 ```
 
-Expected: MCP is `reviewable`; missing Business Flow metadata/provenance remains
-visible coverage, and no context-saving claim is made.
+Expected: retained v2 MCP remains `invalid` for the exact missing relationship
+link; missing Business Flow coverage is not the failure.
 
 ## Heterogeneous opt-in evidence
 
@@ -35,5 +35,6 @@ npm run benchmark:okf -- pair aws-serverless aws-serverless-shopping-cart
 npm run benchmark:okf -- compare aws-serverless <UTC-pair-id> aws-serverless-shopping-cart
 ```
 
-Use the unchanged v2 prompts. If MCP is invalid, diagnose a general hard-gate or
-tool failure; do not add shopping-cart answers to the prompt.
+Run both Health Aware and shopping cart with unchanged v3 prompts. If either MCP
+arm is invalid, diagnose a general hard-gate or tool failure; do not add fixture
+answers to the prompt.

@@ -29,6 +29,12 @@ authoring instructions to one repository.
   `aws-serverless-shopping-cart`. This is bounded evidence, not a universal claim.
 - Quality and efficiency remain separate. A reviewable draft can still be too
   expensive; no context-saving claim is allowed without supporting measurements.
+- The retained v2 Health Aware artifact proves a general workflow gap: per-file
+  validation did not catch a declared relationship missing its Markdown link.
+  The correction must be bounded, content-only relationship-set validation; it
+  must not read arbitrary caller-selected paths or encode fixture identities.
+- Changed authoring behavior uses immutable v3 prompts. Both repositories must
+  be measured with the same v3 contract before capability completion.
 - Structured unresolved questions, future `/abs-questions` review, external
   evidence requests and explicitly authorized AWS CLI enrichment are recorded as
   future product direction only. They are not implemented in capability 014.
@@ -165,6 +171,14 @@ benchmark on each existing repository without changing the prompt between them.
 - **AB-BENCH-029**: Reports MUST state that deterministic validation and curated
   references cannot prove the semantic relevance of every source-backed claim;
   accepted OKF still requires human review.
+- **AB-BENCH-030**: The MCP authoring workflow MUST expose bounded content-only
+  relationship-set validation that checks unique caller-supplied identities,
+  declared targets, resolving Markdown links and known-schema guidance without
+  reading an arbitrary output path.
+- **AB-BENCH-031**: A v3 MCP benchmark arm MUST call relationship-set validation
+  after authoring and repair every reported failure. Missing or failed use MUST
+  fail the arm visibly. The direct arm retains the equivalent authoring contract
+  without receiving AgentBase MCP tools.
 
 ### Key Entities
 
@@ -190,12 +204,13 @@ benchmark on each existing repository without changing the prompt between them.
 - **SC-003**: Unmatched authored concepts/relationships are reported 100% as
   unjudged unless a curated contradiction applies; they are never automatically
   counted as false positives.
-- **SC-004**: The unchanged v2 MCP artifact for `aws-health-aware` is classified
-  reviewable while retaining its 80% concept/schema, 75% metadata, 71%
-  provenance and 100% relationship-coverage diagnostics.
-- **SC-005**: The same general v2 prompt produces a reviewable current-model MCP
-  draft on `aws-serverless-shopping-cart`, or exposes a hard failure whose fix is
-  demonstrably general and contains no fixture answer.
+- **SC-004**: The retained v2 MCP artifact for `aws-health-aware` remains invalid
+  for its exact missing relationship link; low coverage is not reported as the
+  failure.
+- **SC-005**: The same general v3 prompt and relationship validator produce
+  reviewable current-model MCP drafts on both `aws-health-aware` and
+  `aws-serverless-shopping-cart`, or expose another general hard failure without
+  adding either fixture's answer.
 - **SC-006**: Reports preserve exact token/time evidence and make no context-
   saving claim while MCP remains more expensive on measured reviewable runs.
 
@@ -206,8 +221,9 @@ benchmark on each existing repository without changing the prompt between them.
   truth. Human review remains authoritative.
 - The two existing fixtures provide an initial heterogeneity check only. More
   ecosystems can be added later without changing the readiness definition.
-- v2 prompts already express the desired evidence-first authoring behavior; the
-  plan changes scoring first and changes prompts only for a proven general gap.
+- v2 prompts expressed the desired evidence-first behavior but per-concept
+  validation missed a cross-document relationship error. This measured general
+  gap justifies immutable v3 prompts and relationship-set validation.
 
 ## Explicit Non-Goals
 

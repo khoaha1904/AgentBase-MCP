@@ -77,7 +77,7 @@ function pairHarness({
     omitMcpOutput ? 'if (!mcp) fs.writeFileSync(path.join(workspace, "okf", "index.md"), ["---", "okf_version: " + String.fromCharCode(34) + "0.2" + String.fromCharCode(34), "---", "", "# Empty", ""].join(String.fromCharCode(10)));' : 'fs.writeFileSync(path.join(workspace, "okf", "index.md"), ["---", "okf_version: " + String.fromCharCode(34) + "0.2" + String.fromCharCode(34), "---", "", "# Empty", ""].join(String.fromCharCode(10)));',
     omitMcpOutput ? 'if (!mcp) fs.writeFileSync(finalMessage, "done");' : 'fs.writeFileSync(finalMessage, "done");',
     driftMcp ? 'if (mcp) fs.writeFileSync(' + JSON.stringify(path.join(source, "README.md")) + ', "changed");' : "",
-    'if (mcp) for (const tool of ["index_repository", "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept"]) console.log(JSON.stringify({ type: "item.completed", item: { type: "mcp_tool_call", tool, status: "completed" } }));',
+    'if (mcp) for (const tool of ["index_repository", "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept", "validate_okf_relationships"]) console.log(JSON.stringify({ type: "item.completed", item: { type: "mcp_tool_call", tool, status: "completed" } }));',
     malformedDirectUsage ? 'if (!mcp) console.log("{malformed"); else console.log(JSON.stringify({ type: "turn.completed", usage: { input_tokens: 10, cached_input_tokens: 2, output_tokens: 4, reasoning_output_tokens: 1 } }));' : 'console.log(JSON.stringify({ type: "turn.completed", usage: { input_tokens: mcp ? 10 : 20, cached_input_tokens: 2, output_tokens: 4, reasoning_output_tokens: 1 } }));',
   ].join("\n"));
   fs.chmodSync(fake, 0o755);
@@ -86,7 +86,7 @@ function pairHarness({
     root, source, log, result: path.join(root, "result"), executable: fake,
     manifest: {
       suite: "test-suite", root: suiteRoot, catalogVersion: "3.0.0",
-      promptVersion: "okf-author-v2", directPromptVersion: "okf-author-direct-v2",
+      promptVersion: "okf-author-v3", directPromptVersion: "okf-author-direct-v3",
       agent: { executable: fake, version: "fake-codex 1.0.0", model: "fake", reasoningEffort: "medium", timeoutMs: timeoutMcp ? 150 : 10_000 },
     },
     entry: { id: "fixture", kind: "test", path: "fixture", commit, expectation: "expected/fixture.json" },
@@ -256,7 +256,7 @@ test("[AB-BENCH-009][AB-BENCH-010][AB-BENCH-011][AB-BENCH-017] paired invocation
   assert.equal(pair.commonInputs.model, "fake");
   assert.equal(pair.commonInputs.reasoningEffort, "medium");
   assert.deepEqual(pair.commonInputs.promptVersions, {
-    mcp: "okf-author-v2", direct: "okf-author-direct-v2",
+    mcp: "okf-author-v3", direct: "okf-author-direct-v3",
   });
   assert.equal(typeof pair.commonInputs.expectationDigest, "string");
   assert.equal(typeof pair.agentBaseSource.dirty, "boolean");

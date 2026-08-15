@@ -72,7 +72,7 @@ and returns visible recovery rather than hidden retry.
 - Exact freshness reuse skips only indexing. Queries, source-integrity checks
   and cleanup always run; cache failure asks for explicit `--refresh`.
 - The public stdio gateway exposes 11 safe Codebase Memory analysis tools, one
-  controlled `index_repository` and four AgentBase schema tools. It omits
+  controlled `index_repository` and five AgentBase schema/validation tools. It omits
   provider mutation tools and binds one connection to one repository.
 - YAML parsing stays behind `core/knowledge`, rejects unsafe/oversized input and
   never reserializes protected documents merely for normalization.
