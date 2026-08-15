@@ -28,13 +28,13 @@
 
 ## Phase 4: Benchmark v5
 
-- [ ] T016 [P] [US3] Add v5 prompt and lifecycle tests in `scripts/benchmark-agent.test.mjs`
-- [ ] T017 [P] [US3] Add usefulness and benchmark-metadata boundary tests in `scripts/benchmark-okf.test.mjs`
-- [ ] T018 [US3] Implement v5 semantic matching and owner-review assessment in `scripts/benchmark-okf.mjs`
-- [ ] T019 [US3] Add immutable v5 prompts and suite identity in `benchmark/prompts/` and `benchmark/repos/aws-serverless/manifest.json`
-- [ ] T020 [US3] Add deterministic three-source sequential qualification using the Hub lifecycle tests
-- [ ] T021 [US3] Update `benchmark/README.md` and `docs/contracts/benchmark.md`
-- [ ] T022 [US3] Run canonical verification and commit the offline v5 phase
+- [x] T016 [P] [US3] Add v5 prompt and lifecycle tests in `scripts/benchmark-agent.test.mjs`
+- [x] T017 [P] [US3] Add usefulness and benchmark-metadata boundary tests in `scripts/benchmark-okf.test.mjs`
+- [x] T018 [US3] Implement v5 semantic matching and owner-review assessment in `scripts/benchmark-okf.mjs`
+- [x] T019 [US3] Add immutable v5 prompts and suite identity in `benchmark/prompts/` and `benchmark/repos/aws-serverless/manifest.json`
+- [x] T020 [US3] Add deterministic three-source sequential qualification using the Hub lifecycle tests
+- [x] T021 [US3] Update `benchmark/README.md` and `docs/contracts/benchmark.md`
+- [x] T022 [US3] Run canonical verification and commit the offline v5 phase
 
 ## Phase 5: Convergence
 

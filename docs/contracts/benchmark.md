@@ -111,6 +111,16 @@ benchmarks.
   remain reviewable and reduce schema/validation calls by at least 50% against
   retained v3 MCP baselines on both heterogeneous repositories. Token and
   elapsed changes are still reported honestly and need not improve.
+- **AB-BENCH-036** — V5 reports production validity and
+  `useful_for_owner_review` as independent judgments. Low reference coverage or
+  an incomplete evidence-backed draft does not by itself fail either judgment.
+- **AB-BENCH-037** — V5 keeps reference identities in hidden expectations and
+  forbids benchmark-only metadata in production proposals. Usefulness checks
+  canonical identity, useful boundaries, Markdown substance, pinned source
+  evidence and fragmentation without requiring a fixed inventory size.
+- **AB-BENCH-038** — Offline qualification applies frontend, backend and
+  infrastructure repository contributions sequentially to one canonical system
+  graph and proves that earlier source evidence and identities survive.
 
 ## Context A/B interpretation
 
@@ -260,3 +270,18 @@ Both corrected runs use two authoring/schema-validation calls, reductions of
 records 808,385 input tokens and 290,240 ms. Call reduction proves interaction
 batching only. Token/time remain supporting telemetry and do not outweigh
 evidence coverage, unresolved knowledge or later owner review.
+
+## v5 offline qualification
+
+The active suite now pins catalog `4.0.0` and immutable `okf-author-v5` /
+`okf-author-direct-v5` prompts. V5 removes scorer probe keys from authored OKF,
+checks cited paths and line bounds against the pinned repository, and reports
+owner-review usefulness independently from validity and reference coverage.
+Deterministic tests distinguish a compact canonical graph from thin per-route or
+per-handler inventories and reject benchmark-only metadata at the Hub boundary.
+
+A three-source lifecycle test applies frontend, backend and infrastructure
+evidence sequentially to the same Shopping Cart system. It preserves all three
+repository sources while retaining one system identity and separate component
+and infrastructure identities. This is offline lifecycle evidence; no V5 real
+model result is claimed yet.

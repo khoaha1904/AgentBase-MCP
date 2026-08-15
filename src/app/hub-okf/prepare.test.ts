@@ -107,3 +107,20 @@ test("[AB-LOCAL-HUB-012] new preparation uses a logical canonical subject and cu
     assert.equal(result.diff.entries.some((entry) => entry.path === "components/cart-service.md"), true);
   } finally { current.cleanup(); }
 });
+
+test("[AB-BENCH-037] new production proposals reject benchmark-only metadata", () => {
+  const current = fixture();
+  try {
+    const target = path.join(current.authored, "repositories/acme/repository.md");
+    fs.writeFileSync(target, fs.readFileSync(target, "utf8").replace(
+      "status: draft",
+      "status: draft\nbenchmark_key: repository-probe",
+    ));
+    assert.throws(() => prepareNewHubProposal({
+      hub: createHubIdentity("agentbase/hub", "main"), baseCommit: BASE_COMMIT, sourceRepositoryId: SOURCE_ID,
+      hubBundleRoot: current.base, authoredBundleRoot: current.authored,
+      proposalRoot: current.proposal, subjectDirectory: "repositories/acme",
+      evidenceDigest: EVIDENCE, signals: ["repository"], createdAt: "2026-08-12T00:00:00Z",
+    }), /benchmark_key/);
+  } finally { current.cleanup(); }
+});

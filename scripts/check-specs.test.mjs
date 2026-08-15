@@ -42,7 +42,7 @@ function fixture() {
     ...ids("AB-LOCAL-HUB", 13), "AB-QUERY-001", ...ids("AB-HUB-SETUP", 17),
   ]));
   write(root, "docs/contracts/installation.md", lines(ids("AB-INSTALL", 24)));
-  write(root, "docs/contracts/benchmark.md", lines(ids("AB-BENCH", 35)));
+  write(root, "docs/contracts/benchmark.md", lines(ids("AB-BENCH", 38)));
   write(root, "specs/CURRENT.md", "Active capability: [foundation](001-clean-foundation/spec.md)\n");
   write(root, "specs/001-clean-foundation/spec.md", "# Active foundation\n");
   write(root, "package.json", "{\"name\":\"fixture\"}\n");

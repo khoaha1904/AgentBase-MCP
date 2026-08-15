@@ -171,3 +171,13 @@ test("[AB-LOCAL-HUB-013] cross-source refresh preserves foreign evidence and non
     assert.equal(result.inspection.counts.conflict >= 2, true);
   } finally { current.cleanup(); }
 });
+
+test("[AB-BENCH-037] refresh rejects new concepts with benchmark-only metadata", () => {
+  const current = fixture();
+  try {
+    current.write(current.authored, "repositories/acme/benchmark.md", draft(
+      "Benchmark", "# Responsibility\n\nProduction knowledge.", "benchmark_key: hidden-probe\n",
+    ));
+    assert.throws(() => prepareRefreshHubProposal(options(current)), /benchmark_key/);
+  } finally { current.cleanup(); }
+});

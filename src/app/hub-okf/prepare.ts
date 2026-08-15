@@ -14,6 +14,7 @@ import {
   prepareBundleProposal,
   selectOkfConceptSchemas,
   validateConceptAgainstSchema,
+  validatePublishableAgentBaseDraft,
   validateBundleProposal,
   type ProposalDiff,
 } from "../../core/knowledge/index.ts";
@@ -66,7 +67,7 @@ export function prepareNewHubProposal(
       if (!conceptReferencesRepository(concept, options.sourceRepositoryId)) {
         throw new Error(`authored concept does not cite the proposal source repository: ${concept.path}`);
       }
-      const failures = validateConceptAgainstSchema(concept);
+      const failures = [...validatePublishableAgentBaseDraft(concept), ...validateConceptAgainstSchema(concept)];
       if (failures.length) throw new Error(`authored concept failed schema validation: ${failures.join("; ")}`);
     }
   }

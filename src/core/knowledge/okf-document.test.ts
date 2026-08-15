@@ -7,6 +7,7 @@ import {
   parseConceptDocument,
   renderConceptDocument,
   validateAgentBaseDraft,
+  validatePublishableAgentBaseDraft,
 } from "./index.ts";
 
 function concept(frontmatter: string, body = "# Overview\n\nA concept.\n"): string {
@@ -24,6 +25,17 @@ test("[AB-MVP-010][AB-MVP-013] parses the minimum concept and preserves unknown 
   const rendered = renderConceptDocument(parsed);
   const reparsed = parseConceptDocument(parsed.path, rendered);
   assert.deepEqual(reparsed.frontmatter.extension, parsed.frontmatter.extension);
+});
+
+test("[AB-BENCH-037] production drafts reject benchmark-only metadata", () => {
+  const parsed = parseConceptDocument("systems/cart.md", concept([
+    "type: System",
+    "status: draft",
+    "benchmark_key: hidden-probe",
+    "generated: { by: 'agentbase/0.0.0', at: '2026-08-12T00:00:00Z' }",
+  ].join("\n")));
+  assert.match(validatePublishableAgentBaseDraft(parsed).join("\n"), /benchmark_key/);
+  assert.equal(validateAgentBaseDraft(parsed).some((failure) => failure.includes("benchmark_key")), false);
 });
 
 test("[AB-MVP-010] rejects missing frontmatter, duplicate keys, aliases and missing type", () => {

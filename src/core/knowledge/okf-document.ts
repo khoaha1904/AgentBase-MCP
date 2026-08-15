@@ -232,6 +232,14 @@ export function validateAgentBaseDraft(concept: ConceptDocument): readonly strin
   return failures;
 }
 
+export function validatePublishableAgentBaseDraft(concept: ConceptDocument): readonly string[] {
+  return [
+    ...validateAgentBaseDraft(concept),
+    ...(concept.frontmatter.benchmark_key === undefined
+      ? [] : [`${concept.path}: benchmark_key is benchmark-only metadata and cannot be published`]),
+  ];
+}
+
 export function createRepositorySourceResource(repositoryId: string, relativePath: string, startLine: number, endLine: number): string {
   if (!/^repository-[a-z0-9-]+-[a-f0-9]{12}$/.test(repositoryId)) throw new OkfValidationError("REPOSITORY_ID_INVALID", "repositoryId is invalid");
   const normalized = path.posix.normalize(relativePath);

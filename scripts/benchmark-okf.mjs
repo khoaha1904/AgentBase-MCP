@@ -180,6 +180,27 @@ function invalidRepositorySources(concept, repositoryId) {
     && !source.resource.startsWith(prefix)).length;
 }
 
+function sourceEvidenceFailures(concept, repositoryId, repositoryRoot) {
+  if (!repositoryRoot) return [];
+  const prefix = `repository://${repositoryId}/`;
+  const sources = Array.isArray(concept.frontmatter.sources) ? concept.frontmatter.sources : [];
+  return sources.flatMap((source) => {
+    const resource = source && typeof source === "object" && !Array.isArray(source) ? source.resource : undefined;
+    if (typeof resource !== "string" || !resource.startsWith(prefix)) return [];
+    const match = resource.slice(prefix.length).match(/^(.+)#L(\d+)-L(\d+)$/);
+    if (!match?.[1] || !match[2] || !match[3]) return [];
+    let relative;
+    try { relative = match[1].split("/").map(decodeURIComponent).join("/"); } catch { return [`${concept.path}: source path cannot be decoded`]; }
+    const file = path.resolve(repositoryRoot, ...relative.split("/"));
+    if (!file.startsWith(`${path.resolve(repositoryRoot)}${path.sep}`) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
+      return [`${concept.path}: source path does not exist at the pinned revision: ${relative}`];
+    }
+    const lineCount = fs.readFileSync(file, "utf8").split(/\r?\n/).length;
+    return Number(match[3]) > lineCount
+      ? [`${concept.path}: source span exceeds ${relative} (${lineCount} lines)`] : [];
+  });
+}
+
 export function createAuthoringAssessment({
   actualConcepts, validationFailures, contradictionFailures, relationshipIntegrityFailures,
 }) {
@@ -196,15 +217,63 @@ export function createAuthoringAssessment({
   };
 }
 
-export function scoreSemanticBenchmark(expectation, bundle, repositoryId) {
+function semanticIdentity(concept) {
+  const legacy = concept.frontmatter.benchmark_key;
+  return typeof legacy === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(legacy)
+    ? legacy : concept.conceptId;
+}
+
+function usefulBody(concept) {
+  const plain = concept.body
+    .replace(/\[[^\]]+\]\([^)]+\)/g, " ")
+    .replace(/[#*`_|>\-[\]]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return /^#{1,6}\s+\S/m.test(concept.body) && plain.length >= 80;
+}
+
+export function assessOwnerReviewUsefulness(concepts) {
+  const findings = [];
+  const titles = new Map();
+  const values = [...concepts.values()];
+  for (const concept of values) {
+    if (concept.frontmatter.benchmark_key !== undefined) {
+      findings.push(`${concept.path}: benchmark-only metadata is not production knowledge`);
+    }
+    if (concept.type !== "Repository" && concept.path.startsWith("repositories/")) {
+      findings.push(`${concept.path}: canonical ${concept.type} identity is nested under a repository`);
+    }
+    if (!usefulBody(concept)) findings.push(`${concept.path}: Markdown body lacks reviewable substance`);
+    const title = typeof concept.frontmatter.title === "string" ? concept.frontmatter.title.trim().toLowerCase() : "";
+    if (!title) continue;
+    const key = `${concept.type}|${title}`;
+    const previous = titles.get(key);
+    if (previous) findings.push(`${concept.path}: duplicates the ${concept.type} identity at ${previous}`);
+    else titles.set(key, concept.path);
+  }
+  const endpoints = values.filter((concept) => concept.type === "API Endpoint");
+  if (endpoints.length >= 3 && !values.some((concept) => concept.type === "API Surface")) {
+    findings.push(`${endpoints.length} API Endpoint concepts fragment one likely API surface`);
+  }
+  const lambdas = values.filter((concept) => concept.type === "AWS Lambda");
+  if (lambdas.length >= 3 && !values.some((concept) => ["System", "Software Component", "Service"].includes(concept.type))) {
+    findings.push(`${lambdas.length} AWS Lambda concepts form an implementation inventory without a useful parent`);
+  }
+  return {
+    status: findings.length ? "needs_revision" : "useful_for_owner_review",
+    findings: [...new Set(findings)],
+  };
+}
+
+export function scoreSemanticBenchmark(expectation, bundle, repositoryId, repositoryRoot) {
   const failures = [...bundle.warnings];
   const actual = new Map();
   for (const concept of bundle.concepts.values()) {
     failures.push(...validateAgentBaseDraft(concept), ...validateConceptAgainstSchema(concept));
     if (invalidRepositorySources(concept, repositoryId)) failures.push(`${concept.path}: provenance uses another repository identity`);
-    const key = concept.frontmatter.benchmark_key;
-    if (typeof key !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(key)) failures.push(`${concept.path}: benchmark_key is missing or invalid`);
-    else if (actual.has(key)) failures.push(`${concept.path}: duplicate benchmark_key ${key}`);
+    failures.push(...sourceEvidenceFailures(concept, repositoryId, repositoryRoot));
+    const key = semanticIdentity(concept);
+    if (actual.has(key)) failures.push(`${concept.path}: duplicate semantic identity ${key}`);
     else actual.set(key, concept);
   }
   const expected = new Map(expectation.concepts.map((item) => [item.key, item]));
@@ -245,9 +314,9 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId) {
   for (const key of matchedKeys) {
     const concept = assignments.get(key);
     const item = expected.get(key);
-    if (concept.type === item.type) confirmedConcepts.push(concept.frontmatter.benchmark_key);
+    if (concept.type === item.type) confirmedConcepts.push(semanticIdentity(concept));
     else contradictedConcepts.push({
-      actual: concept.frontmatter.benchmark_key,
+      actual: semanticIdentity(concept),
       expected: key,
       actualType: concept.type,
       expectedType: item.type,
@@ -271,8 +340,10 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId) {
   const actualRelationships = new Set(relationshipValidation.relationships.map((item) =>
     `${item.source}|${item.kind}|${item.target}`));
   const mappedExpectedRelationships = new Map(expectation.relationships.map((item) => {
-    const from = assignments.get(item.from)?.frontmatter.benchmark_key;
-    const to = assignments.get(item.to)?.frontmatter.benchmark_key;
+    const fromConcept = assignments.get(item.from);
+    const toConcept = assignments.get(item.to);
+    const from = fromConcept ? semanticIdentity(fromConcept) : undefined;
+    const to = toConcept ? semanticIdentity(toConcept) : undefined;
     const reference = `${item.from}|${item.kind}|${item.to}`;
     const authored = typeof from === "string" && typeof to === "string" ? `${from}|${item.kind}|${to}` : null;
     return [reference, authored];
@@ -319,6 +390,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId) {
   };
   return {
     ...metrics,
+    ownerReview: assessOwnerReviewUsefulness(bundle.concepts),
     authoringAssessment: createAuthoringAssessment({
       actualConcepts: actual.size,
       validationFailures: failures,
@@ -338,6 +410,7 @@ function reportFor(entry, run, metrics) {
       + `- Catalog/prompt: ${catalogPrompt}\n`
       + `- Agent outcome: failed\n- OKF validation: failed\n`
       + `- Authoring assessment: invalid\n`
+      + `- Owner review: needs_revision\n`
       + `- Semantic metrics: not scored because the ${run.arm ?? "mcp"} arm lifecycle failed\n`
       + `\n## Hard failures\n\n${metrics.authoringAssessment.hardFailures.map((item) => `- ${item}`).join("\n")}\n`
       + `\n## Limitations\n\n${metrics.authoringAssessment.limitations.map((item) => `- ${item}`).join("\n")}\n`;
@@ -348,6 +421,7 @@ function reportFor(entry, run, metrics) {
     + `- Agent outcome: ${run.outcome}\n`
     + `- OKF validation: ${metrics.validation.passed ? "passed" : "failed"}\n`
     + `- Authoring assessment: ${metrics.authoringAssessment.status}\n`
+    + `- Owner review: ${metrics.ownerReview.status}\n`
     + `- Reference concept coverage: ${metrics.referenceConceptCoveragePercent}%\n`
     + `- Recognized schema agreement: ${metrics.recognizedSchemaAgreementPercent}%\n`
     + `- Metadata completeness: ${metrics.metadataCompletenessPercent}%\n`
@@ -357,6 +431,8 @@ function reportFor(entry, run, metrics) {
     + `- Missing reference concepts / relationships: ${metrics.classifications.concepts.missingReference.length} / ${metrics.classifications.relationships.missingReference.length}\n`
     + (metrics.authoringAssessment.hardFailures.length
       ? `\n## Hard failures\n\n${metrics.authoringAssessment.hardFailures.map((item) => `- ${item}`).join("\n")}\n` : "")
+    + (metrics.ownerReview.findings.length
+      ? `\n## Owner-review findings\n\n${metrics.ownerReview.findings.map((item) => `- ${item}`).join("\n")}\n` : "")
     + `\n## Limitations\n\n${metrics.authoringAssessment.limitations.map((item) => `- ${item}`).join("\n")}\n`;
 }
 
@@ -378,6 +454,7 @@ function invalidMetrics(suite, repository, runId, error) {
       relationships: { confirmed: [], contradicted: [], unjudged: [], missingReference: [] },
     },
     validation: { passed: false, failures: [`OKF bundle could not be loaded: ${error}`] },
+    ownerReview: { status: "needs_revision", findings: ["No scorable OKF bundle is available for owner review"] },
     okfTreeDigest: null,
   };
   return {
@@ -491,7 +568,7 @@ function finalizeArmRoot({ manifest, entry, root, runId }) {
       repository: entry.id,
       runId,
       arm: runData.arm ?? "mcp",
-      ...scoreSemanticBenchmark(expectation, bundle, runData.sourceRepositoryId),
+      ...scoreSemanticBenchmark(expectation, bundle, runData.sourceRepositoryId, path.resolve(projectRoot, entry.path)),
       okfTreeDigest: bundle.treeDigest,
     };
   } catch (error) {
@@ -506,7 +583,7 @@ function pairReportFor(comparison) {
   const quality = (arm) => {
     const metrics = comparison.quality[arm];
     return metrics
-      ? `- ${arm}: assessment ${metrics.authoringAssessment?.status ?? "invalid"}; validation ${metrics.validation.passed ? "passed" : "failed"}; reference concepts ${metrics.referenceConceptCoveragePercent}%; recognized schemas ${metrics.recognizedSchemaAgreementPercent}%; metadata ${metrics.metadataCompletenessPercent}%; provenance ${metrics.provenanceCoveragePercent}%; reference relationships ${metrics.referenceRelationshipCoveragePercent}%; unjudged concepts/relationships ${metrics.classifications?.concepts.unjudged.length ?? 0}/${metrics.classifications?.relationships.unjudged.length ?? 0}`
+      ? `- ${arm}: assessment ${metrics.authoringAssessment?.status ?? "invalid"}; owner review ${metrics.ownerReview?.status ?? "needs_revision"}; validation ${metrics.validation.passed ? "passed" : "failed"}; reference concepts ${metrics.referenceConceptCoveragePercent}%; recognized schemas ${metrics.recognizedSchemaAgreementPercent}%; metadata ${metrics.metadataCompletenessPercent}%; provenance ${metrics.provenanceCoveragePercent}%; reference relationships ${metrics.referenceRelationshipCoveragePercent}%; unjudged concepts/relationships ${metrics.classifications?.concepts.unjudged.length ?? 0}/${metrics.classifications?.relationships.unjudged.length ?? 0}`
       : `- ${arm}: unavailable`;
   };
   const efficiency = (arm) => {

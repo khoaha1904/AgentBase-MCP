@@ -2,10 +2,17 @@
   "repository": "aws-health-aware",
   "concepts": [
     {
-      "key": "terraform-deploy-aha",
-      "identityTerms": ["terraform", "deployment"],
-      "type": "Terraform Module",
-      "requiredMetadata": ["module_root", "managed_resources"],
+      "key": "aws-health-aware-system",
+      "identityTerms": ["aws", "health", "aware"],
+      "type": "System",
+      "requiredMetadata": [],
+      "requiredSourcePaths": ["README.md"]
+    },
+    {
+      "key": "aha-infrastructure-definition",
+      "identityTerms": ["aha", "terraform", "infrastructure"],
+      "type": "Infrastructure Definition",
+      "requiredMetadata": ["configuration_root", "declared_resources"],
       "requiredSourcePaths": ["terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf"]
     },
     {
@@ -38,9 +45,10 @@
     }
   ],
   "relationships": [
-    { "from": "terraform-deploy-aha", "to": "aha-lambda-function-primary-region", "kind": "declares" },
-    { "from": "terraform-deploy-aha", "to": "aha-dynamodb-table", "kind": "declares" },
-    { "from": "terraform-deploy-aha", "to": "aha-lambda-schedule-primary-region", "kind": "declares" },
+    { "from": "aha-lambda-function-primary-region", "to": "aws-health-aware-system", "kind": "part-of" },
+    { "from": "aha-infrastructure-definition", "to": "aha-lambda-function-primary-region", "kind": "declares" },
+    { "from": "aha-infrastructure-definition", "to": "aha-dynamodb-table", "kind": "declares" },
+    { "from": "aha-infrastructure-definition", "to": "aha-lambda-schedule-primary-region", "kind": "declares" },
     { "from": "aha-lambda-schedule-primary-region", "to": "aha-lambda-function-primary-region", "kind": "triggers" },
     { "from": "aha-lambda-function-primary-region", "to": "aha-dynamodb-table", "kind": "accesses" },
     { "from": "aws-health-alerting-flow", "to": "aha-lambda-function-primary-region", "kind": "step" }

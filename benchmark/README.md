@@ -58,11 +58,13 @@ AgentBase MCP configuration. `compare` reports existing semantic metrics,
 tokens and elapsed time side by side. Deltas are MCP minus direct; no overall
 winner is generated.
 
-Both v4 prompts share the same general authoring contract without receiving the
-gold expectation. The MCP arm additionally uses graph tools, one batch-selected
-schema-guidance call and bounded whole-bundle validation; the direct arm
-investigates source without them. Prompt behavior is immutable: new rules
-require a new identity, while v1-v3 files remain historical.
+Both v5 prompts share the same general authoring contract without receiving the
+hidden expectation. They author one canonical entity graph, group ordinary
+routes into API surfaces, keep implementation-only handlers inside useful
+parents and surface uncertainty as limitations. The MCP arm additionally uses
+graph tools, one batch-selected schema-guidance call and bounded whole-bundle
+validation; the direct arm investigates source without them. Prompt behavior
+is immutable: v1-v4 files and recorded results remain historical.
 
 Expectations do not prescribe prose or agent slugs. Bounded identity terms and
 evidence match concept instances; the scorer then evaluates concrete schema
@@ -75,10 +77,17 @@ claim the reference is a complete repository inventory.
 
 Each arm declares an authoring assessment of `reviewable` or `invalid`.
 Lifecycle/conformance failures, empty output, unsafe provenance, known schema
-contradictions and malformed, broken or schema-unsupported relationships are
-invalid. Missing concepts, metadata, evidence or relationships do not invalidate
+contradictions and malformed or broken relationships are invalid. Missing
+concepts, metadata, evidence or relationships do not invalidate
 an otherwise evidence-backed draft, even below 80%; they remain visible for
 human review and later enrichment.
+
+V5 separately reports `ownerReview.status` as `useful_for_owner_review` or
+`needs_revision`. This assessment catches duplicate identities, repository-tree
+copies, thin Markdown bodies and route/handler fragmentation. It does not turn
+reference coverage, concept count, token use or elapsed time into quality gates.
+Reference probe keys remain scorer-only and production Hub proposals reject
+benchmark-only metadata.
 
 Deterministic source-path checks prove that a cited path is present in the
 curated probe, not that every authored sentence is semantically supported.

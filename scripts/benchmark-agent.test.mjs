@@ -91,6 +91,22 @@ test("[AB-BENCH-024][AB-BENCH-032][AB-BENCH-034] v4 keeps shared quality rules a
   }
 });
 
+test("[AB-BENCH-024][AB-BENCH-036][AB-BENCH-037] v5 uses canonical useful units without benchmark metadata", () => {
+  const prompts = path.resolve(import.meta.dirname, "..", "benchmark", "prompts");
+  const mcp = fs.readFileSync(path.join(prompts, "okf-author-v5.md"), "utf8");
+  const direct = fs.readFileSync(path.join(prompts, "okf-author-direct-v5.md"), "utf8");
+  const shared = (value) => value.split("## Shared authoring contract\n")[1]?.split("## Arm-specific workflow\n")[0];
+  assert.ok(shared(mcp));
+  assert.equal(shared(mcp), shared(direct));
+  for (const rule of ["one canonical concept", "API Surface", "implementation-only handlers", "useful Markdown", "Limitations", "unresolved items"]) {
+    assert.ok(shared(mcp).includes(rule), rule);
+  }
+  assert.equal(mcp.includes("benchmark_key"), false);
+  assert.equal(direct.includes("benchmark_key"), false);
+  assert.match(mcp, /get_okf_authoring_schemas/);
+  assert.match(mcp, /validate_okf_bundle/);
+});
+
 test("[AB-BENCH-001][AB-BENCH-007] prompt rendering is exact and rejects missing inputs", () => {
   assert.equal(renderAgentPrompt("{{A}}/{{B}}", { A: "one", B: "two" }), "one/two");
   assert.throws(() => renderAgentPrompt("{{MISSING}}", {}), /prompt value is missing/);
@@ -168,6 +184,13 @@ for (const tool of ["index_repository", "list_okf_schemas", "select_okf_schemas"
     assert.deepEqual(v4.requiredToolUsage, {
       index_repository: true, get_okf_authoring_schemas: true, validate_okf_bundle: true,
     });
+    const v5 = runAgentRepository({
+      manifest: { suite: "test", catalogVersion: "4.0.0", promptVersion: "okf-author-v5", agent: { executable: fake, version: "fake-codex 1.0.0", model: "fake", reasoningEffort: "medium", timeoutMs: 10_000 } },
+      entry: { id: "fixture", kind: "test", path: "fixture", commit }, repository: source,
+      root: path.join(root, "result-v5"), executable: fake,
+    });
+    assert.equal(v5.outcome, "succeeded");
+    assert.deepEqual(v5.requiredToolUsage, v4.requiredToolUsage);
     assert.equal(v4.activity.authoringToolCalls, 7);
     assert.equal(spawnSync("git", ["-C", source, "status", "--porcelain"], { encoding: "utf8" }).stdout, "");
     for (const artifact of ["run.json", "prompt.md", "agent-events.jsonl", "agent-final.md", "okf/index.md"]) assert.ok(fs.existsSync(path.join(resultRoot, artifact)));

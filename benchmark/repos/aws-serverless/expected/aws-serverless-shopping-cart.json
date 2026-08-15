@@ -2,18 +2,32 @@
   "repository": "aws-serverless-shopping-cart",
   "concepts": [
     {
-      "key": "post-cart-migrate",
-      "identityTerms": ["cart", "migrate"],
-      "type": "API Endpoint",
-      "requiredMetadata": ["method", "route", "handler"],
+      "key": "shopping-cart-system",
+      "identityTerms": ["shopping", "cart"],
+      "type": "System",
+      "requiredMetadata": [],
+      "requiredSourcePaths": ["README.md"]
+    },
+    {
+      "key": "shopping-cart-service",
+      "identityTerms": ["shopping", "cart", "service"],
+      "type": "Service",
+      "requiredMetadata": [],
+      "requiredSourcePaths": ["backend/shoppingcart-service.yaml"]
+    },
+    {
+      "key": "shopping-cart-api",
+      "identityTerms": ["shopping", "cart", "api"],
+      "type": "API Surface",
+      "requiredMetadata": [],
       "requiredSourcePaths": ["backend/shoppingcart-service.yaml", "frontend/src/backend/api.js"]
     },
     {
-      "key": "migrate-cart-function",
-      "identityTerms": ["migrate", "function"],
-      "type": "AWS Lambda",
-      "requiredMetadata": ["business_purpose", "resource_name", "runtime", "handler"],
-      "requiredSourcePaths": ["backend/shoppingcart-service.yaml", "backend/shopping-cart-service/migrate_cart.py"]
+      "key": "shopping-cart-infrastructure",
+      "identityTerms": ["shopping", "cart", "infrastructure"],
+      "type": "Infrastructure Definition",
+      "requiredMetadata": ["configuration_root", "declared_resources"],
+      "requiredSourcePaths": ["backend/shoppingcart-service.yaml"]
     },
     {
       "key": "dynamodb-shopping-cart-table",
@@ -38,10 +52,12 @@
     }
   ],
   "relationships": [
-    { "from": "post-cart-migrate", "to": "migrate-cart-function", "kind": "handled-by" },
-    { "from": "migrate-cart-function", "to": "dynamodb-shopping-cart-table", "kind": "accesses" },
-    { "from": "migrate-cart-function", "to": "cart-delete-sqs-queue", "kind": "accesses" },
-    { "from": "authenticated-cart-migration", "to": "post-cart-migrate", "kind": "step" },
-    { "from": "authenticated-cart-migration", "to": "migrate-cart-function", "kind": "step" }
+    { "from": "shopping-cart-system", "to": "shopping-cart-service", "kind": "composed-of" },
+    { "from": "shopping-cart-system", "to": "shopping-cart-api", "kind": "exposes" },
+    { "from": "shopping-cart-api", "to": "shopping-cart-service", "kind": "provided-by" },
+    { "from": "shopping-cart-infrastructure", "to": "dynamodb-shopping-cart-table", "kind": "declares" },
+    { "from": "shopping-cart-infrastructure", "to": "cart-delete-sqs-queue", "kind": "declares" },
+    { "from": "authenticated-cart-migration", "to": "shopping-cart-api", "kind": "step" },
+    { "from": "authenticated-cart-migration", "to": "cart-delete-sqs-queue", "kind": "step" }
   ]
 }

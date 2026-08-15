@@ -7,14 +7,14 @@ import test from "node:test";
 
 import { parseConceptDocument } from "../src/core/knowledge/index.ts";
 import * as benchmarkOkf from "./benchmark-okf.mjs";
-import { loadScorableBundle, scoreSemanticBenchmark } from "./benchmark-okf.mjs";
+import { assessOwnerReviewUsefulness, loadScorableBundle, scoreSemanticBenchmark } from "./benchmark-okf.mjs";
 
 const repositoryId = "repository-example-aaaaaaaaaaaa";
 
 function concept(path, type, key, metadata, sources, relationships = [], body = "Evidence.") {
   return parseConceptDocument(path, [
     "---", `type: ${type}`, `title: ${key}`, "description: Benchmark fixture", "status: draft",
-    "generated: { by: agentbase/0.0.0, at: '2026-08-14T00:00:00Z' }", `benchmark_key: ${key}`,
+    "generated: { by: agentbase/0.0.0, at: '2026-08-14T00:00:00Z' }", ...(key ? [`benchmark_key: ${key}`] : []),
     ...Object.entries(metadata).map(([field, value]) => `${field}: ${JSON.stringify(value)}`),
     "relationships:", ...relationships.map((item) => `  - { kind: ${item.kind}, target: ${item.target} }`),
     "sources:", ...sources.map((source, index) => `  - { id: s${index}, resource: 'repository://${repositoryId}/${source}#L1-L2' }`),
@@ -136,6 +136,51 @@ test("[AB-BENCH-004][AB-BENCH-005] complete semantic OKF receives separate perfe
   for (const field of ["referenceConceptCoveragePercent", "recognizedSchemaAgreementPercent", "metadataCompletenessPercent", "provenanceCoveragePercent", "referenceRelationshipCoveragePercent"]) {
     assert.equal(result[field], 100, field);
   }
+});
+
+test("[AB-BENCH-036][AB-BENCH-037] v5 matches hidden probes without authored benchmark metadata", () => {
+  const system = concept(
+    "systems/shopping-cart.md", "System", null, { business_purpose: "Manage shopping carts" },
+    ["README.md", "src/cart.ts"], [],
+    "# Shopping cart\n\nThe system owns cart lifecycle and exposes the supported cart behavior to clients.\n\n## Limitations\n\nDeployment ownership is not evidenced.",
+  );
+  const result = scoreSemanticBenchmark({
+    concepts: [{
+      key: "shopping-cart-system", identityTerms: ["shopping", "cart"], type: "System",
+      requiredMetadata: ["business_purpose"], requiredSourcePaths: ["README.md"],
+    }],
+    relationships: [],
+  }, { concepts: new Map([[system.conceptId, system]]), warnings: [] }, repositoryId);
+  assert.equal(result.validation.passed, true);
+  assert.deepEqual(result.classifications.concepts.confirmed, ["systems/shopping-cart"]);
+  assert.equal(result.authoringAssessment.status, "reviewable");
+  assert.equal(result.ownerReview.status, "useful_for_owner_review");
+});
+
+test("[AB-BENCH-036][AB-BENCH-037] usefulness flags shallow route fragmentation independently from validity", () => {
+  const concepts = new Map(["get", "put", "delete"].map((method) => {
+    const item = concept(`interfaces/${method}-cart.md`, "API Endpoint", null, {
+      method: method.toUpperCase(), route: "/cart", handler: `${method}.handler`,
+    }, [`src/${method}.ts`], [], "Evidence-backed route.");
+    return [item.conceptId, item];
+  }));
+  const assessment = assessOwnerReviewUsefulness(concepts);
+  assert.equal(assessment.status, "needs_revision");
+  assert.match(assessment.findings.join("\n"), /API Endpoint|substance/);
+});
+
+test("[AB-BENCH-037] pinned source paths and line spans are verified when the repository is available", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-source-evidence-"));
+  try {
+    fs.writeFileSync(path.join(root, "infra.tf"), "one\ntwo\n");
+    const bad = concept("components/runtime.md", "Service", null, {}, ["missing.tf"], [],
+      "# Runtime\n\nThis service has enough explanatory content for a maintainer to understand its responsibility and boundary.");
+    const result = scoreSemanticBenchmark({ concepts: [], relationships: [] }, {
+      concepts: new Map([[bad.conceptId, bad]]), warnings: [],
+    }, repositoryId, root);
+    assert.equal(result.validation.passed, false);
+    assert.match(result.validation.failures.join("\n"), /does not exist at the pinned revision/);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
 test("[AB-BENCH-005] shallow valid Markdown loses metadata without hiding conformance", () => {

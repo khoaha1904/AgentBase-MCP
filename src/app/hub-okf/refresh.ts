@@ -16,6 +16,7 @@ import {
   repositorySourceResources,
   selectOkfConceptSchemas,
   validateConceptAgainstSchema,
+  validatePublishableAgentBaseDraft,
   validateBundleProposal,
   type ConceptDocument,
 } from "../../core/knowledge/index.ts";
@@ -52,7 +53,6 @@ function writeBytes(root: string, relative: string, content: Buffer): void {
   fs.mkdirSync(path.dirname(target), { recursive: true, mode: 0o700 });
   fs.writeFileSync(target, content, { mode: 0o600 });
 }
-
 function copyAuthored(source: string, target: string): void {
   fs.rmSync(target, { recursive: true, force: true });
   fs.cpSync(source, target, { recursive: true, errorOnExist: true, force: false });
@@ -189,7 +189,6 @@ function restoreUnknownFieldConflicts(
     };
   });
 }
-
 function supersessionEntries(
   options: AnyRefreshOptions,
   bundleRoot: string,
@@ -232,7 +231,8 @@ function validateChangedSchemas(options: AnyRefreshOptions, bundleRoot: string):
     const selectionFailure = !previous && !selected.has(concept.type)
       ? [`${concept.path}: authored concept requires unselected schema ${concept.type}`]
       : [];
-    return [...sourceFailure, ...selectionFailure, ...validateConceptAgainstSchema(concept)];
+    return [...sourceFailure, ...selectionFailure, ...validatePublishableAgentBaseDraft(concept),
+      ...validateConceptAgainstSchema(concept)];
   });
   if (failures.length) throw new Error(`Hub refresh failed schema validation: ${failures.join("; ")}`);
 }

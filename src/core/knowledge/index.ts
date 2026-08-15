@@ -25,6 +25,7 @@ export {
   renderConceptDocument,
   repositorySourceResources,
   validateAgentBaseDraft,
+  validatePublishableAgentBaseDraft,
   type ConceptDocument,
   type OkfFrontmatter,
   type OkfScalar,
