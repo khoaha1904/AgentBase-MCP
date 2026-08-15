@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "repository": "aws-serverless-shopping-cart",
   "concepts": [
     {
@@ -53,12 +53,22 @@
     }
   ],
   "relationships": [
-    { "from": "shopping-cart-system", "to": "shopping-cart-service", "kind": "composed-of" },
-    { "from": "shopping-cart-system", "to": "shopping-cart-api", "kind": "exposes" },
-    { "from": "shopping-cart-api", "to": "shopping-cart-service", "kind": "provided-by" },
-    { "from": "shopping-cart-infrastructure", "to": "dynamodb-shopping-cart-table", "kind": "declares" },
-    { "from": "shopping-cart-infrastructure", "to": "cart-delete-sqs-queue", "kind": "declares" },
-    { "from": "authenticated-cart-migration", "to": "shopping-cart-api", "kind": "step" },
-    { "from": "authenticated-cart-migration", "to": "cart-delete-sqs-queue", "kind": "step" }
+    { "from": "shopping-cart-service", "to": "shopping-cart-system", "kind": "part-of" },
+    { "from": "shopping-cart-api", "to": "shopping-cart-system", "kind": "part-of" },
+    { "from": "shopping-cart-infrastructure", "to": "shopping-cart-system", "kind": "part-of" },
+    { "from": "dynamodb-shopping-cart-table", "to": "shopping-cart-infrastructure", "kind": "declared-by" },
+    { "from": "cart-delete-sqs-queue", "to": "shopping-cart-infrastructure", "kind": "declared-by" },
+    { "from": "authenticated-cart-migration", "to": "shopping-cart-system", "kind": "part-of" }
+  ],
+  "conflicts": [
+    {
+      "key": "cart-retention-ttl",
+      "requiredTerms": ["1 day", "7 days", "30 days"],
+      "requiredSourcePaths": [
+        "README.md",
+        "backend/shopping-cart-service/add_to_cart.py",
+        "backend/shopping-cart-service/migrate_cart.py"
+      ]
+    }
   ]
 }

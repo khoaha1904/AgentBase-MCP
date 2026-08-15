@@ -121,6 +121,15 @@ benchmarks.
 - **AB-BENCH-038** — Offline qualification applies frontend, backend and
   infrastructure repository contributions sequentially to one canonical system
   graph and proves that earlier source evidence and identities survive.
+- **AB-BENCH-039** — Generated qualification covers ten domains and more than
+  one thousand concepts. Scoped search, ambiguity clarification, exact
+  traversal and changed-set validation operate without sending the full Hub to
+  an agent.
+- **AB-BENCH-040** — Sequential multi-repository qualification retains prior
+  evidence and bounded continuity. V8 real-run scoring treats canonical
+  evidenced relationships as integrity requirements and progressive navigation
+  plus source-conflict visibility as owner-review findings. Retrieval quality,
+  provenance and honest uncertainty are primary; token use remains diagnostic.
 
 ## Context A/B interpretation
 
@@ -304,3 +313,10 @@ Metadata, reference provenance and relationship coverage are 25%, 64% and 43%;
 these remain visible diagnostics, not evidence that missing knowledge is known.
 The run used 690,476 input tokens (623,616 cached), 8,998 output tokens and
 213,567 ms. No token-efficiency claim follows from this single MCP arm.
+
+Immutable V8 moves the suite to catalog 5.0.0. It validates only authored
+changes against explicit targets, requires one canonical evidenced direction
+per edge and structured ordered flow steps, and evaluates progressive
+Domain/System/Repository navigation. The Shopping Cart expectation also checks
+whether its source-level TTL disagreement is surfaced for owner review; absence
+is a review finding rather than a claim that the whole OKF draft is invalid.

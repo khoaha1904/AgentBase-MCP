@@ -54,7 +54,8 @@ is the portable archive.
 - Catalog 4.0.0 groups ordinary routes into API surfaces, keeps
   implementation-only handlers inside useful parents and distinguishes desired
   infrastructure, reusable modules and evidenced deployments.
-- The V5 benchmark quality model, with active V7 prompt guidance, separates
+- The benchmark quality model, with active V8 prompt guidance and catalog
+  5.0.0 relationship semantics, separates
   validity, owner-review usefulness, non-exhaustive coverage and token/time
   telemetry. Three-source offline qualification retains
   frontend, backend and infrastructure evidence in one canonical system graph.

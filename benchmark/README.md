@@ -58,17 +58,20 @@ AgentBase MCP configuration. `compare` reports existing semantic metrics,
 tokens and elapsed time side by side. Deltas are MCP minus direct; no overall
 winner is generated.
 
-Both v7 prompts share the V5 quality contract without receiving the
+Both v8 prompts share the same quality contract without receiving the
 hidden expectation. They author one canonical entity graph, group ordinary
 routes into API surfaces, keep implementation-only handlers inside useful
-parents and surface uncertainty as limitations. The MCP arm additionally uses
-graph tools, one batch-selected schema-guidance call and bounded whole-bundle
-validation; the direct arm investigates source without them. Prompt behavior
-is immutable: v1-v6 files and recorded results remain historical. V6 made the
+parents and surface uncertainty as limitations. V8 also requires canonical
+evidenced edge directions, ordered evidenced flow steps and progressive
+Domain/System/Repository navigation. The MCP arm additionally uses graph tools,
+one batch-selected schema-guidance call and changed-set validation; the direct
+arm investigates source without them. Prompt behavior is immutable: v1-v7
+files and recorded results remain historical. V6 made the
 exact root-index list grammar explicit after the first V5 real run exposed an
 otherwise-useful bundle using unsupported hyphen bullets. V7 additionally
 clarifies that implementation concepts do not replace an evidenced Business
-Flow and that every schema-recommended Limitations section must be present.
+Flow and that every schema-recommended Limitations section must be present. V8
+applies catalog 5.0 graph semantics and bounded re-ingest validation.
 
 Expectations do not prescribe prose or agent slugs. Bounded identity terms and
 evidence match concept instances; the scorer then evaluates concrete schema
@@ -88,7 +91,9 @@ human review and later enrichment.
 
 V5 separately reports `ownerReview.status` as `useful_for_owner_review` or
 `needs_revision`. This assessment catches duplicate identities, repository-tree
-copies, thin Markdown bodies and route/handler fragmentation. It does not turn
+copies, thin Markdown bodies and route/handler fragmentation. V8 additionally
+checks progressive navigation and whether curated source contradictions are
+visible with their evidence in a concept Limitations section. It does not turn
 reference coverage, concept count, token use or elapsed time into quality gates.
 Reference probe keys remain scorer-only and production Hub proposals reject
 benchmark-only metadata.

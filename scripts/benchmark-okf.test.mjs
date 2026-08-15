@@ -276,6 +276,109 @@ test("[AB-BENCH-021][AB-BENCH-023] declared relationships require targets and re
   assert.deepEqual(result.classifications.relationships.unjudged, ["primary-lambda|triggers|orders-table"]);
 });
 
+test("[AB-SCHEMA-019][AB-BENCH-040] v6 benchmark rejects new canonical edges without evidence", () => {
+  const service = concept("components/cart.md", "Service", "cart-service", {}, ["service.yaml"], [
+    { kind: "part-of", target: "cart-system" },
+  ], "The cart service belongs to the [shopping cart system](../systems/cart.md) and owns its runtime behavior.");
+  const system = concept("systems/cart.md", "System", "cart-system", {}, ["README.md"], [],
+    "# Purpose\n\nThe shopping cart system provides an evidenced customer cart capability across cooperating runtime units.\n\n# Limitations\n\nOwnership is not evidenced.");
+  const result = scoreSemanticBenchmark({ version: 6, concepts: [], relationships: [] }, {
+    concepts: new Map([[service.conceptId, service], [system.conceptId, system]]), warnings: [],
+  }, repositoryId);
+  assert.equal(result.authoringAssessment.status, "invalid");
+  assert.match(result.authoringAssessment.hardFailures.join("\n"), /evidence must be a non-empty source ID list/);
+});
+
+test("[AB-QUERY-005][AB-BENCH-039] v6 owner review catches an unbounded root concept link", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-progressive-navigation-"));
+  try {
+    fs.mkdirSync(path.join(root, "systems"), { recursive: true });
+    fs.mkdirSync(path.join(root, "components"), { recursive: true });
+    fs.writeFileSync(path.join(root, "index.md"), "---\nokf_version: '0.2'\n---\n\n# Knowledge\n\n* [Cart](systems/cart.md) - direct concept\n");
+    fs.writeFileSync(path.join(root, "systems", "cart.md"), `---
+type: System
+title: Shopping cart
+description: Customer shopping cart capability.
+status: draft
+generated: { by: agentbase/0.0.0, at: '2026-08-15T00:00:00Z' }
+sources:
+  - { id: readme, resource: 'repository://${repositoryId}/README.md#L1-L2' }
+relationships: []
+---
+
+# Purpose
+
+The system coordinates the [cart runtime](../components/cart.md) to provide customer shopping cart behavior.
+
+# Limitations
+
+Production ownership is not evidenced.
+`);
+    fs.writeFileSync(path.join(root, "components", "cart.md"), `---
+type: Service
+title: Cart runtime
+description: Implements shopping cart behavior.
+status: draft
+generated: { by: agentbase/0.0.0, at: '2026-08-15T00:00:00Z' }
+sources:
+  - { id: runtime, resource: 'repository://${repositoryId}/src/cart.py#L1-L2' }
+relationships: []
+---
+
+# Responsibility
+
+This runtime implements the cart operations and forms an independently deployable service boundary for the system.
+`);
+    const bundle = loadScorableBundle(root);
+    const result = scoreSemanticBenchmark({ version: 6, concepts: [], relationships: [] }, bundle, repositoryId);
+    assert.equal(result.authoringAssessment.status, "reviewable");
+    assert.equal(result.ownerReview.status, "needs_revision");
+    assert.match(result.ownerReview.findings.join("\n"), /root index links directly/);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test("[AB-BENCH-037][AB-BENCH-040] source conflicts are visible only with evidence in Limitations", () => {
+  const withConflict = parseConceptDocument("resources/cart-table.md", `---
+type: Database Table
+title: Cart table
+description: Stores shopping cart items and their expiration.
+status: draft
+generated: { by: agentbase/0.0.0, at: '2026-08-15T00:00:00Z' }
+sources:
+  - { id: readme, resource: 'repository://${repositoryId}/README.md#L36-L38' }
+  - { id: add, resource: 'repository://${repositoryId}/add_to_cart.py#L62-L104' }
+  - { id: migrate, resource: 'repository://${repositoryId}/migrate_cart.py#L27-L39' }
+relationships: []
+---
+
+# Purpose
+
+The table stores durable cart items and their expiration timestamp for anonymous and authenticated customers.
+
+# Limitations
+
+TTL behavior conflicts: documentation says 1 day and 7 days, while migration writes 30 days.
+`);
+  const conflicts = [{
+    key: "cart-ttl", requiredTerms: ["1 day", "7 days", "30 days"],
+    requiredSourcePaths: ["README.md", "add_to_cart.py", "migrate_cart.py"],
+  }];
+  const visible = scoreSemanticBenchmark({ version: 6, concepts: [], relationships: [], conflicts }, {
+    concepts: new Map([[withConflict.conceptId, withConflict]]), warnings: [],
+  }, repositoryId);
+  assert.equal(visible.conflictVisibilityPercent, 100);
+  assert.equal(visible.ownerReview.status, "useful_for_owner_review");
+
+  const hidden = concept("resources/cart-table.md", "Database Table", "cart-table", {}, ["README.md"], [],
+    "# Purpose\n\nThe table stores durable cart items and their expiration timestamp for customer shopping cart behavior.");
+  const missing = scoreSemanticBenchmark({ version: 6, concepts: [], relationships: [], conflicts }, {
+    concepts: new Map([[hidden.conceptId, hidden]]), warnings: [],
+  }, repositoryId);
+  assert.equal(missing.conflictVisibilityPercent, 0);
+  assert.equal(missing.ownerReview.status, "needs_revision");
+  assert.match(missing.ownerReview.findings.join("\n"), /cart-ttl/);
+});
+
 test("[AB-BENCH-026] linked relationships from an unknown Google OKF type stay unjudged", () => {
   const custom = concept("custom.md", "Custom Runtime", "custom-runtime", {}, ["custom.ts"], [
     { kind: "uses", target: "orders-table" },

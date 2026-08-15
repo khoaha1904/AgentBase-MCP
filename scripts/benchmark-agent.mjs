@@ -10,9 +10,10 @@ const projectRoot = path.resolve(import.meta.dirname, "..");
 const requiredTools = ["index_repository", "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept"];
 const v3RequiredTools = [...requiredTools, "validate_okf_relationships"];
 const v4RequiredTools = ["index_repository", "get_okf_authoring_schemas", "validate_okf_bundle"];
+const v8RequiredTools = ["index_repository", "get_okf_authoring_schemas", "validate_okf_changes"];
 const authoringTools = new Set([
   "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept", "validate_okf_relationships",
-  "get_okf_authoring_schemas", "validate_okf_bundle",
+  "get_okf_authoring_schemas", "validate_okf_bundle", "validate_okf_changes",
 ]);
 
 function writeJson(file, value) {
@@ -133,9 +134,11 @@ export function summarizeAgentEvents(events) {
 function toolUsage(completedTools, arm, promptVersion) {
   if (arm === "direct") return {};
   const completed = new Set(completedTools);
-  const required = ["okf-author-v4", "okf-author-v5", "okf-author-v6", "okf-author-v7"].includes(promptVersion)
-    ? v4RequiredTools
-    : promptVersion === "okf-author-v3" ? v3RequiredTools : requiredTools;
+  const required = promptVersion === "okf-author-v8"
+    ? v8RequiredTools
+    : ["okf-author-v4", "okf-author-v5", "okf-author-v6", "okf-author-v7"].includes(promptVersion)
+      ? v4RequiredTools
+      : promptVersion === "okf-author-v3" ? v3RequiredTools : requiredTools;
   return Object.fromEntries(required.map((tool) => [tool, completed.has(tool)]));
 }
 

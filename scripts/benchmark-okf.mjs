@@ -233,8 +233,8 @@ function usefulBody(concept) {
   return /^#{1,6}\s+\S/m.test(concept.body) && plain.length >= 80;
 }
 
-export function assessOwnerReviewUsefulness(concepts) {
-  const findings = [];
+export function assessOwnerReviewUsefulness(concepts, { navigationFindings = [], conflictFindings = [] } = {}) {
+  const findings = [...navigationFindings, ...conflictFindings];
   const titles = new Map();
   const values = [...concepts.values()];
   for (const concept of values) {
@@ -271,6 +271,67 @@ export function assessOwnerReviewUsefulness(concepts) {
   };
 }
 
+function markdownTargets(source, from) {
+  return [...source.matchAll(/(?<!!)\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)].flatMap((match) => {
+    const clean = match[1]?.split("#")[0]?.split("?")[0];
+    if (!clean || /^[a-z][a-z0-9+.-]*:/i.test(clean)) return [];
+    const resolved = clean.startsWith("/")
+      ? path.posix.normalize(clean.slice(1))
+      : path.posix.normalize(path.posix.join(path.posix.dirname(from), clean));
+    if (resolved === ".." || resolved.startsWith("../")) return [];
+    return [resolved.endsWith("/") ? `${resolved}index.md` : resolved];
+  });
+}
+
+function progressiveNavigationFindings(bundle) {
+  if (!bundle.root || !Array.isArray(bundle.files)) return [];
+  const findings = [];
+  const rootFile = path.join(bundle.root, "index.md");
+  if (!fs.existsSync(rootFile)) return ["root index is missing progressive entrypoints"];
+  const targets = markdownTargets(fs.readFileSync(rootFile, "utf8"), "index.md");
+  const allowed = new Set(["domains/index.md", "systems/index.md", "repositories/index.md"]);
+  if (!targets.length) findings.push("root index has no progressive Domain, System or Repository entrypoint");
+  if (targets.length > allowed.size) findings.push(`root index has ${targets.length} entries; navigation must stay bounded`);
+  for (const target of targets) {
+    if (!allowed.has(target)) findings.push(`root index links directly to ${target} instead of a bounded role index`);
+    if (!bundle.files.includes(target)) findings.push(`root index target does not exist: ${target}`);
+  }
+  const values = [...bundle.concepts.values()];
+  const conceptPaths = new Set(values.map((concept) => concept.path));
+  for (const concept of values.filter((item) => item.type === "System" || item.type === "Domain")) {
+    const linkedConcepts = markdownTargets(concept.body, concept.path).filter((target) => conceptPaths.has(target));
+    if (!linkedConcepts.length && values.length > 1) {
+      findings.push(`${concept.path}: ${concept.type} does not navigate to any canonical concept`);
+    }
+  }
+  return findings;
+}
+
+function limitationsBody(body) {
+  const match = body.match(/^#{1,6}\s+Limitations\s*$([\s\S]*?)(?=^#{1,6}\s+|$(?![\s\S]))/im);
+  return match?.[1]?.toLowerCase() ?? "";
+}
+
+function assessConflictVisibility(conflicts, concepts, repositoryId) {
+  if (!Array.isArray(conflicts) || !conflicts.length) return { visible: 0, required: 0, findings: [] };
+  let visible = 0;
+  const findings = [];
+  for (const conflict of conflicts) {
+    const requiredTerms = Array.isArray(conflict.requiredTerms)
+      ? conflict.requiredTerms.map((term) => String(term).toLowerCase()) : [];
+    const requiredPaths = Array.isArray(conflict.requiredSourcePaths) ? conflict.requiredSourcePaths : [];
+    const found = [...concepts.values()].some((concept) => {
+      const limitations = limitationsBody(concept.body);
+      const paths = sourcePaths(concept, repositoryId);
+      return requiredTerms.every((term) => limitations.includes(term))
+        && requiredPaths.every((required) => paths.includes(required));
+    });
+    if (found) visible += 1;
+    else findings.push(`${conflict.key}: source conflict is not visible with its evidence in a Limitations section`);
+  }
+  return { visible, required: conflicts.length, findings };
+}
+
 export function scoreSemanticBenchmark(expectation, bundle, repositoryId, repositoryRoot) {
   const failures = [...bundle.warnings];
   const actual = new Map();
@@ -283,7 +344,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
     else actual.set(key, concept);
   }
   const expected = new Map(expectation.concepts.map((item) => [item.key, item]));
-  const strictSemanticAnchors = expectation.version === 5;
+  const strictSemanticAnchors = expectation.version >= 5;
   const assignments = new Map();
   const usedActual = new Set();
   for (const item of expectation.concepts) {
@@ -342,7 +403,9 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
     const paths = sourcePaths(concept, repositoryId);
     evidencePresent += item.requiredSourcePaths.filter((required) => paths.includes(required)).length;
   }
-  const relationshipValidation = validateOkfRelationships([...actual].map(([identity, concept]) => ({ identity, concept })));
+  const relationshipInputs = [...actual].map(([identity, concept]) => ({ identity, concept }));
+  const relationshipValidation = validateOkfRelationships(relationshipInputs, expectation.version >= 6
+    ? { strictSourceIdentities: new Set(actual.keys()) } : {});
   const relationshipIntegrityFailures = relationshipValidation.failures;
   const actualRelationships = new Set(relationshipValidation.relationships.map((item) =>
     `${item.source}|${item.kind}|${item.target}`));
@@ -370,6 +433,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
   const percent = (part, total) => total ? Math.round((part / total) * 100) : 100;
   const contradictionFailures = contradictedConcepts.map((item) =>
     `Reference ${item.expected} matched ${item.actual} but expected schema ${item.expectedType}, found ${item.actualType}`);
+  const conflictVisibility = assessConflictVisibility(expectation.conflicts, bundle.concepts, repositoryId);
   const metrics = {
     expectedConcepts: expected.size,
     actualConcepts: actual.size,
@@ -379,6 +443,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
     metadataCompletenessPercent: percent(metadataPresent, metadataRequired),
     provenanceCoveragePercent: percent(evidencePresent, evidenceRequired),
     referenceRelationshipCoveragePercent: percent(confirmedRelationships.length, expectation.relationships.length),
+    conflictVisibilityPercent: percent(conflictVisibility.visible, conflictVisibility.required),
     classifications: {
       concepts: {
         confirmed: confirmedConcepts,
@@ -397,7 +462,10 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
   };
   return {
     ...metrics,
-    ownerReview: assessOwnerReviewUsefulness(bundle.concepts),
+    ownerReview: assessOwnerReviewUsefulness(bundle.concepts, {
+      navigationFindings: expectation.version >= 6 ? progressiveNavigationFindings(bundle) : [],
+      conflictFindings: conflictVisibility.findings,
+    }),
     authoringAssessment: createAuthoringAssessment({
       actualConcepts: actual.size,
       validationFailures: failures,
@@ -434,6 +502,7 @@ function reportFor(entry, run, metrics) {
     + `- Metadata completeness: ${metrics.metadataCompletenessPercent}%\n`
     + `- Provenance coverage: ${metrics.provenanceCoveragePercent}%\n`
     + `- Reference relationship coverage: ${metrics.referenceRelationshipCoveragePercent}%\n`
+    + `- Source-conflict visibility: ${metrics.conflictVisibilityPercent}%\n`
     + `- Unjudged concepts / relationships: ${metrics.classifications.concepts.unjudged.length} / ${metrics.classifications.relationships.unjudged.length}\n`
     + `- Missing reference concepts / relationships: ${metrics.classifications.concepts.missingReference.length} / ${metrics.classifications.relationships.missingReference.length}\n`
     + (metrics.authoringAssessment.hardFailures.length
@@ -456,6 +525,7 @@ function invalidMetrics(suite, repository, runId, error) {
     metadataCompletenessPercent: 0,
     provenanceCoveragePercent: 0,
     referenceRelationshipCoveragePercent: 0,
+    conflictVisibilityPercent: 0,
     classifications: {
       concepts: { confirmed: [], contradicted: [], unjudged: [], missingReference: [] },
       relationships: { confirmed: [], contradicted: [], unjudged: [], missingReference: [] },
@@ -590,7 +660,7 @@ function pairReportFor(comparison) {
   const quality = (arm) => {
     const metrics = comparison.quality[arm];
     return metrics
-      ? `- ${arm}: assessment ${metrics.authoringAssessment?.status ?? "invalid"}; owner review ${metrics.ownerReview?.status ?? "needs_revision"}; validation ${metrics.validation.passed ? "passed" : "failed"}; reference concepts ${metrics.referenceConceptCoveragePercent}%; recognized schemas ${metrics.recognizedSchemaAgreementPercent}%; metadata ${metrics.metadataCompletenessPercent}%; provenance ${metrics.provenanceCoveragePercent}%; reference relationships ${metrics.referenceRelationshipCoveragePercent}%; unjudged concepts/relationships ${metrics.classifications?.concepts.unjudged.length ?? 0}/${metrics.classifications?.relationships.unjudged.length ?? 0}`
+      ? `- ${arm}: assessment ${metrics.authoringAssessment?.status ?? "invalid"}; owner review ${metrics.ownerReview?.status ?? "needs_revision"}; validation ${metrics.validation.passed ? "passed" : "failed"}; reference concepts ${metrics.referenceConceptCoveragePercent}%; recognized schemas ${metrics.recognizedSchemaAgreementPercent}%; metadata ${metrics.metadataCompletenessPercent}%; provenance ${metrics.provenanceCoveragePercent}%; reference relationships ${metrics.referenceRelationshipCoveragePercent}%; source conflicts ${metrics.conflictVisibilityPercent ?? "n/a"}%; unjudged concepts/relationships ${metrics.classifications?.concepts.unjudged.length ?? 0}/${metrics.classifications?.relationships.unjudged.length ?? 0}`
       : `- ${arm}: unavailable`;
   };
   const efficiency = (arm) => {
