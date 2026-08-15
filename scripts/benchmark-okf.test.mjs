@@ -337,6 +337,73 @@ This runtime implements the cart operations and forms an independently deployabl
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
+test("[AB-SCHEMA-024][AB-LOCAL-HUB-015][AB-BENCH-041] v7 scores confirmed Domain navigation and root identity", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-confirmed-domain-"));
+  try {
+    fs.mkdirSync(path.join(root, "domains"));
+    fs.mkdirSync(path.join(root, "systems"));
+    fs.writeFileSync(path.join(root, "index.md"), "---\nokf_version: '0.2'\n---\n\n# AgentBase-Hub\n\n* [Domains](domains/index.md) - domains\n* [Systems](systems/index.md) - systems\n");
+    fs.writeFileSync(path.join(root, "domains/index.md"), "# Domains\n\n* [Commerce](commerce.md) - commerce\n");
+    fs.writeFileSync(path.join(root, "systems/index.md"), "# Systems\n\n* [Cart](cart.md) - cart\n");
+    fs.writeFileSync(path.join(root, "domains/commerce.md"), `---
+type: Domain
+title: Commerce
+description: Owner-confirmed commerce domain.
+status: draft
+generated: { by: agentbase/5.0.0, at: '2026-08-16T00:00:00Z' }
+sources:
+  - { id: owner-domain, resource: 'agentbase://owner-guidance/domains/commerce' }
+  - { id: readme, resource: 'repository://${repositoryId}/README.md#L1-L2' }
+relationships: []
+---
+
+# Purpose
+
+Commerce contains the [Shopping Cart](../systems/cart.md) customer capability and provides its business navigation boundary.
+
+# Limitations
+
+Domain ownership beyond the explicit maintainer guidance is not evidenced.
+`);
+    fs.writeFileSync(path.join(root, "systems/cart.md"), `---
+type: System
+title: Shopping Cart
+description: Shopping cart customer capability.
+status: draft
+generated: { by: agentbase/5.0.0, at: '2026-08-16T00:00:00Z' }
+sources:
+  - { id: owner-domain, resource: 'agentbase://owner-guidance/domains/commerce' }
+  - { id: readme, resource: 'repository://${repositoryId}/README.md#L1-L2' }
+relationships:
+  - kind: part-of
+    target: domains/commerce
+    evidence: [owner-domain]
+---
+
+# Purpose
+
+The Shopping Cart belongs to [Commerce](../domains/commerce.md) and delivers the customer cart capability described by the repository.
+
+# Limitations
+
+Production ownership is not evidenced.
+`);
+    const result = scoreSemanticBenchmark({
+      version: 7,
+      confirmedDomain: { identity: "domains/commerce", title: "Commerce", rootHeading: "AgentBase-Hub" },
+      concepts: [], relationships: [],
+    }, loadScorableBundle(root), repositoryId);
+    assert.equal(result.ownerReview.status, "useful_for_owner_review");
+    fs.writeFileSync(path.join(root, "index.md"), fs.readFileSync(path.join(root, "index.md"), "utf8").replace("AgentBase-Hub", "Shopping Cart"));
+    const renamed = scoreSemanticBenchmark({
+      version: 7,
+      confirmedDomain: { identity: "domains/commerce", title: "Commerce", rootHeading: "AgentBase-Hub" },
+      concepts: [], relationships: [],
+    }, loadScorableBundle(root), repositoryId);
+    assert.match(renamed.ownerReview.findings.join("\n"), /root heading/);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
 test("[AB-BENCH-037][AB-BENCH-040] source conflicts are visible only with evidence in Limitations", () => {
   const withConflict = parseConceptDocument("resources/cart-table.md", `---
 type: Database Table

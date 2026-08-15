@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import type { AnyHubProposal, HubIdentity } from "../../core/hub/index.ts";
+import { normalizeConfirmedDomain, type ConfirmedDomain } from "../../core/knowledge/index.ts";
 import { inspectHubProposal, type HubLifecycleEntry, type HubProposalInspection } from "./inspect.ts";
 import { prepareNewHubProposal } from "./prepare.ts";
 import { prepareRefreshHubProposal, type HubSupersession } from "./refresh.ts";
@@ -17,6 +18,7 @@ export type HubAuthoringSession = Readonly<{
   sourceRepositoryId: string;
   evidenceDigest: string;
   subjectDirectory: string;
+  confirmedDomain?: ConfirmedDomain;
   signals: readonly string[];
   selectedSchemas: readonly string[];
   root: string;
@@ -37,6 +39,7 @@ export type BeginHubAuthoringOptions = Readonly<{
   sourceRepositoryId: string;
   evidenceDigest: string;
   subjectDirectory: string;
+  confirmedDomain?: ConfirmedDomain;
   signals: readonly string[];
   selectedSchemas: readonly string[];
   createdAt: string;
@@ -66,7 +69,8 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
   const authority = options.hub?.repository ?? options.localHubId;
   if (!authority || (!options.hub && !/^[a-f0-9]{24}$/.test(options.localHubId ?? ""))) throw new Error("Hub authoring authority is invalid");
   const seed = [options.mode, authority, options.baseCommit, options.sourceRepositoryId,
-    options.evidenceDigest, options.subjectDirectory].join("\0");
+    options.evidenceDigest, options.subjectDirectory, options.confirmedDomain?.identity ?? "",
+    options.confirmedDomain?.title ?? ""].join("\0");
   const id = `hub-session-${createHash("sha256").update(seed).digest("hex").slice(0, 24)}`;
   const root = path.join(path.resolve(options.stateRoot), "sessions", id);
   if (fs.existsSync(root)) throw new Error("matching Hub authoring session already exists");
@@ -83,6 +87,7 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
     sourceRepositoryId: options.sourceRepositoryId,
     evidenceDigest: options.evidenceDigest,
     subjectDirectory: options.subjectDirectory,
+    ...(options.confirmedDomain ? { confirmedDomain: options.confirmedDomain } : {}),
     signals: [...options.signals],
     selectedSchemas: [...options.selectedSchemas],
     root,
@@ -106,12 +111,15 @@ export function readHubAuthoringSession(
   const value = JSON.parse(fs.readFileSync(path.join(root, "session.json"), "utf8")) as HubAuthoringSession;
   const checkoutRoot = path.resolve(value.checkoutRoot);
   const expected = path.resolve(expectedCheckoutRoot);
+  const confirmedDomain = value.confirmedDomain
+    ? normalizeConfirmedDomain({ identity: value.confirmedDomain.identity, title: value.confirmedDomain.title }) : undefined;
   if (value.formatVersion !== 1 || value.id !== sessionId || path.resolve(value.root) !== root
     || path.resolve(value.baseRoot) !== path.join(root, "base")
     || path.resolve(value.bundleRoot) !== path.join(root, "bundle")
     || !path.isAbsolute(value.checkoutRoot) || checkoutRoot !== expected
     || !fs.existsSync(checkoutRoot) || fs.lstatSync(checkoutRoot).isSymbolicLink()
     || !fs.statSync(checkoutRoot).isDirectory()
+    || (confirmedDomain && confirmedDomain.evidenceResource !== value.confirmedDomain?.evidenceResource)
     || (!value.hub && !/^[a-f0-9]{24}$/.test(value.localHubId ?? ""))) {
     throw new Error("Hub authoring session state is invalid");
   }
@@ -136,6 +144,7 @@ export function finalizeHubAuthoringSession(
     subjectDirectory: session.subjectDirectory,
     evidenceDigest: session.evidenceDigest,
     signals: session.signals,
+    ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),
     createdAt: session.createdAt,
   };
   let finalized: Readonly<{

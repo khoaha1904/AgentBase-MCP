@@ -16,10 +16,12 @@ import {
   repositorySourceResources,
   selectOkfConceptSchemas,
   validateConceptAgainstSchema,
+  assertConfirmedDomainAssignment,
   validatePublishableAgentBaseDraft,
   validateOkfRelationships,
   validateBundleProposal,
   type ConceptDocument,
+  type ConfirmedDomain,
 } from "../../core/knowledge/index.ts";
 import { inspectHubProposal, type HubLifecycleEntry, type HubProposalInspection } from "./inspect.ts";
 import { writeHubProposalState } from "./proposal-state.ts";
@@ -32,6 +34,7 @@ export type PrepareRefreshHubOptions = Readonly<{
   authoredBundleRoot: string;
   proposalRoot: string;
   subjectDirectory: string;
+  confirmedDomain?: ConfirmedDomain;
   evidenceDigest: string;
   signals: readonly string[];
   supersessions?: readonly HubSupersession[];
@@ -248,36 +251,29 @@ export function prepareRefreshHubProposal(
   const seed = `${options.baseCommit}\0${options.evidenceDigest}\0${options.subjectDirectory}\0refresh`;
   const proposalId = `proposal-${createHash("sha256").update(seed).digest("hex").slice(0, 24)}`;
   const removal = subjectRemovalEntries(options, options.authoredBundleRoot);
-  prepareBundleProposal({
-    currentBundleRoot: options.hubBundleRoot,
-    proposalRoot: options.proposalRoot,
-    proposalId,
-    evidenceDigest: options.evidenceDigest,
-    createdAt: options.createdAt,
-  });
+  prepareBundleProposal({ currentBundleRoot: options.hubBundleRoot, proposalRoot: options.proposalRoot,
+    proposalId, evidenceDigest: options.evidenceDigest, createdAt: options.createdAt });
   const bundleRoot = path.join(options.proposalRoot, "bundle");
   copyAuthored(options.authoredBundleRoot, bundleRoot);
   const conflicts = protectBase(options, bundleRoot, removal);
   let validation = validateBundleProposal(options.hubBundleRoot, options.proposalRoot);
-  const unknownConflicts = restoreUnknownFieldConflicts(
-    options,
-    bundleRoot,
-    validation.producerValidation?.failures ?? [],
-  );
+  const unknownConflicts = restoreUnknownFieldConflicts(options, bundleRoot,
+    validation.producerValidation?.failures ?? []);
   if (unknownConflicts.length) validation = validateBundleProposal(options.hubBundleRoot, options.proposalRoot);
   if (!validation.producerValidation?.passed) {
     throw new Error(`Hub refresh failed validation: ${validation.producerValidation?.failures.join("; ")}`);
   }
   validateChangedSchemas(options, bundleRoot);
+  assertConfirmedDomainAssignment(
+    loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true }).concepts,
+    loadOkfBundle(options.hubBundleRoot).concepts, options.confirmedDomain, options.sourceRepositoryId,
+  );
   const diff = diffBundleProposal(options.hubBundleRoot, options.proposalRoot);
   const lifecycle = classifyLifecycle(
     diff.entries,
     [...conflicts, ...unknownConflicts, ...(removal ?? []), ...supersessionEntries(options, bundleRoot)],
   );
-  const inspection = inspectHubProposal(lifecycle, {
-    baseRoot: options.hubBundleRoot,
-    proposedRoot: bundleRoot,
-  });
+  const inspection = inspectHubProposal(lifecycle, { baseRoot: options.hubBundleRoot, proposedRoot: bundleRoot });
   const digestHex = createHash("sha256").update(JSON.stringify(inspection.entries)).digest("hex");
   const diffDigest = `sha256:${digestHex}`;
   const common = {

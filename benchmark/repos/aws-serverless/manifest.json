@@ -1,9 +1,9 @@
 {
   "suite": "aws-serverless",
-  "version": 9,
+  "version": 10,
   "catalogVersion": "5.0.0",
-  "promptVersion": "okf-author-v9",
-  "directPromptVersion": "okf-author-direct-v9",
+  "promptVersion": "okf-author-v10",
+  "directPromptVersion": "okf-author-direct-v10",
   "agent": {
     "provider": "codex-cli",
     "executable": "codex",
@@ -18,6 +18,7 @@
       "kind": "terraform-serverless",
       "path": "../fixtures/source-repos/aws-health-polyrepo/aws-health-aware",
       "commit": "928494c70a904a65b877d426516882397541eafd",
+      "confirmedDomain": null,
       "expectation": "expected/aws-health-aware.json"
     },
     {
@@ -25,6 +26,11 @@
       "kind": "sam-backend-vue-frontend",
       "path": "../fixtures/source-repos/multiservice-feasibility/aws-serverless-shopping-cart",
       "commit": "66a863f1b7a2a7f319adddce6a55e090ce9f6734",
+      "confirmedDomain": {
+        "identity": "domains/commerce",
+        "title": "Commerce",
+        "evidenceResource": "agentbase://owner-guidance/domains/commerce"
+      },
       "expectation": "expected/aws-serverless-shopping-cart.json"
     }
   ]

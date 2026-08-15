@@ -26,13 +26,24 @@ test("[AB-HUB-SETUP-001..003][AB-HUB-SETUP-006] runtime defers Hub setup and rel
     assert.equal(status.pendingCount, 0);
     assert.equal(status.localRoot, configured.localRoot);
     const prepared = await actions.prepare({ mode: "new", sourceRepository: sourceRoot,
-      evidenceDigest: `sha256:${"b".repeat(64)}`, subjectDirectory: "repositories/acme", signals: ["repository"] }) as {
+      evidenceDigest: `sha256:${"b".repeat(64)}`, subjectDirectory: "repositories/acme", signals: ["repository"],
+      confirmedDomain: {
+        identity: "domains/commerce", title: "Commerce",
+        evidenceResource: "agentbase://owner-guidance/domains/commerce",
+      } }) as {
       baseCommit: string;
+      selectedSchemas: string[];
+      confirmedDomain: { identity: string; title: string; evidenceResource: string };
       continuity: { commit: string; currentSource: unknown[]; neighbors: unknown[]; navigationPaths: string[] };
     };
     assert.equal(prepared.continuity.commit, prepared.baseCommit);
     assert.deepEqual(prepared.continuity.currentSource, []);
     assert.deepEqual(prepared.continuity.neighbors, []);
     assert.deepEqual(prepared.continuity.navigationPaths, ["index.md"]);
+    assert.ok(prepared.selectedSchemas.includes("Domain"));
+    assert.deepEqual(prepared.confirmedDomain, {
+      identity: "domains/commerce", title: "Commerce",
+      evidenceResource: "agentbase://owner-guidance/domains/commerce",
+    });
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });

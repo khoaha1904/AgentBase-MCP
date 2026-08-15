@@ -50,6 +50,10 @@ queries and ordinary coding never create Hub state, commits or publication.
   neighbors and relevant navigation paths with explicit omitted counts. The
   complete checkout remains lifecycle state and is not serialized as authoring
   context.
+- **AB-LOCAL-HUB-015** — A new repository proposal may append navigation to an
+  existing root or category `index.md`, but every accepted nonblank line remains
+  byte-exact and ordered. Renaming the Hub/category heading, deleting, replacing
+  or reordering existing navigation fails before proposal acceptance.
 - **AB-QUERY-001** — Code questions primarily use Code Graph; business/system/
   cross-repository questions primarily use local Hub; combined answers retain
   both source kinds and limitations.

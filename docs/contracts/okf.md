@@ -152,3 +152,9 @@ Normative OKF source is pinned to commit
   relative to the OKF root with `.md` removed. Changed concepts and unchanged
   target summaries MUST use that identity, and validation rejects ephemeral
   type-prefixed aliases or paths beginning with the outer `okf/` directory.
+- **AB-SCHEMA-024** — Hub prepare accepts at most one optional owner-confirmed
+  Domain with exact `domains/<slug>` identity and title. It validates before
+  session creation, selects Domain guidance and returns deterministic
+  `agentbase://owner-guidance/<identity>` evidence. Finalization requires the
+  Domain plus a current-source System `part-of` edge citing that owner evidence;
+  absent input never authorizes Domain inference.

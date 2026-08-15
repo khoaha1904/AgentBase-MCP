@@ -283,18 +283,33 @@ function markdownTargets(source, from) {
   });
 }
 
-function progressiveNavigationFindings(bundle) {
+function progressiveNavigationFindings(bundle, expectation) {
   if (!bundle.root || !Array.isArray(bundle.files)) return [];
   const findings = [];
   const rootFile = path.join(bundle.root, "index.md");
   if (!fs.existsSync(rootFile)) return ["root index is missing progressive entrypoints"];
-  const targets = markdownTargets(fs.readFileSync(rootFile, "utf8"), "index.md");
+  const rootSource = fs.readFileSync(rootFile, "utf8");
+  const targets = markdownTargets(rootSource, "index.md");
   const allowed = new Set(["domains/index.md", "systems/index.md", "repositories/index.md"]);
   if (!targets.length) findings.push("root index has no progressive Domain, System or Repository entrypoint");
   if (targets.length > allowed.size) findings.push(`root index has ${targets.length} entries; navigation must stay bounded`);
   for (const target of targets) {
     if (!allowed.has(target)) findings.push(`root index links directly to ${target} instead of a bounded role index`);
     if (!bundle.files.includes(target)) findings.push(`root index target does not exist: ${target}`);
+  }
+  const confirmedDomain = expectation.confirmedDomain;
+  if (confirmedDomain) {
+    const heading = rootSource.match(/^#\s+(.+)$/m)?.[1]?.trim();
+    if (heading !== confirmedDomain.rootHeading) findings.push(`root heading must remain ${confirmedDomain.rootHeading}`);
+    if (!targets.includes("domains/index.md")) findings.push("confirmed Domain is not reachable from root domains/index.md");
+    const domain = bundle.concepts.get(confirmedDomain.identity);
+    if (!domain || domain.type !== "Domain" || domain.frontmatter.title !== confirmedDomain.title) {
+      findings.push(`confirmed Domain is missing or mismatched: ${confirmedDomain.identity}`);
+    } else {
+      const linkedSystems = markdownTargets(domain.body, domain.path).some((target) =>
+        [...bundle.concepts.values()].some((concept) => concept.path === target && concept.type === "System"));
+      if (!linkedSystems) findings.push(`${domain.path}: confirmed Domain does not navigate to a System`);
+    }
   }
   const values = [...bundle.concepts.values()];
   const conceptPaths = new Set(values.map((concept) => concept.path));
@@ -463,7 +478,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
   return {
     ...metrics,
     ownerReview: assessOwnerReviewUsefulness(bundle.concepts, {
-      navigationFindings: expectation.version >= 6 ? progressiveNavigationFindings(bundle) : [],
+      navigationFindings: expectation.version >= 6 ? progressiveNavigationFindings(bundle, expectation) : [],
       conflictFindings: conflictVisibility.findings,
     }),
     authoringAssessment: createAuthoringAssessment({

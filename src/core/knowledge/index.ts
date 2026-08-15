@@ -1,6 +1,13 @@
 export const OKF_VERSION = "0.2" as const;
 export const OKF_SHARED_DIRECTORY = "okf" as const;
 export {
+  assertConfirmedDomainAssignment,
+  normalizeConfirmedDomain,
+  validateConfirmedDomainAssignment,
+  type ConfirmedDomain,
+  type ConfirmedDomainInput,
+} from "./confirmed-domain.ts";
+export {
   normalizeHubConceptPath,
   readHubConcept,
   searchHubConcepts,

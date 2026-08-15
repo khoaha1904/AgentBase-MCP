@@ -124,3 +124,39 @@ test("[AB-BENCH-037] new production proposals reject benchmark-only metadata", (
     }), /benchmark_key/);
   } finally { current.cleanup(); }
 });
+
+test("[AB-LOCAL-HUB-015] new proposal preserves existing index identity while adding navigation", () => {
+  const current = fixture();
+  try {
+    const root = "---\nokf_version: '0.2'\n---\n\n# AgentBase-Hub\n\n* [Systems](systems/index.md) - systems\n";
+    fs.writeFileSync(path.join(current.base, "index.md"), root);
+    fs.writeFileSync(path.join(current.authored, "index.md"), `${root}\n* [Repositories](repositories/index.md) - repositories\n`);
+    const result = prepareNewHubProposal({
+      hub: createHubIdentity("agentbase/hub", "main"), baseCommit: BASE_COMMIT, sourceRepositoryId: SOURCE_ID,
+      hubBundleRoot: current.base, authoredBundleRoot: current.authored,
+      proposalRoot: current.proposal, subjectDirectory: "repositories/acme",
+      evidenceDigest: EVIDENCE, signals: ["repository"], createdAt: "2026-08-12T00:00:00Z",
+    });
+    assert.equal(result.diff.entries.find((entry) => entry.path === "index.md")?.change, "modified");
+  } finally { current.cleanup(); }
+});
+
+test("[AB-LOCAL-HUB-015] new proposal cannot rename or reorder a shared index", () => {
+  for (const authoredRoot of [
+    "---\nokf_version: '0.2'\n---\n\n# Shopping Cart\n\n* [Systems](systems/index.md) - systems\n* [Repositories](repositories/index.md) - repositories\n",
+    "---\nokf_version: '0.2'\n---\n\n# AgentBase-Hub\n\n* [Repositories](repositories/index.md) - repositories\n* [Systems](systems/index.md) - systems\n",
+  ]) {
+    const current = fixture();
+    try {
+      fs.writeFileSync(path.join(current.base, "index.md"),
+        "---\nokf_version: '0.2'\n---\n\n# AgentBase-Hub\n\n* [Systems](systems/index.md) - systems\n* [Repositories](repositories/index.md) - repositories\n");
+      fs.writeFileSync(path.join(current.authored, "index.md"), authoredRoot);
+      assert.throws(() => prepareNewHubProposal({
+        hub: createHubIdentity("agentbase/hub", "main"), baseCommit: BASE_COMMIT, sourceRepositoryId: SOURCE_ID,
+        hubBundleRoot: current.base, authoredBundleRoot: current.authored,
+        proposalRoot: current.proposal, subjectDirectory: "repositories/acme",
+        evidenceDigest: EVIDENCE, signals: ["repository"], createdAt: "2026-08-12T00:00:00Z",
+      }), /existing index lines/);
+    } finally { current.cleanup(); }
+  }
+});

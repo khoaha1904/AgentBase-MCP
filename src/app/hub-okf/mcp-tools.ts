@@ -1,6 +1,7 @@
 import type { CallToolResult } from "@modelcontextprotocol/server";
 import { HUB_PROPOSAL_SUBJECT_PATTERN } from "../../core/hub/index.ts";
-import type { HubSearchOptions, HubTraversalOptions } from "../../core/knowledge/index.ts";
+import { normalizeConfirmedDomain, type ConfirmedDomain,
+  type HubSearchOptions, type HubTraversalOptions } from "../../core/knowledge/index.ts";
 import type { BootstrapMode } from "./bootstrap.ts";
 import { HUB_OKF_QUERY_TOOLS } from "./mcp-query-tools.ts";
 
@@ -59,6 +60,15 @@ export const HUB_OKF_TOOLS = [
           type: "string",
           pattern: HUB_PROPOSAL_SUBJECT_PATTERN.source,
           description: "Logical proposal focus; source repository identity and changed concept paths remain independent.",
+        },
+        confirmed_domain: {
+          type: "object",
+          description: "Optional owner-confirmed business Domain; never inferred from the repository name.",
+          properties: {
+            identity: { type: "string", pattern: "^domains/[a-z0-9]+(?:-[a-z0-9]+)*$" },
+            title: { type: "string", minLength: 1, maxLength: 120 },
+          },
+          required: ["identity", "title"], additionalProperties: false,
         },
         signals: { type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: 64 },
       },
@@ -151,6 +161,7 @@ export type HubToolActions = Readonly<{
     sourceRepository: string;
     evidenceDigest: string;
     subjectDirectory: string;
+    confirmedDomain?: ConfirmedDomain;
     signals: readonly string[];
   }>): Promise<unknown>;
   finalize(sessionId: string): Promise<unknown>;
@@ -213,11 +224,14 @@ export async function callHubOkfTool(
     if (name === "prepare_hub_okf") {
       const mode = required(args, "mode");
       if (mode !== "new" && mode !== "refresh") throw new Error("mode must be new or refresh");
+      const confirmedDomain = args.confirmed_domain === undefined
+        ? undefined : normalizeConfirmedDomain(args.confirmed_domain);
       return result(await actions.prepare({
         mode,
         sourceRepository: required(args, "source_repository"),
         evidenceDigest: required(args, "evidence_digest"),
         subjectDirectory: required(args, "subject_directory"),
+        ...(confirmedDomain ? { confirmedDomain } : {}),
         signals: Array.isArray(args.signals) && args.signals.every((signal) => typeof signal === "string")
           ? args.signals as string[]
           : (() => { throw new Error("signals must be a string list"); })(),

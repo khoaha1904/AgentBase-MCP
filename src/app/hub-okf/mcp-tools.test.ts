@@ -9,7 +9,10 @@ function actions(events: string[]): HubToolActions {
     async configure(input) { events.push(`configure:${input.mode}`); return input; },
     async previewBootstrap(url, mode) { events.push(`preview:${url}:${mode}`); return { mode }; },
     async bootstrap(url, mode) { events.push(`bootstrap:${url}:${mode}`); return { mode }; },
-    async prepare(input) { events.push(`prepare:${input.mode}:${input.sourceRepository}`); return { id: "p1" }; },
+    async prepare(input) {
+      events.push(`prepare:${input.mode}:${input.sourceRepository}:${input.confirmedDomain?.identity ?? "none"}`);
+      return { id: "p1" };
+    },
     async finalize(id) { events.push(`finalize:${id}`); return { id: "p1" }; },
     async inspect(id) { events.push(`inspect:${id}`); return { id }; },
     async accept(id, digest) { events.push(`accept:${id}:${digest}`); return { id }; },
@@ -40,13 +43,26 @@ test("[AB-LOCAL-HUB-002][AB-LOCAL-HUB-006] MCP routes explicit prepare and batch
     mode: "new", source_repository: "/source",
     evidence_digest: `sha256:${"a".repeat(64)}`,
     subject_directory: "repositories/acme", signals: ["repository"],
+    confirmed_domain: { identity: "domains/commerce", title: "Commerce" },
   }, current);
   const submitted = await callHubOkfTool("submit_hub_okf_proposals", {
     proposal_ids: ["p1", "p2"],
   }, current);
   assert.equal(prepared.isError, undefined);
   assert.equal(submitted.isError, undefined);
-  assert.deepEqual(events, ["prepare:new:/source", "submit:p1,p2"]);
+  assert.deepEqual(events, ["prepare:new:/source:domains/commerce", "submit:p1,p2"]);
+});
+
+test("[AB-SCHEMA-024] MCP rejects malformed confirmed Domain input before prepare", async () => {
+  const events: string[] = [];
+  const result = await callHubOkfTool("prepare_hub_okf", {
+    mode: "new", source_repository: "/source",
+    evidence_digest: `sha256:${"a".repeat(64)}`,
+    subject_directory: "repositories/acme", signals: ["repository"],
+    confirmed_domain: { identity: "commerce", title: "Commerce" },
+  }, actions(events));
+  assert.equal(result.isError, true);
+  assert.deepEqual(events, []);
 });
 
 test("[AB-HUB-SETUP-002][AB-HUB-SETUP-003][AB-HUB-SETUP-010] MCP routes explicit setup and bootstrap choices", async () => {

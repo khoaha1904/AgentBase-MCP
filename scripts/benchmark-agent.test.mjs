@@ -161,6 +161,20 @@ test("[AB-SCHEMA-023][AB-BENCH-039][AB-BENCH-040] v9 persists path identities an
   assert.equal(fs.existsSync(path.join(prompts, "okf-author-v8.md")), true);
 });
 
+test("[AB-SCHEMA-024][AB-LOCAL-HUB-015][AB-BENCH-041] v10 carries confirmed Domain and shared-root rules", () => {
+  const prompts = path.resolve(import.meta.dirname, "..", "benchmark", "prompts");
+  const mcp = fs.readFileSync(path.join(prompts, "okf-author-v10.md"), "utf8");
+  const direct = fs.readFileSync(path.join(prompts, "okf-author-direct-v10.md"), "utf8");
+  const shared = (value) => value.split("## Shared authoring contract\n")[1]?.split("## Arm-specific workflow\n")[0];
+  assert.equal(shared(mcp), shared(direct));
+  for (const rule of ["{{CONFIRMED_DOMAIN}}", "owner-guidance", "AgentBase-Hub", "part-of"]) {
+    assert.ok(shared(mcp).includes(rule), rule);
+  }
+  assert.ok(mcp.indexOf("Before requesting schemas") < mcp.indexOf("call `get_okf_authoring_schemas` once"));
+  assert.equal(fs.existsSync(path.join(prompts, "okf-author-v9.md")), true);
+  assert.equal(fs.existsSync(path.join(prompts, "okf-author-direct-v9.md")), true);
+});
+
 test("[AB-BENCH-001][AB-BENCH-007] prompt rendering is exact and rejects missing inputs", () => {
   assert.equal(renderAgentPrompt("{{A}}/{{B}}", { A: "one", B: "two" }), "one/two");
   assert.throws(() => renderAgentPrompt("{{MISSING}}", {}), /prompt value is missing/);

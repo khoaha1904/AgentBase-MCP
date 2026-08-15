@@ -1,7 +1,19 @@
 {
-  "version": 6,
+  "version": 7,
   "repository": "aws-serverless-shopping-cart",
+  "confirmedDomain": {
+    "identity": "domains/commerce",
+    "title": "Commerce",
+    "rootHeading": "AgentBase-Hub"
+  },
   "concepts": [
+    {
+      "key": "commerce-domain",
+      "identityTerms": ["commerce"],
+      "type": "Domain",
+      "requiredMetadata": [],
+      "requiredSourcePaths": []
+    },
     {
       "key": "shopping-cart-system",
       "identityTerms": ["shopping", "cart"],
@@ -53,6 +65,7 @@
     }
   ],
   "relationships": [
+    { "from": "shopping-cart-system", "to": "commerce-domain", "kind": "part-of" },
     { "from": "shopping-cart-service", "to": "shopping-cart-system", "kind": "part-of" },
     { "from": "shopping-cart-api", "to": "shopping-cart-system", "kind": "part-of" },
     { "from": "shopping-cart-infrastructure", "to": "shopping-cart-system", "kind": "part-of" },

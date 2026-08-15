@@ -12,6 +12,10 @@ repository as read-only.
 ## Workflow
 
 1. Read the proposal metadata and bounded repository evidence before authoring.
+   When prepare returns `confirmedDomain`, treat its exact identity/title as
+   owner guidance: create or reuse that Domain and use the returned
+   `evidenceResource` for Domain membership rather than attributing the business
+   boundary to repository code.
 2. Read prior concept bodies only at the exact `currentSource`, `subject`,
    `neighbors` and `navigationPaths` named by the prepare result's continuity
    manifest. The full copied Hub is lifecycle state, not authoring context.
@@ -26,7 +30,10 @@ repository as read-only.
    concept merely because it is concrete.
 5. Keep navigation progressive. The root `index.md` carries `okf_version:
    "0.2"` and links only existing Domain, System and Repository entrypoint
-   indexes. Consume an existing valid `log.md`; do not generate one.
+   indexes. Preserve every existing nonblank root/category index line exactly
+   and in order; repository authoring may append navigation but must never
+   rename the Hub heading or restyle earlier entries. Consume an existing valid
+   `log.md`; do not generate one.
 6. Validate created/modified concepts with `validate_okf_changes`, supplying
    only their full Markdown plus unchanged target summaries from continuity or
    exact search/traversal. For every supplied concept or target, `identity` is
@@ -89,6 +96,10 @@ For every new or modified AgentBase concept:
 
 - Create a Domain only from explicit business-boundary evidence or owner
   guidance; never infer one from a repository or product name.
+- For a prepare-confirmed Domain, add its returned owner-guidance resource to
+  `sources`, and make each System `part-of` relationship cite the matching
+  source ID. Repository resources still support code/system claims; they do not
+  become evidence for the maintainer's business classification.
 - Create a System when cooperating entities deliver one recognizable
   capability. A library or reusable module need not belong to a known system.
 - Keep repository-specific purpose, source structure, build, test and entry

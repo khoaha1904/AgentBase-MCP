@@ -86,7 +86,8 @@ export function createHubRuntimeActions(
       const configuration = configured();
       const localHub = await admit();
       const continuity = await buildActiveHubContinuity(localHub, source.repositoryId, input.subjectDirectory);
-      const selectedSchemas = selectOkfConceptSchemas(input.signals).map((item) => item.type);
+      const signals = input.confirmedDomain ? [...input.signals, "business domain"] : input.signals;
+      const selectedSchemas = selectOkfConceptSchemas(signals).map((item) => item.type);
       const session = beginHubAuthoringSession({
         stateRoot,
         mode: input.mode,
@@ -96,7 +97,8 @@ export function createHubRuntimeActions(
         sourceRepositoryId: source.repositoryId,
         evidenceDigest: input.evidenceDigest,
         subjectDirectory: input.subjectDirectory,
-        signals: input.signals,
+        ...(input.confirmedDomain ? { confirmedDomain: input.confirmedDomain } : {}),
+        signals,
         selectedSchemas,
         createdAt: new Date().toISOString(),
       });
@@ -106,6 +108,7 @@ export function createHubRuntimeActions(
         baseCommit: session.baseCommit,
         selectedSchemas: session.selectedSchemas,
         sourceRepositoryId: session.sourceRepositoryId,
+        ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),
         continuity,
       };
     },

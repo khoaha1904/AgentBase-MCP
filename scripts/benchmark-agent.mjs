@@ -134,7 +134,7 @@ export function summarizeAgentEvents(events) {
 function toolUsage(completedTools, arm, promptVersion) {
   if (arm === "direct") return {};
   const completed = new Set(completedTools);
-  const required = ["okf-author-v8", "okf-author-v9"].includes(promptVersion)
+  const required = ["okf-author-v8", "okf-author-v9", "okf-author-v10"].includes(promptVersion)
     ? v8RequiredTools
     : ["okf-author-v4", "okf-author-v5", "okf-author-v6", "okf-author-v7"].includes(promptVersion)
       ? v4RequiredTools
@@ -173,12 +173,18 @@ export function runAgentRepository({
     OUTPUT_ROOT: workspace,
     REPOSITORY_ID: source.repositoryId,
     CATALOG_VERSION: manifest.catalogVersion,
+    CONFIRMED_DOMAIN: entry.confirmedDomain
+      ? `${entry.confirmedDomain.title} (${entry.confirmedDomain.identity}); evidence ${entry.confirmedDomain.evidenceResource}`
+      : "None; do not infer a Domain from repository or product names",
   });
   const portablePrompt = renderAgentPrompt(template, {
     SOURCE_ROOT: "<SOURCE_ROOT>",
     OUTPUT_ROOT: "<OUTPUT_ROOT>",
     REPOSITORY_ID: source.repositoryId,
     CATALOG_VERSION: manifest.catalogVersion,
+    CONFIRMED_DOMAIN: entry.confirmedDomain
+      ? `${entry.confirmedDomain.title} (${entry.confirmedDomain.identity}); evidence ${entry.confirmedDomain.evidenceResource}`
+      : "None; do not infer a Domain from repository or product names",
   });
   const promptFile = path.join(root, "prompt.md");
   const eventsFile = path.join(root, "agent-events.jsonl");

@@ -14,10 +14,12 @@ import {
   prepareBundleProposal,
   selectOkfConceptSchemas,
   validateConceptAgainstSchema,
+  assertConfirmedDomainAssignment,
   validateOkfRelationships,
   validatePublishableAgentBaseDraft,
   validateBundleProposal,
   type ProposalDiff,
+  type ConfirmedDomain,
 } from "../../core/knowledge/index.ts";
 import { writeHubProposalState } from "./proposal-state.ts";
 
@@ -29,6 +31,7 @@ export type PrepareNewHubOptions = Readonly<{
   authoredBundleRoot: string;
   proposalRoot: string;
   subjectDirectory: string;
+  confirmedDomain?: ConfirmedDomain;
   evidenceDigest: string;
   signals: readonly string[];
   createdAt: string;
@@ -50,6 +53,14 @@ function copyBundle(source: string, target: string): void {
   fs.cpSync(source, target, { recursive: true, errorOnExist: true, force: false });
 }
 
+function preservesNonblankLines(previous: string, proposed: string): boolean {
+  const retained = previous.split("\n").filter((line) => line.trim());
+  const next = proposed.split("\n").filter((line) => line.trim());
+  let cursor = 0;
+  for (const line of next) if (line === retained[cursor]) cursor += 1;
+  return cursor === retained.length;
+}
+
 export function prepareNewHubProposal(options: PrepareNewHubOptions): PreparedHubProposal;
 export function prepareNewHubProposal(options: PrepareNewLocalHubOptions): PreparedLocalHubProposal;
 export function prepareNewHubProposal(
@@ -60,6 +71,13 @@ export function prepareNewHubProposal(
   const selected = selectOkfConceptSchemas(options.signals).map((item) => item.type);
   const authored = loadOkfBundle(options.authoredBundleRoot, { requireAgentBaseRootIndex: true });
   const base = loadOkfBundle(options.hubBundleRoot);
+  for (const relative of base.files.filter((item) => path.posix.basename(item) === "index.md")) {
+    const target = path.join(options.authoredBundleRoot, ...relative.split("/"));
+    if (!fs.existsSync(target) || !preservesNonblankLines(
+      fs.readFileSync(path.join(options.hubBundleRoot, ...relative.split("/")), "utf8"),
+      fs.readFileSync(target, "utf8"),
+    )) throw new Error(`new Hub proposal must preserve existing index lines: ${relative}`);
+  }
   const createdIdentities = new Set<string>();
   for (const concept of authored.concepts.values()) {
     if (!base.concepts.has(concept.conceptId) && !selected.includes(concept.type)) {
@@ -74,6 +92,7 @@ export function prepareNewHubProposal(
       if (failures.length) throw new Error(`authored concept failed schema validation: ${failures.join("; ")}`);
     }
   }
+  assertConfirmedDomainAssignment(authored.concepts, base.concepts, options.confirmedDomain, options.sourceRepositoryId);
   const relationships = validateOkfRelationships(
     [...authored.concepts].map(([identity, concept]) => ({ identity, concept })),
     { sourceIdentities: createdIdentities, strictSourceIdentities: createdIdentities },
