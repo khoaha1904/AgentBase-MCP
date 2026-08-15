@@ -1,0 +1,107 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-serverless-shopping-cart",
+  "runId": "2026-08-15T102132Z",
+  "arm": "mcp",
+  "expectedConcepts": 7,
+  "actualConcepts": 12,
+  "matchedConcepts": 7,
+  "referenceConceptCoveragePercent": 100,
+  "recognizedSchemaAgreementPercent": 100,
+  "metadataCompletenessPercent": 25,
+  "provenanceCoveragePercent": 64,
+  "referenceRelationshipCoveragePercent": 43,
+  "classifications": {
+    "concepts": {
+      "confirmed": [
+        "systems/shopping-cart",
+        "components/shopping-cart-service",
+        "interfaces/cart-api",
+        "infrastructure/shopping-cart-sam",
+        "resources/shopping-cart-table",
+        "resources/cart-deletion-queue",
+        "flows/cart-migration"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "components/product-mock-service",
+        "flows/cart-total-maintenance",
+        "infrastructure/product-mock-sam",
+        "interfaces/product-api",
+        "repositories/aws-serverless-shopping-cart"
+      ],
+      "missingReference": []
+    },
+    "relationships": {
+      "confirmed": [
+        "shopping-cart-api|provided-by|shopping-cart-service",
+        "shopping-cart-infrastructure|declares|dynamodb-shopping-cart-table",
+        "shopping-cart-infrastructure|declares|cart-delete-sqs-queue"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "components/product-mock-service|part-of|systems/shopping-cart",
+        "components/product-mock-service|provides|interfaces/product-api",
+        "components/shopping-cart-service|part-of|systems/shopping-cart",
+        "components/shopping-cart-service|provides|interfaces/cart-api",
+        "components/shopping-cart-service|implements|flows/cart-migration",
+        "components/shopping-cart-service|implements|flows/cart-total-maintenance",
+        "components/shopping-cart-service|uses|resources/shopping-cart-table",
+        "components/shopping-cart-service|uses|resources/cart-deletion-queue",
+        "flows/cart-migration|part-of|systems/shopping-cart",
+        "flows/cart-migration|triggered-by|interfaces/cart-api",
+        "flows/cart-migration|implemented-by|components/shopping-cart-service",
+        "flows/cart-migration|reads-from|resources/shopping-cart-table",
+        "flows/cart-migration|writes-to|resources/shopping-cart-table",
+        "flows/cart-migration|sends-to|resources/cart-deletion-queue",
+        "flows/cart-total-maintenance|part-of|systems/shopping-cart",
+        "flows/cart-total-maintenance|implemented-by|components/shopping-cart-service",
+        "flows/cart-total-maintenance|triggered-by|resources/shopping-cart-table",
+        "flows/cart-total-maintenance|writes-to|resources/shopping-cart-table",
+        "flows/cart-total-maintenance|exposed-by|interfaces/cart-api",
+        "infrastructure/product-mock-sam|declares|components/product-mock-service",
+        "infrastructure/shopping-cart-sam|declares|components/shopping-cart-service",
+        "interfaces/cart-api|part-of|systems/shopping-cart",
+        "interfaces/cart-api|triggers|flows/cart-migration",
+        "interfaces/product-api|part-of|systems/shopping-cart",
+        "interfaces/product-api|provided-by|components/product-mock-service",
+        "repositories/aws-serverless-shopping-cart|documents|systems/shopping-cart",
+        "repositories/aws-serverless-shopping-cart|contains|infrastructure/shopping-cart-sam",
+        "repositories/aws-serverless-shopping-cart|contains|infrastructure/product-mock-sam",
+        "resources/cart-deletion-queue|part-of|systems/shopping-cart",
+        "resources/cart-deletion-queue|used-by|components/shopping-cart-service",
+        "resources/cart-deletion-queue|supports|flows/cart-migration",
+        "resources/shopping-cart-table|part-of|systems/shopping-cart",
+        "resources/shopping-cart-table|used-by|components/shopping-cart-service",
+        "resources/shopping-cart-table|triggers|flows/cart-total-maintenance",
+        "systems/shopping-cart|implemented-by|components/shopping-cart-service",
+        "systems/shopping-cart|includes|components/product-mock-service",
+        "systems/shopping-cart|exposed-by|interfaces/cart-api",
+        "systems/shopping-cart|exposed-by|interfaces/product-api"
+      ],
+      "missingReference": [
+        "shopping-cart-system|composed-of|shopping-cart-service",
+        "shopping-cart-system|exposes|shopping-cart-api",
+        "authenticated-cart-migration|step|shopping-cart-api",
+        "authenticated-cart-migration|step|cart-delete-sqs-queue"
+      ]
+    }
+  },
+  "validation": {
+    "passed": true,
+    "failures": []
+  },
+  "ownerReview": {
+    "status": "useful_for_owner_review",
+    "findings": []
+  },
+  "authoringAssessment": {
+    "status": "reviewable",
+    "hardFailures": [],
+    "limitations": [
+      "Deterministic source-path checks do not prove that authored claims are semantically supported; human review is required.",
+      "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept."
+    ]
+  },
+  "okfTreeDigest": "sha256:8d83d0f4f908ed6e97b1d7d65d6351b0ed280d651e2666191342f31d20c73a39"
+}
