@@ -46,23 +46,30 @@ is the portable archive.
 ## Current checkpoint
 
 - Active capability: none.
-- Most recent completed capability: `016-canonical-okf-graph`.
-- Canonical offline verification is green with 313 tests.
+- Most recent completed capability: `017-scalable-hub-navigation`.
+- Canonical offline verification is green with 330 tests.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.
-- Catalog 4.0.0 groups ordinary routes into API surfaces, keeps
-  implementation-only handlers inside useful parents and distinguishes desired
-  infrastructure, reusable modules and evidenced deployments.
+- Catalog 5.0.0 adds one evidenced canonical relationship direction and ordered
+  Business Flow steps while preserving open-world compatibility for existing
+  foreign extensions.
+- Hub retrieval is progressively scoped through root, Domain and System
+  navigation, deterministic search and bounded inbound/outbound traversal. A
+  broad ambiguous query asks for Domain scope instead of returning Hub-wide
+  bodies.
+- Re-ingest continuity contains only that source repository's prior concepts,
+  canonical subject, immediate neighbors and navigation paths; changed-set
+  validation does not receive the whole Hub.
 - The benchmark quality model, with active V9 prompt guidance and catalog
   5.0.0 relationship semantics, separates
   validity, owner-review usefulness, non-exhaustive coverage and token/time
   telemetry. Three-source offline qualification retains
   frontend, backend and infrastructure evidence in one canonical system graph.
-- Shopping Cart run `2026-08-15T102132Z` is conformant, reviewable and
-  `useful_for_owner_review`: all seven semantic probes matched with 100% schema
-  agreement. Its incomplete metadata/provenance/relationship coverage remains
-  visible for owner review rather than becoming a completeness gate.
+- Shopping Cart V9 run `2026-08-15T163041Z` is valid and reviewable: all seven
+  reference concepts and all six canonical relationship probes matched with
+  100% schema agreement. Its unresolved TTL provenance and optional enrichment
+  remain visible for owner review in open Hub PR #7 rather than being guessed.
 
 Question management and external evidence enrichment remain the next product
 direction for retaining and resolving missing or unjudged knowledge.

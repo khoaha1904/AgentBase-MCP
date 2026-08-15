@@ -46,14 +46,14 @@
 - [x] T027A [US3] Enforce the durable path-derived identity contract in changed-set validation after the first V8 real run exposed ephemeral aliases
 - [x] T027B [US4] Add an immutable V9 prompt that obtains schemas after investigation and makes progressive index, parent-boundary and conflict review explicit
 - [x] T028 [US4] Run real Shopping Cart qualification, inspect source conflicts and commit immutable evidence under `benchmark/results/`
-- [ ] T029 [US4] Rebuild one Shopping Cart Hub proposal from remote `main` after PR #6 is closed
+- [x] T029 [US4] Rebuild one Shopping Cart Hub proposal from remote `main` after PR #6 is closed
 
 ## Phase 6: Convergence and publication
 
-- [ ] T030 Reconcile implementation against all requirements and append only genuine remaining work below
-- [ ] T031 Update `docs/README.md`, affected current contracts and `specs/017-scalable-hub-navigation/verification.md`
-- [ ] T032 Mark capability complete in `specs/CURRENT.md`, run `npm run verify` and commit completion
-- [ ] T033 Publish the accepted replacement Shopping Cart proposal as one Hub PR and record the result
+- [x] T030 Reconcile implementation against all requirements and append only genuine remaining work below
+- [x] T031 Update `docs/README.md`, affected current contracts and `specs/017-scalable-hub-navigation/verification.md`
+- [x] T032 Mark capability complete in `specs/CURRENT.md`, run `npm run verify` and commit completion
+- [x] T033 Publish the accepted replacement Shopping Cart proposal as one Hub PR and record the result
 
 ## Dependencies
 

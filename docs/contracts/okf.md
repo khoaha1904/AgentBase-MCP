@@ -114,9 +114,11 @@ Normative OKF source is pinned to commit
   never reads a caller-selected output path.
 - **AB-SCHEMA-015** — Advisory selection matches normalized rule words anywhere
   in one natural-language evidence signal while retaining word boundaries,
-  deterministic order and specific-type shadowing. Catalog phrases include
-  admitted singular/plural wording; repository names or benchmark identities
-  are never selection rules.
+  deterministic order and evidence-local specific-type shadowing. A
+  specialization shadows its fallback only when it covers every signal that
+  selected the fallback; distinct evidence for a parent and specialization
+  retains both. Catalog phrases include admitted singular/plural wording;
+  repository names or benchmark identities are never selection rules.
 - **AB-SCHEMA-016** — Canonical Domain, System, Component, Interface, Flow,
   Resource, Infrastructure, Deployment and Repository paths classify one
   identity per entity; links express containment, implementation and evidence.

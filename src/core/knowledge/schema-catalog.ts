@@ -53,9 +53,9 @@ export function selectOkfConceptSchemas(signals: readonly string[]): readonly Ok
     const missingEvidence = item.evidenceRequirements.filter((requirement) => !normalized.some((signal) => signal.includes(requirement.toLocaleLowerCase())));
     return [{ type: item.type, matchedSignals, missingEvidence, specificity: item.specificity, fallbackType: item.fallbackType }];
   });
-  const shadowed = new Set(selected.flatMap((item) => item.fallbackType ? [item.fallbackType] : []));
   return selected
-    .filter((item) => !shadowed.has(item.type))
+    .filter((item) => !selected.some((specialization) => specialization.fallbackType === item.type
+      && item.matchedSignals.every((signal) => specialization.matchedSignals.includes(signal))))
     .sort((left, right) => right.specificity - left.specificity || left.type.localeCompare(right.type))
     .map(({ type, matchedSignals, missingEvidence }) => ({ type, matchedSignals, missingEvidence }));
 }

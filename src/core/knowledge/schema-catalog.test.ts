@@ -16,6 +16,11 @@ test("[AB-SCHEMA-001][AB-SCHEMA-006][AB-SCHEMA-007][AB-SCHEMA-016] catalog 5.0 e
   assert.equal(getOkfConceptSchema("Domain")?.directoryHint, "domains/<slug>.md");
 });
 
+test("[AB-SCHEMA-022] distinct parent and specialization evidence retains both schemas", () => {
+  const selected = selectOkfConceptSchemas(["software component", "service"]).map((item) => item.type);
+  assert.deepEqual(selected, ["Service", "Software Component"]);
+});
+
 test("[AB-SCHEMA-010][AB-SCHEMA-011] AWS and business schemas guide evidence-led investigation", () => {
   const lambda = getOkfConceptSchema("AWS Lambda");
   assert.ok(lambda?.investigationQuestions.some((question) => question.includes("business purpose")));

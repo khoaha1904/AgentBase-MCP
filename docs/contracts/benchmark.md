@@ -339,3 +339,11 @@ body, but the concept does not cite the migration source that supports its
 30-day statement and does not place the conflict in Limitations. Authentication
 infrastructure, a separate DLQ identity and explicit operation-to-handler maps
 also remain useful enrichment rather than inferred facts.
+
+The exact V9 bundle was accepted from remote Hub `main` as new subject
+`systems/serverless-shopping-cart` and published without merge as
+[`AgentBase-Hub` PR #7](https://github.com/khoaha1904/AgentBase-Hub/pull/7).
+Proposal `1825cee818828dd7e60cfb3f` has accepted commit
+`faaf8569452699a9405c062ca90042a499546b71`; the PR remains human-review input,
+not proof that the visible owner-review findings are resolved. Governed
+questions are deliberately not represented as OKF concepts in this capability.
