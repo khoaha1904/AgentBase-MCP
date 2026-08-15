@@ -1,9 +1,9 @@
 {
   "suite": "aws-serverless",
-  "version": 3,
+  "version": 4,
   "catalogVersion": "3.0.0",
-  "promptVersion": "okf-author-v3",
-  "directPromptVersion": "okf-author-direct-v3",
+  "promptVersion": "okf-author-v4",
+  "directPromptVersion": "okf-author-direct-v4",
   "agent": {
     "provider": "codex-cli",
     "executable": "codex",

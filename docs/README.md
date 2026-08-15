@@ -47,14 +47,16 @@ is the portable archive.
 
 - Active capability: `015-batch-okf-authoring`.
 - Most recent completed capability: `014-benchmark-authoring-quality`.
-- Canonical offline verification is green with 294 tests.
+- Canonical offline verification is green with 295 tests.
 - The unchanged v3 workflow produced reviewable MCP drafts on Health Aware and
   shopping cart, so evidence-first quality is ready for human review.
 - MCP used 210,649 and 466,574 more input tokens than direct. Retained traces
   show 20 and 27 schema/validation calls respectively, repeatedly carrying
   catalog guidance and full concept content through model context.
 - Capability 015 batches selected schema guidance and whole-bundle validation.
-  It changes interaction shape, not repository discovery or expected answers.
+  Immutable v4 prompts and trace payload metrics pass offline verification. This
+  changes interaction shape, not repository discovery or expected answers;
+  model-backed evidence is next.
 
 Question management and external evidence enrichment remain future direction.
 

@@ -279,6 +279,8 @@ test("[AB-BENCH-009][AB-BENCH-010][AB-BENCH-011][AB-BENCH-017] paired invocation
   assert.ok(report.indexOf("assessment") < report.indexOf("## Efficiency"));
   assert.match(report, /human review/i);
   assert.match(report, /declares no overall winner/);
+  assert.match(report, /authoring schema\/validation calls/);
+  assert.match(report, /supplied bytes/);
   await assert.rejects(() => benchmarkOkf.runPairRepository({
     manifest: harness.manifest,
     entry: harness.entry,
@@ -296,7 +298,11 @@ test("[AB-BENCH-013][AB-BENCH-014][AB-BENCH-015] comparison keeps quality and ef
       mcp: {
         outcome: "succeeded", elapsedMs: 80,
         usage: { inputTokens: 100, cachedInputTokens: 70, cacheWriteInputTokens: 0, uncachedInputTokens: 30, outputTokens: 10, reasoningOutputTokens: 2 },
-        activity: { mcpToolCalls: 5, commandExecutions: 1, observedSourceReadBytes: null, limitation: "unknown" },
+        activity: {
+          mcpToolCalls: 5, commandExecutions: 1, authoringToolCalls: 2,
+          authoringArgumentBytes: 200, authoringResultBytes: 300,
+          observedSourceReadBytes: null, limitation: "unknown",
+        },
       },
       direct: {
         outcome: "succeeded", elapsedMs: 100,
@@ -313,6 +319,9 @@ test("[AB-BENCH-013][AB-BENCH-014][AB-BENCH-015] comparison keeps quality and ef
   assert.equal(comparison.efficiency.delta.elapsedMs, -20);
   assert.equal("cacheWriteInputTokens" in comparison.efficiency.delta, false);
   assert.equal(comparison.activity.mcp.mcpToolCalls, 5);
+  assert.equal(comparison.activity.mcp.authoringToolCalls, 2);
+  assert.equal(comparison.activity.mcp.authoringArgumentBytes, 200);
+  assert.equal(comparison.activity.mcp.authoringResultBytes, 300);
   assert.equal(JSON.stringify(comparison).includes("winner"), false);
 });
 

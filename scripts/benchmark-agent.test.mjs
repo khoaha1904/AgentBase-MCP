@@ -30,11 +30,17 @@ test("[AB-BENCH-010][AB-BENCH-011] direct invocation omits AgentBase MCP while M
 });
 
 test("[AB-BENCH-012][AB-BENCH-013][AB-BENCH-014] event summary uses final usage and preserves unknown fields", () => {
+  const authoringArguments = { signals: ["aws lambda"] };
+  const authoringResult = { content: [{ type: "text", text: "guidance" }] };
   const summary = benchmarkAgent.summarizeAgentEvents([
     JSON.stringify({ type: "turn.completed", usage: { input_tokens: 5, output_tokens: 2 } }),
     "{malformed",
     JSON.stringify({ type: "item.completed", item: { type: "mcp_tool_call", tool: "query", status: "completed" } }),
     JSON.stringify({ type: "item.completed", item: { type: "mcp_tool_call", tool: "query", status: "completed" } }),
+    JSON.stringify({ type: "item.completed", item: {
+      type: "mcp_tool_call", tool: "get_okf_authoring_schemas", status: "completed",
+      arguments: authoringArguments, result: authoringResult,
+    } }),
     JSON.stringify({ type: "item.completed", item: { type: "command_execution", status: "completed" } }),
     JSON.stringify({ type: "turn.completed", usage: { input_tokens: 10 } }),
   ].join("\n"));
@@ -47,11 +53,42 @@ test("[AB-BENCH-012][AB-BENCH-013][AB-BENCH-014] event summary uses final usage 
     reasoningOutputTokens: null,
   });
   assert.deepEqual(summary.activity, {
-    mcpToolCalls: 2,
+    mcpToolCalls: 3,
     commandExecutions: 1,
+    authoringToolCalls: 1,
+    authoringArgumentBytes: Buffer.byteLength(JSON.stringify(authoringArguments)),
+    authoringResultBytes: Buffer.byteLength(JSON.stringify(authoringResult)),
+    authoringTools: {
+      get_okf_authoring_schemas: {
+        calls: 1,
+        argumentBytes: Buffer.byteLength(JSON.stringify(authoringArguments)),
+        resultBytes: Buffer.byteLength(JSON.stringify(authoringResult)),
+      },
+    },
     observedSourceReadBytes: null,
     limitation: "event trace does not prove complete source-read volume",
   });
+});
+
+test("[AB-BENCH-024][AB-BENCH-032][AB-BENCH-034] v4 keeps shared quality rules and uses only batch authoring tools", () => {
+  const prompts = path.resolve(import.meta.dirname, "..", "benchmark", "prompts");
+  const v3 = fs.readFileSync(path.join(prompts, "okf-author-v3.md"), "utf8");
+  const mcp = fs.readFileSync(path.join(prompts, "okf-author-v4.md"), "utf8");
+  const direct = fs.readFileSync(path.join(prompts, "okf-author-direct-v4.md"), "utf8");
+  const shared = (value) => value.split("## Shared authoring contract\n")[1]?.split("## Arm-specific workflow\n")[0];
+  assert.equal(shared(mcp), shared(v3));
+  assert.equal(shared(mcp), shared(direct));
+  assert.match(mcp, /get_okf_authoring_schemas/);
+  assert.match(mcp, /validate_okf_bundle/);
+  for (const legacy of ["`list_okf_schemas`", "`select_okf_schemas`", "`get_okf_schema`", "`validate_okf_concept`", "`validate_okf_relationships`"]) {
+    assert.equal(mcp.includes(legacy), false, legacy);
+  }
+  assert.equal(direct.includes("get_okf_authoring_schemas"), false);
+  assert.equal(direct.includes("validate_okf_bundle"), false);
+  for (const goldOnly of ["aha-primary-region-lambda", "deploy_aha/variables.tf", "declares|aha-primary-region-lambda"]) {
+    assert.equal(mcp.includes(goldOnly), false, goldOnly);
+    assert.equal(direct.includes(goldOnly), false, goldOnly);
+  }
 });
 
 test("[AB-BENCH-001][AB-BENCH-007] prompt rendering is exact and rejects missing inputs", () => {
@@ -111,7 +148,7 @@ const finalMessage = args[args.indexOf("--output-last-message") + 1];
 fs.mkdirSync(path.join(workspace, "okf"));
 fs.writeFileSync(path.join(workspace, "okf", "index.md"), "---\\nokf_version: \\\"0.2\\\"\\n---\\n\\n# Empty\\n");
 fs.writeFileSync(finalMessage, "done\\n");
-for (const tool of ["index_repository", "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept", "validate_okf_relationships"]) console.log(JSON.stringify({ type: "item.completed", item: { type: "mcp_tool_call", tool, status: "completed" } }));
+for (const tool of ["index_repository", "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept", "validate_okf_relationships", "get_okf_authoring_schemas", "validate_okf_bundle"]) console.log(JSON.stringify({ type: "item.completed", item: { type: "mcp_tool_call", tool, status: "completed", arguments: {}, result: {} } }));
 `);
     fs.chmodSync(fake, 0o755);
     const commit = spawnSync("git", ["-C", source, "rev-parse", "HEAD"], { encoding: "utf8" }).stdout.trim();
@@ -122,6 +159,16 @@ for (const tool of ["index_repository", "list_okf_schemas", "select_okf_schemas"
     });
     assert.equal(result.outcome, "succeeded");
     assert.equal(result.requiredToolUsage.validate_okf_relationships, true);
+    const v4 = runAgentRepository({
+      manifest: { suite: "test", catalogVersion: "3.0.0", promptVersion: "okf-author-v4", agent: { executable: fake, version: "fake-codex 1.0.0", model: "fake", reasoningEffort: "medium", timeoutMs: 10_000 } },
+      entry: { id: "fixture", kind: "test", path: "fixture", commit }, repository: source,
+      root: path.join(root, "result-v4"), executable: fake,
+    });
+    assert.equal(v4.outcome, "succeeded");
+    assert.deepEqual(v4.requiredToolUsage, {
+      index_repository: true, get_okf_authoring_schemas: true, validate_okf_bundle: true,
+    });
+    assert.equal(v4.activity.authoringToolCalls, 7);
     assert.equal(spawnSync("git", ["-C", source, "status", "--porcelain"], { encoding: "utf8" }).stdout, "");
     for (const artifact of ["run.json", "prompt.md", "agent-events.jsonl", "agent-final.md", "okf/index.md"]) assert.ok(fs.existsSync(path.join(resultRoot, artifact)));
   } finally {

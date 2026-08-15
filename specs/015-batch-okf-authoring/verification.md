@@ -30,3 +30,18 @@ Serialized payload bytes are diagnostic and are not presented as token counts.
 - `npm run verify`: 294 tests, 0 failures, 0 architecture errors and six
   unchanged reviewed architecture warnings.
 
+## Phase 2: immutable v4 benchmark
+
+- Date: 2026-08-15
+- Added immutable `okf-author-v4` and `okf-author-direct-v4`; their shared
+  evidence-first contract is byte-equivalent to v3 and contains no fixture key,
+  expected path or relationship answer.
+- The v4 MCP lifecycle requires `index_repository`,
+  `get_okf_authoring_schemas` and `validate_okf_bundle`. v1-v3 lifecycle rules
+  remain selected by their historical prompt identities.
+- Trace summaries now retain completed authoring call count, serialized argument
+  bytes, serialized result bytes and deterministic per-tool detail. Pair reports
+  expose those values separately from model tokens.
+- Focused agent/scorer verification: 27 tests, 0 failures.
+- `npm run verify`: 295 tests, 0 failures, 0 architecture errors and six
+  unchanged reviewed architecture warnings.

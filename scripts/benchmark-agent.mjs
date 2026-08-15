@@ -9,6 +9,11 @@ import { discoverRepositorySourceState } from "../src/app/repository-okf/index.t
 const projectRoot = path.resolve(import.meta.dirname, "..");
 const requiredTools = ["index_repository", "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept"];
 const v3RequiredTools = [...requiredTools, "validate_okf_relationships"];
+const v4RequiredTools = ["index_repository", "get_okf_authoring_schemas", "validate_okf_bundle"];
+const authoringTools = new Set([
+  "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept", "validate_okf_relationships",
+  "get_okf_authoring_schemas", "validate_okf_bundle",
+]);
 
 function writeJson(file, value) {
   fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
@@ -56,10 +61,19 @@ function token(value) {
   return Number.isFinite(value) && value >= 0 ? value : null;
 }
 
+function serializedBytes(value) {
+  const serialized = JSON.stringify(value);
+  return serialized === undefined ? 0 : Buffer.byteLength(serialized);
+}
+
 export function summarizeAgentEvents(events) {
   const completed = new Set();
   let mcpToolCalls = 0;
   let commandExecutions = 0;
+  let authoringToolCalls = 0;
+  let authoringArgumentBytes = 0;
+  let authoringResultBytes = 0;
+  const authoringActivity = {};
   let usage = null;
   for (const line of events.split("\n")) {
     try {
@@ -69,6 +83,19 @@ export function summarizeAgentEvents(events) {
         if (item?.type === "mcp_tool_call" && typeof item?.tool === "string") {
           completed.add(item.tool);
           mcpToolCalls += 1;
+          if (authoringTools.has(item.tool)) {
+            const argumentBytes = serializedBytes(item.arguments);
+            const resultBytes = serializedBytes(item.result);
+            const prior = authoringActivity[item.tool] ?? { calls: 0, argumentBytes: 0, resultBytes: 0 };
+            authoringActivity[item.tool] = {
+              calls: prior.calls + 1,
+              argumentBytes: prior.argumentBytes + argumentBytes,
+              resultBytes: prior.resultBytes + resultBytes,
+            };
+            authoringToolCalls += 1;
+            authoringArgumentBytes += argumentBytes;
+            authoringResultBytes += resultBytes;
+          }
         }
         if (item?.type === "command_execution") commandExecutions += 1;
       }
@@ -92,6 +119,10 @@ export function summarizeAgentEvents(events) {
     activity: {
       mcpToolCalls,
       commandExecutions,
+      authoringToolCalls,
+      authoringArgumentBytes,
+      authoringResultBytes,
+      authoringTools: Object.fromEntries(Object.entries(authoringActivity).sort(([left], [right]) => left.localeCompare(right))),
       observedSourceReadBytes: null,
       limitation: "event trace does not prove complete source-read volume",
     },
@@ -102,7 +133,9 @@ export function summarizeAgentEvents(events) {
 function toolUsage(completedTools, arm, promptVersion) {
   if (arm === "direct") return {};
   const completed = new Set(completedTools);
-  const required = promptVersion === "okf-author-v3" ? v3RequiredTools : requiredTools;
+  const required = promptVersion === "okf-author-v4"
+    ? v4RequiredTools
+    : promptVersion === "okf-author-v3" ? v3RequiredTools : requiredTools;
   return Object.fromEntries(required.map((tool) => [tool, completed.has(tool)]));
 }
 

@@ -12,11 +12,11 @@
 
 ## Phase 2: Immutable v4 Benchmark
 
-- [ ] T006 Add immutable v4 prompts without fixture answers
-- [ ] T007 Require batch tools and retain historical v1-v3 lifecycle behavior
-- [ ] T008 Measure completed authoring calls and payload bytes in arm/pair artifacts
-- [ ] T009 Prove v4 rendering, fake lifecycle and measurement offline
-- [ ] T010 Run canonical verification, record evidence and commit the v4 offline phase
+- [x] T006 Add immutable v4 prompts without fixture answers
+- [x] T007 Require batch tools and retain historical v1-v3 lifecycle behavior
+- [x] T008 Measure completed authoring calls and payload bytes in arm/pair artifacts
+- [x] T009 Prove v4 rendering, fake lifecycle and measurement offline
+- [x] T010 Run canonical verification, record evidence and commit the v4 offline phase
 
 ## Phase 3: Heterogeneous Efficiency Evidence
 

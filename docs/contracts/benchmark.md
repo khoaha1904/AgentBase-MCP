@@ -11,8 +11,8 @@ benchmarks.
   non-interactive host-agent process per repository in an isolated result
   workspace with AgentBase MCP required. AgentBase stores no model credentials
   and contains no model SDK.
-- **AB-BENCH-003** — The agent indexes once, uses graph and schema list/select/
-  read/validate tools, may inspect authorized source/docs/Git, writes only sparse
+- **AB-BENCH-003** — The agent indexes once, uses graph and admitted schema/
+  validation tools, may inspect authorized source/docs/Git, writes only sparse
   OKF and records limitations instead of inventing evidence.
 - **AB-BENCH-004** — Expectations define semantic concept identity, concrete
   schema, required metadata/evidence paths and directed relationships without
@@ -97,6 +97,19 @@ benchmarks.
 - **AB-BENCH-031** — v3 MCP arms must complete relationship-set validation after
   authoring and repair failures. Direct arms retain the equivalent shared
   contract without receiving AgentBase MCP capability.
+- **AB-BENCH-032** — v4 MCP arms replace catalog list/select/per-schema reads and
+  per-concept/relationship validation with `get_okf_authoring_schemas` and
+  `validate_okf_bundle`. The legacy fine-grained tools remain compatible but are
+  not required by v4.
+- **AB-BENCH-033** — Each trace reports completed schema/validation calls and
+  serialized supplied/result bytes, including per-tool detail. These payload
+  diagnostics remain distinct from model token usage.
+- **AB-BENCH-034** — v4 retains the exact v3 shared evidence-first authoring
+  contract and hidden-reference boundary; only the MCP interaction shape changes.
+- **AB-BENCH-035** — Efficiency improvement requires the same v4 workflow to
+  remain reviewable and reduce schema/validation calls by at least 50% against
+  retained v3 MCP baselines on both heterogeneous repositories. Token and
+  elapsed changes are still reported honestly and need not improve.
 
 ## Context A/B interpretation
 
@@ -219,3 +232,12 @@ Both direct arms were invalid, so the table is not a quality-equivalent speed
 contest. It nevertheless shows that MCP consumed more input and elapsed time in
 both measured pairs. AgentBase therefore claims reviewable authoring quality,
 not context-token or runtime savings.
+
+## v4 batch-authoring checkpoint
+
+Retained v3 traces show 20 schema/validation calls for Health Aware and 27 for
+shopping cart. The immutable v4 workflow keeps the shared authoring contract but
+uses one selected-schema guidance call and whole-bundle validation calls. Fake
+execution proves the required batch lifecycle and now records argument/result
+payload bytes. Model-backed v4 evidence remains pending; no efficiency
+improvement is claimed from offline structure alone.

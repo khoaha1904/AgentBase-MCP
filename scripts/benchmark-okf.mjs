@@ -515,6 +515,12 @@ function pairReportFor(comparison) {
       ? `- ${arm}: ${item.inputTokens ?? "n/a"} input (${item.cachedInputTokens ?? "n/a"} cached, ${item.uncachedInputTokens ?? "n/a"} uncached); ${item.outputTokens ?? "n/a"} output; ${item.reasoningOutputTokens ?? "n/a"} reasoning; ${item.elapsedMs ?? "n/a"} ms`
       : `- ${arm}: unavailable`;
   };
+  const activity = (arm) => {
+    const item = comparison.activity[arm];
+    return item
+      ? `- ${arm}: ${item.mcpToolCalls ?? "n/a"} MCP calls; ${item.authoringToolCalls ?? "n/a"} authoring schema/validation calls; ${item.authoringArgumentBytes ?? "n/a"} supplied bytes; ${item.authoringResultBytes ?? "n/a"} result bytes; ${item.commandExecutions ?? "n/a"} shell commands`
+      : `- ${arm}: unavailable`;
+  };
   const failures = comparison.completeness.failures.length
     ? `\n## Incomplete evidence\n\n${comparison.completeness.failures.map((item) => `- ${item}`).join("\n")}\n` : "";
   return `# ${comparison.repository} — AgentBase context A/B\n\n`
@@ -527,6 +533,7 @@ function pairReportFor(comparison) {
     + `${efficiency("mcp")}\n${efficiency("direct")}\n`
     + `- Delta convention: MCP minus direct. ${JSON.stringify(comparison.efficiency.delta)}\n`
     + "\n## Investigation activity\n\n"
+    + `${activity("mcp")}\n${activity("direct")}\n`
     + "- Counts are directly observed events, not proof of complete source-read volume.\n"
     + failures;
 }

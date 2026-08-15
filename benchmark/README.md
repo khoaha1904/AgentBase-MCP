@@ -58,11 +58,11 @@ AgentBase MCP configuration. `compare` reports existing semantic metrics,
 tokens and elapsed time side by side. Deltas are MCP minus direct; no overall
 winner is generated.
 
-Both v3 prompts share the same general authoring contract without receiving the
-gold expectation. The MCP arm additionally uses graph/schema tools plus bounded
-content-only relationship-set validation; the direct arm investigates source
-without them. Prompt behavior is immutable: new rules require a new identity,
-while v1/v2 files remain historical.
+Both v4 prompts share the same general authoring contract without receiving the
+gold expectation. The MCP arm additionally uses graph tools, one batch-selected
+schema-guidance call and bounded whole-bundle validation; the direct arm
+investigates source without them. Prompt behavior is immutable: new rules
+require a new identity, while v1-v3 files remain historical.
 
 Expectations do not prescribe prose or agent slugs. Bounded identity terms and
 evidence match concept instances; the scorer then evaluates concrete schema
@@ -85,8 +85,9 @@ curated probe, not that every authored sentence is semantically supported.
 Reports state this limitation and require human review.
 
 Token values come from the final completed-turn event emitted by the pinned
-Codex CLI. Missing fields stay unavailable. MCP and shell-command counts are
-direct observations, not complete telemetry for every source file or byte read.
+Codex CLI. Missing fields stay unavailable. MCP/shell counts and serialized
+authoring-tool argument/result bytes are direct trace observations, not complete
+telemetry for every source file or model-context byte.
 
 `npm run verify` uses a fake Codex process and never invokes a model. Real runs
 use existing host Codex authentication; AgentBase does not read or persist it.
