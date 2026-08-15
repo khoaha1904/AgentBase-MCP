@@ -107,6 +107,18 @@ test("[AB-BENCH-024][AB-BENCH-036][AB-BENCH-037] v5 uses canonical useful units 
   assert.match(mcp, /validate_okf_bundle/);
 });
 
+test("[AB-BENCH-019][AB-BENCH-024] v6 makes the root index grammar explicit", () => {
+  const prompts = path.resolve(import.meta.dirname, "..", "benchmark", "prompts");
+  const mcp = fs.readFileSync(path.join(prompts, "okf-author-v6.md"), "utf8");
+  const direct = fs.readFileSync(path.join(prompts, "okf-author-direct-v6.md"), "utf8");
+  const shared = (value) => value.split("## Shared authoring contract\n")[1]?.split("## Arm-specific workflow\n")[0];
+  assert.equal(shared(mcp), shared(direct));
+  assert.match(shared(mcp), /exactly `\* \[Title\]\(relative\/concept\.md\)/);
+  assert.match(shared(mcp), /Hyphen bullets.*invalid/);
+  assert.equal(fs.existsSync(path.join(prompts, "okf-author-v5.md")), true);
+  assert.equal(fs.existsSync(path.join(prompts, "okf-author-direct-v5.md")), true);
+});
+
 test("[AB-BENCH-001][AB-BENCH-007] prompt rendering is exact and rejects missing inputs", () => {
   assert.equal(renderAgentPrompt("{{A}}/{{B}}", { A: "one", B: "two" }), "one/two");
   assert.throws(() => renderAgentPrompt("{{MISSING}}", {}), /prompt value is missing/);
@@ -191,6 +203,13 @@ for (const tool of ["index_repository", "list_okf_schemas", "select_okf_schemas"
     });
     assert.equal(v5.outcome, "succeeded");
     assert.deepEqual(v5.requiredToolUsage, v4.requiredToolUsage);
+    const v6 = runAgentRepository({
+      manifest: { suite: "test", catalogVersion: "4.0.0", promptVersion: "okf-author-v6", agent: { executable: fake, version: "fake-codex 1.0.0", model: "fake", reasoningEffort: "medium", timeoutMs: 10_000 } },
+      entry: { id: "fixture", kind: "test", path: "fixture", commit }, repository: source,
+      root: path.join(root, "result-v6"), executable: fake,
+    });
+    assert.equal(v6.outcome, "succeeded");
+    assert.deepEqual(v6.requiredToolUsage, v4.requiredToolUsage);
     assert.equal(v4.activity.authoringToolCalls, 7);
     assert.equal(spawnSync("git", ["-C", source, "status", "--porcelain"], { encoding: "utf8" }).stdout, "");
     for (const artifact of ["run.json", "prompt.md", "agent-events.jsonl", "agent-final.md", "okf/index.md"]) assert.ok(fs.existsSync(path.join(resultRoot, artifact)));

@@ -283,5 +283,10 @@ per-handler inventories and reject benchmark-only metadata at the Hub boundary.
 A three-source lifecycle test applies frontend, backend and infrastructure
 evidence sequentially to the same Shopping Cart system. It preserves all three
 repository sources while retaining one system identity and separate component
-and infrastructure identities. This is offline lifecycle evidence; no V5 real
-model result is claimed yet.
+and infrastructure identities. This lifecycle evidence is offline and remains
+separate from model-output evidence.
+
+The first V5 Shopping Cart run produced useful canonical content but failed root
+conformance because the prompt permitted a generic Markdown list while the
+bundle contract requires `*` entries. Immutable V6 changes only that shared
+grammar instruction and retains the V5 quality/scoring model.

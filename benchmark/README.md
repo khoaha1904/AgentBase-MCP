@@ -58,13 +58,15 @@ AgentBase MCP configuration. `compare` reports existing semantic metrics,
 tokens and elapsed time side by side. Deltas are MCP minus direct; no overall
 winner is generated.
 
-Both v5 prompts share the same general authoring contract without receiving the
+Both v6 prompts share the V5 quality contract without receiving the
 hidden expectation. They author one canonical entity graph, group ordinary
 routes into API surfaces, keep implementation-only handlers inside useful
 parents and surface uncertainty as limitations. The MCP arm additionally uses
 graph tools, one batch-selected schema-guidance call and bounded whole-bundle
 validation; the direct arm investigates source without them. Prompt behavior
-is immutable: v1-v4 files and recorded results remain historical.
+is immutable: v1-v5 files and recorded results remain historical. V6 makes the
+exact root-index list grammar explicit after the first V5 real run exposed an
+otherwise-useful bundle using unsupported hyphen bullets.
 
 Expectations do not prescribe prose or agent slugs. Bounded identity terms and
 evidence match concept instances; the scorer then evaluates concrete schema

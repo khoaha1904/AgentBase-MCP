@@ -54,8 +54,9 @@ is the portable archive.
 - Catalog 4.0.0 groups ordinary routes into API surfaces, keeps
   implementation-only handlers inside useful parents and distinguishes desired
   infrastructure, reusable modules and evidenced deployments.
-- Benchmark V5 separates validity, owner-review usefulness, non-exhaustive
-  coverage and token/time telemetry. Three-source offline qualification retains
+- The V5 benchmark quality model, with active V6 prompt grammar, separates
+  validity, owner-review usefulness, non-exhaustive coverage and token/time
+  telemetry. Three-source offline qualification retains
   frontend, backend and infrastructure evidence in one canonical system graph.
 - No V5 real-model result is claimed yet; a real run remains an explicit next
   evidence step after the offline behavior is accepted.

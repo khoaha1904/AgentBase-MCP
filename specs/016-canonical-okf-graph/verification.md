@@ -30,8 +30,9 @@ warnings and no errors.
 
 ## Explicit limitations
 
-- No real V5 model-backed benchmark has been run; offline qualification proves
-  mechanics and scoring behavior, not model output quality.
+- The first real V5 Shopping Cart run was useful for owner review but invalid
+  because its root index used unsupported hyphen bullets. Immutable V6 corrects
+  only that prompt ambiguity; a valid rerun is still required.
 - Reference coverage remains non-exhaustive and cannot prove semantic truth.
 - Question persistence, `/abs-questions`, AWS CLI authority and cloud resource
   enrichment remain future capabilities.
