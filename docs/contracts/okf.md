@@ -146,3 +146,7 @@ Normative OKF source is pinned to commit
   Lambda/workers remain concepts; implementation-only handlers stay in their
   parent; a Server may link smaller evidenced capability concepts rather than
   grow one unrelated document.
+- **AB-SCHEMA-023** — A persisted concept identity is its normalized path
+  relative to the OKF root with `.md` removed. Changed concepts and unchanged
+  target summaries MUST use that identity, and validation rejects ephemeral
+  type-prefixed aliases or paths beginning with the outer `okf/` directory.

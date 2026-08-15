@@ -146,6 +146,21 @@ test("[AB-BENCH-024][AB-BENCH-039][AB-BENCH-040] v8 shares scalable graph author
   assert.equal(fs.existsSync(path.join(prompts, "okf-author-v7.md")), true);
 });
 
+test("[AB-SCHEMA-023][AB-BENCH-039][AB-BENCH-040] v9 persists path identities and investigates before schema selection", () => {
+  const prompts = path.resolve(import.meta.dirname, "..", "benchmark", "prompts");
+  const mcp = fs.readFileSync(path.join(prompts, "okf-author-v9.md"), "utf8");
+  const direct = fs.readFileSync(path.join(prompts, "okf-author-direct-v9.md"), "utf8");
+  const shared = (value) => value.split("## Shared authoring contract\n")[1]?.split("## Arm-specific workflow\n")[0];
+  assert.equal(shared(mcp), shared(direct));
+  for (const rule of ["path relative to the OKF root", "never include the outer `okf/`", "numeric policy", "category indexes", "parent Service"]) {
+    assert.ok(shared(mcp).includes(rule), rule);
+  }
+  assert.ok(mcp.indexOf("Before requesting schemas") < mcp.indexOf("call `get_okf_authoring_schemas` once"));
+  assert.match(mcp, /validate_okf_changes/);
+  assert.equal(direct.includes("validate_okf_changes"), false);
+  assert.equal(fs.existsSync(path.join(prompts, "okf-author-v8.md")), true);
+});
+
 test("[AB-BENCH-001][AB-BENCH-007] prompt rendering is exact and rejects missing inputs", () => {
   assert.equal(renderAgentPrompt("{{A}}/{{B}}", { A: "one", B: "two" }), "one/two");
   assert.throws(() => renderAgentPrompt("{{MISSING}}", {}), /prompt value is missing/);
@@ -253,6 +268,13 @@ for (const tool of ["index_repository", "list_okf_schemas", "select_okf_schemas"
     assert.deepEqual(v8.requiredToolUsage, {
       index_repository: true, get_okf_authoring_schemas: true, validate_okf_changes: true,
     });
+    const v9 = runAgentRepository({
+      manifest: { suite: "test", catalogVersion: "5.0.0", promptVersion: "okf-author-v9", agent: { executable: fake, version: "fake-codex 1.0.0", model: "fake", reasoningEffort: "medium", timeoutMs: 10_000 } },
+      entry: { id: "fixture", kind: "test", path: "fixture", commit }, repository: source,
+      root: path.join(root, "result-v9"), executable: fake,
+    });
+    assert.equal(v9.outcome, "succeeded");
+    assert.deepEqual(v9.requiredToolUsage, v8.requiredToolUsage);
     assert.equal(v4.activity.authoringToolCalls, 8);
     assert.equal(spawnSync("git", ["-C", source, "status", "--porcelain"], { encoding: "utf8" }).stdout, "");
     for (const artifact of ["run.json", "prompt.md", "agent-events.jsonl", "agent-final.md", "okf/index.md"]) assert.ok(fs.existsSync(path.join(resultRoot, artifact)));

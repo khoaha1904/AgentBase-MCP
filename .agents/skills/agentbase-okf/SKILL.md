@@ -29,7 +29,9 @@ repository as read-only.
    indexes. Consume an existing valid `log.md`; do not generate one.
 6. Validate created/modified concepts with `validate_okf_changes`, supplying
    only their full Markdown plus unchanged target summaries from continuity or
-   exact search/traversal. Then run AgentBase final validation and diff. Repair
+   exact search/traversal. For every supplied concept or target, `identity` is
+   exactly its normalized path relative to the OKF root with `.md` removed;
+   never include an outer `okf/` prefix. Then run AgentBase final validation and diff. Repair
    only proposal files. Present warnings, limitations, and the complete diff.
 7. Stop before apply unless the maintainer explicitly authorizes applying that
    exact validated proposal.

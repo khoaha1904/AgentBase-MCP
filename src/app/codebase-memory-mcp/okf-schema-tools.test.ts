@@ -146,3 +146,30 @@ test("[AB-SCHEMA-021] changed-set validation uses unchanged summaries instead of
   });
   assert.equal(excessive.isError, true);
 });
+
+test("[AB-SCHEMA-023] changed-set identities survive persistence because they derive from paths", () => {
+  const content = [
+    "---", "title: Cart", "description: Shopping cart system.", "type: System", "status: draft",
+    "generated: { by: agentbase/0.0.0, at: 2026-08-15T00:00:00Z }",
+    "sources:", "  - id: readme", "    resource: repository://repository-cart-aaaaaaaaaaaa/README.md#L1-L2",
+    "---", "", "# Purpose", "", "A customer shopping cart system with an evidenced source boundary.", "",
+    "# Limitations", "", "Production ownership is not evidenced.", "",
+  ].join("\n");
+  const alias = callOkfSchemaTool("validate_okf_changes", {
+    changes: [{ identity: "system:cart", path: "systems/cart.md", content }], targets: [],
+  });
+  assert.equal(alias.isError, true);
+  assert.match(JSON.stringify(body(alias)), /identity must equal systems\/cart/);
+
+  const prefixed = callOkfSchemaTool("validate_okf_changes", {
+    changes: [{ identity: "okf/systems/cart", path: "okf/systems/cart.md", content }], targets: [],
+  });
+  assert.equal(prefixed.isError, true);
+  assert.match(JSON.stringify(body(prefixed)), /without an okf\/ prefix/);
+
+  const durable = callOkfSchemaTool("validate_okf_changes", {
+    changes: [{ identity: "systems/cart", path: "systems/cart.md", content }], targets: [],
+  });
+  assert.equal(durable.isError, undefined);
+  assert.equal(body(durable).valid, true);
+});

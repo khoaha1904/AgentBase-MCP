@@ -112,7 +112,7 @@ export const OKF_SCHEMA_TOOLS = [
   },
   {
     name: "validate_okf_changes",
-    description: "Validate changed OKF concepts against bounded unchanged target summaries without supplying the whole Hub.",
+    description: "Validate changed OKF concepts against bounded unchanged target summaries. Identity is the OKF-root-relative Markdown path without .md.",
     inputSchema: {
       type: "object",
       properties: { changes: conceptSetInputSchema.properties.concepts, targets: targetSummarySchema },
@@ -128,6 +128,14 @@ function result(value: unknown, isError = false): CallToolResult {
 type SuppliedConcept = Readonly<{ identity: string; path: string; content: string }>;
 type ParsedSuppliedConcept = Readonly<{ item: SuppliedConcept; concept: ConceptDocument }>
   | Readonly<{ item: SuppliedConcept; error: string }>;
+
+function durableIdentity(pathValue: string): string {
+  const normalized = normalizeHubConceptPath(pathValue);
+  if (normalized !== pathValue || normalized.startsWith("okf/")) {
+    throw new Error("path must be normalized and relative to the OKF root without an okf/ prefix");
+  }
+  return normalized.slice(0, -3);
+}
 
 function suppliedConcepts(args: Readonly<Record<string, unknown>>, key = "concepts"): Readonly<{ entries?: SuppliedConcept[]; error?: string }> {
   const supplied = args[key];
@@ -154,9 +162,10 @@ function suppliedTargets(args: Readonly<Record<string, unknown>>): Readonly<{ en
     && supplied.every((item) => item && typeof item === "object" && !Array.isArray(item)
       && typeof item.identity === "string" && item.identity.length >= 1 && item.identity.length <= 256
       && typeof item.path === "string" && item.path.length >= 1 && item.path.length <= 1024 && validPath(item.path)
+      && item.identity === item.path.slice(0, -3) && !item.path.startsWith("okf/")
       && typeof item.type === "string" && item.type.length >= 1 && item.type.length <= 256);
   return valid ? { entries: supplied as OkfRelationshipTarget[] }
-    : { error: "targets must be a bounded list of identity, path and type strings" };
+    : { error: "targets must use normalized OKF-root-relative paths and path-derived identities" };
 }
 
 function validateBundle(entries: readonly SuppliedConcept[], targets: readonly OkfRelationshipTarget[] = []): CallToolResult {
@@ -170,6 +179,12 @@ function validateBundle(entries: readonly SuppliedConcept[], targets: readonly O
       failures: [`${entry.item.path}: ${entry.error}`],
     };
     const failures = [...validateAgentBaseDraft(entry.concept), ...validateConceptAgainstSchema(entry.concept)];
+    try {
+      const expected = durableIdentity(entry.item.path);
+      if (entry.item.identity !== expected) failures.push(`${entry.item.path}: identity must equal ${expected}`);
+    } catch (error) {
+      failures.push(`${entry.item.path}: ${error instanceof Error ? error.message : "invalid durable path"}`);
+    }
     return { identity: entry.item.identity, path: entry.item.path, type: entry.concept.type,
       knownSchema: Boolean(getOkfConceptSchema(entry.concept.type)), valid: failures.length === 0, failures };
   });
@@ -219,6 +234,7 @@ export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record
       return result({
         catalogVersion: AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
         okfVersion: "0.2",
+        identityContract: "identity equals the normalized OKF-root-relative Markdown path without .md; never prefix paths with okf/",
         schemas: recommendations.map((recommendation) => ({
           ...getOkfConceptSchema(recommendation.type),
           matchedSignals: recommendation.matchedSignals,

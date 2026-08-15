@@ -320,3 +320,11 @@ per edge and structured ordered flow steps, and evaluates progressive
 Domain/System/Repository navigation. The Shopping Cart expectation also checks
 whether its source-level TTL disagreement is surfaced for owner review; absence
 is a review finding rather than a claim that the whole OKF draft is invalid.
+
+The first V8 Shopping Cart run exposed an artifact-boundary defect: the agent
+validated ephemeral type-prefixed identities and paths beginning with `okf/`,
+which did not survive loading the emitted bundle. The run is retained as failed
+evidence. Immutable V9 requires path-derived durable identities, obtains schema
+guidance after evidence discovery, preserves evidenced parent components, names
+exact progressive category indexes and explicitly compares documented numeric
+policies with implementation.

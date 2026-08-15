@@ -43,6 +43,8 @@
 - [x] T025 [P] [US3] Extend sequential multi-repository qualification in `src/app/hub-okf/canonical-graph-e2e.test.ts`
 - [x] T026 [US4] Extend benchmark usefulness gates for progressive navigation, canonical evidenced edges and conflict visibility in `scripts/benchmark-okf.mjs` and tests
 - [x] T027 [US4] Add an immutable next authoring prompt and update `benchmark/repos/aws-serverless/manifest.json` plus benchmark documentation
+- [x] T027A [US3] Enforce the durable path-derived identity contract in changed-set validation after the first V8 real run exposed ephemeral aliases
+- [x] T027B [US4] Add an immutable V9 prompt that obtains schemas after investigation and makes progressive index, parent-boundary and conflict review explicit
 - [ ] T028 [US4] Run real Shopping Cart qualification, inspect source conflicts and commit immutable evidence under `benchmark/results/`
 - [ ] T029 [US4] Rebuild one Shopping Cart Hub proposal from remote `main` after PR #6 is closed
 

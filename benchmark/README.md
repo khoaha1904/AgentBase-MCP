@@ -58,15 +58,17 @@ AgentBase MCP configuration. `compare` reports existing semantic metrics,
 tokens and elapsed time side by side. Deltas are MCP minus direct; no overall
 winner is generated.
 
-Both v8 prompts share the same quality contract without receiving the
+Both v9 prompts share the same quality contract without receiving the
 hidden expectation. They author one canonical entity graph, group ordinary
 routes into API surfaces, keep implementation-only handlers inside useful
-parents and surface uncertainty as limitations. V8 also requires canonical
+parents and surface uncertainty as limitations. V8 introduced canonical
 evidenced edge directions, ordered evidenced flow steps and progressive
 Domain/System/Repository navigation. The MCP arm additionally uses graph tools,
 one batch-selected schema-guidance call and changed-set validation; the direct
-arm investigates source without them. Prompt behavior is immutable: v1-v7
-files and recorded results remain historical. V6 made the
+arm investigates source without them. V9 makes durable path-derived identity,
+parent service/component boundaries, schema selection after investigation,
+exact category indexes and numeric-policy conflict review explicit. Prompt
+behavior is immutable: v1-v8 files and recorded results remain historical. V6 made the
 exact root-index list grammar explicit after the first V5 real run exposed an
 otherwise-useful bundle using unsupported hyphen bullets. V7 additionally
 clarifies that implementation concepts do not replace an evidenced Business
