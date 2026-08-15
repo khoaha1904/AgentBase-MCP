@@ -46,15 +46,19 @@ is the portable archive.
 ## Current checkpoint
 
 - Active capability: none.
-- Most recent completed capability: `015-batch-okf-authoring`.
-- Canonical offline verification is green with 296 tests.
-- The unchanged v3 workflow produced reviewable MCP drafts on Health Aware and
-  shopping cart, so evidence-first quality is ready for human review.
-- Capability 015 batches selected schema guidance and whole-bundle validation.
-  Corrected catalog-3.1.0 runs are reviewable on both repositories with no
-  contradicted concepts or relationships and two authoring calls each. Their
-  reference coverage is incomplete and lower than retained v3 measurements, so
-  no quality or token-saving improvement is claimed from batching alone.
+- Most recent completed capability: `016-canonical-okf-graph`.
+- Canonical offline verification is green with 311 tests.
+- OKF authoring uses one entity-centered graph: repositories provide evidence,
+  Domain remains optional, and system/component/interface/resource/
+  infrastructure identities are not copied into repository trees.
+- Catalog 4.0.0 groups ordinary routes into API surfaces, keeps
+  implementation-only handlers inside useful parents and distinguishes desired
+  infrastructure, reusable modules and evidenced deployments.
+- Benchmark V5 separates validity, owner-review usefulness, non-exhaustive
+  coverage and token/time telemetry. Three-source offline qualification retains
+  frontend, backend and infrastructure evidence in one canonical system graph.
+- No V5 real-model result is claimed yet; a real run remains an explicit next
+  evidence step after the offline behavior is accepted.
 
 Question management and external evidence enrichment remain the next product
 direction for retaining and resolving missing or unjudged knowledge.

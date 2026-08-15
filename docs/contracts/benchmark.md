@@ -134,7 +134,7 @@ source baseline. It does not isolate graph retrieval from schema guidance.
 Codex token events are the primary context-cost evidence; command counts are
 observations only and cannot prove every file or byte read.
 
-## Current baseline
+## Historical v1 baseline
 
 Suite `aws-serverless` pins two repositories with catalog `3.0.0`, prompt
 `okf-author-v1`, Codex CLI `0.147.0`, model `gpt-5.6-terra` and medium effort.

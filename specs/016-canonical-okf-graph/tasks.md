@@ -38,9 +38,9 @@
 
 ## Phase 5: Convergence
 
-- [ ] T023 Reconcile implementation with `specs/016-canonical-okf-graph/spec.md` and append any missing work here
-- [ ] T024 Record verification in `specs/016-canonical-okf-graph/verification.md`
-- [ ] T025 Mark capability completed in `specs/CURRENT.md`, run `npm run verify` and commit completion
+- [x] T023 Reconcile implementation with `specs/016-canonical-okf-graph/spec.md` and append any missing work here
+- [x] T024 Record verification in `specs/016-canonical-okf-graph/verification.md`
+- [x] T025 Mark capability completed in `specs/CURRENT.md`, run `npm run verify` and commit completion
 
 ## Dependencies
 
