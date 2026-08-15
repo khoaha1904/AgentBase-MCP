@@ -1,0 +1,65 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-serverless-shopping-cart",
+  "arm": "mcp",
+  "kind": "sam-backend-vue-frontend",
+  "fixturePath": "../fixtures/source-repos/multiservice-feasibility/aws-serverless-shopping-cart",
+  "fixtureCommit": "66a863f1b7a2a7f319adddce6a55e090ce9f6734",
+  "sourceRepositoryId": "repository-aws-serverless-shopping-cart-708d65caf454",
+  "catalogVersion": "4.0.0",
+  "promptVersion": "okf-author-v6",
+  "promptDigest": "sha256:7ad1b50d451e5e7df43dd87aef3b09104a2e7c641ddad2ccebb0611719e5c28d",
+  "agent": {
+    "provider": "codex-cli",
+    "executable": "codex",
+    "version": "codex-cli 0.147.0",
+    "model": "gpt-5.6-terra",
+    "reasoningEffort": "medium",
+    "timeoutMs": 900000,
+    "actualVersion": "codex-cli 0.147.0"
+  },
+  "startedAt": "2026-08-15T10:14:56.568Z",
+  "completedAt": "2026-08-15T10:19:49.009Z",
+  "outcome": "succeeded",
+  "elapsedMs": 292441,
+  "process": {
+    "exitCode": 0,
+    "signal": null,
+    "error": null
+  },
+  "usage": {
+    "inputTokens": 997565,
+    "cachedInputTokens": 923392,
+    "cacheWriteInputTokens": 0,
+    "uncachedInputTokens": 74173,
+    "outputTokens": 13087,
+    "reasoningOutputTokens": 2993
+  },
+  "activity": {
+    "mcpToolCalls": 7,
+    "commandExecutions": 9,
+    "authoringToolCalls": 2,
+    "authoringArgumentBytes": 27949,
+    "authoringResultBytes": 24226,
+    "authoringTools": {
+      "get_okf_authoring_schemas": {
+        "calls": 1,
+        "argumentBytes": 552,
+        "resultBytes": 11895
+      },
+      "validate_okf_bundle": {
+        "calls": 1,
+        "argumentBytes": 27397,
+        "resultBytes": 12331
+      }
+    },
+    "observedSourceReadBytes": null,
+    "limitation": "event trace does not prove complete source-read volume"
+  },
+  "requiredToolUsage": {
+    "index_repository": true,
+    "get_okf_authoring_schemas": true,
+    "validate_okf_bundle": true
+  },
+  "failures": []
+}

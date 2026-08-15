@@ -1,0 +1,129 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-serverless-shopping-cart",
+  "runId": "2026-08-15T101456Z",
+  "arm": "mcp",
+  "expectedConcepts": 7,
+  "actualConcepts": 15,
+  "matchedConcepts": 7,
+  "referenceConceptCoveragePercent": 100,
+  "recognizedSchemaAgreementPercent": 86,
+  "metadataCompletenessPercent": 75,
+  "provenanceCoveragePercent": 55,
+  "referenceRelationshipCoveragePercent": 43,
+  "classifications": {
+    "concepts": {
+      "confirmed": [
+        "systems/serverless-shopping-cart",
+        "components/shopping-cart-service",
+        "interfaces/cart-api",
+        "infrastructure/shopping-cart-sam",
+        "resources/cart-table",
+        "resources/cart-deletion-queue"
+      ],
+      "contradicted": [
+        {
+          "actual": "components/anonymous-cart-migration-lambda",
+          "expected": "authenticated-cart-migration",
+          "actualType": "AWS Lambda",
+          "expectedType": "Business Flow"
+        }
+      ],
+      "unjudged": [
+        "components/cart-aggregate-lambda",
+        "components/cart-deletion-worker-lambda",
+        "components/product-mock-service",
+        "components/vue-shopping-cart-client",
+        "infrastructure/authentication-sam",
+        "infrastructure/product-mock-sam",
+        "interfaces/product-api",
+        "repositories/aws-serverless-shopping-cart"
+      ],
+      "missingReference": []
+    },
+    "relationships": {
+      "confirmed": [
+        "shopping-cart-api|provided-by|shopping-cart-service",
+        "shopping-cart-infrastructure|declares|dynamodb-shopping-cart-table",
+        "shopping-cart-infrastructure|declares|cart-delete-sqs-queue"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "components/anonymous-cart-migration-lambda|part-of|components/shopping-cart-service",
+        "components/anonymous-cart-migration-lambda|triggered-by|interfaces/cart-api",
+        "components/anonymous-cart-migration-lambda|accesses|resources/cart-table",
+        "components/anonymous-cart-migration-lambda|accesses|resources/cart-deletion-queue",
+        "components/anonymous-cart-migration-lambda|declared-by|infrastructure/shopping-cart-sam",
+        "components/cart-aggregate-lambda|part-of|components/shopping-cart-service",
+        "components/cart-aggregate-lambda|triggered-by|resources/cart-table",
+        "components/cart-aggregate-lambda|accesses|resources/cart-table",
+        "components/cart-aggregate-lambda|declared-by|infrastructure/shopping-cart-sam",
+        "components/cart-deletion-worker-lambda|part-of|components/shopping-cart-service",
+        "components/cart-deletion-worker-lambda|triggered-by|resources/cart-deletion-queue",
+        "components/cart-deletion-worker-lambda|accesses|resources/cart-table",
+        "components/cart-deletion-worker-lambda|declared-by|infrastructure/shopping-cart-sam",
+        "components/product-mock-service|part-of|systems/serverless-shopping-cart",
+        "components/product-mock-service|provides|interfaces/product-api",
+        "components/shopping-cart-service|part-of|systems/serverless-shopping-cart",
+        "components/shopping-cart-service|provides|interfaces/cart-api",
+        "components/shopping-cart-service|accesses|resources/cart-table",
+        "components/shopping-cart-service|includes|components/anonymous-cart-migration-lambda",
+        "components/shopping-cart-service|includes|components/cart-deletion-worker-lambda",
+        "components/shopping-cart-service|includes|components/cart-aggregate-lambda",
+        "components/vue-shopping-cart-client|part-of|systems/serverless-shopping-cart",
+        "components/vue-shopping-cart-client|consumes|interfaces/cart-api",
+        "components/vue-shopping-cart-client|consumes|interfaces/product-api",
+        "infrastructure/authentication-sam|configures|interfaces/cart-api",
+        "infrastructure/authentication-sam|part-of|systems/serverless-shopping-cart",
+        "infrastructure/product-mock-sam|declares|components/product-mock-service",
+        "infrastructure/product-mock-sam|defines|interfaces/product-api",
+        "infrastructure/shopping-cart-sam|declares|components/shopping-cart-service",
+        "infrastructure/shopping-cart-sam|declares|components/anonymous-cart-migration-lambda",
+        "infrastructure/shopping-cart-sam|declares|components/cart-deletion-worker-lambda",
+        "infrastructure/shopping-cart-sam|declares|components/cart-aggregate-lambda",
+        "infrastructure/shopping-cart-sam|defines|interfaces/cart-api",
+        "interfaces/cart-api|consumed-by|components/vue-shopping-cart-client",
+        "interfaces/cart-api|part-of|systems/serverless-shopping-cart",
+        "interfaces/product-api|provided-by|components/product-mock-service",
+        "interfaces/product-api|consumed-by|components/vue-shopping-cart-client",
+        "interfaces/product-api|part-of|systems/serverless-shopping-cart",
+        "repositories/aws-serverless-shopping-cart|documents|systems/serverless-shopping-cart",
+        "resources/cart-deletion-queue|produced-by|components/anonymous-cart-migration-lambda",
+        "resources/cart-deletion-queue|consumed-by|components/cart-deletion-worker-lambda",
+        "resources/cart-table|accessed-by|components/shopping-cart-service",
+        "resources/cart-table|updated-by|components/cart-aggregate-lambda",
+        "systems/serverless-shopping-cart|documented-by|repositories/aws-serverless-shopping-cart",
+        "systems/serverless-shopping-cart|contains|components/shopping-cart-service",
+        "systems/serverless-shopping-cart|contains|components/product-mock-service",
+        "systems/serverless-shopping-cart|contains|components/vue-shopping-cart-client"
+      ],
+      "missingReference": [
+        "shopping-cart-system|composed-of|shopping-cart-service",
+        "shopping-cart-system|exposes|shopping-cart-api",
+        "authenticated-cart-migration|step|shopping-cart-api",
+        "authenticated-cart-migration|step|cart-delete-sqs-queue"
+      ]
+    }
+  },
+  "validation": {
+    "passed": true,
+    "failures": []
+  },
+  "ownerReview": {
+    "status": "needs_revision",
+    "findings": [
+      "components/cart-aggregate-lambda.md: owner review needs an explicit Limitations section"
+    ]
+  },
+  "authoringAssessment": {
+    "status": "invalid",
+    "hardFailures": [
+      "Reference authenticated-cart-migration matched components/anonymous-cart-migration-lambda but expected schema Business Flow, found AWS Lambda"
+    ],
+    "limitations": [
+      "Deterministic source-path checks do not prove that authored claims are semantically supported; human review is required.",
+      "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept."
+    ]
+  },
+  "okfTreeDigest": "sha256:a0d10a215fdd58020c60e17a541c60ae8ec564aa3ebfe0af0d49764b7dcd9f77"
+}
