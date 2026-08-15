@@ -45,25 +45,18 @@ is the portable archive.
 
 ## Current checkpoint
 
-- Active capability: `014-benchmark-authoring-quality`.
-- Most recent completed capability: `013-benchmark-context-ab`.
-- Canonical offline verification was green with 283 tests before capability 014.
-- Real pair `aws-health-aware/2026-08-14T181910Z` compares the current MCP
-  workflow with direct source reading on the same pinned model and task.
-- MCP was 50 seconds faster and used 36% fewer output tokens, but total input
-  differed by only 0.2% and MCP used 1.2% more uncached input. It does not prove
-  context-token savings.
-- MCP semantic quality was better than direct, but reached only 60% concept
-  recall, 40% schema recall, 25% metadata, 29% provenance and 0% expected
-  relationships. Both bundles failed OKF conformance.
+- Active capability: `015-batch-okf-authoring`.
+- Most recent completed capability: `014-benchmark-authoring-quality`.
+- Canonical offline verification is green with 294 tests.
+- The unchanged v3 workflow produced reviewable MCP drafts on Health Aware and
+  shopping cart, so evidence-first quality is ready for human review.
+- MCP used 210,649 and 466,574 more input tokens than direct. Retained traces
+  show 20 and 27 schema/validation calls respectively, repeatedly carrying
+  catalog guidance and full concept content through model context.
+- Capability 015 batches selected schema guidance and whole-bundle validation.
+  It changes interaction shape, not repository discovery or expected answers.
 
-Capability 014 is complete. The scorer uses `reviewable`/`invalid`, treats gold
-expectations as non-exhaustive and shares one bounded relationship validator
-with MCP. The unchanged v3 workflow produced reviewable MCP drafts on Health
-Aware and shopping cart; missing coverage remains visible for humans. MCP used
-210,649 and 466,574 more input tokens than direct and was slower on both pairs,
-so quality is ready for review but context efficiency is not yet good. Question
-management and external evidence enrichment remain future direction.
+Question management and external evidence enrichment remain future direction.
 
 ## Superseded assumptions
 

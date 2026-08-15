@@ -101,3 +101,11 @@ Normative OKF source is pinned to commit
   is unique; every declared target exists, has a resolving Markdown link and,
   for a known source schema, follows its relationship guidance. Unknown OKF
   schemas remain valid and their linked relationships remain unjudged.
+- **AB-SCHEMA-013** — MCP can select and return complete guidance for only the
+  schemas matched by a bounded set of repository evidence signals in one
+  advisory call. Listing the whole catalog and reading each selected schema are
+  compatible fine-grained operations, not required authoring steps.
+- **AB-SCHEMA-014** — MCP can validate up to 64 caller-supplied concepts, 256 KiB
+  each and 4 MiB total, in one content-only bundle call. It reports per-concept
+  draft/schema failures together with cross-document relationship failures and
+  never reads a caller-selected output path.

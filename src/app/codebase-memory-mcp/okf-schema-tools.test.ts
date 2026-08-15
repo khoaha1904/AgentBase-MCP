@@ -9,7 +9,10 @@ function body(value: ReturnType<typeof callOkfSchemaTool>) {
 }
 
 test("[AB-SCHEMA-001..003][AB-SCHEMA-006..011] MCP lists, reads and selects concrete versioned schemas", () => {
-  assert.deepEqual(OKF_SCHEMA_TOOLS.map((tool) => tool.name), ["list_okf_schemas", "get_okf_schema", "select_okf_schemas", "validate_okf_concept", "validate_okf_relationships"]);
+  assert.deepEqual(OKF_SCHEMA_TOOLS.map((tool) => tool.name), [
+    "list_okf_schemas", "get_okf_schema", "select_okf_schemas", "validate_okf_concept", "validate_okf_relationships",
+    "get_okf_authoring_schemas", "validate_okf_bundle",
+  ]);
   assert.equal(body(callOkfSchemaTool("list_okf_schemas", {})).catalogVersion, "3.0.0");
   const lambda = body(callOkfSchemaTool("get_okf_schema", { type: "AWS Lambda" })).schema as {
     type: string; investigationQuestions: string[]; metadataGuidance: { field: string }[];
@@ -20,6 +23,22 @@ test("[AB-SCHEMA-001..003][AB-SCHEMA-006..011] MCP lists, reads and selects conc
   const selected = body(callOkfSchemaTool("select_okf_schemas", { signals: ["terraform module", "aws sqs queue"] }));
   assert.equal(selected.advisory, true);
   assert.deepEqual((selected.recommendations as { type: string }[]).map((item) => item.type), ["AWS SQS Queue", "Terraform Module"]);
+});
+
+test("[AB-SCHEMA-013] MCP returns only selected complete schemas in one bounded call", () => {
+  const selected = body(callOkfSchemaTool("get_okf_authoring_schemas", {
+    signals: ["terraform module", "aws sqs queue"],
+  }));
+  assert.equal(selected.advisory, true);
+  const schemas = selected.schemas as { type: string; investigationQuestions: string[] }[];
+  assert.deepEqual(schemas.map((schema) => schema.type), ["AWS SQS Queue", "Terraform Module"]);
+  assert.ok(schemas.every((schema) => schema.investigationQuestions.length > 0));
+  assert.equal(schemas.some((schema) => schema.type === "Repository"), false);
+
+  const excessive = callOkfSchemaTool("get_okf_authoring_schemas", {
+    signals: Array.from({ length: 65 }, (_, index) => `signal-${index}`),
+  });
+  assert.equal(excessive.isError, true);
 });
 
 test("[AB-SCHEMA-004][AB-SCHEMA-005] MCP validates known policy and preserves unknown-type conformance", () => {
@@ -51,4 +70,43 @@ test("[AB-SCHEMA-012][AB-BENCH-030] MCP validates bounded relationship content w
   assert.match((body(invalid).failures as string[]).join("\n"), /no resolving Markdown link/);
   const schema = OKF_SCHEMA_TOOLS.find((tool) => tool.name === "validate_okf_relationships");
   assert.equal(schema && "output_path" in schema.inputSchema.properties, false);
+});
+
+test("[AB-SCHEMA-014] MCP validates concept policy and relationships in one bounded bundle call", () => {
+  const generated = "generated: { by: agentbase/0.0.0, at: 2026-08-15T00:00:00Z }";
+  const lambda = [
+    "---", "title: Worker", "description: Processes orders.", "type: AWS Lambda", "status: draft", generated,
+    "sources: []", "relationships:", "  - { kind: accesses, target: orders }", "---", "", "Uses [orders](orders.md).", "",
+  ].join("\n");
+  const table = [
+    "---", "title: Orders", "description: Stores orders.", "type: Database Table", "status: draft", generated,
+    "sources: []", "relationships:", "  - { kind: accessed-by, target: lambda }", "---", "", "Used by [worker](lambda.md).", "",
+  ].join("\n");
+  const concepts = [
+    { identity: "lambda", path: "lambda.md", content: lambda },
+    { identity: "orders", path: "orders.md", content: table },
+  ];
+  const valid = callOkfSchemaTool("validate_okf_bundle", { concepts });
+  assert.equal(valid.isError, undefined);
+  assert.equal(body(valid).valid, true);
+
+  const invalid = callOkfSchemaTool("validate_okf_bundle", { concepts: [
+    { ...concepts[0], content: lambda.replace("title: Worker\n", "").replace("Uses [orders](orders.md).", "No link.") },
+    concepts[1],
+  ] });
+  assert.equal(invalid.isError, true);
+  const result = body(invalid);
+  assert.match(JSON.stringify(result.concepts), /requires title/);
+  assert.match((result.relationshipFailures as string[]).join("\n"), /no resolving Markdown link/);
+
+  const schema = OKF_SCHEMA_TOOLS.find((tool) => tool.name === "validate_okf_bundle");
+  assert.equal(schema && "output_path" in schema.inputSchema.properties, false);
+  const excessive = callOkfSchemaTool("validate_okf_bundle", {
+    concepts: Array.from({ length: 65 }, (_, index) => ({ identity: `${index}`, path: `${index}.md`, content: lambda })),
+  });
+  assert.equal(excessive.isError, true);
+  const oversized = callOkfSchemaTool("validate_okf_bundle", {
+    concepts: [{ identity: "large", path: "large.md", content: "x".repeat(262145) }],
+  });
+  assert.equal(oversized.isError, true);
 });

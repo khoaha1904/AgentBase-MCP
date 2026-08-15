@@ -8,12 +8,33 @@ import {
   validateAgentBaseDraft,
   validateConceptAgainstSchema,
   validateOkfRelationships,
+  type ConceptDocument,
 } from "../../core/knowledge/index.ts";
 
 export const OKF_SCHEMA_TOOL_NAMES = [
   "list_okf_schemas", "get_okf_schema", "select_okf_schemas", "validate_okf_concept", "validate_okf_relationships",
+  "get_okf_authoring_schemas", "validate_okf_bundle",
 ] as const;
 export type OkfSchemaToolName = typeof OKF_SCHEMA_TOOL_NAMES[number];
+
+const conceptSetInputSchema = {
+  type: "object",
+  properties: {
+    concepts: {
+      type: "array", minItems: 1, maxItems: 64,
+      items: {
+        type: "object",
+        properties: {
+          identity: { type: "string", minLength: 1, maxLength: 256 },
+          path: { type: "string", minLength: 1, maxLength: 1024 },
+          content: { type: "string", minLength: 1, maxLength: 262144 },
+        },
+        required: ["identity", "path", "content"], additionalProperties: false,
+      },
+    },
+  },
+  required: ["concepts"], additionalProperties: false,
+} as const;
 
 export const OKF_SCHEMA_TOOLS = [
   {
@@ -54,29 +75,50 @@ export const OKF_SCHEMA_TOOLS = [
   {
     name: "validate_okf_relationships",
     description: "Validate cross-document OKF relationship targets, Markdown links and known-schema guidance from bounded supplied content.",
+    inputSchema: conceptSetInputSchema,
+  },
+  {
+    name: "get_okf_authoring_schemas",
+    description: "Select and return complete OKF schema guidance for bounded repository evidence signals in one advisory call.",
     inputSchema: {
       type: "object",
       properties: {
-        concepts: {
-          type: "array", minItems: 1, maxItems: 64,
-          items: {
-            type: "object",
-            properties: {
-              identity: { type: "string", minLength: 1, maxLength: 256 },
-              path: { type: "string", minLength: 1, maxLength: 1024 },
-              content: { type: "string", minLength: 1, maxLength: 262144 },
-            },
-            required: ["identity", "path", "content"], additionalProperties: false,
-          },
+        signals: {
+          type: "array", items: { type: "string", minLength: 1, maxLength: 2048 }, minItems: 1, maxItems: 64,
         },
       },
-      required: ["concepts"], additionalProperties: false,
+      required: ["signals"], additionalProperties: false,
     },
+  },
+  {
+    name: "validate_okf_bundle",
+    description: "Validate draft policy, known schemas and cross-document relationships for a bounded supplied OKF bundle in one call.",
+    inputSchema: conceptSetInputSchema,
   },
 ] as const;
 
 function result(value: unknown, isError = false): CallToolResult {
   return { content: [{ type: "text", text: JSON.stringify(value) }], ...(isError ? { isError: true } : {}) };
+}
+
+type SuppliedConcept = Readonly<{ identity: string; path: string; content: string }>;
+type ParsedSuppliedConcept = Readonly<{ item: SuppliedConcept; concept: ConceptDocument }>
+  | Readonly<{ item: SuppliedConcept; error: string }>;
+
+function suppliedConcepts(args: Readonly<Record<string, unknown>>): Readonly<{ entries?: SuppliedConcept[]; error?: string }> {
+  const supplied = args.concepts;
+  const valid = Array.isArray(supplied) && supplied.length >= 1 && supplied.length <= 64
+    && supplied.every((item) => item && typeof item === "object" && !Array.isArray(item)
+      && typeof item.identity === "string" && item.identity.length >= 1 && item.identity.length <= 256
+      && typeof item.path === "string" && item.path.length >= 1 && item.path.length <= 1024
+      && typeof item.content === "string" && item.content.length >= 1
+      && Buffer.byteLength(item.content) <= 262144);
+  if (!valid) return { error: "concepts must be a bounded list of identity, path and content strings" };
+  const entries = supplied as SuppliedConcept[];
+  if (entries.reduce((bytes, item) => bytes + Buffer.byteLength(item.content), 0) > 4 * 1024 * 1024) {
+    return { error: "concept content exceeds 4194304 bytes" };
+  }
+  return { entries };
 }
 
 export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record<string, unknown>>): CallToolResult {
@@ -105,17 +147,59 @@ export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record
         advisory: true,
       });
     }
-    if (name === "validate_okf_relationships") {
-      const supplied = args.concepts;
-      const valid = Array.isArray(supplied) && supplied.length >= 1 && supplied.length <= 64
-        && supplied.every((item) => item && typeof item === "object" && !Array.isArray(item)
-          && typeof item.identity === "string" && Boolean(item.identity)
-          && typeof item.path === "string" && Boolean(item.path)
-          && typeof item.content === "string" && Boolean(item.content));
-      if (!valid) return result({ error: "concepts must be a bounded list of identity, path and content strings" }, true);
-      const entries = supplied as { identity: string; path: string; content: string }[];
-      if (entries.reduce((bytes, item) => bytes + Buffer.byteLength(item.content), 0) > 4 * 1024 * 1024) {
-        return result({ error: "concept content exceeds 4194304 bytes" }, true);
+    if (name === "get_okf_authoring_schemas") {
+      const signals = args.signals;
+      const valid = Array.isArray(signals) && signals.length >= 1 && signals.length <= 64
+        && signals.every((signal) => typeof signal === "string" && signal.length >= 1 && signal.length <= 2048);
+      if (!valid) return result({ error: "signals must be a bounded non-empty string list" }, true);
+      const recommendations = selectOkfConceptSchemas(signals as string[]);
+      return result({
+        catalogVersion: AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
+        okfVersion: "0.2",
+        schemas: recommendations.map((recommendation) => ({
+          ...getOkfConceptSchema(recommendation.type),
+          matchedSignals: recommendation.matchedSignals,
+          missingEvidence: recommendation.missingEvidence,
+        })),
+        advisory: true,
+      });
+    }
+    if (name === "validate_okf_relationships" || name === "validate_okf_bundle") {
+      const supplied = suppliedConcepts(args);
+      if (!supplied.entries) return result({ error: supplied.error }, true);
+      const entries = supplied.entries;
+      if (name === "validate_okf_bundle") {
+        const parsed: ParsedSuppliedConcept[] = entries.map((item) => {
+          try { return { item, concept: parseConceptDocument(item.path, item.content) }; }
+          catch (error) {
+            return { item, error: error instanceof Error ? error.message : "concept parsing failed" };
+          }
+        });
+        const concepts = parsed.map((entry) => {
+          if ("error" in entry) return {
+            identity: entry.item.identity, path: entry.item.path, valid: false,
+            failures: [`${entry.item.path}: ${entry.error}`],
+          };
+          const failures = [...validateAgentBaseDraft(entry.concept), ...validateConceptAgainstSchema(entry.concept)];
+          return {
+            identity: entry.item.identity, path: entry.item.path, type: entry.concept.type,
+            knownSchema: Boolean(getOkfConceptSchema(entry.concept.type)), valid: failures.length === 0, failures,
+          };
+        });
+        const parsedConcepts = parsed.flatMap((entry) => "concept" in entry
+          ? [{ identity: entry.item.identity, concept: entry.concept }]
+          : []);
+        const relationshipValidation = parsedConcepts.length === entries.length
+          ? validateOkfRelationships(parsedConcepts)
+          : { failures: [] as readonly string[], relationships: [] };
+        const valid = concepts.every((concept) => concept.valid) && relationshipValidation.failures.length === 0;
+        return result({
+          valid,
+          concepts,
+          relationshipFailures: relationshipValidation.failures,
+          relationships: relationshipValidation.relationships,
+          relationshipValidationSkipped: parsedConcepts.length !== entries.length,
+        }, !valid);
       }
       const validation = validateOkfRelationships(entries.map((item) => ({
         identity: item.identity,

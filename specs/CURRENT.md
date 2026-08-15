@@ -1,11 +1,10 @@
 # Current capability
 
-Active capability: None
+Active capability: [`015-batch-okf-authoring`](015-batch-okf-authoring/spec.md)
 
 Most recent completed: [`014-benchmark-authoring-quality`](014-benchmark-authoring-quality/spec.md)
 
-Capability 014 establishes evidence-first reviewability without hidden-answer
-completeness. Bounded relationship-set validation and one immutable v3 workflow
-produced reviewable MCP drafts on two structurally different repositories. MCP
-remains more expensive than direct source reading, so no context-saving claim is
-accepted.
+Capability 015 reduces measured MCP interaction overhead without changing the
+evidence-first quality contract or adding repository answers. It batches selected
+schema guidance and whole-bundle validation before repeating the same workflow
+on both heterogeneous fixtures.

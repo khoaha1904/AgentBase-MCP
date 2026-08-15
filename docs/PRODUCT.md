@@ -23,8 +23,8 @@ source repository
   -> build or reuse private Code Graph
   -> agent investigates graph and authorized source evidence
   -> normalize bounded provenance-bearing observations
-  -> select concrete OKF schemas and author a sparse proposal
-  -> validate, inspect and explicitly accept into local Hub main
+  -> batch-select concrete OKF guidance and author a sparse proposal
+  -> batch-validate, inspect and explicitly accept into local Hub main
   -> query accepted local knowledge
   -> optionally publish a safe pending prefix in one PR
   -> after merge, synchronize and rebase remaining pending commits safely
