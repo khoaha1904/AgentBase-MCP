@@ -32,7 +32,10 @@ warnings and no errors.
 
 - The first real V5 Shopping Cart run was useful for owner review but invalid
   because its root index used unsupported hyphen bullets. Immutable V6 corrects
-  only that prompt ambiguity; a valid rerun is still required.
+  that prompt ambiguity; its rerun passed conformance but replaced an evidenced
+  Business Flow with a Lambda and omitted one Limitations section. Immutable V7
+  adds the general behavior-boundary and recommended-section rules; a valid
+  rerun is still required.
 - Reference coverage remains non-exhaustive and cannot prove semantic truth.
 - Question persistence, `/abs-questions`, AWS CLI authority and cloud resource
   enrichment remain future capabilities.

@@ -290,3 +290,9 @@ The first V5 Shopping Cart run produced useful canonical content but failed root
 conformance because the prompt permitted a generic Markdown list while the
 bundle contract requires `*` entries. Immutable V6 changes only that shared
 grammar instruction and retains the V5 quality/scoring model.
+
+The V6 rerun passed conformance but substituted a Lambda concept for an
+evidenced Business Flow and omitted one required Limitations section, so it was
+not publishable. Immutable V7 adds the general boundary rule that implementation
+concepts do not replace behavior concepts and requires schema-recommended
+Limitations sections; it does not name a fixture or expected identity.
