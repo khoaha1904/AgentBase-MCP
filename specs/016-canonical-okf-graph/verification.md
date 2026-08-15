@@ -38,6 +38,8 @@ warnings and no errors.
   `2026-08-15T102132Z` is conformant, reviewable and useful for owner review;
   incomplete coverage remains diagnostic.
 - Reference coverage remains non-exhaustive and cannot prove semantic truth.
+- The accepted V7 graph and canonical Hub README were published together for
+  owner review in `khoaha1904/AgentBase-Hub` PR #6.
 - Question persistence, `/abs-questions`, AWS CLI authority and cloud resource
   enrichment remain future capabilities.
 - Human review remains required before accepting generated OKF knowledge.
