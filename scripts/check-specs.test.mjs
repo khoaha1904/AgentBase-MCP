@@ -36,7 +36,7 @@ function fixture() {
     ...ids("AB-MVP", 7), ...ids("AB-GRAPH", 14), ...ids("AB-REFRESH", 12), ...ids("AB-MCP", 14),
   ]));
   write(root, "docs/contracts/okf.md", lines([
-    ...ids("AB-MVP", 15, 8), ...ids("AB-OBS", 7), ...ids("AB-SCHEMA", 15),
+    ...ids("AB-MVP", 15, 8), ...ids("AB-OBS", 7), ...ids("AB-SCHEMA", 18),
   ]));
   write(root, "docs/contracts/hub.md", lines([
     ...ids("AB-LOCAL-HUB", 13), "AB-QUERY-001", ...ids("AB-HUB-SETUP", 17),

@@ -80,16 +80,19 @@ Normative OKF source is pinned to commit
 - **AB-SCHEMA-005, AB-SCHEMA-006** — Unknown OKF types/extensions remain valid
   and protected. The catalog is distinct from MCP input schemas and provider
   graph schemas; raw graph data is never copied wholesale into Hub.
-- **AB-SCHEMA-007** — The corrected concrete vocabulary contains Repository,
-  Service, Server, API Endpoint, Event, Database Table, Queue, AWS Lambda, AWS
-  SQS Queue, Terraform Module, Business Flow, Cross-Repository Relationship,
-  Open Question and Maintainer Guidance.
-- **AB-SCHEMA-008** — Selection deterministically prefers the most-specific type
-  actually supported by evidence; repeated instances remain separate concepts.
+- **AB-SCHEMA-007** — The compatible vocabulary contains Repository, Domain,
+  System, Software Component, Service, Server, API Surface, API Endpoint, Event,
+  Database Table, Queue, AWS Lambda, AWS SQS Queue, Infrastructure Definition,
+  Terraform Module, Deployment, Business Flow, Cross-Repository Relationship,
+  legacy Open Question and Maintainer Guidance.
+- **AB-SCHEMA-008** — Selection recommends the smallest independently useful
+  type supported by evidence. Concrete implementation detail remains inside its
+  useful parent unless an independent contract, ownership, lifecycle, failure,
+  operational, audience or graph boundary is evidenced.
 - **AB-SCHEMA-009** — Concrete concepts preserve provenance and important
   uncertainty. Cross-repository relationships need evidence for both endpoints
   and the relationship.
-- **AB-SCHEMA-010** — Current catalog `3.1.0` provides bounded investigation,
+- **AB-SCHEMA-010** — Current catalog `4.0.0` provides bounded investigation,
   semantic metadata, relationship and optional-enrichment guidance. AWS Lambda,
   Terraform and Business Flow guidance connects identity and infrastructure to
   runtime and observable outcomes.
@@ -98,9 +101,9 @@ Normative OKF source is pinned to commit
   invented value.
 - **AB-SCHEMA-012** — MCP validates a bounded caller-supplied concept set without
   reading caller-selected filesystem paths. Each supplied relationship identity
-  is unique; every declared target exists, has a resolving Markdown link and,
-  for a known source schema, follows its relationship guidance. Unknown OKF
-  schemas remain valid and their linked relationships remain unjudged.
+  is unique; every declared target exists and has a resolving relative or
+  absolute bundle-relative Markdown link. A catalog-unknown relationship stays
+  portable and is reported unjudged rather than rejected.
 - **AB-SCHEMA-013** — MCP can select and return complete guidance for only the
   schemas matched by a bounded set of repository evidence signals in one
   advisory call. Listing the whole catalog and reading each selected schema are
@@ -114,3 +117,13 @@ Normative OKF source is pinned to commit
   deterministic order and specific-type shadowing. Catalog phrases include
   admitted singular/plural wording; repository names or benchmark identities
   are never selection rules.
+- **AB-SCHEMA-016** — Canonical Domain, System, Component, Interface, Flow,
+  Resource, Infrastructure, Deployment and Repository paths classify one
+  identity per entity; links express containment, implementation and evidence.
+- **AB-SCHEMA-017** — Related operations share an API Surface; implementation-
+  only handlers stay in their useful parent; infrastructure definition,
+  reusable module and evidenced deployment remain distinct.
+- **AB-SCHEMA-018** — Domain is optional and never inferred from a repository
+  name. Repository concepts retain source-specific knowledge and link to
+  canonical entities without copying their contracts. Existing Open Question
+  concepts remain readable but are not recommended for new authoring.

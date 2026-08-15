@@ -19,12 +19,12 @@
 
 ## Phase 3: System-centered authoring
 
-- [ ] T010 [P] [US1] Add canonical schema selection tests in `src/core/knowledge/schema-catalog.test.ts`
-- [ ] T011 [P] [US1] Add open-world/absolute-link relationship tests in `src/core/knowledge/okf-relationships.test.ts`
-- [ ] T012 [US1] Implement catalog 4.0.0 canonical schemas and useful-unit guidance in `src/core/knowledge/schema-definitions.ts` and `schema-infrastructure-definitions.ts`
-- [ ] T013 [US1] Update relationship validation in `src/core/knowledge/okf-relationships.ts`
-- [ ] T014 [US1] Update `.agents/skills/agentbase-okf/SKILL.md` and `docs/contracts/okf.md`
-- [ ] T015 [US1] Run canonical verification and commit the system-centered authoring phase
+- [x] T010 [P] [US1] Add canonical schema selection tests in `src/core/knowledge/schema-catalog.test.ts`
+- [x] T011 [P] [US1] Add open-world/absolute-link relationship tests in `src/core/knowledge/okf-relationships.test.ts`
+- [x] T012 [US1] Implement catalog 4.0.0 canonical schemas and useful-unit guidance in `src/core/knowledge/schema-definitions.ts` and `schema-infrastructure-definitions.ts`
+- [x] T013 [US1] Update relationship validation in `src/core/knowledge/okf-relationships.ts`
+- [x] T014 [US1] Update `.agents/skills/agentbase-okf/SKILL.md` and `docs/contracts/okf.md`
+- [x] T015 [US1] Run canonical verification and commit the system-centered authoring phase
 
 ## Phase 4: Benchmark v5
 

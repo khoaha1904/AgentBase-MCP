@@ -191,12 +191,13 @@ export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record
           : []);
         const relationshipValidation = parsedConcepts.length === entries.length
           ? validateOkfRelationships(parsedConcepts)
-          : { failures: [] as readonly string[], relationships: [] };
+          : { failures: [] as readonly string[], relationships: [], warnings: [] as readonly string[] };
         const valid = concepts.every((concept) => concept.valid) && relationshipValidation.failures.length === 0;
         return result({
           valid,
           concepts,
           relationshipFailures: relationshipValidation.failures,
+          relationshipWarnings: relationshipValidation.warnings,
           relationships: relationshipValidation.relationships,
           relationshipValidationSkipped: parsedConcepts.length !== entries.length,
         }, !valid);

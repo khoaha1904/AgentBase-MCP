@@ -79,7 +79,7 @@ test("new preparation admits a selected cross-repository relationship outside th
       hub: createHubIdentity("agentbase/hub", "main"), baseCommit: BASE_COMMIT, sourceRepositoryId: SOURCE_ID,
       hubBundleRoot: current.base, authoredBundleRoot: current.authored,
       proposalRoot: current.proposal, subjectDirectory: "repositories/acme",
-      evidenceDigest: EVIDENCE, signals: ["repository", "cross-repository"],
+      evidenceDigest: EVIDENCE, signals: ["repository", "integration contract"],
       createdAt: "2026-08-12T00:00:00Z",
     });
     assert.equal(result.diff.entries.some((entry) => entry.path === "relationships/acme-billing.md"), true);

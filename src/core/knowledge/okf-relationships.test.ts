@@ -9,7 +9,7 @@ function concept(documentPath: string, type: string, relationships: string, body
   return parseConceptDocument(documentPath, `---\ntype: ${type}\nstatus: draft\n${generated}\nrelationships:${relationships}\n---\n\n${body}\n`);
 }
 
-test("[AB-SCHEMA-012][AB-BENCH-030] validates targets, links and known schema guidance", () => {
+test("[AB-SCHEMA-012][AB-BENCH-030] validates targets and links while unknown guidance stays visible", () => {
   const lambda = concept("runtime/lambda.md", "AWS Lambda", "\n  - { kind: accesses, target: orders }", "Uses [orders](../data/orders.md).");
   const table = concept("data/orders.md", "Database Table", " []", "Orders.");
   const valid = validateOkfRelationships([
@@ -31,7 +31,9 @@ test("[AB-SCHEMA-012][AB-BENCH-030] validates targets, links and known schema gu
     { identity: "lambda", concept: concept("runtime/lambda.md", "AWS Lambda", "\n  - { kind: triggers, target: orders }", "Uses [orders](../data/orders.md).") },
     { identity: "orders", concept: table },
   ]);
-  assert.match(unsupported.failures.join("\n"), /unsupported by AWS Lambda schema guidance/);
+  assert.deepEqual(unsupported.failures, []);
+  assert.match(unsupported.warnings.join("\n"), /unjudged by AWS Lambda schema guidance/);
+  assert.deepEqual(unsupported.relationships, [{ source: "lambda", kind: "triggers", target: "orders" }]);
 });
 
 test("[AB-SCHEMA-005][AB-SCHEMA-012] unknown schemas stay portable and identities are unambiguous", () => {
@@ -43,4 +45,15 @@ test("[AB-SCHEMA-005][AB-SCHEMA-012] unknown schemas stay portable and identitie
   assert.match(validateOkfRelationships([
     { identity: "same", concept: custom }, { identity: "same", concept: table },
   ]).failures.join("\n"), /duplicate relationship identity same/);
+});
+
+test("[AB-SCHEMA-012] absolute bundle-relative Markdown links resolve portably", () => {
+  const source = concept("components/cart.md", "Service", "\n  - { kind: uses, target: api }", "Uses [API](/interfaces/cart-api.md). ");
+  const target = concept("interfaces/cart-api.md", "API Surface", " []", "Cart API.");
+  const validation = validateOkfRelationships([
+    { identity: "cart", concept: source }, { identity: "api", concept: target },
+  ]);
+  assert.deepEqual(validation.failures, []);
+  assert.deepEqual(validation.relationships, [{ source: "cart", kind: "uses", target: "api" }]);
+  assert.equal(validation.warnings.length, 1);
 });

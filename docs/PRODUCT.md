@@ -52,9 +52,10 @@ An OKF bundle is linked Markdown with YAML frontmatter, bundle-relative concept
 IDs and reserved index/log rules. Conformance does not prove semantic truth.
 
 AgentBase's versioned catalog supplies concrete software, AWS, Terraform,
-business, question and guidance types. Selection is evidence-driven and sparse;
-unknown valid OKF types remain readable and protected. Missing evidence becomes
-a limitation or question, never an invented field.
+business and guidance types, with legacy question compatibility. Selection is
+evidence-driven and sparse; unknown valid OKF types remain readable and
+protected. Missing evidence becomes a limitation or a separately surfaced
+unresolved item, never an invented field.
 
 ## Governance and authority
 

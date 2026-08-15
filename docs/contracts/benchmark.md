@@ -60,18 +60,19 @@ benchmarks.
 - **AB-BENCH-019** — The authoring contract defines root `index.md` as only
   `okf_version: "0.2"` frontmatter, one heading and Markdown list entries that
   link to authored concepts; arbitrary root prose is forbidden.
-- **AB-BENCH-020** — Before writing, the agent identifies candidates at stable
-  resource or business-behavior granularity, chooses the most concrete
-  supported type and omits speculative or duplicate concepts.
+- **AB-BENCH-020** — Before writing, the agent identifies the smallest
+  independently useful candidates, chooses an evidence-supported boundary and
+  omits speculative, duplicate or implementation-only concepts.
 - **AB-BENCH-021** — Every candidate is assessed against applicable relationship
-  guidance. Supported relationships appear in both frontmatter and a resolving
-  Markdown link; unsupported gaps remain visible rather than invented.
+  guidance. Declared relationships require an existing target and resolving
+  Markdown link; catalog-unknown combinations remain visible as unjudged rather
+  than being rejected or invented.
 - **AB-BENCH-022** — Agent-visible inputs never expose benchmark expectations,
   expected keys, types, paths or relationships.
 - **AB-BENCH-023** — Each scored arm declares `reviewable` or `invalid`.
   Lifecycle/conformance failure, empty output, unsafe provenance, a recognized
-  identity with a contradictory schema, or a malformed, broken or
-  schema-unsupported authored relationship is invalid. Missing reference
+  identity with a contradictory schema, or a malformed or broken authored
+  relationship is invalid. Missing reference
   concepts, metadata, provenance or relationships remain diagnostics and never
   become invalid solely because coverage is low.
 - **AB-BENCH-024** — Changed prompt behavior receives a new immutable prompt

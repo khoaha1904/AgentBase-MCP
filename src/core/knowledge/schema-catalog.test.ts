@@ -4,13 +4,16 @@ import test from "node:test";
 import { getOkfConceptSchema, listOkfConceptSchemas, selectOkfConceptSchemas, validateConceptAgainstSchema } from "./schema-catalog.ts";
 import { parseConceptDocument } from "./okf-document.ts";
 
-test("[AB-SCHEMA-001][AB-SCHEMA-006][AB-SCHEMA-007] catalog 3.1 exposes concrete authoring types", () => {
+test("[AB-SCHEMA-001][AB-SCHEMA-006][AB-SCHEMA-007][AB-SCHEMA-016] catalog 4.0 exposes canonical authoring types", () => {
   assert.deepEqual(listOkfConceptSchemas().map((item) => item.type), [
-    "Repository", "Service", "Server", "API Endpoint", "Event", "Database Table", "Queue",
-    "AWS Lambda", "AWS SQS Queue", "Terraform Module", "Business Flow",
+    "Repository", "Domain", "System", "Software Component", "Service", "Server", "API Surface", "API Endpoint",
+    "Event", "Database Table", "Queue", "AWS Lambda", "AWS SQS Queue", "Infrastructure Definition",
+    "Terraform Module", "Deployment", "Business Flow",
     "Cross-Repository Relationship", "Open Question", "Maintainer Guidance",
   ]);
-  assert.equal(getOkfConceptSchema("AWS Lambda")?.directoryHint, "repositories/<repository>/infrastructure/aws/lambda/<slug>.md");
+  assert.equal(getOkfConceptSchema("AWS Lambda")?.directoryHint, "components/<slug>.md");
+  assert.equal(getOkfConceptSchema("Repository")?.directoryHint, "repositories/<slug>.md");
+  assert.equal(getOkfConceptSchema("Domain")?.directoryHint, "domains/<slug>.md");
 });
 
 test("[AB-SCHEMA-010][AB-SCHEMA-011] AWS and business schemas guide evidence-led investigation", () => {
@@ -28,8 +31,22 @@ test("[AB-SCHEMA-010][AB-SCHEMA-011] AWS and business schemas guide evidence-led
 test("[AB-SCHEMA-002][AB-SCHEMA-008] selection is sparse and prefers specific supported types", () => {
   assert.deepEqual(selectOkfConceptSchemas(["aws sqs queue", "producer or consumer evidence", "SQS resource identity"]).map((item) => item.type), ["AWS SQS Queue"]);
   assert.deepEqual(selectOkfConceptSchemas(["server entry point", "http server"]).map((item) => item.type), ["Server"]);
-  assert.deepEqual(selectOkfConceptSchemas(["HTTP routes backed by handlers"]).map((item) => item.type), ["API Endpoint"]);
+  assert.deepEqual(selectOkfConceptSchemas(["HTTP routes backed by handlers"]).map((item) => item.type), ["API Surface"]);
+  assert.deepEqual(selectOkfConceptSchemas(["independent endpoint with endpoint policy"]).map((item) => item.type), ["API Endpoint"]);
+  assert.deepEqual(selectOkfConceptSchemas(["terraform root configuration"]).map((item) => item.type), ["Infrastructure Definition"]);
+  assert.deepEqual(selectOkfConceptSchemas(["terraform module"]).map((item) => item.type), ["Terraform Module"]);
+  assert.deepEqual(selectOkfConceptSchemas(["repository named commerce-api"]).map((item) => item.type), ["Repository"]);
+  assert.equal(selectOkfConceptSchemas(["repository named commerce-api"]).some((item) => item.type === "Domain"), false);
   assert.deepEqual(selectOkfConceptSchemas([]), []);
+});
+
+test("[AB-SCHEMA-017][AB-SCHEMA-018] catalog guidance keeps implementation details inside useful boundaries", () => {
+  assert.match(getOkfConceptSchema("API Surface")?.purpose ?? "", /related operations/);
+  assert.match(getOkfConceptSchema("API Endpoint")?.evidenceRequirements.join(" ") ?? "", /independent/);
+  assert.match(getOkfConceptSchema("AWS Lambda")?.investigationQuestions[0] ?? "", /only a handler/);
+  assert.match(getOkfConceptSchema("Terraform Module")?.purpose ?? "", /reusable/);
+  assert.match(getOkfConceptSchema("Deployment")?.evidenceRequirements.join(" ") ?? "", /external evidence/);
+  assert.deepEqual(selectOkfConceptSchemas(["question about an unknown owner"]), []);
 });
 
 test("[AB-SCHEMA-015] selection recognizes natural evidence word order and catalog phrases", () => {

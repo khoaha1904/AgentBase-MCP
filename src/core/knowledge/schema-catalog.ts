@@ -3,7 +3,7 @@ import { OKF_CONCEPT_SCHEMAS, type OkfConceptSchema } from "./schema-definitions
 
 export type { OkfConceptSchema } from "./schema-definitions.ts";
 
-export const AGENTBASE_OKF_SCHEMA_CATALOG_VERSION = "3.1.0" as const;
+export const AGENTBASE_OKF_SCHEMA_CATALOG_VERSION = "4.0.0" as const;
 
 export type OkfSchemaSelection = Readonly<{
   type: string;

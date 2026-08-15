@@ -8,6 +8,7 @@ export type ValidatedOkfRelationship = Readonly<{ source: string; kind: string; 
 export type OkfRelationshipValidation = Readonly<{
   relationships: readonly ValidatedOkfRelationship[];
   failures: readonly string[];
+  warnings: readonly string[];
 }>;
 
 const MAX_CONCEPTS = 128;
@@ -22,8 +23,10 @@ function linkedPaths(concept: ConceptDocument): ReadonlySet<string> {
   const links = new Set<string>();
   for (const match of concept.body.matchAll(/(?<!!)\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)) {
     const raw = match[1]?.split("#")[0]?.split("?")[0];
-    if (!raw || !raw.endsWith(".md") || raw.startsWith("/") || /^[a-z][a-z0-9+.-]*:/i.test(raw)) continue;
-    const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(concept.path), raw));
+    if (!raw || !raw.endsWith(".md") || /^[a-z][a-z0-9+.-]*:/i.test(raw)) continue;
+    const resolved = raw.startsWith("/")
+      ? path.posix.normalize(raw.slice(1))
+      : path.posix.normalize(path.posix.join(path.posix.dirname(concept.path), raw));
     if (resolved !== ".." && !resolved.startsWith("../")) links.add(resolved);
   }
   return links;
@@ -31,9 +34,10 @@ function linkedPaths(concept: ConceptDocument): ReadonlySet<string> {
 
 export function validateOkfRelationships(concepts: readonly OkfRelationshipConcept[]): OkfRelationshipValidation {
   const failures: string[] = [];
+  const warnings: string[] = [];
   const relationships: ValidatedOkfRelationship[] = [];
   if (!concepts.length || concepts.length > MAX_CONCEPTS) {
-    return { relationships, failures: [`relationship validation requires 1-${MAX_CONCEPTS} concepts`] };
+    return { relationships, failures: [`relationship validation requires 1-${MAX_CONCEPTS} concepts`], warnings };
   }
   const identities = new Map<string, ConceptDocument>();
   const paths = new Set<string>();
@@ -72,11 +76,10 @@ export function validateOkfRelationships(concepts: readonly OkfRelationshipConce
       const supported = schema?.relationshipGuidance.some((guidance) =>
         guidance.kind === relationship.kind && guidance.targetTypes.includes(target.type));
       if (schema && !supported) {
-        failures.push(`${concept.path}: relationship ${relationship.kind} -> ${relationship.target} is unsupported by ${concept.type} schema guidance`);
-        continue;
+        warnings.push(`${concept.path}: relationship ${relationship.kind} -> ${relationship.target} is unjudged by ${concept.type} schema guidance`);
       }
       relationships.push({ source: identity, kind: relationship.kind, target: relationship.target });
     }
   }
-  return { relationships, failures };
+  return { relationships, failures, warnings };
 }

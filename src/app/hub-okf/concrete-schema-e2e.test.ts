@@ -25,8 +25,11 @@ test("[AB-SCHEMA-007] every initial concrete schema has a validation/selection f
     catalogVersion: string;
     cases: readonly CatalogCase[];
   };
-  assert.equal(fixture.catalogVersion, "3.1.0");
-  assert.deepEqual(fixture.cases.map((item) => item.type), listOkfConceptSchemas().slice(0, 12).map((item) => item.type));
+  assert.equal(fixture.catalogVersion, "4.0.0");
+  assert.deepEqual(
+    fixture.cases.map((item) => item.type),
+    listOkfConceptSchemas().filter((item) => item.selectWhen.length).map((item) => item.type),
+  );
   for (const current of fixture.cases) {
     assert.ok(getOkfConceptSchema(current.type));
     assert.ok(selectOkfConceptSchemas(current.signals).some((item) => item.type === current.type));

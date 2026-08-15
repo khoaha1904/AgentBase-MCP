@@ -185,11 +185,10 @@ test("[AB-BENCH-004][AB-BENCH-005] schema and evidence outrank a greedy identity
   assert.deepEqual(result.classifications.concepts.missingReference, ["alert-flow"]);
 });
 
-test("[AB-BENCH-021][AB-BENCH-023] declared relationships require target, link and schema guidance", () => {
+test("[AB-BENCH-021][AB-BENCH-023] declared relationships require targets and resolving links", () => {
   for (const [name, lambda] of [
     ["missing target", concept("lambda.md", "AWS Lambda", "primary-lambda", {}, ["infra.tf"], [{ kind: "accesses", target: "ghost" }], "Uses [ghost](ghost.md).")],
     ["missing Markdown link", concept("lambda.md", "AWS Lambda", "primary-lambda", {}, ["infra.tf"], [{ kind: "accesses", target: "orders-table" }])],
-    ["unsupported schema relation", concept("lambda.md", "AWS Lambda", "primary-lambda", {}, ["infra.tf"], [{ kind: "triggers", target: "orders-table" }], "Uses [orders](table.md).")],
   ]) {
     const table = concept("table.md", "Database Table", "orders-table", {}, ["infra.tf"]);
     const result = scoreSemanticBenchmark(expectation, {
@@ -198,6 +197,15 @@ test("[AB-BENCH-021][AB-BENCH-023] declared relationships require target, link a
     assert.equal(result.authoringAssessment.status, "invalid", name);
     assert.match(result.authoringAssessment.hardFailures.join("\n"), /relationship/i, name);
   }
+  const unjudged = concept("lambda.md", "AWS Lambda", "primary-lambda", {}, ["infra.tf"], [
+    { kind: "triggers", target: "orders-table" },
+  ], "Uses [orders](table.md).");
+  const table = concept("table.md", "Database Table", "orders-table", {}, ["infra.tf"]);
+  const result = scoreSemanticBenchmark(expectation, {
+    concepts: new Map([["lambda", unjudged], ["table", table]]), warnings: [],
+  }, repositoryId);
+  assert.equal(result.authoringAssessment.status, "reviewable");
+  assert.deepEqual(result.classifications.relationships.unjudged, ["primary-lambda|triggers|orders-table"]);
 });
 
 test("[AB-BENCH-026] linked relationships from an unknown Google OKF type stay unjudged", () => {
