@@ -185,3 +185,37 @@ required. The shopping-cart model pair is deferred until the general bundle
 consistency gap is fixed; no fixture-specific hint is justified. Immutable v3
 prompts add only a required bounded relationship-set validation step to the MCP
 workflow.
+
+## v3 heterogeneous evidence
+
+The unchanged v3 workflow completed current-model pairs on both pinned fixture
+types. Both MCP arms called `validate_okf_relationships`, passed conformance and
+are reviewable; this is bounded two-repository evidence, not universal proof.
+
+| MCP quality | Health Aware `2026-08-15T040000Z` | Shopping cart `2026-08-15T041000Z` |
+|---|---:|---:|
+| Assessment | reviewable | reviewable |
+| Reference concepts | 80% | 100% |
+| Recognized schema agreement | 100% | 100% |
+| Metadata | 83% | 100% |
+| Provenance | 86% | 80% |
+| Reference relationships | 67% | 100% |
+| Unjudged concepts | 0 | 1 |
+
+Health Aware omitted the DynamoDB table and related edges; shopping cart added a
+source-backed deletion Lambda outside the non-exhaustive reference. These are
+visible review/coverage items, not hard failures. Human review is still required
+because path checks cannot establish semantic support for every claim.
+
+| MCP-minus-direct efficiency | Health Aware | Shopping cart |
+|---|---:|---:|
+| Elapsed | +11,400 ms | +33,661 ms |
+| Input tokens | +210,649 | +466,574 |
+| Uncached input | +3,289 | +13,966 |
+| Output tokens | -879 | +400 |
+| Reasoning output | -775 | -362 |
+
+Both direct arms were invalid, so the table is not a quality-equivalent speed
+contest. It nevertheless shows that MCP consumed more input and elapsed time in
+both measured pairs. AgentBase therefore claims reviewable authoring quality,
+not context-token or runtime savings.

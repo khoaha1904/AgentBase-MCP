@@ -1,9 +1,11 @@
 # Current capability
 
-Active capability: [`014-benchmark-authoring-quality`](014-benchmark-authoring-quality/spec.md)
+Active capability: None
 
-Most recent completed: [`013-benchmark-context-ab`](013-benchmark-context-ab/spec.md)
+Most recent completed: [`014-benchmark-authoring-quality`](014-benchmark-authoring-quality/spec.md)
 
-Capability 014 corrects evidence-first scoring without exposing gold
-expectations. Bounded relationship-set validation and immutable v3 prompts pass
-offline verification; heterogeneous v3 model evidence is next.
+Capability 014 establishes evidence-first reviewability without hidden-answer
+completeness. Bounded relationship-set validation and one immutable v3 workflow
+produced reviewable MCP drafts on two structurally different repositories. MCP
+remains more expensive than direct source reading, so no context-saving claim is
+accepted.

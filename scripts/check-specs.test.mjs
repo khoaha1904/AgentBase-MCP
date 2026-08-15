@@ -36,7 +36,7 @@ function fixture() {
     ...ids("AB-MVP", 7), ...ids("AB-GRAPH", 14), ...ids("AB-REFRESH", 12), ...ids("AB-MCP", 14),
   ]));
   write(root, "docs/contracts/okf.md", lines([
-    ...ids("AB-MVP", 15, 8), ...ids("AB-OBS", 7), ...ids("AB-SCHEMA", 11),
+    ...ids("AB-MVP", 15, 8), ...ids("AB-OBS", 7), ...ids("AB-SCHEMA", 12),
   ]));
   write(root, "docs/contracts/hub.md", lines([
     ...ids("AB-LOCAL-HUB", 11), "AB-QUERY-001", ...ids("AB-HUB-SETUP", 17),
@@ -134,7 +134,7 @@ test("[AB-MVP/OBS/SCHEMA] enforces the consolidated evidence and OKF contract", 
     let source = fs.readFileSync(file, "utf8");
     source = source.replace("AB-MVP-022", "missing-okf")
       .replace("AB-OBS-007", "missing-observation")
-      .replace("AB-SCHEMA-011", "missing-schema");
+      .replace("AB-SCHEMA-012", "missing-schema");
     fs.writeFileSync(file, source);
     const result = codes(checkSpecifications(current.root));
     assert.ok(result.includes("SPEC-MVP-ID-MISSING"));

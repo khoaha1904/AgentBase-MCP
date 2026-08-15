@@ -57,16 +57,13 @@ is the portable archive.
   recall, 40% schema recall, 25% metadata, 29% provenance and 0% expected
   relationships. Both bundles failed OKF conformance.
 
-Capability 014 remains active under an owner-amended evidence-first plan. The
-scorer now uses `reviewable`/`invalid` and treats gold expectations as
-non-exhaustive. Deterministic re-scoring found one real v2 MCP hard failure: the
-Lambda declares a Terraform `declared-by` relationship without the required
-resolving Markdown link. Missing Business Flow coverage is diagnostic, but the
-broken relationship mirror keeps this retained artifact invalid. Shopping-cart
-model execution is deferred until the new content-only relationship validator
-and immutable v3 workflow pass offline verification. MCP used 440,523 more input
-tokens than direct, so no context-saving claim exists.
-Question management and external evidence enrichment remain future direction.
+Capability 014 is complete. The scorer uses `reviewable`/`invalid`, treats gold
+expectations as non-exhaustive and shares one bounded relationship validator
+with MCP. The unchanged v3 workflow produced reviewable MCP drafts on Health
+Aware and shopping cart; missing coverage remains visible for humans. MCP used
+210,649 and 466,574 more input tokens than direct and was slower on both pairs,
+so quality is ready for review but context efficiency is not yet good. Question
+management and external evidence enrichment remain future direction.
 
 ## Superseded assumptions
 

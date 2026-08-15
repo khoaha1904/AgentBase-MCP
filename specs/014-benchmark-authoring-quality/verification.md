@@ -1,5 +1,45 @@
 # Verification: Benchmark Authoring Quality
 
+## v3 heterogeneous model evidence
+
+Both pairs used catalog `3.0.0`, immutable v3 prompts, Codex CLI `0.147.0`,
+`gpt-5.6-terra` and medium effort. Both source fixtures remained clean and both
+MCP `run.json` artifacts record `validate_okf_relationships: true`.
+
+### Health Aware — `2026-08-15T040000Z`
+
+- MCP: `reviewable`; conformance passed; reference concepts 80%; recognized
+  schema agreement 100%; metadata 83%; provenance 86%; relationships 67%; no
+  unjudged concepts and no hard failures.
+- Missing DynamoDB knowledge remains diagnostic. The Business Flow is now
+  confirmed, showing that reviewability does not require the same omissions or
+  output shape across runs.
+- Direct: `invalid` due to draft/provenance policy failures and two known schema
+  contradictions.
+- MCP-minus-direct: +11,400 ms, +210,649 input, +3,289 uncached input, -879
+  output and -775 reasoning-output tokens.
+
+### Shopping cart — `2026-08-15T041000Z`
+
+- MCP: `reviewable`; conformance passed; reference concepts 100%; recognized
+  schema agreement 100%; metadata 100%; provenance 80%; relationships 100%; one
+  deletion Lambda is unjudged and there are no hard failures.
+- Direct: `invalid` due to draft/provenance policy failures, three known schema
+  contradictions and one missing relationship link.
+- MCP-minus-direct: +33,661 ms, +466,574 input, +13,966 uncached input, +400
+  output and -362 reasoning-output tokens.
+
+### Conclusion
+
+The same general v3 workflow is reviewable on two unlike repositories without
+fixture answers. This satisfies the bounded quality checkpoint, not universal
+generalization or automatic acceptance. MCP consumed 677,223 more input tokens
+and took 45,061 ms longer across the two pairs; context efficiency remains an
+explicitly unsolved concern.
+
+Final `npm run verify` passed with 292 tests, 0 failures and 0 architecture
+errors. The six architecture warnings are unchanged reviewed baselines.
+
 ## v3 relationship-validator phase
 
 - Date: 2026-08-15
@@ -66,11 +106,8 @@ The retained comparison was deterministically regenerated from unchanged arm
 artifacts and now reports schema 80/80 and relationships 100. Focused combined
 benchmark verification passed with 23 tests.
 
-## Remaining decision
+## Completion
 
-The scorer correction is implemented, but SC-004 is not met because the retained
-v2 MCP artifact is invalid. Do not run shopping cart yet. The next proposed
-general fix is deterministic bundle-level validation exposed to the authoring
-workflow, followed by a new immutable prompt identity that requires that check.
-Proving that change would require new model-backed pairs on both repositories;
-it must not contain Health Aware or shopping-cart answers.
+SC-001 through SC-006 are satisfied under the owner-amended evidence-first
+contract. Capability 014 can close. Question management, AWS enrichment and MCP
+payload/token optimization remain separate future work.

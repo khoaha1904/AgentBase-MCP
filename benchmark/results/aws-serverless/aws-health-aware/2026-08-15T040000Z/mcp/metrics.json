@@ -1,0 +1,60 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-health-aware",
+  "runId": "2026-08-15T040000Z",
+  "arm": "mcp",
+  "expectedConcepts": 5,
+  "actualConcepts": 4,
+  "matchedConcepts": 4,
+  "referenceConceptCoveragePercent": 80,
+  "recognizedSchemaAgreementPercent": 100,
+  "metadataCompletenessPercent": 83,
+  "provenanceCoveragePercent": 86,
+  "referenceRelationshipCoveragePercent": 67,
+  "classifications": {
+    "concepts": {
+      "confirmed": [
+        "aha-terraform-deployment",
+        "aha-lambda-function",
+        "aha-lambda-schedule",
+        "process-aws-health-alerts"
+      ],
+      "contradicted": [],
+      "unjudged": [],
+      "missingReference": [
+        "aha-dynamodb-table"
+      ]
+    },
+    "relationships": {
+      "confirmed": [
+        "terraform-deploy-aha|declares|aha-lambda-function-primary-region",
+        "terraform-deploy-aha|declares|aha-lambda-schedule-primary-region",
+        "aha-lambda-schedule-primary-region|triggers|aha-lambda-function-primary-region",
+        "aws-health-alerting-flow|step|aha-lambda-function-primary-region"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "process-aws-health-alerts|step|aha-lambda-schedule",
+        "aha-lambda-function|triggered-by|aha-lambda-schedule",
+        "aha-lambda-function|declared-by|aha-terraform-deployment"
+      ],
+      "missingReference": [
+        "terraform-deploy-aha|declares|aha-dynamodb-table",
+        "aha-lambda-function-primary-region|accesses|aha-dynamodb-table"
+      ]
+    }
+  },
+  "validation": {
+    "passed": true,
+    "failures": []
+  },
+  "authoringAssessment": {
+    "status": "reviewable",
+    "hardFailures": [],
+    "limitations": [
+      "Deterministic source-path checks do not prove that authored claims are semantically supported; human review is required.",
+      "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept."
+    ]
+  },
+  "okfTreeDigest": "sha256:1ae53634994a58e2a9dfd7cfac99b23ff13a795bc257a3aa1f884e0d96b83e5e"
+}

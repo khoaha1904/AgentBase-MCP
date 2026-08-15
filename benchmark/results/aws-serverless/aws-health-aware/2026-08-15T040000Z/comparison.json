@@ -1,0 +1,263 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-health-aware",
+  "pairId": "2026-08-15T040000Z",
+  "completeness": {
+    "status": "complete",
+    "failures": []
+  },
+  "quality": {
+    "mcp": {
+      "suite": "aws-serverless",
+      "repository": "aws-health-aware",
+      "runId": "2026-08-15T040000Z",
+      "arm": "mcp",
+      "expectedConcepts": 5,
+      "actualConcepts": 4,
+      "matchedConcepts": 4,
+      "referenceConceptCoveragePercent": 80,
+      "recognizedSchemaAgreementPercent": 100,
+      "metadataCompletenessPercent": 83,
+      "provenanceCoveragePercent": 86,
+      "referenceRelationshipCoveragePercent": 67,
+      "classifications": {
+        "concepts": {
+          "confirmed": [
+            "aha-terraform-deployment",
+            "aha-lambda-function",
+            "aha-lambda-schedule",
+            "process-aws-health-alerts"
+          ],
+          "contradicted": [],
+          "unjudged": [],
+          "missingReference": [
+            "aha-dynamodb-table"
+          ]
+        },
+        "relationships": {
+          "confirmed": [
+            "terraform-deploy-aha|declares|aha-lambda-function-primary-region",
+            "terraform-deploy-aha|declares|aha-lambda-schedule-primary-region",
+            "aha-lambda-schedule-primary-region|triggers|aha-lambda-function-primary-region",
+            "aws-health-alerting-flow|step|aha-lambda-function-primary-region"
+          ],
+          "contradicted": [],
+          "unjudged": [
+            "process-aws-health-alerts|step|aha-lambda-schedule",
+            "aha-lambda-function|triggered-by|aha-lambda-schedule",
+            "aha-lambda-function|declared-by|aha-terraform-deployment"
+          ],
+          "missingReference": [
+            "terraform-deploy-aha|declares|aha-dynamodb-table",
+            "aha-lambda-function-primary-region|accesses|aha-dynamodb-table"
+          ]
+        }
+      },
+      "validation": {
+        "passed": true,
+        "failures": []
+      },
+      "authoringAssessment": {
+        "status": "reviewable",
+        "hardFailures": [],
+        "limitations": [
+          "Deterministic source-path checks do not prove that authored claims are semantically supported; human review is required.",
+          "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept."
+        ]
+      },
+      "okfTreeDigest": "sha256:1ae53634994a58e2a9dfd7cfac99b23ff13a795bc257a3aa1f884e0d96b83e5e"
+    },
+    "direct": {
+      "suite": "aws-serverless",
+      "repository": "aws-health-aware",
+      "runId": "2026-08-15T040000Z",
+      "arm": "direct",
+      "expectedConcepts": 5,
+      "actualConcepts": 9,
+      "matchedConcepts": 2,
+      "referenceConceptCoveragePercent": 40,
+      "recognizedSchemaAgreementPercent": 0,
+      "metadataCompletenessPercent": 0,
+      "provenanceCoveragePercent": 0,
+      "referenceRelationshipCoveragePercent": 0,
+      "classifications": {
+        "concepts": {
+          "confirmed": [],
+          "contradicted": [
+            {
+              "actual": "aha-event-state-store",
+              "expected": "aha-dynamodb-table",
+              "actualType": "aws-dynamodb-table",
+              "expectedType": "Database Table"
+            },
+            {
+              "actual": "aha-health-event-schedule",
+              "expected": "aha-lambda-schedule-primary-region",
+              "actualType": "aws-eventbridge-rule",
+              "expectedType": "Event"
+            }
+          ],
+          "unjudged": [
+            "aha-chime-webhook-secret",
+            "aha-eventbridge-bus-name-secret",
+            "aha-lambda-execution-role",
+            "aha-management-role-secret",
+            "aha-microsoft-teams-webhook-secret",
+            "aha-notification-lambda",
+            "aha-slack-webhook-secret"
+          ],
+          "missingReference": [
+            "terraform-deploy-aha",
+            "aha-lambda-function-primary-region",
+            "aws-health-alerting-flow"
+          ]
+        },
+        "relationships": {
+          "confirmed": [],
+          "contradicted": [],
+          "unjudged": [
+            "aha-health-event-schedule|triggers|aha-notification-lambda",
+            "aha-notification-lambda|uses|aha-event-state-store",
+            "aha-notification-lambda|uses|aha-lambda-execution-role",
+            "aha-notification-lambda|uses|aha-microsoft-teams-webhook-secret",
+            "aha-notification-lambda|uses|aha-slack-webhook-secret",
+            "aha-notification-lambda|uses|aha-eventbridge-bus-name-secret",
+            "aha-notification-lambda|uses|aha-chime-webhook-secret",
+            "aha-notification-lambda|uses|aha-management-role-secret"
+          ],
+          "missingReference": [
+            "terraform-deploy-aha|declares|aha-lambda-function-primary-region",
+            "terraform-deploy-aha|declares|aha-dynamodb-table",
+            "terraform-deploy-aha|declares|aha-lambda-schedule-primary-region",
+            "aha-lambda-schedule-primary-region|triggers|aha-lambda-function-primary-region",
+            "aha-lambda-function-primary-region|accesses|aha-dynamodb-table",
+            "aws-health-alerting-flow|step|aha-lambda-function-primary-region"
+          ]
+        }
+      },
+      "validation": {
+        "passed": false,
+        "failures": [
+          "infrastructure/aha-chime-webhook-secret.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-chime-webhook-secret.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-chime-webhook-secret.md: every source requires resource",
+          "infrastructure/aha-chime-webhook-secret.md: every source requires resource",
+          "infrastructure/aha-event-state-store.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-event-state-store.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-event-state-store.md: every source requires resource",
+          "infrastructure/aha-event-state-store.md: every source requires resource",
+          "infrastructure/aha-eventbridge-bus-name-secret.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-eventbridge-bus-name-secret.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-eventbridge-bus-name-secret.md: every source requires resource",
+          "infrastructure/aha-eventbridge-bus-name-secret.md: every source requires resource",
+          "infrastructure/aha-health-event-schedule.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-health-event-schedule.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-health-event-schedule.md: every source requires resource",
+          "infrastructure/aha-lambda-execution-role.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-lambda-execution-role.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-lambda-execution-role.md: every source requires resource",
+          "infrastructure/aha-lambda-execution-role.md: every source requires resource",
+          "infrastructure/aha-management-role-secret.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-management-role-secret.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-management-role-secret.md: every source requires resource",
+          "infrastructure/aha-management-role-secret.md: every source requires resource",
+          "infrastructure/aha-microsoft-teams-webhook-secret.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-microsoft-teams-webhook-secret.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-microsoft-teams-webhook-secret.md: every source requires resource",
+          "infrastructure/aha-microsoft-teams-webhook-secret.md: every source requires resource",
+          "infrastructure/aha-notification-lambda.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-notification-lambda.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-notification-lambda.md: every source requires resource",
+          "infrastructure/aha-notification-lambda.md: every source requires resource",
+          "infrastructure/aha-notification-lambda.md: every source requires resource",
+          "infrastructure/aha-slack-webhook-secret.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-slack-webhook-secret.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-slack-webhook-secret.md: every source requires resource",
+          "infrastructure/aha-slack-webhook-secret.md: every source requires resource"
+        ]
+      },
+      "authoringAssessment": {
+        "status": "invalid",
+        "hardFailures": [
+          "infrastructure/aha-chime-webhook-secret.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-chime-webhook-secret.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-chime-webhook-secret.md: every source requires resource",
+          "infrastructure/aha-event-state-store.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-event-state-store.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-event-state-store.md: every source requires resource",
+          "infrastructure/aha-eventbridge-bus-name-secret.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-eventbridge-bus-name-secret.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-eventbridge-bus-name-secret.md: every source requires resource",
+          "infrastructure/aha-health-event-schedule.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-health-event-schedule.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-health-event-schedule.md: every source requires resource",
+          "infrastructure/aha-lambda-execution-role.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-lambda-execution-role.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-lambda-execution-role.md: every source requires resource",
+          "infrastructure/aha-management-role-secret.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-management-role-secret.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-management-role-secret.md: every source requires resource",
+          "infrastructure/aha-microsoft-teams-webhook-secret.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-microsoft-teams-webhook-secret.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-microsoft-teams-webhook-secret.md: every source requires resource",
+          "infrastructure/aha-notification-lambda.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-notification-lambda.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-notification-lambda.md: every source requires resource",
+          "infrastructure/aha-slack-webhook-secret.md: generated.by must identify agentbase/<version>",
+          "infrastructure/aha-slack-webhook-secret.md: generated.at must be an ISO 8601 datetime",
+          "infrastructure/aha-slack-webhook-secret.md: every source requires resource",
+          "Reference aha-dynamodb-table matched aha-event-state-store but expected schema Database Table, found aws-dynamodb-table",
+          "Reference aha-lambda-schedule-primary-region matched aha-health-event-schedule but expected schema Event, found aws-eventbridge-rule"
+        ],
+        "limitations": [
+          "Deterministic source-path checks do not prove that authored claims are semantically supported; human review is required.",
+          "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept."
+        ]
+      },
+      "okfTreeDigest": "sha256:5dbc3e6f9375a8fd2de259cd5ed0afb40d9576669ecd9a61ddafa7a9736788fd"
+    }
+  },
+  "efficiency": {
+    "mcp": {
+      "elapsedMs": 186628,
+      "inputTokens": 732525,
+      "cachedInputTokens": 676352,
+      "cacheWriteInputTokens": 0,
+      "uncachedInputTokens": 56173,
+      "outputTokens": 7320,
+      "reasoningOutputTokens": 1540
+    },
+    "direct": {
+      "elapsedMs": 175228,
+      "inputTokens": 521876,
+      "cachedInputTokens": 468992,
+      "cacheWriteInputTokens": 0,
+      "uncachedInputTokens": 52884,
+      "outputTokens": 8199,
+      "reasoningOutputTokens": 2315
+    },
+    "delta": {
+      "elapsedMs": 11400,
+      "inputTokens": 210649,
+      "cachedInputTokens": 207360,
+      "cacheWriteInputTokens": 0,
+      "uncachedInputTokens": 3289,
+      "outputTokens": -879,
+      "reasoningOutputTokens": -775
+    }
+  },
+  "activity": {
+    "mcp": {
+      "mcpToolCalls": 20,
+      "commandExecutions": 7,
+      "observedSourceReadBytes": null,
+      "limitation": "event trace does not prove complete source-read volume"
+    },
+    "direct": {
+      "mcpToolCalls": 0,
+      "commandExecutions": 7,
+      "observedSourceReadBytes": null,
+      "limitation": "event trace does not prove complete source-read volume"
+    }
+  }
+}

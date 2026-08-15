@@ -116,8 +116,8 @@ and known-schema mismatches through both core and MCP surfaces.
 
 **Goal**: Measure the same corrected workflow on both unlike repositories.
 
-- [ ] T030 [US3] Run and compare one v3 Health Aware pair
-- [ ] T031 [US3] Run and compare one v3 shopping-cart pair
-- [ ] T032 [US3] Record cross-repository quality/efficiency and limitations in current docs and verification
-- [ ] T033 [US3] Close capability only if both MCP arms are reviewable; otherwise retain the exact general failure
-- [ ] T034 [US3] Run final verification and commit the v3 evidence phase
+- [x] T030 [US3] Run and compare one v3 Health Aware pair
+- [x] T031 [US3] Run and compare one v3 shopping-cart pair
+- [x] T032 [US3] Record cross-repository quality/efficiency and limitations in current docs and verification
+- [x] T033 [US3] Close capability only if both MCP arms are reviewable; otherwise retain the exact general failure
+- [x] T034 [US3] Run final verification and commit the v3 evidence phase
