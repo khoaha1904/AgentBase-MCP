@@ -3,7 +3,7 @@ import { OKF_CONCEPT_SCHEMAS, type OkfConceptSchema } from "./schema-definitions
 
 export type { OkfConceptSchema } from "./schema-definitions.ts";
 
-export const AGENTBASE_OKF_SCHEMA_CATALOG_VERSION = "3.0.0" as const;
+export const AGENTBASE_OKF_SCHEMA_CATALOG_VERSION = "3.1.0" as const;
 
 export type OkfSchemaSelection = Readonly<{
   type: string;
@@ -17,10 +17,13 @@ export function listOkfConceptSchemas(): readonly OkfConceptSchema[] { return sc
 export function getOkfConceptSchema(type: string): OkfConceptSchema | undefined { return schemas.find((item) => item.type === type); }
 
 function matchesSignal(signal: string, rule: string): boolean {
-  if (/^[a-z0-9]+$/.test(rule)) {
-    return new RegExp(`(?:^|[^a-z0-9])${rule}(?:$|[^a-z0-9])`).test(signal);
-  }
-  return signal.includes(rule);
+  const signalTokens = signal.split(/[^a-z0-9]+/).filter(Boolean);
+  const ruleTokens = rule.split(/[^a-z0-9]+/).filter(Boolean);
+  const matchesToken = (expected: string, actual: string) => actual === expected
+    || (ruleTokens.length > 1 && (actual === `${expected}s` || actual === `${expected}es`
+      || (expected.endsWith("y") && actual === `${expected.slice(0, -1)}ies`)));
+  return ruleTokens.length > 0
+    && ruleTokens.every((expected) => signalTokens.some((actual) => matchesToken(expected, actual)));
 }
 
 export function selectOkfConceptSchemas(signals: readonly string[]): readonly OkfSchemaSelection[] {

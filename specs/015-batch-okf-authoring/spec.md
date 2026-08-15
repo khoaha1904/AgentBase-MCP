@@ -18,6 +18,9 @@ accepted by capability 014.
   not encourage guessing.
 - Existing fine-grained schema tools remain compatible, but the recommended
   workflow should not require list/select/get and one validation call per file.
+- Token and elapsed values are supporting telemetry, not the product-quality
+  gate. A cheaper direct run that finds less evidence does not prove a better
+  knowledge workflow.
 - Question persistence, `/abs-questions`, AWS CLI authority and cross-repository
   enrichment remain future capabilities.
 
@@ -87,7 +90,8 @@ and compare its quality, calls, payload and tokens with retained v3 MCP evidence
 - **SC-005**: Both model-backed v4 MCP outputs remain `reviewable`.
 - **SC-006**: Each v4 run reduces completed schema/validation MCP calls by at
   least 50% versus its retained v3 MCP baseline. Token and elapsed changes are
-  reported honestly even if they do not improve.
+  reported honestly even if they do not improve and never outweigh evidence
+  quality or unresolved-question usefulness.
 
 ## Explicit Non-Goals
 
@@ -96,4 +100,3 @@ and compare its quality, calls, payload and tokens with retained v3 MCP evidence
 - Removing compatible fine-grained MCP tools.
 - Question storage, `/abs-questions`, AWS CLI, cloud authority or external
   evidence enrichment.
-

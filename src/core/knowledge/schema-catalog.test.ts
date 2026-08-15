@@ -4,7 +4,7 @@ import test from "node:test";
 import { getOkfConceptSchema, listOkfConceptSchemas, selectOkfConceptSchemas, validateConceptAgainstSchema } from "./schema-catalog.ts";
 import { parseConceptDocument } from "./okf-document.ts";
 
-test("[AB-SCHEMA-001][AB-SCHEMA-006][AB-SCHEMA-007] catalog 3.0 exposes concrete authoring types", () => {
+test("[AB-SCHEMA-001][AB-SCHEMA-006][AB-SCHEMA-007] catalog 3.1 exposes concrete authoring types", () => {
   assert.deepEqual(listOkfConceptSchemas().map((item) => item.type), [
     "Repository", "Service", "Server", "API Endpoint", "Event", "Database Table", "Queue",
     "AWS Lambda", "AWS SQS Queue", "Terraform Module", "Business Flow",
@@ -28,7 +28,17 @@ test("[AB-SCHEMA-010][AB-SCHEMA-011] AWS and business schemas guide evidence-led
 test("[AB-SCHEMA-002][AB-SCHEMA-008] selection is sparse and prefers specific supported types", () => {
   assert.deepEqual(selectOkfConceptSchemas(["aws sqs queue", "producer or consumer evidence", "SQS resource identity"]).map((item) => item.type), ["AWS SQS Queue"]);
   assert.deepEqual(selectOkfConceptSchemas(["server entry point", "http server"]).map((item) => item.type), ["Server"]);
+  assert.deepEqual(selectOkfConceptSchemas(["HTTP routes backed by handlers"]).map((item) => item.type), ["API Endpoint"]);
   assert.deepEqual(selectOkfConceptSchemas([]), []);
+});
+
+test("[AB-SCHEMA-015] selection recognizes natural evidence word order and catalog phrases", () => {
+  const selected = selectOkfConceptSchemas([
+    "AWS SAM defines an SQS deletion queue and Lambda consumer",
+    "Several observed user actions are business behaviors",
+  ]).map((item) => item.type);
+  assert.deepEqual(selected, ["AWS Lambda", "AWS SQS Queue", "Business Flow"]);
+  assert.equal(selected.includes("Queue"), false);
 });
 
 test("[AB-SCHEMA-003][AB-SCHEMA-009] repeated instances are allowed and missing evidence stays visible", () => {

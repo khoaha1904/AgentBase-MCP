@@ -20,13 +20,21 @@
 
 ## Phase 3: Heterogeneous Efficiency Evidence
 
-- [ ] T011 Run one v4 MCP pair on Health Aware
-- [ ] T012 Run one v4 MCP pair on shopping cart
-- [ ] T013 Compare quality, calls, payload, tokens and elapsed time with retained v3 MCP baselines
-- [ ] T014 Close capability only if both outputs are reviewable and call reduction meets SC-006
-- [ ] T015 Run final verification and commit the evidence phase
+- [x] T011 Run one v4 MCP-only measurement on Health Aware
+- [x] T012 Run one v4 MCP-only measurement on shopping cart
+- [x] T013 Retain the invalid shopping-cart artifact and isolate the general natural-language selector failure
+
+## Phase 4: Natural Evidence Selection Correction
+
+- [x] T014 Add regression coverage for separated evidence words, admitted plurals and specific-type shadowing
+- [x] T015 Update the general selector and catalog to 3.1.0 without repository identities
+- [x] T016 Run canonical verification, record evidence and commit the selector-correction phase
+- [ ] T017 Re-run the unchanged v4 MCP workflow on both repositories with catalog 3.1.0
+- [ ] T018 Compare reviewability and authoring calls with retained v3/v4 evidence; treat token/time as supporting telemetry
+- [ ] T019 Close capability only if both corrected outputs are reviewable and call reduction meets SC-006
+- [ ] T020 Run final verification and commit the corrected evidence phase
 
 ## Dependencies
 
 T001 → T002 → T003 → T004 → T005 → T006 → T007 → T008 → T009 → T010 →
-T011 → T012 → T013 → T014 → T015.
+T011 → T012 → T013 → T014 → T015 → T016 → T017 → T018 → T019 → T020.

@@ -73,7 +73,7 @@ export const INFRASTRUCTURE_SCHEMAS: readonly OkfConceptSchema[] = [
   ),
   defineSchema(
     "Business Flow", "A business/system behavior spanning technical concepts", "flows/<slug>.md", 50,
-    ["business flow", "user journey", "workflow", "end-to-end flow"],
+    ["business flow", "business behavior", "business behaviors", "user journey", "workflow", "end-to-end flow"],
     ["trigger", "observable outcome", "supporting system evidence"],
     ["# Trigger", "# Outcome", "# Flow", "# Failure and Recovery"],
     ["Repository", "Service", "API Endpoint", "Event", "Queue", "AWS Lambda", "AWS SQS Queue"],

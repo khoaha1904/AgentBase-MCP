@@ -238,6 +238,10 @@ not context-token or runtime savings.
 Retained v3 traces show 20 schema/validation calls for Health Aware and 27 for
 shopping cart. The immutable v4 workflow keeps the shared authoring contract but
 uses one selected-schema guidance call and whole-bundle validation calls. Fake
-execution proves the required batch lifecycle and now records argument/result
-payload bytes. Model-backed v4 evidence remains pending; no efficiency
-improvement is claimed from offline structure alone.
+execution proves the required batch lifecycle and records argument/result bytes.
+Initial catalog-3.0.0 runs reduced these calls to two on both repositories.
+Health Aware remained reviewable; shopping cart exposed a general contiguous-
+phrase selector fault and is retained as invalid evidence. Catalog 3.1.0 fixes
+natural word-order selection without fixture rules; corrected model evidence is
+required before capability completion. Token/time remain supporting telemetry,
+not a substitute for evidence quality.

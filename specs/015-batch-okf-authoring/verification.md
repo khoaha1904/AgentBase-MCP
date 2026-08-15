@@ -45,3 +45,37 @@ Serialized payload bytes are diagnostic and are not presented as token counts.
 - Focused agent/scorer verification: 27 tests, 0 failures.
 - `npm run verify`: 295 tests, 0 failures, 0 architecture errors and six
   unchanged reviewed architecture warnings.
+
+## Initial v4 model evidence and correction
+
+### Health Aware — `2026-08-15T082239Z`
+
+- Catalog 3.0.0 / v4 MCP is `reviewable`; conformance passed with no hard
+  failures.
+- Authoring/schema validation fell from 20 v3 calls to 2 v4 calls (90%).
+- The two calls supplied 8,032 serialized bytes and returned 9,355 bytes.
+- Total model input and elapsed time increased. Per owner direction these stay
+  supporting telemetry; they do not override reviewable evidence quality.
+
+### Shopping cart — `2026-08-15T082714Z`
+
+- Catalog 3.0.0 / v4 MCP is `invalid`: source evidence established an AWS SQS
+  queue, but selected guidance exposed only generic `Queue`, producing one known
+  schema contradiction.
+- Authoring/schema validation fell from 27 v3 calls to 2 v4 calls (93%).
+- Trace inspection proves a general selector fault: natural signals contained
+  AWS, SQS, queue and Lambda words separated by ordinary prose; catalog 3.0.0
+  required contiguous phrases and returned neither AWS-specific schema.
+- The immutable output is retained as regression evidence. No fixture identity,
+  expected key or expected path is added to selection or prompts.
+
+### General correction
+
+Catalog 3.1.0 matches all normalized words of one selection rule within the
+same evidence signal, permits plural variants only inside multiword catalog
+phrases and preserves exact single-word matching plus specific-type shadowing.
+The formerly observed signal now selects AWS Lambda, AWS SQS Queue, Database
+Table, API Endpoint and Business Flow rather than generic Queue.
+
+`npm run verify` passed with 296 tests, 0 failures, 0 architecture errors and
+six unchanged reviewed architecture warnings before the correction commit.

@@ -89,7 +89,7 @@ Normative OKF source is pinned to commit
 - **AB-SCHEMA-009** — Concrete concepts preserve provenance and important
   uncertainty. Cross-repository relationships need evidence for both endpoints
   and the relationship.
-- **AB-SCHEMA-010** — Current catalog `3.0.0` provides bounded investigation,
+- **AB-SCHEMA-010** — Current catalog `3.1.0` provides bounded investigation,
   semantic metadata, relationship and optional-enrichment guidance. AWS Lambda,
   Terraform and Business Flow guidance connects identity and infrastructure to
   runtime and observable outcomes.
@@ -109,3 +109,8 @@ Normative OKF source is pinned to commit
   each and 4 MiB total, in one content-only bundle call. It reports per-concept
   draft/schema failures together with cross-document relationship failures and
   never reads a caller-selected output path.
+- **AB-SCHEMA-015** — Advisory selection matches normalized rule words anywhere
+  in one natural-language evidence signal while retaining word boundaries,
+  deterministic order and specific-type shadowing. Catalog phrases include
+  admitted singular/plural wording; repository names or benchmark identities
+  are never selection rules.

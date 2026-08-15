@@ -108,7 +108,7 @@ export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
     "An evidence-bearing relationship between concepts owned by different repositories",
     "relationships/<slug>.md",
     70,
-    ["cross-repository", "cross repo", "producer consumer", "repository relationship"],
+    ["cross-repository", "cross repo", "repository relationship"],
     ["source endpoint", "target endpoint", "relationship evidence"],
     ["# Source", "# Relationship", "# Target", "# Evidence and Limitations"],
     ["Repository", "Service", "API Endpoint", "Event", "AWS Lambda", "AWS SQS Queue", "Business Flow"],

@@ -13,7 +13,7 @@ test("[AB-SCHEMA-001..003][AB-SCHEMA-006..011] MCP lists, reads and selects conc
     "list_okf_schemas", "get_okf_schema", "select_okf_schemas", "validate_okf_concept", "validate_okf_relationships",
     "get_okf_authoring_schemas", "validate_okf_bundle",
   ]);
-  assert.equal(body(callOkfSchemaTool("list_okf_schemas", {})).catalogVersion, "3.0.0");
+  assert.equal(body(callOkfSchemaTool("list_okf_schemas", {})).catalogVersion, "3.1.0");
   const lambda = body(callOkfSchemaTool("get_okf_schema", { type: "AWS Lambda" })).schema as {
     type: string; investigationQuestions: string[]; metadataGuidance: { field: string }[];
   };

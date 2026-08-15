@@ -1,7 +1,7 @@
 {
   "suite": "aws-serverless",
   "version": 4,
-  "catalogVersion": "3.0.0",
+  "catalogVersion": "3.1.0",
   "promptVersion": "okf-author-v4",
   "directPromptVersion": "okf-author-direct-v4",
   "agent": {
