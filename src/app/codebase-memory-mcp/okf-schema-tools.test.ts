@@ -13,7 +13,7 @@ test("[AB-SCHEMA-001..003][AB-SCHEMA-006..011] MCP lists, reads and selects conc
     "list_okf_schemas", "get_okf_schema", "select_okf_schemas", "validate_okf_concept", "validate_okf_relationships",
     "get_okf_authoring_schemas", "validate_okf_bundle",
   ]);
-  assert.equal(body(callOkfSchemaTool("list_okf_schemas", {})).catalogVersion, "4.0.0");
+  assert.equal(body(callOkfSchemaTool("list_okf_schemas", {})).catalogVersion, "5.0.0");
   const lambda = body(callOkfSchemaTool("get_okf_schema", { type: "AWS Lambda" })).schema as {
     type: string; investigationQuestions: string[]; metadataGuidance: { field: string }[];
   };
@@ -53,7 +53,12 @@ test("[AB-SCHEMA-004][AB-SCHEMA-005] MCP validates known policy and preserves un
 
 test("[AB-SCHEMA-012][AB-BENCH-030] MCP validates bounded relationship content without filesystem authority", () => {
   const generated = "generated: { by: agentbase/0.0.0, at: 2026-08-15T00:00:00Z }";
-  const lambda = `---\ntype: AWS Lambda\nstatus: draft\n${generated}\nrelationships:\n  - { kind: accesses, target: orders }\n---\n\nUses [orders](orders.md).\n`;
+  const lambda = [
+    "---", "type: AWS Lambda", "status: draft", generated, "sources:", "  - id: table-read",
+    "    resource: repository://repository-orders-aaaaaaaaaaaa/src/worker.ts#L1-L10",
+    "relationships:", "  - { kind: reads-from, target: orders, evidence: [table-read] }",
+    "---", "", "Uses [orders](orders.md).", "",
+  ].join("\n");
   const table = `---\ntype: Database Table\nstatus: draft\n${generated}\nrelationships: []\n---\n\nOrders.\n`;
   const valid = callOkfSchemaTool("validate_okf_relationships", { concepts: [
     { identity: "lambda", path: "lambda.md", content: lambda },
@@ -76,11 +81,13 @@ test("[AB-SCHEMA-014] MCP validates concept policy and relationships in one boun
   const generated = "generated: { by: agentbase/0.0.0, at: 2026-08-15T00:00:00Z }";
   const lambda = [
     "---", "title: Worker", "description: Processes orders.", "type: AWS Lambda", "status: draft", generated,
-    "sources: []", "relationships:", "  - { kind: accesses, target: orders }", "---", "", "Uses [orders](orders.md).", "",
+    "sources:", "  - id: table-read", "    resource: repository://repository-orders-aaaaaaaaaaaa/src/worker.ts#L1-L10",
+    "relationships:", "  - { kind: reads-from, target: orders, evidence: [table-read] }", "---", "", "Uses [orders](orders.md).", "",
   ].join("\n");
   const table = [
     "---", "title: Orders", "description: Stores orders.", "type: Database Table", "status: draft", generated,
-    "sources: []", "relationships:", "  - { kind: accessed-by, target: lambda }", "---", "", "Used by [worker](lambda.md).", "",
+    "sources:", "  - id: table-definition", "    resource: repository://repository-orders-aaaaaaaaaaaa/template.yaml#L1-L10",
+    "relationships: []", "---", "", "Orders table.", "",
   ].join("\n");
   const concepts = [
     { identity: "lambda", path: "lambda.md", content: lambda },

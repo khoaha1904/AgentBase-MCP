@@ -190,8 +190,8 @@ export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record
           ? [{ identity: entry.item.identity, concept: entry.concept }]
           : []);
         const relationshipValidation = parsedConcepts.length === entries.length
-          ? validateOkfRelationships(parsedConcepts)
-          : { failures: [] as readonly string[], relationships: [], warnings: [] as readonly string[] };
+          ? validateOkfRelationships(parsedConcepts, { strictSourceIdentities: new Set(parsedConcepts.map((item) => item.identity)) })
+          : { failures: [] as readonly string[], relationships: [], flowSteps: [], warnings: [] as readonly string[] };
         const valid = concepts.every((concept) => concept.valid) && relationshipValidation.failures.length === 0;
         return result({
           valid,
@@ -199,13 +199,17 @@ export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record
           relationshipFailures: relationshipValidation.failures,
           relationshipWarnings: relationshipValidation.warnings,
           relationships: relationshipValidation.relationships,
+          flowSteps: relationshipValidation.flowSteps,
           relationshipValidationSkipped: parsedConcepts.length !== entries.length,
         }, !valid);
       }
-      const validation = validateOkfRelationships(entries.map((item) => ({
+      const concepts = entries.map((item) => ({
         identity: item.identity,
         concept: parseConceptDocument(item.path, item.content),
-      })));
+      }));
+      const validation = validateOkfRelationships(concepts, {
+        strictSourceIdentities: new Set(concepts.map((item) => item.identity)),
+      });
       return result({ valid: validation.failures.length === 0, ...validation }, validation.failures.length > 0);
     }
     if (typeof args.path !== "string" || typeof args.content !== "string") {

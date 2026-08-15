@@ -12,6 +12,7 @@ export type OkfConceptSchema = Readonly<{
   investigationQuestions: readonly string[];
   metadataGuidance: readonly Readonly<{ field: string; evidence: string; requiredWhenSupported: boolean }>[];
   relationshipGuidance: readonly Readonly<{ kind: string; targetTypes: readonly string[]; evidence: string }>[];
+  flowStepGuidance?: Readonly<{ actions: readonly string[]; modes: readonly string[]; evidence: string }>;
   optionalEnrichment: readonly string[];
   limitationGuidance: string;
 }>;
@@ -22,6 +23,7 @@ type SchemaOptions = Readonly<{
   investigationQuestions?: readonly string[];
   metadataGuidance?: OkfConceptSchema["metadataGuidance"];
   relationshipGuidance?: OkfConceptSchema["relationshipGuidance"];
+  flowStepGuidance?: OkfConceptSchema["flowStepGuidance"];
   optionalEnrichment?: readonly string[];
 }>;
 
@@ -41,6 +43,7 @@ export function defineSchema(
     investigationQuestions: options.investigationQuestions ?? evidenceRequirements.map((item) => `What source proves ${item}?`),
     metadataGuidance: options.metadataGuidance ?? [],
     relationshipGuidance: options.relationshipGuidance ?? [],
+    ...(options.flowStepGuidance ? { flowStepGuidance: options.flowStepGuidance } : {}),
     optionalEnrichment: options.optionalEnrichment ?? [],
     limitationGuidance: limitations,
   };

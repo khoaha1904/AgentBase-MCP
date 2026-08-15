@@ -14,6 +14,7 @@ import {
   prepareBundleProposal,
   selectOkfConceptSchemas,
   validateConceptAgainstSchema,
+  validateOkfRelationships,
   validatePublishableAgentBaseDraft,
   validateBundleProposal,
   type ProposalDiff,
@@ -59,17 +60,26 @@ export function prepareNewHubProposal(
   const selected = selectOkfConceptSchemas(options.signals).map((item) => item.type);
   const authored = loadOkfBundle(options.authoredBundleRoot, { requireAgentBaseRootIndex: true });
   const base = loadOkfBundle(options.hubBundleRoot);
+  const createdIdentities = new Set<string>();
   for (const concept of authored.concepts.values()) {
     if (!base.concepts.has(concept.conceptId) && !selected.includes(concept.type)) {
       throw new Error(`authored concept requires unselected schema: ${concept.type}`);
     }
     if (!base.concepts.has(concept.conceptId)) {
+      createdIdentities.add(concept.conceptId);
       if (!conceptReferencesRepository(concept, options.sourceRepositoryId)) {
         throw new Error(`authored concept does not cite the proposal source repository: ${concept.path}`);
       }
       const failures = [...validatePublishableAgentBaseDraft(concept), ...validateConceptAgainstSchema(concept)];
       if (failures.length) throw new Error(`authored concept failed schema validation: ${failures.join("; ")}`);
     }
+  }
+  const relationships = validateOkfRelationships(
+    [...authored.concepts].map(([identity, concept]) => ({ identity, concept })),
+    { sourceIdentities: createdIdentities, strictSourceIdentities: createdIdentities },
+  );
+  if (relationships.failures.length) {
+    throw new Error(`authored concept relationship validation failed: ${relationships.failures.join("; ")}`);
   }
   const seed = `${options.baseCommit}\0${options.evidenceDigest}\0${options.subjectDirectory}`;
   const provisionalId = `proposal-${createHash("sha256").update(seed).digest("hex").slice(0, 24)}`;

@@ -16,7 +16,7 @@ test("[AB-SCHEMA-012][AB-BENCH-030] validates targets and links while unknown gu
     { identity: "lambda", concept: lambda }, { identity: "orders", concept: table },
   ]);
   assert.deepEqual(valid.failures, []);
-  assert.deepEqual(valid.relationships, [{ source: "lambda", kind: "accesses", target: "orders" }]);
+  assert.deepEqual(valid.relationships, [{ source: "lambda", kind: "accesses", target: "orders", evidence: [] }]);
 
   const missingLink = validateOkfRelationships([
     { identity: "lambda", concept: concept("runtime/lambda.md", "AWS Lambda", "\n  - { kind: accesses, target: orders }", "No link.") },
@@ -33,7 +33,7 @@ test("[AB-SCHEMA-012][AB-BENCH-030] validates targets and links while unknown gu
   ]);
   assert.deepEqual(unsupported.failures, []);
   assert.match(unsupported.warnings.join("\n"), /unjudged by AWS Lambda schema guidance/);
-  assert.deepEqual(unsupported.relationships, [{ source: "lambda", kind: "triggers", target: "orders" }]);
+  assert.deepEqual(unsupported.relationships, [{ source: "lambda", kind: "triggers", target: "orders", evidence: [] }]);
 });
 
 test("[AB-SCHEMA-005][AB-SCHEMA-012] unknown schemas stay portable and identities are unambiguous", () => {
@@ -54,6 +54,70 @@ test("[AB-SCHEMA-012] absolute bundle-relative Markdown links resolve portably",
     { identity: "cart", concept: source }, { identity: "api", concept: target },
   ]);
   assert.deepEqual(validation.failures, []);
-  assert.deepEqual(validation.relationships, [{ source: "cart", kind: "uses", target: "api" }]);
+  assert.deepEqual(validation.relationships, [{ source: "cart", kind: "uses", target: "api", evidence: [] }]);
   assert.equal(validation.warnings.length, 1);
+});
+
+test("[AB-SCHEMA-019][AB-SCHEMA-020] new known-schema edges use one canonical evidenced direction", () => {
+  const lambda = parseConceptDocument("components/worker.md", `---
+type: AWS Lambda
+title: Worker
+description: Consumes work.
+status: draft
+${generated}
+sources:
+  - id: queue-binding
+    resource: repository://repository-orders-aaaaaaaaaaaa/template.yaml#L1-L10
+relationships:
+  - kind: triggered-by
+    target: queue
+    evidence: [queue-binding]
+---
+Uses [queue](../resources/orders.md).
+`);
+  const queue = concept("resources/orders.md", "AWS SQS Queue", " []", "Orders.");
+  const strict = new Set(["worker"]);
+  const valid = validateOkfRelationships([
+    { identity: "worker", concept: lambda }, { identity: "queue", concept: queue },
+  ], { strictSourceIdentities: strict });
+  assert.deepEqual(valid.failures, []);
+  assert.deepEqual(valid.relationships[0]?.evidence, ["queue-binding"]);
+
+  const inverse = concept("components/worker.md", "AWS Lambda", "\n  - { kind: consumed-by, target: queue }", "Uses [queue](../resources/orders.md).");
+  assert.match(validateOkfRelationships([
+    { identity: "worker", concept: inverse }, { identity: "queue", concept: queue },
+  ], { strictSourceIdentities: strict }).failures.join("\n"), /not a canonical AgentBase predicate/);
+});
+
+test("[AB-SCHEMA-020] business flows carry ordered evidenced steps", () => {
+  const flow = parseConceptDocument("flows/place-order.md", `---
+type: Business Flow
+title: Place order
+description: Places an order.
+status: draft
+${generated}
+sources:
+  - id: call
+    resource: repository://repository-orders-aaaaaaaaaaaa/src/order.ts#L1-L10
+flow_steps:
+  - order: 1
+    source: api
+    action: invokes
+    target: worker
+    mode: synchronous
+    evidence: [call]
+relationships: []
+---
+[API](../interfaces/orders.md) invokes [worker](../components/worker.md).
+`);
+  const api = concept("interfaces/orders.md", "API Surface", " []", "API.");
+  const worker = concept("components/worker.md", "AWS Lambda", " []", "Worker.");
+  const result = validateOkfRelationships([
+    { identity: "flow", concept: flow }, { identity: "api", concept: api }, { identity: "worker", concept: worker },
+  ], { strictSourceIdentities: new Set(["flow"]) });
+  assert.deepEqual(result.failures, []);
+  assert.deepEqual(result.flowSteps, [{
+    flow: "flow", order: 1, source: "api", action: "invokes", target: "worker",
+    mode: "synchronous", evidence: ["call"],
+  }]);
 });

@@ -17,6 +17,7 @@ import {
   selectOkfConceptSchemas,
   validateConceptAgainstSchema,
   validatePublishableAgentBaseDraft,
+  validateOkfRelationships,
   validateBundleProposal,
   type ConceptDocument,
 } from "../../core/knowledge/index.ts";
@@ -44,7 +45,6 @@ export type PreparedRefreshHubProposal = Readonly<{
 }>;
 export type PreparedRefreshLocalHubProposal = Omit<PreparedRefreshHubProposal, "proposal"> & Readonly<{ proposal: LocalOnlyHubProposal }>;
 type AnyRefreshOptions = PrepareRefreshHubOptions | PrepareRefreshLocalHubOptions;
-
 function bytes(root: string, relative: string): Buffer {
   return fs.readFileSync(path.join(root, ...relative.split("/")));
 }
@@ -60,7 +60,6 @@ function copyAuthored(source: string, target: string): void {
 function subjectExists(root: string, subject: string): boolean {
   return fs.existsSync(path.join(root, subject)) || fs.existsSync(path.join(root, `${subject}.md`));
 }
-
 function withinSubject(relative: string, subject: string): boolean {
   return relative === `${subject}.md` || relative.startsWith(`${subject}/`);
 }
@@ -71,7 +70,6 @@ function preservesLines(previous: Buffer, proposed: Buffer): boolean {
   for (const line of next) if (line === retained[cursor]) cursor += 1;
   return cursor === retained.length;
 }
-
 function preservesForeignSources(
   previous: ConceptDocument,
   proposed: ConceptDocument,
@@ -83,7 +81,6 @@ function preservesForeignSources(
     .filter((resource) => !resource.startsWith(currentPrefix))
     .every((resource) => next.has(resource));
 }
-
 function rootIndexWithoutSubject(source: string, subjectDirectory: string): string {
   let removed = 0;
   const lines = source.split("\n").filter((line) => {
@@ -98,7 +95,6 @@ function rootIndexWithoutSubject(source: string, subjectDirectory: string): stri
   if (!removed) throw new Error("whole-subject refresh requires an exact root index link to the subject");
   return lines.join("\n").replace(/\n{2,}$/, "\n");
 }
-
 function subjectRemovalEntries(
   options: AnyRefreshOptions,
   bundleRoot: string,
@@ -131,7 +127,6 @@ function subjectRemovalEntries(
       reason: "reserved index removed with an explicitly authored AgentBase-owned subject deletion",
     }));
 }
-
 function protectBase(
   options: AnyRefreshOptions,
   bundleRoot: string,
@@ -222,9 +217,11 @@ function validateChangedSchemas(options: AnyRefreshOptions, bundleRoot: string):
   const base = loadOkfBundle(options.hubBundleRoot);
   const proposed = loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true });
   const selected = new Set(selectOkfConceptSchemas(options.signals).map((item) => item.type));
+  const changedIdentities = new Set<string>();
   const failures = [...proposed.concepts.values()].flatMap((concept) => {
     const previous = base.concepts.get(concept.conceptId);
     if (previous && bytes(options.hubBundleRoot, previous.path).equals(bytes(bundleRoot, concept.path))) return [];
+    changedIdentities.add(concept.conceptId);
     const sourceFailure = !conceptReferencesRepository(concept, options.sourceRepositoryId)
       ? [`${concept.path}: changed concept must cite proposal source repository ${options.sourceRepositoryId}`]
       : [];
@@ -234,9 +231,12 @@ function validateChangedSchemas(options: AnyRefreshOptions, bundleRoot: string):
     return [...sourceFailure, ...selectionFailure, ...validatePublishableAgentBaseDraft(concept),
       ...validateConceptAgainstSchema(concept)];
   });
+  if (changedIdentities.size) failures.push(...validateOkfRelationships(
+    [...proposed.concepts].map(([identity, concept]) => ({ identity, concept })), {
+      sourceIdentities: changedIdentities, strictSourceIdentities: changedIdentities,
+    }).failures);
   if (failures.length) throw new Error(`Hub refresh failed schema validation: ${failures.join("; ")}`);
 }
-
 export function prepareRefreshHubProposal(options: PrepareRefreshHubOptions): PreparedRefreshHubProposal;
 export function prepareRefreshHubProposal(options: PrepareRefreshLocalHubOptions): PreparedRefreshLocalHubProposal;
 export function prepareRefreshHubProposal(

@@ -47,6 +47,14 @@ For every new or modified AgentBase concept:
 - never expose checkout roots, provider cache paths, secrets, credentials, or
   raw graph storage;
 - relate concepts with normal bundle-relative Markdown links.
+- persist only canonical relationship directions: `part-of`, `provides`,
+  `consumes`, `depends-on`, `triggered-by`, `publishes-to`, `reads-from`,
+  `writes-to`, `implemented-in`, `declared-by` and `deployed-as`; MCP derives
+  inbound navigation, so never add a duplicate inverse edge;
+- give every relationship a non-empty `evidence` list resolving to stable
+  `sources[].id` values;
+- give every Business Flow ordered `flow_steps` with exact source and target
+  identities, canonical action, sync/async mode and source evidence;
 - use one canonical path per entity under the role-oriented roots `domains/`,
   `systems/`, `components/`, `interfaces/`, `flows/`, `resources/`,
   `infrastructure/`, `deployments/` or `repositories/`;
@@ -70,12 +78,18 @@ For every new or modified AgentBase concept:
 - Keep an implementation-only Lambda or handler inside its component/API/flow.
   Split it only for independent triggers, scaling, permissions, failure or
   operational behavior.
+- Treat an architecture node and a Markdown knowledge unit separately. A
+  Server remains a component boundary but may link independently useful
+  capability or worker concepts instead of accumulating unrelated contracts,
+  flows and operations in one large document.
 - Distinguish desired-state Infrastructure Definition, genuinely reusable
   Terraform Module and externally evidenced Deployment. Source declarations do
   not prove an account, region, ARN or deployed instance.
 
-Unknown OKF types and extension fields are valid. Broken links are warnings,
-not permission to invent the missing concept.
+Unknown OKF types and extension fields are valid. Preserve their relationship
+predicates as unjudged extensions. New known AgentBase concepts use only the
+canonical vocabulary. Broken links are warnings, not permission to invent the
+missing concept.
 
 ## Uncertainty and guidance
 

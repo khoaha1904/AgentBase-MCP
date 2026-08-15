@@ -4,7 +4,7 @@ import test from "node:test";
 import { getOkfConceptSchema, listOkfConceptSchemas, selectOkfConceptSchemas, validateConceptAgainstSchema } from "./schema-catalog.ts";
 import { parseConceptDocument } from "./okf-document.ts";
 
-test("[AB-SCHEMA-001][AB-SCHEMA-006][AB-SCHEMA-007][AB-SCHEMA-016] catalog 4.0 exposes canonical authoring types", () => {
+test("[AB-SCHEMA-001][AB-SCHEMA-006][AB-SCHEMA-007][AB-SCHEMA-016] catalog 5.0 exposes canonical authoring types", () => {
   assert.deepEqual(listOkfConceptSchemas().map((item) => item.type), [
     "Repository", "Domain", "System", "Software Component", "Service", "Server", "API Surface", "API Endpoint",
     "Event", "Database Table", "Queue", "AWS Lambda", "AWS SQS Queue", "Infrastructure Definition",
@@ -22,10 +22,17 @@ test("[AB-SCHEMA-010][AB-SCHEMA-011] AWS and business schemas guide evidence-led
   assert.deepEqual(lambda?.metadataGuidance.filter((item) => item.requiredWhenSupported).map((item) => item.field), [
     "business_purpose", "resource_name", "runtime", "handler",
   ]);
-  assert.ok(lambda?.relationshipGuidance.some((item) => item.kind === "accesses" && item.targetTypes.includes("Database Table")));
-  assert.ok(getOkfConceptSchema("Terraform Module")?.relationshipGuidance.some((item) => item.kind === "declares"));
+  assert.ok(lambda?.relationshipGuidance.some((item) => item.kind === "reads-from" && item.targetTypes.includes("Database Table")));
+  assert.ok(getOkfConceptSchema("Terraform Module")?.relationshipGuidance.some((item) => item.kind === "implemented-in"));
   assert.ok(getOkfConceptSchema("Business Flow")?.metadataGuidance.some((item) => item.field === "outcome"));
   assert.match(lambda?.limitationGuidance ?? "", /never invent/);
+});
+
+test("[AB-SCHEMA-019][AB-SCHEMA-022] component specializations inherit canonical navigation guidance", () => {
+  const service = getOkfConceptSchema("Service");
+  assert.ok(service?.relationshipGuidance.some((item) => item.kind === "part-of" && item.targetTypes.includes("System")));
+  assert.ok(service?.relationshipGuidance.some((item) => item.kind === "provides" && item.targetTypes.includes("API Surface")));
+  assert.deepEqual(getOkfConceptSchema("Business Flow")?.flowStepGuidance?.modes, ["synchronous", "asynchronous"]);
 });
 
 test("[AB-SCHEMA-002][AB-SCHEMA-008] selection is sparse and prefers specific supported types", () => {

@@ -9,6 +9,7 @@ export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
     ["repository", "source root"], ["admitted repository identity"],
     ["# Purpose", "# Source Structure", "# Build and Test", "# Canonical Knowledge"],
     ["System", "Software Component", "API Surface", "Business Flow", "Infrastructure Definition"],
+    { relationshipGuidance: [] },
   ),
   defineSchema(
     "Domain", "An evidenced business domain or bounded context", "domains/<slug>.md", 10,
@@ -30,8 +31,6 @@ export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
       ],
       relationshipGuidance: [
         { kind: "part-of", targetTypes: ["Domain"], evidence: "business boundary or owner guidance" },
-        { kind: "composed-of", targetTypes: ["Software Component", "Service", "Server"], evidence: "runtime or deployment cooperation" },
-        { kind: "exposes", targetTypes: ["API Surface"], evidence: "consumer-visible interface evidence" },
       ],
     },
   ),
@@ -47,8 +46,19 @@ export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
       ],
       relationshipGuidance: [
         { kind: "part-of", targetTypes: ["System"], evidence: "system composition evidence" },
-        { kind: "implemented-by", targetTypes: ["Repository"], evidence: "source ownership evidence" },
-        { kind: "exposes", targetTypes: ["API Surface"], evidence: "interface declaration" },
+        { kind: "provides", targetTypes: ["API Surface", "API Endpoint", "Event"], evidence: "interface declaration" },
+        { kind: "consumes", targetTypes: ["API Surface", "API Endpoint", "Event"], evidence: "runtime call or subscription" },
+        { kind: "depends-on", targetTypes: ["Software Component", "Service", "Server", "API Surface", "Event"], evidence: "runtime dependency evidence" },
+        {
+          kind: "triggered-by", targetTypes: ["API Surface", "API Endpoint", "Event", "Queue", "AWS SQS Queue", "Database Table"],
+          evidence: "trigger or event-source binding",
+        },
+        { kind: "publishes-to", targetTypes: ["Event", "Queue", "AWS SQS Queue"], evidence: "runtime publish/send plus binding" },
+        { kind: "reads-from", targetTypes: ["Database Table", "Queue", "AWS SQS Queue"], evidence: "runtime read plus binding" },
+        { kind: "writes-to", targetTypes: ["Database Table", "Queue", "AWS SQS Queue"], evidence: "runtime write/send plus binding" },
+        { kind: "implemented-in", targetTypes: ["Repository"], evidence: "source ownership evidence" },
+        { kind: "declared-by", targetTypes: ["Infrastructure Definition", "Terraform Module"], evidence: "infrastructure declaration" },
+        { kind: "deployed-as", targetTypes: ["Deployment"], evidence: "external deployment binding" },
       ],
     },
   ),
@@ -77,8 +87,8 @@ export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
         "What authentication, versioning and failure behavior apply to the surface?",
       ],
       relationshipGuidance: [
-        { kind: "provided-by", targetTypes: ["Software Component", "Service", "Server", "AWS Lambda"], evidence: "routing or deployment binding" },
         { kind: "part-of", targetTypes: ["System"], evidence: "system boundary evidence" },
+        { kind: "implemented-in", targetTypes: ["Repository"], evidence: "interface source evidence" },
       ],
     },
   ),
@@ -101,7 +111,7 @@ export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
       ],
       relationshipGuidance: [
         { kind: "part-of", targetTypes: ["API Surface"], evidence: "shared consumer contract" },
-        { kind: "handled-by", targetTypes: ["Software Component", "Service", "AWS Lambda", "Server"], evidence: "route declaration resolving the handler" },
+        { kind: "implemented-in", targetTypes: ["Repository"], evidence: "route or handler source evidence" },
       ],
     },
   ),
@@ -113,10 +123,10 @@ export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
     {
       investigationQuestions: ["What produces this event?", "What consumes it?", "What schedule or event pattern triggers it?"],
       metadataGuidance: [{ field: "trigger", evidence: "schedule, event pattern or producer call", requiredWhenSupported: true }],
-      relationshipGuidance: [{
-        kind: "triggers", targetTypes: ["AWS Lambda", "Software Component", "Service", "Business Flow"],
-        evidence: "event target or consumer binding",
-      }],
+      relationshipGuidance: [
+        { kind: "part-of", targetTypes: ["System"], evidence: "system boundary evidence" },
+        { kind: "implemented-in", targetTypes: ["Repository"], evidence: "event contract source evidence" },
+      ],
     },
   ),
   defineSchema(
@@ -130,10 +140,11 @@ export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
         { field: "resource_name", evidence: "infrastructure or schema declaration", requiredWhenSupported: true },
         { field: "keys", evidence: "table schema declaration", requiredWhenSupported: false },
       ],
-      relationshipGuidance: [{
-        kind: "accessed-by", targetTypes: ["AWS Lambda", "Software Component", "Service", "Server"],
-        evidence: "runtime database operation plus configuration binding",
-      }],
+      relationshipGuidance: [
+        { kind: "part-of", targetTypes: ["System"], evidence: "system ownership evidence" },
+        { kind: "declared-by", targetTypes: ["Infrastructure Definition", "Terraform Module"], evidence: "infrastructure declaration" },
+        { kind: "deployed-as", targetTypes: ["Deployment"], evidence: "external deployment binding" },
+      ],
     },
   ),
   defineSchema(
@@ -141,6 +152,11 @@ export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
     ["queue", "message queue"], ["queue identity", "producer or consumer evidence"],
     ["# Purpose", "# Messages", "# Producers", "# Consumers", "# Failure Behavior"],
     ["System", "Software Component", "Service", "Event", "Business Flow", "Infrastructure Definition", "Deployment"],
+    { relationshipGuidance: [
+      { kind: "part-of", targetTypes: ["System"], evidence: "system ownership evidence" },
+      { kind: "declared-by", targetTypes: ["Infrastructure Definition", "Terraform Module"], evidence: "infrastructure declaration" },
+      { kind: "deployed-as", targetTypes: ["Deployment"], evidence: "external deployment binding" },
+    ] },
   ),
   ...INFRASTRUCTURE_SCHEMAS,
   defineSchema(

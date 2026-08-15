@@ -36,9 +36,18 @@ export { computeOkfTreeDigest, loadOkfBundle, type LoadOkfBundleOptions, type Ok
 export {
   validateOkfRelationships,
   type OkfRelationshipConcept,
+  type OkfRelationshipTarget,
   type OkfRelationshipValidation,
   type ValidatedOkfRelationship,
+  type ValidatedOkfFlowStep,
 } from "./okf-relationships.ts";
+export {
+  CANONICAL_RELATIONSHIP_KINDS,
+  FLOW_STEP_ACTIONS,
+  FLOW_STEP_MODES,
+  isCanonicalRelationshipKind,
+  type CanonicalRelationshipKind,
+} from "./relationship-vocabulary.ts";
 export {
   diffBundleProposal,
   isMutableAgentBaseDraft,

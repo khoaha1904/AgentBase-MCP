@@ -12,12 +12,12 @@
 
 ## Phase 2: Canonical evidenced relationships
 
-- [ ] T006 [P] [US2] Add canonical predicate, evidence and open-world compatibility tests in `src/core/knowledge/okf-relationships.test.ts`
-- [ ] T007 [P] [US2] Add flow-step and inherited component-guidance tests in `src/core/knowledge/schema-catalog.test.ts`
-- [ ] T008 [US2] Implement catalog 5.0.0 canonical relationship and flow-step guidance in `src/core/knowledge/schema-definition-builder.ts`, `schema-definitions.ts` and `schema-infrastructure-definitions.ts`
-- [ ] T009 [US2] Validate canonical edge evidence and structured Business Flow steps in `src/core/knowledge/okf-relationships.ts`
-- [ ] T010 [US2] Update schema MCP validation, authoring guidance and current OKF contract in `src/app/codebase-memory-mcp/okf-schema-tools.ts`, `.agents/skills/agentbase-okf/SKILL.md` and `docs/contracts/okf.md`
-- [ ] T011 [US2] Run focused/full verification and commit the relationship phase
+- [x] T006 [P] [US2] Add canonical predicate, evidence and open-world compatibility tests in `src/core/knowledge/okf-relationships.test.ts`
+- [x] T007 [P] [US2] Add flow-step and inherited component-guidance tests in `src/core/knowledge/schema-catalog.test.ts`
+- [x] T008 [US2] Implement catalog 5.0.0 canonical relationship and flow-step guidance in `src/core/knowledge/schema-definition-builder.ts`, `schema-definitions.ts` and `schema-infrastructure-definitions.ts`
+- [x] T009 [US2] Validate canonical edge evidence and structured Business Flow steps in `src/core/knowledge/okf-relationships.ts`
+- [x] T010 [US2] Update schema MCP validation, authoring guidance and current OKF contract in `src/app/codebase-memory-mcp/okf-schema-tools.ts`, `.agents/skills/agentbase-okf/SKILL.md` and `docs/contracts/okf.md`
+- [x] T011 [US2] Run focused/full verification and commit the relationship phase
 
 ## Phase 3: Progressive domain retrieval
 

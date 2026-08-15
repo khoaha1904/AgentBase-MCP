@@ -92,7 +92,7 @@ Normative OKF source is pinned to commit
 - **AB-SCHEMA-009** — Concrete concepts preserve provenance and important
   uncertainty. Cross-repository relationships need evidence for both endpoints
   and the relationship.
-- **AB-SCHEMA-010** — Current catalog `4.0.0` provides bounded investigation,
+- **AB-SCHEMA-010** — Current catalog `5.0.0` provides bounded investigation,
   semantic metadata, relationship and optional-enrichment guidance. AWS Lambda,
   Terraform and Business Flow guidance connects identity and infrastructure to
   runtime and observable outcomes.
@@ -127,3 +127,19 @@ Normative OKF source is pinned to commit
   name. Repository concepts retain source-specific knowledge and link to
   canonical entities without copying their contracts. Existing Open Question
   concepts remain readable but are not recommended for new authoring.
+- **AB-SCHEMA-019** — Newly authored known AgentBase schemas store only one
+  canonical direction for `part-of`, `provides`, `consumes`, `depends-on`,
+  `triggered-by`, `publishes-to`, `reads-from`, `writes-to`, `implemented-in`,
+  `declared-by` and `deployed-as`. MCP derives inbound navigation rather than
+  persisting inverse duplicates. Legacy and foreign predicates remain readable
+  and unjudged.
+- **AB-SCHEMA-020** — Every new canonical relationship references one or more
+  stable source IDs from the owning concept. Business Flow `flow_steps` identify
+  contiguous order, exact endpoints, one canonical action, sync/async mode and
+  evidence. Invalid endpoints, modes, evidence or known-schema predicates fail
+  authoring validation.
+- **AB-SCHEMA-022** — Architecture nodes and useful knowledge units are not
+  forced into one technology-shaped granularity. Operationally independent
+  Lambda/workers remain concepts; implementation-only handlers stay in their
+  parent; a Server may link smaller evidenced capability concepts rather than
+  grow one unrelated document.

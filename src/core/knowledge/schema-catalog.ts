@@ -3,7 +3,7 @@ import { OKF_CONCEPT_SCHEMAS, type OkfConceptSchema } from "./schema-definitions
 
 export type { OkfConceptSchema } from "./schema-definitions.ts";
 
-export const AGENTBASE_OKF_SCHEMA_CATALOG_VERSION = "4.0.0" as const;
+export const AGENTBASE_OKF_SCHEMA_CATALOG_VERSION = "5.0.0" as const;
 
 export type OkfSchemaSelection = Readonly<{
   type: string;
@@ -11,7 +11,26 @@ export type OkfSchemaSelection = Readonly<{
   missingEvidence: readonly string[];
 }>;
 
-const schemas: readonly OkfConceptSchema[] = OKF_CONCEPT_SCHEMAS;
+function inheritSchema(schema: OkfConceptSchema, seen: ReadonlySet<string> = new Set()): OkfConceptSchema {
+  if (!schema.fallbackType || seen.has(schema.type)) return schema;
+  const fallback = OKF_CONCEPT_SCHEMAS.find((item) => item.type === schema.fallbackType);
+  if (!fallback) return schema;
+  const inherited = inheritSchema(fallback, new Set([...seen, schema.type]));
+  const relations = [...inherited.relationshipGuidance, ...schema.relationshipGuidance];
+  const relationKeys = new Set<string>();
+  return {
+    ...schema,
+    allowedLinks: [...new Set([...inherited.allowedLinks, ...schema.allowedLinks])],
+    relationshipGuidance: relations.filter((item) => {
+      const key = `${item.kind}\0${item.targetTypes.join("\0")}`;
+      if (relationKeys.has(key)) return false;
+      relationKeys.add(key);
+      return true;
+    }),
+  };
+}
+
+const schemas: readonly OkfConceptSchema[] = OKF_CONCEPT_SCHEMAS.map((schema) => inheritSchema(schema));
 
 export function listOkfConceptSchemas(): readonly OkfConceptSchema[] { return schemas; }
 export function getOkfConceptSchema(type: string): OkfConceptSchema | undefined { return schemas.find((item) => item.type === type); }
