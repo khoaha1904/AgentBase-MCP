@@ -175,6 +175,17 @@ test("[AB-SCHEMA-024][AB-LOCAL-HUB-015][AB-BENCH-041] v10 carries confirmed Doma
   assert.equal(fs.existsSync(path.join(prompts, "okf-author-direct-v9.md")), true);
 });
 
+test("[AB-BENCH-019][AB-BENCH-041] v11 makes every index list marker explicit", () => {
+  const prompts = path.resolve(import.meta.dirname, "..", "benchmark", "prompts");
+  const mcp = fs.readFileSync(path.join(prompts, "okf-author-v11.md"), "utf8");
+  const direct = fs.readFileSync(path.join(prompts, "okf-author-direct-v11.md"), "utf8");
+  const shared = (value) => value.split("## Shared authoring contract\n")[1]?.split("## Arm-specific workflow\n")[0];
+  assert.equal(shared(mcp), shared(direct));
+  assert.match(shared(mcp) ?? "", /Every root and category index entry starts with literal `\* `/);
+  assert.equal(fs.existsSync(path.join(prompts, "okf-author-v10.md")), true);
+  assert.equal(fs.existsSync(path.join(prompts, "okf-author-direct-v10.md")), true);
+});
+
 test("[AB-BENCH-001][AB-BENCH-007] prompt rendering is exact and rejects missing inputs", () => {
   assert.equal(renderAgentPrompt("{{A}}/{{B}}", { A: "one", B: "two" }), "one/two");
   assert.throws(() => renderAgentPrompt("{{MISSING}}", {}), /prompt value is missing/);
