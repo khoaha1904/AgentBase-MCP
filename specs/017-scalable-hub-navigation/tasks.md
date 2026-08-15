@@ -39,8 +39,8 @@
 
 ## Phase 5: Scale and Shopping Cart qualification
 
-- [ ] T024 [P] [US1] Add generated ten-domain thousand-concept search/traversal qualification beside `src/core/knowledge/hub-query.test.ts`
-- [ ] T025 [P] [US3] Extend sequential multi-repository qualification in `src/app/hub-okf/canonical-graph-e2e.test.ts`
+- [x] T024 [P] [US1] Add generated ten-domain thousand-concept search/traversal qualification beside `src/core/knowledge/hub-query.test.ts`
+- [x] T025 [P] [US3] Extend sequential multi-repository qualification in `src/app/hub-okf/canonical-graph-e2e.test.ts`
 - [ ] T026 [US4] Extend benchmark usefulness gates for progressive navigation, canonical evidenced edges and conflict visibility in `scripts/benchmark-okf.mjs` and tests
 - [ ] T027 [US4] Add an immutable next authoring prompt and update `benchmark/repos/aws-serverless/manifest.json` plus benchmark documentation
 - [ ] T028 [US4] Run real Shopping Cart qualification, inspect source conflicts and commit immutable evidence under `benchmark/results/`
