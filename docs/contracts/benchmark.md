@@ -328,3 +328,14 @@ evidence. Immutable V9 requires path-derived durable identities, obtains schema
 guidance after evidence discovery, preserves evidenced parent components, names
 exact progressive category indexes and explicitly compares documented numeric
 policies with implementation.
+
+V9 Shopping Cart run `2026-08-15T163041Z` reloads as a valid, reviewable
+16-concept bundle. It confirms all seven reference concepts with 100% schema
+agreement, all six canonical relationship probes, all required semantic
+metadata and 73% reference provenance. It adds frontend, parent services,
+independent workers, two ordered flows and progressive category indexes. Owner
+review remains `needs_revision`: the TTL disagreement is visible in the table
+body, but the concept does not cite the migration source that supports its
+30-day statement and does not place the conflict in Limitations. Authentication
+infrastructure, a separate DLQ identity and explicit operation-to-handler maps
+also remain useful enrichment rather than inferred facts.
