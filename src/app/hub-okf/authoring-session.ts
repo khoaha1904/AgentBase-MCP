@@ -3,10 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 
 import type { AnyHubProposal, HubIdentity } from "../../core/hub/index.ts";
-import { normalizeConfirmedDomain, type ConfirmedDomain } from "../../core/knowledge/index.ts";
+import { loadOkfBundle, normalizeConfirmedDomain, readLiveClaims, type ConfirmedDomain } from "../../core/knowledge/index.ts";
 import { inspectHubProposal, type HubLifecycleEntry, type HubProposalInspection } from "./inspect.ts";
 import { prepareNewHubProposal } from "./prepare.ts";
 import { prepareRefreshHubProposal, type HubSupersession } from "./refresh.ts";
+import { bindQuestionDeclarations } from "./question-recovery.ts";
+import { validateQuestionDeclarations, type QuestionDeclaration } from "./questions.ts";
 
 export type HubAuthoringSession = Readonly<{
   formatVersion: 1;
@@ -130,6 +132,7 @@ export function finalizeHubAuthoringSession(
   stateRoot: string,
   sessionId: string,
   expectedCheckoutRoot: string,
+  questions: readonly QuestionDeclaration[] = [],
 ): Readonly<{ proposal: AnyHubProposal; inspection: HubProposalInspection }> {
   const session = readHubAuthoringSession(stateRoot, sessionId, expectedCheckoutRoot);
   const staging = path.join(path.resolve(stateRoot), "proposals", `.staging-${session.id}`);
@@ -170,11 +173,14 @@ export function finalizeHubAuthoringSession(
   }
   const inspection = finalized.inspection
     ?? inspectHubProposal(finalized.diff!.entries, { baseRoot: session.baseRoot, proposedRoot: finalized.bundleRoot });
+  const claims = [...loadOkfBundle(finalized.bundleRoot).concepts.values()].flatMap((concept) => readLiveClaims(concept));
+  const declarations = validateQuestionDeclarations(questions, claims, session.sourceRepositoryId);
+  const bound = bindQuestionDeclarations(staging, finalized.proposal, inspection, declarations, session.createdAt, claims);
   fs.cpSync(session.baseRoot, path.join(staging, "base"), { recursive: true, errorOnExist: true, force: false });
-  fs.writeFileSync(path.join(staging, "inspection.json"), `${JSON.stringify(inspection, null, 2)}\n`, { mode: 0o600 });
+  fs.writeFileSync(path.join(staging, "inspection.json"), `${JSON.stringify(bound.inspection, null, 2)}\n`, { mode: 0o600 });
   fs.writeFileSync(path.join(staging, "runtime.json"), `${JSON.stringify({ checkoutRoot: session.checkoutRoot })}\n`, { mode: 0o600 });
-  const proposalRoot = path.join(path.resolve(stateRoot), "proposals", finalized.proposal.id);
+  const proposalRoot = path.join(path.resolve(stateRoot), "proposals", bound.proposal.id);
   if (fs.existsSync(proposalRoot)) throw new Error("finalized Hub proposal already exists");
   fs.renameSync(staging, proposalRoot);
-  return { proposal: finalized.proposal, inspection };
+  return bound;
 }

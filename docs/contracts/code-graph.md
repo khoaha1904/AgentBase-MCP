@@ -113,3 +113,8 @@ fixture cost, so no incremental-speed or scale claim is accepted.
   fresh gateway/client and disposable source.
 - **AB-MCP-014** — The gateway uses exact official
   `@modelcontextprotocol/server@2.0.0`, not hand-written framing or a web adapter.
+- **AB-MCP-015** — A live-evidence read may bind accepted Hub references only to
+  the one repository already authorized by the connection. AgentBase returns
+  reference/status metadata; the host uses existing `search_graph` and
+  `get_code_snippet` calls for current values. No AgentBase source parser,
+  durable live-value cache, hidden re-index or second graph is introduced.

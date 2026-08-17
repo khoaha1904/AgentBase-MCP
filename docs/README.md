@@ -45,10 +45,11 @@ is the portable archive.
 
 ## Current checkpoint
 
-- Active capability: `018-confirmed-domain-navigation`; most recent completed
-  capability: `017-scalable-hub-navigation`.
-- The capability 018 implementation is committed through `3bbbb9d`. Its last
-  full offline verification is green with 339 tests.
+- Active capability: none; most recent completed capability:
+  `019-live-evidence-questions`.
+- Capability 018 is complete with 339 passing offline tests. Its V11 real run is
+  accepted for confirmed Domain and shared-navigation qualification; no V12
+  numeric-snapshot iteration was authorized.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.
@@ -71,13 +72,14 @@ is the portable archive.
   Commerce → Shopping Cart navigation and protects existing shared index lines
   from replacement, deletion, reordering or restyling.
 - Shopping Cart V11 run `2026-08-15T172701Z` is valid and reviewable with all
-  eight reference concepts found and 100% schema agreement. It remains at an
-  explicit review breakpoint because the conflicting cart-retention TTL claims
-  are not visible with evidence in an authored `Limitations` section. Its result
-  is uncommitted, and open Hub PR #7 remains the earlier V9 proposal.
-
-Question management and external evidence enrichment remain the next product
-direction for retaining and resolving missing or unjudged knowledge.
+  eight reference concepts found and 100% schema agreement. Its incomplete TTL
+  evidence is not treated as a resolved policy or repaired by storing more
+  volatile numbers. Open Hub PR #7 remains the earlier V9 proposal.
+- Capability 019 is complete. It retains
+  conflicting live claim references without durable volatile scalars, binds
+  query-time resolution to the authorized repository, persists proposal-coupled
+  governed questions and turns attributed answers into separately reviewable
+  Maintainer Guidance without choosing or deleting source truth.
 
 ## Superseded assumptions
 

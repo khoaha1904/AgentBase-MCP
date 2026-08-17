@@ -54,6 +54,19 @@ queries and ordinary coding never create Hub state, commits or publication.
   existing root or category `index.md`, but every accepted nonblank line remains
   byte-exact and ordered. Renaming the Hub/category heading, deleting, replacing
   or reordering existing navigation fails before proposal acceptance.
+- **AB-QUESTION-001, AB-QUESTION-005** — Finalization may attach bounded
+  governed-question declarations to the reviewed proposal digest. Acceptance
+  deterministically creates or merges private subject/property records with
+  linked claim references, missing evidence and append-only history; accepted
+  attachments recover an interrupted post-commit ledger write idempotently.
+- **AB-QUESTION-002, AB-QUESTION-003** — Questions can be listed by pending or
+  resolved status with claim roles/sources and history. Only an exact-revision,
+  non-empty answer attributed as `human:<id>` resolves one; an incompatible
+  later answer is appended and reopens it instead of overwriting evidence.
+- **AB-QUESTION-004** — An answer prepares exactly one stable, human-authored
+  `guidance/<question-id>-r<revision>.md` Maintainer Guidance proposal. Accepted
+  Hub bytes do not change until that proposal passes the ordinary inspect and
+  accept lifecycle.
 - **AB-QUERY-001** — Code questions primarily use Code Graph; business/system/
   cross-repository questions primarily use local Hub; combined answers retain
   both source kinds and limitations.
@@ -71,6 +84,12 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-QUERY-005** — Root navigation links bounded Domain and fallback System/
   Repository entrypoints. Domain concepts navigate Systems and critical flows;
   System concepts navigate useful entities without copying their knowledge.
+- **AB-QUERY-006..008** — `read_hub_live_evidence` reads validated references at
+  one exact accepted Hub commit and binds them only to the repository authorized
+  on the current MCP connection. The host resolves ready targets through graph
+  search/exact snippets, labels documentation/implementation/configuration and
+  Maintainer Guidance separately, and never emits an automatic winner. Missing,
+  ambiguous, moved or mismatched evidence is reported without a stale scalar.
 
 ## Lazy setup and first bootstrap
 

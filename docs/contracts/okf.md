@@ -64,6 +64,22 @@ Normative OKF source is pinned to commit
 - **AB-OBS-007** — Observation preserves package-private admission, private
   cache, bounded process/session, source integrity and confirmed cleanup.
 
+## Live claims
+
+- **AB-CLAIM-001** — Distinct claims about one subject/property retain their
+  own stable identity, role and provenance. Conflict never silently merges the
+  claims or selects a canonical winner.
+- **AB-CLAIM-002** — A newly authored volatile implementation/configuration
+  value is an `agentbase.live_claims` reference, not a durable scalar. Each
+  reference binds one same-concept repository source, semantic target and the
+  clean commit or dirty digest observed during authoring; `value` is forbidden.
+- **AB-CLAIM-003** — Durable policy and explicit human decisions may contain a
+  literal only as separately attributed Maintainer Guidance. They remain
+  distinguishable from documentation, implementation and configuration claims.
+- Live-claim IDs are bundle-unique and refresh cannot remove an accepted ID.
+  A later reviewed proposal may move the same semantic reference while all
+  protected knowledge and human guidance keep their normal lifecycle rules.
+
 ## Concrete schema catalog
 
 - **AB-SCHEMA-001** — MCP exposes one explicit catalog version and target OKF

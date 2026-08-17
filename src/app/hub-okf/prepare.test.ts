@@ -125,6 +125,26 @@ test("[AB-BENCH-037] new production proposals reject benchmark-only metadata", (
   } finally { current.cleanup(); }
 });
 
+test("[AB-CLAIM-002] new proposals reject live references containing a scalar snapshot", () => {
+  const current = fixture();
+  try {
+    const target = path.join(current.authored, "repositories/acme/repository.md");
+    fs.writeFileSync(target, fs.readFileSync(target, "utf8").replace("---\n\n# Purpose", [
+      "agentbase:", "  live_claims:", "    - id: AB-CLAIM-ttl", "      subject: repositories/acme/repository",
+      "      property: session.ttl", "      role: configuration", "      source_id: source",
+      "      target: { kind: symbol, name: TTL }",
+      `      observed: { commit: ${"a".repeat(40)}, dirty: false, dirty_digest: null, value: 7 }`,
+      "---", "", "# Purpose",
+    ].join("\n")));
+    assert.throws(() => prepareNewHubProposal({
+      hub: createHubIdentity("agentbase/hub", "main"), baseCommit: BASE_COMMIT, sourceRepositoryId: SOURCE_ID,
+      hubBundleRoot: current.base, authoredBundleRoot: current.authored,
+      proposalRoot: current.proposal, subjectDirectory: "repositories/acme",
+      evidenceDigest: EVIDENCE, signals: ["repository"], createdAt: "2026-08-12T00:00:00Z",
+    }), /observed contains unknown fields/);
+  } finally { current.cleanup(); }
+});
+
 test("[AB-LOCAL-HUB-015] new proposal preserves existing index identity while adding navigation", () => {
   const current = fixture();
   try {

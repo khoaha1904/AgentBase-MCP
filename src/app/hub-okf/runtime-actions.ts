@@ -10,14 +10,14 @@ import { acceptHubProposal } from "./accept.ts";
 import { resolveHubConfiguration, type OptionalHubConfiguration } from "./configuration.ts";
 import { admitPersistentLocalHub } from "./local-hub.ts";
 import type { HubToolActions } from "./mcp-tools.ts";
-import { readHubProposalState } from "./proposal-state.ts";
 import { recoverSynchronizationTransaction } from "./recovery.ts";
-import { buildActiveHubContinuity, readActiveHubConcept, searchActiveHub, traverseActiveHub } from "./query.ts";
+import { buildActiveHubContinuity, readActiveHubConcept, readActiveHubLiveEvidence, searchActiveHub, traverseActiveHub } from "./query.ts";
 import { listPendingHubProposals } from "./pending.ts";
 import { publishPendingHubProposals } from "./publish.ts";
 import { synchronizeLocalHub } from "./synchronize.ts";
 import { attachExistingHub, createLocalHub } from "./setup.ts";
 import { executeHubBootstrap, previewHubBootstrap } from "./bootstrap.ts";
+import { createReviewActions } from "./review-actions.ts";
 
 function defaultStateRoot(): string {
   const owner = typeof process.getuid === "function" ? String(process.getuid()) : "portable";
@@ -108,21 +108,16 @@ export function createHubRuntimeActions(
         baseCommit: session.baseCommit,
         selectedSchemas: session.selectedSchemas,
         sourceRepositoryId: session.sourceRepositoryId,
+        source,
         ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),
         continuity,
       };
     },
-    async finalize(sessionId) {
+    async finalize(sessionId, questions) {
       const configuration = configured();
-      return finalizeHubAuthoringSession(stateRoot, sessionId, configuration.localRoot);
+      return finalizeHubAuthoringSession(stateRoot, sessionId, configuration.localRoot, questions ?? []);
     },
-    async inspect(proposalId) {
-      const root = proposalRoot(stateRoot, proposalId);
-      return {
-        proposal: readHubProposalState(root),
-        inspection: JSON.parse(fs.readFileSync(path.join(root, "inspection.json"), "utf8")) as unknown,
-      };
-    },
+    ...createReviewActions(stateRoot, (proposalId) => proposalRoot(stateRoot, proposalId), admit),
     async accept(proposalId, proposalDigest) {
       const localHub = await admit();
       return acceptHubProposal({
@@ -143,6 +138,10 @@ export function createHubRuntimeActions(
     async read(relativePath) {
       const localHub = await admit();
       return readActiveHubConcept(localHub, relativePath);
+    },
+    async readLiveEvidence(relativePath, source) {
+      const localHub = await admit();
+      return readActiveHubLiveEvidence(localHub, relativePath, source);
     },
     async listPending() {
       const localHub = await admit();

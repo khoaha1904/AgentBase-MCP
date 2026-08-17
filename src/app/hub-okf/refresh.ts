@@ -14,12 +14,14 @@ import {
   loadOkfBundle,
   prepareBundleProposal,
   repositorySourceResources,
+  readLiveClaims,
   selectOkfConceptSchemas,
   validateConceptAgainstSchema,
   assertConfirmedDomainAssignment,
   validatePublishableAgentBaseDraft,
   validateOkfRelationships,
   validateBundleProposal,
+  validateBundleLiveClaims,
   type ConceptDocument,
   type ConfirmedDomain,
 } from "../../core/knowledge/index.ts";
@@ -48,9 +50,7 @@ export type PreparedRefreshHubProposal = Readonly<{
 }>;
 export type PreparedRefreshLocalHubProposal = Omit<PreparedRefreshHubProposal, "proposal"> & Readonly<{ proposal: LocalOnlyHubProposal }>;
 type AnyRefreshOptions = PrepareRefreshHubOptions | PrepareRefreshLocalHubOptions;
-function bytes(root: string, relative: string): Buffer {
-  return fs.readFileSync(path.join(root, ...relative.split("/")));
-}
+function bytes(root: string, relative: string): Buffer { return fs.readFileSync(path.join(root, ...relative.split("/"))); }
 function writeBytes(root: string, relative: string, content: Buffer): void {
   const target = path.join(root, ...relative.split("/"));
   fs.mkdirSync(path.dirname(target), { recursive: true, mode: 0o700 });
@@ -83,6 +83,10 @@ function preservesForeignSources(
   return repositorySourceResources(previous)
     .filter((resource) => !resource.startsWith(currentPrefix))
     .every((resource) => next.has(resource));
+}
+function preservesLiveClaimIdentities(previous: ConceptDocument, proposed: ConceptDocument): boolean {
+  const next = new Set(readLiveClaims(proposed).map((claim) => claim.id));
+  return readLiveClaims(previous).every((claim) => next.has(claim.id));
 }
 function rootIndexWithoutSubject(source: string, subjectDirectory: string): string {
   let removed = 0;
@@ -151,7 +155,8 @@ function protectBase(
     const currentSourceContribution = Boolean(
       concept && proposedConcept
       && conceptReferencesRepository(proposedConcept, options.sourceRepositoryId)
-      && preservesForeignSources(concept, proposedConcept, options.sourceRepositoryId),
+      && preservesForeignSources(concept, proposedConcept, options.sourceRepositoryId)
+      && preservesLiveClaimIdentities(concept, proposedConcept)
     );
     const additiveIndex = Boolean(index && proposed && preservesLines(bytes(options.hubBundleRoot, relative), proposed));
     const ownedDeletion = Boolean(mutable && !proposed && inSubject);
@@ -167,7 +172,6 @@ function protectBase(
   }
   return conflicts;
 }
-
 function restoreUnknownFieldConflicts(
   options: AnyRefreshOptions,
   bundleRoot: string,
@@ -206,7 +210,6 @@ function supersessionEntries(
     };
   });
 }
-
 function classifyLifecycle(
   baseEntries: readonly HubLifecycleEntry[],
   annotations: readonly HubLifecycleEntry[],
@@ -221,7 +224,7 @@ function validateChangedSchemas(options: AnyRefreshOptions, bundleRoot: string):
   const proposed = loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true });
   const selected = new Set(selectOkfConceptSchemas(options.signals).map((item) => item.type));
   const changedIdentities = new Set<string>();
-  const failures = [...proposed.concepts.values()].flatMap((concept) => {
+  const failures = [...validateBundleLiveClaims(proposed.concepts.values()), ...[...proposed.concepts.values()].flatMap((concept) => {
     const previous = base.concepts.get(concept.conceptId);
     if (previous && bytes(options.hubBundleRoot, previous.path).equals(bytes(bundleRoot, concept.path))) return [];
     changedIdentities.add(concept.conceptId);
@@ -233,7 +236,7 @@ function validateChangedSchemas(options: AnyRefreshOptions, bundleRoot: string):
       : [];
     return [...sourceFailure, ...selectionFailure, ...validatePublishableAgentBaseDraft(concept),
       ...validateConceptAgainstSchema(concept)];
-  });
+  })];
   if (changedIdentities.size) failures.push(...validateOkfRelationships(
     [...proposed.concepts].map(([identity, concept]) => ({ identity, concept })), {
       sourceIdentities: changedIdentities, strictSourceIdentities: changedIdentities,

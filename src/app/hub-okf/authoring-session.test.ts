@@ -31,18 +31,29 @@ test("[AB-HUB-003..008] agent authors in a prepared workspace then finalizes an 
     fs.writeFileSync(path.join(session.bundleRoot, "repositories/acme/index.md"), "# Acme\n\n* [Repository](repository.md) - identity\n");
     const concept = "---\ntype: Repository\ntitle: Acme\ndescription: Acme\nstatus: draft\n"
       + "generated: { by: 'agentbase/0.0.0', at: '2026-08-12T00:00:00Z' }\n"
-      + "sources:\n  - resource: repository://repository-acme-aaaaaaaaaaaa/README.md#L1-L1\n"
+      + "sources:\n  - id: readme\n    resource: repository://repository-acme-aaaaaaaaaaaa/README.md#L1-L1\n"
+      + "agentbase:\n  live_claims:\n    - id: AB-CLAIM-readme-purpose\n"
+      + "      subject: repositories/acme\n      property: repository.purpose\n      role: documentation\n"
+      + "      source_id: readme\n      target: { kind: text, name: Purpose section }\n"
+      + `      observed: { commit: ${"a".repeat(40)}, dirty: false, dirty_digest: null }\n`
       + "---\n\n# Purpose\n\nAcme.\n";
     fs.writeFileSync(path.join(session.bundleRoot, "repositories/acme/repository.md"), concept);
     assert.throws(
       () => finalizeHubAuthoringSession(stateRoot, session.id, path.join(root, "wrong-hub")),
       /session state is invalid/,
     );
-    const result = finalizeHubAuthoringSession(stateRoot, session.id, checkout);
+    const result = finalizeHubAuthoringSession(stateRoot, session.id, checkout, [{
+      subject: "repositories/acme", property: "repository.purpose",
+      claimIds: ["AB-CLAIM-readme-purpose"], missingEvidence: ["implementation evidence"],
+    }]);
     const proposalRoot = path.join(stateRoot, "proposals", result.proposal.id);
     assert.equal(readHubProposalState(proposalRoot).phase, "prepared");
     assert.equal(result.inspection.counts.created, 3);
     assert.equal(fs.existsSync(path.join(proposalRoot, "base")), true);
+    assert.equal(result.inspection.questions?.length, 1);
+    assert.equal(fs.existsSync(path.join(proposalRoot, "questions.json")), true);
+    const attachment = JSON.parse(fs.readFileSync(path.join(proposalRoot, "questions.json"), "utf8")) as { claims: unknown[] };
+    assert.equal(attachment.claims.length, 1);
     assert.equal(fs.existsSync(path.join(session.bundleRoot, ".git")), false);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });

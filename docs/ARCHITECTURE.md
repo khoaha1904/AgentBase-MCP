@@ -51,6 +51,7 @@ provider -X-> app
 | Freshness receipt | machine/repository/provider | no | yes |
 | Observation/evidence bundle | source revision | no in current product | yes |
 | Unaccepted proposal workspace | local transaction | no | yes from reviewed input |
+| Governed-question ledger | local Hub authority | no | yes from accepted proposal attachments |
 | Accepted Hub `main` and pending commits | user/team knowledge | yes through Git | governed |
 
 Private state lives outside source checkouts where required, uses bounded exact
@@ -71,11 +72,17 @@ and returns visible recovery rather than hidden retry.
   watcher, UI, daemon or automatic transport retry exists.
 - Exact freshness reuse skips only indexing. Queries, source-integrity checks
   and cleanup always run; cache failure asks for explicit `--refresh`.
-- The public stdio gateway exposes 11 safe Codebase Memory analysis tools, one
-  controlled `index_repository` and seven AgentBase schema/validation tools. It omits
-  provider mutation tools and binds one connection to one repository.
+- The public stdio gateway exposes safe Codebase Memory analysis, one controlled
+  `index_repository`, AgentBase schema/validation and local Hub lifecycle/query
+  tools. It omits provider mutation tools and binds one connection to one
+  repository. Live references compose accepted Hub metadata with existing graph
+  search/snippets; they add no parser, cache or graph owner.
 - YAML parsing stays behind `core/knowledge`, rejects unsafe/oversized input and
   never reserializes protected documents merely for normalization.
+- `core/knowledge` owns the portable `agentbase.live_claims` contract.
+  `app/hub-okf` owns proposal-coupled question recovery, the private atomic
+  ledger and answer-to-guidance proposals; the MCP gateway supplies only the
+  authorized current-repository binding.
 - GitHub access is confined to explicit attach, bootstrap, publication and
   synchronization workflows. Local knowledge work requires no network.
 - Benchmark model execution is an opt-in external Codex process in an isolated

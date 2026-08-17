@@ -1,0 +1,95 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-serverless-shopping-cart",
+  "runId": "2026-08-15T172701Z",
+  "arm": "mcp",
+  "expectedConcepts": 8,
+  "actualConcepts": 14,
+  "matchedConcepts": 8,
+  "referenceConceptCoveragePercent": 100,
+  "recognizedSchemaAgreementPercent": 100,
+  "metadataCompletenessPercent": 88,
+  "provenanceCoveragePercent": 82,
+  "referenceRelationshipCoveragePercent": 86,
+  "conflictVisibilityPercent": 0,
+  "classifications": {
+    "concepts": {
+      "confirmed": [
+        "domains/commerce",
+        "systems/serverless-shopping-cart",
+        "components/shopping-cart-service",
+        "interfaces/cart-api",
+        "infrastructure/shopping-cart-sam-stack",
+        "resources/shopping-cart-table",
+        "resources/cart-delete-queue",
+        "flows/cart-migration"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "components/product-mock-service",
+        "flows/cart-quantity-aggregation",
+        "infrastructure/authentication-sam-stack",
+        "infrastructure/product-mock-sam-stack",
+        "interfaces/product-api",
+        "repositories/repository-aws-serverless-shopping-cart-708d65caf454"
+      ],
+      "missingReference": []
+    },
+    "relationships": {
+      "confirmed": [
+        "shopping-cart-system|part-of|commerce-domain",
+        "shopping-cart-service|part-of|shopping-cart-system",
+        "shopping-cart-api|part-of|shopping-cart-system",
+        "shopping-cart-infrastructure|part-of|shopping-cart-system",
+        "dynamodb-shopping-cart-table|declared-by|shopping-cart-infrastructure",
+        "cart-delete-sqs-queue|declared-by|shopping-cart-infrastructure"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "components/product-mock-service|part-of|systems/serverless-shopping-cart",
+        "components/product-mock-service|provides|interfaces/product-api",
+        "components/product-mock-service|declared-by|infrastructure/product-mock-sam-stack",
+        "components/product-mock-service|implemented-in|repositories/repository-aws-serverless-shopping-cart-708d65caf454",
+        "components/shopping-cart-service|provides|interfaces/cart-api",
+        "components/shopping-cart-service|depends-on|components/product-mock-service",
+        "components/shopping-cart-service|publishes-to|resources/cart-delete-queue",
+        "components/shopping-cart-service|declared-by|infrastructure/shopping-cart-sam-stack",
+        "components/shopping-cart-service|implemented-in|repositories/repository-aws-serverless-shopping-cart-708d65caf454",
+        "flows/cart-migration|part-of|domains/commerce",
+        "flows/cart-quantity-aggregation|part-of|systems/serverless-shopping-cart",
+        "infrastructure/authentication-sam-stack|part-of|systems/serverless-shopping-cart",
+        "infrastructure/authentication-sam-stack|implemented-in|repositories/repository-aws-serverless-shopping-cart-708d65caf454",
+        "infrastructure/product-mock-sam-stack|part-of|systems/serverless-shopping-cart",
+        "infrastructure/product-mock-sam-stack|implemented-in|repositories/repository-aws-serverless-shopping-cart-708d65caf454",
+        "infrastructure/shopping-cart-sam-stack|implemented-in|repositories/repository-aws-serverless-shopping-cart-708d65caf454",
+        "interfaces/cart-api|implemented-in|repositories/repository-aws-serverless-shopping-cart-708d65caf454",
+        "interfaces/product-api|part-of|systems/serverless-shopping-cart",
+        "interfaces/product-api|implemented-in|repositories/repository-aws-serverless-shopping-cart-708d65caf454",
+        "resources/cart-delete-queue|part-of|systems/serverless-shopping-cart",
+        "resources/shopping-cart-table|part-of|systems/serverless-shopping-cart"
+      ],
+      "missingReference": [
+        "authenticated-cart-migration|part-of|shopping-cart-system"
+      ]
+    }
+  },
+  "validation": {
+    "passed": true,
+    "failures": []
+  },
+  "ownerReview": {
+    "status": "needs_revision",
+    "findings": [
+      "cart-retention-ttl: source conflict is not visible with its evidence in a Limitations section"
+    ]
+  },
+  "authoringAssessment": {
+    "status": "reviewable",
+    "hardFailures": [],
+    "limitations": [
+      "Deterministic source-path checks do not prove that authored claims are semantically supported; human review is required.",
+      "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept."
+    ]
+  },
+  "okfTreeDigest": "sha256:1a3c7f7f350ec66d97dee1a21a5d788e99d7af9fcd12ba678fd0e1c6bd182eed"
+}

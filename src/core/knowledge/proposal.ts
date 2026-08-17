@@ -4,6 +4,7 @@ import { isDeepStrictEqual } from "node:util";
 
 import { computeOkfTreeDigest, loadOkfBundle } from "./okf-bundle.ts";
 import { validateAgentBaseDraft, type ConceptDocument, type OkfValue } from "./okf-document.ts";
+import { validateConceptAgainstSchema } from "./schema-catalog.ts";
 
 export type ProposalState = "prepared" | "generated";
 
@@ -40,6 +41,9 @@ export type PrepareProposalOptions = Readonly<{
   proposalId: string;
   evidenceDigest: string;
   createdAt: string;
+}>;
+export type ValidateProposalOptions = Readonly<{
+  maintainerGuidance?: Readonly<{ conceptId: string; by: string; at: string }>;
 }>;
 
 const metadataPath = (proposalRoot: string) => path.join(proposalRoot, "proposal.json");
@@ -166,6 +170,14 @@ const STANDARD_OKF_KEYS = new Set([
 function unknownValueFailures(base: ConceptDocument, proposed: ConceptDocument): readonly string[] {
   const failures: string[] = [];
   for (const [key, value] of Object.entries(base.frontmatter)) {
+    if (key === "agentbase") {
+      const previous = { ...(mapping(value) ?? {}) }, next = { ...(mapping(proposed.frontmatter[key]) ?? {}) };
+      delete previous.live_claims; delete next.live_claims;
+      if (!isDeepStrictEqual(previous, next)) {
+        failures.push(`${proposed.path}: unknown frontmatter value agentbase must preserve fields outside live_claims`);
+      }
+      continue;
+    }
     if (!STANDARD_OKF_KEYS.has(key) && !isDeepStrictEqual(proposed.frontmatter[key], value)) {
       failures.push(`${proposed.path}: unknown frontmatter value ${key} must be preserved when modifying an owned draft`);
     }
@@ -173,7 +185,23 @@ function unknownValueFailures(base: ConceptDocument, proposed: ConceptDocument):
   return failures;
 }
 
-export function validateBundleProposal(currentBundleRoot: string, proposalRoot: string): ProposalMetadata {
+function maintainerGuidanceFailures(
+  concept: ConceptDocument,
+  expected: NonNullable<ValidateProposalOptions["maintainerGuidance"]>,
+): readonly string[] {
+  const generated = mapping(concept.frontmatter.generated);
+  const failures = concept.conceptId !== expected.conceptId || concept.type !== "Maintainer Guidance"
+    || concept.status !== "stable" || generated?.by !== expected.by || generated.at !== expected.at
+    || concept.verified.length
+    ? [`${concept.path}: answer proposal must contain the exact stable human Maintainer Guidance`] : [];
+  return [...failures, ...validateConceptAgainstSchema(concept)];
+}
+
+export function validateBundleProposal(
+  currentBundleRoot: string,
+  proposalRoot: string,
+  options: ValidateProposalOptions = {},
+): ProposalMetadata {
   const metadata = readProposalMetadata(proposalRoot);
   const current = loadOkfBundle(currentBundleRoot);
   if (current.treeDigest !== metadata.baseTreeDigest) throw new Error("proposal base tree is stale");
@@ -185,7 +213,9 @@ export function validateBundleProposal(currentBundleRoot: string, proposalRoot: 
     const base = current.concepts.get(concept.conceptId);
     const changed = !base || !bytes(currentBundleRoot, base.path).equals(bytes(proposedRoot, concept.path));
     if (changed && (!base || isMutableAgentBaseDraft(base))) {
-      failures.push(...validateAgentBaseDraft(concept));
+      failures.push(...(!base && options.maintainerGuidance?.conceptId === concept.conceptId
+        ? maintainerGuidanceFailures(concept, options.maintainerGuidance)
+        : validateAgentBaseDraft(concept)));
     }
     if (changed && base && isMutableAgentBaseDraft(base)) failures.push(...unknownValueFailures(base, concept));
     failures.push(...continuitySourceFailures(concept, baseDraftPaths));

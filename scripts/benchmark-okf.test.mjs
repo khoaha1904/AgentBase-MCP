@@ -446,6 +446,64 @@ TTL behavior conflicts: documentation says 1 day and 7 days, while migration wri
   assert.match(missing.ownerReview.findings.join("\n"), /cart-ttl/);
 });
 
+test("[AB-BENCH-042] v8 scores live evidence references without durable volatile scalar snapshots", () => {
+  const sourceCommit = "a".repeat(40);
+  const current = parseConceptDocument("resources/cart-table.md", `---
+type: Database Table
+title: Cart table
+description: Stores shopping cart items.
+status: draft
+generated: { by: agentbase/5.0.0, at: '2026-08-17T00:00:00Z' }
+sources:
+  - { id: docs, resource: 'repository://${repositoryId}/README.md#L1-L2' }
+  - { id: code, resource: 'repository://${repositoryId}/src/cart.py#L1-L2' }
+agentbase:
+  live_claims:
+    - id: AB-CLAIM-cart-ttl-docs
+      subject: resources/cart-table
+      property: cart.retention.ttl
+      role: documentation
+      source_id: docs
+      target: { kind: text, name: retention policy }
+      observed: { commit: ${sourceCommit}, dirty: false, dirty_digest: null }
+    - id: AB-CLAIM-cart-ttl-code
+      subject: resources/cart-table
+      property: cart.retention.ttl
+      role: implementation
+      source_id: code
+      target: { kind: symbol, name: CART_TTL }
+      observed: { commit: ${sourceCommit}, dirty: false, dirty_digest: null }
+relationships: []
+---
+
+# Purpose
+
+The table stores shopping cart items while current retention values remain source-resolved evidence.
+`);
+  const result = scoreSemanticBenchmark({ version: 8, concepts: [], relationships: [], liveEvidence: [{
+    key: "cart-ttl", subject: "resources/cart-table", property: "cart.retention.ttl",
+    roles: ["documentation", "implementation"], requiredSourcePaths: ["README.md", "src/cart.py"],
+  }] }, { concepts: new Map([[current.conceptId, current]]), warnings: [] }, repositoryId);
+  assert.equal(result.liveEvidenceReferenceCoveragePercent, 100);
+  assert.equal(result.validation.passed, true);
+  assert.equal(JSON.stringify(current.frontmatter.agentbase).includes('"value"'), false);
+
+  assert.deepEqual(benchmarkOkf.assessLiveResolutionCases([
+    { key: "changed", expectedStatus: "resolved", status: "resolved", usedStaleFallback: false,
+      roles: ["implementation"], expectedRoles: ["implementation"], selectedWinner: false },
+    { key: "missing", expectedStatus: "unavailable", status: "unavailable", usedStaleFallback: false,
+      roles: ["documentation", "implementation"], expectedRoles: ["documentation", "implementation"], selectedWinner: false },
+    { key: "maintainer-mismatch", expectedStatus: "resolved", status: "resolved", usedStaleFallback: false,
+      roles: ["documentation", "implementation", "maintainer-guidance"],
+      expectedRoles: ["documentation", "implementation", "maintainer-guidance"], selectedWinner: false },
+  ]), { status: "passed", findings: [] });
+  assert.match(benchmarkOkf.assessLiveResolutionCases([
+    { key: "invalid-winner", expectedStatus: "resolved", status: "resolved", usedStaleFallback: false,
+      roles: ["documentation", "implementation", "maintainer-guidance"],
+      expectedRoles: ["documentation", "implementation", "maintainer-guidance"], selectedWinner: true },
+  ]).findings.join("\n"), /automatic truth winner/);
+});
+
 test("[AB-BENCH-026] linked relationships from an unknown Google OKF type stay unjudged", () => {
   const custom = concept("custom.md", "Custom Runtime", "custom-runtime", {}, ["custom.ts"], [
     { kind: "uses", target: "orders-table" },

@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import type { ProposalDiffEntry } from "../../core/knowledge/index.ts";
+import type { QuestionDeclaration } from "./questions.ts";
 
 export type HubLifecycleEntry = Readonly<{
   path: string;
@@ -25,6 +26,7 @@ export type HubProposalInspection = Readonly<{
   entries: readonly HubLifecycleEntry[];
   counts: Readonly<Record<HubLifecycleEntry["change"], number>>;
   applicable: boolean;
+  questions?: readonly QuestionDeclaration[];
 }>;
 
 function inspectContent(root: string, relative: string, maximum: number): HubInspectedContent | undefined {

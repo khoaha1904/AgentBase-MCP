@@ -130,6 +130,12 @@ benchmarks.
   evidenced relationships as integrity requirements and progressive navigation
   plus source-conflict visibility as owner-review findings. Retrieval quality,
   provenance and honest uncertainty are primary; token use remains diagnostic.
+- **AB-BENCH-041** — Confirmed-Domain qualification requires exact owner input,
+  valid shared navigation and preservation of all prior nonblank index lines.
+- **AB-BENCH-042** — Live-evidence qualification scores validated reference
+  coverage, current-resolution status, role-separated conflict presentation,
+  unavailable-source behavior and absence of durable volatile scalars. It does
+  not require a numeric snapshot or choose an evidence winner.
 
 ## Context A/B interpretation
 
@@ -347,3 +353,29 @@ Proposal `1825cee818828dd7e60cfb3f` has accepted commit
 `faaf8569452699a9405c062ca90042a499546b71`; the PR remains human-review input,
 not proof that the visible owner-review findings are resolved. Governed
 questions are deliberately not represented as OKF concepts in this capability.
+
+## Confirmed-Domain qualification
+
+Capability 018 added owner-confirmed `domains/commerce` input and shared-index
+preservation. V10 run `2026-08-15T171650Z` found all eight reference concepts
+but is retained as invalid evidence because its generated category entries used
+unsupported `-` markers. Immutable V11 corrected only that general index
+grammar.
+
+V11 run `2026-08-15T172701Z` is valid and reviewable. It preserves the
+`AgentBase-Hub` root, provides Commerce → Serverless Shopping Cart navigation,
+finds all eight reference concepts with 100% recognized-schema agreement and
+reports 88% metadata, 82% provenance and 86% reference relationship coverage.
+It is accepted as the real AB-BENCH-041 Domain/navigation qualification.
+
+Owner review does not treat its literal TTL diagnostic as durable truth. The
+bundle mentions incompatible seven-day documentation and 30-day migration
+behavior but lacks complete source coverage and retains volatile numeric
+snapshots. Capability 019 supersedes that scoring model with governed questions
+and live source references. No V12 numeric-snapshot prompt correction is
+authorized. Open Hub PR #7 remains the earlier V9 proposal and is not rebuilt,
+replaced or merged until capability 019 separately qualifies publication.
+
+AB-BENCH-042 is covered offline by expectation format v8 and deterministic
+live-resolution cases. No capability-019 model-backed run has been executed;
+qualification and publication remain separately opt-in.

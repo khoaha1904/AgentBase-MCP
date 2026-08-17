@@ -13,12 +13,17 @@ function actions(events: string[]): HubToolActions {
       events.push(`prepare:${input.mode}:${input.sourceRepository}:${input.confirmedDomain?.identity ?? "none"}`);
       return { id: "p1" };
     },
-    async finalize(id) { events.push(`finalize:${id}`); return { id: "p1" }; },
+    async finalize(id, questions = []) { events.push(`finalize:${id}:${questions.length}`); return { id: "p1" }; },
     async inspect(id) { events.push(`inspect:${id}`); return { id }; },
     async accept(id, digest) { events.push(`accept:${id}:${digest}`); return { id }; },
     async search(query, options) { events.push(`search:${query}:${JSON.stringify(options ?? {})}`); return []; },
     async traverse(start, options) { events.push(`traverse:${start}:${JSON.stringify(options ?? {})}`); return []; },
     async read(relativePath) { events.push(`read:${relativePath}`); return { path: relativePath }; },
+    async readLiveEvidence(relativePath, source) {
+      events.push(`live:${relativePath}:${source?.repositoryId ?? "none"}`); return { path: relativePath, source };
+    },
+    async listQuestions(options) { events.push(`questions:${options.status ?? "all"}:${options.limit ?? "default"}`); return []; },
+    async answerQuestion(input) { events.push(`answer:${input.questionId}:${input.revision}:${input.maintainer}`); return input; },
     async listPending() { events.push("pending"); return []; },
     async submitMany(ids) { events.push(`submit:${ids.join(",")}`); return { number: 1 }; },
     async synchronize() { events.push("synchronize"); return { active: "main" }; },
@@ -33,7 +38,27 @@ test("[AB-HUB-001..003] Hub MCP schemas contain no authority or credential overr
     "get_hub_status", "configure_hub", "preview_hub_bootstrap", "bootstrap_hub",
     "prepare_hub_okf", "finalize_hub_okf_proposal", "inspect_hub_okf_proposal",
     "accept_hub_okf_proposal", "search_hub_okf", "traverse_hub_okf", "read_hub_okf_concept",
+    "read_hub_live_evidence",
+    "list_hub_questions", "answer_hub_question",
     "list_pending_hub_okf", "submit_hub_okf_proposals", "synchronize_hub_okf", "recover_hub_okf",
+  ]);
+});
+
+test("[AB-QUESTION-001..004] MCP routes reviewed declarations, question listing and attributed answers", async () => {
+  const events: string[] = [], current = actions(events);
+  const finalized = await callHubOkfTool("finalize_hub_okf_proposal", {
+    session_id: `hub-session-${"a".repeat(24)}`,
+    questions: [{ subject: "systems/checkout", property: "session.ttl",
+      claim_ids: ["AB-CLAIM-doc", "AB-CLAIM-code"], missing_evidence: [] }],
+  }, current);
+  await callHubOkfTool("list_hub_questions", { status: "pending", limit: 10 }, current);
+  const answered = await callHubOkfTool("answer_hub_question", {
+    question_id: "a".repeat(24), question_revision: 1, answer: "Seven days", maintainer: "human:khoa",
+  }, current);
+  assert.equal(finalized.isError, undefined);
+  assert.equal(answered.isError, undefined);
+  assert.deepEqual(events, [
+    `finalize:hub-session-${"a".repeat(24)}:1`, "questions:pending:10", `answer:${"a".repeat(24)}:1:human:khoa`,
   ]);
 });
 
@@ -89,11 +114,16 @@ test("[AB-LOCAL-HUB-002][AB-LOCAL-HUB-004] MCP routes local accept, search and r
     start: "systems/orders", direction: "inbound", kinds: ["part-of"], max_depth: 2, limit: 10,
   }, current);
   await callHubOkfTool("read_hub_okf_concept", { path: "repositories/orders/repository.md" }, current);
+  await callHubOkfTool("read_hub_live_evidence", { path: "systems/orders.md" }, current, {
+    liveSource: { repositoryId: "repository-orders-aaaaaaaaaaaa", commit: "a".repeat(40), dirty: false,
+      dirtyDigest: null, limitations: [] },
+  });
   assert.deepEqual(events, [
     `accept:p1:sha256:${"c".repeat(64)}`,
     'search:orders:{"domain":"domains/commerce","types":["System"],"limit":5}',
     'traverse:systems/orders:{"direction":"inbound","kinds":["part-of"],"maxDepth":2,"limit":10}',
     "read:repositories/orders/repository.md",
+    "live:systems/orders.md:repository-orders-aaaaaaaaaaaa",
   ]);
 });
 

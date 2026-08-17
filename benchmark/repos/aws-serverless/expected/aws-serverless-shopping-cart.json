@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "repository": "aws-serverless-shopping-cart",
   "confirmedDomain": {
     "identity": "domains/commerce",
@@ -73,10 +73,11 @@
     { "from": "cart-delete-sqs-queue", "to": "shopping-cart-infrastructure", "kind": "declared-by" },
     { "from": "authenticated-cart-migration", "to": "shopping-cart-system", "kind": "part-of" }
   ],
-  "conflicts": [
+  "liveEvidence": [
     {
       "key": "cart-retention-ttl",
-      "requiredTerms": ["1 day", "7 days", "30 days"],
+      "property": "cart.retention.ttl",
+      "roles": ["documentation", "implementation"],
       "requiredSourcePaths": [
         "README.md",
         "backend/shopping-cart-service/add_to_cart.py",

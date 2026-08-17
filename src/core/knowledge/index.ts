@@ -78,12 +78,20 @@ export {
   type ProposalDiffEntry,
   type ProposalMetadata,
   type ProposalState,
+  type ValidateProposalOptions,
 } from "./proposal.ts";
 export {
   readMaintainerDirectives,
   type MaintainerDirective,
   type MaintainerDirectiveSet,
 } from "./directives.ts";
+export {
+  readLiveClaims,
+  validateBundleLiveClaims,
+  type LiveClaim,
+  type LiveClaimRole,
+  type LiveClaimTargetKind,
+} from "./live-claims.ts";
 export {
   applyBundleProposal,
   recoverBundleSwitch,

@@ -35,9 +35,9 @@
 
 - [x] T013 Add immutable V10 confirmed-Domain prompts and manifest input in `benchmark/prompts/`, `benchmark/repos/aws-serverless/manifest.json` and `scripts/benchmark-agent.test.mjs`
 - [x] T014 Run focused checks, `npm run verify` and commit the offline implementation phase
-- [x] T015 Run the real Shopping Cart V10 qualification and commit immutable evidence under `benchmark/results/`
-- [ ] T016 Rebuild the Shopping Cart proposal from remote Hub `main`, replace PR #7 with one unmerged PR and record it in `docs/contracts/benchmark.md`
-- [ ] T017 Complete `specs/018-confirmed-domain-navigation/verification.md`, `docs/README.md`, `specs/CURRENT.md`, run `npm run verify` and commit completion
+- [x] T015 Retain immutable V10 failure evidence and the valid V11 Shopping Cart qualification under `benchmark/results/`
+- [x] T016 Record the owner-approved publication deviation in `specs/018-confirmed-domain-navigation/spec.md` and `docs/contracts/benchmark.md`; leave open Hub PR #7 unchanged until capability 019 qualifies live source references
+- [x] T017 Complete `specs/018-confirmed-domain-navigation/verification.md`, `docs/README.md` and `specs/CURRENT.md`, then run `npm run verify`
 
 ### Qualification review checkpoint
 
@@ -46,9 +46,11 @@
 - V11 corrected only that generic grammar rule. Run `2026-08-15T172701Z` is
   valid and reviewable, but owner review remains `needs_revision` because the
   TTL source conflict is absent from the authored `Limitations` evidence.
-- Stop here for owner review. Do not start V12 or T016 implicitly. The owner must
-  first decide whether V11 is accepted or whether one explicitly bounded
-  conflict-retention improvement is required.
+- Owner review accepted V11 for this capability's Domain/navigation
+  qualification and rejected another numeric-snapshot prompt iteration. Live
+  source references and governed conflict questions move to capability 019.
+- PR #7 remains the earlier V9 proposal. Rebuild and replacement are explicitly
+  deferred until capability 019 qualifies the new representation.
 
 ## Dependencies
 
@@ -63,5 +65,5 @@ written alongside US1 tests because it owns a separate behavior boundary.
 Implement one bounded value and reuse existing prepare/session/finalize paths.
 Do not add automatic Domain discovery, a new persistence layer, multi-Domain
 input or lifecycle semantic changes. The requested useful slice is complete
-only after the real proposal visibly preserves the Hub root and includes
-Commerce → Shopping Cart navigation.
+when real qualification visibly preserves the Hub root and includes Commerce →
+Shopping Cart navigation.

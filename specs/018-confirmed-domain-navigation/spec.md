@@ -25,6 +25,13 @@ root from becoming the ingested repository's title.
   and navigation. A repository proposal may append navigation but not replace,
   reorder or restyle those lines.
 - Question management and new/refresh lifecycle semantics remain unchanged.
+- V11 is accepted as the real qualification for this capability's confirmed
+  Domain and shared-navigation outcome. Its unresolved TTL diagnostic is not
+  repaired by persisting more volatile numeric snapshots; governed questions
+  and live source references belong to capability 019.
+- Rebuilding and replacing Hub PR #7 is deferred until capability 019 has
+  qualified its knowledge representation. The existing V9 PR remains open and
+  unmerged; this capability performs no remote publication change.
 
 ## User Scenarios & Testing
 
@@ -106,10 +113,11 @@ observe finalization reject the proposal before acceptance.
   MUST fail before proposal acceptance. The authoring contract MUST identify
   root and category headings as shared Hub identity rather than repository
   content.
-- **AB-BENCH-041**: The next immutable Shopping Cart qualification MUST receive
+- **AB-BENCH-041**: The immutable Shopping Cart qualification MUST receive
   confirmed Domain `domains/commerce`, preserve the AgentBase-Hub root identity,
-  expose Domain → System progressive navigation and remain subject to all V9
-  validity, provenance, relationship and honest-uncertainty gates.
+  expose Domain → System progressive navigation and remain valid and reviewable.
+  Volatile numeric conflict diagnostics MUST remain visible for owner review but
+  MUST NOT require numeric snapshots to be promoted as durable OKF truth.
 
 ### Key Entities
 
@@ -127,7 +135,7 @@ observe finalization reject the proposal before acceptance.
   rejected before a session directory exists.
 - **SC-002**: Tests prove additive index navigation succeeds and root heading
   replacement, deletion and reordering all fail.
-- **SC-003**: The rebuilt Shopping Cart bundle has a Commerce Domain reachable
+- **SC-003**: The qualified Shopping Cart bundle has a Commerce Domain reachable
   from root, its System reachable from Commerce, and the unchanged
   `AgentBase-Hub` root heading.
 - **SC-004**: Canonical offline verification passes without a new dependency,

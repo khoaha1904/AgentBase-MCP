@@ -55,6 +55,10 @@ For every new or modified AgentBase concept:
 - preserve unknown frontmatter values when modifying an owned draft;
 - attach important claims to `sources` entries from current repository evidence;
 - use stable source IDs and matching Markdown footnotes for attributed claims;
+- represent a change-prone configuration or implementation scalar under
+  `agentbase.live_claims` with a stable claim ID, subject/property/role, one
+  `sources[].id`, semantic target and the prepare source identity; never include
+  the observed scalar in that live-claim record or present it as timeless prose;
 - encode source code as
   `repository://<repository-id>/<encoded-relative-path>#L<start>-L<end>`;
 - never expose checkout roots, provider cache paths, secrets, credentials, or
@@ -128,8 +132,17 @@ missing concept.
 
 Record source-visible uncertainty in the affected concept's Limitations. Do not
 create new `Open Question` concepts: the type remains readable only for legacy
-compatibility while governed question persistence is future scope. Surface
-material unanswered items separately to the maintainer after validation.
+compatibility. Submit material conflicts as governed question declarations when
+finalizing the proposal; keep every linked claim and source role.
+
+For a volatile-value query, call `read_hub_live_evidence` on the accepted concept.
+Resolve only entries marked `ready`: use `search_graph` for the semantic target
+and `get_code_snippet` for the exact current source. Treat missing, ambiguous,
+computed or mismatched targets as unavailable/stale/indeterminate and never fall
+back to a prior literal. Present documentation, implementation/configuration and
+accepted Maintainer Guidance separately with current source identity; if they
+disagree, say so and do not select a winner. A dirty-source observation is useful
+current evidence but never accepted knowledge.
 
 Respect a matching maintainer defer directive until it is removed or explicitly
 reopened.

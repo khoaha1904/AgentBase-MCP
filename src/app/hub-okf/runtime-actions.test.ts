@@ -34,6 +34,7 @@ test("[AB-HUB-SETUP-001..003][AB-HUB-SETUP-006] runtime defers Hub setup and rel
       baseCommit: string;
       selectedSchemas: string[];
       confirmedDomain: { identity: string; title: string; evidenceResource: string };
+      source: { repositoryId: string; commit: string | null; dirty: boolean };
       continuity: { commit: string; currentSource: unknown[]; neighbors: unknown[]; navigationPaths: string[] };
     };
     assert.equal(prepared.continuity.commit, prepared.baseCommit);
@@ -41,6 +42,8 @@ test("[AB-HUB-SETUP-001..003][AB-HUB-SETUP-006] runtime defers Hub setup and rel
     assert.deepEqual(prepared.continuity.neighbors, []);
     assert.deepEqual(prepared.continuity.navigationPaths, ["index.md"]);
     assert.ok(prepared.selectedSchemas.includes("Domain"));
+    assert.equal(prepared.source.repositoryId.startsWith("repository-source-"), true);
+    assert.equal(prepared.source.dirty, true);
     assert.deepEqual(prepared.confirmedDomain, {
       identity: "domains/commerce", title: "Commerce",
       evidenceResource: "agentbase://owner-guidance/domains/commerce",

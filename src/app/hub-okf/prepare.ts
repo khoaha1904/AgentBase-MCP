@@ -17,6 +17,7 @@ import {
   assertConfirmedDomainAssignment,
   validateOkfRelationships,
   validatePublishableAgentBaseDraft,
+  validateBundleLiveClaims,
   validateBundleProposal,
   type ProposalDiff,
   type ConfirmedDomain,
@@ -71,6 +72,8 @@ export function prepareNewHubProposal(
   const selected = selectOkfConceptSchemas(options.signals).map((item) => item.type);
   const authored = loadOkfBundle(options.authoredBundleRoot, { requireAgentBaseRootIndex: true });
   const base = loadOkfBundle(options.hubBundleRoot);
+  const liveClaimFailures = validateBundleLiveClaims(authored.concepts.values());
+  if (liveClaimFailures.length) throw new Error(`authored live claims failed validation: ${liveClaimFailures.join("; ")}`);
   for (const relative of base.files.filter((item) => path.posix.basename(item) === "index.md")) {
     const target = path.join(options.authoredBundleRoot, ...relative.split("/"));
     if (!fs.existsSync(target) || !preservesNonblankLines(

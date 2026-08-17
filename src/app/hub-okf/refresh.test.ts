@@ -18,6 +18,13 @@ function draft(title: string, body: string, extension = ""): string {
     + `${extension}---\n\n${body}\n`;
 }
 
+function liveClaim(target = "OLD_TTL"): string {
+  return "agentbase:\n  live_claims:\n    - id: AB-CLAIM-session-ttl\n"
+    + "      subject: repositories/acme\n      property: session.ttl\n      role: configuration\n"
+    + `      source_id: source\n      target: { kind: symbol, name: ${target} }\n`
+    + `      observed: { commit: ${"a".repeat(40)}, dirty: false, dirty_digest: null }\n`;
+}
+
 function fixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "hub-refresh-test-"));
   const base = path.join(root, "base"), authored = path.join(root, "authored"), proposal = path.join(root, "proposal");
@@ -179,5 +186,32 @@ test("[AB-BENCH-037] refresh rejects new concepts with benchmark-only metadata",
       "Benchmark", "# Responsibility\n\nProduction knowledge.", "benchmark_key: hidden-probe\n",
     ));
     assert.throws(() => prepareRefreshHubProposal(options(current)), /benchmark_key/);
+  } finally { current.cleanup(); }
+});
+
+test("[AB-REFRESH-013] incomplete refresh cannot remove an accepted live claim", () => {
+  const current = fixture();
+  try {
+    const previous = draft("Owned", "# Before", liveClaim());
+    current.write(current.base, "repositories/acme/owned.md", previous);
+    current.write(current.authored, "repositories/acme/owned.md", draft("Owned", "# Incomplete"));
+    const result = prepareRefreshHubProposal(options(current));
+    assert.equal(fs.readFileSync(path.join(result.bundleRoot, "repositories/acme/owned.md"), "utf8"), previous);
+    assert.equal(result.inspection.entries.some((entry) => entry.path === "repositories/acme/owned.md"
+      && entry.change === "conflict"), true);
+  } finally { current.cleanup(); }
+});
+
+test("[AB-REFRESH-013] refresh may reviewably move a retained live claim reference", () => {
+  const current = fixture();
+  try {
+    current.write(current.base, "repositories/acme/owned.md", draft("Owned", "# Before", liveClaim()));
+    current.write(current.authored, "repositories/acme/owned.md", draft("Owned", "# Before", liveClaim("NEW_TTL"))
+      .replace("src/a.ts#L1-L2", "src/b.ts#L7-L9"));
+    const result = prepareRefreshHubProposal(options(current));
+    const proposed = fs.readFileSync(path.join(result.bundleRoot, "repositories/acme/owned.md"), "utf8");
+    assert.match(proposed, /NEW_TTL/);
+    assert.match(proposed, /src\/b\.ts#L7-L9/);
+    assert.equal(result.inspection.entries.find((entry) => entry.path === "repositories/acme/owned.md")?.change, "modified");
   } finally { current.cleanup(); }
 });

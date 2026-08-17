@@ -10,7 +10,9 @@ import {
   getOkfConceptSchema,
   loadOkfBundle,
   parseConceptDocument,
+  readLiveClaims,
   validateAgentBaseDraft,
+  validateBundleLiveClaims,
   validateConceptAgainstSchema,
   validateOkfRelationships,
 } from "../src/core/knowledge/index.ts";
@@ -347,8 +349,42 @@ function assessConflictVisibility(conflicts, concepts, repositoryId) {
   return { visible, required: conflicts.length, findings };
 }
 
+function assessLiveEvidence(expectations, concepts) {
+  if (!Array.isArray(expectations) || !expectations.length) return { matched: 0, required: 0, findings: [] };
+  const claims = [...concepts.values()].flatMap((concept) => {
+    try { return readLiveClaims(concept); } catch { return []; }
+  });
+  const findings = [];
+  let matched = 0;
+  for (const expected of expectations) {
+    const grouped = claims.filter((claim) => claim.property === expected.property
+      && (!expected.subject || claim.subject === expected.subject));
+    const roles = new Set(grouped.map((claim) => claim.role));
+    const paths = grouped.map((claim) => claim.source.resource.match(/^repository:\/\/[^/]+\/(.+)#L\d+-L\d+$/)?.[1])
+      .filter(Boolean).map((value) => value.split("/").map(decodeURIComponent).join("/"));
+    const complete = (expected.roles ?? []).every((role) => roles.has(role))
+      && (expected.requiredSourcePaths ?? []).every((required) => paths.includes(required));
+    if (complete) matched += 1;
+    else findings.push(`${expected.key}: live evidence references or source roles are incomplete`);
+  }
+  return { matched, required: expectations.length, findings };
+}
+
+export function assessLiveResolutionCases(cases) {
+  const findings = [];
+  for (const value of cases) {
+    if (value.status !== value.expectedStatus) findings.push(`${value.key}: expected ${value.expectedStatus}, found ${value.status}`);
+    if (value.usedStaleFallback) findings.push(`${value.key}: used a stale scalar fallback`);
+    if (value.selectedWinner) findings.push(`${value.key}: selected an automatic truth winner`);
+    if (value.expectedRoles && !value.expectedRoles.every((role) => value.roles?.includes(role))) {
+      findings.push(`${value.key}: omitted a required evidence role`);
+    }
+  }
+  return { status: findings.length ? "failed" : "passed", findings };
+}
+
 export function scoreSemanticBenchmark(expectation, bundle, repositoryId, repositoryRoot) {
-  const failures = [...bundle.warnings];
+  const failures = [...bundle.warnings, ...validateBundleLiveClaims(bundle.concepts.values())];
   const actual = new Map();
   for (const concept of bundle.concepts.values()) {
     failures.push(...validateAgentBaseDraft(concept), ...validateConceptAgainstSchema(concept));
@@ -449,6 +485,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
   const contradictionFailures = contradictedConcepts.map((item) =>
     `Reference ${item.expected} matched ${item.actual} but expected schema ${item.expectedType}, found ${item.actualType}`);
   const conflictVisibility = assessConflictVisibility(expectation.conflicts, bundle.concepts, repositoryId);
+  const liveEvidence = assessLiveEvidence(expectation.liveEvidence, bundle.concepts);
   const metrics = {
     expectedConcepts: expected.size,
     actualConcepts: actual.size,
@@ -459,6 +496,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
     provenanceCoveragePercent: percent(evidencePresent, evidenceRequired),
     referenceRelationshipCoveragePercent: percent(confirmedRelationships.length, expectation.relationships.length),
     conflictVisibilityPercent: percent(conflictVisibility.visible, conflictVisibility.required),
+    liveEvidenceReferenceCoveragePercent: percent(liveEvidence.matched, liveEvidence.required),
     classifications: {
       concepts: {
         confirmed: confirmedConcepts,
@@ -479,7 +517,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
     ...metrics,
     ownerReview: assessOwnerReviewUsefulness(bundle.concepts, {
       navigationFindings: expectation.version >= 6 ? progressiveNavigationFindings(bundle, expectation) : [],
-      conflictFindings: conflictVisibility.findings,
+      conflictFindings: [...conflictVisibility.findings, ...liveEvidence.findings],
     }),
     authoringAssessment: createAuthoringAssessment({
       actualConcepts: actual.size,
@@ -518,6 +556,7 @@ function reportFor(entry, run, metrics) {
     + `- Provenance coverage: ${metrics.provenanceCoveragePercent}%\n`
     + `- Reference relationship coverage: ${metrics.referenceRelationshipCoveragePercent}%\n`
     + `- Source-conflict visibility: ${metrics.conflictVisibilityPercent}%\n`
+    + `- Live-evidence reference coverage: ${metrics.liveEvidenceReferenceCoveragePercent}%\n`
     + `- Unjudged concepts / relationships: ${metrics.classifications.concepts.unjudged.length} / ${metrics.classifications.relationships.unjudged.length}\n`
     + `- Missing reference concepts / relationships: ${metrics.classifications.concepts.missingReference.length} / ${metrics.classifications.relationships.missingReference.length}\n`
     + (metrics.authoringAssessment.hardFailures.length
@@ -541,6 +580,7 @@ function invalidMetrics(suite, repository, runId, error) {
     provenanceCoveragePercent: 0,
     referenceRelationshipCoveragePercent: 0,
     conflictVisibilityPercent: 0,
+    liveEvidenceReferenceCoveragePercent: 0,
     classifications: {
       concepts: { confirmed: [], contradicted: [], unjudged: [], missingReference: [] },
       relationships: { confirmed: [], contradicted: [], unjudged: [], missingReference: [] },
