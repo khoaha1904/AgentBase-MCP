@@ -103,7 +103,11 @@ export const OKF_SCHEMA_TOOLS = [
         candidates: {
           type: "array", minItems: 1, maxItems: 64, items: { type: "object", properties: {
             id: { type: "string" }, identity_hint: { type: "string" }, identity_basis: { type: "string" },
-            query_value: { type: "string" }, evidence_ids: { type: "array", minItems: 1, maxItems: 64, items: { type: "string" } },
+            query_value: { type: "string" }, evidence_ids: {
+              type: "array", minItems: 1, maxItems: 64,
+              description: "IDs from semantic_observations or resource_observations in this request; never repository:// source URIs.",
+              items: { type: "string" },
+            },
           }, required: ["id", "identity_hint", "identity_basis", "query_value", "evidence_ids"], additionalProperties: false },
         },
         semantic_observations: {

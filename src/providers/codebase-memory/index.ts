@@ -35,6 +35,7 @@ export async function createCodebaseMemoryProvider(options: CodebaseMemoryProvid
     environment: {
       CBM_CACHE_DIR: options.cacheRoot,
       CBM_ALLOWED_ROOT: options.repositoryRoot,
+      HOME: options.cacheRoot,
       LANG: "C.UTF-8",
       LC_ALL: "C.UTF-8",
     },

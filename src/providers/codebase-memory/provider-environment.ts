@@ -1,7 +1,7 @@
 export function providerProcessEnvironment(environment: Readonly<Record<string, string>>): Readonly<Record<string, string>> {
   return {
     ...environment,
-    HOME: "",
+    HOME: environment.CBM_CACHE_DIR ?? "",
     LOGNAME: "",
     PATH: "/usr/bin:/bin",
     SHELL: "",
