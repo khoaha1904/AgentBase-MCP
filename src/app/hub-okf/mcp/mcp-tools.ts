@@ -54,7 +54,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "prepare_hub_okf",
-    description: "Prepare a local new or refresh AgentBase Hub OKF proposal without publishing.",
+    description: "Prepare a local new or refresh AgentBase Hub OKF proposal without publishing. The returned selectedSchemas is the hard allowlist for authored known types; Initial Ingest always includes Repository.",
     inputSchema: {
       type: "object",
       properties: {
@@ -105,7 +105,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "finalize_hub_okf_proposal",
-    description: "Validate and lock an authored Hub workspace into one immutable local proposal.",
+    description: "Validate and lock an authored Hub workspace into one immutable local proposal. Omit questions that have no existing claim IDs; never send an empty claim_ids list.",
     inputSchema: {
       type: "object",
       properties: {

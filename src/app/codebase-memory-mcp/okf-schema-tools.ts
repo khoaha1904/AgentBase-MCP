@@ -138,7 +138,7 @@ export const OKF_SCHEMA_TOOLS = [
   },
   {
     name: "validate_okf_changes",
-    description: "Validate changed OKF concepts against bounded unchanged target summaries. Identity is the OKF-root-relative Markdown path without .md.",
+    description: "Validate changed concept documents only, excluding root/category index files, against bounded unchanged concept target summaries. Identity is the OKF-root-relative Markdown path without .md; targets are not changed concepts.",
     inputSchema: {
       type: "object",
       properties: { changes: conceptSetInputSchema.properties.concepts, targets: targetSummarySchema },

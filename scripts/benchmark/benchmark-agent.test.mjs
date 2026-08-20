@@ -9,7 +9,7 @@ import { buildCodexArgs, portableAgentText, renderAgentPrompt, runAgentRepositor
 import * as benchmarkAgent from "./benchmark-agent.mjs";
 
 test("[AB-BENCH-002][AB-BENCH-003] Codex invocation is ephemeral, isolated and requires AgentBase MCP", () => {
-  const args = buildCodexArgs({ workspace: "/result/workspace", finalMessage: "/result/final.md", model: "model-x", reasoningEffort: "medium", runtimeRoot: "/private/runtime" });
+  const args = buildCodexArgs({ workspace: "/result/workspace", finalMessage: "/result/final.md", model: "model-x", reasoningEffort: "medium", runtimeRoot: "/private/runtime", enabledTools: ["index_repository"] });
   assert.ok(args.includes("--ephemeral"));
   assert.deepEqual(args.slice(0, 3), ["--ask-for-approval", "never", "exec"]);
   assert.ok(args.includes("--json"));
@@ -19,6 +19,7 @@ test("[AB-BENCH-002][AB-BENCH-003] Codex invocation is ephemeral, isolated and r
   assert.ok(args.includes("mcp_servers.agentbase.required=true"));
   assert.ok(args.includes('mcp_servers.agentbase.default_tools_approval_mode="approve"'));
   assert.ok(args.includes('mcp_servers.agentbase.env={HOME="/private/runtime/home",XDG_CONFIG_HOME="/private/runtime/config",XDG_DATA_HOME="/private/runtime/data",TMPDIR="/private/runtime/tmp"}'));
+  assert.ok(args.includes('mcp_servers.agentbase.enabled_tools=["index_repository"]'));
   assert.equal(args.at(-1), "-");
 });
 

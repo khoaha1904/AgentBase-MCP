@@ -21,6 +21,10 @@ const v13ForbiddenTools = new Set([
   "accept_hub_okf_proposal", "preview_hub_bootstrap", "bootstrap_hub",
   "submit_hub_okf_proposals", "synchronize_hub_okf", "recover_hub_okf",
 ]);
+const v13EnabledTools = [
+  ...v13RequiredTools, "search_graph", "trace_path", "get_code_snippet", "search_code",
+  "search_hub_okf", "read_hub_okf_concept",
+];
 
 export function validateV13Lifecycle(mcpTools) {
   return [
@@ -61,7 +65,7 @@ export function portableAgentText(value, { repository, workspace, runtimeRoot })
     .split(os.homedir()).join("<HOME>");
 }
 
-export function buildCodexArgs({ workspace, finalMessage, model, reasoningEffort, arm = "mcp", runtimeRoot }) {
+export function buildCodexArgs({ workspace, finalMessage, model, reasoningEffort, arm = "mcp", runtimeRoot, enabledTools }) {
   if (!["mcp", "direct"].includes(arm)) throw new Error(`unknown benchmark arm: ${arm}`);
   const args = [
     "--ask-for-approval", "never", "exec", "--ephemeral", "--json", "--ignore-user-config", "--skip-git-repo-check", "--sandbox", "workspace-write",
@@ -73,6 +77,7 @@ export function buildCodexArgs({ workspace, finalMessage, model, reasoningEffort
     "--config", `mcp_servers.agentbase.args=${toml([path.join(projectRoot, "src", "cli.ts"), "mcp"])}`,
     "--config", `mcp_servers.agentbase.cwd=${toml(projectRoot)}`,
     ...(runtimeRoot ? ["--config", `mcp_servers.agentbase.env={HOME=${toml(path.join(runtimeRoot, "home"))},XDG_CONFIG_HOME=${toml(path.join(runtimeRoot, "config"))},XDG_DATA_HOME=${toml(path.join(runtimeRoot, "data"))},TMPDIR=${toml(path.join(runtimeRoot, "tmp"))}}`] : []),
+    ...(enabledTools ? ["--config", `mcp_servers.agentbase.enabled_tools=${toml(enabledTools)}`] : []),
     "--config", "mcp_servers.agentbase.required=true",
     "--config", `mcp_servers.agentbase.default_tools_approval_mode=${toml("approve")}`,
     "--config", "mcp_servers.agentbase.startup_timeout_sec=30",
@@ -192,7 +197,7 @@ export function runAgentRepository({
   const runtimeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-okf-runtime-"));
   const runtimeTmp = path.join(runtimeRoot, "tmp");
   fs.mkdirSync(path.join(runtimeRoot, "home"));
-  fs.mkdirSync(runtimeTmp);
+  fs.mkdirSync(runtimeTmp, { mode: 0o700 });
   const startedAt = new Date().toISOString();
   const startedMs = Date.now();
   const source = discoverRepositorySourceState(repository, startedAt);
@@ -241,6 +246,7 @@ export function runAgentRepository({
   writeJson(path.join(root, "run.json"), run);
   const args = buildCodexArgs({
     workspace, finalMessage, model: manifest.agent.model, reasoningEffort: manifest.agent.reasoningEffort, arm, runtimeRoot,
+    ...(promptVersion === "okf-author-v13" ? { enabledTools: v13EnabledTools } : {}),
   });
   const result = spawnSync(executable, args, {
     cwd: projectRoot,

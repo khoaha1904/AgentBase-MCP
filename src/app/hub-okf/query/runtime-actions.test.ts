@@ -61,6 +61,7 @@ test("[AB-HUB-SETUP-001..003][AB-HUB-SETUP-006] runtime defers Hub setup and rel
     assert.deepEqual(prepared.continuity.neighbors, []);
     assert.deepEqual(prepared.continuity.navigationPaths, ["index.md"]);
     assert.ok(prepared.selectedSchemas.includes("Domain"));
+    assert.ok(prepared.selectedSchemas.includes("Repository"));
     assert.equal(prepared.source.repositoryId.startsWith("repository-source-"), true);
     assert.equal(prepared.sourceRepositoryId, preflight.repository.repository.id);
     assert.match(prepared.evidenceDigest, /^sha256:[a-f0-9]{64}$/);

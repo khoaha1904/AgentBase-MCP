@@ -137,6 +137,7 @@ export function createHubRuntimeActions(
       const selectedSchemas = guidance
         ? [...new Set(guidance.recommendations.flatMap((item) => item.status === "exact" && item.schema ? [item.schema.type] : []))]
         : selectOkfConceptSchemas(signals).map((item) => item.type);
+      if (input.mode === "new" && !selectedSchemas.includes("Repository")) selectedSchemas.unshift("Repository");
       if (input.confirmedDomain && !selectedSchemas.includes("Domain")) selectedSchemas.push("Domain");
       if (!selectedSchemas.length) throw new Error("authoring guidance did not establish any exact schema role");
       const session = beginHubAuthoringSession({
