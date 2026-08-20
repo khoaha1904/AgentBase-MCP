@@ -1,6 +1,6 @@
 # Verification: Single-Repository Initial Ingest
 
-**Status**: Offline implementation accepted; external qualification pending.
+**Status**: Offline implementation accepted; V13 external qualification failed.
 
 ## Offline evidence — 2026-08-21
 
@@ -38,9 +38,38 @@ new living-contract ranges. The complete gate then passed without an allowlist.
   state, requires Preflight through Inspect, permits at most one validation
   repair, and rejects Accept, bootstrap, submit and synchronize operations.
 
-## External qualification
+## V13 external qualification — 2026-08-21
 
-Authorized but not yet run. A usable host account was confirmed before the V13
-offline gate. Run exactly three sequential representative Initial Ingest
-benchmarks, record validity, owner-review usefulness, elapsed time, limitations
-and correction count here, and do not rebuild or publish a Hub PR.
+Exactly three model-backed runs executed sequentially through one isolated
+AgentDocks account runtime. No replacement run was added after a failure.
+
+| Run | Repository | Elapsed | Outcome | Validation / finalize attempts |
+|---|---|---:|---|---:|
+| `2026-08-21T010900Z` | Health Aware | 83,058 ms | invalid; no preview | 0 / 0 |
+| `2026-08-21T011800Z` | Shopping Cart | 361,368 ms | invalid; no preview | 4 / 3 |
+| `2026-08-21T013000Z` | Health Aware | 360,518 ms | invalid; no preview | 2 / 7 |
+
+Median elapsed time was 360,518 ms, below the ten-minute timing target, but the
+validity/reviewability requirement failed at 0/3. No run reached Inspect, Accept
+or Publish, and no Hub PR was created or rebuilt.
+
+The runs identified these concrete gaps:
+
+- run 1 exposed an empty provider `HOME`, non-isolated MCP XDG state and an
+  unclear candidate `evidence_ids` contract; the benchmark-created ambient
+  `hub.json` and empty local Hub were moved to Trash without touching the
+  existing credential file;
+- run 2 proved Hub isolation, then exposed a non-private temp ancestor,
+  omission of the mandatory Repository schema, unbounded legacy schema calls
+  and missing SAM/CloudFormation detector coverage;
+- run 3 proved isolated graph indexing and architecture retrieval (240 nodes,
+  537 edges), but the agent still lacked one exact machine-followable OKF
+  document template and session-aware pre-final validation. It authored invalid
+  frontmatter, exhausted its repair budget and retried finalization seven times.
+
+The first two runtime/integration defects were corrected and the complete
+offline gate remained 379/379. The remaining acceptance blocker is not concept
+coverage: Initial Ingest needs a deterministic authoring surface that emits or
+validates exact document bytes before finalization, plus a later scoped decision
+on SAM/CloudFormation mapping. Capability 022 remains active and SC-005 is not
+accepted. Another model-backed run requires a new owner authorization.

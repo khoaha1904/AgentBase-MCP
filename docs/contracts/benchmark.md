@@ -392,3 +392,17 @@ evidence reference coverage and is not publication evidence. A later prompt
 iteration must state the exact portable target kinds and root-only frontmatter
 rule while requiring relevant volatile-property investigation without exposing
 hidden fixture answers. Qualification and publication remain separately opt-in.
+
+## V13 Initial Ingest qualification
+
+Three authorized sequential V13 runs on 2026-08-21 produced zero valid
+previews. Timing passed in isolation (median 360,518 ms), but validity and owner
+review failed because no run reached Inspect. The sequence exposed and then
+verified fixes for private provider HOME, MCP XDG isolation, mandatory
+Repository selection and bounded tool exposure. The final Health Aware run
+successfully indexed 240 nodes and 537 edges, then failed because the agent had
+no exact machine-followable OKF document template and retried finalization
+instead of stopping after its validation repair. Shopping Cart additionally
+exposed missing SAM/CloudFormation detector coverage. These results are retained
+as failed evidence; AB-BENCH-043 and SC-005 are not accepted, and no Hub PR was
+created or rebuilt.

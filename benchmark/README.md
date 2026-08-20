@@ -79,6 +79,8 @@ source references and retains conflicting evidence roles without selecting a
 winner. V13 measures the actual catalog-6.0 Initial Ingest lifecycle in an
 isolated local-only Hub: status/setup, Preflight, one graph pass, guidance,
 prepare, validation, finalize and Inspect. It stops before Accept or Publish.
+The retained 2026-08-21 V13 qualification is failed evidence: all three runs
+stopped before Inspect, so another model run is not authorized by that attempt.
 
 Expectations do not prescribe prose or agent slugs. Bounded identity terms and
 evidence match concept instances; the scorer then evaluates concrete schema

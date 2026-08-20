@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-20
 
-**Status**: Implemented — external qualification pending
+**Status**: Implemented — V13 external qualification failed; correction required
 
 **Input**: Build the first independently useful AgentBase Ingest slice: read one
 authorized local repository, confirm its primary Domain, discover a sparse set

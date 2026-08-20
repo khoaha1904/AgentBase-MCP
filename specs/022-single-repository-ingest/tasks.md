@@ -91,7 +91,7 @@ and record reproducible evidence.
 - [x] T026 Run the focused quickstart plus `npm run verify`, fix only requirement-linked failures and record exact offline evidence in `specs/022-single-repository-ingest/verification.md`
 - [x] T027 Close AB-INGEST-010 by persisting the owner-evidenced Repository primary-Domain edge and deriving new-proposal evidence identity from validated guidance plus exact source state
 - [x] T028 Implement immutable catalog-6.0 V13 prompts and an isolated fake-tested Initial Ingest benchmark lifecycle that requires Preflight through Inspect and rejects Accept/Publish operations
-- [ ] T029 After separate owner authorization and usable account confirmation, run exactly three sequential representative V13 Ingest benchmarks and append validity/reviewability/timing evidence to `specs/022-single-repository-ingest/verification.md`; do not rebuild or publish a Hub PR
+- [x] T029 After separate owner authorization and usable account confirmation, run exactly three sequential representative V13 Ingest benchmarks and append validity/reviewability/timing evidence to `specs/022-single-repository-ingest/verification.md`; do not rebuild or publish a Hub PR
 - [ ] T030 Mark capability 022 completed in `specs/022-single-repository-ingest/spec.md` and `specs/CURRENT.md` only after every required task, offline gate and authorized qualification pass; otherwise retain `implemented — external qualification pending`
 
 ---

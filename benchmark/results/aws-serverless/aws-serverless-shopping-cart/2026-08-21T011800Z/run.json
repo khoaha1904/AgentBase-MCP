@@ -1,0 +1,98 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-serverless-shopping-cart",
+  "arm": "mcp",
+  "kind": "sam-backend-vue-frontend",
+  "fixturePath": "../fixtures/source-repos/multiservice-feasibility/aws-serverless-shopping-cart",
+  "fixtureCommit": "66a863f1b7a2a7f319adddce6a55e090ce9f6734",
+  "sourceRepositoryId": "repository-aws-serverless-shopping-cart-708d65caf454",
+  "catalogVersion": "6.0.0",
+  "promptVersion": "okf-author-v13",
+  "promptDigest": "sha256:f63d9728bbbf4a6c8f61103eec675ccebeb9571fd2943214b85db4438f666121",
+  "agent": {
+    "provider": "codex-cli",
+    "executable": "codex",
+    "version": "codex-cli 0.147.0",
+    "model": "gpt-5.6-terra",
+    "reasoningEffort": "medium",
+    "timeoutMs": 900000,
+    "actualVersion": "codex-cli 0.147.0"
+  },
+  "startedAt": "2026-08-20T18:16:55.302Z",
+  "completedAt": "2026-08-20T18:22:56.671Z",
+  "outcome": "failed",
+  "elapsedMs": 361368,
+  "process": {
+    "exitCode": 0,
+    "signal": null,
+    "error": null
+  },
+  "usage": {
+    "inputTokens": 1647122,
+    "cachedInputTokens": 1572608,
+    "cacheWriteInputTokens": 0,
+    "uncachedInputTokens": 74514,
+    "outputTokens": 15586,
+    "reasoningOutputTokens": 2529
+  },
+  "activity": {
+    "mcpToolCalls": 23,
+    "commandExecutions": 15,
+    "authoringToolCalls": 14,
+    "authoringArgumentBytes": 42504,
+    "authoringResultBytes": 27931,
+    "authoringTools": {
+      "get_okf_authoring_schemas": {
+        "calls": 1,
+        "argumentBytes": 4220,
+        "resultBytes": 5819
+      },
+      "get_okf_schema": {
+        "calls": 9,
+        "argumentBytes": 174,
+        "resultBytes": 14246
+      },
+      "validate_okf_changes": {
+        "calls": 4,
+        "argumentBytes": 38110,
+        "resultBytes": 7866
+      }
+    },
+    "mcpTools": {
+      "configure_hub": 1,
+      "finalize_hub_okf_proposal": 3,
+      "get_architecture": 1,
+      "get_hub_status": 1,
+      "get_okf_authoring_schemas": 1,
+      "get_okf_schema": 9,
+      "index_repository": 1,
+      "preflight_hub_ingest": 1,
+      "prepare_hub_okf": 1,
+      "validate_okf_changes": 4
+    },
+    "observedSourceReadBytes": null,
+    "limitation": "event trace does not prove complete source-read volume"
+  },
+  "requiredToolUsage": {
+    "get_hub_status": true,
+    "configure_hub": true,
+    "preflight_hub_ingest": true,
+    "index_repository": false,
+    "get_architecture": false,
+    "get_okf_authoring_schemas": true,
+    "prepare_hub_okf": true,
+    "validate_okf_changes": true,
+    "finalize_hub_okf_proposal": false,
+    "inspect_hub_okf_proposal": false
+  },
+  "failures": [
+    "agent workspace must contain only okf/, found: nothing",
+    "required MCP tool not observed: index_repository",
+    "required MCP tool not observed: get_architecture",
+    "required MCP tool not observed: finalize_hub_okf_proposal",
+    "required MCP tool not observed: inspect_hub_okf_proposal",
+    "finalize_hub_okf_proposal must run exactly once; observed 3",
+    "inspect_hub_okf_proposal must run exactly once; observed 0",
+    "validate_okf_changes must run once, or twice after one repair; observed 4"
+  ]
+}
