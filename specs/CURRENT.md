@@ -2,7 +2,12 @@
 
 Active capability: None.
 
-Most recent completed: [`019-live-evidence-questions`](019-live-evidence-questions/spec.md).
+Most recent completed: [`020-domain-metric-concepts`](020-domain-metric-concepts/spec.md).
+
+Capability 020 is complete. It adds generic Domain Entity and Metric concept schemas, clarifies
+the difference between a catalog schema and a repository-specific concept
+instance, and makes the host skill state the exact live-reference and index
+authoring rules that V12 left implicit.
 
 Capability 018 adds explicit owner-confirmed Domain context to repository
 authoring and prevents a repository proposal from replacing the shared Hub or

@@ -8,12 +8,12 @@ function body(value: ReturnType<typeof callOkfSchemaTool>) {
   return JSON.parse(first.type === "text" ? first.text : "") as Record<string, unknown>;
 }
 
-test("[AB-SCHEMA-001..003][AB-SCHEMA-006..011] MCP lists, reads and selects concrete versioned schemas", () => {
+test("[AB-SCHEMA-001..003][AB-SCHEMA-006..011][AB-SCHEMA-025..029] MCP lists, reads and selects concrete versioned schemas", () => {
   assert.deepEqual(OKF_SCHEMA_TOOLS.map((tool) => tool.name), [
     "list_okf_schemas", "get_okf_schema", "select_okf_schemas", "validate_okf_concept", "validate_okf_relationships",
     "get_okf_authoring_schemas", "validate_okf_bundle", "validate_okf_changes",
   ]);
-  assert.equal(body(callOkfSchemaTool("list_okf_schemas", {})).catalogVersion, "5.0.0");
+  assert.equal(body(callOkfSchemaTool("list_okf_schemas", {})).catalogVersion, "5.1.0");
   const lambda = body(callOkfSchemaTool("get_okf_schema", { type: "AWS Lambda" })).schema as {
     type: string; investigationQuestions: string[]; metadataGuidance: { field: string }[];
   };
@@ -23,6 +23,10 @@ test("[AB-SCHEMA-001..003][AB-SCHEMA-006..011] MCP lists, reads and selects conc
   const selected = body(callOkfSchemaTool("select_okf_schemas", { signals: ["terraform module", "aws sqs queue"] }));
   assert.equal(selected.advisory, true);
   assert.deepEqual((selected.recommendations as { type: string }[]).map((item) => item.type), ["AWS SQS Queue", "Terraform Module"]);
+  const business = body(callOkfSchemaTool("get_okf_authoring_schemas", {
+    signals: ["business entity Vehicle", "performance metric click-through rate"],
+  }));
+  assert.deepEqual((business.schemas as { type: string }[]).map((item) => item.type), ["Metric", "Domain Entity"]);
 });
 
 test("[AB-SCHEMA-013] MCP returns only selected complete schemas in one bounded call", () => {
@@ -39,6 +43,30 @@ test("[AB-SCHEMA-013] MCP returns only selected complete schemas in one bounded 
     signals: Array.from({ length: 65 }, (_, index) => `signal-${index}`),
   });
   assert.equal(excessive.isError, true);
+});
+
+test("[AB-SCHEMA-026][AB-SCHEMA-027][SC-002] Domain Entity and Metric instances validate as one linked graph", () => {
+  const generated = "generated: { by: agentbase/5.1.0, at: 2026-08-19T00:00:00Z }";
+  const concept = (type: string, title: string, source: string, relationship: string, bodyText: string) => [
+    "---", `type: ${type}`, `title: ${title}`, `description: ${title} knowledge.`, "status: draft", generated,
+    "sources:", `  - id: ${source}`, `    resource: repository://repository-vehicle-platform-aaaaaaaaaaaa/src/domain.ts#L1-L20`,
+    ...(relationship ? ["relationships:", `  - ${relationship}`] : []), "---", "", bodyText, "",
+  ].join("\n");
+  const concepts = [
+    { identity: "systems/vehicle-platform", path: "systems/vehicle-platform.md",
+      content: concept("System", "Vehicle Platform", "system-source", "", "Vehicle advertising system.") },
+    { identity: "entities/vehicle", path: "entities/vehicle.md",
+      content: concept("Domain Entity", "Vehicle", "entity-source",
+        "{ kind: part-of, target: systems/vehicle-platform, evidence: [entity-source] }",
+        "Vehicle belongs to the [platform](../systems/vehicle-platform.md).") },
+    { identity: "metrics/listing-views", path: "metrics/listing-views.md",
+      content: concept("Metric", "Listing Views", "metric-source",
+        "{ kind: depends-on, target: entities/vehicle, evidence: [metric-source] }",
+        "Listing Views is defined over a [vehicle](../entities/vehicle.md).") },
+  ];
+  const validated = callOkfSchemaTool("validate_okf_bundle", { concepts });
+  assert.equal(validated.isError, undefined);
+  assert.equal(body(validated).valid, true);
 });
 
 test("[AB-SCHEMA-004][AB-SCHEMA-005] MCP validates known policy and preserves unknown-type conformance", () => {

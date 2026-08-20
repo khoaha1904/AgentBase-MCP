@@ -20,3 +20,13 @@ test("[AB-MCP-011][AB-MCP-012] Codebase Memory skill is a concise provenance-bea
   assert.match(metadata, /default_prompt: "Use \$use-codebase-memory /);
   assert.deepEqual(fs.readdirSync(directory).sort(), ["SKILL.md", "agents"]);
 });
+
+test("[AB-SCHEMA-025][AB-CLAIM-004][AB-MVP-023] OKF skill distinguishes instances and states exact authoring vocabularies", () => {
+  const skill = fs.readFileSync(path.join(root, ".agents", "skills", "agentbase-okf", "SKILL.md"), "utf8");
+  for (const required of [
+    "Concept Schema", "Concept Instance", "`symbol`", "`function`", "`config-field`", "`text`",
+    "category indexes MUST NOT have frontmatter",
+  ]) assert.equal(skill.includes(required), true, `missing ${required}`);
+  assert.match(skill, /target\.kind[^\n]+exactly one of/);
+  assert.match(skill, /only the root `index\.md`[^\n]+frontmatter/i);
+});

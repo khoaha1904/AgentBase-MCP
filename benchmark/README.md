@@ -58,7 +58,7 @@ AgentBase MCP configuration. `compare` reports existing semantic metrics,
 tokens and elapsed time side by side. Deltas are MCP minus direct; no overall
 winner is generated.
 
-Both v9 prompts share the same quality contract without receiving the
+Both current prompts share the same quality contract without receiving the
 hidden expectation. They author one canonical entity graph, group ordinary
 routes into API surfaces, keep implementation-only handlers inside useful
 parents and surface uncertainty as limitations. V8 introduced canonical
@@ -74,6 +74,9 @@ otherwise-useful bundle using unsupported hyphen bullets. V7 additionally
 clarifies that implementation concepts do not replace an evidenced Business
 Flow and that every schema-recommended Limitations section must be present. V8
 applies catalog 5.0 graph semantics and bounded re-ingest validation.
+V12 replaces volatile numeric snapshots with validated `agentbase.live_claims`
+source references and retains conflicting evidence roles without selecting a
+winner.
 
 Expectations do not prescribe prose or agent slugs. Bounded identity terms and
 evidence match concept instances; the scorer then evaluates concrete schema

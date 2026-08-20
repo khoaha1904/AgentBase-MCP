@@ -372,10 +372,16 @@ Owner review does not treat its literal TTL diagnostic as durable truth. The
 bundle mentions incompatible seven-day documentation and 30-day migration
 behavior but lacks complete source coverage and retains volatile numeric
 snapshots. Capability 019 supersedes that scoring model with governed questions
-and live source references. No V12 numeric-snapshot prompt correction is
-authorized. Open Hub PR #7 remains the earlier V9 proposal and is not rebuilt,
-replaced or merged until capability 019 separately qualifies publication.
+and live source references. Open Hub PR #7 remains the earlier V9 proposal and
+is not rebuilt, replaced or merged until capability 019 separately qualifies
+publication.
 
 AB-BENCH-042 is covered offline by expectation format v8 and deterministic
-live-resolution cases. No capability-019 model-backed run has been executed;
-qualification and publication remain separately opt-in.
+live-resolution cases. V12 run `2026-08-17T063359Z` is retained as invalid real
+evidence: it authored live references but used target kinds outside the portable
+contract, added forbidden category-index frontmatter and omitted the required
+cart-retention documentation/implementation reference set. It scored 0% live-
+evidence reference coverage and is not publication evidence. A later prompt
+iteration must state the exact portable target kinds and root-only frontmatter
+rule while requiring relevant volatile-property investigation without exposing
+hidden fixture answers. Qualification and publication remain separately opt-in.

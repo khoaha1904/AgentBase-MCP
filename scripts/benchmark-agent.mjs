@@ -134,7 +134,7 @@ export function summarizeAgentEvents(events) {
 function toolUsage(completedTools, arm, promptVersion) {
   if (arm === "direct") return {};
   const completed = new Set(completedTools);
-  const required = ["okf-author-v8", "okf-author-v9", "okf-author-v10", "okf-author-v11"].includes(promptVersion)
+  const required = ["okf-author-v8", "okf-author-v9", "okf-author-v10", "okf-author-v11", "okf-author-v12"].includes(promptVersion)
     ? v8RequiredTools
     : ["okf-author-v4", "okf-author-v5", "okf-author-v6", "okf-author-v7"].includes(promptVersion)
       ? v4RequiredTools

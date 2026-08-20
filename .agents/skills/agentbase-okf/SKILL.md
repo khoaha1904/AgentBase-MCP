@@ -45,6 +45,12 @@ repository as read-only.
 
 ## Concept rules
 
+The catalog exposes reusable **Concept Schema** definitions such as Service,
+Domain Entity or Metric. Authoring creates evidence-backed **Concept Instance**
+documents such as Vehicle Inventory Service or Click-through Rate. One schema
+may yield many instances, but each instance declares exactly one concrete
+`type`; never merge competing schemas onto one document.
+
 For every new or modified AgentBase concept:
 
 - use one non-reserved `.md` file per concept and a descriptive `type`;
@@ -59,6 +65,9 @@ For every new or modified AgentBase concept:
   `agentbase.live_claims` with a stable claim ID, subject/property/role, one
   `sources[].id`, semantic target and the prepare source identity; never include
   the observed scalar in that live-claim record or present it as timeless prose;
+- `agentbase.live_claims[].target.kind` is exactly one of `symbol`, `function`,
+  `config-field` or `text`; concept types such as Database Table, AWS SQS Queue
+  or Infrastructure Definition are never live-reference target kinds;
 - encode source code as
   `repository://<repository-id>/<encoded-relative-path>#L<start>-L<end>`;
 - never expose checkout roots, provider cache paths, secrets, credentials, or
@@ -73,8 +82,8 @@ For every new or modified AgentBase concept:
 - give every Business Flow ordered `flow_steps` with exact source and target
   identities, canonical action, sync/async mode and source evidence;
 - use one canonical path per entity under the role-oriented roots `domains/`,
-  `systems/`, `components/`, `interfaces/`, `flows/`, `resources/`,
-  `infrastructure/`, `deployments/` or `repositories/`;
+  `entities/`, `systems/`, `components/`, `interfaces/`, `flows/`, `metrics/`,
+  `resources/`, `infrastructure/`, `deployments/` or `repositories/`;
 - treat directory placement as classification, not ownership or containment;
   express containment and implementation through prose and links;
 - never duplicate a component, interface, flow or resource beneath both a
@@ -82,6 +91,7 @@ For every new or modified AgentBase concept:
 
 ## Navigation rules
 
+- Only the root `index.md` may have OKF frontmatter; category indexes MUST NOT have frontmatter and contain navigation Markdown only.
 - Keep one canonical concept file; indexes link to it and never copy it.
 - Root navigation grows with Domain and fallback entrypoints, not every entity.
 - A Domain concept links its Systems and critical Business Flows. A System

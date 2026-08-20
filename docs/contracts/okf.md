@@ -46,6 +46,9 @@ Normative OKF source is pinned to commit
 - **AB-MVP-022** — Graph/direct-source comparison may record time, presented
   context, fact coverage and correction count; no unmeasured speed threshold is
   a product claim.
+- **AB-MVP-023** — Only root `index.md` carries OKF frontmatter. Category
+  indexes are navigation Markdown without frontmatter; host-agent guidance MUST
+  state this distinction before authoring.
 
 ## Explicit observations
 
@@ -76,6 +79,10 @@ Normative OKF source is pinned to commit
 - **AB-CLAIM-003** — Durable policy and explicit human decisions may contain a
   literal only as separately attributed Maintainer Guidance. They remain
   distinguishable from documentation, implementation and configuration claims.
+- **AB-CLAIM-004** — `agentbase.live_claims[].target.kind` is exactly one of
+  `symbol`, `function`, `config-field` or `text`. Concept type names are not
+  live-reference target kinds, and host-agent guidance enumerates the complete
+  vocabulary.
 - Live-claim IDs are bundle-unique and refresh cannot remove an accepted ID.
   A later reviewed proposal may move the same semantic reference while all
   protected knowledge and human guidance keep their normal lifecycle rules.
@@ -97,10 +104,10 @@ Normative OKF source is pinned to commit
   and protected. The catalog is distinct from MCP input schemas and provider
   graph schemas; raw graph data is never copied wholesale into Hub.
 - **AB-SCHEMA-007** — The compatible vocabulary contains Repository, Domain,
-  System, Software Component, Service, Server, API Surface, API Endpoint, Event,
-  Database Table, Queue, AWS Lambda, AWS SQS Queue, Infrastructure Definition,
-  Terraform Module, Deployment, Business Flow, Cross-Repository Relationship,
-  legacy Open Question and Maintainer Guidance.
+  Domain Entity, System, Software Component, Service, Server, API Surface, API
+  Endpoint, Event, Metric, Database Table, Queue, AWS Lambda, AWS SQS Queue,
+  Infrastructure Definition, Terraform Module, Deployment, Business Flow,
+  Cross-Repository Relationship, legacy Open Question and Maintainer Guidance.
 - **AB-SCHEMA-008** — Selection recommends the smallest independently useful
   type supported by evidence. Concrete implementation detail remains inside its
   useful parent unless an independent contract, ownership, lifecycle, failure,
@@ -108,7 +115,7 @@ Normative OKF source is pinned to commit
 - **AB-SCHEMA-009** — Concrete concepts preserve provenance and important
   uncertainty. Cross-repository relationships need evidence for both endpoints
   and the relationship.
-- **AB-SCHEMA-010** — Current catalog `5.0.0` provides bounded investigation,
+- **AB-SCHEMA-010** — Current catalog `5.1.0` provides bounded investigation,
   semantic metadata, relationship and optional-enrichment guidance. AWS Lambda,
   Terraform and Business Flow guidance connects identity and infrastructure to
   runtime and observable outcomes.
@@ -135,9 +142,10 @@ Normative OKF source is pinned to commit
   selected the fallback; distinct evidence for a parent and specialization
   retains both. Catalog phrases include admitted singular/plural wording;
   repository names or benchmark identities are never selection rules.
-- **AB-SCHEMA-016** — Canonical Domain, System, Component, Interface, Flow,
-  Resource, Infrastructure, Deployment and Repository paths classify one
-  identity per entity; links express containment, implementation and evidence.
+- **AB-SCHEMA-016** — Canonical Domain, Domain Entity, System, Component,
+  Interface, Flow, Metric, Resource, Infrastructure, Deployment and Repository
+  paths classify one identity per entity; links express containment,
+  implementation and evidence.
 - **AB-SCHEMA-017** — Related operations share an API Surface; implementation-
   only handlers stay in their useful parent; infrastructure definition,
   reusable module and evidenced deployment remain distinct.
@@ -174,3 +182,21 @@ Normative OKF source is pinned to commit
   `agentbase://owner-guidance/<identity>` evidence. Finalization requires the
   Domain plus a current-source System `part-of` edge citing that owner evidence;
   absent input never authorizes Domain inference.
+- **AB-SCHEMA-025** — Product and authoring language distinguishes a reusable
+  catalog Concept Schema from a repository-specific Concept Instance. One
+  schema may yield many instances; each instance declares one concrete type.
+- **AB-SCHEMA-026** — `Domain Entity` represents a stable evidenced business
+  object or value identity shared across useful contracts, flows or systems.
+  An implementation class or data structure without that boundary remains in
+  its useful parent.
+- **AB-SCHEMA-027** — `Metric` represents a stable named measure and evidenced
+  definition, producer or calculation. A current change-prone numeric
+  observation is not required and remains a live reference rather than
+  timeless Metric prose.
+- **AB-SCHEMA-028** — One evidence signal selects the most concrete supported
+  specialization instead of its fallback for the same entity. Distinct evidence
+  may retain both recommendations for separate useful instances; schemas are
+  not merged onto one instance.
+- **AB-SCHEMA-029** — Catalog 5.1 is additive over 5.0. Existing known concepts
+  require no migration, and unknown valid OKF types remain portable, protected
+  and semantically unjudged by AgentBase.

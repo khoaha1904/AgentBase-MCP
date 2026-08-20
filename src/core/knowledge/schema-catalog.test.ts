@@ -4,16 +4,52 @@ import test from "node:test";
 import { getOkfConceptSchema, listOkfConceptSchemas, selectOkfConceptSchemas, validateConceptAgainstSchema } from "./schema-catalog.ts";
 import { parseConceptDocument } from "./okf-document.ts";
 
-test("[AB-SCHEMA-001][AB-SCHEMA-006][AB-SCHEMA-007][AB-SCHEMA-016] catalog 5.0 exposes canonical authoring types", () => {
+test("[AB-SCHEMA-001][AB-SCHEMA-006][AB-SCHEMA-007][AB-SCHEMA-016][AB-SCHEMA-025] catalog exposes schemas distinct from instances", () => {
   assert.deepEqual(listOkfConceptSchemas().map((item) => item.type), [
-    "Repository", "Domain", "System", "Software Component", "Service", "Server", "API Surface", "API Endpoint",
-    "Event", "Database Table", "Queue", "AWS Lambda", "AWS SQS Queue", "Infrastructure Definition",
+    "Repository", "Domain", "Domain Entity", "System", "Software Component", "Service", "Server", "API Surface", "API Endpoint",
+    "Event", "Metric", "Database Table", "Queue", "AWS Lambda", "AWS SQS Queue", "Infrastructure Definition",
     "Terraform Module", "Deployment", "Business Flow",
     "Cross-Repository Relationship", "Open Question", "Maintainer Guidance",
   ]);
   assert.equal(getOkfConceptSchema("AWS Lambda")?.directoryHint, "components/<slug>.md");
   assert.equal(getOkfConceptSchema("Repository")?.directoryHint, "repositories/<slug>.md");
   assert.equal(getOkfConceptSchema("Domain")?.directoryHint, "domains/<slug>.md");
+  assert.equal(getOkfConceptSchema("Domain Entity")?.directoryHint, "entities/<slug>.md");
+  assert.equal(getOkfConceptSchema("Metric")?.directoryHint, "metrics/<slug>.md");
+});
+
+test("[AB-SCHEMA-026][AB-SCHEMA-027] business entities and metric definitions select without domain-specific types or live values", () => {
+  const selected = selectOkfConceptSchemas([
+    "business entity Vehicle Listing with stable business identity",
+    "performance metric click-through rate with metric definition",
+  ]);
+  assert.deepEqual(selected.map((item) => item.type), ["Metric", "Domain Entity"]);
+  assert.ok(selected.find((item) => item.type === "Domain Entity")?.missingEvidence.includes(
+    "stable business identity and meaning or lifecycle evidence",
+  ));
+  assert.ok(selected.find((item) => item.type === "Metric")?.missingEvidence.includes(
+    "stable metric definition and producer or calculation evidence",
+  ));
+  assert.deepEqual(selectOkfConceptSchemas(["vehicle class", "current value is 42"]), []);
+  assert.match(getOkfConceptSchema("Domain Entity")?.investigationQuestions.join(" ") ?? "", /implementation class/);
+  assert.match(getOkfConceptSchema("Metric")?.limitationGuidance ?? "", /never invent/);
+});
+
+test("[AB-SCHEMA-026][AB-SCHEMA-027][AB-SCHEMA-028] new schemas expose canonical graph guidance and one-type instances", () => {
+  const entity = getOkfConceptSchema("Domain Entity");
+  const metric = getOkfConceptSchema("Metric");
+  assert.ok(entity?.relationshipGuidance.some((item) => item.kind === "part-of" && item.targetTypes.includes("Domain")));
+  assert.ok(metric?.relationshipGuidance.some((item) => item.kind === "depends-on" && item.targetTypes.includes("Event")));
+  for (const type of ["Domain Entity", "Metric"]) {
+    for (const title of ["Vehicle", "Listing"]) {
+      const concept = parseConceptDocument(`${type === "Metric" ? "metrics" : "entities"}/${title.toLowerCase()}.md`, [
+        "---", `type: ${type}`, `title: ${title}`, `description: ${title} knowledge.`,
+        "generated: { by: agentbase/test, at: 2026-08-19T00:00:00Z }", "sources: []", "---", "Body",
+      ].join("\n"));
+      assert.equal(concept.type, type);
+      assert.deepEqual(validateConceptAgainstSchema(concept), []);
+    }
+  }
 });
 
 test("[AB-SCHEMA-022] distinct parent and specialization evidence retains both schemas", () => {
@@ -77,7 +113,7 @@ test("[AB-SCHEMA-003][AB-SCHEMA-009] repeated instances are allowed and missing 
   assert.match(getOkfConceptSchema("AWS Lambda")?.limitationGuidance ?? "", /never invent/);
 });
 
-test("[AB-SCHEMA-004][AB-SCHEMA-005] known types add policy while unknown Google OKF types remain valid", () => {
+test("[AB-SCHEMA-004][AB-SCHEMA-005][AB-SCHEMA-029] additive known types preserve older and foreign concepts", () => {
   const known = parseConceptDocument("repositories/a/repository.md", "---\ntype: Repository\n---\nBody\n");
   assert.deepEqual(validateConceptAgainstSchema(known), [
     "repositories/a/repository.md: Repository requires title",

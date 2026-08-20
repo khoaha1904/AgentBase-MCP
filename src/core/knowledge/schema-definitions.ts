@@ -14,7 +14,30 @@ export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
   defineSchema(
     "Domain", "An evidenced business domain or bounded context", "domains/<slug>.md", 10,
     ["business domain", "bounded context", "domain ownership"], ["business boundary or explicit owner guidance"],
-    ["# Purpose", "# Vocabulary", "# Boundaries", "# Systems"], ["System"],
+    ["# Purpose", "# Vocabulary", "# Boundaries", "# Systems"], ["System", "Domain Entity", "Metric", "Business Flow"],
+  ),
+  defineSchema(
+    "Domain Entity", "A stable business object or value identity shared across useful contracts, flows or systems",
+    "entities/<slug>.md", 30,
+    ["domain entity", "business entity", "business object", "aggregate root", "domain model boundary"],
+    ["stable business identity and meaning or lifecycle evidence"],
+    ["# Meaning", "# Identity", "# Lifecycle", "# Used By", "# Limitations"],
+    ["Domain", "System", "API Surface", "Event", "Metric", "Database Table", "Business Flow", "Repository"],
+    {
+      investigationQuestions: [
+        "What stable business identity makes this entity useful beyond one implementation class?",
+        "Which contracts, flows or systems share its meaning?",
+        "What lifecycle or invariants are evidenced, and what remains uncertain?",
+      ],
+      metadataGuidance: [
+        { field: "business_identity", evidence: "domain contract, API, data model or owner guidance", requiredWhenSupported: true },
+        { field: "lifecycle", evidence: "business flow or state-transition evidence", requiredWhenSupported: false },
+      ],
+      relationshipGuidance: [
+        { kind: "part-of", targetTypes: ["Domain", "System"], evidence: "business boundary or system ownership evidence" },
+        { kind: "implemented-in", targetTypes: ["Repository"], evidence: "source representation evidence" },
+      ],
+    },
   ),
   defineSchema(
     "System", "A recognizable capability delivered by cooperating software and infrastructure", "systems/<slug>.md", 20,
@@ -22,7 +45,7 @@ export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
     ["# Purpose", "# Architecture", "# Interfaces", "# Critical Flows", "# Limitations"],
     [
       "Domain", "Software Component", "Service", "Server", "API Surface", "Business Flow",
-      "Database Table", "Queue", "Infrastructure Definition", "Deployment", "Repository",
+      "Domain Entity", "Metric", "Database Table", "Queue", "Infrastructure Definition", "Deployment", "Repository",
     ],
     {
       investigationQuestions: [
@@ -119,7 +142,7 @@ export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
     "Event", "A named event with independently useful producer or consumer semantics", "interfaces/<slug>.md", 40,
     ["event", "event type", "message contract"], ["event name and producer or consumer evidence"],
     ["# Meaning", "# Contract", "# Producers", "# Consumers"],
-    ["System", "Software Component", "Service", "Queue", "AWS SQS Queue", "Business Flow"],
+    ["System", "Software Component", "Service", "Domain Entity", "Metric", "Queue", "AWS SQS Queue", "Business Flow"],
     {
       investigationQuestions: ["What produces this event?", "What consumes it?", "What schedule or event pattern triggers it?"],
       metadataGuidance: [{ field: "trigger", evidence: "schedule, event pattern or producer call", requiredWhenSupported: true }],
@@ -130,10 +153,37 @@ export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
     },
   ),
   defineSchema(
+    "Metric", "A stable named measure and definition, distinct from any current observed numeric value",
+    "metrics/<slug>.md", 40,
+    ["business metric", "performance metric", "analytics metric", "defined measure", "metric definition"],
+    ["stable metric definition and producer or calculation evidence"],
+    ["# Purpose", "# Definition", "# Inputs", "# Producers and Consumers", "# Limitations"],
+    ["Domain", "System", "Software Component", "Service", "Domain Entity", "Event", "Database Table", "Business Flow", "Repository"],
+    {
+      investigationQuestions: [
+        "What stable question or outcome does this metric measure?",
+        "What definition, formula, unit or aggregation is evidenced?",
+        "Which component, event or data source produces its inputs?",
+        "Is a cited number only a change-prone observation that must remain a live reference?",
+      ],
+      metadataGuidance: [
+        { field: "unit", evidence: "metric definition or instrumentation contract", requiredWhenSupported: false },
+        { field: "formula", evidence: "calculation code or documented definition", requiredWhenSupported: false },
+        { field: "aggregation", evidence: "instrumentation or analytics definition", requiredWhenSupported: false },
+      ],
+      relationshipGuidance: [
+        { kind: "part-of", targetTypes: ["Domain", "System"], evidence: "business or system measurement boundary" },
+        { kind: "depends-on", targetTypes: ["Domain Entity", "Event", "Database Table"], evidence: "metric input or calculation evidence" },
+        { kind: "implemented-in", targetTypes: ["Repository"], evidence: "instrumentation or calculation source evidence" },
+      ],
+      optionalEnrichment: ["unit", "formula", "aggregation window and dimensions"],
+    },
+  ),
+  defineSchema(
     "Database Table", "A durable data resource with an independent identity or operational boundary", "resources/<slug>.md", 60,
     ["database table", "sql table", "dynamodb table"], ["table identity or schema evidence"],
     ["# Purpose", "# Data", "# Ownership", "# Access", "# Operations"],
-    ["System", "Software Component", "Service", "Server", "Business Flow", "Infrastructure Definition", "Deployment"],
+    ["System", "Software Component", "Service", "Server", "Domain Entity", "Metric", "Business Flow", "Infrastructure Definition", "Deployment"],
     {
       investigationQuestions: ["What is the table identity and key/schema?", "Which runtime reads or writes it?", "How is its name passed to the runtime?"],
       metadataGuidance: [

@@ -1,0 +1,120 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-serverless-shopping-cart",
+  "runId": "2026-08-17T063359Z",
+  "arm": "mcp",
+  "expectedConcepts": 8,
+  "actualConcepts": 15,
+  "matchedConcepts": 7,
+  "referenceConceptCoveragePercent": 88,
+  "recognizedSchemaAgreementPercent": 100,
+  "metadataCompletenessPercent": 0,
+  "provenanceCoveragePercent": 64,
+  "referenceRelationshipCoveragePercent": 86,
+  "conflictVisibilityPercent": 100,
+  "liveEvidenceReferenceCoveragePercent": 0,
+  "classifications": {
+    "concepts": {
+      "confirmed": [
+        "domains/commerce",
+        "systems/serverless-shopping-cart",
+        "components/shopping-cart-service",
+        "interfaces/cart-api",
+        "infrastructure/shopping-cart-sam",
+        "resources/shopping-cart-table",
+        "resources/cart-deletion-queue"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "components/product-mock-service",
+        "components/shopping-cart-web-client",
+        "flows/cart-migration-and-cleanup",
+        "flows/cart-total-projection",
+        "infrastructure/auth-sam",
+        "infrastructure/product-mock-sam",
+        "interfaces/product-api",
+        "repositories/aws-serverless-shopping-cart"
+      ],
+      "missingReference": [
+        "authenticated-cart-migration"
+      ]
+    },
+    "relationships": {
+      "confirmed": [
+        "shopping-cart-system|part-of|commerce-domain",
+        "shopping-cart-service|part-of|shopping-cart-system",
+        "shopping-cart-api|part-of|shopping-cart-system",
+        "shopping-cart-infrastructure|part-of|shopping-cart-system",
+        "dynamodb-shopping-cart-table|declared-by|shopping-cart-infrastructure",
+        "cart-delete-sqs-queue|declared-by|shopping-cart-infrastructure"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "components/product-mock-service|part-of|systems/serverless-shopping-cart",
+        "components/product-mock-service|provides|interfaces/product-api",
+        "components/product-mock-service|declared-by|infrastructure/product-mock-sam",
+        "components/product-mock-service|implemented-in|repositories/aws-serverless-shopping-cart",
+        "components/shopping-cart-service|provides|interfaces/cart-api",
+        "components/shopping-cart-service|reads-from|resources/shopping-cart-table",
+        "components/shopping-cart-service|writes-to|resources/shopping-cart-table",
+        "components/shopping-cart-service|publishes-to|resources/cart-deletion-queue",
+        "components/shopping-cart-service|declared-by|infrastructure/shopping-cart-sam",
+        "components/shopping-cart-service|implemented-in|repositories/aws-serverless-shopping-cart",
+        "components/shopping-cart-web-client|part-of|systems/serverless-shopping-cart",
+        "components/shopping-cart-web-client|consumes|interfaces/cart-api",
+        "components/shopping-cart-web-client|consumes|interfaces/product-api",
+        "components/shopping-cart-web-client|implemented-in|repositories/aws-serverless-shopping-cart",
+        "flows/cart-migration-and-cleanup|part-of|systems/serverless-shopping-cart",
+        "flows/cart-total-projection|part-of|systems/serverless-shopping-cart",
+        "infrastructure/auth-sam|part-of|systems/serverless-shopping-cart",
+        "infrastructure/auth-sam|implemented-in|repositories/aws-serverless-shopping-cart",
+        "infrastructure/product-mock-sam|part-of|systems/serverless-shopping-cart",
+        "infrastructure/product-mock-sam|implemented-in|repositories/aws-serverless-shopping-cart",
+        "infrastructure/shopping-cart-sam|implemented-in|repositories/aws-serverless-shopping-cart",
+        "interfaces/cart-api|implemented-in|repositories/aws-serverless-shopping-cart",
+        "interfaces/product-api|part-of|systems/serverless-shopping-cart",
+        "interfaces/product-api|implemented-in|repositories/aws-serverless-shopping-cart",
+        "resources/cart-deletion-queue|part-of|systems/serverless-shopping-cart",
+        "resources/shopping-cart-table|part-of|systems/serverless-shopping-cart"
+      ],
+      "missingReference": [
+        "authenticated-cart-migration|part-of|shopping-cart-system"
+      ]
+    }
+  },
+  "validation": {
+    "passed": false,
+    "failures": [
+      "OKF conformance failed: domains/index.md: only the root index may have frontmatter",
+      "infrastructure/auth-sam.md: live claim 1 target kind is invalid",
+      "infrastructure/shopping-cart-sam.md: live claim 1 target kind is invalid",
+      "interfaces/cart-api.md: live claim 1 target kind is invalid",
+      "resources/cart-deletion-queue.md: live claim 1 target kind is invalid",
+      "resources/shopping-cart-table.md: live claim 1 target kind is invalid",
+      "resources/shopping-cart-table.md: live claim 2 target kind is invalid"
+    ]
+  },
+  "ownerReview": {
+    "status": "needs_revision",
+    "findings": [
+      "cart-retention-ttl: live evidence references or source roles are incomplete"
+    ]
+  },
+  "authoringAssessment": {
+    "status": "invalid",
+    "hardFailures": [
+      "OKF conformance failed: domains/index.md: only the root index may have frontmatter",
+      "infrastructure/auth-sam.md: live claim 1 target kind is invalid",
+      "infrastructure/shopping-cart-sam.md: live claim 1 target kind is invalid",
+      "interfaces/cart-api.md: live claim 1 target kind is invalid",
+      "resources/cart-deletion-queue.md: live claim 1 target kind is invalid",
+      "resources/shopping-cart-table.md: live claim 1 target kind is invalid",
+      "resources/shopping-cart-table.md: live claim 2 target kind is invalid"
+    ],
+    "limitations": [
+      "Deterministic source-path checks do not prove that authored claims are semantically supported; human review is required.",
+      "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept."
+    ]
+  },
+  "okfTreeDigest": "sha256:0d778d528a3f9648a425a7978dc078b5a73e22dbfed174cffc9255938aac9627"
+}

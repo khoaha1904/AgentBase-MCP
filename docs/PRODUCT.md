@@ -57,6 +57,12 @@ evidence-driven and sparse; unknown valid OKF types remain readable and
 protected. Missing evidence becomes a limitation or a separately surfaced
 unresolved item, never an invented field.
 
+A **Concept Schema** is one reusable released catalog definition. A **Concept
+Instance** is one concrete provenance-bearing Hub document created from
+repository evidence. One schema may yield many instances, but each instance
+declares one concrete type; AgentBase does not merge competing schemas onto one
+document.
+
 ## Governance and authority
 
 Generated concepts begin as drafts. Previous generated prose is continuity, not

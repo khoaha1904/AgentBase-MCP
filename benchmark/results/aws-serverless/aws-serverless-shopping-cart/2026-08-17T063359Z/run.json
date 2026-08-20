@@ -1,0 +1,75 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-serverless-shopping-cart",
+  "arm": "mcp",
+  "kind": "sam-backend-vue-frontend",
+  "fixturePath": "../fixtures/source-repos/multiservice-feasibility/aws-serverless-shopping-cart",
+  "fixtureCommit": "66a863f1b7a2a7f319adddce6a55e090ce9f6734",
+  "sourceRepositoryId": "repository-aws-serverless-shopping-cart-708d65caf454",
+  "catalogVersion": "5.0.0",
+  "promptVersion": "okf-author-v12",
+  "promptDigest": "sha256:441b50215a42d6b16082989a41d2ba78e253c4495bf79b96377e0e380062b9a3",
+  "agent": {
+    "provider": "codex-cli",
+    "executable": "codex",
+    "version": "codex-cli 0.147.0",
+    "model": "gpt-5.6-terra",
+    "reasoningEffort": "medium",
+    "timeoutMs": 900000,
+    "actualVersion": "codex-cli 0.147.0"
+  },
+  "startedAt": "2026-08-17T06:33:59.229Z",
+  "completedAt": "2026-08-17T06:43:09.408Z",
+  "outcome": "succeeded",
+  "elapsedMs": 550179,
+  "process": {
+    "exitCode": 0,
+    "signal": null,
+    "error": null
+  },
+  "usage": {
+    "inputTokens": 1872014,
+    "cachedInputTokens": 1778944,
+    "cacheWriteInputTokens": 0,
+    "uncachedInputTokens": 93070,
+    "outputTokens": 25088,
+    "reasoningOutputTokens": 5268
+  },
+  "activity": {
+    "mcpToolCalls": 15,
+    "commandExecutions": 17,
+    "authoringToolCalls": 11,
+    "authoringArgumentBytes": 78964,
+    "authoringResultBytes": 43026,
+    "authoringTools": {
+      "get_okf_authoring_schemas": {
+        "calls": 1,
+        "argumentBytes": 367,
+        "resultBytes": 21052
+      },
+      "get_okf_schema": {
+        "calls": 1,
+        "argumentBytes": 24,
+        "resultBytes": 1985
+      },
+      "validate_okf_changes": {
+        "calls": 2,
+        "argumentBytes": 61516,
+        "resultBytes": 18974
+      },
+      "validate_okf_concept": {
+        "calls": 7,
+        "argumentBytes": 17057,
+        "resultBytes": 1015
+      }
+    },
+    "observedSourceReadBytes": null,
+    "limitation": "event trace does not prove complete source-read volume"
+  },
+  "requiredToolUsage": {
+    "index_repository": true,
+    "get_okf_authoring_schemas": true,
+    "validate_okf_changes": true
+  },
+  "failures": []
+}

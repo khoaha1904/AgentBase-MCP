@@ -46,16 +46,17 @@ is the portable archive.
 ## Current checkpoint
 
 - Active capability: none; most recent completed capability:
-  `019-live-evidence-questions`.
+  `020-domain-metric-concepts`.
 - Capability 018 is complete with 339 passing offline tests. Its V11 real run is
   accepted for confirmed Domain and shared-navigation qualification; no V12
   numeric-snapshot iteration was authorized.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.
-- Catalog 5.0.0 adds one evidenced canonical relationship direction and ordered
-  Business Flow steps while preserving open-world compatibility for existing
-  foreign extensions.
+- Completed catalog 5.1.0 adds generic Domain Entity and Metric schemas to the existing
+  canonical relationship and Business Flow vocabulary. A schema is reusable;
+  each repository-specific instance declares one type, and foreign extensions
+  remain open-world compatible.
 - Hub retrieval is progressively scoped through root, Domain and System
   navigation, deterministic search and bounded inbound/outbound traversal. A
   broad ambiguous query asks for Domain scope instead of returning Hub-wide
@@ -80,6 +81,10 @@ is the portable archive.
   query-time resolution to the authorized repository, persists proposal-coupled
   governed questions and turns attributed answers into separately reviewable
   Maintainer Guidance without choosing or deleting source truth.
+- Shopping Cart V12 run `2026-08-17T063359Z` exercised that authoring contract
+  but is retained as invalid: target-kind/index conformance failed and the
+  required retention references were omitted. It does not qualify PR #7 rebuild
+  or publication.
 
 ## Superseded assumptions
 

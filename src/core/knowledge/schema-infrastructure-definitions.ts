@@ -130,7 +130,7 @@ export const INFRASTRUCTURE_SCHEMAS: readonly OkfConceptSchema[] = [
     ["business flow", "business behavior", "business behaviors", "user journey", "workflow", "end-to-end flow"],
     ["trigger", "observable outcome", "supporting system evidence"],
     ["# Purpose", "# Trigger", "# Outcome", "# Flow", "# Failure and Recovery", "# Limitations"],
-    ["System", "Software Component", "Service", "API Surface", "API Endpoint", "Event", "Queue", "AWS Lambda", "AWS SQS Queue"],
+    ["System", "Software Component", "Service", "API Surface", "API Endpoint", "Domain Entity", "Metric", "Event", "Queue", "AWS Lambda", "AWS SQS Queue"],
     {
       investigationQuestions: [
         "What user or system trigger starts the flow?", "What observable business outcome completes it?",
