@@ -136,6 +136,13 @@ benchmarks.
   coverage, current-resolution status, role-separated conflict presentation,
   unavailable-source behavior and absence of durable volatile scalars. It does
   not require a numeric snapshot or choose an evidence winner.
+- **AB-BENCH-043** — V13 qualifies catalog `6.0.0` through the actual
+  single-repository Initial Ingest lifecycle in an isolated local-only Hub. It
+  requires status/setup, Preflight, one index/architecture pass,
+  evidence-bearing guidance, prepare, changed-set validation, finalize and
+  inspect; it fails on missing stages or any Accept, bootstrap, submit or
+  synchronize call. Only the finalized proposal bundle becomes a scored
+  artifact and the source plus owner-native Hub remain unchanged.
 
 ## Context A/B interpretation
 

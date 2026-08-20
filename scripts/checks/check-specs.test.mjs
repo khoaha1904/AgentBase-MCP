@@ -37,13 +37,13 @@ function fixture() {
   ]));
   write(root, "docs/contracts/okf.md", lines([
     ...ids("AB-MVP", 16, 8), ...ids("AB-OBS", 7), ...ids("AB-SCHEMA", 35),
-    ...ids("AB-CLAIM", 5), ...ids("AB-INGEST", 9),
+    ...ids("AB-CLAIM", 5), ...ids("AB-INGEST", 10),
   ]));
   write(root, "docs/contracts/hub.md", lines([
     ...ids("AB-LOCAL-HUB", 16), "AB-QUERY-001", ...ids("AB-HUB-SETUP", 17),
   ]));
   write(root, "docs/contracts/installation.md", lines(ids("AB-INSTALL", 24)));
-  write(root, "docs/contracts/benchmark.md", lines(ids("AB-BENCH", 38)));
+  write(root, "docs/contracts/benchmark.md", lines(ids("AB-BENCH", 43)));
   write(root, "specs/CURRENT.md", "Active capability: [foundation](001-clean-foundation/spec.md)\n");
   write(root, "specs/001-clean-foundation/spec.md", "# Active foundation\n");
   write(root, "package.json", "{\"name\":\"fixture\"}\n");
@@ -137,7 +137,7 @@ test("[AB-MVP/OBS/SCHEMA/CLAIM/INGEST] enforces the consolidated evidence and OK
       .replace("AB-OBS-007", "missing-observation")
       .replace("AB-SCHEMA-035", "missing-schema")
       .replace("AB-CLAIM-005", "missing-claim")
-      .replace("AB-INGEST-009", "missing-ingest");
+      .replace("AB-INGEST-010", "missing-ingest");
     fs.writeFileSync(file, source);
     const result = codes(checkSpecifications(current.root));
     assert.ok(result.includes("SPEC-MVP-ID-MISSING"));

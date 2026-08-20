@@ -190,6 +190,11 @@ accepted.
 - **AB-INGEST-009**: The public Ingest workflow MUST be agent-operated through a
   packaged skill and bounded MCP operations; users MUST NOT have to construct
   an authoring prompt and canonical verification MUST NOT require a model call.
+- **AB-INGEST-010**: A confirmed primary Domain MUST be persisted as one
+  owner-evidenced `Repository part-of Domain` relation. Initial Ingest MUST
+  derive its proposal evidence digest from the validated guidance request and
+  exact repository source state rather than requiring the agent to invent or
+  supply an opaque digest.
 - **AB-SCHEMA-030**: Catalog `6.0.0` MUST expose exactly the 22 approved
   provider-neutral roles: `Repository`, `Domain`, `Domain Entity`, `System`,
   `Metric`, `Business Flow`, `Maintainer Guidance`, `Software Component`,
@@ -264,7 +269,9 @@ accepted.
 - **SC-005**: On the accepted representative repository and qualified host-agent
   environment, three consecutive opt-in runs produce valid reviewable previews
   with a median elapsed time no greater than 10 minutes. Measurement records
-  limitations and is not part of the offline gate.
+  limitations and is not part of the offline gate. V13 runs the real isolated
+  local-Hub Preflight through Inspect lifecycle under catalog `6.0.0`, requires
+  the packaged Initial Ingest tool sequence and never Accepts or publishes.
 - **SC-006**: The canonical offline repository verification passes without
   network access, provider credentials, provider CLI calls, model calls or
   source-repository mutation.

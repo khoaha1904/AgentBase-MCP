@@ -11,6 +11,28 @@ const requiredTools = ["index_repository", "list_okf_schemas", "select_okf_schem
 const v3RequiredTools = [...requiredTools, "validate_okf_relationships"];
 const v4RequiredTools = ["index_repository", "get_okf_authoring_schemas", "validate_okf_bundle"];
 const v8RequiredTools = ["index_repository", "get_okf_authoring_schemas", "validate_okf_changes"];
+const v13RequiredTools = [
+  "get_hub_status", "configure_hub", "preflight_hub_ingest", "index_repository", "get_architecture",
+  "get_okf_authoring_schemas", "prepare_hub_okf", "validate_okf_changes",
+  "finalize_hub_okf_proposal", "inspect_hub_okf_proposal",
+];
+const v13ExactlyOnceTools = v13RequiredTools.filter((tool) => tool !== "validate_okf_changes");
+const v13ForbiddenTools = new Set([
+  "accept_hub_okf_proposal", "preview_hub_bootstrap", "bootstrap_hub",
+  "submit_hub_okf_proposals", "synchronize_hub_okf", "recover_hub_okf",
+]);
+
+export function validateV13Lifecycle(mcpTools) {
+  return [
+    ...v13ExactlyOnceTools.filter((tool) => mcpTools[tool] !== 1)
+      .map((tool) => `${tool} must run exactly once; observed ${mcpTools[tool] ?? 0}`),
+    ...(mcpTools.validate_okf_changes >= 1 && mcpTools.validate_okf_changes <= 2
+      ? []
+      : [`validate_okf_changes must run once, or twice after one repair; observed ${mcpTools.validate_okf_changes ?? 0}`]),
+    ...Object.keys(mcpTools).filter((tool) => v13ForbiddenTools.has(tool))
+      .map((tool) => `forbidden V13 lifecycle tool observed: ${tool}`),
+  ];
+}
 const authoringTools = new Set([
   "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept", "validate_okf_relationships",
   "get_okf_authoring_schemas", "validate_okf_bundle", "validate_okf_changes",
@@ -31,9 +53,10 @@ export function renderAgentPrompt(template, values) {
   });
 }
 
-export function portableAgentText(value, { repository, workspace }) {
+export function portableAgentText(value, { repository, workspace, runtimeRoot }) {
   return value.split(repository).join("<SOURCE_ROOT>")
     .split(workspace).join("<OUTPUT_ROOT>")
+    .split(runtimeRoot ?? "\0").join("<RUNTIME_ROOT>")
     .split(projectRoot).join("<AGENTBASE_ROOT>")
     .split(os.homedir()).join("<HOME>");
 }
@@ -75,6 +98,7 @@ export function summarizeAgentEvents(events) {
   let authoringArgumentBytes = 0;
   let authoringResultBytes = 0;
   const authoringActivity = {};
+  const mcpTools = {};
   let usage = null;
   for (const line of events.split("\n")) {
     try {
@@ -84,6 +108,7 @@ export function summarizeAgentEvents(events) {
         if (item?.type === "mcp_tool_call" && typeof item?.tool === "string") {
           completed.add(item.tool);
           mcpToolCalls += 1;
+          mcpTools[item.tool] = (mcpTools[item.tool] ?? 0) + 1;
           if (authoringTools.has(item.tool)) {
             const argumentBytes = serializedBytes(item.arguments);
             const resultBytes = serializedBytes(item.result);
@@ -124,6 +149,7 @@ export function summarizeAgentEvents(events) {
       authoringArgumentBytes,
       authoringResultBytes,
       authoringTools: Object.fromEntries(Object.entries(authoringActivity).sort(([left], [right]) => left.localeCompare(right))),
+      mcpTools: Object.fromEntries(Object.entries(mcpTools).sort(([left], [right]) => left.localeCompare(right))),
       observedSourceReadBytes: null,
       limitation: "event trace does not prove complete source-read volume",
     },
@@ -136,6 +162,7 @@ function toolUsage(completedTools, arm, promptVersion) {
   const completed = new Set(completedTools);
   const required = ["okf-author-v8", "okf-author-v9", "okf-author-v10", "okf-author-v11", "okf-author-v12"].includes(promptVersion)
     ? v8RequiredTools
+    : promptVersion === "okf-author-v13" ? v13RequiredTools
     : ["okf-author-v4", "okf-author-v5", "okf-author-v6", "okf-author-v7"].includes(promptVersion)
       ? v4RequiredTools
       : promptVersion === "okf-author-v3" ? v3RequiredTools : requiredTools;
@@ -161,6 +188,9 @@ export function runAgentRepository({
   }
   fs.mkdirSync(root, { recursive: true });
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-okf-benchmark-"));
+  const runtimeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-okf-runtime-"));
+  const runtimeTmp = path.join(runtimeRoot, "tmp");
+  fs.mkdirSync(runtimeTmp);
   const startedAt = new Date().toISOString();
   const startedMs = Date.now();
   const source = discoverRepositorySourceState(repository, startedAt);
@@ -216,8 +246,14 @@ export function runAgentRepository({
     encoding: "utf8",
     timeout: manifest.agent.timeoutMs,
     maxBuffer: 50 * 1024 * 1024,
+    env: {
+      ...process.env,
+      TMPDIR: runtimeTmp,
+      XDG_CONFIG_HOME: path.join(runtimeRoot, "config"),
+      XDG_DATA_HOME: path.join(runtimeRoot, "data"),
+    },
   });
-  const portable = (value) => portableAgentText(value, { repository, workspace });
+  const portable = (value) => portableAgentText(value, { repository, workspace, runtimeRoot });
   fs.writeFileSync(eventsFile, portable(result.stdout || ""));
   if (fs.existsSync(finalMessage)) fs.writeFileSync(finalMessage, portable(fs.readFileSync(finalMessage, "utf8")));
   if (result.stderr) fs.writeFileSync(path.join(root, "agent-stderr.txt"), portable(result.stderr.slice(0, 1024 * 1024)));
@@ -235,6 +271,8 @@ export function runAgentRepository({
   }
   const summary = summarizeAgentEvents(result.stdout || "");
   const usage = toolUsage(summary.completedTools, arm, promptVersion);
+  const v13LifecycleFailures = promptVersion === "okf-author-v13"
+    ? validateV13Lifecycle(summary.activity.mcpTools) : [];
   const directMcpFailure = arm === "direct" && summary.activity.mcpToolCalls
     ? ["direct arm unexpectedly observed MCP tool calls"] : [];
   const completed = {
@@ -250,10 +288,12 @@ export function runAgentRepository({
       ...(failure ? [failure] : []),
       ...directMcpFailure,
       ...Object.entries(usage).filter(([, used]) => !used).map(([tool]) => `required MCP tool not observed: ${tool}`),
+      ...v13LifecycleFailures,
     ],
   };
   if (completed.failures.length) completed.outcome = "failed";
   writeJson(path.join(root, "run.json"), completed);
   fs.rmSync(workspace, { recursive: true, force: true });
+  fs.rmSync(runtimeRoot, { recursive: true, force: true });
   return completed;
 }

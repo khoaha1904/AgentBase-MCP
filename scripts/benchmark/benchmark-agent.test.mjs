@@ -65,6 +65,7 @@ test("[AB-BENCH-012][AB-BENCH-013][AB-BENCH-014] event summary uses final usage 
         resultBytes: Buffer.byteLength(JSON.stringify(authoringResult)),
       },
     },
+    mcpTools: { get_okf_authoring_schemas: 1, query: 2 },
     observedSourceReadBytes: null,
     limitation: "event trace does not prove complete source-read volume",
   });
@@ -200,6 +201,34 @@ test("[AB-CLAIM-001..003][AB-BENCH-042] v12 stores volatile values only as live 
   assert.equal(fs.existsSync(path.join(prompts, "okf-author-direct-v11.md")), true);
 });
 
+test("[AB-INGEST-010][AB-BENCH-043] v13 mirrors isolated Initial Ingest through prepared inspection", () => {
+  const prompts = path.resolve(import.meta.dirname, "..", "..", "benchmark", "prompts");
+  const mcp = fs.readFileSync(path.join(prompts, "okf-author-v13.md"), "utf8");
+  const direct = fs.readFileSync(path.join(prompts, "okf-author-direct-v13.md"), "utf8");
+  const shared = (value) => value.split("## Shared authoring contract\n")[1]?.split("## Arm-specific workflow\n")[0];
+  assert.equal(shared(mcp), shared(direct));
+  for (const rule of [
+    "catalog `6.0.0`", "one `part-of` relation", "evidence_digest", "get_hub_status",
+    "preflight_hub_ingest", "get_architecture", "prepare_hub_okf", "finalize_hub_okf_proposal",
+    "inspect_hub_okf_proposal", "Never call Accept",
+  ]) assert.ok(mcp.includes(rule), rule);
+  for (const retired of ["`AWS Lambda`", "`AWS SQS Queue`", "`Terraform Module`"]) assert.ok(mcp.includes(retired));
+  assert.equal(fs.existsSync(path.join(prompts, "okf-author-v12.md")), true);
+});
+
+test("[AB-BENCH-043] v13 bounds lifecycle stages, one repair, and publication", () => {
+  const exact = Object.fromEntries([
+    "get_hub_status", "configure_hub", "preflight_hub_ingest", "index_repository", "get_architecture",
+    "get_okf_authoring_schemas", "prepare_hub_okf", "validate_okf_changes",
+    "finalize_hub_okf_proposal", "inspect_hub_okf_proposal",
+  ].map((tool) => [tool, 1]));
+  assert.deepEqual(benchmarkAgent.validateV13Lifecycle(exact), []);
+  assert.deepEqual(benchmarkAgent.validateV13Lifecycle({ ...exact, validate_okf_changes: 2 }), []);
+  assert.match(benchmarkAgent.validateV13Lifecycle({ ...exact, validate_okf_changes: 3 }).join("\n"), /one repair/);
+  assert.match(benchmarkAgent.validateV13Lifecycle({ ...exact, index_repository: 2 })[0] ?? "", /exactly once/);
+  assert.match(benchmarkAgent.validateV13Lifecycle({ ...exact, accept_hub_okf_proposal: 1 }).join("\n"), /forbidden/);
+});
+
 test("[AB-BENCH-001][AB-BENCH-007] prompt rendering is exact and rejects missing inputs", () => {
   assert.equal(renderAgentPrompt("{{A}}/{{B}}", { A: "one", B: "two" }), "one/two");
   assert.throws(() => renderAgentPrompt("{{MISSING}}", {}), /prompt value is missing/);
@@ -257,7 +286,7 @@ const finalMessage = args[args.indexOf("--output-last-message") + 1];
 fs.mkdirSync(path.join(workspace, "okf"));
 fs.writeFileSync(path.join(workspace, "okf", "index.md"), "---\\nokf_version: \\\"0.2\\\"\\n---\\n\\n# Empty\\n");
 fs.writeFileSync(finalMessage, "done\\n");
-for (const tool of ["index_repository", "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept", "validate_okf_relationships", "get_okf_authoring_schemas", "validate_okf_bundle", "validate_okf_changes"]) console.log(JSON.stringify({ type: "item.completed", item: { type: "mcp_tool_call", tool, status: "completed", arguments: {}, result: {} } }));
+for (const tool of ["index_repository", "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept", "validate_okf_relationships", "get_okf_authoring_schemas", "validate_okf_bundle", "validate_okf_changes", "get_hub_status", "configure_hub", "preflight_hub_ingest", "get_architecture", "prepare_hub_okf", "finalize_hub_okf_proposal", "inspect_hub_okf_proposal"]) console.log(JSON.stringify({ type: "item.completed", item: { type: "mcp_tool_call", tool, status: "completed", arguments: {}, result: {} } }));
 `);
     fs.chmodSync(fake, 0o755);
     const commit = spawnSync("git", ["-C", source, "rev-parse", "HEAD"], { encoding: "utf8" }).stdout.trim();
@@ -314,6 +343,18 @@ for (const tool of ["index_repository", "list_okf_schemas", "select_okf_schemas"
     });
     assert.equal(v9.outcome, "succeeded");
     assert.deepEqual(v9.requiredToolUsage, v8.requiredToolUsage);
+    const v13 = runAgentRepository({
+      manifest: { suite: "test", catalogVersion: "6.0.0", promptVersion: "okf-author-v13", agent: { executable: fake, version: "fake-codex 1.0.0", model: "fake", reasoningEffort: "medium", timeoutMs: 10_000 } },
+      entry: { id: "fixture", kind: "test", path: "fixture", commit }, repository: source,
+      root: path.join(root, "result-v13"), executable: fake,
+    });
+    assert.equal(v13.outcome, "succeeded");
+    assert.deepEqual(Object.keys(v13.requiredToolUsage).sort(), [
+      "configure_hub", "finalize_hub_okf_proposal", "get_architecture", "get_hub_status",
+      "get_okf_authoring_schemas", "index_repository", "inspect_hub_okf_proposal",
+      "preflight_hub_ingest", "prepare_hub_okf", "validate_okf_changes",
+    ].sort());
+    assert.ok(Object.values(v13.requiredToolUsage).every(Boolean));
     assert.equal(v4.activity.authoringToolCalls, 8);
     assert.equal(spawnSync("git", ["-C", source, "status", "--porcelain"], { encoding: "utf8" }).stdout, "");
     for (const artifact of ["run.json", "prompt.md", "agent-events.jsonl", "agent-final.md", "okf/index.md"]) assert.ok(fs.existsSync(path.join(resultRoot, artifact)));

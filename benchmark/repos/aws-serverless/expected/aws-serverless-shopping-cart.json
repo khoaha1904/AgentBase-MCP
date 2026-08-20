@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 9,
   "repository": "aws-serverless-shopping-cart",
   "confirmedDomain": {
     "identity": "domains/commerce",
@@ -13,6 +13,13 @@
       "type": "Domain",
       "requiredMetadata": [],
       "requiredSourcePaths": []
+    },
+    {
+      "key": "shopping-cart-repository",
+      "identityTerms": ["shopping", "cart", "repository"],
+      "type": "Repository",
+      "requiredMetadata": [],
+      "requiredSourcePaths": ["README.md"]
     },
     {
       "key": "shopping-cart-system",
@@ -39,32 +46,33 @@
       "key": "shopping-cart-infrastructure",
       "identityTerms": ["shopping", "cart", "infrastructure"],
       "type": "Infrastructure Definition",
-      "requiredMetadata": ["configuration_root", "declared_resources"],
+      "requiredMetadata": [],
       "requiredSourcePaths": ["backend/shoppingcart-service.yaml"]
     },
     {
       "key": "dynamodb-shopping-cart-table",
       "identityTerms": ["cart", "table"],
       "type": "Database Table",
-      "requiredMetadata": ["resource_name", "keys"],
+      "requiredMetadata": [],
       "requiredSourcePaths": ["backend/shoppingcart-service.yaml", "backend/shopping-cart-service/migrate_cart.py"]
     },
     {
       "key": "cart-delete-sqs-queue",
       "identityTerms": ["cart", "queue"],
-      "type": "AWS SQS Queue",
-      "requiredMetadata": ["resource_name"],
+      "type": "Queue",
+      "requiredMetadata": [],
       "requiredSourcePaths": ["backend/shoppingcart-service.yaml", "backend/shopping-cart-service/migrate_cart.py"]
     },
     {
       "key": "authenticated-cart-migration",
       "identityTerms": ["authenticated", "migration"],
       "type": "Business Flow",
-      "requiredMetadata": ["business_purpose", "trigger", "outcome"],
+      "requiredMetadata": [],
       "requiredSourcePaths": ["frontend/src/backend/api.js", "backend/shopping-cart-service/migrate_cart.py"]
     }
   ],
   "relationships": [
+    { "from": "shopping-cart-repository", "to": "commerce-domain", "kind": "part-of" },
     { "from": "shopping-cart-system", "to": "commerce-domain", "kind": "part-of" },
     { "from": "shopping-cart-service", "to": "shopping-cart-system", "kind": "part-of" },
     { "from": "shopping-cart-api", "to": "shopping-cart-system", "kind": "part-of" },

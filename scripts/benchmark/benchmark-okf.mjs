@@ -285,7 +285,7 @@ function markdownTargets(source, from) {
   });
 }
 
-function progressiveNavigationFindings(bundle, expectation) {
+function progressiveNavigationFindings(bundle, expectation, repositoryId) {
   if (!bundle.root || !Array.isArray(bundle.files)) return [];
   const findings = [];
   const rootFile = path.join(bundle.root, "index.md");
@@ -311,6 +311,14 @@ function progressiveNavigationFindings(bundle, expectation) {
       const linkedSystems = markdownTargets(domain.body, domain.path).some((target) =>
         [...bundle.concepts.values()].some((concept) => concept.path === target && concept.type === "System"));
       if (!linkedSystems) findings.push(`${domain.path}: confirmed Domain does not navigate to a System`);
+    }
+    if (expectation.version >= 9) {
+      const repository = [...bundle.concepts.values()].find((concept) =>
+        concept.type === "Repository" && sourcePaths(concept, repositoryId).length > 0);
+      const assigned = Array.isArray(repository?.frontmatter.relationships)
+        && repository.frontmatter.relationships.some((item) => item && typeof item === "object" && !Array.isArray(item)
+          && item.kind === "part-of" && item.target === confirmedDomain.identity);
+      if (!repository || !assigned) findings.push(`current-source Repository is not assigned to ${confirmedDomain.identity}`);
     }
   }
   const values = [...bundle.concepts.values()];
@@ -516,7 +524,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
   return {
     ...metrics,
     ownerReview: assessOwnerReviewUsefulness(bundle.concepts, {
-      navigationFindings: expectation.version >= 6 ? progressiveNavigationFindings(bundle, expectation) : [],
+      navigationFindings: expectation.version >= 6 ? progressiveNavigationFindings(bundle, expectation, repositoryId) : [],
       conflictFindings: [...conflictVisibility.findings, ...liveEvidence.findings],
     }),
     authoringAssessment: createAuthoringAssessment({

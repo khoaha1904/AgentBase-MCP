@@ -14,7 +14,7 @@ export type HubToolActions = Readonly<{
   prepare(input: Readonly<{
     mode: "new" | "refresh";
     sourceRepository: string;
-    evidenceDigest: string;
+    evidenceDigest?: string;
     subjectDirectory: string;
     confirmedDomain?: ConfirmedDomain;
     signals?: readonly string[];

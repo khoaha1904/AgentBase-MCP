@@ -243,3 +243,7 @@ Normative OKF source is pinned to commit
 - **AB-INGEST-008, AB-INGEST-009** — No-change is success; change stops at one
   inspectable proposal preview. The agent-operated workflow never calls a
   provider CLI, clones another repository, Accepts or Publishes.
+- **AB-INGEST-010** — Confirmed ownership is stored as one owner-evidenced
+  `Repository part-of Domain` relation. New preparation derives its evidence
+  digest from the validated guidance request and exact repository source state;
+  the agent does not supply an opaque digest.

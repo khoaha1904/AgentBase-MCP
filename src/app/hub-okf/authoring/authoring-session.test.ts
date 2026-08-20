@@ -114,7 +114,9 @@ test("[AB-SCHEMA-024] confirmed Domain persists through session and final valida
       `${generated}sources:`, ownerSource, repoSource, "---", "", "# Purpose", "", "Owner-confirmed domain.",
       "", "# Systems", "", "[Cart](../systems/cart.md).", ""].join("\n"));
     write("repositories/acme.md", ["---", "type: Repository", "title: Acme", "description: Acme source repository",
-      `${generated}sources:`, repoSource, "---", "", "# Purpose", "", "Source for [Cart](../systems/cart.md).", ""].join("\n"));
+      `${generated}sources:`, repoSource, ownerSource, "relationships:", "  - kind: part-of",
+      "    target: domains/commerce", "    evidence: [owner-domain]", "---", "", "# Purpose", "",
+      "Source for [Cart](../systems/cart.md) in [Commerce](../domains/commerce.md).", ""].join("\n"));
     write("systems/cart.md", ["---", "type: System", "title: Cart", "description: Cart system",
       `${generated}sources:`, repoSource, ownerSource, "relationships:", "  - kind: part-of",
       "    target: domains/commerce", "    evidence: [owner-domain]", "---", "", "# Purpose", "",

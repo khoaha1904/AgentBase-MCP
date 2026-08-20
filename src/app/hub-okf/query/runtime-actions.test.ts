@@ -43,7 +43,7 @@ test("[AB-HUB-SETUP-001..003][AB-HUB-SETUP-006] runtime defers Hub setup and rel
     assert.deepEqual(preflight.domains, []);
     assert.deepEqual(preflight.source.identityHints, { remotes: [], rootCommits: [] });
     const prepared = await actions.prepare({ mode: "new", sourceRepository: sourceRoot,
-      evidenceDigest: `sha256:${"b".repeat(64)}`, subjectDirectory: "repositories/acme", guidanceRequest: repositoryGuidance,
+      subjectDirectory: "repositories/acme", guidanceRequest: repositoryGuidance,
       confirmedDomain: {
         identity: "domains/commerce", title: "Commerce",
         evidenceResource: "agentbase://owner-guidance/domains/commerce",
@@ -53,6 +53,7 @@ test("[AB-HUB-SETUP-001..003][AB-HUB-SETUP-006] runtime defers Hub setup and rel
       confirmedDomain: { identity: string; title: string; evidenceResource: string };
       source: { repositoryId: string; commit: string | null; dirty: boolean };
       sourceRepositoryId: string;
+      evidenceDigest: string;
       continuity: { commit: string; currentSource: unknown[]; neighbors: unknown[]; navigationPaths: string[] };
     };
     assert.equal(prepared.continuity.commit, prepared.baseCommit);
@@ -62,6 +63,7 @@ test("[AB-HUB-SETUP-001..003][AB-HUB-SETUP-006] runtime defers Hub setup and rel
     assert.ok(prepared.selectedSchemas.includes("Domain"));
     assert.equal(prepared.source.repositoryId.startsWith("repository-source-"), true);
     assert.equal(prepared.sourceRepositoryId, preflight.repository.repository.id);
+    assert.match(prepared.evidenceDigest, /^sha256:[a-f0-9]{64}$/);
     assert.equal(prepared.source.dirty, true);
     assert.deepEqual(prepared.confirmedDomain, {
       identity: "domains/commerce", title: "Commerce",

@@ -67,7 +67,6 @@ test("[AB-LOCAL-HUB-002][AB-LOCAL-HUB-006] MCP routes explicit prepare and batch
   const events: string[] = [], current = actions(events);
   const prepared = await callHubOkfTool("prepare_hub_okf", {
     mode: "new", source_repository: "/source",
-    evidence_digest: `sha256:${"a".repeat(64)}`,
     subject_directory: "repositories/acme",
     guidance_request: {
       candidates: [{ id: "repository", identity_hint: "source", identity_basis: "checkout root",
@@ -90,12 +89,26 @@ test("[AB-SCHEMA-024] MCP rejects malformed confirmed Domain input before prepar
   const events: string[] = [];
   const result = await callHubOkfTool("prepare_hub_okf", {
     mode: "new", source_repository: "/source",
-    evidence_digest: `sha256:${"a".repeat(64)}`,
     subject_directory: "repositories/acme", signals: ["repository"],
     confirmed_domain: { identity: "commerce", title: "Commerce" },
   }, actions(events));
   assert.equal(result.isError, true);
   assert.deepEqual(events, []);
+});
+
+test("[AB-INGEST-010] MCP derives new evidence identity and keeps explicit digest refresh-only", async () => {
+  const current = actions([]);
+  const supplied = await callHubOkfTool("prepare_hub_okf", {
+    mode: "new", source_repository: "/source", subject_directory: "repositories/acme",
+    evidence_digest: `sha256:${"a".repeat(64)}`,
+  }, current);
+  assert.equal(supplied.isError, true);
+  assert.match((supplied.content[0] as { text: string }).text, /derives evidence_digest/);
+  const missing = await callHubOkfTool("prepare_hub_okf", {
+    mode: "refresh", source_repository: "/source", subject_directory: "repositories/acme",
+  }, current);
+  assert.equal(missing.isError, true);
+  assert.match((missing.content[0] as { text: string }).text, /refresh requires evidence_digest/);
 });
 
 test("[AB-HUB-SETUP-002][AB-HUB-SETUP-003][AB-HUB-SETUP-010] MCP routes explicit setup and bootstrap choices", async () => {

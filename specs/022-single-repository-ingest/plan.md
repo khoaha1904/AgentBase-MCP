@@ -112,6 +112,16 @@ Refresh-only omission deletion and stale reconciliation are not modified in
 this slice except where catalog input types must compile; Phase 2 will replace
 their behavior under its own requirements.
 
+### 6. Qualify the real workflow, not the retired prompt contract
+
+V13 uses an isolated local-only Hub per run and exercises status/setup,
+Preflight, one graph index/architecture pass, evidence-bearing guidance,
+prepare, changed-set validation, finalize and inspect. New preparation derives
+its evidence digest from validated observations plus exact source state. The
+confirmed primary Domain is stored on the Repository relation. The harness
+copies only the finalized proposal bundle into benchmark artifacts and rejects
+Accept, submit, synchronize or bootstrap calls.
+
 ## Project Structure
 
 ### Documentation
@@ -199,9 +209,10 @@ sufficient.
 4. MCP and Hub authoring integration tests prove one guidance call, one proposal
    preview, one repair ceiling and no Accept/Publish/provider CLI side effects.
 5. Skill checks prove stage order, Domain confirmation and explicit stop points.
-6. `npm run verify` is the canonical offline gate. The representative three-run
-   model benchmark occurs only after separate owner authorization and usable
-   account confirmation.
+6. `npm run verify` is the canonical offline gate. V13 first proves the real
+   isolated proposal lifecycle with a fake executable, then the representative
+   three-run model benchmark occurs only after separate owner authorization and
+   usable account confirmation.
 
 ## Complexity Tracking
 

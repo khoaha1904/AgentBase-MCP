@@ -1,7 +1,26 @@
 {
-  "version": 5,
+  "version": 9,
   "repository": "aws-health-aware",
+  "confirmedDomain": {
+    "identity": "domains/health-operations",
+    "title": "Health Operations",
+    "rootHeading": "AgentBase-Hub"
+  },
   "concepts": [
+    {
+      "key": "health-operations-domain",
+      "identityTerms": ["health", "operations"],
+      "type": "Domain",
+      "requiredMetadata": [],
+      "requiredSourcePaths": []
+    },
+    {
+      "key": "aws-health-aware-repository",
+      "identityTerms": ["aws", "health", "aware", "repository"],
+      "type": "Repository",
+      "requiredMetadata": [],
+      "requiredSourcePaths": ["README.md"]
+    },
     {
       "key": "aws-health-aware-system",
       "identityTerms": ["aws", "health", "aware"],
@@ -13,45 +32,46 @@
       "key": "aha-infrastructure-definition",
       "identityTerms": ["aha", "terraform", "infrastructure"],
       "type": "Infrastructure Definition",
-      "requiredMetadata": ["configuration_root", "declared_resources"],
+      "requiredMetadata": [],
       "requiredSourcePaths": ["terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf"]
     },
     {
       "key": "aha-lambda-function-primary-region",
       "identityTerms": ["scheduled", "lambda"],
-      "type": "AWS Lambda",
-      "requiredMetadata": ["business_purpose", "resource_name", "runtime", "handler"],
+      "type": "Function",
+      "requiredMetadata": [],
       "requiredSourcePaths": ["terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf", "handler.py"]
     },
     {
       "key": "aha-dynamodb-table",
       "identityTerms": ["state", "table"],
       "type": "Database Table",
-      "requiredMetadata": ["resource_name", "keys"],
+      "requiredMetadata": [],
       "requiredSourcePaths": ["terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf"]
     },
     {
       "key": "aha-lambda-schedule-primary-region",
       "identityTerms": ["minute", "schedule"],
       "type": "Event",
-      "requiredMetadata": ["trigger"],
+      "requiredMetadata": [],
       "requiredSourcePaths": ["terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf"]
     },
     {
       "key": "aws-health-alerting-flow",
       "identityTerms": ["alert", "processing"],
       "type": "Business Flow",
-      "requiredMetadata": ["business_purpose", "trigger", "outcome"],
+      "requiredMetadata": [],
       "requiredSourcePaths": ["terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf", "handler.py"]
     }
   ],
   "relationships": [
+    { "from": "aws-health-aware-repository", "to": "health-operations-domain", "kind": "part-of" },
+    { "from": "aws-health-aware-system", "to": "health-operations-domain", "kind": "part-of" },
     { "from": "aha-lambda-function-primary-region", "to": "aws-health-aware-system", "kind": "part-of" },
-    { "from": "aha-infrastructure-definition", "to": "aha-lambda-function-primary-region", "kind": "declares" },
-    { "from": "aha-infrastructure-definition", "to": "aha-dynamodb-table", "kind": "declares" },
-    { "from": "aha-infrastructure-definition", "to": "aha-lambda-schedule-primary-region", "kind": "declares" },
-    { "from": "aha-lambda-schedule-primary-region", "to": "aha-lambda-function-primary-region", "kind": "triggers" },
-    { "from": "aha-lambda-function-primary-region", "to": "aha-dynamodb-table", "kind": "accesses" },
-    { "from": "aws-health-alerting-flow", "to": "aha-lambda-function-primary-region", "kind": "step" }
+    { "from": "aha-lambda-function-primary-region", "to": "aha-infrastructure-definition", "kind": "declared-by" },
+    { "from": "aha-dynamodb-table", "to": "aha-infrastructure-definition", "kind": "declared-by" },
+    { "from": "aha-lambda-schedule-primary-region", "to": "aws-health-aware-system", "kind": "part-of" },
+    { "from": "aha-lambda-function-primary-region", "to": "aha-dynamodb-table", "kind": "reads-from" },
+    { "from": "aws-health-alerting-flow", "to": "aws-health-aware-system", "kind": "part-of" }
   ]
 }

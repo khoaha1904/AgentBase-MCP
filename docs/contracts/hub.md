@@ -59,6 +59,9 @@ queries and ordinary coding never create Hub state, commits or publication.
   display name and current remote are hints, not regenerated identity. One
   strong match survives rename/organization transfer; shared fork/mirror
   lineage is ambiguous and requires owner choice.
+- **AB-INGEST-010** — A confirmed primary Domain is materialized on the
+  current-source Repository concept with deterministic owner-guidance evidence;
+  it is not stored in a side registry or inferred from a System name.
 - **AB-QUESTION-001, AB-QUESTION-005** — Finalization may attach bounded
   governed-question declarations to the reviewed proposal digest. Acceptance
   deterministically creates or merges private subject/property records with

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -39,6 +40,14 @@ function proposalRoot(stateRoot: string, proposalId: string): string {
 function requireHubToken(token: string | undefined): string {
   if (!token) throw new Error("remote Hub publication requires the dedicated GitHub token");
   return token;
+}
+
+function initialEvidenceDigest(sourceRepositoryId: string, source: ReturnType<typeof discoverRepositorySourceState>, request: unknown): string {
+  return `sha256:${createHash("sha256").update(JSON.stringify({
+    sourceRepositoryId,
+    source: { commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest },
+    guidanceRequest: request,
+  })).digest("hex")}`;
 }
 
 function remoteFailure(error: unknown, token: string): Error {
@@ -116,8 +125,15 @@ export function createHubRuntimeActions(
       if (input.mode === "new" && !input.guidanceRequest) {
         throw new Error("new Initial Ingest requires evidence-bearing guidance_request; source-less signals are refresh-only");
       }
+      if (input.mode === "new" && input.evidenceDigest) {
+        throw new Error("new Initial Ingest derives evidence digest from validated guidance and source state");
+      }
+      if (input.mode === "refresh" && !input.evidenceDigest) throw new Error("refresh requires evidence digest");
       const signals = input.confirmedDomain ? [...(input.signals ?? []), "business domain"] : (input.signals ?? []);
       const guidance = input.guidanceRequest ? getOkfAuthoringGuidance(input.guidanceRequest) : undefined;
+      const evidenceDigest = input.mode === "new"
+        ? initialEvidenceDigest(sourceRepositoryId, source, input.guidanceRequest)
+        : input.evidenceDigest!;
       const selectedSchemas = guidance
         ? [...new Set(guidance.recommendations.flatMap((item) => item.status === "exact" && item.schema ? [item.schema.type] : []))]
         : selectOkfConceptSchemas(signals).map((item) => item.type);
@@ -130,7 +146,7 @@ export function createHubRuntimeActions(
         baseCommit: localHub.activeHead,
         checkoutRoot: localHub.root,
         sourceRepositoryId,
-        evidenceDigest: input.evidenceDigest,
+        evidenceDigest,
         subjectDirectory: input.subjectDirectory,
         ...(input.confirmedDomain ? { confirmedDomain: input.confirmedDomain } : {}),
         signals,
@@ -145,6 +161,7 @@ export function createHubRuntimeActions(
         baseCommit: session.baseCommit,
         selectedSchemas: session.selectedSchemas,
         sourceRepositoryId: session.sourceRepositoryId,
+        evidenceDigest,
         source,
         repositoryResolution: repository.repository,
         ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),

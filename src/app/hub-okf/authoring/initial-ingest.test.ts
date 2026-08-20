@@ -45,11 +45,15 @@ test("[AB-INGEST-004..006][AB-INGEST-008] evidence guidance produces one generic
       ],
     };
     const prepared = await actions.prepare({
-      mode: "new", sourceRepository: source, evidenceDigest: `sha256:${"e".repeat(64)}`,
+      mode: "new", sourceRepository: source,
       subjectDirectory: "repositories/vehicle-events", guidanceRequest,
+      confirmedDomain: {
+        identity: "domains/vehicle-data", title: "Vehicle Data",
+        evidenceResource: "agentbase://owner-guidance/domains/vehicle-data",
+      },
       coverage: { partial: true, limitations: ["runtime consumers were not present in this repository"] },
     }) as { sessionId: string; bundleRoot: string; sourceRepositoryId: string; selectedSchemas: string[] };
-    assert.deepEqual(prepared.selectedSchemas.sort(), ["Function", "Queue", "Repository"]);
+    assert.deepEqual(prepared.selectedSchemas.sort(), ["Domain", "Function", "Queue", "Repository"]);
 
     const write = (relative: string, content: string) => {
       const target = path.join(prepared.bundleRoot, relative);
@@ -57,18 +61,27 @@ test("[AB-INGEST-004..006][AB-INGEST-008] evidence guidance produces one generic
       fs.writeFileSync(target, content);
     };
     fs.appendFileSync(path.join(prepared.bundleRoot, "index.md"), [
-      "", "* [Repository](repositories/vehicle-events.md) - source", "* [Components](components/index.md) - runtime",
-      "* [Resources](resources/index.md) - data resources", "",
+      "", "* [Domains](domains/index.md) - business domains", "* [Repositories](repositories/vehicle-events.md) - source",
+      "* [Components](components/index.md) - runtime", "",
     ].join("\n"));
+    write("domains/index.md", "# Domains\n\n* [Vehicle Data](vehicle-data.md) - owner-confirmed domain\n");
     write("components/index.md", "# Components\n\n* [Publisher](publisher.md) - event publisher\n");
     write("resources/index.md", "# Resources\n\n* [Vehicle events](vehicle-events.md) - asynchronous queue\n");
     const generated = "status: draft\ngenerated: { by: agentbase/0.0.0, at: 2026-08-21T00:00:00Z }\n";
+    write("domains/vehicle-data.md", [
+      "---", "type: Domain", "title: Vehicle Data", "description: Vehicle data business domain", generated.trimEnd(),
+      "sources:", "  - { id: owner-domain, resource: agentbase://owner-guidance/domains/vehicle-data }",
+      `  - { id: readme, resource: repository://${prepared.sourceRepositoryId}/README.md#L1-L3 }`,
+      "---", "", "# Purpose", "", "Owner-confirmed boundary for [vehicle-event source](../repositories/vehicle-events.md).", "",
+    ].join("\n"));
     write("repositories/vehicle-events.md", [
       "---", "type: Repository", "title: Vehicle events", "description: Vehicle event source repository", generated.trimEnd(),
       "sources:", `  - { id: readme, resource: repository://${prepared.sourceRepositoryId}/README.md#L1-L3 }`,
+      "  - { id: owner-domain, resource: agentbase://owner-guidance/domains/vehicle-data }",
+      "relationships:", "  - { kind: part-of, target: domains/vehicle-data, evidence: [owner-domain] }",
       "agentbase:", "  repository:", `    id: ${prepared.sourceRepositoryId}`, "    display_name: vehicle-events",
       "    aliases:", "      remotes: []", `      root_commits: [${preflight.repository.repository.rootCommits[0]}]`,
-      "---", "", "# Purpose", "", "Provides the [publisher](../components/publisher.md) and [event queue](../resources/vehicle-events.md).", "",
+      "---", "", "# Purpose", "", "Provides the [publisher](../components/publisher.md) in [Vehicle Data](../domains/vehicle-data.md).", "",
     ].join("\n"));
     write("components/publisher.md", [
       "---", "type: Function", "title: Vehicle publisher", "description: Publishes vehicle events", generated.trimEnd(),

@@ -76,7 +76,9 @@ Flow and that every schema-recommended Limitations section must be present. V8
 applies catalog 5.0 graph semantics and bounded re-ingest validation.
 V12 replaces volatile numeric snapshots with validated `agentbase.live_claims`
 source references and retains conflicting evidence roles without selecting a
-winner.
+winner. V13 measures the actual catalog-6.0 Initial Ingest lifecycle in an
+isolated local-only Hub: status/setup, Preflight, one graph pass, guidance,
+prepare, validation, finalize and Inspect. It stops before Accept or Publish.
 
 Expectations do not prescribe prose or agent slugs. Bounded identity terms and
 evidence match concept instances; the scorer then evaluates concrete schema

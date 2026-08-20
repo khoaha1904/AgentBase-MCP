@@ -117,6 +117,10 @@ export async function callHubOkfTool(
     if (name === "prepare_hub_okf") {
       const mode = required(args, "mode");
       if (mode !== "new" && mode !== "refresh") throw new Error("mode must be new or refresh");
+      if (mode === "new" && args.evidence_digest !== undefined) {
+        throw new Error("new Initial Ingest derives evidence_digest; callers must not supply it");
+      }
+      if (mode === "refresh" && args.evidence_digest === undefined) throw new Error("refresh requires evidence_digest");
       const confirmedDomain = args.confirmed_domain === undefined
         ? undefined : normalizeConfirmedDomain(args.confirmed_domain);
       const coverage = args.coverage;
@@ -130,7 +134,7 @@ export async function callHubOkfTool(
       return result(await actions.prepare({
         mode,
         sourceRepository: required(args, "source_repository"),
-        evidenceDigest: required(args, "evidence_digest"),
+        ...(args.evidence_digest === undefined ? {} : { evidenceDigest: required(args, "evidence_digest") }),
         subjectDirectory: required(args, "subject_directory"),
         ...(confirmedDomain ? { confirmedDomain } : {}),
         ...(args.signals === undefined ? {} : { signals: Array.isArray(args.signals)

@@ -60,7 +60,10 @@ export const HUB_OKF_TOOLS = [
       properties: {
         mode: { type: "string", enum: ["new", "refresh"] },
         source_repository: { type: "string", minLength: 1 },
-        evidence_digest: { type: "string", pattern: "^sha256:[a-f0-9]{64}$" },
+        evidence_digest: {
+          type: "string", pattern: "^sha256:[a-f0-9]{64}$",
+          description: "Required for Refresh only; Initial Ingest derives this from validated evidence and source state.",
+        },
         subject_directory: {
           type: "string",
           pattern: HUB_PROPOSAL_SUBJECT_PATTERN.source,
@@ -96,7 +99,7 @@ export const HUB_OKF_TOOLS = [
           }, required: ["partial", "limitations"], additionalProperties: false,
         },
       },
-      required: ["mode", "source_repository", "evidence_digest", "subject_directory"],
+      required: ["mode", "source_repository", "subject_directory"],
       additionalProperties: false,
     },
   },

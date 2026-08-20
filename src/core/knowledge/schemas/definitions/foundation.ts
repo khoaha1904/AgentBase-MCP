@@ -6,7 +6,9 @@ export const FOUNDATION_SCHEMAS: readonly OkfConceptSchema[] = [
     ["repository", "source root"], ["admitted repository identity"],
     ["# Purpose", "# Source Structure", "# Build and Test", "# Canonical Knowledge"],
     ["System", "Software Component", "API Surface", "Business Flow", "Infrastructure Definition"],
-    { relationshipGuidance: [] },
+    { relationshipGuidance: [
+      { kind: "part-of", targetTypes: ["Domain"], evidence: "explicit owner-confirmed primary Domain" },
+    ] },
   ),
   defineSchema(
     "Domain", "An evidenced business domain or bounded context", "domains/<slug>.md", 10,

@@ -1,9 +1,9 @@
 {
   "suite": "aws-serverless",
-  "version": 12,
-  "catalogVersion": "5.0.0",
-  "promptVersion": "okf-author-v12",
-  "directPromptVersion": "okf-author-direct-v12",
+  "version": 13,
+  "catalogVersion": "6.0.0",
+  "promptVersion": "okf-author-v13",
+  "directPromptVersion": "okf-author-direct-v13",
   "agent": {
     "provider": "codex-cli",
     "executable": "codex",
@@ -18,7 +18,11 @@
       "kind": "terraform-serverless",
       "path": "../fixtures/source-repos/aws-health-polyrepo/aws-health-aware",
       "commit": "928494c70a904a65b877d426516882397541eafd",
-      "confirmedDomain": null,
+      "confirmedDomain": {
+        "identity": "domains/health-operations",
+        "title": "Health Operations",
+        "evidenceResource": "agentbase://owner-guidance/domains/health-operations"
+      },
       "expectation": "expected/aws-health-aware.json"
     },
     {

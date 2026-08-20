@@ -39,25 +39,25 @@ test("[AB-SCHEMA-024] confirmed Domain has exact identity and deterministic owne
   ]) assert.throws(() => normalizeConfirmedDomain(value), /confirmed Domain/);
 });
 
-test("[AB-SCHEMA-024] assignment requires the Domain and an owner-evidenced current-source System edge", () => {
+test("[AB-SCHEMA-024][AB-INGEST-010] assignment requires the Domain and an owner-evidenced current-source Repository edge", () => {
   const domain = normalizeConfirmedDomain({ identity: "domains/commerce", title: "Commerce" });
   const domainConcept = concept("domains/commerce.md", "Domain",
     "  - id: owner-domain\n    resource: agentbase://owner-guidance/domains/commerce\n"
     + `  - id: repo\n    resource: repository://${REPOSITORY}/README.md#L1-L2\n`);
-  const system = concept("systems/cart.md", "System",
+  const repository = concept("repositories/cart.md", "Repository",
     `  - id: repo\n    resource: repository://${REPOSITORY}/README.md#L1-L2\n`
     + "  - id: owner-domain\n    resource: agentbase://owner-guidance/domains/commerce\n",
     "relationships:\n  - kind: part-of\n    target: domains/commerce\n    evidence: [owner-domain]\n");
-  const concepts = new Map([[domainConcept.conceptId, domainConcept], [system.conceptId, system]]);
+  const concepts = new Map([[domainConcept.conceptId, domainConcept], [repository.conceptId, repository]]);
   assert.deepEqual(validateConfirmedDomainAssignment(concepts, domain, REPOSITORY, true), []);
-  assert.match(validateConfirmedDomainAssignment(new Map([[system.conceptId, system]]), domain, REPOSITORY, true)[0] ?? "", /missing/);
+  assert.match(validateConfirmedDomainAssignment(new Map([[repository.conceptId, repository]]), domain, REPOSITORY, true)[0] ?? "", /missing/);
   const wrongTitle = concept("domains/commerce.md", "Domain",
     "  - id: owner-domain\n    resource: agentbase://owner-guidance/domains/commerce\n"
     + `  - id: repo\n    resource: repository://${REPOSITORY}/README.md#L1-L2\n`, "", "Retail");
   assert.match(validateConfirmedDomainAssignment(
-    new Map([[wrongTitle.conceptId, wrongTitle], [system.conceptId, system]]), domain, REPOSITORY, true,
+    new Map([[wrongTitle.conceptId, wrongTitle], [repository.conceptId, repository]]), domain, REPOSITORY, true,
   )[0] ?? "", /does not match/);
-  const unsupported = concept("systems/cart.md", "System",
+  const unsupported = concept("repositories/cart.md", "Repository",
     `  - id: repo\n    resource: repository://${REPOSITORY}/README.md#L1-L2\n`,
     "relationships:\n  - kind: part-of\n    target: domains/commerce\n    evidence: [repo]\n");
   assert.match(validateConfirmedDomainAssignment(

@@ -22,7 +22,9 @@ the repository, not an authoring prompt. Stop before Accept or Publish.
 4. **Author** — Call `get_okf_authoring_schemas` exactly once with the qualified
    candidates plus exact semantic/resource observations. Pass that same
    evidence-bearing request to `prepare_hub_okf`; never replace it with free
-   text `signals`. Run one bounded active-Hub identity match, then follow
+   text `signals` or supply an opaque evidence digest. Persist the confirmed
+   primary Domain as an owner-evidenced `Repository part-of Domain` relation.
+   Run one bounded active-Hub identity match, then follow
    `agentbase-okf` inside the returned workspace. Create only useful concepts
    and required navigation.
 5. **Validate** — Run changed-set and final validation. Make at most one repair

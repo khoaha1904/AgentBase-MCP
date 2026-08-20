@@ -47,7 +47,7 @@ export function validateConfirmedDomainAssignment(
     failures.push(`${domainConcept.path}: new confirmed Domain requires owner-guidance evidence ${domain.evidenceResource}`);
   }
   const assigned = [...concepts.values()].some((concept) => {
-    if (concept.type !== "System" || !conceptReferencesRepository(concept, sourceRepositoryId)) return false;
+    if (concept.type !== "Repository" || !conceptReferencesRepository(concept, sourceRepositoryId)) return false;
     const sources = sourceResources(concept);
     const relationships = Array.isArray(concept.frontmatter.relationships) ? concept.frontmatter.relationships : [];
     return relationships.some((raw) => {
@@ -57,7 +57,7 @@ export function validateConfirmedDomainAssignment(
       return relationship.evidence.some((id) => typeof id === "string" && sources.get(id) === domain.evidenceResource);
     });
   });
-  if (!assigned) failures.push(`confirmed Domain ${domain.identity} requires a current-source System part-of edge with owner-guidance evidence`);
+  if (!assigned) failures.push(`confirmed Domain ${domain.identity} requires a current-source Repository part-of edge with owner-guidance evidence`);
   return failures;
 }
 
