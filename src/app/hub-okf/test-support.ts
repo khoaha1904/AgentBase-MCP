@@ -4,8 +4,8 @@ import path from "node:path";
 
 import { createHubIdentity } from "../../core/hub/index.ts";
 import type { GitRequest, GitHubPullRequest } from "../../providers/github-hub/index.ts";
-import { prepareNewHubProposal } from "./prepare.ts";
-import type { SubmissionGitHub, SubmitHubOptions } from "./submit.ts";
+import { prepareNewHubProposal } from "./authoring/prepare.ts";
+import type { SubmissionGitHub, SubmitHubOptions } from "./publication/submit.ts";
 
 const BASE = "a".repeat(40), COMMIT = "b".repeat(40), EVIDENCE = `sha256:${"c".repeat(64)}`;
 

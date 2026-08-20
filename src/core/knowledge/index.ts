@@ -6,7 +6,7 @@ export {
   validateConfirmedDomainAssignment,
   type ConfirmedDomain,
   type ConfirmedDomainInput,
-} from "./confirmed-domain.ts";
+} from "./governance/confirmed-domain.ts";
 export {
   normalizeHubConceptPath,
   readHubConcept,
@@ -21,12 +21,12 @@ export {
   type HubTraversalEdge,
   type HubTraversalOptions,
   type HubTraversalResult,
-} from "./hub-query.ts";
+} from "./query/hub-query.ts";
 export {
   buildHubContinuity,
   type HubContinuityManifest,
   type HubContinuityOptions,
-} from "./hub-continuity.ts";
+} from "./query/hub-continuity.ts";
 export {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
   getOkfConceptSchema,
@@ -35,7 +35,7 @@ export {
   validateConceptAgainstSchema,
   type OkfConceptSchema,
   type OkfSchemaSelection,
-} from "./schema-catalog.ts";
+} from "./schemas/catalog.ts";
 export {
   conceptReferencesRepository,
   createRepositorySourceResource,
@@ -50,8 +50,8 @@ export {
   type OkfScalar,
   type OkfValue,
   type VerificationEvent,
-} from "./okf-document.ts";
-export { computeOkfTreeDigest, loadOkfBundle, type LoadOkfBundleOptions, type OkfBundle } from "./okf-bundle.ts";
+} from "./documents/okf-document.ts";
+export { computeOkfTreeDigest, loadOkfBundle, type LoadOkfBundleOptions, type OkfBundle } from "./documents/okf-bundle.ts";
 export {
   validateOkfRelationships,
   type OkfRelationshipConcept,
@@ -59,14 +59,14 @@ export {
   type OkfRelationshipValidation,
   type ValidatedOkfRelationship,
   type ValidatedOkfFlowStep,
-} from "./okf-relationships.ts";
+} from "./documents/okf-relationships.ts";
 export {
   CANONICAL_RELATIONSHIP_KINDS,
   FLOW_STEP_ACTIONS,
   FLOW_STEP_MODES,
   isCanonicalRelationshipKind,
   type CanonicalRelationshipKind,
-} from "./relationship-vocabulary.ts";
+} from "./documents/relationship-vocabulary.ts";
 export {
   diffBundleProposal,
   isMutableAgentBaseDraft,
@@ -79,19 +79,19 @@ export {
   type ProposalMetadata,
   type ProposalState,
   type ValidateProposalOptions,
-} from "./proposal.ts";
+} from "./proposals/proposal.ts";
 export {
   readMaintainerDirectives,
   type MaintainerDirective,
   type MaintainerDirectiveSet,
-} from "./directives.ts";
+} from "./governance/directives.ts";
 export {
   readLiveClaims,
   validateBundleLiveClaims,
   type LiveClaim,
   type LiveClaimRole,
   type LiveClaimTargetKind,
-} from "./live-claims.ts";
+} from "./governance/live-claims.ts";
 export {
   applyBundleProposal,
   recoverBundleSwitch,
@@ -99,4 +99,4 @@ export {
   type RecoveryResult,
   type SwitchManifest,
   type SwitchPhase,
-} from "./switch.ts";
+} from "./proposals/switch.ts";

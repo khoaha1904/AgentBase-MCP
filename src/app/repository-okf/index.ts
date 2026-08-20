@@ -1,22 +1,22 @@
 export const REPOSITORY_OKF_COMMANDS = ["prepare", "validate", "diff", "apply", "recover"] as const;
 export type RepositoryOkfCommand = typeof REPOSITORY_OKF_COMMANDS[number];
-export { prepareRepositoryEvidence, type EvidencePreparation } from "./prepare-evidence.ts";
-export { prepareProviderWorkspace, type ProviderWorkspace } from "./provider-workspace.ts";
-export { discoverRepositorySourceState } from "./source-state.ts";
+export { prepareRepositoryEvidence, type EvidencePreparation } from "./evidence/prepare-evidence.ts";
+export { prepareProviderWorkspace, type ProviderWorkspace } from "./provider/provider-workspace.ts";
+export { discoverRepositorySourceState } from "./evidence/source-state.ts";
 export {
   benchmarkRealGraphLifecycle,
   executeGraphBenchmarkCli,
   executeObservationCli,
   executeRealEvidenceCli,
   prepareRealRepositoryEvidence,
-} from "./real-evidence.ts";
+} from "./evidence/real-evidence.ts";
 export {
   GraphRoundError,
   runGraphRound,
   type GraphFreshnessLocation,
   type GraphRoundDiagnostics,
   type GraphRoundResult,
-} from "./graph-round.ts";
+} from "./graph/graph-round.ts";
 export {
   commitGraphFreshnessReceipt,
   createGraphFreshnessReceipt,
@@ -24,14 +24,14 @@ export {
   readGraphFreshnessReceipt,
   type GraphFreshnessReceipt,
   type GraphPreparationDecision,
-} from "./graph-freshness.ts";
+} from "./graph/graph-freshness.ts";
 export {
   benchmarkGraphLifecycle,
   type CriticalFactRequirement,
   type GraphBenchmarkAcceptance,
   type GraphBenchmarkArm,
   type GraphLifecycleBenchmark,
-} from "./graph-benchmark.ts";
+} from "./graph/graph-benchmark.ts";
 export { executeOkfCli } from "./cli.ts";
 export {
   diffRepositoryProposal,
@@ -39,5 +39,5 @@ export {
   prepareRepositoryProposal,
   validateRepositoryProposal,
   type PreparedRepositoryProposal,
-} from "./workflow.ts";
-export { recoverRepositoryOkf } from "./recovery.ts";
+} from "./workflow/workflow.ts";
+export { recoverRepositoryOkf } from "./workflow/recovery.ts";

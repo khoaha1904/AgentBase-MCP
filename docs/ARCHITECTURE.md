@@ -17,7 +17,12 @@ src/cli.ts                         composition root
 src/core/
   code-intelligence/              neutral map/query contracts
   observations/                   normalized evidence and identity
-  knowledge/                      OKF policy, schemas and local query
+  knowledge/                      provider-neutral OKF policy
+    documents/                    OKF documents and relationships
+    governance/                   domain, directive and live-claim policy
+    proposals/                    proposal validation and atomic apply
+    query/                        accepted-knowledge reads and continuity
+    schemas/                      versioned catalog and grouped definitions
   hub/                            Hub identity, ancestry and transitions
 src/providers/
   fake-code-intelligence/         deterministic conformance provider
@@ -26,9 +31,28 @@ src/providers/
 src/app/
   foundation-demo/                offline product demonstration
   codebase-memory-mcp/            filtered stdio MCP composition
-  repository-okf/                 evidence, proposal and explicit apply
-  hub-okf/                        lazy setup, local lifecycle and publication
+  repository-okf/                 one-repository evidence workflow
+    graph/                        graph rounds and freshness
+    evidence/                     source state and normalized evidence
+    provider/                     isolated provider workspace
+    workflow/                     orchestration and recovery
+  hub-okf/                        local Hub lifecycle and publication
+    configuration/                settings and credentials
+    workspace/                    checkout, setup and bootstrap
+    authoring/                    proposals, refresh and Questions
+    review/                       inspection and acceptance
+    publication/                  submit, publish and synchronize
+    query/                        accepted-Hub reads and runtime actions
+    mcp/                          MCP adapters
+scripts/
+  checks/                         repository verification
+  installation/                   setup and migration utilities
+  benchmark/                      opt-in measurement and qualification
 ```
+
+Repository-local product skills live under `.agents/skills/<goal>/`; its
+`README.md` separates product workflows from development-only Spec Kit skills.
+Do not create empty skill scaffolds before the workflow exists.
 
 Do not create generic `common`, `utils` or `helpers` areas for possible reuse.
 Split a file only when the results have distinct responsibilities and reasons

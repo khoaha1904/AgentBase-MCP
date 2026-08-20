@@ -9,6 +9,16 @@ Work only inside the exact prepared proposal's `bundle/` subtree. Treat the
 current `okf/`, proposal metadata, evidence bundle, provider cache, and source
 repository as read-only.
 
+## Load the relevant rules
+
+- Always read [`references/concepts.md`](references/concepts.md) before creating
+  or modifying concepts.
+- Read [`references/navigation-and-boundaries.md`](references/navigation-and-boundaries.md)
+  when adding concepts, indexes, Domain/System navigation or infrastructure.
+- Read [`references/uncertainty-and-guidance.md`](references/uncertainty-and-guidance.md)
+  when evidence conflicts, values can change, Questions exist or protected
+  knowledge is involved.
+
 ## Workflow
 
 1. Read the proposal metadata and bounded repository evidence before authoring.
@@ -42,124 +52,6 @@ repository as read-only.
    only proposal files. Present warnings, limitations, and the complete diff.
 7. Stop before apply unless the maintainer explicitly authorizes applying that
    exact validated proposal.
-
-## Concept rules
-
-The catalog exposes reusable **Concept Schema** definitions such as Service,
-Domain Entity or Metric. Authoring creates evidence-backed **Concept Instance**
-documents such as Vehicle Inventory Service or Click-through Rate. One schema
-may yield many instances, but each instance declares exactly one concrete
-`type`; never merge competing schemas onto one document.
-
-For every new or modified AgentBase concept:
-
-- use one non-reserved `.md` file per concept and a descriptive `type`;
-- set `status: draft`;
-- set `generated.by` to the current `agentbase/<version>` producer and
-  `generated.at` to the meaningful content-change time;
-- omit `verified`; never impersonate a human or process verifier;
-- preserve unknown frontmatter values when modifying an owned draft;
-- attach important claims to `sources` entries from current repository evidence;
-- use stable source IDs and matching Markdown footnotes for attributed claims;
-- represent a change-prone configuration or implementation scalar under
-  `agentbase.live_claims` with a stable claim ID, subject/property/role, one
-  `sources[].id`, semantic target and the prepare source identity; never include
-  the observed scalar in that live-claim record or present it as timeless prose;
-- `agentbase.live_claims[].target.kind` is exactly one of `symbol`, `function`,
-  `config-field` or `text`; concept types such as Database Table, AWS SQS Queue
-  or Infrastructure Definition are never live-reference target kinds;
-- encode source code as
-  `repository://<repository-id>/<encoded-relative-path>#L<start>-L<end>`;
-- never expose checkout roots, provider cache paths, secrets, credentials, or
-  raw graph storage;
-- relate concepts with normal bundle-relative Markdown links.
-- persist only canonical relationship directions: `part-of`, `provides`,
-  `consumes`, `depends-on`, `triggered-by`, `publishes-to`, `reads-from`,
-  `writes-to`, `implemented-in`, `declared-by` and `deployed-as`; MCP derives
-  inbound navigation, so never add a duplicate inverse edge;
-- give every relationship a non-empty `evidence` list resolving to stable
-  `sources[].id` values;
-- give every Business Flow ordered `flow_steps` with exact source and target
-  identities, canonical action, sync/async mode and source evidence;
-- use one canonical path per entity under the role-oriented roots `domains/`,
-  `entities/`, `systems/`, `components/`, `interfaces/`, `flows/`, `metrics/`,
-  `resources/`, `infrastructure/`, `deployments/` or `repositories/`;
-- treat directory placement as classification, not ownership or containment;
-  express containment and implementation through prose and links;
-- never duplicate a component, interface, flow or resource beneath both a
-  system and repository tree.
-
-## Navigation rules
-
-- Only the root `index.md` may have OKF frontmatter; category indexes MUST NOT have frontmatter and contain navigation Markdown only.
-- Keep one canonical concept file; indexes link to it and never copy it.
-- Root navigation grows with Domain and fallback entrypoints, not every entity.
-- A Domain concept links its Systems and critical Business Flows. A System
-  concept links the components, interfaces, flows, resources and infrastructure
-  needed to understand that system.
-- When Domain evidence is absent, use bounded System and Repository indexes;
-  never invent a Domain merely to satisfy the layout.
-- Prefer domain-scoped Hub search for broad terms. An exact concept, resource or
-  repository identity is already sufficient scope. Ask the maintainer to choose
-  a Domain when search reports `scope_required`; use explicit global search only
-  when the maintainer wants cross-domain results.
-- Use bounded relationship traversal for impact and producer/consumer questions.
-  Traverse inbound edges through MCP rather than persisting inverse duplicates.
-
-## Boundary rules
-
-- Create a Domain only from explicit business-boundary evidence or owner
-  guidance; never infer one from a repository or product name.
-- For a prepare-confirmed Domain, add its returned owner-guidance resource to
-  `sources`, and make each System `part-of` relationship cite the matching
-  source ID. Repository resources still support code/system claims; they do not
-  become evidence for the maintainer's business classification.
-- Create a System when cooperating entities deliver one recognizable
-  capability. A library or reusable module need not belong to a known system.
-- Keep repository-specific purpose, source structure, build, test and entry
-  points in a Repository concept. Link to canonical entities instead of copying
-  their architecture or contracts.
-- Group related CRUD/HTTP operations into one API Surface with a Markdown
-  operations table. Split an API Endpoint only for an independent consumer,
-  owner, version, policy, SLA or lifecycle boundary.
-- Keep an implementation-only Lambda or handler inside its component/API/flow.
-  Split it only for independent triggers, scaling, permissions, failure or
-  operational behavior.
-- Treat an architecture node and a Markdown knowledge unit separately. A
-  Server remains a component boundary but may link independently useful
-  capability or worker concepts instead of accumulating unrelated contracts,
-  flows and operations in one large document.
-- Distinguish desired-state Infrastructure Definition, genuinely reusable
-  Terraform Module and externally evidenced Deployment. Source declarations do
-  not prove an account, region, ARN or deployed instance.
-
-Unknown OKF types and extension fields are valid. Preserve their relationship
-predicates as unjudged extensions. New known AgentBase concepts use only the
-canonical vocabulary. Broken links are warnings, not permission to invent the
-missing concept.
-
-## Uncertainty and guidance
-
-Record source-visible uncertainty in the affected concept's Limitations. Do not
-create new `Open Question` concepts: the type remains readable only for legacy
-compatibility. Submit material conflicts as governed question declarations when
-finalizing the proposal; keep every linked claim and source role.
-
-For a volatile-value query, call `read_hub_live_evidence` on the accepted concept.
-Resolve only entries marked `ready`: use `search_graph` for the semantic target
-and `get_code_snippet` for the exact current source. Treat missing, ambiguous,
-computed or mismatched targets as unavailable/stale/indeterminate and never fall
-back to a prior literal. Present documentation, implementation/configuration and
-accepted Maintainer Guidance separately with current source identity; if they
-disagree, say so and do not select a winner. A dirty-source observation is useful
-current evidence but never accepted knowledge.
-
-Respect a matching maintainer defer directive until it is removed or explicitly
-reopened.
-
-Treat `Maintainer Guidance`, human-authored or human-verified concepts,
-third-party concepts, ambiguous ownership, stable concepts, reference files,
-and existing logs as protected. Do not rewrite them for style or normalization.
 
 ## Validation boundary
 

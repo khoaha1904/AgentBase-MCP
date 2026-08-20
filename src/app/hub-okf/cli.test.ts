@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { HubToolActions } from "./mcp-tools.ts";
+import type { HubToolActions } from "./mcp/mcp-tools.ts";
 import { executeHubCli } from "./cli.ts";
 
 function actions(events: string[]): HubToolActions {

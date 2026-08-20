@@ -6,8 +6,8 @@ import {
   diffRepositoryProposal,
   prepareRepositoryProposal,
   validateRepositoryProposal,
-} from "./workflow.ts";
-import { recoverRepositoryOkf } from "./recovery.ts";
+} from "./workflow/workflow.ts";
+import { recoverRepositoryOkf } from "./workflow/recovery.ts";
 
 type Writer = (value: string) => void;
 

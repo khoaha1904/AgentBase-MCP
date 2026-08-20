@@ -1,4 +1,4 @@
-import type { HubToolActions } from "./mcp-tools.ts";
+import type { HubToolActions } from "./mcp/mcp-tools.ts";
 
 type Writer = (value: string) => void;
 

@@ -1,5 +1,5 @@
 export const HUB_OKF_CAPABILITY = "agentbase-hub-okf" as const;
-export { loadHubConfiguration, resolveHubConfiguration, type HubConfiguration, type OptionalHubConfiguration } from "./configuration.ts";
+export { loadHubConfiguration, resolveHubConfiguration, type HubConfiguration, type OptionalHubConfiguration } from "./configuration/configuration.ts";
 export {
   globalHubConfigurationPath,
   readPersistedHubConfiguration,
@@ -8,72 +8,72 @@ export {
   type PersistedHubConfiguration,
   type PersistedLocalHubConfiguration,
   type PersistedRemoteHubConfiguration,
-} from "./configuration-file.ts";
-export { attachExistingHub, createLocalHub, normalizeGitHubHubUrl, type HubSetupResult } from "./setup.ts";
+} from "./configuration/configuration-file.ts";
+export { attachExistingHub, createLocalHub, normalizeGitHubHubUrl, type HubSetupResult } from "./workspace/setup.ts";
 export {
   executeHubBootstrap,
   previewHubBootstrap,
   type BootstrapMode,
   type HubBootstrapIntent,
   type HubBootstrapReceipt,
-} from "./bootstrap.ts";
-export { checkoutHub, type GitRunner, type HubCheckout } from "./checkout.ts";
-export { prepareNewHubProposal, type PreparedHubProposal, type PrepareNewHubOptions } from "./prepare.ts";
+} from "./workspace/bootstrap.ts";
+export { checkoutHub, type GitRunner, type HubCheckout } from "./workspace/checkout.ts";
+export { prepareNewHubProposal, type PreparedHubProposal, type PrepareNewHubOptions } from "./authoring/prepare.ts";
 export {
   inspectHubProposal,
   type HubInspectedContent,
   type HubInspectionOptions,
   type HubLifecycleEntry,
   type HubProposalInspection,
-} from "./inspect.ts";
+} from "./review/inspect.ts";
 export {
   prepareRefreshHubProposal,
   type HubSupersession,
   type PreparedRefreshHubProposal,
   type PrepareRefreshHubOptions,
-} from "./refresh.ts";
-export { readHubProposalState, writeHubProposalState } from "./proposal-state.ts";
+} from "./authoring/refresh.ts";
+export { readHubProposalState, writeHubProposalState } from "./review/proposal-state.ts";
 export {
   submitHubProposal,
   type HubPublicationReceipt,
   type SubmissionGit,
   type SubmissionGitHub,
   type SubmitHubOptions,
-} from "./submit.ts";
+} from "./publication/submit.ts";
 export {
   beginHubAuthoringSession,
   finalizeHubAuthoringSession,
   readHubAuthoringSession,
   type BeginHubAuthoringOptions,
   type HubAuthoringSession,
-} from "./authoring-session.ts";
-export { admitPersistentLocalHub, type LocalHubGit } from "./local-hub.ts";
-export { acceptHubProposal, type AcceptHubOptions } from "./accept.ts";
-export { readActiveHubConcept, searchActiveHub, type HubQueryGit } from "./query.ts";
-export { listPendingHubProposals, selectPendingPrefix, type PendingHubProposal } from "./pending.ts";
+} from "./authoring/authoring-session.ts";
+export { admitPersistentLocalHub, type LocalHubGit } from "./workspace/local-hub.ts";
+export { acceptHubProposal, type AcceptHubOptions } from "./review/accept.ts";
+export { readActiveHubConcept, searchActiveHub, type HubQueryGit } from "./query/query.ts";
+export { listPendingHubProposals, selectPendingPrefix, type PendingHubProposal } from "./review/pending.ts";
 export {
   publishPendingHubProposals,
   type HubBatchPublicationReceipt,
   type PublishGitHub,
   type PublishHubOptions,
-} from "./publish.ts";
+} from "./publication/publish.ts";
 export {
   synchronizeLocalHub,
   type HubSynchronizationReceipt,
   type SynchronizeGit,
   type SynchronizeHubOptions,
-} from "./synchronize.ts";
-export { recognizePublishedProposals, stablePatchIdentity } from "./synchronization-recognition.ts";
+} from "./publication/synchronize.ts";
+export { recognizePublishedProposals, stablePatchIdentity } from "./publication/synchronization-recognition.ts";
 export {
   recoverHubSubmission,
   recoverSynchronizationTransaction,
   type HubSynchronizationRecovery,
-} from "./recovery.ts";
+} from "./publication/recovery.ts";
 export { executeHubCli } from "./cli.ts";
 export {
   callHubOkfTool,
   HUB_OKF_TOOLS,
   type HubOkfToolName,
   type HubToolActions,
-} from "./mcp-tools.ts";
-export { createHubRuntimeActions, tryCreateHubRuntimeActions } from "./runtime-actions.ts";
+} from "./mcp/mcp-tools.ts";
+export { createHubRuntimeActions, tryCreateHubRuntimeActions } from "./query/runtime-actions.ts";

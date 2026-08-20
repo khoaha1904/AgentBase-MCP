@@ -8,19 +8,19 @@
     "node": ">=24.12 <25"
   },
   "scripts": {
-    "spec:check": "node scripts/check-specs.mjs",
+    "spec:check": "node scripts/checks/check-specs.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "depcruise": "depcruise src --config .dependency-cruiser.cjs",
     "knip": "knip",
     "gitleaks": "gitleaks detect --no-git --redact --config .gitleaks.toml",
-    "test": "node scripts/run-tests.mjs",
+    "test": "node scripts/checks/run-tests.mjs",
     "test:code-intelligence": "node --test src/core/code-intelligence/contract.test.ts",
     "test:fake-provider": "node --test src/providers/fake-code-intelligence/fake-provider.test.ts",
     "test:foundation-demo": "node --test src/app/foundation-demo/run-demo.test.ts",
     "demo": "node src/cli.ts",
     "integration:codebase-memory": "node src/cli.ts codebase-memory:integration",
     "benchmark:codebase-memory": "node src/cli.ts codebase-memory:benchmark",
-    "benchmark:okf": "node scripts/benchmark-okf.mjs",
+    "benchmark:okf": "node scripts/benchmark/benchmark-okf.mjs",
     "check": "npm run spec:check && npm run typecheck && npm run depcruise && npm run knip && npm run gitleaks && npm test",
     "verify": "npm run check && git diff --check"
   },
