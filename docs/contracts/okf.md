@@ -83,6 +83,11 @@ Normative OKF source is pinned to commit
   `symbol`, `function`, `config-field` or `text`. Concept type names are not
   live-reference target kinds, and host-agent guidance enumerates the complete
   vocabulary.
+- **AB-CLAIM-005** — A claim observation may carry one optional non-current
+  `snapshot` only with exact source revision and RFC3339 observed time. It is
+  one scalar or single-line identifier of at most 256 UTF-8 bytes. Multiline,
+  oversized and obviously secret-like values fail validation; proposal review
+  remains the final sensitivity guard.
 - Live-claim IDs are bundle-unique and refresh cannot remove an accepted ID.
   A later reviewed proposal may move the same semantic reference while all
   protected knowledge and human guidance keep their normal lifecycle rules.
@@ -103,11 +108,13 @@ Normative OKF source is pinned to commit
 - **AB-SCHEMA-005, AB-SCHEMA-006** — Unknown OKF types/extensions remain valid
   and protected. The catalog is distinct from MCP input schemas and provider
   graph schemas; raw graph data is never copied wholesale into Hub.
-- **AB-SCHEMA-007** — The compatible vocabulary contains Repository, Domain,
-  Domain Entity, System, Software Component, Service, Server, API Surface, API
-  Endpoint, Event, Metric, Database Table, Queue, AWS Lambda, AWS SQS Queue,
-  Infrastructure Definition, Terraform Module, Deployment, Business Flow,
-  Cross-Repository Relationship, legacy Open Question and Maintainer Guidance.
+- **AB-SCHEMA-007** — Catalog 6.0 contains exactly 22 authoring roles:
+  Repository, Domain, Domain Entity, System, Software Component, Service,
+  Function, Server, API Surface, API Endpoint, Event, Metric, Database,
+  Database Table, Queue, Object Storage, Infrastructure Definition,
+  Infrastructure Module, Deployment, Business Flow, Cross-Repository
+  Relationship and Maintainer Guidance. Foreign types, including legacy Open
+  Question, remain readable through open-world OKF compatibility.
 - **AB-SCHEMA-008** — Selection recommends the smallest independently useful
   type supported by evidence. Concrete implementation detail remains inside its
   useful parent unless an independent contract, ownership, lifecycle, failure,
@@ -115,10 +122,9 @@ Normative OKF source is pinned to commit
 - **AB-SCHEMA-009** — Concrete concepts preserve provenance and important
   uncertainty. Cross-repository relationships need evidence for both endpoints
   and the relationship.
-- **AB-SCHEMA-010** — Current catalog `5.1.0` provides bounded investigation,
-  semantic metadata, relationship and optional-enrichment guidance. AWS Lambda,
-  Terraform and Business Flow guidance connects identity and infrastructure to
-  runtime and observable outcomes.
+- **AB-SCHEMA-010** — Current catalog `6.0.0` provides bounded investigation,
+  semantic metadata, relationship and optional-enrichment guidance without
+  provider or source-tool schema types.
 - **AB-SCHEMA-011** — Guidance distinguishes evidence-required metadata from
   optional enrichment; absent or contradictory evidence never authorizes an
   invented value.
@@ -127,10 +133,10 @@ Normative OKF source is pinned to commit
   is unique; every declared target exists and has a resolving relative or
   absolute bundle-relative Markdown link. A catalog-unknown relationship stays
   portable and is reported unjudged rather than rejected.
-- **AB-SCHEMA-013** — MCP can select and return complete guidance for only the
-  schemas matched by a bounded set of repository evidence signals in one
-  advisory call. Listing the whole catalog and reading each selected schema are
-  compatible fine-grained operations, not required authoring steps.
+- **AB-SCHEMA-013** — Initial Ingest requests complete guidance once with
+  bounded candidates and exact semantic/resource observations. Source-less
+  signals remain a legacy fine-grained/Refresh aid and are not accepted by the
+  new Initial Ingest preparation path.
 - **AB-SCHEMA-014** — MCP can validate up to 64 caller-supplied concepts, 256 KiB
   each and 4 MiB total, in one content-only bundle call. It reports per-concept
   draft/schema failures together with cross-document relationship failures and
@@ -156,7 +162,7 @@ Normative OKF source is pinned to commit
 - **AB-SCHEMA-019** — Newly authored known AgentBase schemas store only one
   canonical direction for `part-of`, `provides`, `consumes`, `depends-on`,
   `triggered-by`, `publishes-to`, `reads-from`, `writes-to`, `implemented-in`,
-  `declared-by` and `deployed-as`. MCP derives inbound navigation rather than
+  `declared-by`, `deployed-as` and `runs-on`. MCP derives inbound navigation rather than
   persisting inverse duplicates. Legacy and foreign predicates remain readable
   and unjudged.
 - **AB-SCHEMA-020** — Every new canonical relationship references one or more
@@ -169,9 +175,8 @@ Normative OKF source is pinned to commit
   no dependency on total Hub size and receives no unchanged concept body.
 - **AB-SCHEMA-022** — Architecture nodes and useful knowledge units are not
   forced into one technology-shaped granularity. Operationally independent
-  Lambda/workers remain concepts; implementation-only handlers stay in their
-  parent; a Server may link smaller evidenced capability concepts rather than
-  grow one unrelated document.
+  Functions remain concepts; implementation-only handlers stay in their
+  parent. Server means a compute host; evidenced workloads use `runs-on`.
 - **AB-SCHEMA-023** — A persisted concept identity is its normalized path
   relative to the OKF root with `.md` removed. Changed concepts and unchanged
   target summaries MUST use that identity, and validation rejects ephemeral
@@ -197,6 +202,44 @@ Normative OKF source is pinned to commit
   specialization instead of its fallback for the same entity. Distinct evidence
   may retain both recommendations for separate useful instances; schemas are
   not merged onto one instance.
-- **AB-SCHEMA-029** — Catalog 5.1 is additive over 5.0. Existing known concepts
-  require no migration, and unknown valid OKF types remain portable, protected
-  and semantically unjudged by AgentBase.
+- **AB-SCHEMA-029** — Catalog 6.0 is a clean authoring cutover because no
+  concepts were published under vendor-specific types. Unknown valid OKF types
+  remain portable, protected and semantically unjudged by AgentBase.
+- **AB-SCHEMA-030** — Catalog roles describe provider-neutral architecture;
+  provider, product, source tool and source resource type are technology
+  metadata attached to evidence-backed recommendations.
+- **AB-SCHEMA-031** — One bounded guidance call requires each candidate's stable
+  identity basis, independent query/link value and exact owned observations;
+  caller-supplied provider/product/schema fields and unknown fields are rejected.
+- **AB-SCHEMA-032** — Terraform Detector v1 and AWS Profile v1 are independently
+  versioned data contracts, not cloud SDKs or new concept taxonomies.
+- **AB-SCHEMA-033** — AWS `instance`, Lambda function, SQS queue, S3 bucket, RDS
+  instance and DynamoDB table map deterministically to Server, Function, Queue,
+  Object Storage, Database and Database Table. Indirection or unsupported input
+  remains ambiguous/unsupported with limitations rather than guessed metadata.
+- **AB-SCHEMA-034** — Guidance returns catalog/detector/provider-profile
+  versions, exact matched and missing evidence, technology metadata,
+  limitations and the complete selected generic schema.
+- **AB-SCHEMA-035** — New AgentBase drafts using `AWS Lambda`, `AWS SQS Queue` or
+  `Terraform Module` fail with Function, Queue or Infrastructure Module
+  replacement guidance. Arbitrary foreign types remain readable and protected.
+
+## Single-repository Initial Ingest
+
+- **AB-INGEST-001, AB-INGEST-002** — Ingest binds one explicit authorized local
+  root, resolves its durable Hub Repository identity, reads at most five/256 KiB
+  introductory documents and requires explicit primary-Domain confirmation
+  after showing evidence and mismatches.
+- **AB-INGEST-003, AB-INGEST-004** — The host skill runs Preflight, Discover,
+  Investigate, Author and Validate. Code Graph is a private map; promoted claims
+  and relations resolve to exact source, and at most one validation repair runs.
+- **AB-INGEST-005, AB-INGEST-006** — Every candidate needs stable identity and
+  independent query/link value. One bounded Hub match pass reuses identity only
+  from strong evidence; name/prose similarity never auto-merges.
+- **AB-INGEST-007** — Limited graph/language evidence may produce a valid
+  explicitly partial proposal with concrete limitations. Source mutation,
+  cleanup uncertainty or integrity failure is Incomplete and exposes no
+  acceptable proposal.
+- **AB-INGEST-008, AB-INGEST-009** — No-change is success; change stops at one
+  inspectable proposal preview. The agent-operated workflow never calls a
+  provider CLI, clones another repository, Accepts or Publishes.

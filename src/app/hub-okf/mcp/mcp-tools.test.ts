@@ -9,6 +9,7 @@ function actions(events: string[]): HubToolActions {
     async configure(input) { events.push(`configure:${input.mode}`); return input; },
     async previewBootstrap(url, mode) { events.push(`preview:${url}:${mode}`); return { mode }; },
     async bootstrap(url, mode) { events.push(`bootstrap:${url}:${mode}`); return { mode }; },
+    async preflight(source) { events.push(`preflight:${source}`); return { kind: "new" }; },
     async prepare(input) {
       events.push(`prepare:${input.mode}:${input.sourceRepository}:${input.confirmedDomain?.identity ?? "none"}`);
       return { id: "p1" };
@@ -36,7 +37,7 @@ test("[AB-HUB-001..003] Hub MCP schemas contain no authority or credential overr
   for (const forbidden of ["token", "remote", "target", "force", "merge"]) assert.doesNotMatch(schemas, new RegExp(`\"${forbidden}\"`));
   assert.deepEqual(HUB_OKF_TOOLS.map((tool) => tool.name), [
     "get_hub_status", "configure_hub", "preview_hub_bootstrap", "bootstrap_hub",
-    "prepare_hub_okf", "finalize_hub_okf_proposal", "inspect_hub_okf_proposal",
+    "preflight_hub_ingest", "prepare_hub_okf", "finalize_hub_okf_proposal", "inspect_hub_okf_proposal",
     "accept_hub_okf_proposal", "search_hub_okf", "traverse_hub_okf", "read_hub_okf_concept",
     "read_hub_live_evidence",
     "list_hub_questions", "answer_hub_question",
@@ -67,7 +68,14 @@ test("[AB-LOCAL-HUB-002][AB-LOCAL-HUB-006] MCP routes explicit prepare and batch
   const prepared = await callHubOkfTool("prepare_hub_okf", {
     mode: "new", source_repository: "/source",
     evidence_digest: `sha256:${"a".repeat(64)}`,
-    subject_directory: "repositories/acme", signals: ["repository"],
+    subject_directory: "repositories/acme",
+    guidance_request: {
+      candidates: [{ id: "repository", identity_hint: "source", identity_basis: "checkout root",
+        query_value: "repository", evidence_ids: ["readme"] }],
+      semantic_observations: [{ id: "readme", candidate_id: "repository", role: "documentation",
+        signal: "repository", source: { path: "README.md", start_line: 1, end_line: 1 } }],
+      resource_observations: [],
+    },
     confirmed_domain: { identity: "domains/commerce", title: "Commerce" },
   }, current);
   const submitted = await callHubOkfTool("submit_hub_okf_proposals", {
@@ -94,10 +102,11 @@ test("[AB-HUB-SETUP-002][AB-HUB-SETUP-003][AB-HUB-SETUP-010] MCP routes explicit
   const events: string[] = [], current = actions(events);
   await callHubOkfTool("get_hub_status", {}, current);
   await callHubOkfTool("configure_hub", { mode: "new" }, current);
+  await callHubOkfTool("preflight_hub_ingest", { source_repository: "/source" }, current);
   await callHubOkfTool("preview_hub_bootstrap", {
     repository_url: "https://github.com/acme/Hub", mode: "base-to-main-knowledge-pr",
   }, current);
-  assert.deepEqual(events, ["status", "configure:new", "preview:https://github.com/acme/Hub:base-to-main-knowledge-pr"]);
+  assert.deepEqual(events, ["status", "configure:new", "preflight:/source", "preview:https://github.com/acme/Hub:base-to-main-knowledge-pr"]);
   const invalid = await callHubOkfTool("configure_hub", { mode: "existing" }, current);
   assert.equal(invalid.isError, true);
 });

@@ -44,6 +44,15 @@ export const HUB_OKF_TOOLS = [
     },
   },
   {
+    name: "preflight_hub_ingest",
+    description: "Resolve one local checkout against canonical Hub Repository identities and list bounded Domain summaries without creating a proposal.",
+    inputSchema: {
+      type: "object",
+      properties: { source_repository: { type: "string", minLength: 1 } },
+      required: ["source_repository"], additionalProperties: false,
+    },
+  },
+  {
     name: "prepare_hub_okf",
     description: "Prepare a local new or refresh AgentBase Hub OKF proposal without publishing.",
     inputSchema: {
@@ -66,9 +75,28 @@ export const HUB_OKF_TOOLS = [
           },
           required: ["identity", "title"], additionalProperties: false,
         },
-        signals: { type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: 64 },
+        signals: {
+          type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: 64,
+          description: "Legacy Refresh-only semantic signals.",
+        },
+        guidance_request: {
+          type: "object",
+          description: "Required for new Initial Ingest; bounded source-backed candidates and observations.",
+          properties: {
+            candidates: { type: "array", minItems: 1, maxItems: 64, items: { type: "object" } },
+            semantic_observations: { type: "array", maxItems: 64, items: { type: "object" } },
+            resource_observations: { type: "array", maxItems: 64, items: { type: "object" } },
+          },
+          required: ["candidates", "semantic_observations", "resource_observations"], additionalProperties: false,
+        },
+        coverage: {
+          type: "object", properties: {
+            partial: { type: "boolean" },
+            limitations: { type: "array", maxItems: 64, items: { type: "string", minLength: 1, maxLength: 512 } },
+          }, required: ["partial", "limitations"], additionalProperties: false,
+        },
       },
-      required: ["mode", "source_repository", "evidence_digest", "subject_directory", "signals"],
+      required: ["mode", "source_repository", "evidence_digest", "subject_directory"],
       additionalProperties: false,
     },
   },

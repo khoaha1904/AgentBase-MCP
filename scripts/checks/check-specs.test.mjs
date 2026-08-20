@@ -36,10 +36,11 @@ function fixture() {
     ...ids("AB-MVP", 7), ...ids("AB-GRAPH", 14), ...ids("AB-REFRESH", 12), ...ids("AB-MCP", 14),
   ]));
   write(root, "docs/contracts/okf.md", lines([
-    ...ids("AB-MVP", 16, 8), ...ids("AB-OBS", 7), ...ids("AB-SCHEMA", 29),
+    ...ids("AB-MVP", 16, 8), ...ids("AB-OBS", 7), ...ids("AB-SCHEMA", 35),
+    ...ids("AB-CLAIM", 5), ...ids("AB-INGEST", 9),
   ]));
   write(root, "docs/contracts/hub.md", lines([
-    ...ids("AB-LOCAL-HUB", 13), "AB-QUERY-001", ...ids("AB-HUB-SETUP", 17),
+    ...ids("AB-LOCAL-HUB", 16), "AB-QUERY-001", ...ids("AB-HUB-SETUP", 17),
   ]));
   write(root, "docs/contracts/installation.md", lines(ids("AB-INSTALL", 24)));
   write(root, "docs/contracts/benchmark.md", lines(ids("AB-BENCH", 38)));
@@ -127,19 +128,23 @@ test("[AB-MVP/GRAPH/REFRESH/MCP] enforces the consolidated Code Graph contract",
   } finally { current.cleanup(); }
 });
 
-test("[AB-MVP/OBS/SCHEMA] enforces the consolidated evidence and OKF contract", () => {
+test("[AB-MVP/OBS/SCHEMA/CLAIM/INGEST] enforces the consolidated evidence and OKF contract", () => {
   const current = fixture();
   try {
     const file = path.join(current.root, "docs", "contracts", "okf.md");
     let source = fs.readFileSync(file, "utf8");
     source = source.replace("AB-MVP-023", "missing-okf")
       .replace("AB-OBS-007", "missing-observation")
-      .replace("AB-SCHEMA-029", "missing-schema");
+      .replace("AB-SCHEMA-035", "missing-schema")
+      .replace("AB-CLAIM-005", "missing-claim")
+      .replace("AB-INGEST-009", "missing-ingest");
     fs.writeFileSync(file, source);
     const result = codes(checkSpecifications(current.root));
     assert.ok(result.includes("SPEC-MVP-ID-MISSING"));
     assert.ok(result.includes("SPEC-OBS-ID-MISSING"));
     assert.ok(result.includes("SPEC-SCHEMA-ID-MISSING"));
+    assert.ok(result.includes("SPEC-CLAIM-ID-MISSING"));
+    assert.ok(result.includes("SPEC-INGEST-ID-MISSING"));
   } finally { current.cleanup(); }
 });
 

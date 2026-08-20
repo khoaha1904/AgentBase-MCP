@@ -54,6 +54,11 @@ queries and ordinary coding never create Hub state, commits or publication.
   existing root or category `index.md`, but every accepted nonblank line remains
   byte-exact and ordered. Renaming the Hub/category heading, deleting, replacing
   or reordering existing navigation fails before proposal acceptance.
+- **AB-LOCAL-HUB-016** — Hub assigns one canonical Repository ID once and stores
+  strong remote/forge/lineage aliases in the Repository concept. Checkout path,
+  display name and current remote are hints, not regenerated identity. One
+  strong match survives rename/organization transfer; shared fork/mirror
+  lineage is ambiguous and requires owner choice.
 - **AB-QUESTION-001, AB-QUESTION-005** — Finalization may attach bounded
   governed-question declarations to the reviewed proposal digest. Acceptance
   deterministically creates or merges private subject/property records with

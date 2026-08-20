@@ -3,7 +3,13 @@ import { OKF_CONCEPT_SCHEMAS, type OkfConceptSchema } from "./definitions/concep
 
 export type { OkfConceptSchema } from "./definitions/concepts.ts";
 
-export const AGENTBASE_OKF_SCHEMA_CATALOG_VERSION = "5.1.0" as const;
+export const AGENTBASE_OKF_SCHEMA_CATALOG_VERSION = "6.0.0" as const;
+
+export const RETIRED_AGENTBASE_SCHEMA_TYPES: ReadonlyMap<string, string> = new Map([
+  ["AWS Lambda", "Function"],
+  ["AWS SQS Queue", "Queue"],
+  ["Terraform Module", "Infrastructure Module"],
+] as const);
 
 export type OkfSchemaSelection = Readonly<{
   type: string;
@@ -61,6 +67,8 @@ export function selectOkfConceptSchemas(signals: readonly string[]): readonly Ok
 }
 
 export function validateConceptAgainstSchema(concept: ConceptDocument): readonly string[] {
+  const replacement = RETIRED_AGENTBASE_SCHEMA_TYPES.get(concept.type);
+  if (replacement) return [`${concept.path}: ${concept.type} is retired for AgentBase authoring; use ${replacement}`];
   const selected = getOkfConceptSchema(concept.type);
   if (!selected) return [];
   return selected.requiredFrontmatter.flatMap((field) => concept.frontmatter[field] === undefined

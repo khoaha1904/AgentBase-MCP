@@ -33,15 +33,16 @@
 - Group related CRUD/HTTP operations into one API Surface with a Markdown
   operations table. Split an API Endpoint only for an independent consumer,
   owner, version, policy, SLA or lifecycle boundary.
-- Keep an implementation-only Lambda or handler inside its component/API/flow.
-  Split it only for independent triggers, scaling, permissions, failure or
-  operational behavior.
+- Keep an implementation-only function or handler inside its component/API/flow.
+  Split a Function only for independent triggers, deployment, scaling,
+  permissions, failure or operational behavior. Provider/product belongs in
+  metadata and evidence, never in the schema type.
 - Treat an architecture node and a Markdown knowledge unit separately. A
-  Server remains a component boundary but may link independently useful
-  capability or worker concepts instead of accumulating unrelated contracts,
-  flows and operations in one large document.
+  Server is a compute host, not an application component; workloads connect to
+  it with `runs-on` only when placement evidence exists.
 - Distinguish desired-state Infrastructure Definition, genuinely reusable
-  Terraform Module and externally evidenced Deployment. Source declarations do
+  Infrastructure Module and externally evidenced Deployment. Terraform remains
+  source-tool metadata. Source declarations do
   not prove an account, region, ARN or deployed instance.
 
 Unknown OKF types and extension fields are valid. Preserve their relationship

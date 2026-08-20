@@ -92,12 +92,18 @@ export function discoverRepositorySourceState(repositoryRoot: string, capturedAt
   const root = topLevel.ok ? fs.realpathSync(topLevel.stdout.trim()) : absoluteRoot;
   if (root !== absoluteRoot) limitations.push("selected path was normalized to its Git worktree root");
   const displayName = path.basename(root);
+  const remote = git(root, ["remote", "get-url", "origin"]);
+  const roots = git(root, ["rev-list", "--max-parents=0", "HEAD"]);
   const commitResult = git(root, ["rev-parse", "HEAD"]);
   if (!commitResult.ok) limitations.push("Git commit was unavailable; repository identity is local to this checkout path");
   const entries = dirtyEntries(root);
   return {
     repositoryId: repositoryIdentity(root, displayName),
     displayName,
+    identityHints: {
+      remotes: remote.ok && remote.stdout.trim() ? [normalizedRemote(remote.stdout)] : [],
+      rootCommits: roots.ok ? [...new Set(roots.stdout.trim().split(/\s+/).filter(Boolean))].sort() : [],
+    },
     commit: commitResult.ok ? commitResult.stdout.trim() : null,
     dirty: entries.length > 0,
     dirtyDigest: entries.length ? dirtyDigest(root, entries) : null,

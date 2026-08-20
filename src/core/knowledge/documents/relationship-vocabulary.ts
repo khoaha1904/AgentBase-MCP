@@ -10,6 +10,7 @@ export const CANONICAL_RELATIONSHIP_KINDS = [
   "implemented-in",
   "declared-by",
   "deployed-as",
+  "runs-on",
 ] as const;
 
 export type CanonicalRelationshipKind = typeof CANONICAL_RELATIONSHIP_KINDS[number];

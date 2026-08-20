@@ -9,11 +9,6 @@ export const GOVERNANCE_SCHEMAS: readonly OkfConceptSchema[] = [
     ["Repository", "System", "Software Component", "Service", "API Surface", "Event", "Business Flow"],
   ),
   defineSchema(
-    "Open Question", "Legacy portable uncertainty concept retained for compatibility", "questions/<slug>.md", 0,
-    [], ["specific unresolved question"], ["# Question", "# Why It Matters", "# Evidence Needed"],
-    ["Repository", "System", "Software Component", "Service", "Business Flow"],
-  ),
-  defineSchema(
     "Maintainer Guidance", "Durable human correction, defer or authoring instruction", "guidance/<slug>.md", 10,
     ["maintainer guidance", "correction", "defer", "reopen"], ["explicit maintainer instruction"],
     ["# Guidance", "# Scope"], ["Repository", "System", "Software Component", "Service", "Business Flow"],

@@ -35,6 +35,7 @@ export type PrepareNewHubOptions = Readonly<{
   confirmedDomain?: ConfirmedDomain;
   evidenceDigest: string;
   signals: readonly string[];
+  selectedSchemas?: readonly string[];
   createdAt: string;
 }>;
 export type PrepareNewLocalHubOptions = Omit<PrepareNewHubOptions, "hub"> & Readonly<{ localHubId: string }>;
@@ -69,7 +70,9 @@ export function prepareNewHubProposal(
 ): Readonly<{ proposal: AnyHubProposal; diff: ProposalDiff; bundleRoot: string }> {
   safeSubject(options.subjectDirectory);
   if (subjectExists(options.hubBundleRoot, options.subjectDirectory)) throw new Error("new Hub subject already exists; use refresh");
-  const selected = selectOkfConceptSchemas(options.signals).map((item) => item.type);
+  const selected = options.selectedSchemas
+    ? [...new Set(options.selectedSchemas)].sort()
+    : selectOkfConceptSchemas(options.signals).map((item) => item.type);
   const authored = loadOkfBundle(options.authoredBundleRoot, { requireAgentBaseRootIndex: true });
   const base = loadOkfBundle(options.hubBundleRoot);
   const liveClaimFailures = validateBundleLiveClaims(authored.concepts.values());

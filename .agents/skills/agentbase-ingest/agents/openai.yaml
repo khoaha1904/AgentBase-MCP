@@ -1,0 +1,4 @@
+interface:
+  display_name: "AgentBase Ingest"
+  short_description: "Create a reviewable OKF draft from one repo"
+  default_prompt: "Use $agentbase-ingest to ingest this local repository into a reviewable AgentBase OKF proposal."

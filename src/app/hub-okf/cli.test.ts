@@ -10,6 +10,7 @@ function actions(events: string[]): HubToolActions {
     async configure(input) { events.push(`configure:${input.mode}`); return input; },
     async previewBootstrap(url, mode) { events.push(`preview:${url}:${mode}`); return { mode }; },
     async bootstrap(url, mode) { events.push(`bootstrap:${url}:${mode}`); return { mode }; },
+    async preflight(source) { events.push(`preflight:${source}`); return { kind: "new" }; },
     async prepare(input) { events.push(`prepare:${input.mode}`); return { id: "p1" }; },
     async finalize(id, questions = []) { events.push(`finalize:${id}:${questions.length}`); return { id: "p1" }; },
     async inspect(id) { events.push(`inspect:${id}`); return { id }; },
@@ -63,6 +64,22 @@ test("[AB-LOCAL-HUB-002][AB-LOCAL-HUB-004] CLI routes local accept and query act
     'search:orders:{"domain":"domains/commerce","types":["System","Component"],"limit":3}',
     'traverse:systems/orders:{"direction":"both","maxDepth":2}',
   ]);
+});
+
+test("[AB-INGEST-003][AB-SCHEMA-013] CLI keeps evidence-bearing Initial Ingest on the skill workflow", async () => {
+  const events: string[] = [], errors: string[] = [];
+  assert.equal(await executeHubCli([
+    "prepare", "--mode", "new", "--repo", "/source", "--evidence", `sha256:${"a".repeat(64)}`,
+    "--subject", "repositories/source", "--signals", "Repository",
+  ], actions(events), () => {}, errors.push.bind(errors)), 1);
+  assert.deepEqual(events, []);
+  assert.match(errors.join(""), /Initial Ingest through the agentbase-ingest skill/);
+
+  assert.equal(await executeHubCli([
+    "prepare", "--mode", "refresh", "--repo", "/source", "--evidence", `sha256:${"a".repeat(64)}`,
+    "--subject", "repositories/source", "--signals", "Repository",
+  ], actions(events), () => {}, errors.push.bind(errors)), 0);
+  assert.deepEqual(events, ["prepare:refresh"]);
 });
 
 test("[AB-HUB-001][AB-HUB-002][AB-HUB-011] CLI rejects authority and credential flags", async () => {

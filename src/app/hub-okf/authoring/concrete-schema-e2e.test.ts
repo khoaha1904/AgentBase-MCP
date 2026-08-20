@@ -25,7 +25,7 @@ test("[AB-SCHEMA-007] every initial concrete schema has a validation/selection f
     catalogVersion: string;
     cases: readonly CatalogCase[];
   };
-  assert.equal(fixture.catalogVersion, "5.1.0");
+  assert.equal(fixture.catalogVersion, "6.0.0");
   assert.deepEqual(
     fixture.cases.map((item) => item.type),
     listOkfConceptSchemas().filter((item) => item.selectWhen.length).map((item) => item.type),
@@ -36,11 +36,11 @@ test("[AB-SCHEMA-007] every initial concrete schema has a validation/selection f
   }
 });
 
-test("[AB-SCHEMA-002][AB-SCHEMA-003][AB-SCHEMA-008][SC-005] AWS/server rehearsal is sparse and supports repeated types", () => {
+test("[AB-SCHEMA-002][AB-SCHEMA-003][AB-SCHEMA-008][SC-005] provider-neutral runtime rehearsal is sparse and supports repeated types", () => {
   const fixture = JSON.parse(fs.readFileSync(path.join(fixtureRoot, "aws-server-evidence.json"), "utf8")) as EvidenceFixture;
   const selected = selectOkfConceptSchemas(fixture.signals).map((item) => item.type);
-  assert.deepEqual(selected, ["AWS Lambda", "AWS SQS Queue", "Server"]);
-  assert.equal(fixture.instances.filter((item) => item.type === "AWS Lambda").length, 2);
+  assert.deepEqual(selected, ["Function", "Server", "Queue"]);
+  assert.equal(fixture.instances.filter((item) => item.type === "Function").length, 2);
   for (const instance of fixture.instances) {
     assert.ok(selected.includes(instance.type));
     const concept = parseConceptDocument(`repositories/orders/${instance.slug}.md`, [
@@ -62,5 +62,5 @@ test("[AB-SCHEMA-002][AB-SCHEMA-003][AB-SCHEMA-008][SC-005] AWS/server rehearsal
     assert.deepEqual(validateConceptAgainstSchema(concept), []);
   }
   for (const unused of fixture.mustNotCreate) assert.equal(fixture.instances.some((item) => item.type === unused), false);
-  assert.equal(selected.includes("Queue"), false, "specific AWS SQS Queue shadows generic Queue");
+  assert.equal(selected.includes("Queue"), true);
 });

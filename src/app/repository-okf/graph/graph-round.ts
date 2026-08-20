@@ -51,7 +51,7 @@ export type GraphRoundDiagnostics = Readonly<{
   sourceUnchanged: boolean;
   processCleanup: ProviderCleanup["status"];
   preparation: GraphPreparationDecision;
-  outcome: "complete";
+  outcome: "complete" | "partial";
   limitations: readonly string[];
 }>;
 
@@ -237,7 +237,7 @@ export async function runGraphRound(request: GraphRoundRequest, dependencies: Gr
       sourceUnchanged: true,
       processCleanup: cleanup.status,
       preparation,
-      outcome: "complete",
+      outcome: evidence.queries.some((query) => query.completeness === "partial") ? "partial" : "complete",
       limitations,
     },
   };

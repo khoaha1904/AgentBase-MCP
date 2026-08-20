@@ -35,3 +35,16 @@ test("[AB-SCHEMA-025][AB-CLAIM-004][AB-MVP-023] OKF skill distinguishes instance
   assert.match(guidance, /target\.kind[^\n]+exactly one of/);
   assert.match(guidance, /only the root `index\.md`[^\n]+frontmatter/i);
 });
+
+test("[AB-INGEST-001..009] Initial Ingest skill is bounded, evidence-bearing and stops before lifecycle actions", () => {
+  const directory = path.join(root, ".agents", "skills", "agentbase-ingest");
+  const skill = fs.readFileSync(path.join(directory, "SKILL.md"), "utf8");
+  const preflight = fs.readFileSync(path.join(directory, "references", "preflight.md"), "utf8");
+  for (const required of [
+    "preflight_hub_ingest", "stable identity", "independent query/link value",
+    "get_okf_authoring_schemas", "prepare_hub_okf", "exactly once", "at most one repair",
+    "partial-coverage", "Stop before Accept or Publish",
+  ]) assert.equal(`${skill}\n${preflight}`.includes(required), true, `missing ${required}`);
+  assert.match(preflight, /five files and 256 KiB/);
+  assert.match(skill, /Do not call a provider CLI/);
+});

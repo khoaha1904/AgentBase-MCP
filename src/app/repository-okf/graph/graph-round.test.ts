@@ -35,7 +35,7 @@ function engine(invocationMode: EngineIdentity["invocationMode"]): EngineIdentit
   };
 }
 
-function taskProvider(events: string[]): TaskContextProvider {
+function taskProvider(events: string[], completeness: "complete" | "partial" = "complete"): TaskContextProvider {
   return {
     async repositoryOverview(repositoryId) {
       events.push("overview");
@@ -48,8 +48,8 @@ function taskProvider(events: string[]): TaskContextProvider {
           packages: ["app", "catalog", "workspace"],
           entryPoints: [],
           boundaries: [{ from: "app", to: "catalog", calls: 1 }],
-          completeness: "complete",
-          limitations: [],
+          completeness,
+          limitations: completeness === "partial" ? ["language coverage is partial"] : [],
         },
       };
     },
@@ -73,8 +73,8 @@ function taskProvider(events: string[]): TaskContextProvider {
             sources: [{ path: "src/workspace/paths.ts", startLine: 1, endLine: 1 }], providerReferences: [],
           },
         ],
-        completeness: "complete",
-        limitations: [],
+        completeness,
+        limitations: completeness === "partial" ? ["language coverage is partial"] : [],
       };
     },
   };
@@ -83,9 +83,10 @@ function taskProvider(events: string[]): TaskContextProvider {
 function managed(
   events: string[],
   cleanup: ProviderCleanup = { status: "clean", pid: 42, graceful: true, forced: false, stderrBytes: 0 },
+  completeness: "complete" | "partial" = "complete",
 ): ManagedCodebaseMemoryProvider {
   return {
-    provider: taskProvider(events),
+    provider: taskProvider(events, completeness),
     identity: engine("scoped-session"),
     transport: "scoped-session",
     async indexRepository() { events.push("index"); },
@@ -128,6 +129,19 @@ test("[AB-GRAPH-002][AB-GRAPH-006][AB-GRAPH-010] one graph round emits complete 
   } finally {
     current.cleanup();
   }
+});
+
+test("[AB-INGEST-007] partial graph coverage preserves exact evidence and limitations", async () => {
+  const current = fixture();
+  try {
+    const result = await runGraphRound({ repositoryRoot: current.root, query, transport: "scoped-session" }, {
+      createProvider: async () => managed([], undefined, "partial"),
+      now: clock(),
+    });
+    assert.equal(result.diagnostics.outcome, "partial");
+    assert.deepEqual(result.diagnostics.limitations, ["language coverage is partial"]);
+    assert.ok(result.evidence.queries.some((item) => item.completeness === "partial"));
+  } finally { current.cleanup(); }
 });
 
 test("[AB-GRAPH-009][AB-GRAPH-011][AB-GRAPH-012] mutation and cleanup failure reject the whole round after close", async () => {

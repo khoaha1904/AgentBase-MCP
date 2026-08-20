@@ -20,6 +20,7 @@ request.
 
 ```text
 source repository
+  -> resolve canonical Repository and confirm one primary Domain
   -> build or reuse private Code Graph
   -> agent investigates graph and authorized source evidence
   -> normalize bounded provenance-bearing observations
@@ -51,11 +52,12 @@ AgentBase targets Google OKF v0.2 at pinned source commit
 An OKF bundle is linked Markdown with YAML frontmatter, bundle-relative concept
 IDs and reserved index/log rules. Conformance does not prove semantic truth.
 
-AgentBase's versioned catalog supplies concrete software, AWS, Terraform,
-business and guidance types, with legacy question compatibility. Selection is
-evidence-driven and sparse; unknown valid OKF types remain readable and
-protected. Missing evidence becomes a limitation or a separately surfaced
-unresolved item, never an invented field.
+AgentBase catalog 6.0 supplies provider-neutral software, data, infrastructure,
+business and guidance roles. Versioned Terraform detection and AWS mapping
+profiles attach technology metadata without multiplying schema types per cloud.
+Selection is evidence-driven and sparse; unknown valid OKF types remain
+readable and protected. Missing evidence becomes a limitation or a governed
+Question, never an invented field.
 
 A **Concept Schema** is one reusable released catalog definition. A **Concept
 Instance** is one concrete provenance-bearing Hub document created from
@@ -100,15 +102,12 @@ first bootstrap into a user-created empty repository under a reviewed mode.
 - A complete universal ontology or one file/directory per schema.
 - Model SDKs, model credential storage or real model calls in canonical tests.
 
-## Future direction: governed unresolved questions
+## Future direction: Domain Enrichment
 
-This is recorded product intent, not current behavior or an accepted storage/
-permission contract. When an authoring agent cannot establish a fact, a future
-AgentBase workflow should retain a structured unresolved question with candidate
-answers (possibly empty), evidence still needed and resolution state. AgentBase
-skills will use the `abs-*` prefix; a future `/abs-questions` flow should let a
-human list, answer, reject or enrich pending questions and then propose bounded
-OKF updates without silently changing accepted knowledge.
+Initial Ingest stays inside one repository and records unresolved evidence as
+limitations or governed Questions. A later Domain Enrichment workflow may
+review several already-published repositories together, answer Questions and
+propose cross-repository relationships without interrupting each Ingest.
 
 Some questions may identify external evidence that could resolve repository or
 cross-repository resource identity, such as AWS account, region, deployed name

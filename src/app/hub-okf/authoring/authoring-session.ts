@@ -3,7 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 
 import type { AnyHubProposal, HubIdentity } from "../../../core/hub/index.ts";
-import { loadOkfBundle, normalizeConfirmedDomain, readLiveClaims, type ConfirmedDomain } from "../../../core/knowledge/index.ts";
+import {
+  loadOkfBundle, normalizeConfirmedDomain, readLiveClaims,
+  type ConfirmedDomain, type OkfAuthoringGuidance,
+} from "../../../core/knowledge/index.ts";
 import { inspectHubProposal, type HubLifecycleEntry, type HubProposalInspection } from "../review/inspect.ts";
 import { prepareNewHubProposal } from "./prepare.ts";
 import { prepareRefreshHubProposal, type HubSupersession } from "./refresh.ts";
@@ -23,6 +26,8 @@ export type HubAuthoringSession = Readonly<{
   confirmedDomain?: ConfirmedDomain;
   signals: readonly string[];
   selectedSchemas: readonly string[];
+  guidance?: OkfAuthoringGuidance;
+  coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
   root: string;
   bundleRoot: string;
   baseRoot: string;
@@ -44,6 +49,8 @@ export type BeginHubAuthoringOptions = Readonly<{
   confirmedDomain?: ConfirmedDomain;
   signals: readonly string[];
   selectedSchemas: readonly string[];
+  guidance?: OkfAuthoringGuidance;
+  coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
   createdAt: string;
   supersessions?: readonly HubSupersession[];
 }>;
@@ -70,6 +77,9 @@ function copyCheckout(source: string, target: string): void {
 export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): HubAuthoringSession {
   const authority = options.hub?.repository ?? options.localHubId;
   if (!authority || (!options.hub && !/^[a-f0-9]{24}$/.test(options.localHubId ?? ""))) throw new Error("Hub authoring authority is invalid");
+  if (options.coverage && options.coverage.partial !== (options.coverage.limitations.length > 0)) {
+    throw new Error("Hub authoring coverage is inconsistent");
+  }
   const seed = [options.mode, authority, options.baseCommit, options.sourceRepositoryId,
     options.evidenceDigest, options.subjectDirectory, options.confirmedDomain?.identity ?? "",
     options.confirmedDomain?.title ?? ""].join("\0");
@@ -92,6 +102,8 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
     ...(options.confirmedDomain ? { confirmedDomain: options.confirmedDomain } : {}),
     signals: [...options.signals],
     selectedSchemas: [...options.selectedSchemas],
+    ...(options.guidance ? { guidance: options.guidance } : {}),
+    ...(options.coverage ? { coverage: options.coverage } : {}),
     root,
     bundleRoot,
     baseRoot,
@@ -147,6 +159,7 @@ export function finalizeHubAuthoringSession(
     subjectDirectory: session.subjectDirectory,
     evidenceDigest: session.evidenceDigest,
     signals: session.signals,
+    selectedSchemas: session.selectedSchemas,
     ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),
     createdAt: session.createdAt,
   };
@@ -176,11 +189,14 @@ export function finalizeHubAuthoringSession(
   const claims = [...loadOkfBundle(finalized.bundleRoot).concepts.values()].flatMap((concept) => readLiveClaims(concept));
   const declarations = validateQuestionDeclarations(questions, claims, session.sourceRepositoryId);
   const bound = bindQuestionDeclarations(staging, finalized.proposal, inspection, declarations, session.createdAt, claims);
+  const reviewed = session.coverage
+    ? { proposal: bound.proposal, inspection: { ...bound.inspection, coverage: session.coverage } }
+    : bound;
   fs.cpSync(session.baseRoot, path.join(staging, "base"), { recursive: true, errorOnExist: true, force: false });
-  fs.writeFileSync(path.join(staging, "inspection.json"), `${JSON.stringify(bound.inspection, null, 2)}\n`, { mode: 0o600 });
+  fs.writeFileSync(path.join(staging, "inspection.json"), `${JSON.stringify(reviewed.inspection, null, 2)}\n`, { mode: 0o600 });
   fs.writeFileSync(path.join(staging, "runtime.json"), `${JSON.stringify({ checkoutRoot: session.checkoutRoot })}\n`, { mode: 0o600 });
-  const proposalRoot = path.join(path.resolve(stateRoot), "proposals", bound.proposal.id);
+  const proposalRoot = path.join(path.resolve(stateRoot), "proposals", reviewed.proposal.id);
   if (fs.existsSync(proposalRoot)) throw new Error("finalized Hub proposal already exists");
   fs.renameSync(staging, proposalRoot);
-  return bound;
+  return reviewed;
 }

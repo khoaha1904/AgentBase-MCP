@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { selectOkfConceptSchemas } from "../../../core/knowledge/index.ts";
+import { getOkfAuthoringGuidance, selectOkfConceptSchemas } from "../../../core/knowledge/index.ts";
 import { GitHubHubApi } from "../../../providers/github-hub/index.ts";
 import { discoverRepositorySourceState } from "../../repository-okf/index.ts";
 import { beginHubAuthoringSession, finalizeHubAuthoringSession } from "../authoring/authoring-session.ts";
@@ -11,7 +11,14 @@ import { resolveHubConfiguration, type OptionalHubConfiguration } from "../confi
 import { admitPersistentLocalHub } from "../workspace/local-hub.ts";
 import type { HubToolActions } from "../mcp/mcp-tools.ts";
 import { recoverSynchronizationTransaction } from "../publication/recovery.ts";
-import { buildActiveHubContinuity, readActiveHubConcept, readActiveHubLiveEvidence, searchActiveHub, traverseActiveHub } from "./query.ts";
+import {
+  buildActiveHubContinuity,
+  inspectInitialIngestHubContext,
+  readActiveHubConcept,
+  readActiveHubLiveEvidence,
+  searchActiveHub,
+  traverseActiveHub,
+} from "./query.ts";
 import { listPendingHubProposals } from "../review/pending.ts";
 import { publishPendingHubProposals } from "../publication/publish.ts";
 import { synchronizeLocalHub } from "../publication/synchronize.ts";
@@ -78,6 +85,18 @@ export function createHubRuntimeActions(
     },
     async previewBootstrap(repositoryUrl, mode) { return previewHubBootstrap(repositoryUrl, mode, environment); },
     async bootstrap(repositoryUrl, mode) { return executeHubBootstrap(repositoryUrl, mode, environment); },
+    async preflight(sourceRepository) {
+      if (!path.isAbsolute(sourceRepository) || !fs.statSync(sourceRepository).isDirectory()) {
+        throw new Error("source repository must be an existing absolute directory");
+      }
+      const source = discoverRepositorySourceState(sourceRepository);
+      const localHub = await admit();
+      const context = await inspectInitialIngestHubContext(localHub, {
+        displayName: source.displayName,
+        ...source.identityHints,
+      });
+      return { source, ...context };
+    },
     async prepare(input) {
       if (!path.isAbsolute(input.sourceRepository) || !fs.statSync(input.sourceRepository).isDirectory()) {
         throw new Error("source repository must be an existing absolute directory");
@@ -85,21 +104,39 @@ export function createHubRuntimeActions(
       const source = discoverRepositorySourceState(input.sourceRepository);
       const configuration = configured();
       const localHub = await admit();
-      const continuity = await buildActiveHubContinuity(localHub, source.repositoryId, input.subjectDirectory);
-      const signals = input.confirmedDomain ? [...input.signals, "business domain"] : input.signals;
-      const selectedSchemas = selectOkfConceptSchemas(signals).map((item) => item.type);
+      const repository = await inspectInitialIngestHubContext(localHub, {
+        displayName: source.displayName,
+        ...source.identityHints,
+      });
+      if (repository.repository.kind === "ambiguous") {
+        throw new Error(`repository identity is ambiguous: ${repository.repository.reason}`);
+      }
+      const sourceRepositoryId = repository.repository.repository.id;
+      const continuity = await buildActiveHubContinuity(localHub, sourceRepositoryId, input.subjectDirectory);
+      if (input.mode === "new" && !input.guidanceRequest) {
+        throw new Error("new Initial Ingest requires evidence-bearing guidance_request; source-less signals are refresh-only");
+      }
+      const signals = input.confirmedDomain ? [...(input.signals ?? []), "business domain"] : (input.signals ?? []);
+      const guidance = input.guidanceRequest ? getOkfAuthoringGuidance(input.guidanceRequest) : undefined;
+      const selectedSchemas = guidance
+        ? [...new Set(guidance.recommendations.flatMap((item) => item.status === "exact" && item.schema ? [item.schema.type] : []))]
+        : selectOkfConceptSchemas(signals).map((item) => item.type);
+      if (input.confirmedDomain && !selectedSchemas.includes("Domain")) selectedSchemas.push("Domain");
+      if (!selectedSchemas.length) throw new Error("authoring guidance did not establish any exact schema role");
       const session = beginHubAuthoringSession({
         stateRoot,
         mode: input.mode,
         ...(configuration.kind === "remote" ? { hub: configuration.hub } : { localHubId: configuration.localHubId }),
         baseCommit: localHub.activeHead,
         checkoutRoot: localHub.root,
-        sourceRepositoryId: source.repositoryId,
+        sourceRepositoryId,
         evidenceDigest: input.evidenceDigest,
         subjectDirectory: input.subjectDirectory,
         ...(input.confirmedDomain ? { confirmedDomain: input.confirmedDomain } : {}),
         signals,
         selectedSchemas,
+        ...(guidance ? { guidance } : {}),
+        ...(input.coverage ? { coverage: input.coverage } : {}),
         createdAt: new Date().toISOString(),
       });
       return {
@@ -109,6 +146,7 @@ export function createHubRuntimeActions(
         selectedSchemas: session.selectedSchemas,
         sourceRepositoryId: session.sourceRepositoryId,
         source,
+        repositoryResolution: repository.repository,
         ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),
         continuity,
       };

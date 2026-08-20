@@ -9,11 +9,13 @@ export {
 } from "./governance/confirmed-domain.ts";
 export {
   normalizeHubConceptPath,
+  listHubConcepts,
   readHubConcept,
   searchHubConcepts,
   traverseHubConcepts,
   type HubConceptSummary,
   type HubQueryMatch,
+  type HubListOptions,
   type HubQueryReader,
   type HubSearchMatch,
   type HubSearchOptions,
@@ -29,6 +31,7 @@ export {
 } from "./query/hub-continuity.ts";
 export {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
+  RETIRED_AGENTBASE_SCHEMA_TYPES,
   getOkfConceptSchema,
   listOkfConceptSchemas,
   selectOkfConceptSchemas,
@@ -36,6 +39,20 @@ export {
   type OkfConceptSchema,
   type OkfSchemaSelection,
 } from "./schemas/catalog.ts";
+export type {
+  ConceptCandidate,
+  MappingProfileVersion,
+  ObservationSource,
+  OkfAuthoringGuidance,
+  OkfAuthoringGuidanceRequest,
+  OkfAuthoringRecommendation,
+  ResourceObservation,
+  SemanticObservation,
+  TechnologyMetadata,
+} from "./schemas/guidance.ts";
+export { getOkfAuthoringGuidance } from "./schemas/guidance.ts";
+export { AWS_PROVIDER_PROFILE, listAwsResourceMappings, mapAwsResource } from "./schemas/profiles/aws.ts";
+export { TERRAFORM_DETECTOR_PROFILE, detectTerraformResource } from "./schemas/profiles/terraform.ts";
 export {
   conceptReferencesRepository,
   createRepositorySourceResource,
@@ -85,6 +102,13 @@ export {
   type MaintainerDirective,
   type MaintainerDirectiveSet,
 } from "./governance/directives.ts";
+export {
+  readRepositoryIdentityRecord,
+  resolveRepositoryIdentity,
+  type RepositoryIdentityHints,
+  type RepositoryIdentityRecord,
+  type RepositoryIdentityResolution,
+} from "./governance/repository-identity.ts";
 export {
   readLiveClaims,
   validateBundleLiveClaims,

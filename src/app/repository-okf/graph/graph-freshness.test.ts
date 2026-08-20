@@ -15,6 +15,7 @@ import {
 const source: RepositorySourceState = {
   repositoryId: "repository-fixture-123456789abc",
   displayName: "Human Display Name",
+  identityHints: { remotes: [], rootCommits: [] },
   commit: "a".repeat(40),
   dirty: false,
   dirtyDigest: null,

@@ -1,12 +1,16 @@
 import {
   buildHubContinuity,
   normalizeHubConceptPath,
+  listHubConcepts,
   parseConceptDocument,
+  readRepositoryIdentityRecord,
+  resolveRepositoryIdentity,
   readHubConcept,
   readLiveClaims,
   searchHubConcepts,
   traverseHubConcepts,
   type HubQueryMatch,
+  type HubConceptSummary,
   type HubQueryReader,
   type HubContinuityManifest,
   type HubContinuityOptions,
@@ -15,6 +19,8 @@ import {
   type HubTraversalOptions,
   type HubTraversalResult,
   type LiveClaim,
+  type RepositoryIdentityHints,
+  type RepositoryIdentityResolution,
 } from "../../../core/knowledge/index.ts";
 import { runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
 import type { AdmittedLocalHubState } from "../../../core/hub/index.ts";
@@ -40,6 +46,12 @@ export type HubLiveEvidence = Readonly<{
   path: string;
   conceptId: string;
   claims: readonly BoundLiveClaim[];
+}>;
+
+export type InitialIngestHubContext = Readonly<{
+  commit: string;
+  repository: RepositoryIdentityResolution;
+  domains: readonly HubConceptSummary[];
 }>;
 
 function reader(localHub: AdmittedLocalHubState, git: HubQueryGit): HubQueryReader {
@@ -73,6 +85,27 @@ export function searchActiveHub(
   git: HubQueryGit = runGit,
 ): Promise<HubSearchResult> {
   return searchHubConcepts(reader(localHub, git), query, options);
+}
+
+export async function inspectInitialIngestHubContext(
+  localHub: AdmittedLocalHubState,
+  hints: RepositoryIdentityHints,
+  git: HubQueryGit = runGit,
+): Promise<InitialIngestHubContext> {
+  const currentReader = reader(localHub, git);
+  const summaries = await listHubConcepts(currentReader, { types: ["Repository", "Domain"], limit: 512 });
+  const repositoryDocuments = await Promise.all(summaries.filter((item) => item.type === "Repository").map(async (item) => (
+    parseConceptDocument(item.path, await currentReader.readMarkdown(item.path))
+  )));
+  const records = repositoryDocuments.flatMap((concept) => {
+    const record = readRepositoryIdentityRecord(concept);
+    return record ? [record] : [];
+  });
+  return {
+    commit: localHub.activeHead,
+    repository: resolveRepositoryIdentity(hints, records),
+    domains: summaries.filter((item) => item.type === "Domain"),
+  };
 }
 
 export function traverseActiveHub(

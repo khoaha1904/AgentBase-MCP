@@ -23,9 +23,9 @@ function concept(path, type, key, metadata, sources, relationships = [], body = 
 }
 
 function fixtureBundle({ shallow = false, unexpected = false } = {}) {
-  const lambda = concept("lambda.md", "AWS Lambda", "primary-lambda", shallow ? {} : {
+  const lambda = concept("lambda.md", "Function", "primary-lambda", shallow ? {} : {
     business_purpose: "Handle requests", resource_name: "Primary", runtime: "python3.11", handler: "handler.main",
-  }, ["infra.tf", "handler.py"], [{ kind: "accesses", target: "orders-table" }], "Uses [orders](table.md).");
+  }, ["infra.tf", "handler.py"], [{ kind: "reads-from", target: "orders-table" }], "Uses [orders](table.md).");
   const table = concept("table.md", "Database Table", "orders-table", { resource_name: "Orders" }, ["infra.tf"]);
   const concepts = new Map([["lambda", lambda], ["table", table]]);
   if (unexpected) concepts.set("extra", concept("extra.md", "Service", "extra", {}, ["README.md"]));
@@ -34,10 +34,10 @@ function fixtureBundle({ shallow = false, unexpected = false } = {}) {
 
 const expectation = {
   concepts: [
-    { key: "primary-lambda", type: "AWS Lambda", requiredMetadata: ["business_purpose", "resource_name", "runtime", "handler"], requiredSourcePaths: ["infra.tf", "handler.py"] },
+    { key: "primary-lambda", type: "Function", requiredMetadata: ["business_purpose", "resource_name", "runtime", "handler"], requiredSourcePaths: ["infra.tf", "handler.py"] },
     { key: "orders-table", type: "Database Table", requiredMetadata: ["resource_name"], requiredSourcePaths: ["infra.tf"] },
   ],
-  relationships: [{ from: "primary-lambda", to: "orders-table", kind: "accesses" }],
+  relationships: [{ from: "primary-lambda", to: "orders-table", kind: "reads-from" }],
 };
 
 function pairHarness({
@@ -225,23 +225,23 @@ test("[AB-BENCH-026][AB-BENCH-027] non-reference concepts are unjudged, not fals
 test("[AB-BENCH-004][AB-BENCH-005] semantic identity matching does not hide a wrong schema", () => {
   const worker = concept("worker.md", "Service", "custom-worker", {}, ["infra.tf"], [], "Scheduled Lambda worker.");
   const result = scoreSemanticBenchmark({
-    concepts: [{ key: "canonical-lambda", identityTerms: ["scheduled", "lambda"], type: "AWS Lambda", requiredMetadata: [], requiredSourcePaths: ["infra.tf"] }],
+    concepts: [{ key: "canonical-lambda", identityTerms: ["scheduled", "lambda"], type: "Function", requiredMetadata: [], requiredSourcePaths: ["infra.tf"] }],
     relationships: [],
   }, { concepts: new Map([["worker", worker]]), warnings: [] }, repositoryId);
   assert.equal(result.referenceConceptCoveragePercent, 100);
   assert.equal(result.recognizedSchemaAgreementPercent, 0);
   assert.equal(result.authoringAssessment.status, "invalid");
   assert.deepEqual(result.classifications.concepts.contradicted, [{
-    actual: "custom-worker", expected: "canonical-lambda", actualType: "Service", expectedType: "AWS Lambda",
+    actual: "custom-worker", expected: "canonical-lambda", actualType: "Service", expectedType: "Function",
   }]);
 });
 
 test("[AB-BENCH-004][AB-BENCH-005] schema and evidence outrank a greedy identity collision", () => {
-  const lambda = concept("lambda.md", "AWS Lambda", "aha-lambda-function", {}, ["infra.tf", "handler.py"], [], "Alert processing runtime.");
+  const lambda = concept("lambda.md", "Function", "aha-lambda-function", {}, ["infra.tf", "handler.py"], [], "Alert processing runtime.");
   const schedule = concept("schedule.md", "Event", "aha-lambda-schedule", {}, ["infra.tf"], [], "Scheduled Lambda invocation runs every minute.");
   const result = scoreSemanticBenchmark({
     concepts: [
-      { key: "primary-lambda", identityTerms: ["scheduled", "lambda"], type: "AWS Lambda", requiredMetadata: [], requiredSourcePaths: ["infra.tf", "handler.py"] },
+      { key: "primary-lambda", identityTerms: ["scheduled", "lambda"], type: "Function", requiredMetadata: [], requiredSourcePaths: ["infra.tf", "handler.py"] },
       { key: "primary-schedule", identityTerms: ["minute", "schedule"], type: "Event", requiredMetadata: [], requiredSourcePaths: ["infra.tf"] },
       { key: "alert-flow", identityTerms: ["alert", "processing"], type: "Business Flow", requiredMetadata: [], requiredSourcePaths: ["handler.py"] },
     ],
@@ -255,8 +255,8 @@ test("[AB-BENCH-004][AB-BENCH-005] schema and evidence outrank a greedy identity
 
 test("[AB-BENCH-021][AB-BENCH-023] declared relationships require targets and resolving links", () => {
   for (const [name, lambda] of [
-    ["missing target", concept("lambda.md", "AWS Lambda", "primary-lambda", {}, ["infra.tf"], [{ kind: "accesses", target: "ghost" }], "Uses [ghost](ghost.md).")],
-    ["missing Markdown link", concept("lambda.md", "AWS Lambda", "primary-lambda", {}, ["infra.tf"], [{ kind: "accesses", target: "orders-table" }])],
+    ["missing target", concept("lambda.md", "Function", "primary-lambda", {}, ["infra.tf"], [{ kind: "reads-from", target: "ghost" }], "Uses [ghost](ghost.md).")],
+    ["missing Markdown link", concept("lambda.md", "Function", "primary-lambda", {}, ["infra.tf"], [{ kind: "reads-from", target: "orders-table" }])],
   ]) {
     const table = concept("table.md", "Database Table", "orders-table", {}, ["infra.tf"]);
     const result = scoreSemanticBenchmark(expectation, {
@@ -265,7 +265,7 @@ test("[AB-BENCH-021][AB-BENCH-023] declared relationships require targets and re
     assert.equal(result.authoringAssessment.status, "invalid", name);
     assert.match(result.authoringAssessment.hardFailures.join("\n"), /relationship/i, name);
   }
-  const unjudged = concept("lambda.md", "AWS Lambda", "primary-lambda", {}, ["infra.tf"], [
+  const unjudged = concept("lambda.md", "Function", "primary-lambda", {}, ["infra.tf"], [
     { kind: "triggers", target: "orders-table" },
   ], "Uses [orders](table.md).");
   const table = concept("table.md", "Database Table", "orders-table", {}, ["infra.tf"]);
@@ -517,7 +517,7 @@ test("[AB-BENCH-026] linked relationships from an unknown Google OKF type stay u
 });
 
 test("[AB-BENCH-027] missing reference coverage stays diagnostic below 80 percent", () => {
-  const one = concept("lambda.md", "AWS Lambda", "primary-lambda", {}, ["infra.tf"]);
+  const one = concept("lambda.md", "Function", "primary-lambda", {}, ["infra.tf"]);
   const result = scoreSemanticBenchmark({
     concepts: [
       expectation.concepts[0], expectation.concepts[1],
@@ -535,7 +535,7 @@ test("[AB-BENCH-005][AB-BENCH-006] invalid index fails conformance without hidin
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-scorable-okf-"));
   try {
     fs.writeFileSync(path.join(root, "index.md"), "---\nokf_version: '0.2'\n---\n\n# Index\n\nInvalid prose.\n");
-    fs.writeFileSync(path.join(root, "lambda.md"), "---\ntype: AWS Lambda\ntitle: Primary\nbenchmark_key: primary-lambda\n---\n\nEvidence.\n");
+    fs.writeFileSync(path.join(root, "lambda.md"), "---\ntype: Function\ntitle: Primary\nbenchmark_key: primary-lambda\n---\n\nEvidence.\n");
     const bundle = loadScorableBundle(root);
     assert.equal(bundle.concepts.size, 1);
     assert.match(bundle.warnings[0], /OKF conformance failed/);

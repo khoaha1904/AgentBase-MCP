@@ -22,6 +22,7 @@ function evidenceFixture(): RepositoryEvidenceBundleInput {
     source: {
       repositoryId: "fixture:typescript-modular-monolith",
       displayName: "TypeScript Modular Monolith Fixture",
+      identityHints: { remotes: [], rootCommits: [] },
       commit: "0123456789abcdef0123456789abcdef01234567",
       dirty: true,
       dirtyDigest: "sha256:dirty",

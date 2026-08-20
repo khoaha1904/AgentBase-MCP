@@ -7,6 +7,14 @@ import test from "node:test";
 import { runGit } from "../../../providers/github-hub/index.ts";
 import { createHubRuntimeActions } from "../query/runtime-actions.ts";
 
+const repositoryGuidance = {
+  candidates: [{ id: "repository", identityHint: "source", identityBasis: "checkout root",
+    queryValue: "repository", evidenceIds: ["readme"] }],
+  semanticObservations: [{ id: "readme", candidateId: "repository", role: "documentation" as const,
+    signal: "repository", source: { path: "README.md", startLine: 1, endLine: 1 } }],
+  resourceObservations: [],
+};
+
 async function sourceRepository(root: string): Promise<string> {
   const repository = path.join(root, "source");
   fs.mkdirSync(repository);
@@ -28,7 +36,7 @@ test("[AB-HUB-SETUP-006..008][SC-003] local-only Hub accepts, queries and invent
     for (const sequence of [1, 2]) {
       const prepared = await actions.prepare({ mode: "new", sourceRepository: repository,
         evidenceDigest: `sha256:${String(sequence).repeat(64)}`, subjectDirectory: `repositories/repo-${sequence}`,
-        signals: ["repository"] }) as { sessionId: string; bundleRoot: string; sourceRepositoryId: string;
+        guidanceRequest: repositoryGuidance }) as { sessionId: string; bundleRoot: string; sourceRepositoryId: string;
           source: { repositoryId: string; commit: string | null; dirty: boolean; dirtyDigest: string | null; limitations: readonly string[] } };
       fs.mkdirSync(path.join(prepared.bundleRoot, `repositories/repo-${sequence}`), { recursive: true });
       fs.appendFileSync(path.join(prepared.bundleRoot, "index.md"), `\n* [Repo ${sequence}](repositories/repo-${sequence}/) - repository\n`);

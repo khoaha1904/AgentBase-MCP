@@ -10,7 +10,7 @@ function concept(documentPath: string, type: string, relationships: string, body
 }
 
 test("[AB-SCHEMA-012][AB-BENCH-030] validates targets and links while unknown guidance stays visible", () => {
-  const lambda = concept("runtime/lambda.md", "AWS Lambda", "\n  - { kind: accesses, target: orders }", "Uses [orders](../data/orders.md).");
+  const lambda = concept("runtime/lambda.md", "Function", "\n  - { kind: accesses, target: orders }", "Uses [orders](../data/orders.md).");
   const table = concept("data/orders.md", "Database Table", " []", "Orders.");
   const valid = validateOkfRelationships([
     { identity: "lambda", concept: lambda }, { identity: "orders", concept: table },
@@ -19,7 +19,7 @@ test("[AB-SCHEMA-012][AB-BENCH-030] validates targets and links while unknown gu
   assert.deepEqual(valid.relationships, [{ source: "lambda", kind: "accesses", target: "orders", evidence: [] }]);
 
   const missingLink = validateOkfRelationships([
-    { identity: "lambda", concept: concept("runtime/lambda.md", "AWS Lambda", "\n  - { kind: accesses, target: orders }", "No link.") },
+    { identity: "lambda", concept: concept("runtime/lambda.md", "Function", "\n  - { kind: accesses, target: orders }", "No link.") },
     { identity: "orders", concept: table },
   ]);
   assert.match(missingLink.failures.join("\n"), /no resolving Markdown link/);
@@ -28,11 +28,11 @@ test("[AB-SCHEMA-012][AB-BENCH-030] validates targets and links while unknown gu
   assert.match(missingTarget.failures.join("\n"), /missing concept orders/);
 
   const unsupported = validateOkfRelationships([
-    { identity: "lambda", concept: concept("runtime/lambda.md", "AWS Lambda", "\n  - { kind: triggers, target: orders }", "Uses [orders](../data/orders.md).") },
+    { identity: "lambda", concept: concept("runtime/lambda.md", "Function", "\n  - { kind: triggers, target: orders }", "Uses [orders](../data/orders.md).") },
     { identity: "orders", concept: table },
   ]);
   assert.deepEqual(unsupported.failures, []);
-  assert.match(unsupported.warnings.join("\n"), /unjudged by AWS Lambda schema guidance/);
+  assert.match(unsupported.warnings.join("\n"), /unjudged by Function schema guidance/);
   assert.deepEqual(unsupported.relationships, [{ source: "lambda", kind: "triggers", target: "orders", evidence: [] }]);
 });
 
@@ -60,7 +60,7 @@ test("[AB-SCHEMA-012] absolute bundle-relative Markdown links resolve portably",
 
 test("[AB-SCHEMA-019][AB-SCHEMA-020] new known-schema edges use one canonical evidenced direction", () => {
   const lambda = parseConceptDocument("components/worker.md", `---
-type: AWS Lambda
+type: Function
 title: Worker
 description: Consumes work.
 status: draft
@@ -75,7 +75,7 @@ relationships:
 ---
 Uses [queue](../resources/orders.md).
 `);
-  const queue = concept("resources/orders.md", "AWS SQS Queue", " []", "Orders.");
+  const queue = concept("resources/orders.md", "Queue", " []", "Orders.");
   const strict = new Set(["worker"]);
   const valid = validateOkfRelationships([
     { identity: "worker", concept: lambda }, { identity: "queue", concept: queue },
@@ -83,7 +83,7 @@ Uses [queue](../resources/orders.md).
   assert.deepEqual(valid.failures, []);
   assert.deepEqual(valid.relationships[0]?.evidence, ["queue-binding"]);
 
-  const inverse = concept("components/worker.md", "AWS Lambda", "\n  - { kind: consumed-by, target: queue }", "Uses [queue](../resources/orders.md).");
+  const inverse = concept("components/worker.md", "Function", "\n  - { kind: consumed-by, target: queue }", "Uses [queue](../resources/orders.md).");
   assert.match(validateOkfRelationships([
     { identity: "worker", concept: inverse }, { identity: "queue", concept: queue },
   ], { strictSourceIdentities: strict }).failures.join("\n"), /not a canonical AgentBase predicate/);
@@ -111,7 +111,7 @@ relationships: []
 [API](../interfaces/orders.md) invokes [worker](../components/worker.md).
 `);
   const api = concept("interfaces/orders.md", "API Surface", " []", "API.");
-  const worker = concept("components/worker.md", "AWS Lambda", " []", "Worker.");
+  const worker = concept("components/worker.md", "Function", " []", "Worker.");
   const result = validateOkfRelationships([
     { identity: "flow", concept: flow }, { identity: "api", concept: api }, { identity: "worker", concept: worker },
   ], { strictSourceIdentities: new Set(["flow"]) });

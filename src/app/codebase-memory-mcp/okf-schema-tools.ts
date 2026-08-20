@@ -2,6 +2,7 @@ import type { CallToolResult } from "@modelcontextprotocol/server";
 import {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
   getOkfConceptSchema,
+  getOkfAuthoringGuidance,
   listOkfConceptSchemas,
   normalizeHubConceptPath,
   parseConceptDocument,
@@ -10,6 +11,7 @@ import {
   validateConceptAgainstSchema,
   validateOkfRelationships,
   type ConceptDocument,
+  type OkfAuthoringGuidanceRequest,
   type OkfRelationshipTarget,
 } from "../../core/knowledge/index.ts";
 
@@ -94,15 +96,35 @@ export const OKF_SCHEMA_TOOLS = [
   },
   {
     name: "get_okf_authoring_schemas",
-    description: "Select and return complete OKF schema guidance for bounded repository evidence signals in one advisory call.",
+    description: "Map bounded source-backed candidates and observations to provider-neutral OKF schema guidance in one advisory call.",
     inputSchema: {
       type: "object",
       properties: {
-        signals: {
-          type: "array", items: { type: "string", minLength: 1, maxLength: 2048 }, minItems: 1, maxItems: 64,
+        candidates: {
+          type: "array", minItems: 1, maxItems: 64, items: { type: "object", properties: {
+            id: { type: "string" }, identity_hint: { type: "string" }, identity_basis: { type: "string" },
+            query_value: { type: "string" }, evidence_ids: { type: "array", minItems: 1, maxItems: 64, items: { type: "string" } },
+          }, required: ["id", "identity_hint", "identity_basis", "query_value", "evidence_ids"], additionalProperties: false },
+        },
+        semantic_observations: {
+          type: "array", maxItems: 64, items: { type: "object", properties: {
+            id: { type: "string" }, candidate_id: { type: "string" },
+            role: { type: "string", enum: ["documentation", "implementation", "configuration"] },
+            signal: { type: "string" }, source: { type: "object", properties: {
+              path: { type: "string" }, start_line: { type: "integer", minimum: 1 }, end_line: { type: "integer", minimum: 1 },
+            }, required: ["path", "start_line", "end_line"], additionalProperties: false },
+          }, required: ["id", "candidate_id", "role", "signal", "source"], additionalProperties: false },
+        },
+        resource_observations: {
+          type: "array", maxItems: 64, items: { type: "object", properties: {
+            id: { type: "string" }, candidate_id: { type: "string" }, source_tool: { type: "string", enum: ["terraform"] },
+            resource_type: { type: "string" }, address: { type: "string" }, source: { type: "object", properties: {
+              path: { type: "string" }, start_line: { type: "integer", minimum: 1 }, end_line: { type: "integer", minimum: 1 },
+            }, required: ["path", "start_line", "end_line"], additionalProperties: false },
+          }, required: ["id", "candidate_id", "source_tool", "resource_type", "address", "source"], additionalProperties: false },
         },
       },
-      required: ["signals"], additionalProperties: false,
+      required: ["candidates", "semantic_observations", "resource_observations"], additionalProperties: false,
     },
   },
   {
@@ -123,6 +145,41 @@ export const OKF_SCHEMA_TOOLS = [
 
 function result(value: unknown, isError = false): CallToolResult {
   return { content: [{ type: "text", text: JSON.stringify(value) }], ...(isError ? { isError: true } : {}) };
+}
+
+function guidanceRequest(args: Readonly<Record<string, unknown>>): OkfAuthoringGuidanceRequest {
+  const object = (value: unknown, name: string, expected: readonly string[]): Readonly<Record<string, unknown>> => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${name} must be an object`);
+    const item = value as Readonly<Record<string, unknown>>;
+    if (Object.keys(item).sort().join("\0") !== [...expected].sort().join("\0")) throw new Error(`${name} contains unknown or missing fields`);
+    return item;
+  };
+  const array = (value: unknown, name: string): readonly unknown[] => {
+    if (!Array.isArray(value)) throw new Error(`${name} must be a list`);
+    return value;
+  };
+  const source = (value: unknown) => {
+    const item = object(value, "observation source", ["path", "start_line", "end_line"]);
+    return { path: item.path as string, startLine: item.start_line as number, endLine: item.end_line as number };
+  };
+  object(args, "guidance request", ["candidates", "semantic_observations", "resource_observations"]);
+  return {
+    candidates: array(args.candidates, "candidates").map((value) => {
+      const item = object(value, "candidate", ["id", "identity_hint", "identity_basis", "query_value", "evidence_ids"]);
+      return { id: item.id as string, identityHint: item.identity_hint as string, identityBasis: item.identity_basis as string,
+        queryValue: item.query_value as string, evidenceIds: array(item.evidence_ids, "candidate evidence_ids") as string[] };
+    }),
+    semanticObservations: array(args.semantic_observations, "semantic_observations").map((value) => {
+      const item = object(value, "semantic observation", ["id", "candidate_id", "role", "signal", "source"]);
+      return { id: item.id as string, candidateId: item.candidate_id as string,
+        role: item.role as "documentation" | "implementation" | "configuration", signal: item.signal as string, source: source(item.source) };
+    }),
+    resourceObservations: array(args.resource_observations, "resource_observations").map((value) => {
+      const item = object(value, "resource observation", ["id", "candidate_id", "source_tool", "resource_type", "address", "source"]);
+      return { id: item.id as string, candidateId: item.candidate_id as string, sourceTool: item.source_tool as "terraform",
+        resourceType: item.resource_type as string, address: item.address as string, source: source(item.source) };
+    }),
+  };
 }
 
 type SuppliedConcept = Readonly<{ identity: string; path: string; content: string }>;
@@ -226,20 +283,10 @@ export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record
       });
     }
     if (name === "get_okf_authoring_schemas") {
-      const signals = args.signals;
-      const valid = Array.isArray(signals) && signals.length >= 1 && signals.length <= 64
-        && signals.every((signal) => typeof signal === "string" && signal.length >= 1 && signal.length <= 2048);
-      if (!valid) return result({ error: "signals must be a bounded non-empty string list" }, true);
-      const recommendations = selectOkfConceptSchemas(signals as string[]);
-      return result({
-        catalogVersion: AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
+      const guidance = getOkfAuthoringGuidance(guidanceRequest(args));
+      return result({ ...guidance,
         okfVersion: "0.2",
         identityContract: "identity equals the normalized OKF-root-relative Markdown path without .md; never prefix paths with okf/",
-        schemas: recommendations.map((recommendation) => ({
-          ...getOkfConceptSchema(recommendation.type),
-          matchedSignals: recommendation.matchedSignals,
-          missingEvidence: recommendation.missingEvidence,
-        })),
         advisory: true,
       });
     }

@@ -40,4 +40,15 @@ export {
   validateRepositoryProposal,
   type PreparedRepositoryProposal,
 } from "./workflow/workflow.ts";
+export type {
+  InitialIngestContext,
+  InitialIngestCoverage,
+  InitialIngestOutcome,
+  InitialIngestStage,
+} from "./workflow/initial-ingest.ts";
+export {
+  claimInitialIngestRepair,
+  initialIngestCoverage,
+  validateInitialIngestOutcome,
+} from "./workflow/initial-ingest.ts";
 export { recoverRepositoryOkf } from "./workflow/recovery.ts";

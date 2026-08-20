@@ -6,7 +6,7 @@ import { readLiveClaims, validateBundleLiveClaims } from "./live-claims.ts";
 
 const commit = "a".repeat(40);
 
-function concept(id = "AB-CLAIM-session-ttl", extra = ""): ReturnType<typeof parseConceptDocument> {
+function concept(id = "AB-CLAIM-session-ttl", extra = "", observed = `{ commit: ${commit}, dirty: false, dirty_digest: null }`, property = "session.ttl"): ReturnType<typeof parseConceptDocument> {
   return parseConceptDocument("systems/checkout.md", [
     "---",
     "type: System",
@@ -19,11 +19,11 @@ function concept(id = "AB-CLAIM-session-ttl", extra = ""): ReturnType<typeof par
     "  live_claims:",
     `    - id: ${id}`,
     "      subject: systems/checkout",
-    "      property: session.ttl",
+    `      property: ${property}`,
     "      role: configuration",
     "      source_id: ttl-source",
     "      target: { kind: symbol, name: SESSION_TTL_DAYS }",
-    `      observed: { commit: ${commit}, dirty: false, dirty_digest: null }`,
+    `      observed: ${observed}`,
     ...(extra ? extra.split("\n") : []),
     "---",
     "# Checkout",
@@ -77,4 +77,30 @@ test("[AB-CLAIM-002] dirty observations require a digest while clean observation
   assert.ok(dirtyMissing);
   assert.match(validateBundleLiveClaims([parseConceptDocument("systems/checkout.md", source)]).join("\n"),
     /dirty observation requires dirty_digest/);
+});
+
+test("[AB-CLAIM-005] reads an optional bounded snapshot as observed and explicitly non-current", () => {
+  const claim = readLiveClaims(concept("AB-CLAIM-snapshot", "",
+    `{ commit: ${commit}, dirty: false, dirty_digest: null, at: '2026-08-21T01:02:03Z', snapshot: 7 }`))[0];
+  assert.deepEqual(claim?.observed.snapshot, {
+    value: 7, observedAt: "2026-08-21T01:02:03Z", current: false,
+  });
+});
+
+test("[AB-CLAIM-005] rejects snapshot without provenance time, unknown fields, multiline, large and secret-like values", () => {
+  const failure = (...claims: ReturnType<typeof parseConceptDocument>[]) => validateBundleLiveClaims(claims).join("\n");
+  const secretLikeValue = ["AKIA", "ABCDEFGHIJKLMNOP"].join("");
+  assert.match(failure(concept("AB-CLAIM-no-time", "",
+    `{ commit: ${commit}, dirty: false, dirty_digest: null, snapshot: 7 }`)), /unknown fields or is incomplete/);
+  assert.match(failure(concept("AB-CLAIM-unknown", "",
+    `{ commit: ${commit}, dirty: false, dirty_digest: null, at: '2026-08-21T01:02:03Z', snapshot: 7, current: true }`)), /unknown fields/);
+  assert.match(failure(concept("AB-CLAIM-multiline", "",
+    `{ commit: ${commit}, dirty: false, dirty_digest: null, at: '2026-08-21T01:02:03Z', snapshot: "line\\nnext" }`)), /one non-empty line/);
+  assert.match(failure(concept("AB-CLAIM-large", "",
+    `{ commit: ${commit}, dirty: false, dirty_digest: null, at: '2026-08-21T01:02:03Z', snapshot: '${"x".repeat(257)}' }`)), /at most 256/);
+  assert.match(failure(concept("AB-CLAIM-secret", "",
+    `{ commit: ${commit}, dirty: false, dirty_digest: null, at: '2026-08-21T01:02:03Z', snapshot: '${secretLikeValue}' }`)), /secret-like/);
+  const secretProperty = concept("AB-CLAIM-secret-name", "",
+    `{ commit: ${commit}, dirty: false, dirty_digest: null, at: '2026-08-21T01:02:03Z', snapshot: 'plain' }`, "session.token");
+  assert.match(failure(secretProperty), /secret-like/);
 });

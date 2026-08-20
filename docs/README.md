@@ -45,22 +45,22 @@ is the portable archive.
 
 ## Current checkpoint
 
-- Active capability: none; most recent completed capability:
-  `021-agentstack-foundation`.
-- Capability 021 replaces the hand-written architecture metric engine, exact
-  ownership registry and non-growing baselines with native dependency-cruiser,
-  Knip and redacted Gitleaks gates. Modular ownership, public entrypoints,
-  cycles and layer direction remain enforced without file-size/import budgets.
+- Active capability: `022-single-repository-ingest`; implementation is offline
+  complete but remains open for separately authorized three-run qualification.
+- Initial Ingest now resolves a durable Repository identity, requires bounded
+  Domain confirmation, uses the graph only as a private map and stops at one
+  sparse, inspectable proposal preview. Partial coverage is valid and visible;
+  integrity failure is Incomplete.
 - Capability 018 is complete with 339 passing offline tests. Its V11 real run is
   accepted for confirmed Domain and shared-navigation qualification; no V12
   numeric-snapshot iteration was authorized.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.
-- Completed catalog 5.1.0 adds generic Domain Entity and Metric schemas to the existing
-  canonical relationship and Business Flow vocabulary. A schema is reusable;
-  each repository-specific instance declares one type, and foreign extensions
-  remain open-world compatible.
+- Catalog 6.0 has 22 provider-neutral roles. Terraform Detector v1 and AWS
+  Profile v1 map supported resource evidence to generic Function, Server,
+  Queue, Database, Database Table and Object Storage roles; provider/product
+  remain metadata. Foreign extensions remain open-world compatible.
 - Hub retrieval is progressively scoped through root, Domain and System
   navigation, deterministic search and bounded inbound/outbound traversal. A
   broad ambiguous query asks for Domain scope instead of returning Hub-wide

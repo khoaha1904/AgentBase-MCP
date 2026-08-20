@@ -19,9 +19,10 @@ For every new or modified AgentBase concept:
 - represent a change-prone configuration or implementation scalar under
   `agentbase.live_claims` with a stable claim ID, subject/property/role, one
   `sources[].id`, semantic target and the prepare source identity; never include
-  the observed scalar in that live-claim record or present it as timeless prose;
+  a value is optional and only valid as a small `observed.snapshot` with exact
+  revision and `observed.at`; always describe it as observed, never current;
 - `agentbase.live_claims[].target.kind` is exactly one of `symbol`, `function`,
-  `config-field` or `text`; concept types such as Database Table, AWS SQS Queue
+  `config-field` or `text`; concept types such as Database Table, Queue
   or Infrastructure Definition are never live-reference target kinds;
 - encode source code as
   `repository://<repository-id>/<encoded-relative-path>#L<start>-L<end>`;
@@ -30,7 +31,7 @@ For every new or modified AgentBase concept:
 - relate concepts with normal bundle-relative Markdown links;
 - persist only canonical relationship directions: `part-of`, `provides`,
   `consumes`, `depends-on`, `triggered-by`, `publishes-to`, `reads-from`,
-  `writes-to`, `implemented-in`, `declared-by` and `deployed-as`; MCP derives
+  `writes-to`, `implemented-in`, `declared-by`, `deployed-as` and `runs-on`; MCP derives
   inbound navigation, so never add a duplicate inverse edge;
 - give every relationship a non-empty `evidence` list resolving to stable
   `sources[].id` values;

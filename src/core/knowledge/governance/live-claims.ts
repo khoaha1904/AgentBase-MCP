@@ -10,7 +10,12 @@ export type LiveClaim = Readonly<{
   sourceId: string;
   source: Readonly<{ resource: string }>;
   target: Readonly<{ kind: LiveClaimTargetKind; name: string }>;
-  observed: Readonly<{ commit: string | null; dirty: boolean; dirtyDigest: string | null }>;
+  observed: Readonly<{
+    commit: string | null;
+    dirty: boolean;
+    dirtyDigest: string | null;
+    snapshot?: Readonly<{ value: string | number | boolean; observedAt: string; current: false }>;
+  }>;
 }>;
 
 const CLAIM_ID = /^AB-CLAIM-[A-Za-z0-9][A-Za-z0-9._-]*$/;
@@ -19,6 +24,9 @@ const SUBJECT = new RegExp(`^${SUBJECT_ROOT}/[a-z0-9][a-z0-9./-]*$`);
 const PROPERTY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const COMMIT = /^[a-f0-9]{40}$/;
 const DIGEST = /^sha256:[a-f0-9]{64}$/;
+const OBSERVED_AT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/;
+const SECRET_FIELD = /(?:^|[._-])(password|passwd|secret|token|credential|private[-_]?key|api[-_]?key|access[-_]?key|signing[-_]?key)(?:$|[._-])/i;
+const SECRET_VALUE = /(?:-----BEGIN [A-Z ]*PRIVATE KEY-----|\bAKIA[A-Z0-9]{16}\b|\bgh[pousr]_[A-Za-z0-9_]{20,}\b|\bxox[baprs]-[A-Za-z0-9-]{10,}\b|\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b)/;
 const REPOSITORY_RESOURCE = /^repository:\/\/repository-[a-z0-9-]+-[a-f0-9]{12}\/.+#L\d+-L\d+$/;
 const ROLES = new Set<LiveClaimRole>(["documentation", "implementation", "configuration"]);
 const TARGET_KINDS = new Set<LiveClaimTargetKind>(["symbol", "function", "config-field", "text"]);
@@ -31,6 +39,25 @@ function mapping(value: OkfValue | undefined): Readonly<Record<string, OkfValue>
 function exactKeys(value: Readonly<Record<string, OkfValue>>, expected: readonly string[]): boolean {
   const keys = Object.keys(value).sort();
   return keys.length === expected.length && keys.every((key, index) => key === [...expected].sort()[index]);
+}
+
+function validObservedKeys(value: Readonly<Record<string, OkfValue>>): boolean {
+  const base = ["commit", "dirty", "dirty_digest"];
+  return exactKeys(value, base) || exactKeys(value, [...base, "at"]) || exactKeys(value, [...base, "at", "snapshot"]);
+}
+
+function snapshotFailure(value: OkfValue | undefined, property: unknown, targetName: unknown): string | undefined {
+  if (typeof value !== "string" && typeof value !== "number" && typeof value !== "boolean") return "snapshot must be one scalar or identifier";
+  if (typeof value === "number" && !Number.isFinite(value)) return "snapshot number must be finite";
+  const serialized = String(value);
+  if (!serialized || serialized.includes("\n") || serialized.includes("\r") || Buffer.byteLength(serialized) > 256) {
+    return "snapshot must be one non-empty line of at most 256 UTF-8 bytes";
+  }
+  if ((typeof property === "string" && SECRET_FIELD.test(property))
+    || (typeof targetName === "string" && SECRET_FIELD.test(targetName)) || SECRET_VALUE.test(serialized)) {
+    return "snapshot is obviously secret-like";
+  }
+  return undefined;
 }
 
 function sourceMap(concept: ConceptDocument): ReadonlyMap<string, string> {
@@ -60,7 +87,7 @@ function parseClaims(concept: ConceptDocument): Readonly<{ claims: readonly Live
     }
     const target = mapping(claim.target), observed = mapping(claim.observed);
     if (!target || !exactKeys(target, ["kind", "name"])) failures.push(`${prefix} target contains unknown or missing fields`);
-    if (!observed || !exactKeys(observed, ["commit", "dirty", "dirty_digest"])) {
+    if (!observed || !validObservedKeys(observed)) {
       failures.push(`${prefix} observed contains unknown fields or is incomplete`);
     }
     const id = claim.id, subject = claim.subject, property = claim.property, role = claim.role, sourceId = claim.source_id;
@@ -75,16 +102,31 @@ function parseClaims(concept: ConceptDocument): Readonly<{ claims: readonly Live
     if (typeof kind !== "string" || !TARGET_KINDS.has(kind as LiveClaimTargetKind)) failures.push(`${prefix} target kind is invalid`);
     if (typeof name !== "string" || !name.trim() || name.length > 256) failures.push(`${prefix} target name is invalid`);
     const commit = observed?.commit, dirty = observed?.dirty, dirtyDigest = observed?.dirty_digest;
+    const observedAt = observed?.at, snapshot = observed?.snapshot;
     if (commit !== null && (typeof commit !== "string" || !COMMIT.test(commit))) failures.push(`${prefix} observed commit is invalid`);
     if (typeof dirty !== "boolean") failures.push(`${prefix} observed dirty must be boolean`);
     if (dirty === true && (typeof dirtyDigest !== "string" || !DIGEST.test(dirtyDigest))) failures.push(`${prefix} dirty observation requires dirty_digest`);
     if (dirty === false && dirtyDigest !== null) failures.push(`${prefix} clean observation requires null dirty_digest`);
     if (dirty === false && (typeof commit !== "string" || !COMMIT.test(commit))) failures.push(`${prefix} clean observation requires commit`);
+    if (snapshot !== undefined) {
+      if (typeof observedAt !== "string" || !OBSERVED_AT.test(observedAt) || !Number.isFinite(Date.parse(observedAt))) {
+        failures.push(`${prefix} snapshot requires an RFC3339 UTC observed time`);
+      }
+      const failure = snapshotFailure(snapshot, property, name);
+      if (failure) failures.push(`${prefix} ${failure}`);
+    } else if (observedAt !== undefined && (typeof observedAt !== "string" || !OBSERVED_AT.test(observedAt) || !Number.isFinite(Date.parse(observedAt)))) {
+      failures.push(`${prefix} observed at is invalid`);
+    }
     if (!failures.some((failure) => failure.startsWith(prefix))) claims.push({
       id: id as string, subject: subject as string, property: property as string, role: role as LiveClaimRole,
       sourceId: sourceId as string, source: { resource: resource! },
       target: { kind: kind as LiveClaimTargetKind, name: name as string },
-      observed: { commit: commit as string | null, dirty: dirty as boolean, dirtyDigest: dirtyDigest as string | null },
+      observed: {
+        commit: commit as string | null, dirty: dirty as boolean, dirtyDigest: dirtyDigest as string | null,
+        ...(snapshot !== undefined ? { snapshot: {
+          value: snapshot as string | number | boolean, observedAt: observedAt as string, current: false as const,
+        } } : {}),
+      },
     });
   }
   return { claims, failures };

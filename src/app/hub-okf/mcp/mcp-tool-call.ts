@@ -1,6 +1,6 @@
 import type { CallToolResult } from "@modelcontextprotocol/server";
 
-import { normalizeConfirmedDomain } from "../../../core/knowledge/index.ts";
+import { normalizeConfirmedDomain, type OkfAuthoringGuidanceRequest } from "../../../core/knowledge/index.ts";
 import type { HubToolActions, HubToolContext } from "./mcp-tool-actions.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
 
@@ -21,6 +21,48 @@ function optionalStringList(args: Readonly<Record<string, unknown>>, key: string
     throw new Error(`${key} must be a non-empty string list`);
   }
   return value as string[];
+}
+
+function guidanceRequest(value: unknown): OkfAuthoringGuidanceRequest {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("guidance_request must be an object");
+  const input = value as Record<string, unknown>;
+  if (Object.keys(input).sort().join("\0") !== ["candidates", "semantic_observations", "resource_observations"].sort().join("\0")) {
+    throw new Error("guidance_request contains unknown or missing fields");
+  }
+  const list = (item: unknown, name: string): readonly unknown[] => {
+    if (!Array.isArray(item)) throw new Error(`${name} must be a list`);
+    return item;
+  };
+  const record = (item: unknown, name: string, expected: readonly string[]): Record<string, unknown> => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error(`${name} must be an object`);
+    const current = item as Record<string, unknown>;
+    if (Object.keys(current).sort().join("\0") !== [...expected].sort().join("\0")) throw new Error(`${name} contains unknown or missing fields`);
+    return current;
+  };
+  const source = (item: unknown) => {
+    const current = record(item, "observation source", ["path", "start_line", "end_line"]);
+    return { path: current.path as string, startLine: current.start_line as number, endLine: current.end_line as number };
+  };
+  return {
+    candidates: list(input.candidates, "candidates").map((item) => {
+      const current = record(item, "candidate", ["id", "identity_hint", "identity_basis", "query_value", "evidence_ids"]);
+      return { id: current.id as string, identityHint: current.identity_hint as string,
+        identityBasis: current.identity_basis as string, queryValue: current.query_value as string,
+        evidenceIds: list(current.evidence_ids, "evidence_ids") as string[] };
+    }),
+    semanticObservations: list(input.semantic_observations, "semantic_observations").map((item) => {
+      const current = record(item, "semantic observation", ["id", "candidate_id", "role", "signal", "source"]);
+      return { id: current.id as string, candidateId: current.candidate_id as string,
+        role: current.role as "documentation" | "implementation" | "configuration",
+        signal: current.signal as string, source: source(current.source) };
+    }),
+    resourceObservations: list(input.resource_observations, "resource_observations").map((item) => {
+      const current = record(item, "resource observation", ["id", "candidate_id", "source_tool", "resource_type", "address", "source"]);
+      return { id: current.id as string, candidateId: current.candidate_id as string,
+        sourceTool: current.source_tool as "terraform", resourceType: current.resource_type as string,
+        address: current.address as string, source: source(current.source) };
+    }),
+  };
 }
 
 function questionDeclarations(value: unknown): readonly QuestionDeclaration[] {
@@ -69,19 +111,33 @@ export async function callHubOkfTool(
         ? await actions.previewBootstrap(repositoryUrl, mode)
         : await actions.bootstrap(repositoryUrl, mode));
     }
+    if (name === "preflight_hub_ingest") {
+      return result(await actions.preflight(required(args, "source_repository")));
+    }
     if (name === "prepare_hub_okf") {
       const mode = required(args, "mode");
       if (mode !== "new" && mode !== "refresh") throw new Error("mode must be new or refresh");
       const confirmedDomain = args.confirmed_domain === undefined
         ? undefined : normalizeConfirmedDomain(args.confirmed_domain);
+      const coverage = args.coverage;
+      if (coverage !== undefined && (!coverage || typeof coverage !== "object" || Array.isArray(coverage)
+        || typeof (coverage as Record<string, unknown>).partial !== "boolean"
+        || !Array.isArray((coverage as Record<string, unknown>).limitations)
+        || !(coverage as Record<string, unknown>).limitations || !((coverage as Record<string, unknown>).limitations as unknown[])
+          .every((item) => typeof item === "string" && item.length > 0 && item.length <= 512))) {
+        throw new Error("coverage must contain partial and bounded limitations");
+      }
       return result(await actions.prepare({
         mode,
         sourceRepository: required(args, "source_repository"),
         evidenceDigest: required(args, "evidence_digest"),
         subjectDirectory: required(args, "subject_directory"),
         ...(confirmedDomain ? { confirmedDomain } : {}),
-        signals: Array.isArray(args.signals) && args.signals.every((signal) => typeof signal === "string")
-          ? args.signals as string[] : (() => { throw new Error("signals must be a string list"); })(),
+        ...(args.signals === undefined ? {} : { signals: Array.isArray(args.signals)
+          && args.signals.every((signal) => typeof signal === "string")
+          ? args.signals as string[] : (() => { throw new Error("signals must be a string list"); })() }),
+        ...(args.guidance_request === undefined ? {} : { guidanceRequest: guidanceRequest(args.guidance_request) }),
+        ...(coverage === undefined ? {} : { coverage: coverage as { partial: boolean; limitations: string[] } }),
       }));
     }
     if (name === "finalize_hub_okf_proposal") {

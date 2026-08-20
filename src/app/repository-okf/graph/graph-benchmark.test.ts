@@ -24,7 +24,8 @@ function benchmarkResult(
     transport,
     engine: engine(transport === "one-shot" ? "one-shot-cli" : "scoped-session"),
     source: {
-      repositoryId: "repository-fixture-123456789abc", displayName: "fixture", commit: "a".repeat(40),
+      repositoryId: "repository-fixture-123456789abc", displayName: "fixture",
+      identityHints: { remotes: [], rootCommits: [] }, commit: "a".repeat(40),
       dirty: false, dirtyDigest: null, capturedAt: "2026-08-12T00:00:00.000Z", limitations: [],
     },
     stages: { admissionMs: 1, indexMs: 2, queryMs: totalMs - 4, cleanupMs: 1, totalMs },

@@ -1,17 +1,24 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getOkfConceptSchema, listOkfConceptSchemas, selectOkfConceptSchemas, validateConceptAgainstSchema } from "./catalog.ts";
+import {
+  AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
+  getOkfConceptSchema,
+  listOkfConceptSchemas,
+  selectOkfConceptSchemas,
+  validateConceptAgainstSchema,
+} from "./catalog.ts";
 import { parseConceptDocument } from "../documents/okf-document.ts";
 
 test("[AB-SCHEMA-001][AB-SCHEMA-006][AB-SCHEMA-007][AB-SCHEMA-016][AB-SCHEMA-025] catalog exposes schemas distinct from instances", () => {
   assert.deepEqual(listOkfConceptSchemas().map((item) => item.type), [
-    "Repository", "Domain", "Domain Entity", "System", "Software Component", "Service", "Server", "API Surface", "API Endpoint",
-    "Event", "Metric", "Database Table", "Queue", "AWS Lambda", "AWS SQS Queue", "Infrastructure Definition",
-    "Terraform Module", "Deployment", "Business Flow",
-    "Cross-Repository Relationship", "Open Question", "Maintainer Guidance",
+    "Repository", "Domain", "Domain Entity", "System", "Software Component", "Service", "Function", "Server", "API Surface", "API Endpoint",
+    "Event", "Metric", "Database", "Database Table", "Queue", "Object Storage", "Infrastructure Definition",
+    "Infrastructure Module", "Deployment", "Business Flow", "Cross-Repository Relationship", "Maintainer Guidance",
   ]);
-  assert.equal(getOkfConceptSchema("AWS Lambda")?.directoryHint, "components/<slug>.md");
+  assert.equal(AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, "6.0.0");
+  assert.equal(getOkfConceptSchema("Function")?.directoryHint, "components/<slug>.md");
+  assert.match(getOkfConceptSchema("Server")?.purpose ?? "", /compute host/);
   assert.equal(getOkfConceptSchema("Repository")?.directoryHint, "repositories/<slug>.md");
   assert.equal(getOkfConceptSchema("Domain")?.directoryHint, "domains/<slug>.md");
   assert.equal(getOkfConceptSchema("Domain Entity")?.directoryHint, "entities/<slug>.md");
@@ -39,7 +46,7 @@ test("[AB-SCHEMA-026][AB-SCHEMA-027][AB-SCHEMA-028] new schemas expose canonical
   const entity = getOkfConceptSchema("Domain Entity");
   const metric = getOkfConceptSchema("Metric");
   assert.ok(entity?.relationshipGuidance.some((item) => item.kind === "part-of" && item.targetTypes.includes("Domain")));
-  assert.ok(metric?.relationshipGuidance.some((item) => item.kind === "depends-on" && item.targetTypes.includes("Event")));
+  assert.ok(metric?.relationshipGuidance.some((item) => item.kind === "implemented-in" && item.targetTypes.includes("Repository")));
   for (const type of ["Domain Entity", "Metric"]) {
     for (const title of ["Vehicle", "Listing"]) {
       const concept = parseConceptDocument(`${type === "Metric" ? "metrics" : "entities"}/${title.toLowerCase()}.md`, [
@@ -57,16 +64,12 @@ test("[AB-SCHEMA-022] distinct parent and specialization evidence retains both s
   assert.deepEqual(selected, ["Service", "Software Component"]);
 });
 
-test("[AB-SCHEMA-010][AB-SCHEMA-011] AWS and business schemas guide evidence-led investigation", () => {
-  const lambda = getOkfConceptSchema("AWS Lambda");
-  assert.ok(lambda?.investigationQuestions.some((question) => question.includes("business purpose")));
-  assert.deepEqual(lambda?.metadataGuidance.filter((item) => item.requiredWhenSupported).map((item) => item.field), [
-    "business_purpose", "resource_name", "runtime", "handler",
-  ]);
-  assert.ok(lambda?.relationshipGuidance.some((item) => item.kind === "reads-from" && item.targetTypes.includes("Database Table")));
-  assert.ok(getOkfConceptSchema("Terraform Module")?.relationshipGuidance.some((item) => item.kind === "implemented-in"));
-  assert.ok(getOkfConceptSchema("Business Flow")?.metadataGuidance.some((item) => item.field === "outcome"));
-  assert.match(lambda?.limitationGuidance ?? "", /never invent/);
+test("[AB-SCHEMA-030][AB-SCHEMA-035] provider-neutral schemas guide evidence-led investigation", () => {
+  const runtimeFunction = getOkfConceptSchema("Function");
+  assert.ok(runtimeFunction?.relationshipGuidance.some((item) => item.kind === "reads-from" && item.targetTypes.includes("Database Table")));
+  assert.ok(runtimeFunction?.relationshipGuidance.some((item) => item.kind === "runs-on" && item.targetTypes.includes("Server")));
+  assert.ok(getOkfConceptSchema("Infrastructure Module")?.relationshipGuidance.some((item) => item.kind === "implemented-in"));
+  assert.ok(getOkfConceptSchema("Business Flow")?.flowStepGuidance?.actions.includes("invokes"));
 });
 
 test("[AB-SCHEMA-019][AB-SCHEMA-022] component specializations inherit canonical navigation guidance", () => {
@@ -77,12 +80,12 @@ test("[AB-SCHEMA-019][AB-SCHEMA-022] component specializations inherit canonical
 });
 
 test("[AB-SCHEMA-002][AB-SCHEMA-008] selection is sparse and prefers specific supported types", () => {
-  assert.deepEqual(selectOkfConceptSchemas(["aws sqs queue", "producer or consumer evidence", "SQS resource identity"]).map((item) => item.type), ["AWS SQS Queue"]);
-  assert.deepEqual(selectOkfConceptSchemas(["server entry point", "http server"]).map((item) => item.type), ["Server"]);
+  assert.deepEqual(selectOkfConceptSchemas(["message queue", "producer or consumer evidence", "queue identity"]).map((item) => item.type), ["Queue"]);
+  assert.deepEqual(selectOkfConceptSchemas(["compute host", "virtual machine"]).map((item) => item.type), ["Server"]);
   assert.deepEqual(selectOkfConceptSchemas(["HTTP routes backed by handlers"]).map((item) => item.type), ["API Surface"]);
   assert.deepEqual(selectOkfConceptSchemas(["independent endpoint with endpoint policy"]).map((item) => item.type), ["API Endpoint"]);
   assert.deepEqual(selectOkfConceptSchemas(["terraform root configuration"]).map((item) => item.type), ["Infrastructure Definition"]);
-  assert.deepEqual(selectOkfConceptSchemas(["terraform module"]).map((item) => item.type), ["Terraform Module"]);
+  assert.deepEqual(selectOkfConceptSchemas(["infrastructure module"]).map((item) => item.type), ["Infrastructure Module"]);
   assert.deepEqual(selectOkfConceptSchemas(["repository named commerce-api"]).map((item) => item.type), ["Repository"]);
   assert.equal(selectOkfConceptSchemas(["repository named commerce-api"]).some((item) => item.type === "Domain"), false);
   assert.deepEqual(selectOkfConceptSchemas([]), []);
@@ -91,26 +94,25 @@ test("[AB-SCHEMA-002][AB-SCHEMA-008] selection is sparse and prefers specific su
 test("[AB-SCHEMA-017][AB-SCHEMA-018] catalog guidance keeps implementation details inside useful boundaries", () => {
   assert.match(getOkfConceptSchema("API Surface")?.purpose ?? "", /related operations/);
   assert.match(getOkfConceptSchema("API Endpoint")?.evidenceRequirements.join(" ") ?? "", /independent/);
-  assert.match(getOkfConceptSchema("AWS Lambda")?.investigationQuestions[0] ?? "", /only a handler/);
-  assert.match(getOkfConceptSchema("Terraform Module")?.purpose ?? "", /reusable/);
+  assert.match(getOkfConceptSchema("Function")?.purpose ?? "", /independent trigger/);
+  assert.match(getOkfConceptSchema("Infrastructure Module")?.purpose ?? "", /reusable/);
   assert.match(getOkfConceptSchema("Deployment")?.evidenceRequirements.join(" ") ?? "", /external evidence/);
   assert.deepEqual(selectOkfConceptSchemas(["question about an unknown owner"]), []);
 });
 
 test("[AB-SCHEMA-015] selection recognizes natural evidence word order and catalog phrases", () => {
   const selected = selectOkfConceptSchemas([
-    "AWS SAM defines an SQS deletion queue and Lambda consumer",
+    "message queue with producer and consumer evidence",
+    "runtime function with an independent trigger",
     "Several observed user actions are business behaviors",
   ]).map((item) => item.type);
-  assert.deepEqual(selected, ["AWS Lambda", "AWS SQS Queue", "Business Flow"]);
-  assert.equal(selected.includes("Queue"), false);
+  assert.deepEqual(selected, ["Business Flow", "Function", "Queue"]);
 });
 
 test("[AB-SCHEMA-003][AB-SCHEMA-009] repeated instances are allowed and missing evidence stays visible", () => {
-  const selected = selectOkfConceptSchemas(["aws lambda function"]);
-  assert.deepEqual(selected.map((item) => item.type), ["AWS Lambda"]);
-  assert.ok(selected[0]?.missingEvidence.includes("Lambda resource or runtime identity"));
-  assert.match(getOkfConceptSchema("AWS Lambda")?.limitationGuidance ?? "", /never invent/);
+  const selected = selectOkfConceptSchemas(["runtime function"]);
+  assert.deepEqual(selected.map((item) => item.type), ["Function"]);
+  assert.ok(selected[0]?.missingEvidence.includes("independent trigger, deployment, scaling, permission, failure or operational boundary"));
 });
 
 test("[AB-SCHEMA-004][AB-SCHEMA-005][AB-SCHEMA-029] additive known types preserve older and foreign concepts", () => {
@@ -123,4 +125,8 @@ test("[AB-SCHEMA-004][AB-SCHEMA-005][AB-SCHEMA-029] additive known types preserv
   ]);
   const unknown = parseConceptDocument("custom.md", "---\ntype: Custom Domain Type\n---\nBody\n");
   assert.deepEqual(validateConceptAgainstSchema(unknown), []);
+  const retired = parseConceptDocument("components/old.md", "---\ntype: AWS Lambda\n---\nBody\n");
+  assert.deepEqual(validateConceptAgainstSchema(retired), [
+    "components/old.md: AWS Lambda is retired for AgentBase authoring; use Function",
+  ]);
 });

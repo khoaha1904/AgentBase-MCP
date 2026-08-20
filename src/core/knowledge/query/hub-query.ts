@@ -40,6 +40,12 @@ export type HubSearchOptions = Readonly<{
   maximumDocumentBytes?: number;
 }>;
 
+export type HubListOptions = Readonly<{
+  types?: readonly string[];
+  limit?: number;
+  maximumDocumentBytes?: number;
+}>;
+
 export type HubTraversalOptions = Readonly<{
   direction?: "outbound" | "inbound" | "both";
   kinds?: readonly string[];
@@ -133,6 +139,18 @@ export async function searchHubConcepts(reader: HubQueryReader, query: string, o
     }
   }
   return { status: "ok", commit: reader.commit, matches: found.slice(0, limit) };
+}
+
+export async function listHubConcepts(reader: HubQueryReader, options: HubListOptions = {}): Promise<readonly HubConceptSummary[]> {
+  const limit = options.limit ?? 100;
+  if (!Number.isInteger(limit) || limit < 1 || limit > 512) throw new Error("Hub concept list limit must be 1..512");
+  const types = validateList(options.types, "types");
+  const graph = await loadHubGraph(reader, options.maximumDocumentBytes ?? 256 * 1024);
+  return [...graph.concepts.keys()]
+    .filter((identity) => !types || types.has(graph.concepts.get(identity)!.document.type))
+    .sort()
+    .slice(0, limit)
+    .map((identity) => summarizeHubConcept(graph, identity));
 }
 
 export async function traverseHubConcepts(reader: HubQueryReader, start: string, options: HubTraversalOptions = {}): Promise<HubTraversalResult> {

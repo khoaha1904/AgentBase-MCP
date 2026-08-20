@@ -1,4 +1,6 @@
-import type { ConfirmedDomain, HubSearchOptions, HubTraversalOptions } from "../../../core/knowledge/index.ts";
+import type {
+  ConfirmedDomain, HubSearchOptions, HubTraversalOptions, OkfAuthoringGuidanceRequest,
+} from "../../../core/knowledge/index.ts";
 import type { BootstrapMode } from "../workspace/bootstrap.ts";
 import type { LiveSourceBinding } from "../query/query.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
@@ -8,13 +10,16 @@ export type HubToolActions = Readonly<{
   configure(input: Readonly<{ mode: "existing" | "new"; repositoryUrl?: string }>): Promise<unknown>;
   previewBootstrap(repositoryUrl: string, mode: BootstrapMode): Promise<unknown>;
   bootstrap(repositoryUrl: string, mode: BootstrapMode): Promise<unknown>;
+  preflight(sourceRepository: string): Promise<unknown>;
   prepare(input: Readonly<{
     mode: "new" | "refresh";
     sourceRepository: string;
     evidenceDigest: string;
     subjectDirectory: string;
     confirmedDomain?: ConfirmedDomain;
-    signals: readonly string[];
+    signals?: readonly string[];
+    guidanceRequest?: OkfAuthoringGuidanceRequest;
+    coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
   }>): Promise<unknown>;
   finalize(sessionId: string, questions?: readonly QuestionDeclaration[]): Promise<unknown>;
   inspect(proposalId: string): Promise<unknown>;

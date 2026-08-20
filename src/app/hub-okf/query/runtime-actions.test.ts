@@ -7,6 +7,14 @@ import test from "node:test";
 import { globalHubConfigurationPath } from "../configuration/configuration-file.ts";
 import { createHubRuntimeActions } from "./runtime-actions.ts";
 
+const repositoryGuidance = {
+  candidates: [{ id: "repository", identityHint: "source", identityBasis: "checkout root",
+    queryValue: "repository", evidenceIds: ["readme"] }],
+  semanticObservations: [{ id: "readme", candidateId: "repository", role: "documentation" as const,
+    signal: "repository", source: { path: "README.md", startLine: 1, endLine: 1 } }],
+  resourceObservations: [],
+};
+
 test("[AB-HUB-SETUP-001..003][AB-HUB-SETUP-006] runtime defers Hub setup and reloads it after explicit local creation", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "hub-runtime-test-"));
   const sourceRoot = path.join(root, "source");
@@ -25,8 +33,17 @@ test("[AB-HUB-SETUP-001..003][AB-HUB-SETUP-006] runtime defers Hub setup and rel
     assert.equal(status.kind, "local-only");
     assert.equal(status.pendingCount, 0);
     assert.equal(status.localRoot, configured.localRoot);
+    const preflight = await actions.preflight(sourceRoot) as {
+      repository: { kind: string; repository: { id: string } };
+      domains: unknown[];
+      source: { identityHints: { remotes: string[]; rootCommits: string[] } };
+    };
+    assert.equal(preflight.repository.kind, "new");
+    assert.match(preflight.repository.repository.id, /^repository-source-[a-f0-9]{12}$/);
+    assert.deepEqual(preflight.domains, []);
+    assert.deepEqual(preflight.source.identityHints, { remotes: [], rootCommits: [] });
     const prepared = await actions.prepare({ mode: "new", sourceRepository: sourceRoot,
-      evidenceDigest: `sha256:${"b".repeat(64)}`, subjectDirectory: "repositories/acme", signals: ["repository"],
+      evidenceDigest: `sha256:${"b".repeat(64)}`, subjectDirectory: "repositories/acme", guidanceRequest: repositoryGuidance,
       confirmedDomain: {
         identity: "domains/commerce", title: "Commerce",
         evidenceResource: "agentbase://owner-guidance/domains/commerce",
@@ -35,6 +52,7 @@ test("[AB-HUB-SETUP-001..003][AB-HUB-SETUP-006] runtime defers Hub setup and rel
       selectedSchemas: string[];
       confirmedDomain: { identity: string; title: string; evidenceResource: string };
       source: { repositoryId: string; commit: string | null; dirty: boolean };
+      sourceRepositoryId: string;
       continuity: { commit: string; currentSource: unknown[]; neighbors: unknown[]; navigationPaths: string[] };
     };
     assert.equal(prepared.continuity.commit, prepared.baseCommit);
@@ -43,6 +61,7 @@ test("[AB-HUB-SETUP-001..003][AB-HUB-SETUP-006] runtime defers Hub setup and rel
     assert.deepEqual(prepared.continuity.navigationPaths, ["index.md"]);
     assert.ok(prepared.selectedSchemas.includes("Domain"));
     assert.equal(prepared.source.repositoryId.startsWith("repository-source-"), true);
+    assert.equal(prepared.sourceRepositoryId, preflight.repository.repository.id);
     assert.equal(prepared.source.dirty, true);
     assert.deepEqual(prepared.confirmedDomain, {
       identity: "domains/commerce", title: "Commerce",

@@ -51,7 +51,9 @@ export async function executeHubCli(
         : await actions.bootstrap(repositoryUrl, mode);
     } else if (command === "prepare") {
       const mode = required(values, "--mode");
-      if (mode !== "new" && mode !== "refresh") throw new Error("--mode must be new or refresh");
+      if (mode !== "refresh") {
+        throw new Error("CLI prepare supports refresh only; run Initial Ingest through the agentbase-ingest skill");
+      }
       output = await actions.prepare({
         mode,
         sourceRepository: required(values, "--repo"),

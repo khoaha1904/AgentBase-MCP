@@ -14,8 +14,13 @@ export type EngineIdentity = Readonly<{
 }>;
 
 export type RepositorySourceState = Readonly<{
+  /** Machine-local graph namespace identity, never the canonical Hub Repository ID. */
   repositoryId: string;
   displayName: string;
+  identityHints: Readonly<{
+    remotes: readonly string[];
+    rootCommits: readonly string[];
+  }>;
   commit: string | null;
   dirty: boolean;
   dirtyDigest: string | null;

@@ -13,36 +13,49 @@ test("[AB-SCHEMA-001..003][AB-SCHEMA-006..011][AB-SCHEMA-025..029] MCP lists, re
     "list_okf_schemas", "get_okf_schema", "select_okf_schemas", "validate_okf_concept", "validate_okf_relationships",
     "get_okf_authoring_schemas", "validate_okf_bundle", "validate_okf_changes",
   ]);
-  assert.equal(body(callOkfSchemaTool("list_okf_schemas", {})).catalogVersion, "5.1.0");
-  const lambda = body(callOkfSchemaTool("get_okf_schema", { type: "AWS Lambda" })).schema as {
-    type: string; investigationQuestions: string[]; metadataGuidance: { field: string }[];
+  assert.equal(body(callOkfSchemaTool("list_okf_schemas", {})).catalogVersion, "6.0.0");
+  const runtimeFunction = body(callOkfSchemaTool("get_okf_schema", { type: "Function" })).schema as {
+    type: string; relationshipGuidance: { kind: string }[];
   };
-  assert.equal(lambda.type, "AWS Lambda");
-  assert.ok(lambda.investigationQuestions.length >= 6);
-  assert.ok(lambda.metadataGuidance.some((item) => item.field === "handler"));
-  const selected = body(callOkfSchemaTool("select_okf_schemas", { signals: ["terraform module", "aws sqs queue"] }));
+  assert.equal(runtimeFunction.type, "Function");
+  assert.ok(runtimeFunction.relationshipGuidance.some((item) => item.kind === "runs-on"));
+  const selected = body(callOkfSchemaTool("select_okf_schemas", { signals: ["infrastructure module", "message queue"] }));
   assert.equal(selected.advisory, true);
-  assert.deepEqual((selected.recommendations as { type: string }[]).map((item) => item.type), ["AWS SQS Queue", "Terraform Module"]);
-  const business = body(callOkfSchemaTool("get_okf_authoring_schemas", {
-    signals: ["business entity Vehicle", "performance metric click-through rate"],
-  }));
-  assert.deepEqual((business.schemas as { type: string }[]).map((item) => item.type), ["Metric", "Domain Entity"]);
+  assert.deepEqual((selected.recommendations as { type: string }[]).map((item) => item.type), ["Infrastructure Module", "Queue"]);
 });
 
-test("[AB-SCHEMA-013] MCP returns only selected complete schemas in one bounded call", () => {
+test("[AB-SCHEMA-031..034] MCP returns evidence-bearing provider-neutral guidance in one bounded call", () => {
   const selected = body(callOkfSchemaTool("get_okf_authoring_schemas", {
-    signals: ["terraform module", "aws sqs queue"],
+    candidates: [{ id: "worker", identity_hint: "worker", identity_basis: "Terraform address",
+      query_value: "aws_lambda_function.worker", evidence_ids: ["resource-worker"] }],
+    semantic_observations: [],
+    resource_observations: [{ id: "resource-worker", candidate_id: "worker", source_tool: "terraform",
+      resource_type: "aws_lambda_function", address: "aws_lambda_function.worker",
+      source: { path: "main.tf", start_line: 1, end_line: 8 } }],
   }));
   assert.equal(selected.advisory, true);
-  const schemas = selected.schemas as { type: string; investigationQuestions: string[] }[];
-  assert.deepEqual(schemas.map((schema) => schema.type), ["AWS SQS Queue", "Terraform Module"]);
-  assert.ok(schemas.every((schema) => schema.investigationQuestions.length > 0));
-  assert.equal(schemas.some((schema) => schema.type === "Repository"), false);
+  assert.equal(selected.catalogVersion, "6.0.0");
+  const recommendations = selected.recommendations as { status: string; schema: { type: string }; technology: { provider: string; product: string } }[];
+  assert.deepEqual(recommendations.map((item) => item.schema.type), ["Function"]);
+  assert.deepEqual(recommendations[0]?.technology, {
+    provider: "aws", product: "lambda", sourceTool: "terraform", resourceType: "aws_lambda_function",
+  });
 
   const excessive = callOkfSchemaTool("get_okf_authoring_schemas", {
-    signals: Array.from({ length: 65 }, (_, index) => `signal-${index}`),
+    candidates: Array.from({ length: 65 }, (_, index) => ({ id: `c-${index}`, identity_hint: "x", identity_basis: "x",
+      query_value: "x", evidence_ids: ["e"] })), semantic_observations: [], resource_observations: [],
   });
   assert.equal(excessive.isError, true);
+  const callerMapped = callOkfSchemaTool("get_okf_authoring_schemas", {
+    candidates: [{ id: "worker", identity_hint: "worker", identity_basis: "Terraform address",
+      query_value: "worker", evidence_ids: ["resource-worker"], provider: "aws" }],
+    semantic_observations: [],
+    resource_observations: [{ id: "resource-worker", candidate_id: "worker", source_tool: "terraform",
+      resource_type: "aws_lambda_function", address: "aws_lambda_function.worker",
+      source: { path: "main.tf", start_line: 1, end_line: 8 } }],
+  });
+  assert.equal(callerMapped.isError, true);
+  assert.match(JSON.stringify(body(callerMapped)), /unknown or missing fields/);
 });
 
 test("[AB-SCHEMA-026][AB-SCHEMA-027][SC-002] Domain Entity and Metric instances validate as one linked graph", () => {
@@ -61,8 +74,8 @@ test("[AB-SCHEMA-026][AB-SCHEMA-027][SC-002] Domain Entity and Metric instances 
         "Vehicle belongs to the [platform](../systems/vehicle-platform.md).") },
     { identity: "metrics/listing-views", path: "metrics/listing-views.md",
       content: concept("Metric", "Listing Views", "metric-source",
-        "{ kind: depends-on, target: entities/vehicle, evidence: [metric-source] }",
-        "Listing Views is defined over a [vehicle](../entities/vehicle.md).") },
+        "{ kind: part-of, target: systems/vehicle-platform, evidence: [metric-source] }",
+        "Listing Views belongs to the [platform](../systems/vehicle-platform.md).") },
   ];
   const validated = callOkfSchemaTool("validate_okf_bundle", { concepts });
   assert.equal(validated.isError, undefined);
@@ -82,7 +95,7 @@ test("[AB-SCHEMA-004][AB-SCHEMA-005] MCP validates known policy and preserves un
 test("[AB-SCHEMA-012][AB-BENCH-030] MCP validates bounded relationship content without filesystem authority", () => {
   const generated = "generated: { by: agentbase/0.0.0, at: 2026-08-15T00:00:00Z }";
   const lambda = [
-    "---", "type: AWS Lambda", "status: draft", generated, "sources:", "  - id: table-read",
+    "---", "type: Function", "status: draft", generated, "sources:", "  - id: table-read",
     "    resource: repository://repository-orders-aaaaaaaaaaaa/src/worker.ts#L1-L10",
     "relationships:", "  - { kind: reads-from, target: orders, evidence: [table-read] }",
     "---", "", "Uses [orders](orders.md).", "",
@@ -108,7 +121,7 @@ test("[AB-SCHEMA-012][AB-BENCH-030] MCP validates bounded relationship content w
 test("[AB-SCHEMA-014] MCP validates concept policy and relationships in one bounded bundle call", () => {
   const generated = "generated: { by: agentbase/0.0.0, at: 2026-08-15T00:00:00Z }";
   const lambda = [
-    "---", "title: Worker", "description: Processes orders.", "type: AWS Lambda", "status: draft", generated,
+    "---", "title: Worker", "description: Processes orders.", "type: Function", "status: draft", generated,
     "sources:", "  - id: table-read", "    resource: repository://repository-orders-aaaaaaaaaaaa/src/worker.ts#L1-L10",
     "relationships:", "  - { kind: reads-from, target: orders, evidence: [table-read] }", "---", "", "Uses [orders](orders.md).", "",
   ].join("\n");
@@ -148,7 +161,7 @@ test("[AB-SCHEMA-014] MCP validates concept policy and relationships in one boun
 
 test("[AB-SCHEMA-021] changed-set validation uses unchanged summaries instead of the whole Hub", () => {
   const lambda = [
-    "---", "title: Worker", "description: Processes orders.", "type: AWS Lambda", "status: draft",
+    "---", "title: Worker", "description: Processes orders.", "type: Function", "status: draft",
     "generated: { by: agentbase/0.0.0, at: 2026-08-15T00:00:00Z }", "sources:", "  - id: table-read",
     "    resource: repository://repository-orders-aaaaaaaaaaaa/src/worker.ts#L1-L10",
     "relationships:", "  - { kind: reads-from, target: data/orders, evidence: [table-read] }",

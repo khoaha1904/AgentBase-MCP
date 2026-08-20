@@ -263,9 +263,9 @@ export function assessOwnerReviewUsefulness(concepts, { navigationFindings = [],
   if (endpoints.length >= 3 && !values.some((concept) => concept.type === "API Surface")) {
     findings.push(`${endpoints.length} API Endpoint concepts fragment one likely API surface`);
   }
-  const lambdas = values.filter((concept) => concept.type === "AWS Lambda");
-  if (lambdas.length >= 3 && !values.some((concept) => ["System", "Software Component", "Service"].includes(concept.type))) {
-    findings.push(`${lambdas.length} AWS Lambda concepts form an implementation inventory without a useful parent`);
+  const functions = values.filter((concept) => concept.type === "Function");
+  if (functions.length >= 3 && !values.some((concept) => ["System", "Software Component", "Service"].includes(concept.type))) {
+    findings.push(`${functions.length} Function concepts form an implementation inventory without a useful parent`);
   }
   return {
     status: findings.length ? "needs_revision" : "useful_for_owner_review",

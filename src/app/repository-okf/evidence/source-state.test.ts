@@ -27,7 +27,7 @@ function repositoryFixture() {
   return { root, cleanup: () => fs.rmSync(root, { recursive: true, force: true }) };
 }
 
-test("[AB-MVP-006] source identity records the commit and a stable repository ID without checkout paths", () => {
+test("[AB-MVP-006][AB-INGEST-001] source identity records graph state and non-canonical Hub hints without checkout paths", () => {
   const fixture = repositoryFixture();
   try {
     const state = discoverRepositorySourceState(fixture.root, "2026-08-12T03:00:00.000Z");
@@ -35,6 +35,8 @@ test("[AB-MVP-006] source identity records the commit and a stable repository ID
     assert.equal(state.dirty, false);
     assert.equal(state.dirtyDigest, null);
     assert.match(state.repositoryId, /^repository-[a-z0-9-]+-[a-f0-9]{12}$/);
+    assert.deepEqual(state.identityHints.remotes, ["https://example.invalid/team/repository"]);
+    assert.deepEqual(state.identityHints.rootCommits, [git(fixture.root, ["rev-list", "--max-parents=0", "HEAD"])]);
     assert.equal(JSON.stringify(state).includes(fixture.root), false);
   } finally {
     fixture.cleanup();

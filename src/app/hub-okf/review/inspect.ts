@@ -27,6 +27,7 @@ export type HubProposalInspection = Readonly<{
   counts: Readonly<Record<HubLifecycleEntry["change"], number>>;
   applicable: boolean;
   questions?: readonly QuestionDeclaration[];
+  coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
 }>;
 
 function inspectContent(root: string, relative: string, maximum: number): HubInspectedContent | undefined {

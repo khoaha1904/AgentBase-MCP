@@ -22,7 +22,7 @@ src/core/
     governance/                   domain, directive and live-claim policy
     proposals/                    proposal validation and atomic apply
     query/                        accepted-knowledge reads and continuity
-    schemas/                      versioned catalog and grouped definitions
+    schemas/                      generic catalog, guidance and versioned profiles
   hub/                            Hub identity, ancestry and transitions
 src/providers/
   fake-code-intelligence/         deterministic conformance provider
@@ -107,6 +107,14 @@ and returns visible recovery rather than hidden retry.
   `app/hub-okf` owns proposal-coupled question recovery, the private atomic
   ledger and answer-to-guidance proposals; the MCP gateway supplies only the
   authorized current-repository binding.
+- `agentbase-ingest` owns the five-stage host-agent workflow: Preflight,
+  Discover, Investigate, Author and Validate. MCP remains deterministic and
+  bounded: it resolves Repository/Domain context, maps exact observations with
+  catalog/profile versions, prepares one isolated workspace and validates one
+  proposal. It contains no reasoning engine or persistent candidate database.
+- Catalog roles are provider-neutral. Terraform Detector v1 normalizes source
+  resources and AWS Profile v1 maps supported products to generic roles;
+  provider/product/source-tool remain metadata and evidence.
 - GitHub access is confined to explicit attach, bootstrap, publication and
   synchronization workflows. Local knowledge work requires no network.
 - Benchmark model execution is an opt-in external Codex process in an isolated
