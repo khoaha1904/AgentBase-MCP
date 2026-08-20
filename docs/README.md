@@ -46,7 +46,11 @@ is the portable archive.
 ## Current checkpoint
 
 - Active capability: none; most recent completed capability:
-  `020-domain-metric-concepts`.
+  `021-agentstack-foundation`.
+- Capability 021 replaces the hand-written architecture metric engine, exact
+  ownership registry and non-growing baselines with native dependency-cruiser,
+  Knip and redacted Gitleaks gates. Modular ownership, public entrypoints,
+  cycles and layer direction remain enforced without file-size/import budgets.
 - Capability 018 is complete with 339 passing offline tests. Its V11 real run is
   accepted for confirmed Domain and shared-navigation qualification; no V12
   numeric-snapshot iteration was authorized.

@@ -10,8 +10,9 @@
   "scripts": {
     "spec:check": "node scripts/check-specs.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "architecture:check": "node scripts/check-architecture.mjs",
-    "architecture:changed": "node scripts/check-architecture.mjs --changed",
+    "depcruise": "depcruise src --config .dependency-cruiser.cjs",
+    "knip": "knip",
+    "gitleaks": "gitleaks detect --no-git --redact --config .gitleaks.toml",
     "test": "node scripts/run-tests.mjs",
     "test:code-intelligence": "node --test src/core/code-intelligence/contract.test.ts",
     "test:fake-provider": "node --test src/providers/fake-code-intelligence/fake-provider.test.ts",
@@ -20,11 +21,14 @@
     "integration:codebase-memory": "node src/cli.ts codebase-memory:integration",
     "benchmark:codebase-memory": "node src/cli.ts codebase-memory:benchmark",
     "benchmark:okf": "node scripts/benchmark-okf.mjs",
-    "check": "npm run spec:check && npm run typecheck && npm run architecture:check && npm test",
+    "check": "npm run spec:check && npm run typecheck && npm run depcruise && npm run knip && npm run gitleaks && npm test",
     "verify": "npm run check && git diff --check"
   },
   "devDependencies": {
+    "@swc/core": "1.16.0",
     "@types/node": "24.13.3",
+    "dependency-cruiser": "18.2.0",
+    "knip": "6.32.2",
     "typescript": "5.9.3"
   },
   "dependencies": {
@@ -34,6 +38,7 @@
     "yaml": "2.9.0"
   },
   "allowScripts": {
-    "codebase-memory-mcp@0.10.1": true
+    "codebase-memory-mcp@0.10.1": true,
+    "@swc/core@1.16.0": true
   }
 }

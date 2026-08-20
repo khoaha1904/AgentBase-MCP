@@ -8,8 +8,9 @@ with erasable syntax and statically checked without a generated build tree.
 Every runtime file has one capability owner, every capability exposes a small
 public `index.ts`, and cross-capability imports use that entrypoint. Core cannot
 import providers or application workflows; providers cannot import application
-workflows. Tests stay beside their owner. `scripts/module-boundaries.json` is
-the executable ownership registry and takes precedence over diagrams.
+workflows. Tests stay beside their owner. This document and the source directory
+layout are the ownership map; dependency-cruiser enforces cycles, direction and
+cross-capability public-entrypoint use without a second ownership registry.
 
 ```text
 src/cli.ts                         composition root
@@ -31,9 +32,8 @@ src/app/
 
 Do not create generic `common`, `utils` or `helpers` areas for possible reuse.
 Split a file only when the results have distinct responsibilities and reasons
-to change. Review-size findings are cohesion signals; an intentionally cohesive
-hotspot may use one exact owner-approved, non-growing baseline instead of
-forwarding wrappers or arbitrary fragments.
+to change. Review a cohesive file from behavior and diff evidence; file lines,
+bytes, density, line length and import count are not architecture gates.
 
 ## Dependency and state boundaries
 
@@ -102,8 +102,9 @@ runtime/build dependencies.
 
 ## Verification
 
-`npm run verify` composes specification checks, TypeScript checking,
-architecture boundaries, offline tests and `git diff --check`. Canonical tests
-use fakes, captured provider responses, disposable Git repositories and fake
-GitHub HTTP. Native-provider qualification, real GitHub actions and model-backed
-benchmarks remain explicit opt-in operations.
+`npm run verify` composes specification checks, TypeScript checking, native
+dependency architecture, dead-code/dependency health, redacted secret scanning,
+offline tests and `git diff --check`. Canonical tests use fakes, captured
+provider responses, disposable Git repositories and fake GitHub HTTP.
+Native-provider qualification, real GitHub actions and model-backed benchmarks
+remain explicit opt-in operations.

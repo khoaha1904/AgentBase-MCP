@@ -2,7 +2,12 @@
 
 Active capability: None.
 
-Most recent completed: [`020-domain-metric-concepts`](020-domain-metric-concepts/spec.md).
+Most recent completed: [`021-agentstack-foundation`](021-agentstack-foundation/spec.md).
+
+Capability 021 replaces the repository-specific architecture metric engine and
+exact registries with native dependency, dead-code and redacted secret gates.
+It preserves modular-monolith ownership and dependency direction while removing
+line/byte/import budgets that obstruct ordinary cohesive development.
 
 Capability 020 is complete. It adds generic Domain Entity and Metric concept schemas, clarifies
 the difference between a catalog schema and a repository-specific concept

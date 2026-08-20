@@ -39,17 +39,17 @@ source identifiers in English unless the user asks otherwise.
 - Organize source by capability ownership, expose a small public entrypoint and
   import other capabilities only through it.
 - Keep tests beside their behavior owner.
-- Treat file-size/import findings as cohesion review signals. Split only
-  distinct responsibilities; never add forwarding wrappers or fragments merely
-  to lower metrics. An intentional cohesive hotspot needs one exact,
-  owner-approved, non-growing baseline with a review condition.
+- Review cohesive changes from their responsibility and diff, not line, byte or
+  import budgets. Split only distinct responsibilities; never add forwarding
+  wrappers or fragments merely to satisfy a metric.
 - Prefer deterministic local Code Intelligence. Keep detailed graphs private,
   disposable and non-canonical. Only bounded provenance-bearing observations
   may enter OKF workflows.
 
 `docs/ARCHITECTURE.md` is the ownership index. Before changing runtime behavior,
-confirm the active plan, domain contract, registered owner, public entrypoint
-and focused requirement-linked tests.
+confirm the active plan, domain contract, owning capability, public entrypoint
+and focused requirement-linked tests. Run `npm run depcruise` after source
+dependency changes; do not weaken a rule without explicit owner approval.
 
 ## Safety and legacy boundaries
 

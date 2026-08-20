@@ -31,20 +31,22 @@ override this contract after completion.
 
 ## Architecture and verification
 
-- **AB-FND-010** — Every authored runtime/test file has exactly one registered
-  owner except explicit composition files; unknown, overlapping and stale owners
-  fail with exact paths.
-- **AB-FND-011** — Cross-capability imports use registered public entrypoints;
-  private imports fail verification.
-- **AB-FND-012** — Core never imports providers/apps, providers never import
-  apps, and local dependency cycles fail with the exact loop.
-- **AB-FND-013** — Review budgets are measured. Exceptions are exact,
-  owner-approved and non-growing; split only distinct responsibilities, never
-  metric-driven wrappers or fragments.
+- **AB-FND-010** — Every authored runtime/test file remains attributable to one
+  capability through the source layout and architecture ownership index. No
+  duplicate exact ownership registry is required.
+- **AB-FND-011** — Cross-capability imports use the target capability's public
+  `index.ts`; native dependency analysis rejects private imports with exact
+  source and target paths.
+- **AB-FND-012** — Native dependency analysis rejects core imports of
+  providers/apps, provider imports of apps and local dependency cycles.
+- **AB-FND-013** — Architecture verification has no file line, byte, line-
+  length, density or local-import budget and no non-growing metric baseline.
+  Split only distinct responsibilities, never metric-driven wrappers.
 - **AB-FND-014** — Tests and deterministic support stay with the narrowest
   behavior owner or explicit repository fixture owner.
 - **AB-FND-015** — `npm run verify` is the canonical offline specification,
-  type, architecture, test and diff gate.
+  type, dependency architecture, dead-code/dependency, redacted-secret, test
+  and diff gate.
 - **AB-FND-016** — Core owns provider-neutral repository-map and
   relevant-neighborhood contracts.
 - **AB-FND-017** — The deterministic fake passes the same neutral conformance
@@ -53,3 +55,12 @@ override this contract after completion.
   values; adapters translate at their boundary.
 - **AB-FND-019** — Foundation verification needs no network, credentials, model,
   daemon or arbitrary executable fallback.
+- **AB-FND-020** — Knip uses explicit runtime, script and test entrypoints and
+  gates unused files and dependencies. Intentionally public exports/types are
+  outside its initial blocking scope.
+- **AB-FND-021** — Gitleaks extends maintained default rules, scans the working
+  tree with redacted output and never auto-installs or silently skips a missing
+  native binary.
+- **AB-FND-022** — Dependency-cruiser, its parser and Knip are exact lockfile-
+  backed development dependencies. The reviewed native gitleaks version remains
+  an explicit environment prerequisite, not a production dependency.
