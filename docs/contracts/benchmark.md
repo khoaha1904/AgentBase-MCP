@@ -156,8 +156,10 @@ benchmarks.
   tables, buckets, infrastructure definitions and hosts receive credit only when
   an allowed useful parent records the knowledge with exact repository evidence;
   they are not required as standalone concept files. Guidance failure is
-  Incomplete, Finalize runs exactly once without retry, and only released type
-  names plus canonical relationship directions are valid.
+  Incomplete except for one failed retryable `INVALID_ARGUMENT` followed by one
+  successful pre-state correction. The trace retains both attempts. Finalize
+  runs exactly once without retry, and only released type names plus canonical
+  relationship directions are valid.
 - **AB-BENCH-046** — The current MVP qualification suite contains only pinned
   Terraform repositories. SAM/CloudFormation and mixed frontend/backend
   fixtures are outside the current qualification scope. Their immutable prompts,
