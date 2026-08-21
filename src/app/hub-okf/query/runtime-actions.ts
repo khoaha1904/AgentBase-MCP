@@ -147,6 +147,7 @@ export function createHubRuntimeActions(
         ...(configuration.kind === "remote" ? { hub: configuration.hub } : { localHubId: configuration.localHubId }),
         baseCommit: localHub.activeHead,
         checkoutRoot: localHub.root,
+        sourceRepositoryRoot: path.resolve(input.sourceRepository),
         sourceRepositoryId,
         evidenceDigest,
         subjectDirectory: input.subjectDirectory,

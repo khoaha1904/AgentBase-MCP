@@ -105,6 +105,10 @@ is the portable archive.
   loader and tells agents that Prepare already owns root/category entries. A
   first Domain stays sparse and summarizes only current evidence instead of
   inventing a complete domain definition.
+- AB-INGEST-014 binds the authorized source checkout only to private session
+  state and makes Finalize reject missing, escaping, non-file or out-of-range
+  citations for that current repository. Foreign-repository citations are not
+  dereferenced without separate authorization.
 - Post-fix probe `2026-08-21T154146Z` proves duplicate navigation is gone and
   again passes the complete lifecycle. It is not replica-qualified: the model
   reintroduced an optional Flow, selected CloudFormation/handler evidence over

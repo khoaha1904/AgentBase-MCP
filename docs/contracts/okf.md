@@ -316,6 +316,13 @@ Normative OKF source is pinned to commit
   root/category navigation. Agent authoring preserves those rows rather than
   appending known targets, and bundle validation rejects a repeated normalized
   navigation target within one index.
+- **AB-INGEST-014** — Initial Ingest Finalize checks every new citation for the
+  authorized current repository against its private local checkout. The path
+  resolves beneath that checkout to a regular file and the cited end line is
+  within the file. Failure rejects the proposal but leaves the session
+  repairable. Foreign-repository citations are not dereferenced without a
+  separately authorized checkout, and local checkout paths never enter Hub
+  knowledge or proposal metadata.
 - **AB-SCHEMA-043** — Exact supported Terraform/Terragrunt observations are
   high-priority when readily available. Their omission is a coverage diagnostic,
   not an invalidity condition for an otherwise truthful partial proposal.

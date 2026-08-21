@@ -240,6 +240,10 @@ and record reproducible evidence.
   100% applicable semantic coverage, classify the out-of-range repository span
   as a hard provenance defect plus an MCP validation blind spot, and stop before
   a replica
+- [x] T078 [US2] Bind the authorized source checkout to private authoring state,
+  reject missing, escaping, non-file or out-of-range current-repository sources
+  at Finalize, and cover repair/retry in the existing Initial Ingest lifecycle
+  test under AB-INGEST-014
 
 ---
 

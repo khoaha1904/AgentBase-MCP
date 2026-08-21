@@ -8,7 +8,7 @@ import { loadOkfBundle, parseConceptDocument, validateOkfRelationships } from ".
 import { runGit } from "../../../providers/github-hub/index.ts";
 import { createHubRuntimeActions } from "../query/runtime-actions.ts";
 
-test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013] preparation renders one generic inspectable skeleton bundle and stops", async () => {
+test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..014] preparation renders one generic inspectable skeleton bundle and stops", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-initial-ingest-"));
   const source = path.join(root, "vehicle-events");
   const environment = { HOME: root, XDG_CONFIG_HOME: path.join(root, "config"), XDG_DATA_HOME: path.join(root, "data") };
@@ -129,6 +129,13 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013] preparat
         "[Vehicle events](../systems/vehicle-events.md) invokes the [publisher](../components/publisher.md).",
         "", "# Limitations",
       ].join("\n")));
+
+    const publisherPath = path.join(prepared.bundleRoot, "components", "publisher.md");
+    const validPublisher = fs.readFileSync(publisherPath, "utf8");
+    fs.writeFileSync(publisherPath, validPublisher.replace("main.tf#L1-L3", "main.tf#L1-L99"));
+    await assert.rejects(actions.finalize(prepared.sessionId),
+      /components\/publisher\.md: source span exceeds main\.tf \(6 lines\)/);
+    fs.writeFileSync(publisherPath, validPublisher);
 
     const finalized = await actions.finalize(prepared.sessionId) as {
       proposal: { id: string; phase: string; selectedSchemas: string[] };

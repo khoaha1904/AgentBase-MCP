@@ -4,7 +4,7 @@ import path from "node:path";
 
 import type { AnyHubProposal, HubIdentity } from "../../../core/hub/index.ts";
 import {
-  loadOkfBundle, normalizeConfirmedDomain, readLiveClaims,
+  loadOkfBundle, normalizeConfirmedDomain, readLiveClaims, repositorySourceResources,
   type ConfirmedDomain, type OkfAuthoringGuidance,
 } from "../../../core/knowledge/index.ts";
 import { inspectHubProposal, type HubLifecycleEntry, type HubProposalInspection } from "../review/inspect.ts";
@@ -32,6 +32,7 @@ export type HubAuthoringSession = Readonly<{
   bundleRoot: string;
   baseRoot: string;
   checkoutRoot: string;
+  sourceRepositoryRoot: string;
   createdAt: string;
   supersessions: readonly HubSupersession[];
 }>;
@@ -43,6 +44,7 @@ export type BeginHubAuthoringOptions = Readonly<{
   localHubId?: string;
   baseCommit: string;
   checkoutRoot: string;
+  sourceRepositoryRoot: string;
   sourceRepositoryId: string;
   evidenceDigest: string;
   subjectDirectory: string;
@@ -77,6 +79,11 @@ function copyCheckout(source: string, target: string): void {
 export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): HubAuthoringSession {
   const authority = options.hub?.repository ?? options.localHubId;
   if (!authority || (!options.hub && !/^[a-f0-9]{24}$/.test(options.localHubId ?? ""))) throw new Error("Hub authoring authority is invalid");
+  if (!path.isAbsolute(options.sourceRepositoryRoot) || !fs.existsSync(options.sourceRepositoryRoot)
+    || fs.lstatSync(options.sourceRepositoryRoot).isSymbolicLink()
+    || !fs.statSync(options.sourceRepositoryRoot).isDirectory()) {
+    throw new Error("Hub authoring source repository is invalid");
+  }
   if (options.coverage && options.coverage.partial !== (options.coverage.limitations.length > 0)) {
     throw new Error("Hub authoring coverage is inconsistent");
   }
@@ -108,6 +115,7 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
     bundleRoot,
     baseRoot,
     checkoutRoot: options.checkoutRoot,
+    sourceRepositoryRoot: path.resolve(options.sourceRepositoryRoot),
     createdAt: options.createdAt,
     supersessions: [...(options.supersessions ?? [])],
   };
@@ -124,6 +132,8 @@ export function readHubAuthoringSession(
   const root = path.join(path.resolve(stateRoot), "sessions", sessionId);
   const value = JSON.parse(fs.readFileSync(path.join(root, "session.json"), "utf8")) as HubAuthoringSession;
   const checkoutRoot = path.resolve(value.checkoutRoot);
+  const sourceRepositoryRoot = typeof value.sourceRepositoryRoot === "string"
+    ? path.resolve(value.sourceRepositoryRoot) : "";
   const expected = path.resolve(expectedCheckoutRoot);
   const confirmedDomain = value.confirmedDomain
     ? normalizeConfirmedDomain({ identity: value.confirmedDomain.identity, title: value.confirmedDomain.title }) : undefined;
@@ -133,11 +143,63 @@ export function readHubAuthoringSession(
     || !path.isAbsolute(value.checkoutRoot) || checkoutRoot !== expected
     || !fs.existsSync(checkoutRoot) || fs.lstatSync(checkoutRoot).isSymbolicLink()
     || !fs.statSync(checkoutRoot).isDirectory()
+    || typeof value.sourceRepositoryRoot !== "string" || !path.isAbsolute(value.sourceRepositoryRoot)
+    || !fs.existsSync(sourceRepositoryRoot) || fs.lstatSync(sourceRepositoryRoot).isSymbolicLink()
+    || !fs.statSync(sourceRepositoryRoot).isDirectory()
     || (confirmedDomain && confirmedDomain.evidenceResource !== value.confirmedDomain?.evidenceResource)
     || (!value.hub && !/^[a-f0-9]{24}$/.test(value.localHubId ?? ""))) {
     throw new Error("Hub authoring session state is invalid");
   }
   return value;
+}
+
+function sourceLineCount(file: string): number {
+  const content = fs.readFileSync(file, "utf8");
+  if (!content.length) return 0;
+  const lines = content.split("\n").length;
+  return content.endsWith("\n") ? lines - 1 : lines;
+}
+
+function validateCurrentRepositorySources(session: HubAuthoringSession): void {
+  const authored = loadOkfBundle(session.bundleRoot, { requireAgentBaseRootIndex: true });
+  const base = loadOkfBundle(session.baseRoot);
+  const repositoryRoot = fs.realpathSync(session.sourceRepositoryRoot);
+  const repositoryPrefix = `repository://${session.sourceRepositoryId}/`;
+  const failures: string[] = [];
+  for (const concept of authored.concepts.values()) {
+    if (base.concepts.has(concept.conceptId)) continue;
+    for (const resource of repositorySourceResources(concept)) {
+      if (!resource.startsWith(repositoryPrefix)) continue;
+      const match = resource.slice(repositoryPrefix.length).match(/^(.+)#L(\d+)-L(\d+)$/);
+      if (!match) continue;
+      let relativePath: string;
+      try {
+        relativePath = match[1]!.split("/").map((part) => decodeURIComponent(part)).join(path.sep);
+      } catch {
+        failures.push(`${concept.path}: repository source path is not decodable`);
+        continue;
+      }
+      const target = path.resolve(repositoryRoot, relativePath);
+      try {
+        const realTarget = fs.realpathSync(target);
+        if (realTarget !== repositoryRoot && !realTarget.startsWith(`${repositoryRoot}${path.sep}`)) {
+          failures.push(`${concept.path}: repository source escapes the authorized checkout: ${relativePath}`);
+          continue;
+        }
+        if (!fs.statSync(realTarget).isFile()) {
+          failures.push(`${concept.path}: repository source is not a regular file: ${relativePath}`);
+          continue;
+        }
+        const lineCount = sourceLineCount(realTarget);
+        if (Number(match[3]) > lineCount) {
+          failures.push(`${concept.path}: source span exceeds ${relativePath} (${lineCount} lines)`);
+        }
+      } catch {
+        failures.push(`${concept.path}: repository source does not exist: ${relativePath}`);
+      }
+    }
+  }
+  if (failures.length) throw new Error(`authored repository sources failed validation: ${failures.join("; ")}`);
 }
 
 export function finalizeHubAuthoringSession(
@@ -170,6 +232,7 @@ export function finalizeHubAuthoringSession(
     diff?: Readonly<{ entries: readonly HubLifecycleEntry[] }>;
   }>;
   try {
+    if (session.mode === "new") validateCurrentRepositorySources(session);
     if (session.hub) {
       finalized = session.mode === "new"
         ? prepareNewHubProposal({ ...common, hub: session.hub })

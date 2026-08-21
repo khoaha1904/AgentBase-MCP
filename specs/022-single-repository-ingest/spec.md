@@ -221,6 +221,12 @@ accepted.
 - **AB-INGEST-013**: Prepare MUST pre-populate required root and category
   navigation. Agent authoring MUST preserve existing rows, and bundle validation
   MUST reject a repeated normalized target within one index.
+- **AB-INGEST-014**: Finalize MUST verify every newly authored source belonging
+  to the authorized current repository against that local checkout. Its path
+  MUST resolve beneath the checkout to a regular file and its end line MUST NOT
+  exceed the current file. A failed check MUST reject the proposal while leaving
+  the private session repairable. Sources belonging to other repositories MUST
+  NOT be dereferenced without a separately authorized checkout.
 - **AB-SCHEMA-030**: Catalog `7.0.0` MUST expose eight provider-neutral Initial
   Ingest roles: `Repository`, `Domain`, `System`, `Component`, `Function`,
   `Interface`, `Flow` and `Resource`. `Entity` and `Metric` remain

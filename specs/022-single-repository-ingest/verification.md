@@ -834,3 +834,18 @@ benchmark source-span check correctly rejected it, but MCP changed-set and
 final proposal validation allowed the impossible source range through. This is
 a hard OKF provenance defect and an MCP trust-boundary blind spot, not a scorer
 or completeness issue. AB-BENCH-048 stopped before a replica.
+
+## Current-repository source-span correction — 2026-08-21
+
+AB-INGEST-014 now keeps the authorized source checkout only in private
+authoring-session state and verifies newly authored citations for that
+repository during Finalize. Each cited path must resolve beneath the checkout
+to a regular file and its end line must be within the current file. Citations
+to other repositories are not dereferenced without separate authorization, and
+the local path does not enter Hub knowledge or proposal metadata.
+
+The existing Initial Ingest lifecycle test reproduces an impossible
+`main.tf#L1-L99` citation against a six-line file, observes Finalize reject it,
+repairs the draft and Finalizes the same session successfully. `npm run verify`
+passes specification checks, TypeScript, dependency boundaries, Knip, Gitleaks,
+50/50 design-level tests and `git diff --check`.

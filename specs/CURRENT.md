@@ -218,4 +218,13 @@ while the pinned file has only 1065 lines. The scorer caught this hard
 provenance error, but MCP Validate/Finalize did not; that source-span trust
 boundary is the next blocker. No replica ran.
 
+AB-INGEST-014 closes that trust-boundary gap offline. The authorized source
+checkout is retained only in private session state; Finalize now rejects a new
+current-repository citation when its path is missing, escapes the checkout, is
+not a regular file or exceeds the real file. Foreign-repository citations are
+not dereferenced without separate authorization, and no scanner, parser,
+completeness rule or provider-specific behavior was added. The exact
+reject-repair-retry lifecycle and full 50-test gate pass. A sequential model
+probe is the next qualification step; no replica has run.
+
 Most recent completed capability: `021-agentstack-foundation`.
