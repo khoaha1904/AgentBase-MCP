@@ -263,6 +263,9 @@ and record reproducible evidence.
   embedded-child reuse is no longer the blocker, classify System reuse of
   Function evidence as proof that exclusive observation ownership is unstable,
   and stop before another role-specific exception
+- [x] T085 [US2] Add AB-SCHEMA-048, replace exclusive ownership with attributable
+  shared evidence for standalone concepts, preserve embedded and
+  Interface/Resource gates, and remove obsolete role-specific exception logic
 
 ---
 

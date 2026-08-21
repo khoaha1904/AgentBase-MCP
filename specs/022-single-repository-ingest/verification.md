@@ -918,3 +918,16 @@ missing System exception. One attributable source observation can legitimately
 support multiple standalone concepts. Continuing to add per-role exceptions
 would make guidance brittle, so the sequence stopped without a replica or code
 change pending approval of a simpler shared-supporting-evidence contract.
+
+## Shared standalone evidence simplification — 2026-08-22
+
+Owner-approved AB-SCHEMA-048 replaces the narrow 046/047 exceptions. An
+observation keeps its primary `candidate_id`, while any standalone concept may
+cite it as supporting or promotion evidence in the same bounded request.
+Embedded candidates remain self-owned, and Interface/Resource promotion still
+requires candidate-owned semantic evidence for the independent boundary.
+
+The implementation deletes the role-specific exception logic. Existing tests
+cover shared System and Flow support/promotion plus embedded rejection without
+increasing the repository count. `npm run verify` passes every deterministic
+check and 50/50 tests.

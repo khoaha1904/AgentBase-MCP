@@ -59,7 +59,7 @@ test("[AB-SCHEMA-032][AB-SCHEMA-037] supporting Terraform resources remain embed
   }
 });
 
-test("[AB-SCHEMA-031][AB-SCHEMA-036][AB-SCHEMA-047] embedded candidates bind evidence only to their direct parent", () => {
+test("[AB-SCHEMA-031][AB-SCHEMA-036][AB-SCHEMA-048] standalone concepts share attributable evidence while embedded stays self-owned", () => {
   const noParent = resource("queue", "aws_sqs_queue", "embedded");
   assert.throws(() => getOkfAuthoringGuidance(noParent), /embedded candidate parent must name a concept candidate/);
   const input = resource("queue", "aws_sqs_queue", "embedded");
@@ -79,10 +79,12 @@ test("[AB-SCHEMA-031][AB-SCHEMA-036][AB-SCHEMA-047] embedded candidates bind evi
   assert.equal(getOkfAuthoringGuidance(input).recommendations[0]?.schema?.type, "Function");
   input.candidates.push({ id: "other", identityHint: "other", identityBasis: "other boundary",
     queryValue: "Other runtime", evidenceIds: ["evidence.queue"], disposition: "concept" });
-  assert.throws(() => getOkfAuthoringGuidance(input), /candidate other cites evidence owned by another candidate/);
+  assert.equal(getOkfAuthoringGuidance(input).recommendations[2]?.status, "unsupported");
+  Object.assign(input.candidates[1]!, { evidenceIds: ["evidence.queue", "docs.parent"] });
+  assert.throws(() => getOkfAuthoringGuidance(input), /candidate queue cites evidence owned by another candidate/);
 });
 
-test("[AB-SCHEMA-034][AB-SCHEMA-036][AB-SCHEMA-046] semantic standalone intent and cross-boundary Flow remain suggested", () => {
+test("[AB-SCHEMA-034][AB-SCHEMA-036][AB-SCHEMA-048] standalone System and Flow share attributable evidence", () => {
   const result = getOkfAuthoringGuidance({
     candidates: [{ id: "capability", identityHint: "health-aware", identityBasis: "README capability",
       queryValue: "Coordinates cooperating runtimes", evidenceIds: ["docs.capability"], disposition: "concept" as const,
@@ -113,12 +115,13 @@ test("[AB-SCHEMA-034][AB-SCHEMA-036][AB-SCHEMA-046] semantic standalone intent a
     resourceObservations: [],
   };
   assert.equal(getOkfAuthoringGuidance(crossBoundary).recommendations[1]?.schema?.type, "Flow");
-  assert.throws(() => getOkfAuthoringGuidance({ ...crossBoundary, candidates: [crossBoundary.candidates[0]!, {
+  assert.equal(getOkfAuthoringGuidance({ ...crossBoundary, candidates: [crossBoundary.candidates[0]!, {
     ...crossBoundary.candidates[1]!, promotion: { basis: "cross-boundary" as const, evidenceIds: ["docs.runtime"] },
-  }] }), /promotion must cite candidate-owned evidence/);
-  assert.throws(() => getOkfAuthoringGuidance({ ...crossBoundary, candidates: [crossBoundary.candidates[0]!, {
+  }] }).recommendations[1]?.schema?.type, "Flow");
+  assert.equal(getOkfAuthoringGuidance({ ...crossBoundary, candidates: [crossBoundary.candidates[0]!, {
     ...crossBoundary.candidates[1]!, suggestedType: "System" as const,
-  }] }), /cites evidence owned by another candidate/);
+    promotion: { basis: "operational" as const, evidenceIds: ["docs.runtime"] },
+  }] }).recommendations[1]?.schema?.type, "System");
 });
 
 test("[AB-SCHEMA-033][AB-SCHEMA-036][AB-SCHEMA-042] detection does not promote non-Lambda resources", () => {

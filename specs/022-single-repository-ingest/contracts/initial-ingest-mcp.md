@@ -75,14 +75,12 @@ must select that role. A resource declaration or suggested type alone returns
 no standalone schema. Other suggested concept roles may carry the same
 candidate-owned semantic or structured evidence as transparent intent; it does
 not override selection. Interface/Resource must include semantic evidence.
-A standalone Flow with `promotion: { basis: "cross-boundary", ... }` may also
-cite supporting observations owned by other standalone concept candidates in
-the same request. Its promotion evidence remains Flow-owned; no other role or
-embedded candidate receives this exception.
-A standalone concept may also cite supporting or promotion evidence owned by a
-direct embedded child that explicitly names it as parent. This does not promote
-the child. Sibling, unrelated and transitive embedded evidence remains invalid;
-Flow promotion evidence remains Flow-owned.
+`candidate_id` preserves an observation's primary attribution; it does not make
+the observation exclusive. Any standalone concept may cite any known
+observation in this bounded request as supporting or promotion evidence.
+Embedded candidates may cite only their own observations. Interface/Resource
+promotion still requires candidate-owned semantic evidence for the independent
+boundary.
 
 `source_tool` is `terraform` or `terragrunt` and must match the exact evidence
 path. Terraform cites `.tf`/`.tf.json`; Terragrunt cites `terragrunt.hcl` for

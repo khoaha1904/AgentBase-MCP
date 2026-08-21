@@ -335,13 +335,11 @@ Normative OKF source is pinned to commit
   `implemented-in -> Repository` direction with exact source-ownership evidence
   and a resolving Markdown link. Validation still rejects missing evidence,
   missing links, inverse duplicates and non-Repository targets.
-- **AB-SCHEMA-046** — Only a standalone Flow with an explicit cross-boundary
-  promotion may reuse supporting observations from other standalone concept
-  candidates in the same bounded request. Promotion evidence remains
-  Flow-owned. This exception does not apply to other roles or embedded
-  candidates and does not bypass source, schema or relationship validation.
-- **AB-SCHEMA-047** — A standalone concept may reuse supporting and promotion
-  observations owned by a direct embedded child that explicitly names it as
-  parent. The child remains embedded with no identity. Sibling, unrelated and
-  transitive reuse stays invalid, and Flow promotion evidence remains
-  Flow-owned under AB-SCHEMA-046.
+- **AB-SCHEMA-046, AB-SCHEMA-047** — The earlier narrow Flow and direct-child
+  exceptions are superseded by AB-SCHEMA-048.
+- **AB-SCHEMA-048** — `candidate_id` records an observation's primary
+  attribution, not exclusive ownership. Standalone concepts may share any known
+  observation in one bounded request as supporting or promotion evidence.
+  Embedded candidates remain self-owned. Interface/Resource promotion still
+  needs candidate-owned semantic boundary evidence. Unknown evidence and
+  source, schema and relationship gates remain strict.

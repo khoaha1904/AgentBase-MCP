@@ -268,4 +268,12 @@ the unstable rule: one attributable source fact may support several standalone
 concepts. No draft was scored and no replica ran; a general simplification is
 pending owner approval rather than another System-specific exception.
 
+AB-SCHEMA-048 implements the approved simplification and supersedes narrow
+046/047 ownership exceptions. `candidate_id` now preserves primary attribution
+without making evidence exclusive; standalone concepts may share known
+supporting or promotion observations. Embedded candidates remain self-owned,
+Interface/Resource promotion retains candidate-owned semantic evidence, and all
+source/schema/relation gates remain unchanged. The simplified code and full
+50-test gate pass; a fresh sequential probe is next.
+
 Most recent completed capability: `021-agentstack-foundation`.

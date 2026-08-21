@@ -99,7 +99,7 @@ export const OKF_SCHEMA_TOOLS = [
   },
   {
     name: "get_okf_authoring_schemas",
-    description: "Map bounded source-backed candidates and observations to provider-neutral OKF schema guidance in one advisory call. An exact supported structured resource mapping takes precedence over incidental semantic role words. Use a separate System candidate only when source evidence shows a recognizable capability plus cooperating entities; never rename a Repository or Service. Evidence IDs are candidate-owned. A parent concept may reuse evidence from its direct embedded children. Only a standalone Flow with cross-boundary promotion may reuse supporting evidence from another standalone concept candidate; its promotion evidence remains Flow-owned.",
+    description: "Map bounded source-backed candidates and observations to provider-neutral OKF schema guidance in one advisory call. An exact supported structured resource mapping takes precedence over incidental semantic role words. Use a separate System candidate only when source evidence shows a recognizable capability plus cooperating entities; never rename a Repository or Service. candidate_id preserves an observation's primary attribution, while standalone concepts may share known observations. Embedded candidates may cite only their own observations.",
     inputSchema: {
       type: "object",
       properties: {
@@ -117,7 +117,7 @@ export const OKF_SCHEMA_TOOLS = [
               description: "Optional released provider-neutral role proposed by the host agent; advisory, evidence-bound and never exact truth.",
             }, promotion: {
               type: "object",
-              description: "Candidate-owned evidence for standalone promotion intent. Interface/Resource must include semantic evidence; other roles may cite structured evidence but the field remains advisory.",
+              description: "Evidence already cited by this candidate for standalone promotion intent. Interface/Resource must also include candidate-owned semantic boundary evidence; the field remains advisory.",
               properties: {
                 basis: { type: "string", enum: ["shared-contract", "cross-boundary", "ownership", "lifecycle", "failure", "security", "operational"] },
                 evidence_ids: { type: "array", minItems: 1, maxItems: 64, items: { type: "string" } },
@@ -125,7 +125,7 @@ export const OKF_SCHEMA_TOOLS = [
               required: ["basis", "evidence_ids"], additionalProperties: false,
             }, evidence_ids: {
               type: "array", minItems: 1, maxItems: 64,
-              description: "IDs from observations in this request owned by this candidate or its direct embedded children. A standalone cross-boundary Flow may additionally cite supporting evidence owned by another standalone concept candidate. Never use repository:// source URIs here.",
+              description: "IDs from known observations in this bounded request. Standalone concepts may share observations; embedded candidates may cite only their own. Never use repository:// source URIs here.",
               items: { type: "string" },
             },
           }, required: ["id", "identity_hint", "identity_basis", "query_value", "evidence_ids", "disposition"], additionalProperties: false },

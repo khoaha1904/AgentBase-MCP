@@ -179,28 +179,15 @@ function validateRequest(request: OkfAuthoringGuidanceRequest): void {
     requireText(observation.resourceType, "resource type", 256);
     requireText(observation.address, "resource address", 512);
   }
-  const observationOwners = new Map(observations.map((item) => [item.id, item.candidateId]));
   for (const candidate of candidates.values()) {
     if (candidate.evidenceIds.some((id) => !observationIds.has(id))) throw new Error(`candidate ${candidate.id} cites unknown evidence`);
-    const crossBoundaryFlow = candidate.disposition === "concept" && candidate.suggestedType === "Flow"
-      && candidate.promotion?.basis === "cross-boundary";
-    const ownsOrEmbeds = (id: string) => {
-      const owner = observationOwners.get(id);
-      const ownerCandidate = owner ? candidates.get(owner) : undefined;
-      return owner === candidate.id || (ownerCandidate?.disposition === "embedded"
-        && ownerCandidate.parentCandidateId === candidate.id);
-    };
-    if (candidate.evidenceIds.some((id) => {
-      const owner = observationOwners.get(id);
-      return !ownsOrEmbeds(id) && (!crossBoundaryFlow || !owner || candidates.get(owner)?.disposition !== "concept");
-    })) {
+    if (candidate.disposition === "embedded" && candidate.evidenceIds.some((id) => (
+      observations.find((item) => item.id === id)?.candidateId !== candidate.id
+    ))) {
       throw new Error(`candidate ${candidate.id} cites evidence owned by another candidate`);
     }
-    if (candidate.promotion?.evidenceIds.some((id) => (
-      !candidate.evidenceIds.includes(id) || (candidate.suggestedType === "Flow"
-        ? observationOwners.get(id) !== candidate.id : !ownsOrEmbeds(id))
-    ))) {
-      throw new Error(`candidate ${candidate.id} promotion must cite candidate-owned evidence or direct embedded-child evidence`);
+    if (candidate.promotion?.evidenceIds.some((id) => !candidate.evidenceIds.includes(id))) {
+      throw new Error(`candidate ${candidate.id} promotion must cite candidate evidence`);
     }
     if (candidate.disposition === "concept" && ["Interface", "Resource"].includes(candidate.suggestedType ?? "") && candidate.promotion
       && !candidate.evidenceIds.some((id) => request.semanticObservations

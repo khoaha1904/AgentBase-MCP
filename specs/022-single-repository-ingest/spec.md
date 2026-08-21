@@ -326,18 +326,17 @@ accepted.
   `implemented-in -> Repository` with exact source-ownership evidence and a
   resolving Markdown link. Missing evidence, missing links, inverse duplicates
   and non-Repository targets MUST remain invalid.
-- **AB-SCHEMA-046**: A standalone `Flow` with explicit `cross-boundary`
-  promotion MAY reuse supporting observations owned by other standalone
-  concept candidates in the same bounded guidance request. Its promotion
-  evidence MUST remain owned by the Flow candidate. Other roles, embedded
-  candidates, unknown evidence and final source/relationship validation MUST
-  retain strict ownership and validation.
-- **AB-SCHEMA-047**: A standalone concept candidate MAY reuse supporting and
-  promotion observations owned by its direct embedded children because those
-  children receive no standalone identity and are rendered inside that parent.
-  The embedded child MUST explicitly name that parent. Evidence from siblings,
-  unrelated or transitively embedded candidates MUST remain invalid, and Flow
-  promotion evidence MUST remain Flow-owned under AB-SCHEMA-046.
+- **AB-SCHEMA-046, AB-SCHEMA-047**: These narrow Flow and direct-embedded-child
+  evidence exceptions are superseded by AB-SCHEMA-048 after sequential probes
+  showed exclusive observation ownership was the unstable underlying rule.
+- **AB-SCHEMA-048**: An observation's `candidate_id` MUST retain its primary
+  attribution but MUST NOT make the observation exclusive. Any standalone
+  concept MAY cite any known observation in the same bounded request as
+  supporting or promotion evidence. Embedded candidates MUST cite only their
+  own observations. Interface/Resource standalone promotion MUST still include
+  candidate-owned semantic evidence for that independent boundary. Unknown
+  evidence and all source, schema and relationship validation MUST remain
+  unchanged.
 - **AB-BENCH-048**: Model qualification MUST run sequentially. One probe MUST
   stop the sequence when it has a hard lifecycle/deterministic failure or a
   clear quality blocker. Only a valid probe without a clear blocker MAY trigger
