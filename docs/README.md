@@ -96,6 +96,11 @@ is the portable archive.
   exposed promotion-field drift in the Prepare parser. That adapter is aligned.
   Benchmark policy is now sequential: stop after a blocked probe; replicate
   only a valid unblocked run; reserve run three for final acceptance.
+- Probe `2026-08-21T152548Z` passed the complete lifecycle and all applicable
+  reference metrics at 100%. It correctly kept DynamoDB, schedule and delivery
+  details embedded and omitted an artificial Flow. Manual review found every
+  generated category index entry duplicated, while validation/scoring missed
+  the defect; AB-BENCH-048 therefore stopped the sequence before a replica.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.

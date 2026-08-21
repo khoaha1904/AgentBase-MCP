@@ -197,6 +197,9 @@ and record reproducible evidence.
 - [x] T064 Record AB-BENCH-048 sequential probe/replica/acceptance policy in the
   living benchmark contract and active capability; do not parallelize runs or
   repeat a probe with a hard or obvious blocker
+- [x] T065 Retain sequential probe `2026-08-21T152548Z`, manually inspect its
+  scored bundle, classify duplicate generated category entries as an OKF
+  authoring defect plus validator/scorer blind spot, and stop before a replica
 
 ---
 

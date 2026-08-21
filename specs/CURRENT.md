@@ -124,4 +124,13 @@ field. That MCP adapter drift is corrected. Qualification now follows
 AB-BENCH-048: sequential probe, stop on hard/obvious failure, one replica only
 after an unblocked valid run, and a third run only for final acceptance.
 
+Sequential probe `2026-08-21T152548Z` then completed Prepare, Validate,
+Finalize and Inspect in 216,851 ms. It produced the intended four concepts,
+used truthful Terraform evidence, embedded DynamoDB/schedule/delivery details,
+omitted an artificial Flow and scored 100% on every applicable reference
+ratio. It is not replica-qualified: the agent appended entries already emitted
+by Prepare, duplicating every category-index row, and the deterministic
+validator/scorer failed to detect that defect. The Domain body also remains
+shallow. AB-BENCH-048 stopped the sequence; no replica ran.
+
 Most recent completed capability: `021-agentstack-foundation`.

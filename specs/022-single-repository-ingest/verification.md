@@ -672,3 +672,23 @@ reserve the third run for final acceptance.
 
 Post-fix verification passed `npm run verify`: specification checks, typecheck,
 dependency/unused-code/secret gates and all 50 design-level tests passed.
+
+## V15 sequential stability probe — 2026-08-21
+
+Owner-authorized probe `2026-08-21T152548Z` completed the entire lifecycle in
+216,851 ms. Its four-concept bundle passes validation and is reviewable. All
+applicable reference ratios report 100%: concept and relationship coverage,
+schema agreement, provenance and embedded knowledge. The Function cites exact
+Terraform Lambda and schedule spans; DynamoDB state and delivery configuration
+remain embedded; no standalone Interface, Resource or artificial Flow was
+authored. This is a material improvement over `2026-08-21T151815Z`, which never
+passed Prepare.
+
+Manual inspection found a new authoring defect hidden by those scores. Prepare
+had already emitted one entry in each category index, but the agent appended
+the same entry again after checking only file sizes. Components, Domains,
+Repositories and Systems therefore each contain a duplicate row. The Domain
+body also remains too shallow for owner acceptance. Duplicate navigation is an
+OKF quality defect; validation/scoring accepting it is a separate benchmark
+blind spot. Under AB-BENCH-048 this clear blocker stops qualification, so no
+sequential replica ran.

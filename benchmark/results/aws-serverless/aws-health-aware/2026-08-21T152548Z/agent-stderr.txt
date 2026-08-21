@@ -1,0 +1,5 @@
+2026-08-21T15:27:57.937712Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in <RUNTIME_ROOT>/tmp/agentbase-1000/hub-runtime/sessions/hub-session-ee523e38014f7b1bfc7f3df2/bundle/components/scheduled-health-alert-processor.md:
+  - id: sem_function
+    resource: repository://repository-aws-health-aware-ef3e83846625/handler.py#L1042-L1060
+relationships:
+agentbase:
