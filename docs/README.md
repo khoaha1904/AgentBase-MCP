@@ -133,6 +133,11 @@ is the portable archive.
 - AB-SCHEMA-042 now removes that redundant nesting rule: semantic evidence is
   checked at candidate scope while promotion evidence proves the compatible
   basis. The retained request shape and full 50-test gate pass offline.
+- Replacement probe `2026-08-21T162053Z` confirms the promotion fix through
+  Prepare and authors six concepts, but Finalize rejects the System's
+  source-backed `implemented-in -> Repository` relation because released System
+  guidance does not judge it. This separate schema-consistency finding stopped
+  the sequence before a replica; no bundle was scored.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.

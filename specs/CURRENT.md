@@ -190,4 +190,12 @@ evidence now establishes semantic support while promotion evidence independently
 proves its compatible basis. The exact reproduction and the full 50-test gate
 pass; a new model probe remains separate.
 
+Replacement probe `2026-08-21T162053Z` confirms that fix in real execution:
+guidance and Prepare passed and six concepts were authored. It stopped after
+238,773 ms because System schema guidance does not judge the otherwise
+source-backed canonical `implemented-in -> Repository` relation. Finalize
+correctly rejected it, no OKF artifact was scored and no replica ran. This is a
+separate schema-relation consistency issue, not a recurrence of the promotion
+bug or a benchmark failure.
+
 Most recent completed capability: `021-agentstack-foundation`.

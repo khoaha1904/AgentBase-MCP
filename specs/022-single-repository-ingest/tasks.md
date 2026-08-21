@@ -225,6 +225,9 @@ and record reproducible evidence.
 - [x] T072 [US2] Fix AB-SCHEMA-042 at the shared guidance validator so exact
   candidate-owned semantic evidence need not be repeated inside the promotion
   evidence list, and cover the retained probe shape in the existing test
+- [x] T073 Retain replacement probe `2026-08-21T162053Z`, confirm the Resource
+  promotion fix in real execution, classify the remaining System-to-Repository
+  relation rejection separately, and stop before a replica
 
 ---
 

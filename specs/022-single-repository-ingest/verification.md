@@ -784,3 +784,18 @@ AB-SCHEMA-042 now checks semantic support across the candidate's evidence list;
 the promotion evidence list may independently cite candidate-owned structured
 evidence proving its basis. The exact retained request shape passes, genuine
 missing-semantic input remains rejected and `npm run verify` passes 50/50 tests.
+
+## V15 Resource-promotion replacement probe — 2026-08-21
+
+Owner-authorized probe `2026-08-21T162053Z` confirms the AB-SCHEMA-042 fix in
+real execution: schema guidance and Prepare accepted System, Function, Resource
+and Interface candidates. The agent authored six source-backed concepts and
+used its one repair to add resolving Markdown links for declared relations.
+
+The proposal remained invalid after 238,773 ms because released System guidance
+does not judge `System implemented-in Repository`, although Repository is an
+allowed System link and `implemented-in` is canonical for other source-backed
+concepts. Finalize correctly rejected the relation and no artifact was scored.
+This is a schema-relation consistency question, distinct from the fixed Resource
+promotion gate and from benchmark/scorer behavior. AB-BENCH-048 stopped before
+a replica.
