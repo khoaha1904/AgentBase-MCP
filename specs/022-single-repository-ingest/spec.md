@@ -326,6 +326,12 @@ accepted.
   `implemented-in -> Repository` with exact source-ownership evidence and a
   resolving Markdown link. Missing evidence, missing links, inverse duplicates
   and non-Repository targets MUST remain invalid.
+- **AB-SCHEMA-046**: A standalone `Flow` with explicit `cross-boundary`
+  promotion MAY reuse supporting observations owned by other standalone
+  concept candidates in the same bounded guidance request. Its promotion
+  evidence MUST remain owned by the Flow candidate. Other roles, embedded
+  candidates, unknown evidence and final source/relationship validation MUST
+  retain strict ownership and validation.
 - **AB-BENCH-048**: Model qualification MUST run sequentially. One probe MUST
   stop the sequence when it has a hard lifecycle/deterministic failure or a
   clear quality blocker. Only a valid probe without a clear blocker MAY trigger

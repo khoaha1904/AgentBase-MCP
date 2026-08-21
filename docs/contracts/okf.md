@@ -335,3 +335,8 @@ Normative OKF source is pinned to commit
   `implemented-in -> Repository` direction with exact source-ownership evidence
   and a resolving Markdown link. Validation still rejects missing evidence,
   missing links, inverse duplicates and non-Repository targets.
+- **AB-SCHEMA-046** — Only a standalone Flow with an explicit cross-boundary
+  promotion may reuse supporting observations from other standalone concept
+  candidates in the same bounded request. Promotion evidence remains
+  Flow-owned. This exception does not apply to other roles or embedded
+  candidates and does not bypass source, schema or relationship validation.

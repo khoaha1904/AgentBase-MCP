@@ -75,7 +75,7 @@ test("[AB-SCHEMA-031][AB-SCHEMA-036] embedded candidates require a parent and ov
   assert.match(recommendation.limitations.join(" "), /embedded disposition overrides/i);
 });
 
-test("[AB-SCHEMA-034][AB-SCHEMA-036] semantic standalone intent remains suggested", () => {
+test("[AB-SCHEMA-034][AB-SCHEMA-036][AB-SCHEMA-046] semantic standalone intent and cross-boundary Flow remain suggested", () => {
   const result = getOkfAuthoringGuidance({
     candidates: [{ id: "capability", identityHint: "health-aware", identityBasis: "README capability",
       queryValue: "Coordinates cooperating runtimes", evidenceIds: ["docs.capability"], disposition: "concept" as const,
@@ -88,6 +88,30 @@ test("[AB-SCHEMA-034][AB-SCHEMA-036] semantic standalone intent remains suggeste
   assert.equal(result.recommendations[0]?.schema?.type, "System");
   assert.match(result.recommendations[0]?.limitations.join(" ") ?? "", /reviewable intent/i);
   assert.match(result.recommendations[0]?.limitations.join(" ") ?? "", /proposal review/i);
+
+  const crossBoundary = {
+    candidates: [
+      { id: "runtime", identityHint: "poller", identityBasis: "runtime boundary", queryValue: "Find the runtime",
+        evidenceIds: ["docs.runtime"], disposition: "concept" as const, suggestedType: "Function" },
+      { id: "flow", identityHint: "alerting", identityBasis: "cross-boundary behavior", queryValue: "Trace alerting",
+        evidenceIds: ["docs.flow", "docs.runtime"], disposition: "concept" as const, suggestedType: "Flow",
+        promotion: { basis: "cross-boundary" as const, evidenceIds: ["docs.flow"] } },
+    ],
+    semanticObservations: [
+      { id: "docs.runtime", candidateId: "runtime", role: "implementation" as const,
+        signal: "independently deployed runtime function", source },
+      { id: "docs.flow", candidateId: "flow", role: "implementation" as const,
+        signal: "end-to-end flow across independently useful concepts", source },
+    ],
+    resourceObservations: [],
+  };
+  assert.equal(getOkfAuthoringGuidance(crossBoundary).recommendations[1]?.schema?.type, "Flow");
+  assert.throws(() => getOkfAuthoringGuidance({ ...crossBoundary, candidates: [crossBoundary.candidates[0]!, {
+    ...crossBoundary.candidates[1]!, promotion: { basis: "cross-boundary" as const, evidenceIds: ["docs.runtime"] },
+  }] }), /promotion must cite candidate-owned evidence/);
+  assert.throws(() => getOkfAuthoringGuidance({ ...crossBoundary, candidates: [crossBoundary.candidates[0]!, {
+    ...crossBoundary.candidates[1]!, suggestedType: "System" as const,
+  }] }), /cites evidence owned by another candidate/);
 });
 
 test("[AB-SCHEMA-033][AB-SCHEMA-036][AB-SCHEMA-042] detection does not promote non-Lambda resources", () => {

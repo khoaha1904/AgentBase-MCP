@@ -240,4 +240,11 @@ Flow-owned. This is a remaining MCP attribution-contract usability issue, not a
 source-span regression or scorer defect. No code change or third run has been
 made pending owner approval of the narrow Flow exception.
 
+AB-SCHEMA-046 implements that owner-approved exception offline. Only a
+standalone cross-boundary Flow may reuse supporting evidence from another
+standalone concept candidate; Flow promotion evidence remains Flow-owned and
+all other ownership/source/relation gates remain strict. The exact replica
+shape and two negative guards pass within the existing 50-test gate. A fresh
+sequential probe is next; no post-fix model result exists yet.
+
 Most recent completed capability: `021-agentstack-foundation`.

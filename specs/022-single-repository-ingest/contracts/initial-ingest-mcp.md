@@ -75,6 +75,10 @@ must select that role. A resource declaration or suggested type alone returns
 no standalone schema. Other suggested concept roles may carry the same
 candidate-owned semantic or structured evidence as transparent intent; it does
 not override selection. Interface/Resource must include semantic evidence.
+A standalone Flow with `promotion: { basis: "cross-boundary", ... }` may also
+cite supporting observations owned by other standalone concept candidates in
+the same request. Its promotion evidence remains Flow-owned; no other role or
+embedded candidate receives this exception.
 
 `source_tool` is `terraform` or `terragrunt` and must match the exact evidence
 path. Terraform cites `.tf`/`.tf.json`; Terragrunt cites `terragrunt.hcl` for

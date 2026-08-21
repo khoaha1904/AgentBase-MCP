@@ -868,3 +868,15 @@ forces duplicated observations for a concept whose purpose is to connect other
 concept boundaries. This is an MCP attribution-contract usability issue, not a
 source-span regression, hallucinated source or benchmark/scorer defect. The
 sequence stopped for owner review.
+
+## Cross-boundary Flow evidence correction — 2026-08-22
+
+Owner-approved AB-SCHEMA-046 permits only a standalone Flow with explicit
+`cross-boundary` promotion to reuse supporting observations owned by other
+standalone concept candidates in the same request. Its promotion evidence
+remains Flow-owned. System and other roles still fail foreign evidence reuse;
+embedded candidates receive no exception.
+
+The existing guidance test reproduces the replica shape, rejects both forbidden
+variants and keeps the repository at 50 tests. `npm run verify` passes all
+specification, type, dependency, dead-code, secret, test and diff checks.

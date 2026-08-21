@@ -113,8 +113,9 @@ is the portable archive.
   reference, schema, provenance, relation and embedded ratios. Its sequential
   replica `2026-08-21T165314Z` exposed a remaining Flow attribution restriction:
   cross-boundary Flow cannot reuse another standalone candidate's supporting
-  observation. The sequence is stopped pending owner approval; this is not a
-  source-span or scorer failure.
+  observation. AB-SCHEMA-046 now permits only that narrow supporting-evidence
+  reuse while keeping Flow promotion evidence and every other candidate
+  ownership rule strict. This was not a source-span or scorer failure.
 - Post-fix probe `2026-08-21T154146Z` proves duplicate navigation is gone and
   again passes the complete lifecycle. It is not replica-qualified: the model
   reintroduced an optional Flow, selected CloudFormation/handler evidence over

@@ -99,7 +99,7 @@ export const OKF_SCHEMA_TOOLS = [
   },
   {
     name: "get_okf_authoring_schemas",
-    description: "Map bounded source-backed candidates and observations to provider-neutral OKF schema guidance in one advisory call. An exact supported structured resource mapping takes precedence over incidental semantic role words. Use a separate System candidate only when source evidence shows a recognizable capability plus cooperating entities; never rename a Repository or Service. Each evidence ID is owned by one candidate; evidence_ids may cite only observations whose candidate_id matches that candidate id.",
+    description: "Map bounded source-backed candidates and observations to provider-neutral OKF schema guidance in one advisory call. An exact supported structured resource mapping takes precedence over incidental semantic role words. Use a separate System candidate only when source evidence shows a recognizable capability plus cooperating entities; never rename a Repository or Service. Evidence IDs are candidate-owned. Only a standalone Flow with cross-boundary promotion may reuse supporting evidence from another standalone concept candidate; its promotion evidence remains Flow-owned.",
     inputSchema: {
       type: "object",
       properties: {
@@ -125,7 +125,7 @@ export const OKF_SCHEMA_TOOLS = [
               required: ["basis", "evidence_ids"], additionalProperties: false,
             }, evidence_ids: {
               type: "array", minItems: 1, maxItems: 64,
-              description: "IDs from observations in this request whose candidate_id equals this candidate id; never another candidate's evidence or repository:// source URIs.",
+              description: "IDs from observations in this request owned by this candidate. A standalone cross-boundary Flow may additionally cite supporting evidence owned by another standalone concept candidate. Never use repository:// source URIs here.",
               items: { type: "string" },
             },
           }, required: ["id", "identity_hint", "identity_basis", "query_value", "evidence_ids", "disposition"], additionalProperties: false },

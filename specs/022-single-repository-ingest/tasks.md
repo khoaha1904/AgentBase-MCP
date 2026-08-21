@@ -250,6 +250,9 @@ and record reproducible evidence.
 - [x] T080 Retain replica `2026-08-21T165314Z`, classify its cross-candidate Flow
   evidence rejection as an MCP attribution-contract issue, and stop before code
   changes pending owner approval
+- [x] T081 [US2] Add AB-SCHEMA-046 and permit only cross-boundary Flow supporting
+  evidence reuse while keeping Flow promotion evidence and every other
+  candidate ownership rule strict
 
 ---
 

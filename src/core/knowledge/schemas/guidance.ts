@@ -179,12 +179,20 @@ function validateRequest(request: OkfAuthoringGuidanceRequest): void {
     requireText(observation.resourceType, "resource type", 256);
     requireText(observation.address, "resource address", 512);
   }
+  const observationOwners = new Map(observations.map((item) => [item.id, item.candidateId]));
   for (const candidate of candidates.values()) {
     if (candidate.evidenceIds.some((id) => !observationIds.has(id))) throw new Error(`candidate ${candidate.id} cites unknown evidence`);
-    if (candidate.evidenceIds.some((id) => observations.find((item) => item.id === id)?.candidateId !== candidate.id)) {
+    const crossBoundaryFlow = candidate.disposition === "concept" && candidate.suggestedType === "Flow"
+      && candidate.promotion?.basis === "cross-boundary";
+    if (candidate.evidenceIds.some((id) => {
+      const owner = observationOwners.get(id);
+      return owner !== candidate.id && (!crossBoundaryFlow || candidates.get(owner!)?.disposition !== "concept");
+    })) {
       throw new Error(`candidate ${candidate.id} cites evidence owned by another candidate`);
     }
-    if (candidate.promotion?.evidenceIds.some((id) => !candidate.evidenceIds.includes(id))) {
+    if (candidate.promotion?.evidenceIds.some((id) => (
+      !candidate.evidenceIds.includes(id) || observationOwners.get(id) !== candidate.id
+    ))) {
       throw new Error(`candidate ${candidate.id} promotion must cite candidate-owned evidence`);
     }
     if (candidate.disposition === "concept" && ["Interface", "Resource"].includes(candidate.suggestedType ?? "") && candidate.promotion
