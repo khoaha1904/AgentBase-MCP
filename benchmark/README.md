@@ -170,6 +170,19 @@ CloudFormation/handler evidence while the Terraform-only expectation requires
 the Terraform path. The retained result separates this qualification-scope
 mismatch from the real OKF navigation and missing-Flow findings.
 
+The next owner-authorized Health run `2026-08-21T135125Z` is retained as failed
+evidence. The Terraform source-truth correction worked: structured observations
+and authored technology metadata cite the exact `.tf` resources rather than
+CloudFormation. The agent drafted Repository, System, Function, Interface and
+Flow knowledge, including the expected embedded DynamoDB and schedule details,
+but could not validate the Flow. Schema guidance exposed actions, modes and a
+prose requirement for source/target identities without the exact serialized
+field shape; the validator expected `order`, `source` and `target` and returned
+only `flow_steps entry is malformed`. The agent guessed `order/from/to`, then
+`sequence/from/to`, exceeded the one-repair lifecycle and correctly did not
+Finalize or Inspect. No OKF bundle was scored. This is an MCP authoring-contract
+defect, not an OKF semantic or benchmark-scorer finding.
+
 Expectations do not prescribe prose or agent slugs. Bounded identity terms and
 evidence match concept instances; the scorer then evaluates concrete schema
 choices, required semantic metadata, source provenance and directed concept

@@ -153,6 +153,9 @@ and record reproducible evidence.
   mixed-source Terraform expectation mismatch without running another model
 - [x] T050 Add AB-SCHEMA-040 truthful Terraform/Terragrunt source validation,
   update the Ingest contract/skill and verify offline without another model run
+- [x] T051 Retain owner-authorized V15 run `2026-08-21T135125Z` and classify its
+  successful Terraform provenance separately from the Flow authoring-contract
+  failure; do not run a replacement benchmark
 
 ---
 

@@ -52,4 +52,13 @@ module orchestration; provider resources cite the referenced Terraform file.
 SAM/CloudFormation/YAML is rejected instead of being relabeled as Terraform.
 This correction adds no parser, provider CLI, schema type or model benchmark.
 
+Owner-authorized V15 run `2026-08-21T135125Z` then confirmed the source-truth
+correction but failed before Finalize after 217,552 ms. The agent used exact
+Terraform resources and drafted Repository, System, Function, Interface and
+Flow knowledge with embedded DynamoDB/schedule details. Flow schema guidance
+did not expose the validator's exact `order/source/target` field shape, so the
+agent guessed incompatible keys across three validation calls and exhausted the
+one-repair lifecycle. No bundle was finalized or scored. This is an MCP
+authoring-contract defect, separate from OKF quality and benchmark scoring.
+
 Most recent completed capability: `021-agentstack-foundation`.

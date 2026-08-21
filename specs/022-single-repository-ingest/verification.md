@@ -530,3 +530,20 @@ to Terragrunt.
 `npm run verify` passes specification checks, TypeScript, dependency rules,
 Knip, Gitleaks, 50/50 design-level tests and `git diff --check`. No parser,
 dependency, SAM/CloudFormation support or model benchmark was added or run.
+
+## V15 Terraform source-truth qualification — 2026-08-21
+
+Owner-authorized run `2026-08-21T135125Z` retained exact Terraform `.tf`
+observations and no longer mislabeled CloudFormation. It drafted Repository,
+System, Function, Interface and Flow knowledge plus embedded DynamoDB and
+schedule details. The run failed before Finalize after 217,552 ms because the
+Flow schema response did not publish the validator's exact
+`order/source/action/target/mode/evidence` shape. The agent tried incompatible
+`from/to` and `sequence` keys across three failed changed-set validations,
+exhausting the one-repair lifecycle. No proposal was finalized, inspected or
+scored; no Accept, Publish, provider CLI or Hub PR operation occurred.
+
+Classification: source provenance correction passed; OKF semantic scoring was
+unavailable; MCP authoring contract failed; benchmark scorer did not cause the
+failure. A further model run requires the Flow contract/diagnostic correction
+and separate owner authorization.

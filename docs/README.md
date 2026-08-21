@@ -63,6 +63,11 @@ is the portable archive.
 - Capability 018 is complete with 339 passing offline tests. Its V11 real run is
   accepted for confirmed Domain and shared-navigation qualification; no V12
   numeric-snapshot iteration was authorized.
+- The latest V15 Health run `2026-08-21T135125Z` proves the Terraform
+  source-truth guard but is invalid before Finalize: Flow guidance omits the
+  exact `order/source/target` serialization required by validation. The agent
+  exhausted its repair budget guessing field names. This is an MCP contract
+  defect; no OKF bundle was scored.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.
