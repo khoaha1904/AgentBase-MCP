@@ -244,6 +244,12 @@ and record reproducible evidence.
   reject missing, escaping, non-file or out-of-range current-repository sources
   at Finalize, and cover repair/retry in the existing Initial Ingest lifecycle
   test under AB-INGEST-014
+- [x] T079 Retain post-fix probe `2026-08-21T164926Z`, confirm source-span
+  validation plus `review_ready` output, and run one sequential replica under
+  AB-BENCH-048
+- [x] T080 Retain replica `2026-08-21T165314Z`, classify its cross-candidate Flow
+  evidence rejection as an MCP attribution-contract issue, and stop before code
+  changes pending owner approval
 
 ---
 

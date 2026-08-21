@@ -227,4 +227,17 @@ completeness rule or provider-specific behavior was added. The exact
 reject-repair-retry lifecycle and full 50-test gate pass. A sequential model
 probe is the next qualification step; no replica has run.
 
+Post-fix probe `2026-08-21T164926Z` is `review_ready`: source validation passes,
+all four reference concepts and three reference relationships are present, and
+all applicable schema, provenance and embedded ratios are 100%. It also authors
+a reviewable DynamoDB Resource and Function-to-Resource Flow; duplicated body
+headings are minor presentation debt.
+
+Sequential replica `2026-08-21T165314Z` did not reproduce the complete
+lifecycle. Schema guidance rejected a cross-boundary Flow because it reused a
+Function-owned supporting observation even though its promotion evidence was
+Flow-owned. This is a remaining MCP attribution-contract usability issue, not a
+source-span regression or scorer defect. No code change or third run has been
+made pending owner approval of the narrow Flow exception.
+
 Most recent completed capability: `021-agentstack-foundation`.

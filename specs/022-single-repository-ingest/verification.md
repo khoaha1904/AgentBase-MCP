@@ -849,3 +849,22 @@ The existing Initial Ingest lifecycle test reproduces an impossible
 repairs the draft and Finalizes the same session successfully. `npm run verify`
 passes specification checks, TypeScript, dependency boundaries, Knip, Gitleaks,
 50/50 design-level tests and `git diff --check`.
+
+## AB-INGEST-014 probe and stability replica — 2026-08-21
+
+Post-fix probe `2026-08-21T164926Z` completed the full lifecycle and scored
+`review_ready`. It has 4/4 reference concepts, 3/3 reference relationships and
+100% applicable schema, provenance and embedded-knowledge coverage. Every real
+source span passed MCP and benchmark validation. It authored two additional
+reviewable concepts, a DynamoDB operational Resource and Function-to-Resource
+Flow; repeated `# Limitations` headings are a minor body-quality issue rather
+than a hard failure.
+
+Sequential replica `2026-08-21T165314Z` stopped at schema guidance before any
+draft. Its cross-boundary Flow reused a Function-owned observation alongside
+Flow-owned promotion evidence, and MCP rejected the request with `candidate
+flow_scheduled_alerting cites evidence owned by another candidate`. The rule
+forces duplicated observations for a concept whose purpose is to connect other
+concept boundaries. This is an MCP attribution-contract usability issue, not a
+source-span regression, hallucinated source or benchmark/scorer defect. The
+sequence stopped for owner review.

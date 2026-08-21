@@ -109,6 +109,12 @@ is the portable archive.
   state and makes Finalize reject missing, escaping, non-file or out-of-range
   citations for that current repository. Foreign-repository citations are not
   dereferenced without separate authorization.
+- Post-fix probe `2026-08-21T164926Z` is `review_ready` with 100% applicable
+  reference, schema, provenance, relation and embedded ratios. Its sequential
+  replica `2026-08-21T165314Z` exposed a remaining Flow attribution restriction:
+  cross-boundary Flow cannot reuse another standalone candidate's supporting
+  observation. The sequence is stopped pending owner approval; this is not a
+  source-span or scorer failure.
 - Post-fix probe `2026-08-21T154146Z` proves duplicate navigation is gone and
   again passes the complete lifecycle. It is not replica-qualified: the model
   reintroduced an optional Flow, selected CloudFormation/handler evidence over
