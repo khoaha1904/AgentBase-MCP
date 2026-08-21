@@ -120,6 +120,10 @@ is the portable archive.
   Function cannot reuse its own embedded schedule child's lifecycle evidence.
   AB-SCHEMA-047 now permits only direct parent reuse, while unrelated candidates
   remain rejected and Flow promotion remains Flow-owned.
+- Probe `2026-08-21T171202Z` then showed the broader problem: a System cannot
+  cite its Function's Terraform evidence. The sequence stopped before another
+  role exception; the proposed correction treats observations as attributable
+  but shareable supporting evidence among standalone concepts.
 - Post-fix probe `2026-08-21T154146Z` proves duplicate navigation is gone and
   again passes the complete lifecycle. It is not replica-qualified: the model
   reintroduced an optional Flow, selected CloudFormation/handler evidence over

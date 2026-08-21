@@ -259,6 +259,10 @@ and record reproducible evidence.
 - [x] T083 [US2] Add AB-SCHEMA-047 and allow direct embedded-child supporting or
   promotion evidence only for its explicit standalone parent while preserving
   Flow promotion ownership and unrelated-candidate rejection
+- [x] T084 Retain post-AB-SCHEMA-047 probe `2026-08-21T171202Z`, confirm direct
+  embedded-child reuse is no longer the blocker, classify System reuse of
+  Function evidence as proof that exclusive observation ownership is unstable,
+  and stop before another role-specific exception
 
 ---
 

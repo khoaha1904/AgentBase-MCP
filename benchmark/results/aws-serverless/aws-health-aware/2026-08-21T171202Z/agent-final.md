@@ -1,0 +1,1 @@
+Incomplete: schema guidance rejected the bounded candidate request because `system_aha` cited evidence owned by another candidate. The workflow requires stopping after this single failed guidance call; no proposal or artifact was created.

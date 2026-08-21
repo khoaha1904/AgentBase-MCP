@@ -905,3 +905,16 @@ AB-SCHEMA-046.
 The existing embedded-guidance test covers the reproduced Function/schedule
 shape plus the unrelated-candidate negative guard without increasing the test
 count. `npm run verify` passes all deterministic checks and 50/50 tests.
+
+## Post-AB-SCHEMA-047 probe — 2026-08-22
+
+Probe `2026-08-21T171202Z` no longer failed on direct embedded-child evidence.
+It instead stopped because the System cited the Function candidate's exact
+Terraform Lambda evidence to support the cooperating runtime inside that
+System. MCP rejected the System before Prepare.
+
+This third ownership variant shows a general modeling mismatch rather than a
+missing System exception. One attributable source observation can legitimately
+support multiple standalone concepts. Continuing to add per-role exceptions
+would make guidance brittle, so the sequence stopped without a replica or code
+change pending approval of a simpler shared-supporting-evidence contract.

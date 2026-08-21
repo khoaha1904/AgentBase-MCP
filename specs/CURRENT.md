@@ -260,4 +260,12 @@ child that explicitly names it. Unrelated reuse remains invalid and Flow
 promotion stays Flow-owned. The exact reproduction and full 50-test gate pass;
 a fresh sequential probe is next.
 
+Post-fix probe `2026-08-21T171202Z` confirms direct embedded-child reuse is no
+longer the blocker. Schema guidance instead rejected a System that cited its
+Function candidate's exact Terraform Lambda observation as evidence of the
+cooperating runtime. This demonstrates that exclusive observation ownership is
+the unstable rule: one attributable source fact may support several standalone
+concepts. No draft was scored and no replica ran; a general simplification is
+pending owner approval rather than another System-specific exception.
+
 Most recent completed capability: `021-agentstack-foundation`.
