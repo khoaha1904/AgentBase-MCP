@@ -22,7 +22,10 @@ expectations or previous results.
    evidence first. Promote only a stable identity with independent query/link
    value and a deployment, ownership, contract, cross-boundary, failure,
    operations or lifecycle boundary. Render promoted candidates with the
-   smallest released schema. Detection alone never requires a concept file.
+   smallest released schema. Detection alone never requires a concept file. A
+   standalone Flow requires at least two independently useful endpoint
+   boundaries; a System and its single contained Function with embedded
+   schedule, state and delivery details do not suffice.
 4. Initial Ingest uses exactly these catalog `7.0.0` types: `Repository`,
    `Domain`, `System`, `Component`, `Function`, `Interface`, `Flow`, `Resource`.
    `Entity` and `Metric` are enrichment-only. Provider products such as Lambda,
@@ -36,7 +39,10 @@ expectations or previous results.
    them, with exact evidence. Promote one to `Resource` only when it has
    independent shared/operational value. Prefer one independently deployed or
    triggered Lambda as `Function`; describe workloads running on a VM as
-   Components rather than creating one broad host concept.
+   Components rather than creating one broad host concept. This qualification
+   is Terraform-only: when exact Terraform exists for retained runtime or
+   infrastructure knowledge, submit its resource observation. CloudFormation
+   or handler evidence may supplement behavior but cannot replace it.
 7. Every attributed claim and canonical relation cites a stable source ID with
    `repository://<canonical-repository-id>/<relative-path>#Lx-Ly`, except the
    supplied `agentbase://owner-guidance/...` Domain evidence. Desired-state IaC

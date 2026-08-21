@@ -309,3 +309,11 @@ Normative OKF source is pinned to commit
   root/category navigation. Agent authoring preserves those rows rather than
   appending known targets, and bundle validation rejects a repeated normalized
   navigation target within one index.
+- **AB-SCHEMA-043** — When supported Terraform/Terragrunt exists for retained
+  runtime or infrastructure knowledge, Initial Ingest submits the exact
+  structured observation. Unsupported IaC may supplement semantic behavior but
+  never replace available supported evidence.
+- **AB-SCHEMA-044** — A standalone Flow spans at least two independently useful
+  endpoint boundaries. A System and its single contained Function do not create
+  a Flow merely because embedded trigger, state and delivery details form an
+  implementation sequence.

@@ -208,6 +208,10 @@ and record reproducible evidence.
   navigation is resolved, classify optional Flow/source-selection and embedded
   coverage regression separately from lifecycle/scorer behavior, and stop
   before a replica under AB-BENCH-048
+- [x] T068 [US2] Record AB-SCHEMA-043/044, require available supported IaC in
+  investigation guidance, exclude the single-contained-runtime Flow case from
+  released guidance and extend the existing catalog test without a new engine
+  or test case
 
 ---
 

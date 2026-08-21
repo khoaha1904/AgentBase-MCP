@@ -720,3 +720,13 @@ fell from 100% to 75% and embedded knowledge from 100% to 25%. Its prepared
 Domain body also remains unchanged and below the owner-review usefulness
 heuristic. These are OKF granularity/source-selection findings; lifecycle and
 scoring operated correctly. AB-BENCH-048 therefore stopped before a replica.
+
+AB-SCHEMA-043/044 correct the two variance paths in product, released-schema
+and V15 qualification guidance. Supported Terraform/Terragrunt observations
+must be retained when available, and a standalone Flow now requires two
+independently useful endpoint boundaries rather than a System plus one contained
+runtime. The existing catalog/guidance suite passes 13/13 without a new test
+case. Model behavior remains unqualified until a later sequential probe.
+
+`npm run verify` passes specification checks, TypeScript, dependency rules,
+Knip, Gitleaks, `git diff --check` and all 50 design-level tests.

@@ -37,7 +37,7 @@ test("[AB-SCHEMA-030][AB-SCHEMA-036] Initial Ingest selection stays sparse and p
   assert.deepEqual(selectOkfConceptSchemas(["performance metric definition"], "enrichment").map((item) => item.type), ["Metric"]);
 });
 
-test("[AB-SCHEMA-030][AB-SCHEMA-038] schemas describe useful boundaries rather than cloud products", () => {
+test("[AB-SCHEMA-030][AB-SCHEMA-038][AB-SCHEMA-044] schemas describe useful boundaries rather than cloud products", () => {
   assert.equal(getOkfConceptSchema("Function")?.directoryHint, "components/<slug>.md");
   assert.match(getOkfConceptSchema("Component")?.purpose ?? "", /workload|build|ownership/);
   assert.match(getOkfConceptSchema("Resource")?.evidenceRequirements.join(" ") ?? "", /independent/);
@@ -48,6 +48,7 @@ test("[AB-SCHEMA-030][AB-SCHEMA-038] schemas describe useful boundaries rather t
   assert.ok(flowGuidance?.actions.includes("invokes"));
   assert.deepEqual(flowGuidance?.requiredFields, ["order", "source", "action", "target", "mode", "evidence"]);
   assert.match(flowGuidance?.endpointRule ?? "", /identities of concepts.*never use embedded knowledge or free text/);
+  assert.match(flowGuidance?.endpointRule ?? "", /at least two independently useful endpoint boundaries.*single contained Function does not suffice/);
   assert.match(flowGuidance?.sourceRule ?? "", /prove the trigger, outcome and every described interaction/);
 });
 

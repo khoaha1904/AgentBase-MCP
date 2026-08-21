@@ -110,6 +110,10 @@ is the portable archive.
   reintroduced an optional Flow, selected CloudFormation/handler evidence over
   the Terraform qualification source and fell to 75% provenance plus 25%
   embedded coverage. The sparse Domain review finding also remains.
+- AB-SCHEMA-043/044 correct that variance in released guidance: available
+  supported IaC cannot be replaced by unsupported semantic IaC, and a System
+  plus its single contained Function does not justify a standalone Flow. No
+  scanner, inference engine or new schema is added.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.

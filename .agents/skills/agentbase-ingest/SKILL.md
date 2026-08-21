@@ -31,7 +31,13 @@ the repository, not an authoring prompt. Stop before Accept or Publish.
    or `.tf.json` evidence `terraform`; label `terragrunt.hcl` module
    orchestration `terragrunt`. When Terragrunt references a module, cite the
    module's exact `.tf` file as `terraform` for provider resources. Never label
-   SAM/CloudFormation/YAML as Terraform or Terragrunt.
+   SAM/CloudFormation/YAML as Terraform or Terragrunt. When supported Terraform
+   or Terragrunt exists for a retained runtime or infrastructure item, inspect
+   and submit its exact resource observation; unsupported IaC may supplement
+   semantic behavior but never replace that supported structured evidence. A
+   standalone Flow needs at least two independently useful endpoint boundaries;
+   a System and its single contained Function with embedded trigger, state and
+   delivery details remain one concept path, not a Flow.
 4. **Author** — Call `get_okf_authoring_schemas` exactly once with the qualified
    candidates plus exact semantic/resource observations. Every candidate declares
    `disposition: concept` or `disposition: embedded`; embedded candidates have

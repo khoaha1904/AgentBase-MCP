@@ -301,6 +301,14 @@ accepted.
   carry candidate-owned semantic or structured promotion evidence as
   transparent intent, but it MUST NOT override semantic or structured schema
   selection. Interface/Resource promotion MUST include semantic evidence.
+- **AB-SCHEMA-043**: When supported Terraform/Terragrunt exists for retained
+  runtime or infrastructure knowledge, investigation MUST submit its exact
+  structured observation. Unsupported IaC MAY supplement semantic behavior but
+  MUST NOT replace available supported evidence.
+- **AB-SCHEMA-044**: A standalone Flow MUST span at least two independently
+  useful endpoint boundaries. A System and its single contained Function MUST
+  NOT become a Flow merely because embedded trigger, state and delivery details
+  form an implementation sequence.
 - **AB-BENCH-048**: Model qualification MUST run sequentially. One probe MUST
   stop the sequence when it has a hard lifecycle/deterministic failure or a
   clear quality blocker. Only a valid probe without a clear blocker MAY trigger

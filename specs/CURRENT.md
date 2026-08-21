@@ -151,4 +151,12 @@ embedded coverage, and left the prepared Domain body unchanged. These are OKF
 source/granularity findings rather than lifecycle or scorer failures.
 AB-BENCH-048 stopped the sequence before a replica.
 
+AB-SCHEMA-043/044 now correct those two findings offline. Mixed-source
+investigation must submit available supported Terraform/Terragrunt observations
+for retained runtime/infrastructure knowledge; unsupported IaC may only add
+semantic context. Released Flow guidance requires two independently useful
+endpoint boundaries and explicitly excludes a System plus its single contained
+Function. This is guidance clarification, not a repository scanner, Flow
+inference engine, candidate-count heuristic or new schema.
+
 Most recent completed capability: `021-agentstack-foundation`.
