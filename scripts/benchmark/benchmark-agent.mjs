@@ -17,7 +17,7 @@ const v13RequiredTools = [
   "get_okf_authoring_schemas", "prepare_hub_okf", "validate_okf_changes",
   "finalize_hub_okf_proposal", "inspect_hub_okf_proposal",
 ];
-const v13ExactlyOnceTools = v13RequiredTools.filter((tool) => tool !== "validate_okf_changes");
+const v13ExactlyOnceTools = v13RequiredTools.filter((tool) => !["get_okf_authoring_schemas", "validate_okf_changes"].includes(tool));
 const v13ForbiddenTools = new Set([
   "accept_hub_okf_proposal", "preview_hub_bootstrap", "bootstrap_hub",
   "submit_hub_okf_proposals", "synchronize_hub_okf", "recover_hub_okf",
@@ -28,13 +28,24 @@ const v13EnabledTools = [
 ];
 const initialIngestPromptVersions = new Set(["okf-author-v13", "okf-author-v14", "okf-author-v15"]);
 
-export function validateV13Lifecycle(mcpTools) {
+export function validateV13Lifecycle(mcpTools, guidanceAttempts = []) {
+  const guidanceCount = mcpTools.get_okf_authoring_schemas ?? 0;
+  const cleanGuidance = guidanceCount === 1
+    && (guidanceAttempts.length === 0 || guidanceAttempts[0]?.status === "completed");
+  const correctedGuidance = guidanceCount === 2
+    && guidanceAttempts[0]?.status === "failed"
+    && guidanceAttempts[0]?.code === "INVALID_ARGUMENT"
+    && guidanceAttempts[0]?.retryable === true
+    && guidanceAttempts[1]?.status === "completed";
   return [
     ...v13ExactlyOnceTools.filter((tool) => mcpTools[tool] !== 1)
       .map((tool) => `${tool} must run exactly once; observed ${mcpTools[tool] ?? 0}`),
     ...(mcpTools.validate_okf_changes >= 1 && mcpTools.validate_okf_changes <= 2
       ? []
       : [`validate_okf_changes must run once, or twice after one repair; observed ${mcpTools.validate_okf_changes ?? 0}`]),
+    ...(cleanGuidance || correctedGuidance
+      ? []
+      : [`get_okf_authoring_schemas must succeed once, or succeed on one correction after retryable INVALID_ARGUMENT; observed ${guidanceCount}`]),
     ...Object.keys(mcpTools).filter((tool) => v13ForbiddenTools.has(tool))
       .map((tool) => `forbidden V13 lifecycle tool observed: ${tool}`),
   ];
@@ -109,6 +120,16 @@ function serializedBytes(value) {
   return serialized === undefined ? 0 : Buffer.byteLength(serialized);
 }
 
+function toolError(item) {
+  try {
+    const text = item?.result?.content?.find((entry) => entry?.type === "text")?.text;
+    const parsed = typeof text === "string" ? JSON.parse(text) : {};
+    return { code: parsed.code ?? null, retryable: parsed.retryable === true, error: parsed.error ?? null };
+  } catch {
+    return { code: null, retryable: false, error: null };
+  }
+}
+
 export function summarizeAgentEvents(events) {
   const completed = new Set();
   let mcpToolCalls = 0;
@@ -118,6 +139,7 @@ export function summarizeAgentEvents(events) {
   let authoringResultBytes = 0;
   const authoringActivity = {};
   const mcpTools = {};
+  const guidanceAttempts = [];
   let usage = null;
   let finalValidationIdentities = null;
   for (const line of events.split("\n")) {
@@ -129,6 +151,9 @@ export function summarizeAgentEvents(events) {
           if (item.status === "completed") completed.add(item.tool);
           mcpToolCalls += 1;
           mcpTools[item.tool] = (mcpTools[item.tool] ?? 0) + 1;
+          if (item.tool === "get_okf_authoring_schemas") {
+            guidanceAttempts.push({ status: item.status, ...toolError(item) });
+          }
           if (authoringTools.has(item.tool)) {
             const argumentBytes = serializedBytes(item.arguments);
             const resultBytes = serializedBytes(item.result);
@@ -174,6 +199,11 @@ export function summarizeAgentEvents(events) {
       authoringResultBytes,
       authoringTools: Object.fromEntries(Object.entries(authoringActivity).sort(([left], [right]) => left.localeCompare(right))),
       mcpTools: Object.fromEntries(Object.entries(mcpTools).sort(([left], [right]) => left.localeCompare(right))),
+      guidance: {
+        attempts: guidanceAttempts,
+        inputCorrectionsUsed: Math.max(0, guidanceAttempts.length - 1),
+        firstAttemptSucceeded: guidanceAttempts[0]?.status === "completed",
+      },
       observedSourceReadBytes: null,
       limitation: "event trace does not prove complete source-read volume",
       finalValidationIdentities,
@@ -335,7 +365,7 @@ export function runAgentRepository({
   }
   const usage = toolUsage(summary.completedTools, arm, promptVersion);
   const v13LifecycleFailures = initialIngestPromptVersions.has(promptVersion)
-    ? validateV13Lifecycle(summary.activity.mcpTools) : [];
+    ? validateV13Lifecycle(summary.activity.mcpTools, summary.activity.guidance.attempts) : [];
   const directMcpFailure = arm === "direct" && summary.activity.mcpToolCalls
     ? ["direct arm unexpectedly observed MCP tool calls"] : [];
   const completed = {

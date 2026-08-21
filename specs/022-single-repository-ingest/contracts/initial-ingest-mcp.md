@@ -116,6 +116,22 @@ review. Provider detection never forces standalone promotion. Function
 resources with exact runtime evidence are the only structured specialization
 promoted directly in Initial Ingest. There is no confidence percentage.
 
+A rejected guidance request returns an additive machine-readable error shape:
+
+```yaml
+error: exact diagnostic
+code: INVALID_ARGUMENT
+retryable: true
+recovery: correct-and-retry-same-tool
+```
+
+The host may correct the reported request and call the same stateless guidance
+tool exactly once more. It must preserve truthful evidence, may remove or defer
+an unsupported candidate, and must not invent evidence merely to make the call
+pass. `ambiguous` and `unsupported` recommendations are successful sparse
+guidance, not retry triggers. Internal, integrity, authority, transport and
+unknown failures are not automatically retried.
+
 ## Proposal preparation and preview
 
 Preparation receives the confirmed Domain, canonical Repository resolution,
@@ -139,9 +155,10 @@ Finalization validates exact current bytes and produces either:
 - exact validation failures eligible for one host-agent repair;
 - Incomplete integrity/runtime failure.
 
-The skill may call changed-set validation during authoring and finalization
-after one repair. It must not call Hub Accept, submit, synchronize, provider CLI
-or any remote mutation operation.
+The skill may call changed-set validation once and repeat it after one separate
+content repair. Prepare and Finalize are called once and are never blindly
+retried. It must not call Hub Accept, submit, synchronize, provider CLI or any
+remote mutation operation.
 
 ## Snapshot extension
 

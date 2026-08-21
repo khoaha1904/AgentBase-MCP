@@ -285,7 +285,11 @@ Normative OKF source is pinned to commit
   after showing evidence and mismatches.
 - **AB-INGEST-003, AB-INGEST-004** — The host skill runs Preflight, Discover,
   Investigate, Author and Validate. Code Graph is a private map; promoted claims
-  and relations resolve to exact source, and at most one validation repair runs.
+  and relations resolve to exact source. Before proposal state exists, one
+  retryable `INVALID_ARGUMENT` guidance request may be corrected; after state
+  exists, at most one separate changed-document validation repair runs. Sparse
+  ambiguous/unsupported guidance continues without retry, while authority,
+  integrity, internal or uncertain-mutation failures stop Incomplete.
 - **AB-INGEST-005, AB-INGEST-006** — Every candidate needs stable identity and
   independent query/link value. One bounded Hub match pass reuses identity only
   from strong evidence; name/prose similarity never auto-merges.

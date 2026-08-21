@@ -5,6 +5,7 @@ import {
   getOkfAuthoringGuidance,
   listOkfConceptSchemas,
   normalizeHubConceptPath,
+  OkfGuidanceInputError,
   parseConceptDocument,
   selectOkfConceptSchemas,
   validateAgentBaseDraft,
@@ -323,7 +324,13 @@ export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record
       });
     }
     if (name === "get_okf_authoring_schemas") {
-      const guidance = getOkfAuthoringGuidance(guidanceRequest(args));
+      let request: OkfAuthoringGuidanceRequest;
+      try {
+        request = guidanceRequest(args);
+      } catch (error) {
+        throw new OkfGuidanceInputError(error instanceof Error ? error.message : "guidance request is invalid");
+      }
+      const guidance = getOkfAuthoringGuidance(request);
       return result({ ...guidance,
         okfVersion: "0.2",
         identityContract: "identity equals the normalized OKF-root-relative Markdown path without .md; never prefix paths with okf/",
@@ -355,6 +362,10 @@ export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record
     const failures = [...validateAgentBaseDraft(concept), ...validateConceptAgainstSchema(concept)];
     return result({ valid: failures.length === 0, type: concept.type, knownSchema: Boolean(getOkfConceptSchema(concept.type)), failures }, failures.length > 0);
   } catch (error) {
-    return result({ error: error instanceof Error ? error.message : "concept validation failed" }, true);
+    const message = error instanceof Error ? error.message : "concept validation failed";
+    return name === "get_okf_authoring_schemas" && error instanceof OkfGuidanceInputError
+      ? result({ error: message, code: "INVALID_ARGUMENT", retryable: true,
+        recovery: "correct-and-retry-same-tool" }, true)
+      : result({ error: message }, true);
   }
 }

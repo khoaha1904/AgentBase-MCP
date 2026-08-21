@@ -283,4 +283,11 @@ source, but MCP rejected that second source. No draft was scored and no replica
 ran. The proposed final attribution adjustment requires one own embedded anchor
 while permitting additional shared observations.
 
+AB-INGEST-003 now permits one explicit pre-state correction only after
+retryable `INVALID_ARGUMENT` guidance, independently of the existing one
+post-state validation repair. Sparse ambiguity continues without retry;
+Prepare, Finalize and uncertain state failures still stop safely. V15 lifecycle
+accounting retains first-attempt diagnostics and correction usage. The complete
+offline gate passes 50/50 tests; no replacement model probe has run.
+
 Most recent completed capability: `021-agentstack-foundation`.

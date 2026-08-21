@@ -6,7 +6,7 @@ import test from "node:test";
 import { parseConceptDocument } from "../../src/core/knowledge/index.ts";
 import { assessOwnerReviewUsefulness, classifyInitialIngest, createAuthoringAssessment,
   createPairComparison, scoreSemanticBenchmark } from "./benchmark-okf.mjs";
-import { validateFinalChangeCoverage } from "./benchmark-agent.mjs";
+import { summarizeAgentEvents, validateFinalChangeCoverage, validateV13Lifecycle } from "./benchmark-agent.mjs";
 
 const repositoryId = "repository-example-aaaaaaaaaaaa";
 
@@ -112,6 +112,20 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
   assert.ok(expected.embeddedKnowledge.some((item) => item.key === "aha-alert-processing"));
   assert.deepEqual(validateFinalChangeCoverage(["repositories/a", "systems/a"], ["repositories/a", "systems/a"]), []);
   assert.match(validateFinalChangeCoverage(["repositories/a"], ["domains/a", "repositories/a"])[0], /omitted.*domains\/a/);
+  const corrected = summarizeAgentEvents([
+    JSON.stringify({ type: "item.completed", item: { type: "mcp_tool_call", tool: "get_okf_authoring_schemas",
+      status: "failed", result: { content: [{ type: "text", text: JSON.stringify({ error: "bad candidate", code: "INVALID_ARGUMENT", retryable: true }) }] } } }),
+    JSON.stringify({ type: "item.completed", item: { type: "mcp_tool_call", tool: "get_okf_authoring_schemas",
+      status: "completed", result: { content: [{ type: "text", text: "{}" }] } } }),
+  ].join("\n")).activity.guidance;
+  assert.equal(corrected.inputCorrectionsUsed, 1);
+  assert.equal(corrected.firstAttemptSucceeded, false);
+  const lifecycleTools = Object.fromEntries([
+    "get_hub_status", "configure_hub", "preflight_hub_ingest", "index_repository", "get_architecture",
+    "prepare_hub_okf", "validate_okf_changes", "finalize_hub_okf_proposal", "inspect_hub_okf_proposal",
+  ].map((tool) => [tool, 1]));
+  lifecycleTools.get_okf_authoring_schemas = 2;
+  assert.deepEqual(validateV13Lifecycle(lifecycleTools, corrected.attempts), []);
 });
 
 test("[AB-BENCH-013..017] pair comparison reports quality and efficiency without a winner", () => {

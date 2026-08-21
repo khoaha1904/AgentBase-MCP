@@ -13,7 +13,7 @@ import { SAFE_TOOLS } from "./tool-manifest.ts";
 import { OKF_SCHEMA_TOOLS } from "./okf-schema-tools.ts";
 import { runGit } from "../../providers/github-hub/index.ts";
 
-test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010] official client lists and calls the safe server surface", async () => {
+test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official client lists and calls the safe server surface", async () => {
   const repo = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-server-repo-"));
   const state = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-server-state-"));
   let closes = 0;
@@ -61,6 +61,22 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010] official client lists and
     assert.match(unconfiguredHub.content[0]?.type === "text" ? unconfiguredHub.content[0].text : "", /not configured/);
     const schemas = await client.callTool({ name: "list_okf_schemas", arguments: {} });
     assert.equal(schemas.isError, undefined);
+    const invalidGuidance = await client.callTool({ name: "get_okf_authoring_schemas", arguments: {
+      candidates: [
+        { id: "function", identity_hint: "worker", identity_basis: "deployed runtime", query_value: "Worker runtime",
+          disposition: "concept", suggested_type: "Function", evidence_ids: ["docs.worker"] },
+        { id: "queue", identity_hint: "work queue", identity_basis: "internal transport", query_value: "Queue role",
+          disposition: "embedded", parent_candidate_id: "function", evidence_ids: ["docs.worker"] },
+      ],
+      semantic_observations: [{ id: "docs.worker", candidate_id: "function", role: "documentation",
+        signal: "independently deployed worker", source: { path: "README.md", start_line: 1, end_line: 1 } }],
+      resource_observations: [],
+    } });
+    assert.equal(invalidGuidance.isError, true);
+    const guidanceError = JSON.parse(invalidGuidance.content[0]?.type === "text" ? invalidGuidance.content[0].text : "{}");
+    assert.deepEqual({ code: guidanceError.code, retryable: guidanceError.retryable, recovery: guidanceError.recovery }, {
+      code: "INVALID_ARGUMENT", retryable: true, recovery: "correct-and-retry-same-tool",
+    });
     const before = await client.callTool({ name: "search_graph", arguments: { project: "fixture" } });
     assert.equal(before.isError, true);
     const indexed = await client.callTool({ name: "index_repository", arguments: { repo_path: repo } });

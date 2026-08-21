@@ -34,8 +34,9 @@ produce one reviewable Hub proposal without accepting or publishing it.
 - Hub knowledge stores claims, evidence and references, not a second source
   tree or Code Graph. A small non-sensitive value may be shown only as an
   attributed observation, never as timeless current truth.
-- Ingest may perform at most one automatic repair after validation and always
-  stops at proposal preview. Accept and Publish remain separate authorizations.
+- Ingest may correct one retryable guidance request before proposal state
+  exists, may perform one separate repair after validation, and always stops at
+  proposal preview. Accept and Publish remain separate authorizations.
 - There are no Published concepts to migrate. The owner will discard obsolete
   local/remote proposals, so this is a clean cutover with no dual catalog or
   content converter.
@@ -173,7 +174,12 @@ accepted.
   before full investigation.
 - **AB-INGEST-003**: Initial Ingest MUST execute the ordered stages Preflight,
   Discover, Investigate, Author and Validate, with deterministic boundaries and
-  no more than one automatic validation-repair attempt.
+  no more than one automatic validation-repair attempt. Before proposal state
+  exists, the host MAY correct and resubmit `get_okf_authoring_schemas` exactly
+  once only when MCP classifies the failure as retryable `INVALID_ARGUMENT`.
+  Ambiguous or unsupported recommendations MUST continue as sparse output;
+  integrity, authority, internal, transport or uncertain-mutation failures MUST
+  stop Incomplete rather than consume either correction budget.
 - **AB-INGEST-004**: Discovery MUST use the private disposable Code Graph as a
   map and MUST resolve attributed claims and relations to exact authorized
   repository evidence. Raw graph records, source blocks and private cache state
@@ -394,9 +400,10 @@ accepted.
   enrichment isolation, supported AWS technology classifications, Terraform-family
   exact/embedded/ambiguous/unsupported outcomes and rejection of legacy
   AgentBase authoring types.
-- **SC-004**: Partial-coverage, no-change, source-mutation, cleanup-failure,
-  first-repair-success and repair-exhausted scenarios each produce the specified
-  distinct outcome with zero implicit Accept or Publish operations.
+- **SC-004**: Partial-coverage, no-change, one guidance-input correction,
+  source-mutation, cleanup-failure, first-validation-repair success and
+  exhausted-budget scenarios each produce the specified distinct outcome with
+  zero implicit Accept or Publish operations.
 - **SC-005**: On the accepted representative repository and qualified host-agent
   environment, three consecutive opt-in runs produce valid reviewable previews
   with a median elapsed time no greater than 10 minutes. Measurement records

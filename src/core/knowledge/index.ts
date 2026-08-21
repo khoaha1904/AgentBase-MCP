@@ -51,7 +51,7 @@ export type {
   SemanticObservation,
   TechnologyMetadata,
 } from "./schemas/guidance.ts";
-export { getOkfAuthoringGuidance } from "./schemas/guidance.ts";
+export { getOkfAuthoringGuidance, OkfGuidanceInputError } from "./schemas/guidance.ts";
 export { AWS_PROVIDER_PROFILE, listAwsResourceMappings, mapAwsResource } from "./schemas/profiles/aws.ts";
 export { TERRAFORM_FAMILY_DETECTOR_PROFILE, detectTerraformResource } from "./schemas/profiles/terraform.ts";
 export {

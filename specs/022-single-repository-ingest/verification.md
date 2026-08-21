@@ -943,3 +943,19 @@ rejected the second source before Prepare.
 This is not a recurrence of standalone exclusive ownership. It exposes the
 remaining embedded boundary: useful embedded knowledge can be multi-source too.
 No draft was created or scored, and AB-BENCH-048 stopped before a replica.
+
+## Bounded guidance correction — 2026-08-22
+
+AB-INGEST-003 now distinguishes one stateless guidance-input correction from
+the existing one changed-document validation repair. Guidance returns
+machine-readable retry only for validated `INVALID_ARGUMENT`; sparse
+`ambiguous`/`unsupported` results continue without retry, while Prepare,
+Finalize and uncertain state failures remain terminal for the run.
+
+The V15 harness accepts only a failed retryable guidance attempt followed by
+one successful correction. Its `run.json` activity retains both attempt
+statuses, the first diagnostic and `inputCorrectionsUsed`, so recovered runs do
+not appear first-pass clean. Focused MCP/guidance/benchmark checks passed 15/15.
+The complete `npm run verify` gate passed specification checks, TypeScript,
+dependency rules, Knip, Gitleaks, 50/50 tests and `git diff --check`. No model
+benchmark, proposal, Accept, Publish or Hub PR was run.

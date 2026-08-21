@@ -269,6 +269,17 @@ and record reproducible evidence.
 - [x] T086 Retain post-AB-SCHEMA-048 probe `2026-08-21T172146Z`, confirm
   standalone sharing passes, classify embedded own-plus-Flow evidence rejection
   as the remaining attribution boundary, and stop before a replica
+- [x] T087 [US3] Record the approved independent guidance-correction and
+  validation-repair policy in the active spec, MCP contract, living OKF contract
+  and `.agents/skills/agentbase-ingest/SKILL.md`
+- [x] T088 [US3] Return retryable `INVALID_ARGUMENT` guidance diagnostics and
+  cover the public MCP response in `src/app/codebase-memory-mcp/okf-schema-tools.ts`
+  and `src/app/codebase-memory-mcp/server.test.ts`
+- [x] T089 [US3] Permit one failed-then-successful guidance sequence while
+  retaining first-attempt telemetry in `scripts/benchmark/benchmark-agent.mjs`,
+  `scripts/benchmark/benchmark-okf.test.mjs` and `benchmark/prompts/okf-author-v15.md`
+- [x] T090 Run focused requirement-linked checks and `npm run verify`, record
+  deterministic evidence in `specs/022-single-repository-ingest/verification.md`
 
 ---
 
@@ -287,6 +298,8 @@ and record reproducible evidence.
   defects found by T029 without treating offline guidance tests as a new
   accepted model qualification. T034 corrects benchmark measurement and shared
   authoring contracts but likewise leaves model stability pending.
+- T087–T090 apply the independent pre-state correction and post-state repair
+  policy, then close only after the complete deterministic gate passes.
 
 ## Parallel Opportunities
 

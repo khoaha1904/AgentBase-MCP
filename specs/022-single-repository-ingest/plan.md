@@ -32,8 +32,9 @@ the existing stdio MCP server
 **Project Type**: TypeScript modular monolith and agent-facing MCP server
 
 **Performance Goals**: One graph session, one bounded Hub match pass, one
-schema-guidance call and no more than one validation repair per repository run;
-qualified real-run median no greater than 10 minutes
+successful schema-guidance result with at most one pre-state input correction,
+and no more than one separate validation repair per repository run; qualified
+real-run median no greater than 10 minutes
 
 **Constraints**: one authorized local repository; offline canonical gate; no
 provider CLI, credentials, remote clone, automatic Accept/Publish, raw graph or
@@ -147,6 +148,18 @@ Technology mappings remain authoritative metadata but cannot override
 disposition. A suggestion produces an editable draft skeleton with a visible
 review limitation; embedded knowledge remains in its parent. Neither receives
 a confidence score or automatic acceptance/publication authority.
+
+### 9. Keep recovery bounded at the existing state boundaries
+
+The host skill may correct one machine-classified `INVALID_ARGUMENT` guidance
+request before Prepare creates proposal state. This is separate from the
+existing one-pass changed-document repair after Prepare. Prepare and Finalize
+are never blindly retried because their completion state may be uncertain;
+ambiguous or unsupported guidance degrades to sparse output instead of using a
+retry. MCP returns a small additive error code/retry/recovery contract, while
+the benchmark retains first-attempt status and correction usage so recovery
+does not hide reliability defects. No persistent run state or retry engine is
+added.
 
 ## Project Structure
 

@@ -78,12 +78,16 @@ expectations or previous results.
    Use bounded graph/source tools only as needed to identify useful boundaries
    and exact evidence.
 4. Build one bounded Detect -> Promote candidate list. Call
-   `get_okf_authoring_schemas` exactly once with candidates plus snake_case
+   `get_okf_authoring_schemas` with candidates plus snake_case
    observations, each bound to an exact relative source path and line span. Use
    only exact released type names in `suggested_type`. Structured mappings win;
    semantic keyword disagreement remains diagnostic and does not reject an
-   evidence-bound suggested role. If guidance fails, stop Incomplete:
-   do not alter the request and continue.
+   evidence-bound suggested role. If it returns retryable `INVALID_ARGUMENT`
+   with recovery `correct-and-retry-same-tool`, correct only the reported
+   request defect and call it once more. Preserve truthful evidence; remove,
+   embed or defer a candidate rather than inventing support. Record ambiguity
+   or unsupported coverage and continue sparsely without retry. For any other
+   failure, or if the corrected call fails, stop Incomplete.
 5. Call `prepare_hub_okf` exactly once with `mode: new`, the source repository,
    one normalized `repositories/<slug>` subject, the exact confirmed Domain, the
    same unchanged `guidance_request` and honest coverage. Do not supply

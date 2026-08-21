@@ -74,6 +74,8 @@ export type OkfAuthoringGuidance = Readonly<{
   recommendations: readonly OkfAuthoringRecommendation[];
 }>;
 
+export class OkfGuidanceInputError extends Error {}
+
 type TechnologyDetection = Readonly<{
   observation: ResourceObservation;
   result: DetectedResource;
@@ -178,6 +180,7 @@ function validateRequest(request: OkfAuthoringGuidanceRequest): void {
     }
     requireText(observation.resourceType, "resource type", 256);
     requireText(observation.address, "resource address", 512);
+    detectTerraformResource(observation);
   }
   for (const candidate of candidates.values()) {
     if (candidate.evidenceIds.some((id) => !observationIds.has(id))) throw new Error(`candidate ${candidate.id} cites unknown evidence`);
@@ -209,7 +212,11 @@ function technologyFrom(detection: TechnologyDetection | undefined): TechnologyM
 }
 
 export function getOkfAuthoringGuidance(request: OkfAuthoringGuidanceRequest): OkfAuthoringGuidance {
-  validateRequest(request);
+  try {
+    validateRequest(request);
+  } catch (error) {
+    throw new OkfGuidanceInputError(error instanceof Error ? error.message : "guidance request is invalid");
+  }
   const recommendations = request.candidates.map((candidate): OkfAuthoringRecommendation => {
     const semantic = request.semanticObservations.filter((item) => item.candidateId === candidate.id);
     const resources = request.resourceObservations.filter((item) => item.candidateId === candidate.id);

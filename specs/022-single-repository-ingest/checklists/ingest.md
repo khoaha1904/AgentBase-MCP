@@ -40,10 +40,12 @@
 
 - [x] CHK018 Is the clean-cutover assumption tied to the explicit absence of Published concepts and owner removal of obsolete proposals? [Assumption, Spec §Owner Decisions, Assumptions]
 - [x] CHK019 Are existing graph/Hub primitives described as reusable but not allowed to override the newly approved product contract? [Assumption, Spec §Owner Decisions, Assumptions]
+- [x] CHK020 Are pre-state guidance correction and post-state content repair specified as independent, single-use budgets? [Clarity, Spec §AB-INGEST-003]
+- [x] CHK021 Does the contract distinguish sparse ambiguity from retryable input defects and fatal trust/state failures? [Coverage, Spec §AB-INGEST-003/007]
 
 ## Notes
 
 - Review depth: formal pre-implementation owner/PR gate.
 - Focus: evidence authority, generic catalog cutover, non-destructive proposal
   boundary and recoverable partial/failure behavior.
-- All 19 requirement-quality questions pass against the current spec and plan.
+- All 21 requirement-quality questions pass against the current spec and plan.

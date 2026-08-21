@@ -38,7 +38,7 @@ the repository, not an authoring prompt. Stop before Accept or Publish.
    trigger, state and delivery sequence embedded; create a Flow only when it
    adds independent query or navigation value. This is an authoring heuristic,
    not a fixed concept-count rule.
-4. **Author** — Call `get_okf_authoring_schemas` exactly once with the qualified
+4. **Author** — Call `get_okf_authoring_schemas` with the qualified
    candidates plus exact semantic/resource observations. Every candidate declares
    `disposition: concept` or `disposition: embedded`; embedded candidates have
    no `suggested_type`. Each evidence ID is
@@ -64,7 +64,12 @@ the repository, not an authoring prompt. Stop before Accept or Publish.
    review limitation on every suggested skeleton. Preserve the one prepared
    Embedded Knowledge table in its parent. An embedded item has no OKF identity,
    standalone file, navigation or graph relationship. Create only useful
-   concepts and required navigation.
+   concepts and required navigation. If the guidance call returns retryable
+   `INVALID_ARGUMENT` with recovery `correct-and-retry-same-tool`, correct only
+   the reported request defect and call it once more. Preserve truthful
+   evidence; remove, embed or defer a candidate rather than inventing support.
+   Do not retry ambiguous/unsupported recommendations or any internal,
+   integrity, authority or transport failure.
 5. **Validate** — Run changed-set and final validation. Make at most one repair
    from exact failures. Inspect and present the complete proposal diff,
    Questions, limitations and partial-coverage status.
@@ -74,6 +79,9 @@ the repository, not an authoring prompt. Stop before Accept or Publish.
 - Stop as Incomplete when repository authority changes, provider cleanup is
   uncertain, evidence/proposal integrity fails, or the one repair still fails.
 - A valid sparse or no-change result is success; completeness is not required.
+- Guidance gets at most one pre-state input correction. This budget is separate
+  from the one post-state changed-document repair and neither permits blind
+  Prepare or Finalize retries.
 - After one exact validation failure, make at most one repair. A second failure
   is Incomplete and requires an explicit user retry; never start another hidden
   reasoning pass.
