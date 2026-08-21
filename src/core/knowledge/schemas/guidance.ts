@@ -265,23 +265,19 @@ export function getOkfAuthoringGuidance(request: OkfAuthoringGuidanceRequest): O
           ? [`exact structured mapping Function overrides suggested type ${candidate.suggestedType}`] : [])],
       };
     }
-    if (candidate.suggestedType
-      && ((semanticTypes.length === 1 && semanticTypes[0] !== candidate.suggestedType)
-        || (semanticTypes.length > 1 && !semanticTypes.includes(candidate.suggestedType)))) return {
-      ...base,
-      status: "ambiguous",
-      limitations: [...limitations, `suggested type ${candidate.suggestedType} conflicts with semantic roles: ${semanticTypes.join(", ")}`],
-    };
+    const semanticRoleNote = candidate.suggestedType && semanticTypes.length
+      && !semanticTypes.includes(candidate.suggestedType)
+      ? [`semantic role hints ${semanticTypes.join(", ")} differ from suggested type ${candidate.suggestedType}; the suggestion remains reviewable intent`]
+      : [];
     if (candidate.suggestedType === "Interface" || candidate.suggestedType === "Resource") {
       const compatibleBases = candidate.suggestedType === "Interface"
         ? ["shared-contract", "cross-boundary"]
         : ["cross-boundary", "ownership", "lifecycle", "failure", "security", "operational"];
-      if (!candidate.promotion || !compatibleBases.includes(candidate.promotion.basis)
-        || !semanticSelections.some((item) => item.type === candidate.suggestedType)) return {
+      if (!candidate.promotion || !compatibleBases.includes(candidate.promotion.basis)) return {
         ...base,
         status: "unsupported",
         limitations: [...limitations,
-          `${candidate.suggestedType} requires a compatible promotion basis and candidate-owned semantic evidence selecting that role; declaration or suggested type alone remains embedded knowledge`],
+          `${candidate.suggestedType} requires a compatible promotion basis and candidate-owned semantic evidence; declaration or suggested type alone remains embedded knowledge`],
       };
     }
     const schemaType = candidate.suggestedType ?? (semanticTypes.length === 1 ? semanticTypes[0] : undefined);
@@ -298,7 +294,8 @@ export function getOkfAuthoringGuidance(request: OkfAuthoringGuidanceRequest): O
       status: "suggested",
       schema,
       missingEvidence: semanticSelections.find((item) => item.type === schema.type)?.missingEvidence ?? [],
-      limitations: [...limitations, `${schema.type} is an evidence-bound semantic suggestion and requires proposal review`],
+      limitations: [...limitations, ...semanticRoleNote,
+        `${schema.type} is an evidence-bound semantic suggestion and requires proposal review`],
     };
   });
   return { catalogVersion: AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, recommendations };

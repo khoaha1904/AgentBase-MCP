@@ -175,6 +175,16 @@ benchmarks.
   identical sequential replica for stability comparison. Compare promotion,
   identities, sources and relations across both runs. A third consecutive run
   is reserved for final acceptance evidence, never routine debugging.
+- **AB-BENCH-049** — Initial Ingest reports one categorical outcome:
+  `invalid`, `valid_partial` or `review_ready`. A source-truthful, structurally
+  valid `valid_partial` proposal passes Initial Ingest even when expected
+  concepts or details are missing. Coverage ratios and missing references remain
+  diagnostics. `review_ready` additionally has useful owner navigation and
+  content, without requiring a fixed concept inventory.
+- **AB-BENCH-050** — One model run's semantic variance does not become a hard
+  product rule. A deterministic offline contract breach may be fixed directly;
+  a semantic miss justifies a new cross-repository rule only after the same
+  failure appears in at least two structurally distinct repositories.
 
 ## Context A/B interpretation
 

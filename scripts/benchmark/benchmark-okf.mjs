@@ -232,7 +232,20 @@ function usefulBody(concept) {
     .replace(/[#*`_|>\-[\]]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+  if (concept.type === "Domain") {
+    const sources = Array.isArray(concept.frontmatter.sources) ? concept.frontmatter.sources : [];
+    const ownerConfirmed = sources.some((source) => source && typeof source === "object"
+      && !Array.isArray(source) && typeof source.resource === "string"
+      && source.resource.startsWith("agentbase://owner-guidance/domains/"));
+    return ownerConfirmed && /^#{1,6}\s+Purpose\s*$/im.test(concept.body)
+      && markdownTargets(concept.body, concept.path).length > 0;
+  }
   return /^#{1,6}\s+\S/m.test(concept.body) && plain.length >= 80;
+}
+
+export function classifyInitialIngest(authoringAssessment, ownerReview) {
+  if (authoringAssessment.status === "invalid") return "invalid";
+  return ownerReview.status === "useful_for_owner_review" ? "review_ready" : "valid_partial";
 }
 
 export function assessOwnerReviewUsefulness(concepts, { navigationFindings = [], conflictFindings = [] } = {}) {
@@ -308,9 +321,10 @@ function progressiveNavigationFindings(bundle, expectation, repositoryId) {
     if (!domain || domain.type !== "Domain" || domain.frontmatter.title !== confirmedDomain.title) {
       findings.push(`confirmed Domain is missing or mismatched: ${confirmedDomain.identity}`);
     } else {
-      const linkedSystems = markdownTargets(domain.body, domain.path).some((target) =>
-        [...bundle.concepts.values()].some((concept) => concept.path === target && concept.type === "System"));
-      if (!linkedSystems) findings.push(`${domain.path}: confirmed Domain does not navigate to a System`);
+      const linkedEntry = markdownTargets(domain.body, domain.path).some((target) =>
+        [...bundle.concepts.values()].some((concept) => concept.path === target
+          && (concept.type === "System" || concept.type === "Repository")));
+      if (!linkedEntry) findings.push(`${domain.path}: confirmed Domain does not navigate to a System or Repository`);
     }
     if (expectation.version >= 9) {
       const repository = [...bundle.concepts.values()].find((concept) =>
@@ -560,18 +574,21 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
     },
     validation: { passed: failures.length === 0, failures },
   };
-  return {
-    ...metrics,
-    ownerReview: assessOwnerReviewUsefulness(bundle.concepts, {
+  const ownerReview = assessOwnerReviewUsefulness(bundle.concepts, {
       navigationFindings: expectation.version >= 6 ? progressiveNavigationFindings(bundle, expectation, repositoryId) : [],
       conflictFindings: [...conflictVisibility.findings, ...liveEvidence.findings, ...embeddedKnowledge.findings],
-    }),
-    authoringAssessment: createAuthoringAssessment({
+    });
+  const authoringAssessment = createAuthoringAssessment({
       actualConcepts: actual.size,
       validationFailures: failures,
       contradictionFailures,
       relationshipIntegrityFailures,
-    }),
+    });
+  return {
+    ...metrics,
+    ownerReview,
+    authoringAssessment,
+    initialIngestAcceptance: classifyInitialIngest(authoringAssessment, ownerReview),
   };
 }
 
@@ -586,6 +603,7 @@ function reportFor(entry, run, metrics) {
       + `- Agent outcome: failed\n- OKF validation: failed\n`
       + `- Authoring assessment: invalid\n`
       + `- Owner review: needs_revision\n`
+      + `- Initial Ingest acceptance: invalid\n`
       + `- Semantic metrics: not scored because the ${run.arm ?? "mcp"} arm lifecycle failed\n`
       + `\n## Hard failures\n\n${metrics.authoringAssessment.hardFailures.map((item) => `- ${item}`).join("\n")}\n`
       + `\n## Limitations\n\n${metrics.authoringAssessment.limitations.map((item) => `- ${item}`).join("\n")}\n`;
@@ -598,6 +616,7 @@ function reportFor(entry, run, metrics) {
     + `- OKF validation: ${metrics.validation.passed ? "passed" : "failed"}\n`
     + `- Authoring assessment: ${metrics.authoringAssessment.status}\n`
     + `- Owner review: ${metrics.ownerReview.status}\n`
+    + `- Initial Ingest acceptance: ${metrics.initialIngestAcceptance}\n`
     + `- Reference concept coverage: ${measured(metrics.referenceConceptCoveragePercent, metrics.ratios.referenceConceptCoverage)}\n`
     + `- Recognized schema agreement: ${measured(metrics.recognizedSchemaAgreementPercent, metrics.ratios.recognizedSchemaAgreement)}\n`
     + `- Metadata completeness: ${measured(metrics.metadataCompletenessPercent, metrics.ratios.metadataCompleteness)}\n`
@@ -646,14 +665,16 @@ function invalidMetrics(suite, repository, runId, error) {
     ownerReview: { status: "needs_revision", findings: ["No scorable OKF bundle is available for owner review"] },
     okfTreeDigest: null,
   };
+  const authoringAssessment = createAuthoringAssessment({
+    actualConcepts: 0,
+    validationFailures: metrics.validation.failures,
+    contradictionFailures: [],
+    relationshipIntegrityFailures: [],
+  });
   return {
     ...metrics,
-    authoringAssessment: createAuthoringAssessment({
-      actualConcepts: 0,
-      validationFailures: metrics.validation.failures,
-      contradictionFailures: [],
-      relationshipIntegrityFailures: [],
-    }),
+    authoringAssessment,
+    initialIngestAcceptance: "invalid",
   };
 }
 
@@ -782,7 +803,7 @@ function pairReportFor(comparison) {
   const quality = (arm) => {
     const metrics = comparison.quality[arm];
     return metrics
-      ? `- ${arm}: assessment ${metrics.authoringAssessment?.status ?? "invalid"}; owner review ${metrics.ownerReview?.status ?? "needs_revision"}; validation ${metrics.validation.passed ? "passed" : "failed"}; reference concepts ${measured(metrics, "referenceConceptCoveragePercent", "referenceConceptCoverage")}; embedded knowledge ${measured(metrics, "embeddedKnowledgeCoveragePercent", "embeddedKnowledgeCoverage")}; recognized schemas ${measured(metrics, "recognizedSchemaAgreementPercent", "recognizedSchemaAgreement")}; metadata ${measured(metrics, "metadataCompletenessPercent", "metadataCompleteness")}; provenance ${measured(metrics, "provenanceCoveragePercent", "provenanceCoverage")}; reference relationships ${measured(metrics, "referenceRelationshipCoveragePercent", "referenceRelationshipCoverage")}; source conflicts ${measured(metrics, "conflictVisibilityPercent", "conflictVisibility")}; unjudged concepts/relationships ${metrics.classifications?.concepts.unjudged.length ?? 0}/${metrics.classifications?.relationships.unjudged.length ?? 0}`
+      ? `- ${arm}: Initial Ingest ${metrics.initialIngestAcceptance ?? "invalid"}; assessment ${metrics.authoringAssessment?.status ?? "invalid"}; owner review ${metrics.ownerReview?.status ?? "needs_revision"}; validation ${metrics.validation.passed ? "passed" : "failed"}; reference concepts ${measured(metrics, "referenceConceptCoveragePercent", "referenceConceptCoverage")}; embedded knowledge ${measured(metrics, "embeddedKnowledgeCoveragePercent", "embeddedKnowledgeCoverage")}; recognized schemas ${measured(metrics, "recognizedSchemaAgreementPercent", "recognizedSchemaAgreement")}; metadata ${measured(metrics, "metadataCompletenessPercent", "metadataCompleteness")}; provenance ${measured(metrics, "provenanceCoveragePercent", "provenanceCoverage")}; reference relationships ${measured(metrics, "referenceRelationshipCoveragePercent", "referenceRelationshipCoverage")}; source conflicts ${measured(metrics, "conflictVisibilityPercent", "conflictVisibility")}; unjudged concepts/relationships ${metrics.classifications?.concepts.unjudged.length ?? 0}/${metrics.classifications?.relationships.unjudged.length ?? 0}`
       : `- ${arm}: unavailable`;
   };
   const efficiency = (arm) => {

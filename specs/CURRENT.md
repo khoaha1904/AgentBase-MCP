@@ -169,4 +169,12 @@ Prepare omitted it. Reference concept/provenance coverage is 75% and reference
 relationship coverage is 33%; missing Domain → System navigation is downstream
 of that omitted System. AB-BENCH-048 stopped before a replica.
 
+That interpretation is superseded by the anti-overfit correction. Initial
+Ingest now reports `invalid`, `valid_partial` or `review_ready`; truthful sparse
+output is accepted even when reference coverage is incomplete. Semantic
+keywords, exact-source completeness and Flow endpoint counts are diagnostics or
+authoring heuristics, not validity gates. Hard gates remain source truth, shape,
+safety, identity and declared-relation integrity. No replacement model run has
+been executed for this correction.
+
 Most recent completed capability: `021-agentstack-foundation`.

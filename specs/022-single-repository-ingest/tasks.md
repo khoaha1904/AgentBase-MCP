@@ -215,6 +215,10 @@ and record reproducible evidence.
 - [x] T069 Retain probe `2026-08-21T155217Z`, confirm source/Flow corrections,
   trace the missing System to source-container wording in its semantic signal,
   classify downstream Domain navigation separately and stop before a replica
+- [x] T070 [US2] Add explicit invalid/valid-partial/review-ready acceptance,
+  make semantic keywords diagnostic, allow sparse Domain-to-Repository
+  navigation, and remove repository-specific Terraform and Flow completeness
+  gates without weakening source, shape, safety or relation integrity
 
 ---
 

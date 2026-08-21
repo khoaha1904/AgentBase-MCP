@@ -119,6 +119,13 @@ is the portable archive.
   replica-qualified because the System observation said “repository describes,”
   semantic selection classified it only as Repository and Prepare omitted the
   resulting ambiguous System. Domain navigation then remained incomplete.
+- The subsequent anti-overfit correction replaces that binary interpretation:
+  Initial Ingest now distinguishes `invalid`, `valid_partial` and
+  `review_ready`. A truthful sparse draft passes without a fixed concept
+  inventory. Semantic keywords, exact-source coverage and Flow endpoint counts
+  remain diagnostics or authoring heuristics; source, shape, safety, identity
+  and declared-relation integrity remain hard gates. No new model run was used
+  to make this offline correction.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.

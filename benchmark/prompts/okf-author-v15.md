@@ -22,10 +22,10 @@ expectations or previous results.
    evidence first. Promote only a stable identity with independent query/link
    value and a deployment, ownership, contract, cross-boundary, failure,
    operations or lifecycle boundary. Render promoted candidates with the
-   smallest released schema. Detection alone never requires a concept file. A
-   standalone Flow requires at least two independently useful endpoint
-   boundaries; a System and its single contained Function with embedded
-   schedule, state and delivery details do not suffice.
+   smallest released schema. Detection alone never requires a concept file.
+   Usually keep one runtime's internal sequence embedded; create a Flow only
+   when it adds independently useful query or navigation value. This is not a
+   fixed endpoint-count requirement.
 4. Initial Ingest uses exactly these catalog `7.0.0` types: `Repository`,
    `Domain`, `System`, `Component`, `Function`, `Interface`, `Flow`, `Resource`.
    `Entity` and `Metric` are enrichment-only. Provider products such as Lambda,
@@ -40,9 +40,10 @@ expectations or previous results.
    independent shared/operational value. Prefer one independently deployed or
    triggered Lambda as `Function`; describe workloads running on a VM as
    Components rather than creating one broad host concept. This qualification
-   is Terraform-only: when exact Terraform exists for retained runtime or
-   infrastructure knowledge, submit its resource observation. CloudFormation
-   or handler evidence may supplement behavior but cannot replace it.
+   is Terraform-only: exact Terraform observations are high-priority when
+   readily available. If one is missed, report the coverage gap without
+   invalidating an otherwise truthful partial proposal. CloudFormation or
+   handler evidence may still support behavior.
 7. Every attributed claim and canonical relation cites a stable source ID with
    `repository://<canonical-repository-id>/<relative-path>#Lx-Ly`, except the
    supplied `agentbase://owner-guidance/...` Domain evidence. Desired-state IaC
@@ -80,7 +81,8 @@ expectations or previous results.
    `get_okf_authoring_schemas` exactly once with candidates plus snake_case
    observations, each bound to an exact relative source path and line span. Use
    only exact released type names in `suggested_type`. Structured mappings win;
-   semantic disagreement remains ambiguous. If guidance fails, stop Incomplete:
+   semantic keyword disagreement remains diagnostic and does not reject an
+   evidence-bound suggested role. If guidance fails, stop Incomplete:
    do not alter the request and continue.
 5. Call `prepare_hub_okf` exactly once with `mode: new`, the source repository,
    one normalized `repositories/<slug>` subject, the exact confirmed Domain, the

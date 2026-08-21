@@ -77,11 +77,12 @@ test("[AB-SCHEMA-034][AB-SCHEMA-036] semantic standalone intent remains suggeste
       queryValue: "Coordinates cooperating runtimes", evidenceIds: ["docs.capability"], disposition: "concept" as const,
       suggestedType: "System", promotion: { basis: "operational" as const, evidenceIds: ["docs.capability"] } }],
     semanticObservations: [{ id: "docs.capability", candidateId: "capability", role: "documentation" as const,
-      signal: "software system capability with cooperating components", source }],
+      signal: "The repository describes AWS Health Aware as an automated notification tool for operational teams", source }],
     resourceObservations: [],
   });
   assert.equal(result.recommendations[0]?.status, "suggested");
   assert.equal(result.recommendations[0]?.schema?.type, "System");
+  assert.match(result.recommendations[0]?.limitations.join(" ") ?? "", /reviewable intent/i);
   assert.match(result.recommendations[0]?.limitations.join(" ") ?? "", /proposal review/i);
 });
 
@@ -103,7 +104,7 @@ test("[AB-SCHEMA-033][AB-SCHEMA-036][AB-SCHEMA-042] detection does not promote n
     candidates: [{ ...input.candidates[0]!, evidenceIds: ["evidence.queue", "docs.contract"],
       suggestedType: "Interface", promotion: { basis: "shared-contract" as const, evidenceIds: ["docs.contract"] } }],
     semanticObservations: [{ id: "docs.contract", candidateId: "queue", role: "documentation" as const,
-      signal: "shared message contract with producer and consumer evidence", source }],
+      signal: "Messages cross the producer and consumer ownership boundary", source }],
   }).recommendations[0]!;
   assert.equal(promoted.status, "suggested");
   assert.equal(promoted.schema?.type, "Interface");

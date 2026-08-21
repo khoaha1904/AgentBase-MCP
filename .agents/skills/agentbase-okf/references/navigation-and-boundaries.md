@@ -42,10 +42,10 @@
   Split a Function only for independent triggers, deployment, scaling,
   permissions, failure or operational behavior. Provider/product belongs in
   metadata and evidence, never in the schema type.
-- Create a standalone Flow only across at least two independently useful
-  endpoint boundaries. A System and its single contained Function do not
-  qualify merely because an embedded schedule, state store and delivery
-  configuration form an implementation sequence.
+- Usually keep one runtime's internal schedule, state and delivery sequence in
+  its useful parent. Create a standalone Flow when the behavior has independent
+  query or navigation value across evidenced concept identities. Endpoint
+  count is a review heuristic, not a schema-validity rule.
 - Treat an architecture node and a Markdown knowledge unit separately. EC2, VM
   and physical-host evidence describes hosting; it never creates a Server
   concept. Create a Component for an independently useful evidenced service,
@@ -61,8 +61,9 @@
 - Terraform/Terragrunt remains source-tool metadata. The label must match the
   exact source path; provider resources reached through Terragrunt cite their
   referenced Terraform module. When supported Terraform/Terragrunt exists for
-  retained runtime or infrastructure knowledge, submit it as structured
-  evidence; unsupported IaC may supplement but not replace it. Source
+  retained runtime or infrastructure knowledge, prefer it as structured
+  evidence when readily available. Missing it is a visible coverage limitation,
+  not grounds to reject an otherwise truthful partial proposal. Source
   declarations do not prove an account, region, ARN or deployed instance.
 
 Unknown OKF types and extension fields are valid. Preserve their relationship

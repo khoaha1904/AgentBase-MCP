@@ -48,7 +48,7 @@ test("[AB-SCHEMA-030][AB-SCHEMA-038][AB-SCHEMA-044] schemas describe useful boun
   assert.ok(flowGuidance?.actions.includes("invokes"));
   assert.deepEqual(flowGuidance?.requiredFields, ["order", "source", "action", "target", "mode", "evidence"]);
   assert.match(flowGuidance?.endpointRule ?? "", /identities of concepts.*never use embedded knowledge or free text/);
-  assert.match(flowGuidance?.endpointRule ?? "", /at least two independently useful endpoint boundaries.*single contained Function does not suffice/);
+  assert.match(getOkfConceptSchema("Flow")?.evidenceRequirements.join(" ") ?? "", /supporting concept evidence/);
   assert.match(flowGuidance?.sourceRule ?? "", /prove the trigger, outcome and every described interaction/);
 });
 

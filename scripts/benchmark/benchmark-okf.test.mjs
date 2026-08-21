@@ -4,7 +4,8 @@ import path from "node:path";
 import test from "node:test";
 
 import { parseConceptDocument } from "../../src/core/knowledge/index.ts";
-import { createAuthoringAssessment, createPairComparison, scoreSemanticBenchmark } from "./benchmark-okf.mjs";
+import { assessOwnerReviewUsefulness, classifyInitialIngest, createAuthoringAssessment,
+  createPairComparison, scoreSemanticBenchmark } from "./benchmark-okf.mjs";
 import { validateFinalChangeCoverage } from "./benchmark-agent.mjs";
 
 const repositoryId = "repository-example-aaaaaaaaaaaa";
@@ -45,6 +46,18 @@ test("[AB-BENCH-023] hard failures, not incomplete coverage, invalidate authorin
     { actualConcepts: 1, validationFailures: ["bad index"], contradictionFailures: [], relationshipIntegrityFailures: [] },
     { actualConcepts: 1, validationFailures: [], contradictionFailures: ["wrong schema"], relationshipIntegrityFailures: [] },
   ]) assert.equal(createAuthoringAssessment(input).status, "invalid");
+  assert.equal(classifyInitialIngest({ status: "reviewable" }, { status: "needs_revision" }), "valid_partial");
+  assert.equal(classifyInitialIngest({ status: "reviewable" }, { status: "useful_for_owner_review" }), "review_ready");
+  assert.equal(classifyInitialIngest({ status: "invalid" }, { status: "useful_for_owner_review" }), "invalid");
+
+  const domain = parseConceptDocument("domains/health.md", [
+    "---", "type: Domain", "title: Health", "description: Confirmed domain", "status: draft",
+    "generated: { by: agentbase/0.0.0, at: '2026-08-14T00:00:00Z' }", "relationships: []", "sources:",
+    "  - { id: owner, resource: 'agentbase://owner-guidance/domains/health' }", "---", "",
+    "# Purpose", "", "Current confirmed scope. See [Repository](../repositories/health.md).", "",
+  ].join("\n"));
+  assert.equal(assessOwnerReviewUsefulness(new Map([[domain.conceptId, domain]])).status,
+    "useful_for_owner_review");
 });
 
 test("[AB-BENCH-004][AB-BENCH-005] semantic scorer keeps quality metrics separate", () => {
@@ -57,6 +70,7 @@ test("[AB-BENCH-004][AB-BENCH-005] semantic scorer keeps quality metrics separat
   }, { concepts: new Map([[worker.conceptId, worker]]), warnings: [] }, repositoryId);
   assert.equal(result.validation.passed, true);
   assert.equal(result.authoringAssessment.status, "reviewable");
+  assert.equal(result.initialIngestAcceptance, "valid_partial");
   assert.equal(result.referenceConceptCoveragePercent, 100);
   assert.equal(result.recognizedSchemaAgreementPercent, 100);
   assert.equal(result.metadataCompletenessPercent, 100);

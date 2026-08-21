@@ -319,12 +319,11 @@ workflow, while Initial Ingest and V15 guidance clarify that Prepare already
 populates navigation. No separate index validator, repair loop or content quota
 is added; new Domains remain sparse and evidence-bound.
 
-The next model-variance correction remains guidance-only. Mixed-source
-investigation must retain supported Terraform/Terragrunt observations when
-available, while unsupported IaC may add semantic context. Released Flow
-guidance excludes a System plus its single contained runtime and requires two
-independently useful endpoint boundaries. MCP gains no repository scanner,
-candidate-count heuristic, reasoning pass or new schema.
+The acceptance correction keeps sparse Initial Ingest useful across repository
+shapes. Exact Terraform/Terragrunt evidence is high-priority rather than a
+completeness gate; Flow creation follows independent query/navigation value
+rather than endpoint count; semantic keyword matching remains diagnostic. MCP
+gains no repository scanner, candidate quota, reasoning pass or new schema.
 
 Constitution re-check: this slice stays deterministic, local, provider-neutral
 and non-destructive. It adds no dependency, credential, migration, process or

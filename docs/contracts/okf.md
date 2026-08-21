@@ -141,8 +141,9 @@ Normative OKF source is pinned to commit
   never reads a caller-selected output path.
 - **AB-SCHEMA-015** — Guidance separates technology detection from promotion.
   Semantic evidence may support one advisory catalog-7 role but incidental role
-  words never override the standalone/embedded boundary. Repository names and
-  benchmark identities are never selection rules.
+  words never override the standalone/embedded boundary or reject an explicit
+  evidence-bound suggested role. Keyword matches are diagnostics, not validity
+  gates. Repository names and benchmark identities are never selection rules.
 - **AB-SCHEMA-016** — Canonical Domain, System, Component, Function, Interface,
   Flow, Resource and Repository paths classify one identity per useful entity;
   links express relationships and evidence. Entity/Metric paths are added only
@@ -262,13 +263,14 @@ Normative OKF source is pinned to commit
   SAM/CloudFormation/YAML is unsupported and cannot be relabeled as either
   source tool.
 - **AB-SCHEMA-042** — Standalone Interface/Resource intent requires a compatible
-  promotion basis plus exact candidate-owned semantic observations that select
-  the requested role. Declaration evidence, caller prose and `suggested_type`
+  promotion basis plus exact candidate-owned semantic observations supporting
+  the candidate boundary. Declaration evidence, caller prose and `suggested_type`
   alone return no standalone schema; insufficient knowledge remains suitable
   for embedding in a useful parent. Other suggested roles may carry the same
   candidate-owned semantic or structured evidence as transparent agent intent,
   but it never overrides schema selection. Interface/Resource promotion must
-  include at least one candidate-owned semantic observation.
+  include at least one candidate-owned semantic observation. Keyword-based
+  semantic role selection is advisory and never a validity gate.
 
 ## Single-repository Initial Ingest
 
@@ -309,11 +311,11 @@ Normative OKF source is pinned to commit
   root/category navigation. Agent authoring preserves those rows rather than
   appending known targets, and bundle validation rejects a repeated normalized
   navigation target within one index.
-- **AB-SCHEMA-043** — When supported Terraform/Terragrunt exists for retained
-  runtime or infrastructure knowledge, Initial Ingest submits the exact
-  structured observation. Unsupported IaC may supplement semantic behavior but
-  never replace available supported evidence.
-- **AB-SCHEMA-044** — A standalone Flow spans at least two independently useful
-  endpoint boundaries. A System and its single contained Function do not create
-  a Flow merely because embedded trigger, state and delivery details form an
-  implementation sequence.
+- **AB-SCHEMA-043** — Exact supported Terraform/Terragrunt observations are
+  high-priority when readily available. Their omission is a coverage diagnostic,
+  not an invalidity condition for an otherwise truthful partial proposal.
+  Unsupported IaC must not be relabeled as supported structured evidence.
+- **AB-SCHEMA-044** — Usually keep one runtime's internal trigger, state and
+  delivery sequence embedded. Create a standalone Flow when it adds independent
+  query or navigation value across evidenced concept identities. Endpoint count
+  is an authoring heuristic, not a schema-validity rule.

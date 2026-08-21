@@ -747,3 +747,19 @@ correctly omitted that candidate. The bundle consequently has 75% reference
 concept/provenance coverage, 33% relationship coverage and no Domain → System
 navigation. This is semantic-guidance/selection usability, not an OKF lifecycle
 or scorer defect. AB-BENCH-048 stopped the sequence before a replica.
+
+## Partial-acceptance and anti-overfit correction — 2026-08-21
+
+Cross-role review found that repeated corrections were optimizing one fixture
+instead of the Initial Ingest product boundary. AB-BENCH-049 now distinguishes
+`invalid`, `valid_partial` and `review_ready`; truthful sparse output passes as
+`valid_partial`, while missing reference coverage stays diagnostic. Sparse
+owner-confirmed Domains may navigate directly to a Repository when no separate
+System is justified.
+
+AB-BENCH-050 prevents one model run's wording variance from becoming a hard
+cross-repository rule. Semantic keyword matching is advisory, exact supported
+Terraform is high-priority rather than mandatory completeness, and Flow
+endpoint count is an authoring heuristic rather than schema validity. Structural
+source, shape, safety, identity and declared-relation checks remain hard gates.
+This correction is verified offline; no new model qualification was run.

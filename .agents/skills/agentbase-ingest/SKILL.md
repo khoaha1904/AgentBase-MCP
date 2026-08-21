@@ -31,13 +31,13 @@ the repository, not an authoring prompt. Stop before Accept or Publish.
    or `.tf.json` evidence `terraform`; label `terragrunt.hcl` module
    orchestration `terragrunt`. When Terragrunt references a module, cite the
    module's exact `.tf` file as `terraform` for provider resources. Never label
-   SAM/CloudFormation/YAML as Terraform or Terragrunt. When supported Terraform
-   or Terragrunt exists for a retained runtime or infrastructure item, inspect
-   and submit its exact resource observation; unsupported IaC may supplement
-   semantic behavior but never replace that supported structured evidence. A
-   standalone Flow needs at least two independently useful endpoint boundaries;
-   a System and its single contained Function with embedded trigger, state and
-   delivery details remain one concept path, not a Flow.
+   SAM/CloudFormation/YAML as Terraform or Terragrunt. Exact supported Terraform
+   or Terragrunt observations are high-priority when readily available. If they
+   are omitted, expose that as a coverage limitation rather than invalidating an
+   otherwise truthful partial proposal. Usually keep one runtime's internal
+   trigger, state and delivery sequence embedded; create a Flow only when it
+   adds independent query or navigation value. This is an authoring heuristic,
+   not a fixed concept-count rule.
 4. **Author** — Call `get_okf_authoring_schemas` exactly once with the qualified
    candidates plus exact semantic/resource observations. Every candidate declares
    `disposition: concept` or `disposition: embedded`; embedded candidates have
@@ -49,7 +49,8 @@ the repository, not an authoring prompt. Stop before Accept or Publish.
    compatible `promotion` basis and exact candidate-owned semantic
    `evidence_ids`; if that boundary is not evidenced, submit the knowledge as
    embedded in its useful parent. Treat a returned `suggested` role as reviewable, never exact;
-   structured mapping wins and semantic disagreement remains ambiguous. Pass that same evidence-bearing
+   structured mapping wins and semantic keyword matches are diagnostic rather
+   than a pass/fail gate. Pass that same evidence-bearing
    request to `prepare_hub_okf`; never replace it with free text `signals` or
    supply an opaque evidence digest. Persist the confirmed
    primary Domain as an owner-evidenced `Repository part-of Domain` relation.

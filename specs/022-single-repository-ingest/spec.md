@@ -294,26 +294,36 @@ accepted.
   free text; implementation detail MUST NOT be promoted only to complete Flow.
 - **AB-SCHEMA-042**: A standalone `Interface` or `Resource` suggestion MUST
   include an applicable promotion basis and exact candidate-owned semantic
-  evidence that also supports that schema role. Resource declaration evidence,
+  evidence supporting that candidate boundary. Resource declaration evidence,
   caller prose or `suggested_type` alone MUST NOT create a skeleton. When this
   boundary is not established, guidance MUST return no standalone schema so the
   knowledge can remain embedded in a useful parent. Other suggested roles MAY
   carry candidate-owned semantic or structured promotion evidence as
-  transparent intent, but it MUST NOT override semantic or structured schema
-  selection. Interface/Resource promotion MUST include semantic evidence.
-- **AB-SCHEMA-043**: When supported Terraform/Terragrunt exists for retained
-  runtime or infrastructure knowledge, investigation MUST submit its exact
-  structured observation. Unsupported IaC MAY supplement semantic behavior but
-  MUST NOT replace available supported evidence.
-- **AB-SCHEMA-044**: A standalone Flow MUST span at least two independently
-  useful endpoint boundaries. A System and its single contained Function MUST
-  NOT become a Flow merely because embedded trigger, state and delivery details
-  form an implementation sequence.
+  transparent intent, but exact structured mapping remains authoritative.
+  Interface/Resource promotion MUST include semantic evidence. Keyword-based
+  role selection MUST remain advisory and MUST NOT be a validity gate.
+- **AB-SCHEMA-043**: Exact supported Terraform/Terragrunt observations SHOULD be
+  retained when readily available. Their omission MUST be reported as a
+  coverage diagnostic and MUST NOT invalidate an otherwise truthful partial
+  proposal. Unsupported IaC MUST NOT be relabeled as supported evidence.
+- **AB-SCHEMA-044**: One runtime's internal sequence SHOULD remain embedded by
+  default. A standalone Flow SHOULD be created only when it adds independent
+  query or navigation value across evidenced concept identities. Endpoint count
+  MUST NOT be a schema-validity rule.
 - **AB-BENCH-048**: Model qualification MUST run sequentially. One probe MUST
   stop the sequence when it has a hard lifecycle/deterministic failure or a
   clear quality blocker. Only a valid probe without a clear blocker MAY trigger
   one identical replica for comparison of promotion, identities, sources and
   relationships. A third consecutive run is reserved for final acceptance.
+- **AB-BENCH-049**: Initial Ingest MUST classify output as `invalid`,
+  `valid_partial` or `review_ready`. `valid_partial` MUST pass Initial Ingest
+  when source truth, shape, safety, identity and declared relationships are
+  valid. Missing reference coverage MUST remain diagnostic. `review_ready`
+  MUST NOT require a fixed concept inventory.
+- **AB-BENCH-050**: A single run's semantic variance MUST NOT create a hard
+  product rule. A semantic miss MAY justify a cross-repository rule only after
+  the same failure appears in at least two structurally distinct repositories;
+  deterministic offline contract breaches remain immediately actionable.
 - **AB-CLAIM-005**: A small directly evidenced non-sensitive scalar or
   identifier MAY be retained as an optional observed snapshot only with its
   claim, exact source, source revision and observed time. It MUST be bounded,
