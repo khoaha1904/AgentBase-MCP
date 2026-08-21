@@ -16,6 +16,13 @@ export type RepositoryIdentityRecord = Readonly<{
   forgeId?: string;
 }>;
 
+export type RepositoryObservedSource = Readonly<{
+  commit: string | null;
+  dirty: boolean;
+  dirtyDigest: string | null;
+  observedAt: string;
+}>;
+
 export type RepositoryIdentityResolution =
   | Readonly<{ kind: "existing"; repository: RepositoryIdentityRecord; matchedBy: "forge-id" | "remote" | "lineage" }>
   | Readonly<{ kind: "new"; repository: RepositoryIdentityRecord }>
@@ -44,6 +51,23 @@ export function readRepositoryIdentityRecord(concept: ConceptDocument): Reposito
     rootCommits: stringList(aliases?.root_commits),
     ...(typeof repository.forge_id === "string" ? { forgeId: repository.forge_id } : {}),
   });
+}
+
+export function readRepositoryObservedSource(concept: ConceptDocument): RepositoryObservedSource | undefined {
+  if (concept.type !== "Repository") return undefined;
+  const repository = mapping(mapping(concept.frontmatter.agentbase)?.repository);
+  const observed = mapping(repository?.observed_source);
+  if (!observed || (observed.commit !== null && (typeof observed.commit !== "string" || !/^[a-f0-9]{40}$/.test(observed.commit)))
+    || typeof observed.dirty !== "boolean"
+    || (observed.dirty_digest !== null && (typeof observed.dirty_digest !== "string"
+      || !/^sha256:[a-f0-9]{64}$/.test(observed.dirty_digest)))
+    || typeof observed.observed_at !== "string" || !Number.isFinite(Date.parse(observed.observed_at))) return undefined;
+  return {
+    commit: observed.commit as string | null,
+    dirty: observed.dirty,
+    dirtyDigest: observed.dirty_digest as string | null,
+    observedAt: observed.observed_at,
+  };
 }
 
 function unique(values: readonly string[]): readonly string[] {

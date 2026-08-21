@@ -54,16 +54,12 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "prepare_hub_okf",
-    description: "Prepare a local new or refresh AgentBase Hub OKF proposal without publishing. New Initial Ingest returns editable skeletons only for promoted concepts and embeds non-promoted resource knowledge in its parent. selectedSchemas is the hard allowlist; Initial Ingest always includes Repository.",
+    description: "Prepare a local new or refresh AgentBase Hub OKF proposal without publishing. Refresh returns bounded changed paths, observed source state and known gaps. New Initial Ingest returns editable skeletons only for promoted concepts and embeds non-promoted resource knowledge in its parent. selectedSchemas is the hard allowlist; Initial Ingest always includes Repository.",
     inputSchema: {
       type: "object",
       properties: {
         mode: { type: "string", enum: ["new", "refresh"] },
         source_repository: { type: "string", minLength: 1 },
-        evidence_digest: {
-          type: "string", pattern: "^sha256:[a-f0-9]{64}$",
-          description: "Required for Refresh only; Initial Ingest derives this from validated evidence and source state.",
-        },
         subject_directory: {
           type: "string",
           pattern: HUB_PROPOSAL_SUBJECT_PATTERN.source,
@@ -118,6 +114,17 @@ export const HUB_OKF_TOOLS = [
               claim_ids: { type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: 64 },
               missing_evidence: { type: "array", items: { type: "string", minLength: 1, maxLength: 512 }, maxItems: 64 },
             }, required: ["subject", "property", "claim_ids"], additionalProperties: false,
+          },
+        },
+        lifecycle_intents: {
+          type: "array", maxItems: 64, items: {
+            type: "object", properties: {
+              action: { type: "string", enum: ["remove-concept", "remove-contribution", "supersede", "retract"] },
+              concept_id: { type: "string", minLength: 1 },
+              replacement_concept_id: { type: "string", minLength: 1 },
+              reason: { type: "string", minLength: 1, maxLength: 512 },
+              evidence_resources: { type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: 64 },
+            }, required: ["action", "concept_id", "reason", "evidence_resources"], additionalProperties: false,
           },
         },
       },

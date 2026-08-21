@@ -111,3 +111,41 @@ export function discoverRepositorySourceState(repositoryRoot: string, capturedAt
     limitations: limitations.sort(),
   };
 }
+
+export function resolveRepositorySourceRoot(repositoryRoot: string): string {
+  const absoluteRoot = fs.realpathSync(repositoryRoot);
+  const topLevel = git(absoluteRoot, ["rev-parse", "--show-toplevel"]);
+  return topLevel.ok ? fs.realpathSync(topLevel.stdout.trim()) : absoluteRoot;
+}
+
+export type RepositorySourceChanges = Readonly<{
+  paths: readonly string[];
+  omitted: number;
+  limitations: readonly string[];
+}>;
+
+export function discoverRepositorySourceChanges(
+  repositoryRoot: string,
+  previousCommit: string | null | undefined,
+  current: Pick<RepositorySourceState, "commit" | "dirty">,
+  limit = 128,
+): RepositorySourceChanges {
+  if (!Number.isInteger(limit) || limit < 1 || limit > 512) throw new Error("source change limit must be 1..512");
+  const root = resolveRepositorySourceRoot(repositoryRoot), limitations: string[] = [];
+  let paths: string[] = [];
+  if (previousCommit && current.commit) {
+    if (!/^[a-f0-9]{40}$/.test(previousCommit) || !/^[a-f0-9]{40}$/.test(current.commit)) {
+      limitations.push("observed or current Git revision is invalid");
+    } else if (!git(root, ["cat-file", "-e", `${previousCommit}^{commit}`]).ok) {
+      limitations.push("last observed Git revision is unavailable in this checkout");
+    } else {
+      const changed = git(root, ["diff", "--name-only", "-z", previousCommit, current.commit, "--"]);
+      if (changed.ok) paths = changed.stdout.split("\0").filter(Boolean).filter(safePath);
+      else limitations.push("changed paths could not be derived from Git history");
+    }
+  } else if (!previousCommit) limitations.push("no prior observed Git revision is available");
+  else limitations.push("current Git revision is unavailable");
+  if (current.dirty) paths.push(...dirtyEntries(root));
+  const unique = [...new Set(paths)].sort();
+  return { paths: unique.slice(0, limit), omitted: Math.max(0, unique.length - limit), limitations };
+}

@@ -57,7 +57,6 @@ export async function executeHubCli(
       output = await actions.prepare({
         mode,
         sourceRepository: required(values, "--repo"),
-        evidenceDigest: required(values, "--evidence"),
         subjectDirectory: required(values, "--subject"),
         signals: required(values, "--signals").split(",").map((value) => value.trim()).filter(Boolean),
       });

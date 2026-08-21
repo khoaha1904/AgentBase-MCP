@@ -28,7 +28,6 @@ export {
 } from "./review/inspect.ts";
 export {
   prepareRefreshHubProposal,
-  type HubSupersession,
   type PreparedRefreshHubProposal,
   type PrepareRefreshHubOptions,
 } from "./authoring/refresh.ts";

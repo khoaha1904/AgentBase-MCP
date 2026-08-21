@@ -4,7 +4,9 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { loadOkfBundle, parseConceptDocument, validateOkfRelationships } from "../../../core/knowledge/index.ts";
+import {
+  loadOkfBundle, parseConceptDocument, readRepositoryObservedSource, validateOkfRelationships,
+} from "../../../core/knowledge/index.ts";
 import { runGit } from "../../../providers/github-hub/index.ts";
 import { createHubRuntimeActions } from "../query/runtime-actions.ts";
 
@@ -78,6 +80,8 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..014] pre
     const skeletonBundle = loadOkfBundle(prepared.bundleRoot, { requireAgentBaseRootIndex: true });
     assert.deepEqual([...skeletonBundle.concepts.values()].map((concept) => concept.type).sort(),
       ["Domain", "Flow", "Function", "Repository", "System"]);
+    const initialObserved = readRepositoryObservedSource(skeletonBundle.concepts.get("repositories/vehicle-events")!);
+    assert.match(initialObserved?.commit ?? "", /^[a-f0-9]{40}$/);
     assert.deepEqual(skeletonBundle.concepts.get("components/publisher")?.frontmatter.agentbase, {
       technology: { kind: "runtime-function", provider: "aws", product: "lambda",
         sourceTool: "terraform", resourceType: "aws_lambda_function" },
@@ -138,14 +142,33 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..014] pre
     fs.writeFileSync(publisherPath, validPublisher);
 
     const finalized = await actions.finalize(prepared.sessionId) as {
-      proposal: { id: string; phase: string; selectedSchemas: string[] };
+      proposal: { id: string; phase: string; selectedSchemas: string[]; diffDigest: string };
       inspection: { applicable: boolean; coverage: { partial: boolean; limitations: string[] } };
     };
     assert.equal(finalized.proposal.phase, "prepared");
     assert.equal(finalized.inspection.applicable, true);
     assert.equal(finalized.inspection.coverage.partial, true);
     assert.deepEqual(finalized.inspection.coverage.limitations, ["runtime consumers were not present in this repository"]);
+    await actions.accept(finalized.proposal.id, finalized.proposal.diffDigest);
+    fs.appendFileSync(path.join(source, "README.md"), "\nThe publisher now exposes delivery ownership.\n");
+    await runGit({ args: ["add", "README.md"], cwd: source, operation: "stage refresh fixture" });
+    await runGit({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit", "-m", "refresh fixture"],
+      cwd: source, operation: "commit refresh fixture", commitTimestamp: "2026-08-22T00:00:00Z" });
+    const refresh = await actions.prepare({
+      mode: "refresh", sourceRepository: source, subjectDirectory: "repositories/vehicle-events",
+      signals: ["repository"],
+    }) as { sessionId: string; bundleRoot: string; source: { commit: string }; sourceChanges: { paths: string[] } };
+    assert.deepEqual(refresh.sourceChanges.paths, ["README.md"]);
+    const repositoryPath = path.join(refresh.bundleRoot, "repositories", "vehicle-events.md");
+    fs.appendFileSync(repositoryPath, "\nRefresh evidence confirms delivery ownership.\n");
+    const refreshed = await actions.finalize(refresh.sessionId) as {
+      inspection: { groups: { updated: readonly { path: string; after?: { content: string } }[] } };
+    };
+    const updatedRepository = refreshed.inspection.groups.updated.find((entry) => entry.path === "repositories/vehicle-events.md");
+    assert.ok(updatedRepository?.after);
+    assert.equal(readRepositoryObservedSource(parseConceptDocument(updatedRepository.path, updatedRepository.after.content))?.commit,
+      refresh.source.commit);
     const status = await actions.status() as { pendingCount: number };
-    assert.equal(status.pendingCount, 0, "preview was not accepted or published");
+    assert.equal(status.pendingCount, 1, "Initial Ingest was accepted locally; Refresh remained an unaccepted preview");
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });

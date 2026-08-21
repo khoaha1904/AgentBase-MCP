@@ -5,7 +5,7 @@ import path from "node:path";
 import { createHubProposal, type AdmittedLocalHubState, type AnyHubProposal } from "../../../core/hub/index.ts";
 import type { LocalProposal } from "../../../core/hub/index.ts";
 import type { LiveClaim } from "../../../core/knowledge/index.ts";
-import type { HubProposalInspection } from "../review/inspect.ts";
+import { attachHubInspectionContext, type HubProposalInspection } from "../review/inspect.ts";
 import { writeHubProposalState, writeAtomicJson } from "../review/proposal-state.ts";
 import { applyQuestionDeclarations, normalizeQuestionDeclarations, type GovernedQuestion, type QuestionDeclaration } from "./questions.ts";
 
@@ -56,7 +56,7 @@ export function bindQuestionDeclarations(
   };
   writeAtomicJson(path.join(proposalRoot, "questions.json"), attachment);
   writeHubProposalState(proposalRoot, bound);
-  return { proposal: bound, inspection: { ...inspection, questions: normalized } };
+  return { proposal: bound, inspection: attachHubInspectionContext(inspection, normalized) };
 }
 
 export function readQuestionProposalAttachment(

@@ -11,8 +11,8 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-LOCAL-HUB-002** — `prepare` creates an isolated workspace at an exact
   local commit without mutation. After authoring/finalization/inspection,
   `accept` commits the exact reviewed tree once to local `main` without network.
-  Refresh may delete a whole subject only when all its non-index content is
-  mutable AgentBase draft and the root index loses only its exact subject link.
+  Refresh omission never authorizes deletion; destructive changes require an
+  explicit lifecycle intent bound to the final reviewed bytes.
 - **AB-LOCAL-HUB-003** — Accepted commits bind stable proposal identity, mode,
   subject/source/evidence, parent/base, catalog/types, tree/diff digests and
   meaningful creation time through trailers plus atomic state.
@@ -98,6 +98,25 @@ queries and ordinary coding never create Hub state, commits or publication.
   search/exact snippets, labels documentation/implementation/configuration and
   Maintainer Guidance separately, and never emits an automatic winner. Missing,
   ambiguous, moved or mismatched evidence is reported without a stale scalar.
+
+## Single-repository Refresh
+
+- **AB-REFRESH-001..003** — Refresh binds one authorized checkout to one
+  unambiguous existing Repository and active local `main`. It returns bounded
+  prior concepts, observed source state, changed paths, known gaps and omitted
+  counts; a missing Repository routes to Initial Ingest.
+- **AB-REFRESH-004..006** — Refresh changes only attributable current-repository
+  contributions. Omission, age and search/graph absence preserve knowledge.
+  Removal, supersession and retraction require typed intent, reason and exact
+  current-source evidence; foreign evidence and ambiguous prose remain.
+- **AB-REFRESH-007..011** — Finalize fails on stale Hub/source or invalid source
+  spans, treats unchanged bytes as successful `no_change`, preserves truthful
+  partial coverage, and groups review as Added, Updated, Removed,
+  Superseded/Retracted and Questions/Limitations. Only a reviewable contribution
+  records a new observed source checkpoint in its Repository concept.
+- **AB-REFRESH-012** — The packaged Refresh skill investigates Changed Source →
+  Known Gaps → Bounded Discovery and stops before Accept, publication, provider
+  CLI enrichment or remote mutation.
 
 ## Lazy setup and first bootstrap
 

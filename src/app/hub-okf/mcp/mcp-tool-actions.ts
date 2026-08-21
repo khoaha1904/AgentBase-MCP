@@ -4,6 +4,7 @@ import type {
 import type { BootstrapMode } from "../workspace/bootstrap.ts";
 import type { LiveSourceBinding } from "../query/query.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
+import type { HubLifecycleIntent } from "../../../core/knowledge/index.ts";
 
 export type HubToolActions = Readonly<{
   status(): Promise<unknown>;
@@ -14,14 +15,13 @@ export type HubToolActions = Readonly<{
   prepare(input: Readonly<{
     mode: "new" | "refresh";
     sourceRepository: string;
-    evidenceDigest?: string;
     subjectDirectory: string;
     confirmedDomain?: ConfirmedDomain;
     signals?: readonly string[];
     guidanceRequest?: OkfAuthoringGuidanceRequest;
     coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
   }>): Promise<unknown>;
-  finalize(sessionId: string, questions?: readonly QuestionDeclaration[]): Promise<unknown>;
+  finalize(sessionId: string, questions?: readonly QuestionDeclaration[], lifecycleIntents?: readonly HubLifecycleIntent[]): Promise<unknown>;
   inspect(proposalId: string): Promise<unknown>;
   accept(proposalId: string, proposalDigest: string): Promise<unknown>;
   search(query: string, options?: HubSearchOptions): Promise<unknown>;

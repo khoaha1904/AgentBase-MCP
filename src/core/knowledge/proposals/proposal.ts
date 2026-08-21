@@ -173,8 +173,14 @@ function unknownValueFailures(base: ConceptDocument, proposed: ConceptDocument):
     if (key === "agentbase") {
       const previous = { ...(mapping(value) ?? {}) }, next = { ...(mapping(proposed.frontmatter[key]) ?? {}) };
       delete previous.live_claims; delete next.live_claims;
+      if (base.type === "Repository" && proposed.type === "Repository") {
+        const previousRepository = { ...(mapping(previous.repository) ?? {}) };
+        const nextRepository = { ...(mapping(next.repository) ?? {}) };
+        delete previousRepository.observed_source; delete nextRepository.observed_source;
+        previous.repository = previousRepository; next.repository = nextRepository;
+      }
       if (!isDeepStrictEqual(previous, next)) {
-        failures.push(`${proposed.path}: unknown frontmatter value agentbase must preserve fields outside live_claims`);
+        failures.push(`${proposed.path}: unknown frontmatter value agentbase must preserve fields outside governed lifecycle fields`);
       }
       continue;
     }

@@ -92,6 +92,18 @@ Normative OKF source is pinned to commit
   A later reviewed proposal may move the same semantic reference while all
   protected knowledge and human guidance keep their normal lifecycle rules.
 
+## Refresh contribution lifecycle
+
+- A Repository concept may carry `agentbase.repository.observed_source` with the
+  exact clean commit or dirty digest and observation time. It is a continuity
+  checkpoint and freshness warning aid, not a truth score or copied source.
+- Refresh validates every added or changed current-repository source span
+  against the authorized checkout. Foreign sources stay as references and are
+  not dereferenced without separate authority.
+- Shared concepts retain foreign evidence and ambiguous human-readable prose.
+  Only structured, exactly attributable contributions may be reconciled; any
+  unresolved ownership or evidence gap remains a Question or limitation.
+
 ## Concrete schema catalog
 
 - **AB-SCHEMA-001** — MCP exposes one explicit catalog version and target OKF

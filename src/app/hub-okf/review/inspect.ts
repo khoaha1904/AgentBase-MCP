@@ -7,7 +7,7 @@ import type { QuestionDeclaration } from "../authoring/questions.ts";
 
 export type HubLifecycleEntry = Readonly<{
   path: string;
-  change: ProposalDiffEntry["change"] | "conflict" | "supersession" | "deleted-agentbase-index";
+  change: ProposalDiffEntry["change"] | "conflict" | "supersession" | "retraction" | "removed-contribution";
   allowed: boolean;
   reason?: string;
   previousConceptId?: string;
@@ -28,7 +28,46 @@ export type HubProposalInspection = Readonly<{
   applicable: boolean;
   questions?: readonly QuestionDeclaration[];
   coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
+  groups: HubInspectionGroups;
 }>;
+
+export type HubInspectionGroups = Readonly<{
+  added: readonly HubLifecycleEntry[];
+  updated: readonly HubLifecycleEntry[];
+  removed: readonly HubLifecycleEntry[];
+  supersededOrRetracted: readonly HubLifecycleEntry[];
+  questionsAndLimitations: Readonly<{
+    questions: readonly QuestionDeclaration[];
+    limitations: readonly string[];
+  }>;
+}>;
+
+function groups(
+  entries: readonly HubLifecycleEntry[],
+  questions: readonly QuestionDeclaration[] = [],
+  limitations: readonly string[] = [],
+): HubInspectionGroups {
+  return {
+    added: entries.filter((entry) => entry.change === "created"),
+    updated: entries.filter((entry) => ["modified", "conflict"].includes(entry.change)),
+    removed: entries.filter((entry) => ["deleted-agentbase-draft", "removed-contribution"].includes(entry.change)),
+    supersededOrRetracted: entries.filter((entry) => ["supersession", "retraction"].includes(entry.change)),
+    questionsAndLimitations: { questions, limitations },
+  };
+}
+
+export function attachHubInspectionContext(
+  inspection: HubProposalInspection,
+  questions: readonly QuestionDeclaration[] = inspection.questions ?? [],
+  coverage: HubProposalInspection["coverage"] = inspection.coverage,
+): HubProposalInspection {
+  return {
+    ...inspection,
+    ...(questions.length ? { questions } : {}),
+    ...(coverage ? { coverage } : {}),
+    groups: groups(inspection.entries, questions, coverage?.limitations ?? []),
+  };
+}
 
 function inspectContent(root: string, relative: string, maximum: number): HubInspectedContent | undefined {
   const target = path.join(root, ...relative.split("/"));
@@ -61,10 +100,11 @@ export function inspectHubProposal(
     preserved: 0,
     "deleted-agentbase-draft": 0,
     "prohibited-deletion": 0,
-    "deleted-agentbase-index": 0,
     conflict: 0,
     supersession: 0,
+    retraction: 0,
+    "removed-contribution": 0,
   };
   for (const entry of ordered) counts[entry.change] += 1;
-  return { entries: ordered, counts, applicable: ordered.every((entry) => entry.allowed) };
+  return { entries: ordered, counts, applicable: ordered.every((entry) => entry.allowed), groups: groups(ordered) };
 }

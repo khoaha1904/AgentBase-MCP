@@ -43,6 +43,10 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
       tools.tools.map((tool) => tool.name),
       [...HUB_OKF_TOOLS, ...OKF_SCHEMA_TOOLS, ...SAFE_TOOLS].map((tool) => tool.name),
     );
+    const prepareTool = tools.tools.find((tool) => tool.name === "prepare_hub_okf");
+    const finalizeTool = tools.tools.find((tool) => tool.name === "finalize_hub_okf_proposal");
+    assert.match(prepareTool?.description ?? "", /changed paths, observed source state and known gaps/);
+    assert.ok("lifecycle_intents" in ((finalizeTool?.inputSchema.properties ?? {}) as Record<string, unknown>));
     const hubStatus = await client.callTool({ name: "get_hub_status", arguments: {} });
     assert.equal(hubStatus.isError, undefined);
     assert.match(hubStatus.content[0]?.type === "text" ? hubStatus.content[0].text : "", /unconfigured/);

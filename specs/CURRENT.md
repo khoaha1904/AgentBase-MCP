@@ -1,6 +1,13 @@
 # Current capability
 
-Active capability: None.
+Active capability: [`023-single-repository-refresh`](023-single-repository-refresh/spec.md).
+
+Capability 023 is implemented and passes the complete offline gate. It adds one
+normal Refresh for one canonical Repository, reconciling accepted knowledge
+through changed source, known gaps and one bounded discovery pass. Missing
+evidence never deletes knowledge; destructive changes are explicit, evidenced
+and review-only. The separately authorized model-backed Terraform probe has not
+run, so the capability remains active rather than completed.
 
 Capability 022 is the first implementation slice of the approved AgentBase
 knowledge design. It connects one authorized local repository to a bounded,

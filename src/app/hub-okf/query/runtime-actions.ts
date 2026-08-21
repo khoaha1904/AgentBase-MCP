@@ -3,11 +3,18 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { getOkfAuthoringGuidance, selectOkfConceptSchemas } from "../../../core/knowledge/index.ts";
+import {
+  getOkfAuthoringGuidance, parseConceptDocument, repositorySourceResources, selectOkfConceptSchemas,
+  type HubContinuityGap, type HubContinuityManifest,
+} from "../../../core/knowledge/index.ts";
 import { GitHubHubApi } from "../../../providers/github-hub/index.ts";
-import { discoverRepositorySourceState } from "../../repository-okf/index.ts";
-import { beginHubAuthoringSession, finalizeHubAuthoringSession } from "../authoring/authoring-session.ts";
+import type { AdmittedLocalHubState } from "../../../core/hub/index.ts";
+import {
+  discoverRepositorySourceChanges, discoverRepositorySourceState, resolveRepositorySourceRoot,
+} from "../../repository-okf/index.ts";
+import { beginHubAuthoringSession, finalizeHubAuthoringSession, readHubAuthoringSession } from "../authoring/authoring-session.ts";
 import { writeInitialIngestSkeletons } from "../authoring/initial-ingest-skeleton.ts";
+import { listHubQuestions } from "../authoring/questions.ts";
 import { acceptHubProposal } from "../review/accept.ts";
 import { resolveHubConfiguration, type OptionalHubConfiguration } from "../configuration/configuration.ts";
 import { admitPersistentLocalHub } from "../workspace/local-hub.ts";
@@ -43,11 +50,11 @@ function requireHubToken(token: string | undefined): string {
   return token;
 }
 
-function initialEvidenceDigest(sourceRepositoryId: string, source: ReturnType<typeof discoverRepositorySourceState>, request: unknown): string {
+function authoringEvidenceDigest(sourceRepositoryId: string, source: ReturnType<typeof discoverRepositorySourceState>, evidence: unknown): string {
   return `sha256:${createHash("sha256").update(JSON.stringify({
     sourceRepositoryId,
     source: { commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest },
-    guidanceRequest: request,
+    evidence,
   })).digest("hex")}`;
 }
 
@@ -59,6 +66,38 @@ function remoteFailure(error: unknown, token: string): Error {
     );
   }
   return new Error(message);
+}
+
+function continuityDocumentGaps(
+  localHub: AdmittedLocalHubState,
+  continuity: HubContinuityManifest,
+  repositoryRoot: string,
+  gitRoot = fs.realpathSync(repositoryRoot),
+): readonly HubContinuityGap[] {
+  const gaps: HubContinuityGap[] = [];
+  for (const summary of continuity.currentSource) {
+    const concept = parseConceptDocument(summary.path,
+      fs.readFileSync(path.join(localHub.root, ...summary.path.split("/")), "utf8"));
+    if (/^# Limitations\s*$/m.test(concept.body)) gaps.push({
+      kind: "limitation", subject: concept.conceptId,
+      detail: "accepted concept contains an explicit Limitations section",
+    });
+    for (const resource of repositorySourceResources(concept)) {
+      const prefix = `repository://${continuity.sourceRepositoryId}/`;
+      if (!resource.startsWith(prefix)) continue;
+      const encoded = resource.slice(prefix.length).replace(/#L\d+-L\d+$/, "");
+      let relative: string;
+      try { relative = encoded.split("/").map((part) => decodeURIComponent(part)).join(path.sep); }
+      catch { relative = ""; }
+      const target = relative ? path.resolve(gitRoot, relative) : "";
+      if (!target || (target !== gitRoot && !target.startsWith(`${gitRoot}${path.sep}`)) || !fs.existsSync(target)) gaps.push({
+        kind: "reference-warning", subject: concept.conceptId,
+        detail: `source reference is unavailable in the authorized checkout: ${resource}`,
+      });
+      if (gaps.length >= 64) return gaps;
+    }
+  }
+  return gaps;
 }
 
 export function createHubRuntimeActions(
@@ -121,20 +160,32 @@ export function createHubRuntimeActions(
       if (repository.repository.kind === "ambiguous") {
         throw new Error(`repository identity is ambiguous: ${repository.repository.reason}`);
       }
+      if (input.mode === "refresh" && repository.repository.kind === "new") {
+        throw new Error("repository is absent from Hub; use Initial Ingest");
+      }
       const sourceRepositoryId = repository.repository.repository.id;
-      const continuity = await buildActiveHubContinuity(localHub, sourceRepositoryId, input.subjectDirectory);
+      const knownGaps = listHubQuestions(stateRoot, localHub, { status: "pending", limit: 100 })
+        .filter((question) => question.sourceRepositoryId === sourceRepositoryId)
+        .slice(0, 64)
+        .map((question) => ({
+          kind: "question" as const,
+          subject: question.subject,
+          detail: `${question.property}: ${question.missingEvidence.join("; ") || "conflicting evidence"}`,
+          updatedAt: question.updatedAt,
+        }));
+      let continuity = await buildActiveHubContinuity(localHub, sourceRepositoryId, input.subjectDirectory, { knownGaps });
+      const documentGaps = continuityDocumentGaps(localHub, continuity, resolveRepositorySourceRoot(input.sourceRepository));
+      continuity = { ...continuity, knownGaps: [...knownGaps, ...documentGaps].slice(0, 64) };
+      const sourceChanges = input.mode === "refresh"
+        ? discoverRepositorySourceChanges(input.sourceRepository, continuity.observedSource?.commit, source)
+        : undefined;
       if (input.mode === "new" && !input.guidanceRequest) {
         throw new Error("new Initial Ingest requires evidence-bearing guidance_request; source-less signals are refresh-only");
       }
-      if (input.mode === "new" && input.evidenceDigest) {
-        throw new Error("new Initial Ingest derives evidence digest from validated guidance and source state");
-      }
-      if (input.mode === "refresh" && !input.evidenceDigest) throw new Error("refresh requires evidence digest");
       const signals = input.confirmedDomain ? [...(input.signals ?? []), "business domain"] : (input.signals ?? []);
       const guidance = input.guidanceRequest ? getOkfAuthoringGuidance(input.guidanceRequest) : undefined;
-      const evidenceDigest = input.mode === "new"
-        ? initialEvidenceDigest(sourceRepositoryId, source, input.guidanceRequest)
-        : input.evidenceDigest!;
+      const evidenceDigest = authoringEvidenceDigest(sourceRepositoryId, source,
+        input.guidanceRequest ?? { signals, coverage: input.coverage });
       const selectedSchemas = guidance
         ? [...new Set(guidance.recommendations.flatMap((item) => ["exact", "suggested"].includes(item.status) && item.schema ? [item.schema.type] : []))]
         : selectOkfConceptSchemas(signals).map((item) => item.type);
@@ -147,8 +198,9 @@ export function createHubRuntimeActions(
         ...(configuration.kind === "remote" ? { hub: configuration.hub } : { localHubId: configuration.localHubId }),
         baseCommit: localHub.activeHead,
         checkoutRoot: localHub.root,
-        sourceRepositoryRoot: path.resolve(input.sourceRepository),
+        sourceRepositoryRoot: resolveRepositorySourceRoot(input.sourceRepository),
         sourceRepositoryId,
+        sourceState: { commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest },
         evidenceDigest,
         subjectDirectory: input.subjectDirectory,
         ...(input.confirmedDomain ? { confirmedDomain: input.confirmedDomain } : {}),
@@ -168,6 +220,7 @@ export function createHubRuntimeActions(
           request: input.guidanceRequest,
           guidance,
           createdAt: session.createdAt,
+          sourceState: session.sourceState,
         }) : [];
       return {
         sessionId: session.id,
@@ -180,12 +233,18 @@ export function createHubRuntimeActions(
         repositoryResolution: repository.repository,
         ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),
         continuity,
+        ...(sourceChanges ? { sourceChanges } : {}),
         skeletons,
       };
     },
-    async finalize(sessionId, questions) {
+    async finalize(sessionId, questions, lifecycleIntents) {
       const configuration = configured();
-      return finalizeHubAuthoringSession(stateRoot, sessionId, configuration.localRoot, questions ?? []);
+      const session = readHubAuthoringSession(stateRoot, sessionId, configuration.localRoot);
+      const source = discoverRepositorySourceState(session.sourceRepositoryRoot);
+      const localHub = await admit();
+      return finalizeHubAuthoringSession(stateRoot, sessionId, configuration.localRoot, questions ?? [], lifecycleIntents ?? [], {
+        commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest,
+      }, localHub.activeHead);
     },
     ...createReviewActions(stateRoot, (proposalId) => proposalRoot(stateRoot, proposalId), admit),
     async accept(proposalId, proposalDigest) {

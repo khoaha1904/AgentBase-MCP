@@ -4,12 +4,16 @@ import path from "node:path";
 
 import type { AnyHubProposal, HubIdentity } from "../../../core/hub/index.ts";
 import {
-  loadOkfBundle, normalizeConfirmedDomain, readLiveClaims, repositorySourceResources,
-  type ConfirmedDomain, type OkfAuthoringGuidance,
+  loadOkfBundle, normalizeConfirmedDomain, readLiveClaims, readRepositoryIdentityRecord,
+  renderConceptDocument, repositorySourceResources,
+  type ConfirmedDomain, type HubLifecycleIntent, type OkfAuthoringGuidance,
+  type OkfValue,
 } from "../../../core/knowledge/index.ts";
-import { inspectHubProposal, type HubLifecycleEntry, type HubProposalInspection } from "../review/inspect.ts";
+import {
+  attachHubInspectionContext, inspectHubProposal, type HubLifecycleEntry, type HubProposalInspection,
+} from "../review/inspect.ts";
 import { prepareNewHubProposal } from "./prepare.ts";
-import { prepareRefreshHubProposal, type HubSupersession } from "./refresh.ts";
+import { prepareRefreshHubProposal } from "./refresh.ts";
 import { bindQuestionDeclarations } from "./question-recovery.ts";
 import { validateQuestionDeclarations, type QuestionDeclaration } from "./questions.ts";
 
@@ -33,8 +37,14 @@ export type HubAuthoringSession = Readonly<{
   baseRoot: string;
   checkoutRoot: string;
   sourceRepositoryRoot: string;
+  sourceState: HubAuthoringSourceState;
   createdAt: string;
-  supersessions: readonly HubSupersession[];
+}>;
+
+export type HubAuthoringSourceState = Readonly<{
+  commit: string | null;
+  dirty: boolean;
+  dirtyDigest: string | null;
 }>;
 
 export type BeginHubAuthoringOptions = Readonly<{
@@ -46,6 +56,7 @@ export type BeginHubAuthoringOptions = Readonly<{
   checkoutRoot: string;
   sourceRepositoryRoot: string;
   sourceRepositoryId: string;
+  sourceState: HubAuthoringSourceState;
   evidenceDigest: string;
   subjectDirectory: string;
   confirmedDomain?: ConfirmedDomain;
@@ -54,7 +65,6 @@ export type BeginHubAuthoringOptions = Readonly<{
   guidance?: OkfAuthoringGuidance;
   coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
   createdAt: string;
-  supersessions?: readonly HubSupersession[];
 }>;
 
 function privateDirectory(directory: string): void {
@@ -104,6 +114,7 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
     ...(options.hub ? { hub: options.hub } : { localHubId: options.localHubId! }),
     baseCommit: options.baseCommit,
     sourceRepositoryId: options.sourceRepositoryId,
+    sourceState: options.sourceState,
     evidenceDigest: options.evidenceDigest,
     subjectDirectory: options.subjectDirectory,
     ...(options.confirmedDomain ? { confirmedDomain: options.confirmedDomain } : {}),
@@ -117,7 +128,6 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
     checkoutRoot: options.checkoutRoot,
     sourceRepositoryRoot: path.resolve(options.sourceRepositoryRoot),
     createdAt: options.createdAt,
-    supersessions: [...(options.supersessions ?? [])],
   };
   fs.writeFileSync(path.join(root, "session.json"), `${JSON.stringify(session, null, 2)}\n`, { mode: 0o600 });
   return session;
@@ -146,6 +156,7 @@ export function readHubAuthoringSession(
     || typeof value.sourceRepositoryRoot !== "string" || !path.isAbsolute(value.sourceRepositoryRoot)
     || !fs.existsSync(sourceRepositoryRoot) || fs.lstatSync(sourceRepositoryRoot).isSymbolicLink()
     || !fs.statSync(sourceRepositoryRoot).isDirectory()
+    || typeof value.sourceState?.dirty !== "boolean"
     || (confirmedDomain && confirmedDomain.evidenceResource !== value.confirmedDomain?.evidenceResource)
     || (!value.hub && !/^[a-f0-9]{24}$/.test(value.localHubId ?? ""))) {
     throw new Error("Hub authoring session state is invalid");
@@ -167,7 +178,9 @@ function validateCurrentRepositorySources(session: HubAuthoringSession): void {
   const repositoryPrefix = `repository://${session.sourceRepositoryId}/`;
   const failures: string[] = [];
   for (const concept of authored.concepts.values()) {
-    if (base.concepts.has(concept.conceptId)) continue;
+    const previous = base.concepts.get(concept.conceptId);
+    if (previous && fs.readFileSync(path.join(session.baseRoot, previous.path)).equals(
+      fs.readFileSync(path.join(session.bundleRoot, concept.path)))) continue;
     for (const resource of repositorySourceResources(concept)) {
       if (!resource.startsWith(repositoryPrefix)) continue;
       const match = resource.slice(repositoryPrefix.length).match(/^(.+)#L(\d+)-L(\d+)$/);
@@ -202,13 +215,58 @@ function validateCurrentRepositorySources(session: HubAuthoringSession): void {
   if (failures.length) throw new Error(`authored repository sources failed validation: ${failures.join("; ")}`);
 }
 
+function mapping(value: OkfValue | undefined): Readonly<Record<string, OkfValue>> {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? value as Readonly<Record<string, OkfValue>> : {};
+}
+
+function recordSuccessfulObservation(session: HubAuthoringSession): void {
+  const bundle = loadOkfBundle(session.bundleRoot, { requireAgentBaseRootIndex: true });
+  const repository = [...bundle.concepts.values()].find((concept) =>
+    readRepositoryIdentityRecord(concept)?.id === session.sourceRepositoryId);
+  // Runtime Refresh already requires a canonical Repository. Legacy direct
+  // authoring fixtures may not have one, so they cannot carry this checkpoint.
+  if (!repository) return;
+  const agentbase = mapping(repository.frontmatter.agentbase);
+  const repositoryMetadata = mapping(agentbase.repository);
+  const frontmatter = {
+    ...repository.frontmatter,
+    agentbase: {
+      ...agentbase,
+      repository: {
+        ...repositoryMetadata,
+        observed_source: {
+          commit: session.sourceState.commit,
+          dirty: session.sourceState.dirty,
+          dirty_digest: session.sourceState.dirtyDigest,
+          observed_at: session.createdAt,
+        },
+      },
+    },
+  };
+  fs.writeFileSync(path.join(session.bundleRoot, repository.path), renderConceptDocument({ ...repository, frontmatter }));
+}
+
 export function finalizeHubAuthoringSession(
   stateRoot: string,
   sessionId: string,
   expectedCheckoutRoot: string,
   questions: readonly QuestionDeclaration[] = [],
-): Readonly<{ proposal: AnyHubProposal; inspection: HubProposalInspection }> {
+  lifecycleIntents: readonly HubLifecycleIntent[] = [],
+  currentSourceState?: HubAuthoringSourceState,
+  currentHubHead?: string,
+): Readonly<{ result: "no_change"; inspection: HubProposalInspection; observedSource: HubAuthoringSourceState & Readonly<{ observedAt: string }> }
+  | { proposal: AnyHubProposal; inspection: HubProposalInspection; observedSource: HubAuthoringSourceState & Readonly<{ observedAt: string }> }> {
   const session = readHubAuthoringSession(stateRoot, sessionId, expectedCheckoutRoot);
+  if (currentHubHead !== undefined && currentHubHead !== session.baseCommit) {
+    throw new Error("Hub authoring base changed after Prepare");
+  }
+  if (!currentSourceState) throw new Error("current source state is required at Finalize");
+  if (currentSourceState.commit !== session.sourceState.commit
+    || currentSourceState.dirty !== session.sourceState.dirty
+    || currentSourceState.dirtyDigest !== session.sourceState.dirtyDigest) {
+    throw new Error("source repository changed after Prepare");
+  }
   const staging = path.join(path.resolve(stateRoot), "proposals", `.staging-${session.id}`);
   privateDirectory(path.dirname(staging));
   if (fs.existsSync(staging)) fs.rmSync(staging, { recursive: true, force: true });
@@ -232,16 +290,21 @@ export function finalizeHubAuthoringSession(
     diff?: Readonly<{ entries: readonly HubLifecycleEntry[] }>;
   }>;
   try {
-    if (session.mode === "new") validateCurrentRepositorySources(session);
+    if (session.mode === "refresh"
+      && (loadOkfBundle(session.baseRoot).treeDigest !== loadOkfBundle(session.bundleRoot).treeDigest
+        || questions.length > 0 || lifecycleIntents.length > 0)) {
+      recordSuccessfulObservation(session);
+    }
+    validateCurrentRepositorySources(session);
     if (session.hub) {
       finalized = session.mode === "new"
         ? prepareNewHubProposal({ ...common, hub: session.hub })
-        : prepareRefreshHubProposal({ ...common, hub: session.hub, supersessions: session.supersessions });
+        : prepareRefreshHubProposal({ ...common, hub: session.hub, lifecycleIntents });
     } else {
       const localHubId = session.localHubId!;
       finalized = session.mode === "new"
         ? prepareNewHubProposal({ ...common, localHubId })
-        : prepareRefreshHubProposal({ ...common, localHubId, supersessions: session.supersessions });
+        : prepareRefreshHubProposal({ ...common, localHubId, lifecycleIntents });
     }
   } catch (error) {
     fs.rmSync(staging, { recursive: true, force: true });
@@ -249,17 +312,24 @@ export function finalizeHubAuthoringSession(
   }
   const inspection = finalized.inspection
     ?? inspectHubProposal(finalized.diff!.entries, { baseRoot: session.baseRoot, proposedRoot: finalized.bundleRoot });
+  if (session.mode === "refresh" && !questions.length
+    && inspection.entries.every((entry) => entry.change === "preserved")) {
+    fs.rmSync(staging, { recursive: true, force: true });
+    fs.rmSync(session.root, { recursive: true, force: true });
+    return { result: "no_change", inspection: attachHubInspectionContext(inspection, [], session.coverage),
+      observedSource: { ...session.sourceState, observedAt: session.createdAt } };
+  }
   const claims = [...loadOkfBundle(finalized.bundleRoot).concepts.values()].flatMap((concept) => readLiveClaims(concept));
   const declarations = validateQuestionDeclarations(questions, claims, session.sourceRepositoryId);
   const bound = bindQuestionDeclarations(staging, finalized.proposal, inspection, declarations, session.createdAt, claims);
-  const reviewed = session.coverage
-    ? { proposal: bound.proposal, inspection: { ...bound.inspection, coverage: session.coverage } }
-    : bound;
+  const reviewed = { proposal: bound.proposal,
+    inspection: attachHubInspectionContext(bound.inspection, bound.inspection.questions, session.coverage) };
   fs.cpSync(session.baseRoot, path.join(staging, "base"), { recursive: true, errorOnExist: true, force: false });
   fs.writeFileSync(path.join(staging, "inspection.json"), `${JSON.stringify(reviewed.inspection, null, 2)}\n`, { mode: 0o600 });
   fs.writeFileSync(path.join(staging, "runtime.json"), `${JSON.stringify({ checkoutRoot: session.checkoutRoot })}\n`, { mode: 0o600 });
   const proposalRoot = path.join(path.resolve(stateRoot), "proposals", reviewed.proposal.id);
   if (fs.existsSync(proposalRoot)) throw new Error("finalized Hub proposal already exists");
   fs.renameSync(staging, proposalRoot);
-  return reviewed;
+  fs.rmSync(session.root, { recursive: true, force: true });
+  return { ...reviewed, observedSource: { ...session.sourceState, observedAt: session.createdAt } };
 }

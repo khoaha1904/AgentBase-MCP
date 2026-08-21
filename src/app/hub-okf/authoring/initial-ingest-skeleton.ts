@@ -34,6 +34,7 @@ export type WriteInitialIngestSkeletonsOptions = Readonly<{
   request: OkfAuthoringGuidanceRequest;
   guidance: OkfAuthoringGuidance;
   createdAt: string;
+  sourceState: Readonly<{ commit: string | null; dirty: boolean; dirtyDigest: string | null }>;
 }>;
 
 function slug(value: string): string {
@@ -125,13 +126,23 @@ function availablePath(root: string, hint: string, candidateId: string, used: Se
   return next;
 }
 
-function repositoryMetadata(repository: RepositoryIdentityRecord): OkfValue {
+function repositoryMetadata(
+  repository: RepositoryIdentityRecord,
+  sourceState: WriteInitialIngestSkeletonsOptions["sourceState"],
+  observedAt: string,
+): OkfValue {
   return {
     repository: {
       id: repository.id,
       display_name: repository.displayName,
       aliases: { remotes: repository.remotes, root_commits: repository.rootCommits },
       ...(repository.forgeId ? { forge_id: repository.forgeId } : {}),
+      observed_source: {
+        commit: sourceState.commit,
+        dirty: sourceState.dirty,
+        dirty_digest: sourceState.dirtyDigest,
+        observed_at: observedAt,
+      },
     },
   };
 }
@@ -218,7 +229,7 @@ export function writeInitialIngestSkeletons(options: WriteInitialIngestSkeletons
     ...(options.confirmedDomain ? {
       relationships: [{ kind: "part-of", target: options.confirmedDomain.identity, evidence: [ownerSource!.id] }],
     } : {}),
-    agentbase: repositoryMetadata(options.repository),
+    agentbase: repositoryMetadata(options.repository, options.sourceState, options.createdAt),
   };
   const links = conceptEntries.map((item) => {
     const target = path.posix.relative(path.posix.dirname(repositoryPath), item.path);

@@ -3,6 +3,7 @@ import type { CallToolResult } from "@modelcontextprotocol/server";
 import { normalizeConfirmedDomain, type OkfAuthoringGuidanceRequest } from "../../../core/knowledge/index.ts";
 import type { HubToolActions, HubToolContext } from "./mcp-tool-actions.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
+import type { HubLifecycleIntent } from "../../../core/knowledge/index.ts";
 
 function result(value: unknown, isError = false): CallToolResult {
   return { content: [{ type: "text", text: JSON.stringify(value) }], ...(isError ? { isError: true } : {}) };
@@ -95,6 +96,25 @@ function questionDeclarations(value: unknown): readonly QuestionDeclaration[] {
   });
 }
 
+function lifecycleIntents(value: unknown): readonly HubLifecycleIntent[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > 64) throw new Error("lifecycle_intents must be a list of at most 64 entries");
+  return value.map((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error("each lifecycle intent must be an object");
+    const entry = item as Record<string, unknown>;
+    const action = entry.action;
+    if (!["remove-concept", "remove-contribution", "supersede", "retract"].includes(String(action))
+      || typeof entry.concept_id !== "string" || typeof entry.reason !== "string"
+      || !Array.isArray(entry.evidence_resources) || !entry.evidence_resources.every((resource) => typeof resource === "string")
+      || (entry.replacement_concept_id !== undefined && typeof entry.replacement_concept_id !== "string")) {
+      throw new Error("lifecycle intent is invalid");
+    }
+    return { action: action as HubLifecycleIntent["action"], conceptId: entry.concept_id,
+      reason: entry.reason, evidenceResources: entry.evidence_resources as string[],
+      ...(typeof entry.replacement_concept_id === "string" ? { replacementConceptId: entry.replacement_concept_id } : {}) };
+  });
+}
+
 export async function callHubOkfTool(
   name: string,
   args: Readonly<Record<string, unknown>>,
@@ -133,7 +153,9 @@ export async function callHubOkfTool(
       if (mode === "new" && args.evidence_digest !== undefined) {
         throw new Error("new Initial Ingest derives evidence_digest; callers must not supply it");
       }
-      if (mode === "refresh" && args.evidence_digest === undefined) throw new Error("refresh requires evidence_digest");
+      if (mode === "refresh" && args.evidence_digest !== undefined) {
+        throw new Error("refresh derives evidence_digest; callers must not supply it");
+      }
       const confirmedDomain = args.confirmed_domain === undefined
         ? undefined : normalizeConfirmedDomain(args.confirmed_domain);
       const coverage = args.coverage;
@@ -147,7 +169,6 @@ export async function callHubOkfTool(
       return result(await actions.prepare({
         mode,
         sourceRepository: required(args, "source_repository"),
-        ...(args.evidence_digest === undefined ? {} : { evidenceDigest: required(args, "evidence_digest") }),
         subjectDirectory: required(args, "subject_directory"),
         ...(confirmedDomain ? { confirmedDomain } : {}),
         ...(args.signals === undefined ? {} : { signals: Array.isArray(args.signals)
@@ -158,7 +179,8 @@ export async function callHubOkfTool(
       }));
     }
     if (name === "finalize_hub_okf_proposal") {
-      return result(await actions.finalize(required(args, "session_id"), questionDeclarations(args.questions)));
+      return result(await actions.finalize(required(args, "session_id"), questionDeclarations(args.questions),
+        lifecycleIntents(args.lifecycle_intents)));
     }
     if (name === "search_hub_okf") {
       const limit = args.limit;

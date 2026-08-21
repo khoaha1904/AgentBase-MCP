@@ -1,6 +1,7 @@
 import path from "node:path";
 
 import { conceptReferencesRepository } from "../documents/okf-document.ts";
+import { readRepositoryIdentityRecord, readRepositoryObservedSource, type RepositoryObservedSource } from "../governance/repository-identity.ts";
 import {
   loadHubGraph,
   resolveHubIdentity,
@@ -20,8 +21,17 @@ export type HubContinuityManifest = Readonly<{
   neighbors: readonly HubConceptSummary[];
   edges: readonly HubGraphEdge[];
   navigationPaths: readonly string[];
+  observedSource?: RepositoryObservedSource;
+  knownGaps: readonly HubContinuityGap[];
   truncated: boolean;
   omitted: Readonly<{ currentSource: number; neighbors: number; edges: number; navigationPaths: number }>;
+}>;
+
+export type HubContinuityGap = Readonly<{
+  kind: "question" | "limitation" | "reference-warning";
+  subject: string;
+  detail: string;
+  updatedAt?: string;
 }>;
 
 export type HubContinuityOptions = Readonly<{
@@ -30,6 +40,7 @@ export type HubContinuityOptions = Readonly<{
   edgeLimit?: number;
   navigationLimit?: number;
   maximumDocumentBytes?: number;
+  knownGaps?: readonly HubContinuityGap[];
 }>;
 
 function bound(value: number | undefined, fallback: number, maximum: number, name: string): number {
@@ -69,6 +80,9 @@ export async function buildHubContinuity(
     conceptReferencesRepository(concept.document, sourceRepositoryId)).map(([identity]) => identity).sort();
   const currentIds = allCurrent.slice(0, conceptLimit);
   const subjectId = subjectIdentity(graph, subjectDirectory);
+  const repositoryConcept = [...graph.concepts.values()].map((item) => item.document).find((concept) =>
+    readRepositoryIdentityRecord(concept)?.id === sourceRepositoryId);
+  const observedSource = repositoryConcept ? readRepositoryObservedSource(repositoryConcept) : undefined;
   const seeds = new Set([...currentIds, ...(subjectId ? [subjectId] : [])]);
   const candidateEdges = sortedEdges(graph.edges.filter((edge) =>
     (seeds.has(edge.source) || seeds.has(edge.target))
@@ -100,6 +114,8 @@ export async function buildHubContinuity(
     neighbors: neighborIds.map((identity) => summarizeHubConcept(graph, identity)),
     edges,
     navigationPaths,
+    ...(observedSource ? { observedSource } : {}),
+    knownGaps: [...(options.knownGaps ?? [])].slice(0, 64),
     truncated: Object.values(omitted).some((count) => count > 0),
     omitted,
   };

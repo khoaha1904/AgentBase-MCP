@@ -12,9 +12,12 @@ import {
   diffBundleProposal,
   isMutableAgentBaseDraft,
   loadOkfBundle,
+  normalizeHubLifecycleIntents,
   prepareBundleProposal,
   repositorySourceResources,
+  renderConceptDocument,
   readLiveClaims,
+  readRepositoryIdentityRecord,
   selectOkfConceptSchemas,
   validateConceptAgainstSchema,
   assertConfirmedDomainAssignment,
@@ -24,10 +27,12 @@ import {
   validateBundleLiveClaims,
   type ConceptDocument,
   type ConfirmedDomain,
+  type HubLifecycleIntent,
+  type OkfFrontmatter,
+  type OkfValue,
 } from "../../../core/knowledge/index.ts";
 import { inspectHubProposal, type HubLifecycleEntry, type HubProposalInspection } from "../review/inspect.ts";
 import { writeHubProposalState } from "../review/proposal-state.ts";
-export type HubSupersession = Readonly<{ previousConceptId: string; replacementConceptId: string }>;
 export type PrepareRefreshHubOptions = Readonly<{
   hub: HubIdentity;
   baseCommit: string;
@@ -39,7 +44,7 @@ export type PrepareRefreshHubOptions = Readonly<{
   confirmedDomain?: ConfirmedDomain;
   evidenceDigest: string;
   signals: readonly string[];
-  supersessions?: readonly HubSupersession[];
+  lifecycleIntents?: readonly HubLifecycleIntent[];
   createdAt: string;
 }>;
 export type PrepareRefreshLocalHubOptions = Omit<PrepareRefreshHubOptions, "hub"> & Readonly<{ localHubId: string }>;
@@ -73,95 +78,89 @@ function preservesLines(previous: Buffer, proposed: Buffer): boolean {
   for (const line of next) if (line === retained[cursor]) cursor += 1;
   return cursor === retained.length;
 }
-function preservesForeignSources(
-  previous: ConceptDocument,
-  proposed: ConceptDocument,
-  sourceRepositoryId: string,
-): boolean {
-  const currentPrefix = `repository://${sourceRepositoryId}/`;
-  const next = new Set(repositorySourceResources(proposed));
-  return repositorySourceResources(previous)
-    .filter((resource) => !resource.startsWith(currentPrefix))
-    .every((resource) => next.has(resource));
-}
 function preservesLiveClaimIdentities(previous: ConceptDocument, proposed: ConceptDocument): boolean {
   const next = new Set(readLiveClaims(proposed).map((claim) => claim.id));
   return readLiveClaims(previous).every((claim) => next.has(claim.id));
 }
-function rootIndexWithoutSubject(source: string, subjectDirectory: string): string {
-  let removed = 0;
-  const lines = source.split("\n").filter((line) => {
-    const target = line.match(/^\s*\*\s+\[[^\]]+\]\(([^)\s]+)(?:\s+"[^"]*")?\)(?:\s+-\s+.+)?\s*$/)?.[1];
-    if (!target) return true;
-    const clean = target.split("#")[0]?.split("?")[0];
-    const resolved = clean?.endsWith("/") ? `${path.posix.normalize(clean)}index.md` : path.posix.normalize(clean ?? "");
-    if (resolved !== `${subjectDirectory}/index.md`) return true;
-    removed += 1;
-    return false;
-  });
-  if (!removed) throw new Error("whole-subject refresh requires an exact root index link to the subject");
-  return lines.join("\n").replace(/\n{2,}$/, "\n");
+function mapping(value: OkfValue | undefined): Readonly<Record<string, OkfValue>> | undefined {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? value as Readonly<Record<string, OkfValue>> : undefined;
 }
-function subjectRemovalEntries(
-  options: AnyRefreshOptions,
+function preserveSharedConcept(
+  previous: ConceptDocument,
+  proposed: ConceptDocument,
+  sourceRepositoryId: string,
   bundleRoot: string,
-): readonly HubLifecycleEntry[] | undefined {
-  const authored = loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true });
-  if (authored.files.some((relative) => withinSubject(relative, options.subjectDirectory))) return undefined;
-  const base = loadOkfBundle(options.hubBundleRoot);
-  const subjectFiles = base.files.filter((relative) => relative.startsWith(`${options.subjectDirectory}/`));
-  if (!subjectFiles.length) return undefined;
-  for (const relative of subjectFiles) {
-    if (path.posix.basename(relative) === "index.md") continue;
-    const concept = base.concepts.get(relative.endsWith(".md") ? relative.slice(0, -3) : "");
-    if (!concept || !isMutableAgentBaseDraft(concept)) {
-      throw new Error(`whole-subject refresh cannot delete protected content: ${relative}`);
-    }
+  removeCurrentContribution: boolean,
+): boolean {
+  const prefix = `repository://${sourceRepositoryId}/`;
+  const previousSources = Array.isArray(previous.frontmatter.sources) ? previous.frontmatter.sources : [];
+  if (!repositorySourceResources(previous).some((resource) => !resource.startsWith(prefix))) return false;
+  const currentSources = (Array.isArray(proposed.frontmatter.sources) ? proposed.frontmatter.sources : [])
+    .filter((source) => String(mapping(source)?.resource ?? "").startsWith(prefix));
+  const sources = removeCurrentContribution
+    ? previousSources.filter((source) => !String(mapping(source)?.resource ?? "").startsWith(prefix))
+    : [...previousSources];
+  for (const source of currentSources) {
+    if (!sources.some((existing) => JSON.stringify(existing) === JSON.stringify(source))) sources.push(source);
   }
-  const expectedRootIndex = rootIndexWithoutSubject(
-    fs.readFileSync(path.join(options.hubBundleRoot, "index.md"), "utf8"),
-    options.subjectDirectory,
-  );
-  if (fs.readFileSync(path.join(bundleRoot, "index.md"), "utf8") !== expectedRootIndex) {
-    throw new Error("whole-subject refresh may only remove its exact root index link");
+  let frontmatter: OkfFrontmatter = { ...previous.frontmatter, sources };
+  if (readRepositoryIdentityRecord(previous)?.id === sourceRepositoryId
+    && readRepositoryIdentityRecord(proposed)?.id === sourceRepositoryId) {
+    const previousAgentbase = mapping(previous.frontmatter.agentbase) ?? {};
+    const proposedAgentbase = mapping(proposed.frontmatter.agentbase) ?? {};
+    const previousRepository = mapping(previousAgentbase.repository) ?? {};
+    const proposedRepository = mapping(proposedAgentbase.repository) ?? {};
+    if (proposedRepository.observed_source !== undefined) frontmatter = {
+      ...frontmatter,
+      agentbase: { ...previousAgentbase, repository: {
+        ...previousRepository, observed_source: proposedRepository.observed_source,
+      } },
+    };
   }
-  return subjectFiles
-    .filter((relative) => path.posix.basename(relative) === "index.md")
-    .map((relative) => ({
-      path: relative,
-      change: "deleted-agentbase-index" as const,
-      allowed: true,
-      reason: "reserved index removed with an explicitly authored AgentBase-owned subject deletion",
-    }));
+  writeBytes(bundleRoot, previous.path, Buffer.from(renderConceptDocument({
+    ...previous, frontmatter, body: previous.body,
+  })));
+  return true;
 }
 function protectBase(
   options: AnyRefreshOptions,
   bundleRoot: string,
-  removal: readonly HubLifecycleEntry[] | undefined,
 ): HubLifecycleEntry[] {
   const base = loadOkfBundle(options.hubBundleRoot);
   const authored = loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true });
   const conflicts: HubLifecycleEntry[] = [];
+  const intents = new Map((options.lifecycleIntents ?? []).map((intent) => [intent.conceptId, intent]));
   for (const relative of base.files) {
     const inSubject = withinSubject(relative, options.subjectDirectory);
     const conceptId = relative.endsWith(".md") ? relative.slice(0, -3) : "";
     const concept = base.concepts.get(conceptId);
     const mutable = Boolean(concept && isMutableAgentBaseDraft(concept));
-    const proposed = authored.files.includes(relative) ? bytes(bundleRoot, relative) : undefined;
+    let proposed = authored.files.includes(relative) ? bytes(bundleRoot, relative) : undefined;
     const changed = !proposed || !bytes(options.hubBundleRoot, relative).equals(proposed);
     const index = path.posix.basename(relative) === "index.md";
-    const rootIndexRemoval = Boolean(removal && relative === "index.md");
     const proposedConcept = authored.concepts.get(conceptId);
+    const intent = intents.get(conceptId);
+    const sharedNormalized = Boolean(changed && concept && proposedConcept && mutable
+      && preserveSharedConcept(concept, proposedConcept, options.sourceRepositoryId, bundleRoot,
+        intent?.action === "remove-contribution"));
+    if (sharedNormalized) proposed = bytes(bundleRoot, relative);
+    const previousSources = concept ? repositorySourceResources(concept) : [];
+    const currentPrefix = `repository://${options.sourceRepositoryId}/`;
     const currentSourceContribution = Boolean(
       concept && proposedConcept
+      && previousSources.length > 0
+      && (sharedNormalized || previousSources.every((resource) => resource.startsWith(currentPrefix)))
       && conceptReferencesRepository(proposedConcept, options.sourceRepositoryId)
-      && preservesForeignSources(concept, proposedConcept, options.sourceRepositoryId)
       && preservesLiveClaimIdentities(concept, proposedConcept)
     );
     const additiveIndex = Boolean(index && proposed && preservesLines(bytes(options.hubBundleRoot, relative), proposed));
-    const ownedDeletion = Boolean(mutable && !proposed && inSubject);
-    if (!changed || rootIndexRemoval || ownedDeletion || (mutable && currentSourceContribution)
-      || (index && (inSubject || additiveIndex))) continue;
+    const explicitOwnedDeletion = Boolean(mutable && !proposed && intent?.action === "remove-concept"
+      && previousSources.length && previousSources.every((resource) => resource.startsWith(currentPrefix)));
+    const explicitContributionRemoval = Boolean(sharedNormalized && intent?.action === "remove-contribution"
+      && proposedConcept && !conceptReferencesRepository(proposedConcept, options.sourceRepositoryId));
+    if (!changed || explicitOwnedDeletion || explicitContributionRemoval || (mutable && currentSourceContribution)
+      || (index && additiveIndex)) continue;
     writeBytes(bundleRoot, relative, bytes(options.hubBundleRoot, relative));
     if (changed) conflicts.push({
       path: relative,
@@ -191,22 +190,46 @@ function restoreUnknownFieldConflicts(
     };
   });
 }
-function supersessionEntries(
+function lifecycleEntries(
   options: AnyRefreshOptions,
   bundleRoot: string,
 ): HubLifecycleEntry[] {
   const base = loadOkfBundle(options.hubBundleRoot);
   const proposed = loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true });
-  return (options.supersessions ?? []).map(({ previousConceptId, replacementConceptId }) => {
-    if (!base.concepts.has(previousConceptId)) throw new Error(`superseded concept is not in Hub base: ${previousConceptId}`);
-    const replacement = proposed.concepts.get(replacementConceptId);
-    if (!replacement) throw new Error(`replacement concept is not in refresh: ${replacementConceptId}`);
+  return (options.lifecycleIntents ?? []).map((intent) => {
+    const previous = base.concepts.get(intent.conceptId);
+    if (!previous) throw new Error(`lifecycle concept is not in Hub base: ${intent.conceptId}`);
+    if (previous.type === "Repository" && readRepositoryIdentityRecord(previous)?.id === options.sourceRepositoryId) {
+      throw new Error("normal Refresh cannot remove or retire its canonical Repository identity");
+    }
+    const currentResources = new Set(repositorySourceResources(previous)
+      .filter((resource) => resource.startsWith(`repository://${options.sourceRepositoryId}/`)));
+    if (!intent.reason.trim() || intent.reason.length > 512 || !intent.evidenceResources.length
+      || intent.evidenceResources.some((resource) => !currentResources.has(resource))) {
+      throw new Error(`lifecycle intent lacks exact current-repository evidence: ${intent.conceptId}`);
+    }
+    if (intent.action === "supersede") {
+      const replacement = intent.replacementConceptId && proposed.concepts.get(intent.replacementConceptId);
+      if (!replacement) throw new Error(`replacement concept is not in refresh: ${intent.replacementConceptId ?? "missing"}`);
+      return { path: replacement.path, change: "supersession" as const, allowed: true,
+        previousConceptId: intent.conceptId, reason: intent.reason };
+    }
+    if (intent.action === "remove-concept") {
+      if (proposed.concepts.has(intent.conceptId) || repositorySourceResources(previous).some((resource) => !currentResources.has(resource))) {
+        throw new Error(`whole-concept removal is not exclusively owned: ${intent.conceptId}`);
+      }
+      return { path: previous.path, change: "deleted-agentbase-draft" as const, allowed: true, reason: intent.reason };
+    }
+    const next = proposed.concepts.get(intent.conceptId);
+    if (!next) throw new Error(`lifecycle concept is absent from refresh: ${intent.conceptId}`);
+    if (intent.action === "remove-contribution" && conceptReferencesRepository(next, options.sourceRepositoryId)) {
+      throw new Error(`removed contribution still cites current repository: ${intent.conceptId}`);
+    }
     return {
-      path: replacement.path,
-      change: "supersession" as const,
+      path: next.path,
+      change: intent.action === "retract" ? "retraction" as const : "removed-contribution" as const,
       allowed: true,
-      previousConceptId,
-      reason: `explicitly supersedes ${previousConceptId}`,
+      reason: intent.reason,
     };
   });
 }
@@ -228,7 +251,9 @@ function validateChangedSchemas(options: AnyRefreshOptions, bundleRoot: string):
     const previous = base.concepts.get(concept.conceptId);
     if (previous && bytes(options.hubBundleRoot, previous.path).equals(bytes(bundleRoot, concept.path))) return [];
     changedIdentities.add(concept.conceptId);
-    const sourceFailure = !conceptReferencesRepository(concept, options.sourceRepositoryId)
+    const removesContribution = options.lifecycleIntents?.some((intent) =>
+      intent.action === "remove-contribution" && intent.conceptId === concept.conceptId);
+    const sourceFailure = !removesContribution && !conceptReferencesRepository(concept, options.sourceRepositoryId)
       ? [`${concept.path}: changed concept must cite proposal source repository ${options.sourceRepositoryId}`]
       : [];
     const selectionFailure = !previous && !selected.has(concept.type)
@@ -250,15 +275,16 @@ export function prepareRefreshHubProposal(
 ): Omit<PreparedRefreshHubProposal, "proposal"> & Readonly<{ proposal: AnyHubProposal }> {
   if (!isHubProposalSubject(options.subjectDirectory)) throw new Error("invalid Hub subject");
   if (!subjectExists(options.hubBundleRoot, options.subjectDirectory)) throw new Error("refresh subject is absent; use new");
+  const normalizedIntents = normalizeHubLifecycleIntents(options.lifecycleIntents ?? []);
+  options = { ...options, lifecycleIntents: normalizedIntents };
   const selected = selectOkfConceptSchemas(options.signals).map((item) => item.type);
   const seed = `${options.baseCommit}\0${options.evidenceDigest}\0${options.subjectDirectory}\0refresh`;
   const proposalId = `proposal-${createHash("sha256").update(seed).digest("hex").slice(0, 24)}`;
-  const removal = subjectRemovalEntries(options, options.authoredBundleRoot);
   prepareBundleProposal({ currentBundleRoot: options.hubBundleRoot, proposalRoot: options.proposalRoot,
     proposalId, evidenceDigest: options.evidenceDigest, createdAt: options.createdAt });
   const bundleRoot = path.join(options.proposalRoot, "bundle");
   copyAuthored(options.authoredBundleRoot, bundleRoot);
-  const conflicts = protectBase(options, bundleRoot, removal);
+  const conflicts = protectBase(options, bundleRoot);
   let validation = validateBundleProposal(options.hubBundleRoot, options.proposalRoot);
   const unknownConflicts = restoreUnknownFieldConflicts(options, bundleRoot,
     validation.producerValidation?.failures ?? []);
@@ -274,7 +300,7 @@ export function prepareRefreshHubProposal(
   const diff = diffBundleProposal(options.hubBundleRoot, options.proposalRoot);
   const lifecycle = classifyLifecycle(
     diff.entries,
-    [...conflicts, ...unknownConflicts, ...(removal ?? []), ...supersessionEntries(options, bundleRoot)],
+    [...conflicts, ...unknownConflicts, ...lifecycleEntries(options, bundleRoot)],
   );
   const inspection = inspectHubProposal(lifecycle, { baseRoot: options.hubBundleRoot, proposedRoot: bundleRoot });
   const digestHex = createHash("sha256").update(JSON.stringify(inspection.entries)).digest("hex");

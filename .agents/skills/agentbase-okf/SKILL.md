@@ -48,6 +48,10 @@ repository as read-only.
    lifecycle, failure/operational boundary, audience or important graph role.
    Do not turn every route, handler, function or infrastructure block into a
    concept merely because it is concrete.
+   For Refresh, investigate `sourceChanges`, then `continuity.knownGaps`, then
+   one small discovery pass. Omitted files, old observations and search/graph
+   absence preserve accepted knowledge. Declare destructive lifecycle intent
+   only at Finalize with an exact reason and current-repository evidence.
 5. Keep the prepared navigation progressive. The root `index.md` carries `okf_version:
    "0.2"` and links only existing Domain, System and Repository entrypoint
    indexes. Preserve every existing nonblank root/category index line exactly

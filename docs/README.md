@@ -45,10 +45,10 @@ is the portable archive.
 
 ## Current checkpoint
 
-- Active capability: none. Capability 022 completed the catalog-7 Initial
-  Ingest MVP with a clean 50-test offline gate plus one `review_ready` probe and
-  one `review_ready` sequential replica. Refresh, Batch and Domain Enrichment
-  remain later capabilities.
+- Active capability 023 implements normal single-Repository Refresh and passes
+  its complete offline gate. It builds on capability 022's catalog-7 Initial
+  Ingest MVP and keeps Batch, full Refresh and Domain Enrichment deferred. Its
+  separately authorized model-backed Terraform probe has not run.
 - Initial Ingest now resolves a durable Repository identity, requires bounded
   Domain confirmation, uses the graph only as a private map and stops at one
   sparse, inspectable proposal preview. Partial coverage is valid and visible;

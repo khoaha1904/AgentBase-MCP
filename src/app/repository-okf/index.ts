@@ -2,7 +2,12 @@ export const REPOSITORY_OKF_COMMANDS = ["prepare", "validate", "diff", "apply", 
 export type RepositoryOkfCommand = typeof REPOSITORY_OKF_COMMANDS[number];
 export { prepareRepositoryEvidence, type EvidencePreparation } from "./evidence/prepare-evidence.ts";
 export { prepareProviderWorkspace, type ProviderWorkspace } from "./provider/provider-workspace.ts";
-export { discoverRepositorySourceState } from "./evidence/source-state.ts";
+export {
+  discoverRepositorySourceChanges,
+  discoverRepositorySourceState,
+  resolveRepositorySourceRoot,
+  type RepositorySourceChanges,
+} from "./evidence/source-state.ts";
 export {
   benchmarkRealGraphLifecycle,
   executeGraphBenchmarkCli,

@@ -1,6 +1,10 @@
 export const OKF_VERSION = "0.2" as const;
 export const OKF_SHARED_DIRECTORY = "okf" as const;
 export {
+  normalizeHubLifecycleIntents,
+  type HubLifecycleIntent,
+} from "./proposals/refresh.ts";
+export {
   assertConfirmedDomainAssignment,
   normalizeConfirmedDomain,
   validateConfirmedDomainAssignment,
@@ -26,6 +30,7 @@ export {
 } from "./query/hub-query.ts";
 export {
   buildHubContinuity,
+  type HubContinuityGap,
   type HubContinuityManifest,
   type HubContinuityOptions,
 } from "./query/hub-continuity.ts";
@@ -105,9 +110,11 @@ export {
 } from "./governance/directives.ts";
 export {
   readRepositoryIdentityRecord,
+  readRepositoryObservedSource,
   resolveRepositoryIdentity,
   type RepositoryIdentityHints,
   type RepositoryIdentityRecord,
+  type RepositoryObservedSource,
   type RepositoryIdentityResolution,
 } from "./governance/repository-identity.ts";
 export {
