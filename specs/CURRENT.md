@@ -247,4 +247,11 @@ all other ownership/source/relation gates remain strict. The exact replica
 shape and two negative guards pass within the existing 50-test gate. A fresh
 sequential probe is next; no post-fix model result exists yet.
 
+Post-fix probe `2026-08-21T170242Z` confirms the Flow exception was not the
+blocker. It stopped at schema guidance because a Function reused its direct
+embedded schedule child's Terraform observation as lifecycle evidence. Uniform
+ownership rejected this even though embedded knowledge has no standalone
+identity and belongs in that Function. This is a separate MCP attribution
+question; no draft was scored and no replica ran.
+
 Most recent completed capability: `021-agentstack-foundation`.

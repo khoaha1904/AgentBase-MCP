@@ -253,6 +253,9 @@ and record reproducible evidence.
 - [x] T081 [US2] Add AB-SCHEMA-046 and permit only cross-boundary Flow supporting
   evidence reuse while keeping Flow promotion evidence and every other
   candidate ownership rule strict
+- [x] T082 Retain post-AB-SCHEMA-046 probe `2026-08-21T170242Z`, confirm the Flow
+  defect does not recur, classify parent use of direct embedded-child lifecycle
+  evidence as a separate attribution issue, and stop before a replica
 
 ---
 

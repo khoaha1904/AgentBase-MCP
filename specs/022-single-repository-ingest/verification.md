@@ -880,3 +880,16 @@ embedded candidates receive no exception.
 The existing guidance test reproduces the replica shape, rejects both forbidden
 variants and keeps the repository at 50 tests. `npm run verify` passes all
 specification, type, dependency, dead-code, secret, test and diff checks.
+
+## Post-AB-SCHEMA-046 probe — 2026-08-22
+
+Probe `2026-08-21T170242Z` did not reproduce cross-boundary Flow rejection. It
+instead stopped at schema guidance because the standalone Function reused its
+direct embedded schedule child's Terraform observation as lifecycle evidence.
+The schedule explicitly names that Function as parent and receives no standalone
+identity, but uniform ownership validation still rejected it.
+
+This is a separate MCP attribution-contract issue: embedded knowledge belongs
+in its parent, yet its exact evidence cannot support that parent without a
+duplicate observation. No draft was prepared or scored, and AB-BENCH-048
+stopped the sequence before a replica.
