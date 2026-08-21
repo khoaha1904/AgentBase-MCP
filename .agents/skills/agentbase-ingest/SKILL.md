@@ -27,6 +27,11 @@ the repository, not an authoring prompt. Stop before Accept or Publish.
    on that host as `Component`; if no workload is known, retain only the host
    reference or a limitation. Resolve every retained item to an exact source
    path/span and keep important ambiguity as a Question or limitation.
+   Structured observations support only Terraform and Terragrunt. Label `.tf`
+   or `.tf.json` evidence `terraform`; label `terragrunt.hcl` module
+   orchestration `terragrunt`. When Terragrunt references a module, cite the
+   module's exact `.tf` file as `terraform` for provider resources. Never label
+   SAM/CloudFormation/YAML as Terraform or Terragrunt.
 4. **Author** — Call `get_okf_authoring_schemas` exactly once with the qualified
    candidates plus exact semantic/resource observations. Every candidate declares
    `disposition: concept` or `disposition: embedded`; embedded candidates have

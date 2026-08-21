@@ -47,8 +47,10 @@
   to Interface only for an independently evidenced shared contract, or to
   Resource for cross-boundary use or independently evidenced ownership,
   lifecycle, failure, security or operational value.
-- Terraform remains source-tool metadata. Source declarations do not prove an
-  account, region, ARN or deployed instance.
+- Terraform/Terragrunt remains source-tool metadata. The label must match the
+  exact source path; provider resources reached through Terragrunt cite their
+  referenced Terraform module. Source declarations do not prove an account,
+  region, ARN or deployed instance.
 
 Unknown OKF types and extension fields are valid. Preserve their relationship
 predicates as unjudged extensions. New known AgentBase concepts use only the

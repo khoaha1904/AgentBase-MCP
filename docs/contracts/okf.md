@@ -214,7 +214,7 @@ Normative OKF source is pinned to commit
   Caller-supplied provider, product, exact schema assertions and unknown fields
   are rejected; optional `suggested_type` is limited to a released
   catalog-7 role and exposes evidence-bound agent intent only.
-- **AB-SCHEMA-032** — Terraform Detector v1 and AWS Profile v2 are independently
+- **AB-SCHEMA-032** — Terraform-family Detector v1 and AWS Profile v2 are independently
   versioned data contracts, not cloud SDKs or new concept taxonomies.
 - **AB-SCHEMA-033** — AWS EC2/VM, Lambda, SQS, SNS, EventBridge, S3, RDS and
   DynamoDB observations map deterministically to technology metadata. A
@@ -251,6 +251,12 @@ Normative OKF source is pinned to commit
   provider-neutral kind, optional technology metadata and exact sources in its
   parent. It has no concept identity, standalone document or graph edge until a
   later reviewed promotion.
+- **AB-SCHEMA-040** — A structured observation identifies `terraform` or
+  `terragrunt` and its source path must agree: Terraform uses `.tf`/`.tf.json`,
+  Terragrunt uses `terragrunt.hcl`. Terragrunt directly evidences module
+  orchestration; exact provider resources cite the referenced Terraform file.
+  SAM/CloudFormation/YAML is unsupported and cannot be relabeled as either
+  source tool.
 
 ## Single-repository Initial Ingest
 

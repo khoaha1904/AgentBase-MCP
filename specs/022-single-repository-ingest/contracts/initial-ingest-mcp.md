@@ -67,6 +67,12 @@ The optional `suggested_type` must name a released provider-neutral catalog role
 and remains evidence-bound and advisory. `disposition: embedded` requires a
 parent in the same request and cannot request a standalone schema.
 
+`source_tool` is `terraform` or `terragrunt` and must match the exact evidence
+path. Terraform cites `.tf`/`.tf.json`; Terragrunt cites `terragrunt.hcl` for
+module orchestration. A provider resource reached through Terragrunt cites its
+referenced Terraform module with `source_tool: terraform`. SAM/CloudFormation
+YAML is unsupported and cannot be relabeled as either tool.
+
 ## Authoring guidance response
 
 ```yaml
@@ -83,7 +89,7 @@ recommendations:
       product: sqs
       source_tool: terraform
       resource_type: aws_sqs_queue
-    detector_profile: { id: terraform, version: 1.0.0 }
+    detector_profile: { id: terraform-family, version: 1.0.0 }
     provider_profile: { id: aws, version: 1.0.0 }
     guidance: bounded-complete-schema-object
 ```

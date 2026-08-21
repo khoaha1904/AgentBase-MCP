@@ -516,3 +516,17 @@ because the agent cited CloudFormation/handler evidence from the same repository
 while the current expectation requires the Terraform path. This is a
 qualification-scope mismatch, distinct from the real navigation and Flow gaps.
 No Accept, Publish, provider CLI or Hub PR operation occurred.
+
+## Terraform-family source-truth correction — 2026-08-21
+
+AB-SCHEMA-040 now accepts Terraform and Terragrunt only when their labels match
+the exact source path. Terraform observations cite `.tf`/`.tf.json`;
+Terragrunt module orchestration cites `terragrunt.hcl`; provider resources
+reached through Terragrunt cite their referenced Terraform module. The focused
+design test rejects the V15 failure mode in which CloudFormation YAML was
+submitted as Terraform and also rejects a provider resource attributed directly
+to Terragrunt.
+
+`npm run verify` passes specification checks, TypeScript, dependency rules,
+Knip, Gitleaks, 50/50 design-level tests and `git diff --check`. No parser,
+dependency, SAM/CloudFormation support or model benchmark was added or run.

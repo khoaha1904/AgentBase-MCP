@@ -116,8 +116,9 @@ and returns visible recovery rather than hidden retry.
   Schema owns meaning; the shared
   document renderer owns OKF encoding. MCP contains no reasoning engine,
   template language or persistent candidate database.
-- Catalog roles are provider-neutral. Terraform Detector v1 normalizes source
-  resources and AWS Profile v1 maps supported products to generic roles;
+- Catalog roles are provider-neutral. Terraform-family Detector v1 validates
+  source-native Terraform/Terragrunt observations and AWS Profile v2 maps
+  supported products to generic roles;
   provider/product/source-tool remain metadata and evidence.
 - GitHub access is confined to explicit attach, bootstrap, publication and
   synchronization workflows. Local knowledge work requires no network.

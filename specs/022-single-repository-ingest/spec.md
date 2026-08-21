@@ -28,9 +28,9 @@ produce one reviewable Hub proposal without accepting or publishing it.
   incomplete; later Refresh can build more knowledge.
 - A candidate needs stable identity and independent query/link value. There is
   no numeric confidence or completeness score.
-- Catalog `7.0.0` contains a small provider-neutral authoring core. AWS and
-  Terraform knowledge classify technology evidence but do not decide whether a
-  resource deserves a standalone concept.
+- Catalog `7.0.0` contains a small provider-neutral authoring core. AWS and the
+  Terraform family (Terraform plus Terragrunt) classify technology evidence but
+  do not decide whether a resource deserves a standalone concept.
 - Hub knowledge stores claims, evidence and references, not a second source
   tree or Code Graph. A small non-sensitive value may be shown only as an
   attributed observation, never as timeless current truth.
@@ -79,7 +79,7 @@ and still tells me where each claim came from.
 the current manual gap between Code Graph use and OKF proposal authoring.
 
 **Independent Test**: Ingest a supported fixture containing application and
-Terraform evidence, then inspect a valid proposal that uses generic roles,
+Terraform-family evidence, then inspect a valid proposal that uses generic roles,
 retains exact source references and contains no copied source or graph dump.
 
 **Acceptance Scenarios**:
@@ -102,6 +102,11 @@ retains exact source references and contains no copied source or graph dump.
 5. **Given** the authored change is valid, **When** Ingest exits, **Then** the
    user receives one bounded proposal preview with added/updated knowledge,
    Questions and limitations, and no local Accept or remote publication occurs.
+6. **Given** a resource observation labels its source as Terraform or
+   Terragrunt, **When** guidance validates it, **Then** the exact source path
+   must match that source tool; CloudFormation/SAM/YAML cannot be relabeled as
+   Terraform, and provider resources reached through Terragrunt cite their
+   referenced Terraform module file.
 
 ---
 
@@ -227,7 +232,7 @@ accepted.
   EventBridge, S3, RDS and DynamoDB observations as technology evidence without
   automatically turning each resource into a concept or asserting deployed
   state, account, region, ARN or runtime values.
-- **AB-SCHEMA-033**: Terraform Detector `1.0.0` MUST validate bounded
+- **AB-SCHEMA-033**: Terraform-family Detector `1.0.0` MUST validate bounded
   source-native resource/module observations, retain exact evidence references
   and treat unresolved type/address indirection as ambiguous rather than
   inventing identity. Detection MUST NOT decide standalone concept promotion.
@@ -266,6 +271,13 @@ accepted.
   searchable in its parent with role, provider-neutral kind, technology and
   exact source references. It MUST NOT receive a concept identity, graph edge
   or standalone Markdown document until later promotion.
+- **AB-SCHEMA-040**: Structured observations MUST identify `terraform` or
+  `terragrunt` truthfully from their exact source. Terraform observations MUST
+  cite `.tf` or `.tf.json`; Terragrunt observations MUST cite
+  `terragrunt.hcl`. Terragrunt may evidence module orchestration, but an exact
+  provider resource reached through that module MUST cite the referenced
+  Terraform file with `source_tool: terraform`. SAM/CloudFormation/YAML is
+  unsupported and MUST NOT be accepted under either source-tool label.
 - **AB-CLAIM-005**: A small directly evidenced non-sensitive scalar or
   identifier MAY be retained as an optional observed snapshot only with its
   claim, exact source, source revision and observed time. It MUST be bounded,
@@ -299,14 +311,14 @@ accepted.
 
 ### Measurable Outcomes
 
-- **SC-001**: Supported application/Terraform fixtures produce a valid proposal
+- **SC-001**: Supported application/Terraform-family fixtures produce a valid proposal
   preview in which 100% of attributed claims and canonical relations cite at
   least one exact authorized source or explicit owner guidance.
 - **SC-002**: Five repeated runs over identical fixed evidence produce the same
   normalized promotion outcomes, schema recommendations, embedded knowledge and
   proposed knowledge tree, excluding declared run IDs and timestamps.
 - **SC-003**: Fixture coverage demonstrates all eight Initial Ingest roles,
-  enrichment isolation, supported AWS technology classifications, Terraform
+  enrichment isolation, supported AWS technology classifications, Terraform-family
   exact/embedded/ambiguous/unsupported outcomes and rejection of legacy
   AgentBase authoring types.
 - **SC-004**: Partial-coverage, no-change, source-mutation, cleanup-failure,
@@ -332,7 +344,8 @@ accepted.
 - Refresh, source-diff reconciliation, removal proposals or OKF freshness.
 - Multi-repository Batch Ingest, batch checkpoints or batch PR membership.
 - SAM/CloudFormation or mixed frontend/backend benchmark qualification; the
-  current MVP benchmark scope is pinned Terraform repositories only.
+  current MVP accepts Terraform/Terragrunt repositories and keeps qualification
+  pinned to the existing Terraform fixture.
 - Domain Enrichment, AWS CLI execution, cloud login or deployed-state proof.
 - Accept, local Hub commit, PR creation, publication, synchronization or merge.
 - Cross-repository discovery, automatic repository clone or remote Code Graph.

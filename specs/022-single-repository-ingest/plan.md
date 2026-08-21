@@ -40,13 +40,13 @@ provider CLI, credentials, remote clone, automatic Accept/Publish, raw graph or
 source copy; exact evidence for every attributed claim
 
 **Scale/Scope**: Catalog 7.0 with eight Initial Ingest roles, two enrichment
-roles, AWS profile v2 technology classifications, Terraform detector v1, one
+roles, AWS profile v2 technology classifications, Terraform-family detector v1, one
 repository and at most the existing bounded 64 candidate/change envelope
 
 ## Constitution Check
 
 - **Evidence Before Abstraction — PASS**: Generic roles come from the approved
-  cross-provider design; AWS/Terraform mappings retain exact observation and
+  cross-provider design; AWS/Terraform-family mappings retain exact observation and
   profile provenance. No unsupported provider abstraction is added.
 - **Local-First Explicit Authority — PASS**: Initial Ingest binds one explicit
   local root. Graph, Hub matching, guidance and validation are local; provider
@@ -61,7 +61,7 @@ repository and at most the existing bounded 64 candidate/change envelope
   `AB-SCHEMA-*`, `AB-CLAIM-005` and `AB-LOCAL-HUB-016` requirements receive
   focused offline tests before behavior becomes current.
 - **Dependency/provider/schema gate — PASS**: Catalog 7.0 is an owner-approved
-  major clean cutover. AWS/Terraform profiles are data/rules inside the current
+  major clean cutover. AWS/Terraform-family profiles are data/rules inside the current
   runtime; no provider process, credential boundary or dependency is added.
 - **Migration/recovery gate — PASS**: Owner confirmed no Published concepts and
   will discard obsolete proposals. No content migration or dual-write path is
@@ -91,10 +91,16 @@ knowledge stores the ID and aliases; later runs match aliases before assigning.
 ### 3. Separate detection, promotion and rendering
 
 Catalog definitions keep only the small provider-neutral authoring core. One
-guidance operation validates candidates and observations, applies Terraform
-Detector v1 plus AWS Profile v2 to technology evidence, then evaluates the
+guidance operation validates candidates and observations, applies one
+Terraform-family Detector v1 plus AWS Profile v2 to technology evidence, then evaluates the
 caller-visible concept/embedded disposition before returning schema guidance.
 Detection never creates a file. Existing list/get and bundle validators remain.
+
+The detector accepts only source-native paths: `.tf`/`.tf.json` for Terraform
+and `terragrunt.hcl` for Terragrunt. Terragrunt itself supplies module
+orchestration evidence; exact provider resources cite the referenced Terraform
+module. No file reading, HCL parser, SAM/CloudFormation detector or new
+dependency is added.
 
 ### 4. Extend evidence rather than store source
 
@@ -273,7 +279,8 @@ required standalone concepts from required embedded knowledge and must not
 reward one-file-per-cloud-resource authoring. V14 prompts/results remain
 immutable historical evidence; the next prompt version is V15.
 
-The V15 MVP manifest qualifies Terraform repositories only. The prior SAM and
+The V15 MVP manifest continues to qualify the pinned Terraform repository only.
+Initial Ingest also accepts truthful Terragrunt orchestration evidence. The prior SAM and
 mixed frontend/backend fixture, expectations and results remain historical
 evidence outside the selectable current suite; no SAM/CloudFormation detector
 or parity behavior is added to this capability.

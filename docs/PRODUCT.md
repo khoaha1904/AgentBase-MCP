@@ -53,8 +53,9 @@ An OKF bundle is linked Markdown with YAML frontmatter, bundle-relative concept
 IDs and reserved index/log rules. Conformance does not prove semantic truth.
 
 AgentBase catalog 7.0 supplies a small provider-neutral authoring core.
-Versioned Terraform detection and AWS mapping profiles attach technology
+Versioned Terraform-family detection and AWS mapping profiles attach technology
 metadata without deciding that every cloud resource deserves a concept.
+Terraform and Terragrunt are supported source tools; SAM/CloudFormation is not.
 Promotion is evidence-driven and sparse: internal resources remain searchable
 inside a useful parent, while independent runtime, contract or operational
 boundaries may become concepts. Unknown valid OKF types remain readable and

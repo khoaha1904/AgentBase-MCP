@@ -45,4 +45,11 @@ handler paths from the mixed-source repository rather than the expected
 Terraform file. V15 is therefore not yet accepted; no Accept, Publish, provider
 CLI or Hub PR operation occurred.
 
+The mixed-source finding is now corrected offline at the trust boundary.
+Structured evidence supports Terraform (`.tf`/`.tf.json`) and Terragrunt
+(`terragrunt.hcl`) with truthful source metadata. Terragrunt directly evidences
+module orchestration; provider resources cite the referenced Terraform file.
+SAM/CloudFormation/YAML is rejected instead of being relabeled as Terraform.
+This correction adds no parser, provider CLI, schema type or model benchmark.
+
 Most recent completed capability: `021-agentstack-foundation`.

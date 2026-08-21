@@ -65,7 +65,7 @@ function guidanceRequest(value: unknown): OkfAuthoringGuidanceRequest {
     resourceObservations: list(input.resource_observations, "resource_observations").map((item) => {
       const current = record(item, "resource observation", ["id", "candidate_id", "source_tool", "resource_type", "address", "source"]);
       return { id: current.id as string, candidateId: current.candidate_id as string,
-        sourceTool: current.source_tool as "terraform", resourceType: current.resource_type as string,
+        sourceTool: current.source_tool as "terraform" | "terragrunt", resourceType: current.resource_type as string,
         address: current.address as string, source: source(current.source) };
     }),
   };

@@ -133,7 +133,10 @@ export const OKF_SCHEMA_TOOLS = [
         },
         resource_observations: {
           type: "array", maxItems: 64, items: { type: "object", properties: {
-            id: { type: "string" }, candidate_id: { type: "string" }, source_tool: { type: "string", enum: ["terraform"] },
+            id: { type: "string" }, candidate_id: { type: "string" }, source_tool: {
+              type: "string", enum: ["terraform", "terragrunt"],
+              description: "Must match the exact source: Terraform uses .tf/.tf.json; Terragrunt uses terragrunt.hcl. Provider resources reached through Terragrunt cite the referenced Terraform file.",
+            },
             resource_type: { type: "string" }, address: { type: "string" }, source: { type: "object", properties: {
               path: { type: "string" }, start_line: { type: "integer", minimum: 1 }, end_line: { type: "integer", minimum: 1 },
             }, required: ["path", "start_line", "end_line"], additionalProperties: false },
@@ -198,7 +201,7 @@ function guidanceRequest(args: Readonly<Record<string, unknown>>): OkfAuthoringG
     }),
     resourceObservations: array(args.resource_observations, "resource_observations").map((value) => {
       const item = object(value, "resource observation", ["id", "candidate_id", "source_tool", "resource_type", "address", "source"]);
-      return { id: item.id as string, candidateId: item.candidate_id as string, sourceTool: item.source_tool as "terraform",
+      return { id: item.id as string, candidateId: item.candidate_id as string, sourceTool: item.source_tool as "terraform" | "terragrunt",
         resourceType: item.resource_type as string, address: item.address as string, source: source(item.source) };
     }),
   };

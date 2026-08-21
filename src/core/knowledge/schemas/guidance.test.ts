@@ -1,18 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getOkfAuthoringGuidance, type SemanticObservation } from "./guidance.ts";
+import { getOkfAuthoringGuidance, type ResourceSourceTool, type SemanticObservation } from "./guidance.ts";
 
 const source = { path: "infra/main.tf", startLine: 1, endLine: 8 };
 
-function resource(candidateId: string, resourceType: string, disposition: "concept" | "embedded" = "concept") {
+function resource(candidateId: string, resourceType: string, disposition: "concept" | "embedded" = "concept",
+  sourceTool: ResourceSourceTool = "terraform", sourcePath = source.path) {
   return {
     candidates: [{ id: candidateId, identityHint: candidateId, identityBasis: "Terraform address",
       queryValue: "Runtime or supporting resource role", evidenceIds: [`evidence.${candidateId}`], disposition,
       ...(disposition === "embedded" ? { parentCandidateId: "parent" } : {}) }],
     semanticObservations: [] as SemanticObservation[],
-    resourceObservations: [{ id: `evidence.${candidateId}`, candidateId, sourceTool: "terraform" as const,
-      resourceType, address: `module.app.${resourceType}.${candidateId}`, source }],
+    resourceObservations: [{ id: `evidence.${candidateId}`, candidateId, sourceTool,
+      resourceType, address: `module.app.${resourceType}.${candidateId}`,
+      source: { ...source, path: sourcePath } }],
   };
 }
 
@@ -23,7 +25,7 @@ test("[AB-SCHEMA-032..036] concept-disposition Lambda maps exactly to Function",
   assert.equal(recommendation.status, "exact");
   assert.equal(recommendation.disposition, "concept");
   assert.equal(recommendation.schema?.type, "Function");
-  assert.deepEqual(recommendation.detectorProfile, { id: "terraform", version: "1.0.0" });
+  assert.deepEqual(recommendation.detectorProfile, { id: "terraform-family", version: "1.0.0" });
   assert.deepEqual(recommendation.providerProfile, { id: "aws", version: "2.0.0" });
   assert.deepEqual(recommendation.technology, {
     kind: "runtime-function", provider: "aws", product: "lambda", sourceTool: "terraform", resourceType: "aws_lambda_function",
@@ -96,10 +98,21 @@ test("[AB-SCHEMA-033][AB-SCHEMA-036] detection does not promote non-Lambda resou
   assert.equal(result.recommendations[0]?.technology.product, "sqs");
 });
 
-test("[AB-SCHEMA-033] unresolved Terraform indirection remains ambiguous", () => {
+test("[AB-SCHEMA-033][AB-SCHEMA-040] Terraform-family evidence is bounded and source-truthful", () => {
   const result = getOkfAuthoringGuidance(resource("queue", "${var.resource_type}"));
   assert.equal(result.recommendations[0]?.status, "ambiguous");
   assert.match(result.recommendations[0]?.limitations.join(" ") ?? "", /unresolved/);
+
+  const terragrunt = getOkfAuthoringGuidance(resource("stack", "module", "concept", "terragrunt", "live/terragrunt.hcl"));
+  assert.equal(terragrunt.recommendations[0]?.technology.sourceTool, "terragrunt");
+  assert.deepEqual(terragrunt.recommendations[0]?.detectorProfile, { id: "terraform-family", version: "1.0.0" });
+
+  assert.throws(() => getOkfAuthoringGuidance(
+    resource("false-terraform", "aws_lambda_function", "concept", "terraform", "template.yaml"),
+  ), /\.tf or \.tf\.json/);
+  assert.throws(() => getOkfAuthoringGuidance(
+    resource("false-terragrunt", "aws_lambda_function", "concept", "terragrunt", "terragrunt.hcl"),
+  ), /referenced Terraform module source/);
 });
 
 test("[AB-SCHEMA-031][AB-SCHEMA-035] suggested type accepts only Initial Ingest catalog roles", () => {

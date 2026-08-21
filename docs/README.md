@@ -68,7 +68,9 @@ is the portable archive.
   infrastructure identities are not copied into repository trees.
 - Catalog 7.0 has eight Initial Ingest roles: Repository, Domain, System,
   Component, Function, Interface, Flow and Resource; Entity/Metric are
-  enrichment-only. Terraform/AWS profiles classify technology evidence.
+  enrichment-only. One Terraform-family detector accepts source-truthful
+  Terraform/Terragrunt evidence and the AWS profile classifies technology.
+  SAM/CloudFormation remains unsupported rather than being mislabeled.
   Internal queues/topics/data/hosts embed in a useful parent unless independent
   boundary evidence promotes them. Foreign extensions remain open-world compatible.
 - Hub retrieval is progressively scoped through root, Domain and System

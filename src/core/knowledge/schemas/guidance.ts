@@ -1,10 +1,11 @@
 import type { OkfConceptSchema } from "./definition.ts";
 import { AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, getOkfConceptSchema, selectOkfConceptSchemas } from "./catalog.ts";
 import { AWS_PROVIDER_PROFILE, mapAwsResource } from "./profiles/aws.ts";
-import { TERRAFORM_DETECTOR_PROFILE, detectTerraformResource } from "./profiles/terraform.ts";
+import { TERRAFORM_FAMILY_DETECTOR_PROFILE, detectTerraformResource } from "./profiles/terraform.ts";
 import type { DetectedResource, ProviderResourceMapping } from "./profiles/definition.ts";
 
 export type ObservationSource = Readonly<{ path: string; startLine: number; endLine: number }>;
+export type ResourceSourceTool = "terraform" | "terragrunt";
 
 export type ConceptCandidate = Readonly<{
   id: string;
@@ -28,7 +29,7 @@ export type SemanticObservation = Readonly<{
 export type ResourceObservation = Readonly<{
   id: string;
   candidateId: string;
-  sourceTool: "terraform";
+  sourceTool: ResourceSourceTool;
   resourceType: string;
   address: string;
   source: ObservationSource;
@@ -157,7 +158,9 @@ function validateRequest(request: OkfAuthoringGuidanceRequest): void {
   for (const observation of request.resourceObservations) {
     requireExactKeys(observation, ["id", "candidateId", "sourceTool", "resourceType", "address", "source"], "resource observation");
     requireExactKeys(observation.source, ["path", "startLine", "endLine"], "observation source");
-    if (observation.sourceTool !== "terraform") throw new Error("resource observation source tool is unsupported");
+    if (!(["terraform", "terragrunt"] as const).includes(observation.sourceTool)) {
+      throw new Error("resource observation source tool is unsupported");
+    }
     requireText(observation.resourceType, "resource type", 256);
     requireText(observation.address, "resource address", 512);
   }
@@ -200,7 +203,7 @@ export function getOkfAuthoringGuidance(request: OkfAuthoringGuidanceRequest): O
       matchedEvidence: candidate.evidenceIds,
       missingEvidence: [],
       technology,
-      ...(resources.length ? { detectorProfile: TERRAFORM_DETECTOR_PROFILE } : {}),
+      ...(resources.length ? { detectorProfile: TERRAFORM_FAMILY_DETECTOR_PROFILE } : {}),
       ...(mapped.length ? { providerProfile: AWS_PROVIDER_PROFILE } : {}),
     } as const;
     if (detections.some((item) => item.result.status === "ambiguous") || distinctTechnologies.size > 1) return {

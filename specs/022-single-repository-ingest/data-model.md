@@ -50,10 +50,14 @@ Common fields:
 
 Resource observation fields:
 
-- source tool, initially `terraform`
+- source tool: `terraform` or `terragrunt`
 - exact source-native resource/module type
 - logical address
 - optional declared dependency/region-alias hints
+
+The source label must match the exact path. Terraform uses `.tf`/`.tf.json`;
+Terragrunt uses `terragrunt.hcl`. Provider resources reached through Terragrunt
+cite the referenced Terraform module rather than the orchestration file.
 
 The caller does not supply provider, product or schema output fields.
 

@@ -151,6 +151,8 @@ and record reproducible evidence.
 - [x] T049 Record and finalize the owner-authorized V15 Terraform Health
   requalification; separate lifecycle success and real OKF findings from the
   mixed-source Terraform expectation mismatch without running another model
+- [x] T050 Add AB-SCHEMA-040 truthful Terraform/Terragrunt source validation,
+  update the Ingest contract/skill and verify offline without another model run
 
 ---
 

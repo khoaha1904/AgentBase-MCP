@@ -28,13 +28,15 @@ and skill boundaries pass without source or remote mutation.
 ## End-to-end offline scenario
 
 Use a disposable Hub plus the representative application/Terraform fixture.
+Terragrunt is covered by the same source-truth contract; SAM/CloudFormation is
+outside the MVP.
 The scenario must show:
 
 1. repository/Domain preflight and confirmation evidence;
 2. one bounded graph/evidence round;
 3. qualified candidates with exact source references;
 4. a generic `Function` recommendation plus embedded queue/data/hosting
-   knowledge with AWS/Terraform profile provenance;
+   knowledge with AWS/Terraform-family profile provenance;
 5. one valid proposal inspection marked partial when coverage is limited;
 6. zero Accept, submit, synchronize, provider CLI or network operations.
 
