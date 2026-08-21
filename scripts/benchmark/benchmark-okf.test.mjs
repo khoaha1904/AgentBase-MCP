@@ -6,7 +6,9 @@ import test from "node:test";
 import { parseConceptDocument } from "../../src/core/knowledge/index.ts";
 import { assessOwnerReviewUsefulness, classifyInitialIngest, createAuthoringAssessment,
   createPairComparison, scoreSemanticBenchmark } from "./benchmark-okf.mjs";
-import { summarizeAgentEvents, validateFinalChangeCoverage, validateV13Lifecycle } from "./benchmark-agent.mjs";
+import {
+  summarizeAgentEvents, validateFinalChangeCoverage, validateRefreshKnowledge, validateRefreshLifecycle, validateV13Lifecycle,
+} from "./benchmark-agent.mjs";
 
 const repositoryId = "repository-example-aaaaaaaaaaaa";
 
@@ -126,6 +128,32 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
   ].map((tool) => [tool, 1]));
   lifecycleTools.get_okf_authoring_schemas = 2;
   assert.deepEqual(validateV13Lifecycle(lifecycleTools, corrected.attempts), []);
+  const refreshRoot = path.resolve(import.meta.dirname, "..", "..", "benchmark", "repos", "aws-serverless-refresh");
+  const refresh = JSON.parse(fs.readFileSync(path.join(refreshRoot, "manifest.json"), "utf8"));
+  assert.equal(refresh.version, 2);
+  assert.equal(refresh.promptVersion, "okf-refresh-v2");
+  assert.equal(refresh.repositories[0].workflow, "refresh");
+  assert.deepEqual(refresh.repositories[0].expectedOkf, {
+    path: "components/aha-health-alert-processor.md",
+    includes: ["rate(5 minutes)", "Five-minute EventBridge schedule"],
+    excludes: ["rate(1 minute)", "One-minute EventBridge schedule"],
+  });
+  const refreshWorkspace = fs.mkdtempSync(path.join(import.meta.dirname, "refresh-knowledge-"));
+  try {
+    const target = path.join(refreshWorkspace, "okf", "components");
+    fs.mkdirSync(target, { recursive: true });
+    fs.writeFileSync(path.join(target, "aha-health-alert-processor.md"), "rate(5 minutes)\nFive-minute EventBridge schedule\n");
+    assert.doesNotThrow(() => validateRefreshKnowledge(refreshWorkspace, refresh.repositories[0]));
+    fs.writeFileSync(path.join(target, "aha-health-alert-processor.md"), "rate(1 minute)\nOne-minute EventBridge schedule\n");
+    assert.throws(() => validateRefreshKnowledge(refreshWorkspace, refresh.repositories[0]), /Refresh knowledge mismatch/);
+  } finally {
+    fs.rmSync(refreshWorkspace, { recursive: true, force: true });
+  }
+  const refreshTools = Object.fromEntries([
+    "get_hub_status", "preflight_hub_ingest", "index_repository", "get_architecture", "prepare_hub_okf",
+    "validate_okf_changes", "finalize_hub_okf_proposal", "inspect_hub_okf_proposal",
+  ].map((tool) => [tool, 1]));
+  assert.deepEqual(validateRefreshLifecycle(refreshTools), []);
 });
 
 test("[AB-BENCH-013..017] pair comparison reports quality and efficiency without a winner", () => {

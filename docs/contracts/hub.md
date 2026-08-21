@@ -104,7 +104,10 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-REFRESH-001..003** — Refresh binds one authorized checkout to one
   unambiguous existing Repository and active local `main`. It returns bounded
   prior concepts, observed source state, changed paths, known gaps and omitted
-  counts; a missing Repository routes to Initial Ingest.
+  counts; a missing Repository routes to Initial Ingest. Existing attributable
+  non-governance concept roles remain authorable without being guessed again
+  from semantic signals. The skill reads exact changed Git hunks before known
+  gaps or bounded discovery; a partial large-file read is not equivalent.
 - **AB-REFRESH-004..006** — Refresh changes only attributable current-repository
   contributions. Omission, age and search/graph absence preserve knowledge.
   Removal, supersession and retraction require typed intent, reason and exact

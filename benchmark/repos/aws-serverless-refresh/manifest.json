@@ -1,0 +1,43 @@
+{
+  "suite": "aws-serverless-refresh",
+  "version": 2,
+  "catalogVersion": "7.0.0",
+  "promptVersion": "okf-refresh-v2",
+  "agent": {
+    "provider": "codex-cli",
+    "executable": "codex",
+    "version": "codex-cli 0.149.0",
+    "model": "gpt-5.6-terra",
+    "reasoningEffort": "medium",
+    "timeoutMs": 900000
+  },
+  "repositories": [
+    {
+      "id": "aws-health-aware",
+      "kind": "terraform-serverless-refresh",
+      "workflow": "refresh",
+      "path": "../fixtures/source-repos/aws-health-polyrepo/aws-health-aware",
+      "commit": "928494c70a904a65b877d426516882397541eafd",
+      "repositoryId": "repository-aws-health-aware-ef3e83846625",
+      "subjectDirectory": "repositories/aws-health-aware",
+      "baseline": "benchmark/results/aws-serverless/aws-health-aware/2026-08-21T175143Z/okf",
+      "mutation": {
+        "path": "terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf",
+        "from": "rate(1 minute)",
+        "to": "rate(5 minutes)",
+        "count": 2
+      },
+      "expectedOkf": {
+        "path": "components/aha-health-alert-processor.md",
+        "includes": ["rate(5 minutes)", "Five-minute EventBridge schedule"],
+        "excludes": ["rate(1 minute)", "One-minute EventBridge schedule"]
+      },
+      "confirmedDomain": {
+        "identity": "domains/health-operations",
+        "title": "Health Operations",
+        "evidenceResource": "agentbase://owner-guidance/domains/health-operations"
+      },
+      "expectation": "../aws-serverless/expected/aws-health-aware-v15.json"
+    }
+  ]
+}

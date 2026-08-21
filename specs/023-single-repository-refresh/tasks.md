@@ -69,8 +69,8 @@ from proposal review.
 - [x] T019 Run focused tests, `npm run verify`, and record exact offline evidence in `specs/023-single-repository-refresh/verification.md`
 - [x] T020 Review source dependency changes with `npm run depcruise` and update `docs/ARCHITECTURE.md` only if ownership actually changed
 - [x] T021 Validate all scenarios in `specs/023-single-repository-refresh/quickstart.md` and reconcile drift in `specs/023-single-repository-refresh/spec.md`, `plan.md` and `tasks.md`
-- [ ] T022 After separate owner authorization, run one model-backed Terraform Refresh probe and conditionally one sequential replica; record separated OKF/benchmark findings in `specs/023-single-repository-refresh/verification.md` without Accept, Publish, CLI enrichment or Hub PR
-- [ ] T023 Promote the accepted behavior to living contracts, complete `specs/023-single-repository-refresh/verification.md`, and close `specs/CURRENT.md`
+- [x] T022 After separate owner authorization, run one model-backed Terraform Refresh probe and conditionally one sequential replica; record separated OKF/benchmark findings in `specs/023-single-repository-refresh/verification.md` without Accept, Publish, CLI enrichment or Hub PR
+- [x] T023 Promote the accepted behavior to living contracts, complete `specs/023-single-repository-refresh/verification.md`, and close `specs/CURRENT.md`
 
 ## Dependencies and Execution Order
 

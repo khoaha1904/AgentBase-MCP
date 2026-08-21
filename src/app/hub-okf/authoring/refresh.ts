@@ -44,6 +44,7 @@ export type PrepareRefreshHubOptions = Readonly<{
   confirmedDomain?: ConfirmedDomain;
   evidenceDigest: string;
   signals: readonly string[];
+  selectedSchemas?: readonly string[];
   lifecycleIntents?: readonly HubLifecycleIntent[];
   createdAt: string;
 }>;
@@ -245,7 +246,8 @@ function classifyLifecycle(
 function validateChangedSchemas(options: AnyRefreshOptions, bundleRoot: string): void {
   const base = loadOkfBundle(options.hubBundleRoot);
   const proposed = loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true });
-  const selected = new Set(selectOkfConceptSchemas(options.signals).map((item) => item.type));
+  const selected = new Set(options.selectedSchemas
+    ?? selectOkfConceptSchemas(options.signals).map((item) => item.type));
   const changedIdentities = new Set<string>();
   const failures = [...validateBundleLiveClaims(proposed.concepts.values()), ...[...proposed.concepts.values()].flatMap((concept) => {
     const previous = base.concepts.get(concept.conceptId);
@@ -277,7 +279,8 @@ export function prepareRefreshHubProposal(
   if (!subjectExists(options.hubBundleRoot, options.subjectDirectory)) throw new Error("refresh subject is absent; use new");
   const normalizedIntents = normalizeHubLifecycleIntents(options.lifecycleIntents ?? []);
   options = { ...options, lifecycleIntents: normalizedIntents };
-  const selected = selectOkfConceptSchemas(options.signals).map((item) => item.type);
+  const selected = [...(options.selectedSchemas
+    ?? selectOkfConceptSchemas(options.signals).map((item) => item.type))];
   const seed = `${options.baseCommit}\0${options.evidenceDigest}\0${options.subjectDirectory}\0refresh`;
   const proposalId = `proposal-${createHash("sha256").update(seed).digest("hex").slice(0, 24)}`;
   prepareBundleProposal({ currentBundleRoot: options.hubBundleRoot, proposalRoot: options.proposalRoot,

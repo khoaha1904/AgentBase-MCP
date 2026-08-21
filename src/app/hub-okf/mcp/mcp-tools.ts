@@ -76,7 +76,7 @@ export const HUB_OKF_TOOLS = [
         },
         signals: {
           type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: 64,
-          description: "Legacy Refresh-only semantic signals.",
+          description: "Optional legacy Refresh signals for newly discovered concept roles. Existing current-Repository concept roles are retained automatically.",
         },
         guidance_request: {
           type: "object",

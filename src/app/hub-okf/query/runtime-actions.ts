@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 
 import {
-  getOkfAuthoringGuidance, parseConceptDocument, repositorySourceResources, selectOkfConceptSchemas,
+  getOkfAuthoringGuidance, getOkfConceptSchema, parseConceptDocument, repositorySourceResources, selectOkfConceptSchemas,
   type HubContinuityGap, type HubContinuityManifest,
 } from "../../../core/knowledge/index.ts";
 import { GitHubHubApi } from "../../../providers/github-hub/index.ts";
@@ -189,6 +189,14 @@ export function createHubRuntimeActions(
       const selectedSchemas = guidance
         ? [...new Set(guidance.recommendations.flatMap((item) => ["exact", "suggested"].includes(item.status) && item.schema ? [item.schema.type] : []))]
         : selectOkfConceptSchemas(signals).map((item) => item.type);
+      if (input.mode === "refresh") {
+        for (const concept of continuity.currentSource) {
+          const schema = getOkfConceptSchema(concept.type);
+          if (schema && schema.authoringScope !== "governance" && !selectedSchemas.includes(schema.type)) {
+            selectedSchemas.push(schema.type);
+          }
+        }
+      }
       if (input.mode === "new" && !selectedSchemas.includes("Repository")) selectedSchemas.unshift("Repository");
       if (input.confirmedDomain && !selectedSchemas.includes("Domain")) selectedSchemas.push("Domain");
       if (!selectedSchemas.length) throw new Error("authoring guidance did not establish any exact or suggested schema role");

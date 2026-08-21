@@ -1,0 +1,88 @@
+{
+  "suite": "aws-serverless-refresh",
+  "repository": "aws-health-aware",
+  "arm": "mcp",
+  "kind": "terraform-serverless-refresh",
+  "fixturePath": "../fixtures/source-repos/aws-health-polyrepo/aws-health-aware",
+  "fixtureCommit": "928494c70a904a65b877d426516882397541eafd",
+  "sourceRepositoryId": "repository-agentbase-refresh-source-zlzttd-779eb7e1bc7a",
+  "provenanceRepositoryId": "repository-aws-health-aware-ef3e83846625",
+  "baselineCommit": "928494c70a904a65b877d426516882397541eafd",
+  "sourceCommit": "0a56f67a5980f43b2fb7f01d1c9a2c3353371911",
+  "catalogVersion": "7.0.0",
+  "promptVersion": "okf-refresh-v1",
+  "promptDigest": "sha256:2d5a24e0632e7d85c0ebf42dd49ca634daa429ea940293290da9c81b1732c9fa",
+  "agent": {
+    "provider": "codex-cli",
+    "executable": "codex",
+    "version": "codex-cli 0.149.0",
+    "model": "gpt-5.6-terra",
+    "reasoningEffort": "medium",
+    "timeoutMs": 900000,
+    "actualVersion": "codex-cli 0.149.0"
+  },
+  "startedAt": "2026-08-21T19:03:39.775Z",
+  "completedAt": "2026-08-21T19:04:51.493Z",
+  "outcome": "failed",
+  "elapsedMs": 71718,
+  "process": {
+    "exitCode": 0,
+    "signal": null,
+    "error": null
+  },
+  "usage": {
+    "inputTokens": 303449,
+    "cachedInputTokens": 269056,
+    "cacheWriteInputTokens": 0,
+    "uncachedInputTokens": 34393,
+    "outputTokens": 2044,
+    "reasoningOutputTokens": 774
+  },
+  "activity": {
+    "mcpToolCalls": 7,
+    "commandExecutions": 4,
+    "authoringToolCalls": 1,
+    "authoringArgumentBytes": 27,
+    "authoringResultBytes": 183,
+    "authoringTools": {
+      "validate_okf_changes": {
+        "calls": 1,
+        "argumentBytes": 27,
+        "resultBytes": 183
+      }
+    },
+    "mcpTools": {
+      "finalize_hub_okf_proposal": 1,
+      "get_architecture": 1,
+      "get_hub_status": 1,
+      "index_repository": 1,
+      "preflight_hub_ingest": 1,
+      "prepare_hub_okf": 1,
+      "validate_okf_changes": 1
+    },
+    "guidance": {
+      "attempts": [],
+      "inputCorrectionsUsed": 0,
+      "firstAttemptSucceeded": false
+    },
+    "observedSourceReadBytes": null,
+    "limitation": "event trace does not prove complete source-read volume",
+    "finalValidationIdentities": null
+  },
+  "requiredToolUsage": {
+    "get_hub_status": true,
+    "preflight_hub_ingest": true,
+    "index_repository": true,
+    "get_architecture": true,
+    "prepare_hub_okf": true,
+    "validate_okf_changes": false,
+    "finalize_hub_okf_proposal": true,
+    "inspect_hub_okf_proposal": false
+  },
+  "failures": [
+    "Refresh must finalize exactly one proposal; observed 0",
+    "required MCP tool did not complete successfully: validate_okf_changes",
+    "required MCP tool not observed: inspect_hub_okf_proposal",
+    "inspect_hub_okf_proposal must run exactly once; observed 0"
+  ]
+}

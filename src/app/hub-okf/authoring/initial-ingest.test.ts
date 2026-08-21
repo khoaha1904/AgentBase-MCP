@@ -157,13 +157,17 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..014] pre
     const refresh = await actions.prepare({
       mode: "refresh", sourceRepository: source, subjectDirectory: "repositories/vehicle-events",
       signals: ["repository"],
-    }) as { sessionId: string; bundleRoot: string; source: { commit: string }; sourceChanges: { paths: string[] } };
+    }) as { sessionId: string; bundleRoot: string; selectedSchemas: string[];
+      source: { commit: string }; sourceChanges: { paths: string[] } };
     assert.deepEqual(refresh.sourceChanges.paths, ["README.md"]);
+    assert.deepEqual(refresh.selectedSchemas.sort(), ["Domain", "Flow", "Function", "Repository", "System"]);
     const repositoryPath = path.join(refresh.bundleRoot, "repositories", "vehicle-events.md");
     fs.appendFileSync(repositoryPath, "\nRefresh evidence confirms delivery ownership.\n");
     const refreshed = await actions.finalize(refresh.sessionId) as {
+      proposal: { selectedSchemas: string[] };
       inspection: { groups: { updated: readonly { path: string; after?: { content: string } }[] } };
     };
+    assert.deepEqual(refreshed.proposal.selectedSchemas, ["Domain", "Flow", "Function", "Repository", "System"]);
     const updatedRepository = refreshed.inspection.groups.updated.find((entry) => entry.path === "repositories/vehicle-events.md");
     assert.ok(updatedRepository?.after);
     assert.equal(readRepositoryObservedSource(parseConceptDocument(updatedRepository.path, updatedRepository.after.content))?.commit,

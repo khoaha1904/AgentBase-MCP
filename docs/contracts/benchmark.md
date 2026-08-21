@@ -183,6 +183,12 @@ benchmarks.
   concepts or details are missing. Coverage ratios and missing references remain
   diagnostics. `review_ready` additionally has useful owner navigation and
   content, without requiring a fixed concept inventory.
+- **AB-BENCH-051** — Refresh qualification uses its own immutable prompt
+  identity and an expectation tied to the exact synthetic source mutation. A
+  structurally valid bundle still fails the run when expected replacement
+  knowledge is absent or superseded literal knowledge remains. Probe and
+  replica compare the changed concept bytes separately from per-run Repository
+  observation commits.
 - **AB-BENCH-050** — One model run's semantic variance does not become a hard
   product rule. A deterministic offline contract breach may be fixed directly;
   a semantic miss justifies a new cross-repository rule only after the same

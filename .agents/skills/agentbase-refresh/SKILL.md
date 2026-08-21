@@ -17,9 +17,12 @@ repository, or invoke provider CLI from this workflow.
 2. Prepare `mode: refresh` without an evidence digest. Treat returned active
    local `main`, source snapshot, continuity, known gaps and omitted counts as
    the bounded baseline.
-3. Investigate in order: changed source, known Questions/limitations/broken or
-   aging references, then one small discovery pass. Use Code Graph as a private
-   map and resolve retained claims to exact authorized source.
+3. Investigate in order: exact changed source, known Questions/limitations/
+   broken or aging references, then one small discovery pass. Before discovery,
+   inspect the exact Git diff from the returned previously observed commit to
+   the current commit for every returned changed path; do not replace this with
+   a partial read of a large file. Use Code Graph as a private map and resolve
+   retained claims to exact authorized source.
 4. Author only inside the prepared `bundle/` following `agentbase-okf`. A valid
    sparse or partial result is enough; do not search for completeness.
 5. Preserve omission. Missing graph/search evidence, elapsed time or an omitted
