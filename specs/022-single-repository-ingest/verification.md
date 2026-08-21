@@ -559,3 +559,19 @@ Initial Ingest design test; the catalog contract checks the public field list.
 `npm run verify` passes all specification, TypeScript, dependency, Knip,
 Gitleaks, 50/50 test and diff gates. No test count, parser, dependency or
 runtime workflow was added.
+
+## V15 Flow-shape requalification — 2026-08-21
+
+Owner-authorized run `2026-08-21T142407Z` completed in 267,429 ms. The exact
+Flow field-shape correction worked: changed-set validation parsed four ordered
+steps. The authored proposal was nevertheless invalid because those steps used
+unpromoted embedded labels (schedule, AWS Health API, DynamoDB state and
+notification endpoints) instead of existing concept identities, while several
+canonical relations lacked resolving Markdown links. The agent identified the
+diagnostics but retained the schedule endpoint during its one repair. Finalize
+correctly failed, Inspect did not run and no bundle was scored.
+
+Classification: AB-SCHEMA-041 passed; OKF authoring/repair failed; MCP guidance
+could make the concept-only endpoint rule more explicit; benchmark lifecycle
+and scorer were not the cause. No Accept, Publish, provider CLI or Hub PR
+operation occurred, and no replacement run was started.

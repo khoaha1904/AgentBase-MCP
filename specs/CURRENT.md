@@ -67,4 +67,12 @@ the required scalar fields. The complete offline gate passes 50/50 tests with
 no new parser, dependency or test case count. Model requalification is the next
 separately authorized evidence.
 
+Owner-authorized run `2026-08-21T142407Z` confirms AB-SCHEMA-041: all four Flow
+steps parsed with the published shape. The proposal remains invalid. It used
+unpromoted embedded labels as Flow endpoints and omitted visible links for
+several canonical relations. The agent recognized the diagnostic but retained
+the schedule endpoint in its single repair; Finalize correctly rejected it and
+Inspect did not run. This is an OKF authoring/repair failure plus a remaining
+guidance-usability gap, not a scorer defect.
+
 Most recent completed capability: `021-agentstack-foundation`.

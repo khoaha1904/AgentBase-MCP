@@ -158,6 +158,8 @@ and record reproducible evidence.
   failure; do not run a replacement benchmark
 - [x] T052 Fix AB-SCHEMA-041 by publishing the exact Flow-step field shape and
   actionable malformed-step diagnostic in the existing schema contract
+- [x] T053 Retain owner-authorized V15 run `2026-08-21T142407Z` and separate
+  its successful Flow parsing from invalid embedded endpoints and repair
 
 ---
 

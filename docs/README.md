@@ -68,6 +68,10 @@ is the portable archive.
   exact `order/source/target` serialization required by validation. The agent
   exhausted its repair budget guessing field names. This is an MCP contract
   defect; no OKF bundle was scored.
+- V15 Health run `2026-08-21T142407Z` proves the exact Flow shape fix, but is
+  invalid before Inspect because its Flow uses embedded labels rather than
+  existing concept identities as endpoints. Finalize correctly blocked it; the
+  scorer did not run.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.

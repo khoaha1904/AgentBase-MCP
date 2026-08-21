@@ -183,6 +183,17 @@ only `flow_steps entry is malformed`. The agent guessed `order/from/to`, then
 Finalize or Inspect. No OKF bundle was scored. This is an MCP authoring-contract
 defect, not an OKF semantic or benchmark-scorer finding.
 
+Owner-authorized run `2026-08-21T142407Z` verifies the exact Flow field-shape
+correction: the validator parsed all four steps and no longer reported malformed
+entries. The authored bundle was still invalid. The Flow used unpromoted
+embedded labels (EventBridge schedule, AWS Health API, DynamoDB state and
+notification endpoints) as step endpoints, and several canonical relations
+lacked resolving Markdown links. The agent recognized those diagnostics but
+retained the schedule as an endpoint during its single repair, then Finalize
+correctly rejected it. No Inspect or scorable bundle followed. This is an OKF
+authoring/repair failure with a remaining guidance-usability gap around concept
+endpoint identities; the benchmark scorer did not cause the failure.
+
 Expectations do not prescribe prose or agent slugs. Bounded identity terms and
 evidence match concept instances; the scorer then evaluates concrete schema
 choices, required semantic metadata, source provenance and directed concept
