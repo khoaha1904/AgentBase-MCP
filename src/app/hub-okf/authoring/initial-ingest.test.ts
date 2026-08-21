@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { loadOkfBundle, validateOkfRelationships } from "../../../core/knowledge/index.ts";
+import { loadOkfBundle, parseConceptDocument, validateOkfRelationships } from "../../../core/knowledge/index.ts";
 import { runGit } from "../../../providers/github-hub/index.ts";
 import { createHubRuntimeActions } from "../query/runtime-actions.ts";
 
@@ -101,6 +101,11 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011] preparation renders one
         strictSourceIdentities: new Set(["flows/publish-vehicle-event"]) },
     );
     assert.match(unfilled.failures.join("\n"), /flow_steps must be a non-empty list/);
+    const malformedFlow = parseConceptDocument("flows/malformed.md", fs.readFileSync(
+      path.join(prepared.bundleRoot, "flows/publish-vehicle-event.md"), "utf8",
+    ).replace("flow_steps: []", "flow_steps:\n  - { order: 1, from: systems/vehicle-events, action: invokes, to: components/publisher, mode: asynchronous, evidence: [flow-docs] }"));
+    assert.match(validateOkfRelationships([{ identity: "flows/malformed", concept: malformedFlow }]).failures.join("\n"),
+      /requires order \(positive integer\), source, action, target and mode/);
     const flowPath = path.join(prepared.bundleRoot, "flows/publish-vehicle-event.md");
     fs.writeFileSync(flowPath, fs.readFileSync(flowPath, "utf8")
       .replace("flow_steps: []", [

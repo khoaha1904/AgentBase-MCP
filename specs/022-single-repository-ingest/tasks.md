@@ -156,6 +156,8 @@ and record reproducible evidence.
 - [x] T051 Retain owner-authorized V15 run `2026-08-21T135125Z` and classify its
   successful Terraform provenance separately from the Flow authoring-contract
   failure; do not run a replacement benchmark
+- [x] T052 Fix AB-SCHEMA-041 by publishing the exact Flow-step field shape and
+  actionable malformed-step diagnostic in the existing schema contract
 
 ---
 

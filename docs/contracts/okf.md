@@ -163,8 +163,10 @@ Normative OKF source is pinned to commit
 - **AB-SCHEMA-020** — Every new canonical relationship references one or more
   stable source IDs from the owning concept. Business Flow `flow_steps` identify
   contiguous order, exact endpoints, one canonical action, sync/async mode and
-  evidence. Invalid endpoints, modes, evidence or known-schema predicates fail
-  authoring validation.
+  evidence. Released Flow guidance exposes the exact
+  `order/source/action/target/mode/evidence` serialized shape. Invalid endpoints,
+  modes, evidence or known-schema predicates fail authoring validation with an
+  actionable diagnostic.
 - **AB-INGEST-011** — Initial Ingest preparation renders editable skeletons for
   promoted candidates. A Flow skeleton contains `flow_steps: []` as an explicit
   edit point because endpoints cannot be inferred safely; preparation may return

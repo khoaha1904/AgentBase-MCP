@@ -61,4 +61,10 @@ agent guessed incompatible keys across three validation calls and exhausted the
 one-repair lifecycle. No bundle was finalized or scored. This is an MCP
 authoring-contract defect, separate from OKF quality and benchmark scoring.
 
+AB-SCHEMA-041 now fixes that deterministic contract: released Flow guidance
+publishes `order/source/action/target/mode/evidence`, and malformed steps name
+the required scalar fields. The complete offline gate passes 50/50 tests with
+no new parser, dependency or test case count. Model requalification is the next
+separately authorized evidence.
+
 Most recent completed capability: `021-agentstack-foundation`.

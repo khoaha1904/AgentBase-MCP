@@ -44,7 +44,9 @@ test("[AB-SCHEMA-030][AB-SCHEMA-038] schemas describe useful boundaries rather t
   assert.match(getOkfConceptSchema("System")?.evidenceRequirements.join(" ") ?? "", /cooperating/);
   assert.equal(getOkfConceptSchema("Server"), undefined);
   assert.equal(getOkfConceptSchema("Queue"), undefined);
-  assert.ok(getOkfConceptSchema("Flow")?.flowStepGuidance?.actions.includes("invokes"));
+  const flowGuidance = getOkfConceptSchema("Flow")?.flowStepGuidance;
+  assert.ok(flowGuidance?.actions.includes("invokes"));
+  assert.deepEqual(flowGuidance?.requiredFields, ["order", "source", "action", "target", "mode", "evidence"]);
 });
 
 test("[AB-SCHEMA-035] catalog-6 authoring types fail while foreign types remain open-world", () => {

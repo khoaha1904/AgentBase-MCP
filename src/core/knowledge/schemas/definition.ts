@@ -14,7 +14,12 @@ export type OkfConceptSchema = Readonly<{
   investigationQuestions: readonly string[];
   metadataGuidance: readonly Readonly<{ field: string; evidence: string; requiredWhenSupported: boolean }>[];
   relationshipGuidance: readonly Readonly<{ kind: string; targetTypes: readonly string[]; evidence: string }>[];
-  flowStepGuidance?: Readonly<{ actions: readonly string[]; modes: readonly string[]; evidence: string }>;
+  flowStepGuidance?: Readonly<{
+    requiredFields: readonly ["order", "source", "action", "target", "mode", "evidence"];
+    actions: readonly string[];
+    modes: readonly string[];
+    evidence: string;
+  }>;
   optionalEnrichment: readonly string[];
   limitationGuidance: string;
 }>;

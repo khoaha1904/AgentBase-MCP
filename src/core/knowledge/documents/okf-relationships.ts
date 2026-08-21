@@ -106,7 +106,7 @@ function validateFlowSteps(
     if (!step || typeof order !== "number" || !Number.isSafeInteger(order) || order < 1
       || typeof source !== "string" || typeof action !== "string"
       || typeof target !== "string" || typeof mode !== "string") {
-      failures.push(`${concept.path}: flow_steps entry is malformed`);
+      failures.push(`${concept.path}: flow_steps entry requires order (positive integer), source, action, target and mode`);
       continue;
     }
     if (orders.has(order)) failures.push(`${concept.path}: flow_steps order ${order} is duplicated`);

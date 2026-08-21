@@ -278,6 +278,10 @@ accepted.
   provider resource reached through that module MUST cite the referenced
   Terraform file with `source_tool: terraform`. SAM/CloudFormation/YAML is
   unsupported and MUST NOT be accepted under either source-tool label.
+- **AB-SCHEMA-041**: Released Flow schema guidance MUST expose the exact
+  `order/source/action/target/mode/evidence` field shape consumed by changed-set
+  and final validation. A malformed step diagnostic MUST name the required
+  scalar fields so the single permitted repair can be deterministic.
 - **AB-CLAIM-005**: A small directly evidenced non-sensitive scalar or
   identifier MAY be retained as an optional observed snapshot only with its
   claim, exact source, source revision and observed time. It MUST be bounded,

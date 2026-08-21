@@ -11,6 +11,7 @@ export const INFRASTRUCTURE_SCHEMAS: readonly OkfConceptSchema[] = [
       requiredFrontmatter: ["title", "description", "generated", "sources", "flow_steps"],
       relationshipGuidance: [{ kind: "part-of", targetTypes: ["Domain", "System"], evidence: "business or system boundary evidence" }],
       flowStepGuidance: {
+        requiredFields: ["order", "source", "action", "target", "mode", "evidence"],
         actions: ["invokes", "publishes", "delivers", "reads", "writes"],
         modes: ["synchronous", "asynchronous"],
         evidence: "ordered interactions and source evidence",

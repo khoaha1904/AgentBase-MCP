@@ -547,3 +547,15 @@ Classification: source provenance correction passed; OKF semantic scoring was
 unavailable; MCP authoring contract failed; benchmark scorer did not cause the
 failure. A further model run requires the Flow contract/diagnostic correction
 and separate owner authorization.
+
+## Flow-step authoring contract correction — 2026-08-21
+
+AB-SCHEMA-041 adds the exact
+`order/source/action/target/mode/evidence` field list to released Flow guidance
+and replaces the generic malformed-step message with the required scalar
+fields. The retained `from/to` failure mode is covered inside the existing
+Initial Ingest design test; the catalog contract checks the public field list.
+
+`npm run verify` passes all specification, TypeScript, dependency, Knip,
+Gitleaks, 50/50 test and diff gates. No test count, parser, dependency or
+runtime workflow was added.
