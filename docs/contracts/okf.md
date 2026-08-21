@@ -242,7 +242,10 @@ Normative OKF source is pinned to commit
   Evidence-bound standalone roles may return suggested; internal resource
   evidence returns embedded; conflicts remain ambiguous. Suggested skeletons
   retain a proposal-review limitation and receive no confidence score or
-  automatic Accept/Publish authority.
+  automatic Accept/Publish authority. An explicit `embedded` disposition also
+  overrides redundant standalone suggested-type or promotion hints; guidance
+  reports those ignored hints without creating a standalone identity. Parent,
+  evidence ownership and field-shape validation remain strict.
 - **AB-SCHEMA-037** — Queue, topic, event-bus, table, bucket, database and host
   evidence defaults to a searchable evidence table inside its Function,
   Component or System parent. It may promote to Interface for an independent

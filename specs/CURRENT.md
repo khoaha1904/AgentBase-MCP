@@ -203,4 +203,11 @@ the evidenced canonical `System implemented-in Repository` direction. The
 focused reproduction and full 50-test gate pass; no other relationship rule was
 relaxed.
 
+Probe `2026-08-21T163001Z` did not reach that relation: it stopped after 85,541
+ms because embedded candidates also carried redundant standalone hints. This
+exposed a separate AB-SCHEMA-036 inconsistency—disposition was documented as
+authoritative but request shape failed first. Embedded now wins safely, produces
+no concept and reports ignored hints while parent/evidence/shape checks stay
+strict. No bundle was scored and no replica ran.
+
 Most recent completed capability: `021-agentstack-foundation`.

@@ -141,6 +141,10 @@ is the portable archive.
 - AB-SCHEMA-045 now judges only the evidenced canonical
   `System implemented-in Repository` direction. Focused and full offline gates
   pass without relaxing any other relationship.
+- Probe `2026-08-21T163001Z` then exposed AB-SCHEMA-036 drift: explicitly
+  embedded candidates carried redundant standalone hints and MCP failed before
+  Prepare. Embedded disposition now wins, reports the ignored hints and creates
+  no identity; strict parent/evidence/shape validation remains.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.

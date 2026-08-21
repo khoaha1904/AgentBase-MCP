@@ -59,7 +59,7 @@ test("[AB-SCHEMA-032][AB-SCHEMA-037] supporting Terraform resources remain embed
   }
 });
 
-test("[AB-SCHEMA-031][AB-SCHEMA-036] embedded candidates require a concept parent and cannot request a schema", () => {
+test("[AB-SCHEMA-031][AB-SCHEMA-036] embedded candidates require a parent and override standalone hints", () => {
   const noParent = resource("queue", "aws_sqs_queue", "embedded");
   assert.throws(() => getOkfAuthoringGuidance(noParent), /embedded candidate parent must name a concept candidate/);
   const input = resource("queue", "aws_sqs_queue", "embedded");
@@ -67,8 +67,12 @@ test("[AB-SCHEMA-031][AB-SCHEMA-036] embedded candidates require a concept paren
     queryValue: "Independent runtime", evidenceIds: ["docs.parent"], disposition: "concept" });
   input.semanticObservations.push({ id: "docs.parent", candidateId: "parent", role: "implementation" as const,
     signal: "runtime function", source });
-  (input.candidates[1] as Record<string, unknown>).suggestedType = "Resource";
-  assert.throws(() => getOkfAuthoringGuidance(input), /embedded candidate cannot request a standalone schema/);
+  Object.assign(input.candidates[1] as Record<string, unknown>, { suggestedType: "Resource",
+    promotion: { basis: "operational", evidenceIds: ["evidence.queue"] } });
+  const recommendation = getOkfAuthoringGuidance(input).recommendations[1]!;
+  assert.equal(recommendation.status, "embedded");
+  assert.equal(recommendation.schema, undefined);
+  assert.match(recommendation.limitations.join(" "), /embedded disposition overrides/i);
 });
 
 test("[AB-SCHEMA-034][AB-SCHEMA-036] semantic standalone intent remains suggested", () => {

@@ -130,16 +130,13 @@ function validateRequest(request: OkfAuthoringGuidanceRequest): void {
         throw new Error("candidate suggested type must name a released Initial Ingest schema");
       }
     }
-    if (candidate.disposition === "embedded" && candidate.suggestedType !== undefined) {
-      throw new Error("embedded candidate cannot request a standalone schema");
-    }
     if (candidate.promotion !== undefined) {
       requireExactKeys(candidate.promotion, ["basis", "evidenceIds"], "candidate promotion");
       if (!PROMOTION_BASES.includes(candidate.promotion.basis)) throw new Error("candidate promotion basis is invalid");
       if (!candidate.promotion.evidenceIds.length || candidate.promotion.evidenceIds.length > 64) {
         throw new Error("candidate promotion evidence IDs must be a bounded non-empty list");
       }
-      if (candidate.disposition !== "concept" || candidate.suggestedType === undefined) {
+      if (candidate.disposition === "concept" && candidate.suggestedType === undefined) {
         throw new Error("candidate promotion requires standalone suggested concept intent");
       }
     }
@@ -190,7 +187,7 @@ function validateRequest(request: OkfAuthoringGuidanceRequest): void {
     if (candidate.promotion?.evidenceIds.some((id) => !candidate.evidenceIds.includes(id))) {
       throw new Error(`candidate ${candidate.id} promotion must cite candidate-owned evidence`);
     }
-    if (["Interface", "Resource"].includes(candidate.suggestedType ?? "") && candidate.promotion
+    if (candidate.disposition === "concept" && ["Interface", "Resource"].includes(candidate.suggestedType ?? "") && candidate.promotion
       && !candidate.evidenceIds.some((id) => request.semanticObservations
         .some((item) => item.id === id && item.candidateId === candidate.id))) {
       throw new Error(`candidate ${candidate.id} Interface/Resource promotion requires semantic evidence`);
@@ -238,17 +235,21 @@ export function getOkfAuthoringGuidance(request: OkfAuthoringGuidanceRequest): O
       limitations: [...limitations, ...(distinctTechnologies.size > 1 ? ["evidence identifies multiple technology resources"] : [])],
     };
     if (candidate.disposition === "embedded") {
+      const ignoredStandaloneHints = candidate.suggestedType !== undefined || candidate.promotion !== undefined
+        ? ["embedded disposition overrides standalone suggested type and promotion hints"] : [];
       if (!mapped.length) return {
         ...base,
         parentCandidateId: candidate.parentCandidateId!,
         status: "unsupported",
-        limitations: [...limitations, "embedded technology kind is not supported by a released provider profile"],
+        limitations: [...limitations, ...ignoredStandaloneHints,
+          "embedded technology kind is not supported by a released provider profile"],
       };
       return {
         ...base,
         parentCandidateId: candidate.parentCandidateId!,
         status: "embedded",
-        limitations: [...limitations, `embedded in ${candidate.parentCandidateId}; technology detection does not promote a concept`],
+        limitations: [...limitations, ...ignoredStandaloneHints,
+          `embedded in ${candidate.parentCandidateId}; technology detection does not promote a concept`],
       };
     }
     const exactFunction = mapped.length === 1 && mapped[0]?.mapping?.product === "lambda";

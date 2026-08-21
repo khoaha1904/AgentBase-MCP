@@ -231,6 +231,11 @@ and record reproducible evidence.
 - [x] T074 [US2] Add AB-SCHEMA-045 System-to-Repository source ownership to the
   released schema, preserve strict evidence/link/target validation and cover it
   in the existing catalog boundary test
+- [x] T075 Retain probe `2026-08-21T163001Z`, confirm it does not exercise the
+  relation fix, classify embedded-plus-standalone hints against AB-SCHEMA-036
+  and stop before a replica
+- [x] T076 [US2] Make explicit embedded disposition authoritative over redundant
+  standalone hints while preserving strict parent, evidence and field validation
 
 ---
 

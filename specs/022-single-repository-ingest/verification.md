@@ -804,3 +804,17 @@ AB-SCHEMA-045 now adds the canonical source-ownership direction to released
 System guidance. Repository is the only allowed target and ordinary exact
 evidence plus resolving-link validation remains unchanged. The focused catalog
 check and full 50-test gate pass offline.
+
+## V15 System-relation replacement probe — 2026-08-21
+
+Owner-authorized probe `2026-08-21T163001Z` stopped after 85,541 ms at schema
+guidance and did not exercise AB-SCHEMA-045. The agent explicitly marked the
+DynamoDB table and schedule as embedded but redundantly attached standalone
+Resource suggestions and promotion records. MCP rejected the whole request
+before Prepare.
+
+AB-SCHEMA-036 says disposition is authoritative, so the fatal response was a
+deterministic contract inconsistency rather than OKF quality or scorer behavior.
+Guidance now keeps the items embedded, reports the ignored standalone hints and
+creates no standalone identity. Parent, evidence ownership, valid field shape
+and exact source checks remain hard. The focused reproduction passes.

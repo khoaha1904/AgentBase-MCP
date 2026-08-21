@@ -261,7 +261,10 @@ accepted.
   standalone roles MAY return `suggested`; non-promoted cloud resources MUST
   return `embedded` with their parent and sources. Unsupported or conflicting
   promotion evidence MUST remain `ambiguous`/`unsupported`. Suggested skeletons
-  require proposal review and MUST NOT be auto-accepted or published.
+  require proposal review and MUST NOT be auto-accepted or published. Explicit
+  `embedded` disposition MUST override redundant standalone suggested-type or
+  promotion hints and report them as ignored without creating a concept;
+  parent, evidence ownership and field-shape validation MUST remain strict.
 - **AB-SCHEMA-037**: SQS queues, SNS topics, event buses, tables, buckets,
   databases and compute hosts MUST default to embedded knowledge in the
   Function, Component or System that uses them. A resource MAY become a
