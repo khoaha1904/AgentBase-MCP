@@ -300,8 +300,11 @@ accepted.
   knowledge can remain embedded in a useful parent. Other suggested roles MAY
   carry candidate-owned semantic or structured promotion evidence as
   transparent intent, but exact structured mapping remains authoritative.
-  Interface/Resource promotion MUST include semantic evidence. Keyword-based
-  role selection MUST remain advisory and MUST NOT be a validity gate.
+  The Interface/Resource candidate MUST include semantic evidence. Its nested
+  promotion evidence list MAY cite any candidate-owned semantic or structured
+  evidence that proves the compatible basis; it MUST NOT be required to repeat
+  the semantic observation ID. Keyword-based role selection MUST remain
+  advisory and MUST NOT be a validity gate.
 - **AB-SCHEMA-043**: Exact supported Terraform/Terragrunt observations SHOULD be
   retained when readily available. Their omission MUST be reported as a
   coverage diagnostic and MUST NOT invalidate an otherwise truthful partial

@@ -130,6 +130,9 @@ is the portable archive.
   whose candidate already had exact semantic evidence because the same semantic
   observation ID was not repeated inside `promotion.evidence_ids`. This is a
   request-shape restriction in MCP, not an OKF/scorer finding; no replica ran.
+- AB-SCHEMA-042 now removes that redundant nesting rule: semantic evidence is
+  checked at candidate scope while promotion evidence proves the compatible
+  basis. The retained request shape and full 50-test gate pass offline.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.

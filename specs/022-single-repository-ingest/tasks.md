@@ -222,6 +222,9 @@ and record reproducible evidence.
 - [x] T071 Retain probe `2026-08-21T161342Z`, classify its pre-authoring failure
   as a redundant Resource-promotion request-shape restriction in MCP, and stop
   before a replica under AB-BENCH-048
+- [x] T072 [US2] Fix AB-SCHEMA-042 at the shared guidance validator so exact
+  candidate-owned semantic evidence need not be repeated inside the promotion
+  evidence list, and cover the retained probe shape in the existing test
 
 ---
 

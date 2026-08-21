@@ -109,6 +109,15 @@ test("[AB-SCHEMA-033][AB-SCHEMA-036][AB-SCHEMA-042] detection does not promote n
   assert.equal(promoted.status, "suggested");
   assert.equal(promoted.schema?.type, "Interface");
 
+  const promotedResource = getOkfAuthoringGuidance({ ...input,
+    candidates: [{ ...input.candidates[0]!, evidenceIds: ["evidence.queue", "docs.operation"],
+      suggestedType: "Resource", promotion: { basis: "operational" as const, evidenceIds: ["evidence.queue"] } }],
+    semanticObservations: [{ id: "docs.operation", candidateId: "queue", role: "implementation" as const,
+      signal: "Runtime writes durable operational state to this boundary", source }],
+  }).recommendations[0]!;
+  assert.equal(promotedResource.status, "suggested");
+  assert.equal(promotedResource.schema?.type, "Resource");
+
   assert.throws(() => getOkfAuthoringGuidance({ ...input,
     candidates: [{ ...input.candidates[0]!, suggestedType: "Resource",
       promotion: { basis: "operational" as const, evidenceIds: ["evidence.queue"] } }],

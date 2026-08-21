@@ -185,4 +185,9 @@ MCP additionally required that semantic observation ID to be repeated inside
 there instead. This is a redundant MCP request-shape restriction, not an OKF or
 scorer result. AB-BENCH-048 stopped before a replica.
 
+That restriction is fixed offline under AB-SCHEMA-042. Candidate-level semantic
+evidence now establishes semantic support while promotion evidence independently
+proves its compatible basis. The exact reproduction and the full 50-test gate
+pass; a new model probe remains separate.
+
 Most recent completed capability: `021-agentstack-foundation`.

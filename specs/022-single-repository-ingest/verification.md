@@ -779,3 +779,8 @@ failure. Candidate ownership, compatible operational promotion basis and exact
 semantic evidence were present; the remaining requirement concerns which
 nested evidence-ID list repeats the already supplied observation. AB-BENCH-048
 therefore stopped the sequence before a replica.
+
+AB-SCHEMA-042 now checks semantic support across the candidate's evidence list;
+the promotion evidence list may independently cite candidate-owned structured
+evidence proving its basis. The exact retained request shape passes, genuine
+missing-semantic input remains rejected and `npm run verify` passes 50/50 tests.
