@@ -236,6 +236,10 @@ and record reproducible evidence.
   and stop before a replica
 - [x] T076 [US2] Make explicit embedded disposition authoritative over redundant
   standalone hints while preserving strict parent, evidence and field validation
+- [x] T077 Retain probe `2026-08-21T163552Z`, confirm the complete lifecycle and
+  100% applicable semantic coverage, classify the out-of-range repository span
+  as a hard provenance defect plus an MCP validation blind spot, and stop before
+  a replica
 
 ---
 

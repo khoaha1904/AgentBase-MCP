@@ -210,4 +210,12 @@ authoritative but request shape failed first. Embedded now wins safely, produces
 no concept and reports ignored hints while parent/evidence/shape checks stay
 strict. No bundle was scored and no replica ran.
 
+Replacement probe `2026-08-21T163552Z` then completed the lifecycle and produced
+the intended four-concept sparse bundle with 100% applicable concept, schema,
+provenance, relationship and embedded-knowledge coverage plus clean owner
+review. It remains invalid because one source cites `handler.py#L1042-L1114`
+while the pinned file has only 1065 lines. The scorer caught this hard
+provenance error, but MCP Validate/Finalize did not; that source-span trust
+boundary is the next blocker. No replica ran.
+
 Most recent completed capability: `021-agentstack-foundation`.

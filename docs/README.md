@@ -145,6 +145,11 @@ is the portable archive.
   embedded candidates carried redundant standalone hints and MCP failed before
   Prepare. Embedded disposition now wins, reports the ignored hints and creates
   no identity; strict parent/evidence/shape validation remains.
+- Replacement probe `2026-08-21T163552Z` completes the lifecycle with the
+  intended four sparse concepts and 100% applicable quality ratios, but is
+  invalid because one handler source span ends beyond the pinned file. The
+  scorer caught it while MCP Validate/Finalize did not, exposing a real
+  provenance-validation blind spot; no replica ran.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.

@@ -818,3 +818,19 @@ deterministic contract inconsistency rather than OKF quality or scorer behavior.
 Guidance now keeps the items embedded, reports the ignored standalone hints and
 creates no standalone identity. Parent, evidence ownership, valid field shape
 and exact source checks remain hard. The focused reproduction passes.
+
+## V15 embedded-precedence replacement probe — 2026-08-21
+
+Owner-authorized probe `2026-08-21T163552Z` completed the full lifecycle in
+186,275 ms. It authored the intended sparse Domain, Repository, System and
+Function, kept DynamoDB/schedule/delivery knowledge embedded, avoided artificial
+Flow/Resource/Interface concepts and scored 100% on every applicable reference,
+provenance, relationship and embedded-knowledge ratio. Owner review found no
+usability issue.
+
+The bundle is nevertheless `invalid`: the Function cites
+`handler.py#L1042-L1114`, while the pinned file has only 1065 lines. The
+benchmark source-span check correctly rejected it, but MCP changed-set and
+final proposal validation allowed the impossible source range through. This is
+a hard OKF provenance defect and an MCP trust-boundary blind spot, not a scorer
+or completeness issue. AB-BENCH-048 stopped before a replica.
