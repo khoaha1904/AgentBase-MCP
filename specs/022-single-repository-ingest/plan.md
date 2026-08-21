@@ -313,6 +313,12 @@ compare semantic outputs. Run three is only the existing final-acceptance gate.
 Parallel model runs are excluded because shared resource/cache/rate contention
 would confound model variance.
 
+The post-probe navigation correction stays at the existing bundle trust
+boundary. `loadOkfBundle` rejects a repeated normalized index target for every
+workflow, while Initial Ingest and V15 guidance clarify that Prepare already
+populates navigation. No separate index validator, repair loop or content quota
+is added; new Domains remain sparse and evidence-bound.
+
 Constitution re-check: this slice stays deterministic, local, provider-neutral
 and non-destructive. It adds no dependency, credential, migration, process or
 network behavior and preserves the 50-test design-level gate.

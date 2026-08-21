@@ -55,10 +55,19 @@ function validateIndex(relative: string, source: string): string | undefined {
   }
   const nonblank = parsed.body.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
   let headingSeen = false;
+  const targets = new Set<string>();
   for (const line of nonblank) {
     if (/^#{1,6}\s+\S/.test(line)) headingSeen = true;
-    else if (/^\*\s+\[[^\]]+\]\([^)]+\)(?:\s+-\s+.+)?$/.test(line) && headingSeen) continue;
-    else throw new OkfValidationError("INDEX_STRUCTURE", `${relative}: invalid index line: ${line}`);
+    else {
+      const navigation = line.match(/^\*\s+\[[^\]]+\]\(([^)]+)\)(?:\s+-\s+.+)?$/);
+      if (navigation && headingSeen) {
+        const target = path.posix.normalize(navigation[1]!);
+        if (targets.has(target)) throw new OkfValidationError("INDEX_DUPLICATE", `${relative}: duplicate index target: ${target}`);
+        targets.add(target);
+        continue;
+      }
+      throw new OkfValidationError("INDEX_STRUCTURE", `${relative}: invalid index line: ${line}`);
+    }
   }
   if (nonblank.length && !headingSeen) throw new OkfValidationError("INDEX_STRUCTURE", `${relative}: index requires a heading`);
   const version = parsed.frontmatter?.okf_version;

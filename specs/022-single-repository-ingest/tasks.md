@@ -200,6 +200,10 @@ and record reproducible evidence.
 - [x] T065 Retain sequential probe `2026-08-21T152548Z`, manually inspect its
   scored bundle, classify duplicate generated category entries as an OKF
   authoring defect plus validator/scorer blind spot, and stop before a replica
+- [x] T066 [US2] Record AB-INGEST-013, reject repeated index targets in the
+  shared OKF bundle loader, clarify prepared-navigation ownership in product and
+  qualification guidance, and cover the observed reproduction in the existing
+  lifecycle test without adding a new test case
 
 ---
 

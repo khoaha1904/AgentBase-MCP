@@ -26,6 +26,7 @@
 - [x] CHK012 Does the one-runtime qualification avoid requiring a Flow or endpoint concepts solely to improve coverage? [Consistency, SC-008]
 - [x] CHK013 Are zero-denominator metrics, unjudged identities and final validation coverage objectively reported? [Measurability, SC-008]
 - [x] CHK014 Does qualification stop after a hard/obvious probe failure and reserve sequential replicas for stability or final acceptance? [Clarity, AB-BENCH-048]
+- [x] CHK015 Does Prepare own initial navigation while shared validation rejects repeated targets without forcing invented Domain prose? [Consistency, AB-INGEST-012..013]
 
 ## Notes
 

@@ -133,4 +133,12 @@ by Prepare, duplicating every category-index row, and the deterministic
 validator/scorer failed to detect that defect. The Domain body also remains
 shallow. AB-BENCH-048 stopped the sequence; no replica ran.
 
+AB-INGEST-013 corrects that finding offline at the shared OKF boundary. Every
+index now rejects a repeated normalized Markdown target, and authoring guidance
+states that Prepare has already populated required navigation. The first Domain
+is intentionally navigation-first: it may summarize only the scope contributed
+by current evidence and build up over later ingests, without fabricated domain
+claims. The existing Initial Ingest lifecycle test covers the exact duplicate
+reproduction; no new test case or dependency is added.
+
 Most recent completed capability: `021-agentstack-foundation`.

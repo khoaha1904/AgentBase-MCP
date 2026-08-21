@@ -49,7 +49,11 @@ the repository, not an authoring prompt. Stop before Accept or Publish.
    primary Domain as an owner-evidenced `Repository part-of Domain` relation.
    Run one bounded active-Hub identity match, then follow `agentbase-okf` inside
    the returned workspace. Enrich the returned OKF skeletons instead of
-   rebuilding their frontmatter or navigation from memory. Preserve the visible
+   rebuilding their frontmatter or navigation from memory. Prepare has already
+   populated root and category indexes; preserve those entries and never append
+   an existing navigation target. Keep a newly confirmed Domain sparse and
+   summarize only the current repository-contributed scope supported by evidence;
+   never invent a complete domain definition. Preserve the visible
    review limitation on every suggested skeleton. Preserve the one prepared
    Embedded Knowledge table in its parent. An embedded item has no OKF identity,
    standalone file, navigation or graph relationship. Create only useful

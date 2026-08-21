@@ -216,7 +216,11 @@ accepted.
   with owner evidence so canonical inbound Domain navigation is derivable.
 - **AB-INGEST-012**: A newly prepared Domain skeleton MUST list every newly
   prepared System that belongs to it. Preparation MUST NOT rewrite an existing
-  Domain document; later authoring remains proposal-reviewed.
+  Domain document; later authoring remains proposal-reviewed. Its initial body
+  MUST remain sparse and evidence-bound rather than inventing a full Domain.
+- **AB-INGEST-013**: Prepare MUST pre-populate required root and category
+  navigation. Agent authoring MUST preserve existing rows, and bundle validation
+  MUST reject a repeated normalized target within one index.
 - **AB-SCHEMA-030**: Catalog `7.0.0` MUST expose eight provider-neutral Initial
   Ingest roles: `Repository`, `Domain`, `System`, `Component`, `Function`,
   `Interface`, `Flow` and `Resource`. `Entity` and `Metric` remain

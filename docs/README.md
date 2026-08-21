@@ -101,6 +101,10 @@ is the portable archive.
   details embedded and omitted an artificial Flow. Manual review found every
   generated category index entry duplicated, while validation/scoring missed
   the defect; AB-BENCH-048 therefore stopped the sequence before a replica.
+- AB-INGEST-013 now rejects repeated navigation targets in the shared bundle
+  loader and tells agents that Prepare already owns root/category entries. A
+  first Domain stays sparse and summarizes only current evidence instead of
+  inventing a complete domain definition.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.

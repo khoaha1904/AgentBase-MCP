@@ -692,3 +692,15 @@ body also remains too shallow for owner acceptance. Duplicate navigation is an
 OKF quality defect; validation/scoring accepting it is a separate benchmark
 blind spot. Under AB-BENCH-048 this clear blocker stops qualification, so no
 sequential replica ran.
+
+AB-INGEST-013 fixes the observed blocker at the shared bundle loader. A repeated
+normalized Markdown target in any index now raises `INDEX_DUPLICATE`; the
+Initial Ingest and V15 instructions state that Prepare already populated the
+navigation. The existing lifecycle test reproduces the exact append and proves
+bundle loading rejects it, then restores the valid bundle and completes
+Finalize. Domain guidance remains sparse/evidence-bound rather than adding a
+minimum word count that would reward fabricated scope.
+
+Offline verification passes specification checks, TypeScript, dependency
+rules, Knip, Gitleaks, `git diff --check` and all 50 design-level tests. No
+model benchmark, Accept, Publish, provider CLI or Hub PR operation ran.

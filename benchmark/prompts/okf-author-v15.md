@@ -52,7 +52,10 @@ expectations or previous results.
 10. Keep Hub navigation progressive. Root `index.md` contains only
     `okf_version: "0.2"`, heading `# AgentBase-Hub`, and at most three literal
     `* ` entries to existing Domain/System/Repository indexes. Category indexes
-    have no frontmatter and every entry also starts with literal `* `.
+    have no frontmatter and every entry also starts with literal `* `. Prepare
+    already populated required navigation; preserve it and never append a target
+    already present. Keep a new Domain sparse and summarize only the current
+    repository-contributed scope supported by evidence.
 11. Write useful overview Markdown explaining purpose, boundaries, interactions,
     embedded resources and limitations; do not copy source, create stubs or build
     a second Code Graph. A valid explicitly partial output is success.

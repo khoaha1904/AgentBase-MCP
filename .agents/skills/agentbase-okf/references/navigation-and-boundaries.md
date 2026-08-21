@@ -3,6 +3,8 @@
 ## Navigation
 
 - Only the root `index.md` may have OKF frontmatter; category indexes MUST NOT have frontmatter and contain navigation Markdown only.
+- Initial Ingest Prepare pre-populates required root/category navigation. Preserve
+  those rows and never append a target already present in the same index.
 - Keep one canonical concept file; indexes link to it and never copy it.
 - Root navigation grows with Domain and fallback entrypoints, not every entity.
 - A Domain concept links its Systems and critical Flows. A System concept links
@@ -21,6 +23,9 @@
 
 - Create a Domain only from explicit business-boundary evidence or owner
   guidance; never infer one from a repository or product name.
+- A new Domain may be navigation-first. Summarize only the scope contributed by
+  current evidence and let later repository ingest build it up; never invent a
+  full domain definition to make the first draft look complete.
 - For a prepare-confirmed Domain, add its returned owner-guidance resource to
   `sources`, and make each System `part-of` relationship cite the matching
   source ID. Repository resources still support code/system claims; they do not

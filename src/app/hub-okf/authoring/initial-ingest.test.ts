@@ -8,7 +8,7 @@ import { loadOkfBundle, parseConceptDocument, validateOkfRelationships } from ".
 import { runGit } from "../../../providers/github-hub/index.ts";
 import { createHubRuntimeActions } from "../query/runtime-actions.ts";
 
-test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011] preparation renders one generic inspectable skeleton bundle and stops", async () => {
+test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013] preparation renders one generic inspectable skeleton bundle and stops", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-initial-ingest-"));
   const source = path.join(root, "vehicle-events");
   const environment = { HOME: root, XDG_CONFIG_HOME: path.join(root, "config"), XDG_DATA_HOME: path.join(root, "data") };
@@ -95,6 +95,12 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011] preparation renders one
     ]);
     assert.match(skeletonBundle.concepts.get("domains/vehicle-data")?.body ?? "",
       /# Systems[\s\S]*\[Vehicle-events\]\(\.\.\/systems\/vehicle-events\.md\)/);
+    const componentsIndex = path.join(prepared.bundleRoot, "components", "index.md");
+    const preparedNavigation = fs.readFileSync(componentsIndex, "utf8");
+    fs.appendFileSync(componentsIndex, "\n* [Publisher](./publisher.md) - Function\n");
+    assert.throws(() => loadOkfBundle(prepared.bundleRoot, { requireAgentBaseRootIndex: true }),
+      /components\/index\.md: duplicate index target: publisher\.md/);
+    fs.writeFileSync(componentsIndex, preparedNavigation);
     const flow = skeletonBundle.concepts.get("flows/publish-vehicle-event");
     assert.deepEqual(flow?.frontmatter.flow_steps, []);
     const unfilled = validateOkfRelationships(

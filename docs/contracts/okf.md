@@ -303,3 +303,9 @@ Normative OKF source is pinned to commit
   enriches these files rather than reconstructing OKF frontmatter.
 - **AB-INGEST-012** — A new confirmed Domain skeleton lists every System newly
   prepared under it. Preparation never rewrites an existing Domain document.
+  Its initial overview stays sparse and describes only current owner/repository
+  evidence; later ingests may build it up without inventing a complete domain.
+- **AB-INGEST-013** — Initial Ingest Prepare owns and pre-populates required
+  root/category navigation. Agent authoring preserves those rows rather than
+  appending known targets, and bundle validation rejects a repeated normalized
+  navigation target within one index.
