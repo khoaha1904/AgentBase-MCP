@@ -183,6 +183,10 @@ and record reproducible evidence.
   current single-runtime expectation
 - [x] T060 Run focused tests and `npm run verify`, record offline evidence,
   converge the active artifacts and do not run a model benchmark
+- [x] T061 Retain owner-authorized run `2026-08-21T150816Z`, classify its
+  Function promotion-field rejection as an AB-SCHEMA-042 contract-usability
+  defect, permit non-authoritative promotion intent on other suggested roles
+  and verify offline without a replacement run
 
 ---
 

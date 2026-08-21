@@ -293,7 +293,9 @@ accepted.
   evidence that also supports that schema role. Resource declaration evidence,
   caller prose or `suggested_type` alone MUST NOT create a skeleton. When this
   boundary is not established, guidance MUST return no standalone schema so the
-  knowledge can remain embedded in a useful parent.
+  knowledge can remain embedded in a useful parent. Other suggested roles MAY
+  carry promotion evidence as transparent intent, but it MUST NOT override
+  semantic or structured schema selection.
 - **AB-CLAIM-005**: A small directly evidenced non-sensitive scalar or
   identifier MAY be retained as an optional observed snapshot only with its
   claim, exact source, source revision and observed time. It MUST be bounded,

@@ -631,3 +631,18 @@ is measured as embedded knowledge under System/Function. Focused tests pass
 19/19 and `npm run verify` passes specification, TypeScript, dependency, Knip,
 Gitleaks, 50/50 design-level test and diff gates.
 No model benchmark, Accept, Publish, provider CLI or Hub PR operation ran.
+
+## V15 promotion-field qualification — 2026-08-21
+
+Owner-authorized run `2026-08-21T150816Z` stopped after 76,380 ms at its single
+guidance call. The agent correctly kept DynamoDB state and notification
+destinations embedded, but supplied candidate-owned operational promotion
+evidence for its Function intent. MCP rejected the whole request because the
+new field was accepted only for Interface/Resource. No proposal or OKF bundle
+was created, so this run measures a guidance-contract usability defect rather
+than OKF quality.
+
+AB-SCHEMA-042 is clarified minimally: other suggested concept roles may retain
+candidate-owned promotion evidence as transparent intent, while only
+Interface/Resource use it as a mandatory promotion gate and it never overrides
+schema selection. No benchmark replacement is included in this correction.

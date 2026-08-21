@@ -84,6 +84,10 @@ is the portable archive.
   `n/a`, name unjudged identities, require final validation coverage and no
   longer require Flow for the one-runtime Terraform fixture. Requalification
   remains separately owner-authorized.
+- V15 run `2026-08-21T150816Z` retained a guidance-contract failure: the agent
+  correctly embedded DynamoDB/delivery details but MCP rejected promotion
+  evidence attached to Function intent. Other roles now accept that evidence as
+  non-authoritative intent; the strict Interface/Resource gate is unchanged.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.

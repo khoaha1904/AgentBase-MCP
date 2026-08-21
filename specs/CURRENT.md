@@ -101,4 +101,13 @@ identities, requires the last changed-set validation to cover the finalized
 bundle and removes required Flow from the single-runtime fixture. Offline
 verification is the current gate; no replacement model benchmark has run.
 
+Owner-authorized run `2026-08-21T150816Z` then stopped at schema guidance after
+76,380 ms because the agent attached candidate-owned operational promotion
+evidence to Function intent. DynamoDB and delivery destinations were correctly
+kept embedded, but MCP rejected the complete request before Prepare. This is a
+new contract-usability defect, not scored OKF quality. AB-SCHEMA-042 now permits
+promotion evidence on other suggested roles as non-authoritative intent while
+retaining the strict Interface/Resource gate. Replacement qualification remains
+separately authorized.
+
 Most recent completed capability: `021-agentstack-foundation`.

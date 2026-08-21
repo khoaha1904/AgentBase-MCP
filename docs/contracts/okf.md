@@ -265,7 +265,8 @@ Normative OKF source is pinned to commit
   promotion basis plus exact candidate-owned semantic observations that select
   the requested role. Declaration evidence, caller prose and `suggested_type`
   alone return no standalone schema; insufficient knowledge remains suitable
-  for embedding in a useful parent.
+  for embedding in a useful parent. Other suggested roles may carry the same
+  evidence as transparent agent intent, but it never overrides schema selection.
 
 ## Single-repository Initial Ingest
 

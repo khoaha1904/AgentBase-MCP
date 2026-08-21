@@ -73,7 +73,7 @@ test("[AB-SCHEMA-034][AB-SCHEMA-036] semantic standalone intent remains suggeste
   const result = getOkfAuthoringGuidance({
     candidates: [{ id: "capability", identityHint: "health-aware", identityBasis: "README capability",
       queryValue: "Coordinates cooperating runtimes", evidenceIds: ["docs.capability"], disposition: "concept" as const,
-      suggestedType: "System" }],
+      suggestedType: "System", promotion: { basis: "operational" as const, evidenceIds: ["docs.capability"] } }],
     semanticObservations: [{ id: "docs.capability", candidateId: "capability", role: "documentation" as const,
       signal: "software system capability with cooperating components", source }],
     resourceObservations: [],

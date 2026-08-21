@@ -72,7 +72,8 @@ Standalone `Interface` or `Resource` intent additionally supplies
 `operational`; its evidence IDs must name semantic observations owned by that
 candidate. The basis must fit the requested role and the semantic observations
 must select that role. A resource declaration or suggested type alone returns
-no standalone schema.
+no standalone schema. Other suggested concept roles may carry the same
+candidate-owned evidence as transparent intent; it does not override selection.
 
 `source_tool` is `terraform` or `terragrunt` and must match the exact evidence
 path. Terraform cites `.tf`/`.tf.json`; Terragrunt cites `terragrunt.hcl` for

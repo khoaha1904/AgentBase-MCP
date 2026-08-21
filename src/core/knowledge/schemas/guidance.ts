@@ -139,8 +139,8 @@ function validateRequest(request: OkfAuthoringGuidanceRequest): void {
       if (!candidate.promotion.evidenceIds.length || candidate.promotion.evidenceIds.length > 64) {
         throw new Error("candidate promotion evidence IDs must be a bounded non-empty list");
       }
-      if (candidate.disposition !== "concept" || !["Interface", "Resource"].includes(candidate.suggestedType ?? "")) {
-        throw new Error("candidate promotion is only valid for standalone Interface or Resource intent");
+      if (candidate.disposition !== "concept" || candidate.suggestedType === undefined) {
+        throw new Error("candidate promotion requires standalone suggested concept intent");
       }
     }
     if (candidate.disposition === "concept" && candidate.parentCandidateId !== undefined) {
