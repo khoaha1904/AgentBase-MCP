@@ -332,6 +332,12 @@ accepted.
   evidence MUST remain owned by the Flow candidate. Other roles, embedded
   candidates, unknown evidence and final source/relationship validation MUST
   retain strict ownership and validation.
+- **AB-SCHEMA-047**: A standalone concept candidate MAY reuse supporting and
+  promotion observations owned by its direct embedded children because those
+  children receive no standalone identity and are rendered inside that parent.
+  The embedded child MUST explicitly name that parent. Evidence from siblings,
+  unrelated or transitively embedded candidates MUST remain invalid, and Flow
+  promotion evidence MUST remain Flow-owned under AB-SCHEMA-046.
 - **AB-BENCH-048**: Model qualification MUST run sequentially. One probe MUST
   stop the sequence when it has a hard lifecycle/deterministic failure or a
   clear quality blocker. Only a valid probe without a clear blocker MAY trigger

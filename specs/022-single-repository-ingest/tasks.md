@@ -256,6 +256,9 @@ and record reproducible evidence.
 - [x] T082 Retain post-AB-SCHEMA-046 probe `2026-08-21T170242Z`, confirm the Flow
   defect does not recur, classify parent use of direct embedded-child lifecycle
   evidence as a separate attribution issue, and stop before a replica
+- [x] T083 [US2] Add AB-SCHEMA-047 and allow direct embedded-child supporting or
+  promotion evidence only for its explicit standalone parent while preserving
+  Flow promotion ownership and unrelated-candidate rejection
 
 ---
 

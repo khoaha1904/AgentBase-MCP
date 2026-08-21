@@ -893,3 +893,15 @@ This is a separate MCP attribution-contract issue: embedded knowledge belongs
 in its parent, yet its exact evidence cannot support that parent without a
 duplicate observation. No draft was prepared or scored, and AB-BENCH-048
 stopped the sequence before a replica.
+
+## Direct embedded-child evidence correction — 2026-08-22
+
+Owner-approved AB-SCHEMA-047 treats evidence owned by a direct embedded child
+as usable by its explicit standalone parent for supporting and promotion
+purposes. The child remains embedded and receives no identity. Evidence from an
+unrelated candidate still fails, and Flow promotion stays Flow-owned under
+AB-SCHEMA-046.
+
+The existing embedded-guidance test covers the reproduced Function/schedule
+shape plus the unrelated-candidate negative guard without increasing the test
+count. `npm run verify` passes all deterministic checks and 50/50 tests.

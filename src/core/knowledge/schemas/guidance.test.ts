@@ -59,7 +59,7 @@ test("[AB-SCHEMA-032][AB-SCHEMA-037] supporting Terraform resources remain embed
   }
 });
 
-test("[AB-SCHEMA-031][AB-SCHEMA-036] embedded candidates require a parent and override standalone hints", () => {
+test("[AB-SCHEMA-031][AB-SCHEMA-036][AB-SCHEMA-047] embedded candidates bind evidence only to their direct parent", () => {
   const noParent = resource("queue", "aws_sqs_queue", "embedded");
   assert.throws(() => getOkfAuthoringGuidance(noParent), /embedded candidate parent must name a concept candidate/);
   const input = resource("queue", "aws_sqs_queue", "embedded");
@@ -73,6 +73,13 @@ test("[AB-SCHEMA-031][AB-SCHEMA-036] embedded candidates require a parent and ov
   assert.equal(recommendation.status, "embedded");
   assert.equal(recommendation.schema, undefined);
   assert.match(recommendation.limitations.join(" "), /embedded disposition overrides/i);
+
+  Object.assign(input.candidates[0]!, { evidenceIds: ["docs.parent", "evidence.queue"], suggestedType: "Function",
+    promotion: { basis: "lifecycle", evidenceIds: ["evidence.queue"] } });
+  assert.equal(getOkfAuthoringGuidance(input).recommendations[0]?.schema?.type, "Function");
+  input.candidates.push({ id: "other", identityHint: "other", identityBasis: "other boundary",
+    queryValue: "Other runtime", evidenceIds: ["evidence.queue"], disposition: "concept" });
+  assert.throws(() => getOkfAuthoringGuidance(input), /candidate other cites evidence owned by another candidate/);
 });
 
 test("[AB-SCHEMA-034][AB-SCHEMA-036][AB-SCHEMA-046] semantic standalone intent and cross-boundary Flow remain suggested", () => {

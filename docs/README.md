@@ -118,8 +118,8 @@ is the portable archive.
   ownership rule strict. This was not a source-span or scorer failure.
 - Probe `2026-08-21T170242Z` then exposed the adjacent parent/embedded case: a
   Function cannot reuse its own embedded schedule child's lifecycle evidence.
-  No draft was produced; the sequence stopped before a replica pending an
-  owner decision on that separate attribution boundary.
+  AB-SCHEMA-047 now permits only direct parent reuse, while unrelated candidates
+  remain rejected and Flow promotion remains Flow-owned.
 - Post-fix probe `2026-08-21T154146Z` proves duplicate navigation is gone and
   again passes the complete lifecycle. It is not replica-qualified: the model
   reintroduced an optional Flow, selected CloudFormation/handler evidence over

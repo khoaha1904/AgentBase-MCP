@@ -254,4 +254,10 @@ ownership rejected this even though embedded knowledge has no standalone
 identity and belongs in that Function. This is a separate MCP attribution
 question; no draft was scored and no replica ran.
 
+AB-SCHEMA-047 closes that direct parent/embedded-child gap offline. A standalone
+parent may reuse supporting or promotion evidence owned by a direct embedded
+child that explicitly names it. Unrelated reuse remains invalid and Flow
+promotion stays Flow-owned. The exact reproduction and full 50-test gate pass;
+a fresh sequential probe is next.
+
 Most recent completed capability: `021-agentstack-foundation`.

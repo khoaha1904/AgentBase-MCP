@@ -340,3 +340,8 @@ Normative OKF source is pinned to commit
   candidates in the same bounded request. Promotion evidence remains
   Flow-owned. This exception does not apply to other roles or embedded
   candidates and does not bypass source, schema or relationship validation.
+- **AB-SCHEMA-047** — A standalone concept may reuse supporting and promotion
+  observations owned by a direct embedded child that explicitly names it as
+  parent. The child remains embedded with no identity. Sibling, unrelated and
+  transitive reuse stays invalid, and Flow promotion evidence remains
+  Flow-owned under AB-SCHEMA-046.

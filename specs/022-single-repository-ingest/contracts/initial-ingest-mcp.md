@@ -79,6 +79,10 @@ A standalone Flow with `promotion: { basis: "cross-boundary", ... }` may also
 cite supporting observations owned by other standalone concept candidates in
 the same request. Its promotion evidence remains Flow-owned; no other role or
 embedded candidate receives this exception.
+A standalone concept may also cite supporting or promotion evidence owned by a
+direct embedded child that explicitly names it as parent. This does not promote
+the child. Sibling, unrelated and transitive embedded evidence remains invalid;
+Flow promotion evidence remains Flow-owned.
 
 `source_tool` is `terraform` or `terragrunt` and must match the exact evidence
 path. Terraform cites `.tf`/`.tf.json`; Terragrunt cites `terragrunt.hcl` for

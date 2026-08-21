@@ -84,7 +84,7 @@ export const HUB_OKF_TOOLS = [
         },
         guidance_request: {
           type: "object",
-          description: "Required for new Initial Ingest; bounded source-backed candidates and observations. Every candidate declares disposition concept or embedded. Embedded candidates require parent_candidate_id and receive no concept identity, path or relationship. Evidence is candidate-owned, except a standalone Flow with cross-boundary promotion may reuse supporting evidence from another standalone concept candidate; promotion evidence remains Flow-owned.",
+          description: "Required for new Initial Ingest; bounded source-backed candidates and observations. Every candidate declares disposition concept or embedded. Embedded candidates require parent_candidate_id and receive no concept identity, path or relationship. A parent concept may reuse evidence from its direct embedded children. A standalone cross-boundary Flow may also reuse supporting evidence from another standalone concept candidate; Flow promotion evidence remains Flow-owned.",
           properties: {
             candidates: { type: "array", minItems: 1, maxItems: 64, items: { type: "object" } },
             semantic_observations: { type: "array", maxItems: 64, items: { type: "object" } },
