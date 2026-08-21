@@ -1,0 +1,4 @@
+2026-08-21T08:43:02.334279Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in <RUNTIME_ROOT>/tmp/agentbase-1000/hub-runtime/sessions/hub-session-52a4c516b68b36341892ef88/bundle/repositories/aws-health-aware.md:
+sources:
+  - id: res_ddb_table
+    resource: repository://repository-aws-health-aware-ef3e83846625/terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf#L246-L273

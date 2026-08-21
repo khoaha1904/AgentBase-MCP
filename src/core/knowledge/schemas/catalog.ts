@@ -3,12 +3,27 @@ import { OKF_CONCEPT_SCHEMAS, type OkfConceptSchema } from "./definitions/concep
 
 export type { OkfConceptSchema } from "./definitions/concepts.ts";
 
-export const AGENTBASE_OKF_SCHEMA_CATALOG_VERSION = "6.0.0" as const;
+export const AGENTBASE_OKF_SCHEMA_CATALOG_VERSION = "7.0.0" as const;
 
 export const RETIRED_AGENTBASE_SCHEMA_TYPES: ReadonlyMap<string, string> = new Map([
   ["AWS Lambda", "Function"],
-  ["AWS SQS Queue", "Queue"],
-  ["Terraform Module", "Infrastructure Module"],
+  ["Software Component", "Component"],
+  ["Service", "Component"],
+  ["API Surface", "Interface"],
+  ["API Endpoint", "Interface"],
+  ["Event", "Interface"],
+  ["Business Flow", "Flow"],
+  ["Domain Entity", "Entity"],
+  ["Server", "re-ingest under catalog 7 promotion rules"],
+  ["Queue", "re-ingest under catalog 7 promotion rules"],
+  ["Database", "re-ingest under catalog 7 promotion rules"],
+  ["Database Table", "re-ingest under catalog 7 promotion rules"],
+  ["Object Storage", "re-ingest under catalog 7 promotion rules"],
+  ["Infrastructure Definition", "re-ingest under catalog 7 promotion rules"],
+  ["Infrastructure Module", "re-ingest under catalog 7 promotion rules"],
+  ["Deployment", "re-ingest under catalog 7 promotion rules"],
+  ["AWS SQS Queue", "re-ingest under catalog 7 promotion rules"],
+  ["Terraform Module", "re-ingest under catalog 7 promotion rules"],
 ] as const);
 
 export type OkfSchemaSelection = Readonly<{
@@ -51,9 +66,11 @@ function matchesSignal(signal: string, rule: string): boolean {
     && ruleTokens.every((expected) => signalTokens.some((actual) => matchesToken(expected, actual)));
 }
 
-export function selectOkfConceptSchemas(signals: readonly string[]): readonly OkfSchemaSelection[] {
+export function selectOkfConceptSchemas(
+  signals: readonly string[], scope: "initial-ingest" | "enrichment" = "initial-ingest",
+): readonly OkfSchemaSelection[] {
   const normalized = [...new Set(signals.map((signal) => signal.trim().toLocaleLowerCase()).filter(Boolean))];
-  const selected = schemas.flatMap((item) => {
+  const selected = schemas.filter((item) => item.authoringScope === scope).flatMap((item) => {
     const matchedSignals = normalized.filter((signal) => item.selectWhen.some((rule) => matchesSignal(signal, rule)));
     if (!matchedSignals.length) return [];
     const missingEvidence = item.evidenceRequirements.filter((requirement) => !normalized.some((signal) => signal.includes(requirement.toLocaleLowerCase())));

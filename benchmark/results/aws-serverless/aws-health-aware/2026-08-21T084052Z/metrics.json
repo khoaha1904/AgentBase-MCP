@@ -1,0 +1,79 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-health-aware",
+  "runId": "2026-08-21T084052Z",
+  "arm": "mcp",
+  "expectedConcepts": 8,
+  "actualConcepts": 3,
+  "matchedConcepts": 3,
+  "referenceConceptCoveragePercent": 38,
+  "recognizedSchemaAgreementPercent": 100,
+  "metadataCompletenessPercent": 100,
+  "provenanceCoveragePercent": 0,
+  "referenceRelationshipCoveragePercent": 13,
+  "conflictVisibilityPercent": 100,
+  "liveEvidenceReferenceCoveragePercent": 100,
+  "classifications": {
+    "concepts": {
+      "confirmed": [
+        "domains/health-operations",
+        "repositories/aws-health-aware",
+        "resources/health-event-state"
+      ],
+      "contradicted": [],
+      "unjudged": [],
+      "missingReference": [
+        "aws-health-aware-system",
+        "aha-infrastructure-definition",
+        "aha-lambda-function-primary-region",
+        "aha-lambda-schedule-primary-region",
+        "aws-health-alerting-flow"
+      ]
+    },
+    "relationships": {
+      "confirmed": [
+        "aws-health-aware-repository|part-of|health-operations-domain"
+      ],
+      "contradicted": [],
+      "unjudged": [],
+      "missingReference": [
+        "aws-health-aware-system|part-of|health-operations-domain",
+        "aha-lambda-function-primary-region|part-of|aws-health-aware-system",
+        "aha-lambda-function-primary-region|declared-by|aha-infrastructure-definition",
+        "aha-dynamodb-table|declared-by|aha-infrastructure-definition",
+        "aha-lambda-schedule-primary-region|part-of|aws-health-aware-system",
+        "aha-lambda-function-primary-region|reads-from|aha-dynamodb-table",
+        "aws-health-alerting-flow|part-of|aws-health-aware-system"
+      ]
+    }
+  },
+  "validation": {
+    "passed": false,
+    "failures": [
+      "domains/health-operations.md: provenance uses another repository identity",
+      "repositories/aws-health-aware.md: provenance uses another repository identity",
+      "resources/health-event-state.md: provenance uses another repository identity"
+    ]
+  },
+  "ownerReview": {
+    "status": "needs_revision",
+    "findings": [
+      "domains/health-operations.md: confirmed Domain does not navigate to a System",
+      "current-source Repository is not assigned to domains/health-operations",
+      "domains/health-operations.md: Markdown body lacks reviewable substance"
+    ]
+  },
+  "authoringAssessment": {
+    "status": "invalid",
+    "hardFailures": [
+      "domains/health-operations.md: provenance uses another repository identity",
+      "repositories/aws-health-aware.md: provenance uses another repository identity",
+      "resources/health-event-state.md: provenance uses another repository identity"
+    ],
+    "limitations": [
+      "Deterministic source-path checks do not prove that authored claims are semantically supported; human review is required.",
+      "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept."
+    ]
+  },
+  "okfTreeDigest": "sha256:8beb1aade7b59884066ab512d3bb7efddf210ebf3d920630907272194a70395b"
+}

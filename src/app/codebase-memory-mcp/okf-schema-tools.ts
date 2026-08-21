@@ -31,7 +31,10 @@ const conceptSetInputSchema = {
         properties: {
           identity: { type: "string", minLength: 1, maxLength: 256 },
           path: { type: "string", minLength: 1, maxLength: 1024 },
-          content: { type: "string", minLength: 1, maxLength: 262144 },
+          content: {
+            type: "string", minLength: 1, maxLength: 262144,
+            description: "Complete Markdown document bytes, including frontmatter; never a file path or wrapper object.",
+          },
         },
         required: ["identity", "path", "content"], additionalProperties: false,
       },
@@ -96,19 +99,28 @@ export const OKF_SCHEMA_TOOLS = [
   },
   {
     name: "get_okf_authoring_schemas",
-    description: "Map bounded source-backed candidates and observations to provider-neutral OKF schema guidance in one advisory call.",
+    description: "Map bounded source-backed candidates and observations to provider-neutral OKF schema guidance in one advisory call. An exact supported structured resource mapping takes precedence over incidental semantic role words. Use a separate System candidate only when source evidence shows a recognizable capability plus cooperating entities; never rename a Repository or Service. Each evidence ID is owned by one candidate; evidence_ids may cite only observations whose candidate_id matches that candidate id.",
     inputSchema: {
       type: "object",
       properties: {
         candidates: {
           type: "array", minItems: 1, maxItems: 64, items: { type: "object", properties: {
             id: { type: "string" }, identity_hint: { type: "string" }, identity_basis: { type: "string" },
-            query_value: { type: "string" }, evidence_ids: {
+            query_value: { type: "string" }, disposition: {
+              type: "string", enum: ["concept", "embedded"],
+              description: "Create a standalone concept or embed this knowledge in one parent candidate.",
+            }, parent_candidate_id: {
+              type: "string",
+              description: "Required only for embedded knowledge; identifies its parent candidate in this request.",
+            }, suggested_type: {
+              type: "string",
+              description: "Optional released provider-neutral role proposed by the host agent; advisory, evidence-bound and never exact truth.",
+            }, evidence_ids: {
               type: "array", minItems: 1, maxItems: 64,
-              description: "IDs from semantic_observations or resource_observations in this request; never repository:// source URIs.",
+              description: "IDs from observations in this request whose candidate_id equals this candidate id; never another candidate's evidence or repository:// source URIs.",
               items: { type: "string" },
             },
-          }, required: ["id", "identity_hint", "identity_basis", "query_value", "evidence_ids"], additionalProperties: false },
+          }, required: ["id", "identity_hint", "identity_basis", "query_value", "evidence_ids", "disposition"], additionalProperties: false },
         },
         semantic_observations: {
           type: "array", maxItems: 64, items: { type: "object", properties: {
@@ -138,7 +150,7 @@ export const OKF_SCHEMA_TOOLS = [
   },
   {
     name: "validate_okf_changes",
-    description: "Validate changed concept documents only, excluding root/category index files, against bounded unchanged concept target summaries. Identity is the OKF-root-relative Markdown path without .md; targets are not changed concepts.",
+    description: "Validate changed concept documents only, excluding root/category index files, against bounded unchanged concept target summaries. Apply relationship guidance from the exact frontmatter type; a display name or prose never changes the schema. Identity is the OKF-root-relative Markdown path without .md; targets are not changed concepts.",
     inputSchema: {
       type: "object",
       properties: { changes: conceptSetInputSchema.properties.concepts, targets: targetSummarySchema },
@@ -169,9 +181,15 @@ function guidanceRequest(args: Readonly<Record<string, unknown>>): OkfAuthoringG
   object(args, "guidance request", ["candidates", "semantic_observations", "resource_observations"]);
   return {
     candidates: array(args.candidates, "candidates").map((value) => {
-      const item = object(value, "candidate", ["id", "identity_hint", "identity_basis", "query_value", "evidence_ids"]);
+      const raw = value as Readonly<Record<string, unknown>>;
+      const item = object(value, "candidate", ["id", "identity_hint", "identity_basis", "query_value", "evidence_ids", "disposition",
+        ...(raw?.parent_candidate_id === undefined ? [] : ["parent_candidate_id"]),
+        ...(raw?.suggested_type === undefined ? [] : ["suggested_type"])]);
       return { id: item.id as string, identityHint: item.identity_hint as string, identityBasis: item.identity_basis as string,
-        queryValue: item.query_value as string, evidenceIds: array(item.evidence_ids, "candidate evidence_ids") as string[] };
+        queryValue: item.query_value as string, evidenceIds: array(item.evidence_ids, "candidate evidence_ids") as string[],
+        disposition: item.disposition as "concept" | "embedded",
+        ...(item.parent_candidate_id === undefined ? {} : { parentCandidateId: item.parent_candidate_id as string }),
+        ...(item.suggested_type === undefined ? {} : { suggestedType: item.suggested_type as string }) };
     }),
     semanticObservations: array(args.semantic_observations, "semantic_observations").map((value) => {
       const item = object(value, "semantic observation", ["id", "candidate_id", "role", "signal", "source"]);

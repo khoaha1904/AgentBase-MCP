@@ -1,0 +1,53 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-serverless-shopping-cart",
+  "runId": "2026-08-21T083731Z",
+  "expectedConcepts": 0,
+  "actualConcepts": 0,
+  "matchedConcepts": 0,
+  "referenceConceptCoveragePercent": 0,
+  "recognizedSchemaAgreementPercent": 0,
+  "metadataCompletenessPercent": 0,
+  "provenanceCoveragePercent": 0,
+  "referenceRelationshipCoveragePercent": 0,
+  "conflictVisibilityPercent": 0,
+  "liveEvidenceReferenceCoveragePercent": 0,
+  "classifications": {
+    "concepts": {
+      "confirmed": [],
+      "contradicted": [],
+      "unjudged": [],
+      "missingReference": []
+    },
+    "relationships": {
+      "confirmed": [],
+      "contradicted": [],
+      "unjudged": [],
+      "missingReference": []
+    }
+  },
+  "validation": {
+    "passed": false,
+    "failures": [
+      "OKF bundle could not be loaded: agent run failed: required MCP tool not observed: get_okf_authoring_schemas; required MCP tool not observed: validate_okf_changes; prepare_hub_okf must run exactly once; observed 2"
+    ]
+  },
+  "ownerReview": {
+    "status": "needs_revision",
+    "findings": [
+      "No scorable OKF bundle is available for owner review"
+    ]
+  },
+  "okfTreeDigest": null,
+  "authoringAssessment": {
+    "status": "invalid",
+    "hardFailures": [
+      "OKF bundle could not be loaded: agent run failed: required MCP tool not observed: get_okf_authoring_schemas; required MCP tool not observed: validate_okf_changes; prepare_hub_okf must run exactly once; observed 2",
+      "OKF output contains no concept documents"
+    ],
+    "limitations": [
+      "Deterministic source-path checks do not prove that authored claims are semantically supported; human review is required.",
+      "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept."
+    ]
+  }
+}

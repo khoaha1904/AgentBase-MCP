@@ -1,0 +1,1 @@
+2026-08-21T11:29:18.295317Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: failed to lookup address information: Try again, url: wss://chatgpt.com/backend-api/codex/responses

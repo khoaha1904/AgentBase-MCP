@@ -9,5 +9,5 @@ export type DetectedResource = Readonly<{
 export type ProviderResourceMapping = Readonly<{
   resourceType: string;
   product: string;
-  schemaType: string;
+  technologyKind: string;
 }>;

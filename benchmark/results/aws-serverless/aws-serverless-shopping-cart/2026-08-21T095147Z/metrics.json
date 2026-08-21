@@ -1,0 +1,83 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-serverless-shopping-cart",
+  "runId": "2026-08-21T095147Z",
+  "arm": "mcp",
+  "expectedConcepts": 9,
+  "actualConcepts": 4,
+  "matchedConcepts": 4,
+  "referenceConceptCoveragePercent": 44,
+  "recognizedSchemaAgreementPercent": 75,
+  "metadataCompletenessPercent": 100,
+  "provenanceCoveragePercent": 17,
+  "referenceRelationshipCoveragePercent": 13,
+  "conflictVisibilityPercent": 100,
+  "liveEvidenceReferenceCoveragePercent": 0,
+  "classifications": {
+    "concepts": {
+      "confirmed": [
+        "domains/commerce",
+        "repositories/aws-serverless-shopping-cart",
+        "components/product-mock-service"
+      ],
+      "contradicted": [
+        {
+          "actual": "components/shopping-cart-service",
+          "expected": "shopping-cart-system",
+          "actualType": "Service",
+          "expectedType": "System"
+        }
+      ],
+      "unjudged": [],
+      "missingReference": [
+        "shopping-cart-api",
+        "shopping-cart-infrastructure",
+        "dynamodb-shopping-cart-table",
+        "cart-delete-sqs-queue",
+        "authenticated-cart-migration"
+      ]
+    },
+    "relationships": {
+      "confirmed": [
+        "shopping-cart-repository|part-of|commerce-domain"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "components/product-mock-service|implemented-in|repositories/aws-serverless-shopping-cart",
+        "components/shopping-cart-service|implemented-in|repositories/aws-serverless-shopping-cart"
+      ],
+      "missingReference": [
+        "shopping-cart-system|part-of|commerce-domain",
+        "shopping-cart-service|part-of|shopping-cart-system",
+        "shopping-cart-api|part-of|shopping-cart-system",
+        "shopping-cart-infrastructure|part-of|shopping-cart-system",
+        "dynamodb-shopping-cart-table|declared-by|shopping-cart-infrastructure",
+        "cart-delete-sqs-queue|declared-by|shopping-cart-infrastructure",
+        "authenticated-cart-migration|part-of|shopping-cart-system"
+      ]
+    }
+  },
+  "validation": {
+    "passed": true,
+    "failures": []
+  },
+  "ownerReview": {
+    "status": "needs_revision",
+    "findings": [
+      "domains/commerce.md: confirmed Domain does not navigate to a System",
+      "cart-retention-ttl: live evidence references or source roles are incomplete",
+      "domains/commerce.md: Markdown body lacks reviewable substance"
+    ]
+  },
+  "authoringAssessment": {
+    "status": "invalid",
+    "hardFailures": [
+      "Reference shopping-cart-system matched components/shopping-cart-service but expected schema System, found Service"
+    ],
+    "limitations": [
+      "Deterministic source-path checks do not prove that authored claims are semantically supported; human review is required.",
+      "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept."
+    ]
+  },
+  "okfTreeDigest": "sha256:50657e96e967cf2aa05c09cea645ac012d91d0e73f364bc6fc0e90b6bc8a7072"
+}

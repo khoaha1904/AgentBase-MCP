@@ -378,6 +378,27 @@ function assessLiveEvidence(expectations, concepts) {
   return { matched, required: expectations.length, findings };
 }
 
+function assessEmbeddedKnowledge(expectations, concepts, repositoryId) {
+  if (!Array.isArray(expectations) || !expectations.length) return { matched: 0, required: 0, findings: [] };
+  let matched = 0;
+  const findings = [];
+  for (const expected of expectations) {
+    const terms = (expected.requiredTerms ?? []).map((term) => String(term).toLowerCase());
+    const paths = expected.requiredSourcePaths ?? [];
+    const found = [...concepts.values()].some((concept) => {
+      if (!(expected.allowedParentTypes ?? []).includes(concept.type)) return false;
+      const text = [concept.frontmatter.title, concept.frontmatter.description, concept.body]
+        .filter((value) => typeof value === "string").join(" ").toLowerCase();
+      const evidence = sourcePaths(concept, repositoryId);
+      return terms.every((term) => text.includes(term))
+        && paths.every((required) => evidence.includes(required));
+    });
+    if (found) matched += 1;
+    else findings.push(`${expected.key}: embedded knowledge is missing from an allowed parent with exact evidence`);
+  }
+  return { matched, required: expectations.length, findings };
+}
+
 export function assessLiveResolutionCases(cases) {
   const findings = [];
   for (const value of cases) {
@@ -402,11 +423,12 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
     if (actual.has(key)) failures.push(`${concept.path}: duplicate semantic identity ${key}`);
     else actual.set(key, concept);
   }
-  const expected = new Map(expectation.concepts.map((item) => [item.key, item]));
+  const requiredConcepts = expectation.requiredConcepts ?? expectation.concepts ?? [];
+  const expected = new Map(requiredConcepts.map((item) => [item.key, item]));
   const strictSemanticAnchors = expectation.version >= 5;
   const assignments = new Map();
   const usedActual = new Set();
-  for (const item of expectation.concepts) {
+  for (const item of requiredConcepts) {
     if (actual.has(item.key)) {
       assignments.set(item.key, actual.get(item.key));
       usedActual.add(item.key);
@@ -414,16 +436,20 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
     }
     if (!Array.isArray(item.identityTerms) || !item.identityTerms.length) continue;
     const ranked = [...actual.entries()].filter(([key]) => !usedActual.has(key)).flatMap(([key, concept]) => {
-      const primaryIdentity = [key, concept.frontmatter.title, concept.frontmatter.description]
+      const nameIdentity = [key, concept.frontmatter.title]
         .filter((value) => typeof value === "string").join(" ").toLowerCase();
+      const primaryIdentity = `${nameIdentity} ${typeof concept.frontmatter.description === "string" ? concept.frontmatter.description : ""}`;
       const identity = `${primaryIdentity} ${concept.body}`.toLowerCase();
       const terms = item.identityTerms.map((term) => term.toLowerCase());
       const evidence = sourcePaths(concept, repositoryId);
       const evidenceMatches = item.requiredSourcePaths.filter((required) => evidence.includes(required)).length;
       const primaryMatches = terms.filter((term) => primaryIdentity.includes(term)).length;
+      const allNameTermsMatch = terms.every((term) => nameIdentity.includes(term));
       const allTermsMatch = terms.every((term) => identity.includes(term));
       const schemaMatches = concept.type === item.type;
-      if (strictSemanticAnchors ? !allTermsMatch : (!allTermsMatch && !(schemaMatches && evidenceMatches))) return [];
+      if (strictSemanticAnchors
+        ? (schemaMatches ? !allTermsMatch : !allNameTermsMatch)
+        : (!allTermsMatch && !(schemaMatches && evidenceMatches))) return [];
       return [{
         key,
         concept,
@@ -453,7 +479,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
   let metadataRequired = 0;
   let evidencePresent = 0;
   let evidenceRequired = 0;
-  for (const item of expectation.concepts) {
+  for (const item of requiredConcepts) {
     const concept = assignments.get(item.key);
     metadataRequired += item.requiredMetadata.length;
     evidenceRequired += item.requiredSourcePaths.length;
@@ -494,6 +520,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
     `Reference ${item.expected} matched ${item.actual} but expected schema ${item.expectedType}, found ${item.actualType}`);
   const conflictVisibility = assessConflictVisibility(expectation.conflicts, bundle.concepts, repositoryId);
   const liveEvidence = assessLiveEvidence(expectation.liveEvidence, bundle.concepts);
+  const embeddedKnowledge = assessEmbeddedKnowledge(expectation.embeddedKnowledge, bundle.concepts, repositoryId);
   const metrics = {
     expectedConcepts: expected.size,
     actualConcepts: actual.size,
@@ -505,6 +532,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
     referenceRelationshipCoveragePercent: percent(confirmedRelationships.length, expectation.relationships.length),
     conflictVisibilityPercent: percent(conflictVisibility.visible, conflictVisibility.required),
     liveEvidenceReferenceCoveragePercent: percent(liveEvidence.matched, liveEvidence.required),
+    embeddedKnowledgeCoveragePercent: percent(embeddedKnowledge.matched, embeddedKnowledge.required),
     classifications: {
       concepts: {
         confirmed: confirmedConcepts,
@@ -525,7 +553,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
     ...metrics,
     ownerReview: assessOwnerReviewUsefulness(bundle.concepts, {
       navigationFindings: expectation.version >= 6 ? progressiveNavigationFindings(bundle, expectation, repositoryId) : [],
-      conflictFindings: [...conflictVisibility.findings, ...liveEvidence.findings],
+      conflictFindings: [...conflictVisibility.findings, ...liveEvidence.findings, ...embeddedKnowledge.findings],
     }),
     authoringAssessment: createAuthoringAssessment({
       actualConcepts: actual.size,
@@ -565,6 +593,7 @@ function reportFor(entry, run, metrics) {
     + `- Reference relationship coverage: ${metrics.referenceRelationshipCoveragePercent}%\n`
     + `- Source-conflict visibility: ${metrics.conflictVisibilityPercent}%\n`
     + `- Live-evidence reference coverage: ${metrics.liveEvidenceReferenceCoveragePercent}%\n`
+    + `- Embedded-knowledge coverage: ${metrics.embeddedKnowledgeCoveragePercent}%\n`
     + `- Unjudged concepts / relationships: ${metrics.classifications.concepts.unjudged.length} / ${metrics.classifications.relationships.unjudged.length}\n`
     + `- Missing reference concepts / relationships: ${metrics.classifications.concepts.missingReference.length} / ${metrics.classifications.relationships.missingReference.length}\n`
     + (metrics.authoringAssessment.hardFailures.length
@@ -589,6 +618,7 @@ function invalidMetrics(suite, repository, runId, error) {
     referenceRelationshipCoveragePercent: 0,
     conflictVisibilityPercent: 0,
     liveEvidenceReferenceCoveragePercent: 0,
+    embeddedKnowledgeCoveragePercent: 0,
     classifications: {
       concepts: { confirmed: [], contradicted: [], unjudged: [], missingReference: [] },
       relationships: { confirmed: [], contradicted: [], unjudged: [], missingReference: [] },
@@ -708,7 +738,7 @@ function finalizeArmRoot({ manifest, entry, root, runId }) {
       repository: entry.id,
       runId,
       arm: runData.arm ?? "mcp",
-      ...scoreSemanticBenchmark(expectation, bundle, runData.sourceRepositoryId, path.resolve(projectRoot, entry.path)),
+      ...scoreSemanticBenchmark(expectation, bundle, scoringRepositoryId(runData), path.resolve(projectRoot, entry.path)),
       okfTreeDigest: bundle.treeDigest,
     };
   } catch (error) {
@@ -719,11 +749,16 @@ function finalizeArmRoot({ manifest, entry, root, runId }) {
   return { run: runData, metrics, failure: null };
 }
 
+export function scoringRepositoryId(runData) {
+  return typeof runData.provenanceRepositoryId === "string" && runData.provenanceRepositoryId
+    ? runData.provenanceRepositoryId : runData.sourceRepositoryId;
+}
+
 function pairReportFor(comparison) {
   const quality = (arm) => {
     const metrics = comparison.quality[arm];
     return metrics
-      ? `- ${arm}: assessment ${metrics.authoringAssessment?.status ?? "invalid"}; owner review ${metrics.ownerReview?.status ?? "needs_revision"}; validation ${metrics.validation.passed ? "passed" : "failed"}; reference concepts ${metrics.referenceConceptCoveragePercent}%; recognized schemas ${metrics.recognizedSchemaAgreementPercent}%; metadata ${metrics.metadataCompletenessPercent}%; provenance ${metrics.provenanceCoveragePercent}%; reference relationships ${metrics.referenceRelationshipCoveragePercent}%; source conflicts ${metrics.conflictVisibilityPercent ?? "n/a"}%; unjudged concepts/relationships ${metrics.classifications?.concepts.unjudged.length ?? 0}/${metrics.classifications?.relationships.unjudged.length ?? 0}`
+      ? `- ${arm}: assessment ${metrics.authoringAssessment?.status ?? "invalid"}; owner review ${metrics.ownerReview?.status ?? "needs_revision"}; validation ${metrics.validation.passed ? "passed" : "failed"}; reference concepts ${metrics.referenceConceptCoveragePercent}%; embedded knowledge ${metrics.embeddedKnowledgeCoveragePercent ?? "n/a"}%; recognized schemas ${metrics.recognizedSchemaAgreementPercent}%; metadata ${metrics.metadataCompletenessPercent}%; provenance ${metrics.provenanceCoveragePercent}%; reference relationships ${metrics.referenceRelationshipCoveragePercent}%; source conflicts ${metrics.conflictVisibilityPercent ?? "n/a"}%; unjudged concepts/relationships ${metrics.classifications?.concepts.unjudged.length ?? 0}/${metrics.classifications?.relationships.unjudged.length ?? 0}`
       : `- ${arm}: unavailable`;
   };
   const efficiency = (arm) => {

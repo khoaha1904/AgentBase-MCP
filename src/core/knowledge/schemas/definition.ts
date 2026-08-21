@@ -1,6 +1,7 @@
 /** Stable shape shared by every released AgentBase concept schema. */
 export type OkfConceptSchema = Readonly<{
   type: string;
+  authoringScope: "initial-ingest" | "enrichment" | "governance";
   purpose: string;
   directoryHint: string;
   specificity: number;
@@ -19,6 +20,7 @@ export type OkfConceptSchema = Readonly<{
 }>;
 
 type SchemaOptions = Readonly<{
+  authoringScope?: OkfConceptSchema["authoringScope"];
   fallbackType?: string;
   requiredFrontmatter?: readonly string[];
   investigationQuestions?: readonly string[];
@@ -39,6 +41,7 @@ export function defineSchema(
 ): OkfConceptSchema {
   return {
     type, purpose, directoryHint, specificity, selectWhen, evidenceRequirements, recommendedSections, allowedLinks,
+    authoringScope: options.authoringScope ?? "initial-ingest",
     ...(options.fallbackType ? { fallbackType: options.fallbackType } : {}),
     requiredFrontmatter: options.requiredFrontmatter ?? generatedEvidence,
     investigationQuestions: options.investigationQuestions ?? evidenceRequirements.map((item) => `What source proves ${item}?`),

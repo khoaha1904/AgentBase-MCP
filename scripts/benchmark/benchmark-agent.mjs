@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+import { resolveRepositoryIdentity } from "../../src/core/knowledge/index.ts";
 import { discoverRepositorySourceState } from "../../src/app/repository-okf/index.ts";
 
 const projectRoot = path.resolve(import.meta.dirname, "../..");
@@ -25,6 +26,7 @@ const v13EnabledTools = [
   ...v13RequiredTools, "search_graph", "trace_path", "get_code_snippet", "search_code",
   "search_hub_okf", "read_hub_okf_concept",
 ];
+const initialIngestPromptVersions = new Set(["okf-author-v13", "okf-author-v14", "okf-author-v15"]);
 
 export function validateV13Lifecycle(mcpTools) {
   return [
@@ -41,6 +43,17 @@ const authoringTools = new Set([
   "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept", "validate_okf_relationships",
   "get_okf_authoring_schemas", "validate_okf_bundle", "validate_okf_changes",
 ]);
+
+export function benchmarkProvenanceRepositoryId(source, promptVersion) {
+  if (!initialIngestPromptVersions.has(promptVersion)) return source.repositoryId;
+  const resolution = resolveRepositoryIdentity({
+    displayName: source.displayName,
+    remotes: source.identityHints.remotes,
+    rootCommits: source.identityHints.rootCommits,
+  }, []);
+  if (resolution.kind !== "new") throw new Error("isolated Initial Ingest repository identity must be new");
+  return resolution.repository.id;
+}
 
 function writeJson(file, value) {
   fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
@@ -168,11 +181,17 @@ function toolUsage(completedTools, arm, promptVersion) {
   const completed = new Set(completedTools);
   const required = ["okf-author-v8", "okf-author-v9", "okf-author-v10", "okf-author-v11", "okf-author-v12"].includes(promptVersion)
     ? v8RequiredTools
-    : promptVersion === "okf-author-v13" ? v13RequiredTools
+    : initialIngestPromptVersions.has(promptVersion) ? v13RequiredTools
     : ["okf-author-v4", "okf-author-v5", "okf-author-v6", "okf-author-v7"].includes(promptVersion)
       ? v4RequiredTools
       : promptVersion === "okf-author-v3" ? v3RequiredTools : requiredTools;
   return Object.fromEntries(required.map((tool) => [tool, completed.has(tool)]));
+}
+
+export function requiredToolFailures(usage, observedTools) {
+  return Object.entries(usage).filter(([, used]) => !used).map(([tool]) => observedTools[tool]
+    ? `required MCP tool did not complete successfully: ${tool}`
+    : `required MCP tool not observed: ${tool}`);
 }
 
 function validateAgentWorkspace(workspace) {
@@ -235,6 +254,7 @@ export function runAgentRepository({
     fixturePath: entry.path,
     fixtureCommit: entry.commit,
     sourceRepositoryId: source.repositoryId,
+    provenanceRepositoryId: benchmarkProvenanceRepositoryId(source, promptVersion),
     catalogVersion: manifest.catalogVersion,
     promptVersion,
     promptDigest: `sha256:${createHash("sha256").update(portablePrompt).digest("hex")}`,
@@ -246,7 +266,7 @@ export function runAgentRepository({
   writeJson(path.join(root, "run.json"), run);
   const args = buildCodexArgs({
     workspace, finalMessage, model: manifest.agent.model, reasoningEffort: manifest.agent.reasoningEffort, arm, runtimeRoot,
-    ...(promptVersion === "okf-author-v13" ? { enabledTools: v13EnabledTools } : {}),
+    ...(initialIngestPromptVersions.has(promptVersion) ? { enabledTools: v13EnabledTools } : {}),
   });
   const result = spawnSync(executable, args, {
     cwd: projectRoot,
@@ -279,7 +299,7 @@ export function runAgentRepository({
   }
   const summary = summarizeAgentEvents(result.stdout || "");
   const usage = toolUsage(summary.completedTools, arm, promptVersion);
-  const v13LifecycleFailures = promptVersion === "okf-author-v13"
+  const v13LifecycleFailures = initialIngestPromptVersions.has(promptVersion)
     ? validateV13Lifecycle(summary.activity.mcpTools) : [];
   const directMcpFailure = arm === "direct" && summary.activity.mcpToolCalls
     ? ["direct arm unexpectedly observed MCP tool calls"] : [];
@@ -295,7 +315,7 @@ export function runAgentRepository({
     failures: [
       ...(failure ? [failure] : []),
       ...directMcpFailure,
-      ...Object.entries(usage).filter(([, used]) => !used).map(([tool]) => `required MCP tool not observed: ${tool}`),
+      ...requiredToolFailures(usage, summary.activity.mcpTools),
       ...v13LifecycleFailures,
     ],
   };

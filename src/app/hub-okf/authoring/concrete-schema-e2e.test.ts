@@ -25,10 +25,10 @@ test("[AB-SCHEMA-007] every initial concrete schema has a validation/selection f
     catalogVersion: string;
     cases: readonly CatalogCase[];
   };
-  assert.equal(fixture.catalogVersion, "6.0.0");
+  assert.equal(fixture.catalogVersion, "7.0.0");
   assert.deepEqual(
     fixture.cases.map((item) => item.type),
-    listOkfConceptSchemas().filter((item) => item.selectWhen.length).map((item) => item.type),
+    listOkfConceptSchemas().filter((item) => item.authoringScope === "initial-ingest" && item.selectWhen.length).map((item) => item.type),
   );
   for (const current of fixture.cases) {
     assert.ok(getOkfConceptSchema(current.type));
@@ -39,7 +39,7 @@ test("[AB-SCHEMA-007] every initial concrete schema has a validation/selection f
 test("[AB-SCHEMA-002][AB-SCHEMA-003][AB-SCHEMA-008][SC-005] provider-neutral runtime rehearsal is sparse and supports repeated types", () => {
   const fixture = JSON.parse(fs.readFileSync(path.join(fixtureRoot, "aws-server-evidence.json"), "utf8")) as EvidenceFixture;
   const selected = selectOkfConceptSchemas(fixture.signals).map((item) => item.type);
-  assert.deepEqual(selected, ["Function", "Server", "Queue"]);
+  assert.deepEqual(selected, ["Function", "Component"]);
   assert.equal(fixture.instances.filter((item) => item.type === "Function").length, 2);
   for (const instance of fixture.instances) {
     assert.ok(selected.includes(instance.type));
@@ -62,5 +62,5 @@ test("[AB-SCHEMA-002][AB-SCHEMA-003][AB-SCHEMA-008][SC-005] provider-neutral run
     assert.deepEqual(validateConceptAgainstSchema(concept), []);
   }
   for (const unused of fixture.mustNotCreate) assert.equal(fixture.instances.some((item) => item.type === unused), false);
-  assert.equal(selected.includes("Queue"), true);
+  assert.equal(selected.includes("Queue"), false);
 });

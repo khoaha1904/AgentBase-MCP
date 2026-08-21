@@ -1,8 +1,8 @@
 {
   "sourceRepositoryId": "repository-orders-aaaaaaaaaaaa",
   "signals": [
-    "compute host",
-    "host identity or independent operational boundary",
+    "workload component orders-api",
+    "independent workload, build, runtime, deployment or ownership boundary",
     "runtime function CreateOrder",
     "runtime function CancelOrder",
     "independent trigger, deployment, scaling, permission, failure or operational boundary",
@@ -11,10 +11,9 @@
     "producer or consumer evidence"
   ],
   "instances": [
-    { "type": "Server", "slug": "orders-api" },
+    { "type": "Component", "slug": "orders-api" },
     { "type": "Function", "slug": "create-order" },
-    { "type": "Function", "slug": "cancel-order" },
-    { "type": "Queue", "slug": "orders-events" }
+    { "type": "Function", "slug": "cancel-order" }
   ],
-  "mustNotCreate": ["Repository", "Service", "API Endpoint", "Event", "Database Table", "Infrastructure Module"]
+  "mustNotCreate": ["Repository", "Interface", "Flow", "Resource", "Queue", "Server"]
 }

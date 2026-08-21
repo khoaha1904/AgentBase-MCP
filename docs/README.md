@@ -45,22 +45,30 @@ is the portable archive.
 
 ## Current checkpoint
 
-- Active capability: `022-single-repository-ingest`; implementation is offline
-  complete but remains open for separately authorized three-run qualification.
+- Active capability: `022-single-repository-ingest`. V14 passed lifecycle only
+  1/3 and exposed that catalog 6 conflates technology detection, concept
+  promotion and rendering. Catalog 7.0 passes the offline gate; the generated
+  Flow-skeleton defect exposed by its first V15 qualification is fixed and
+  verified offline, while model requalification remains pending.
 - Initial Ingest now resolves a durable Repository identity, requires bounded
   Domain confirmation, uses the graph only as a private map and stops at one
   sparse, inspectable proposal preview. Partial coverage is valid and visible;
   integrity failure is Incomplete.
+- New Initial Ingest preparation renders exact and suggested candidate recommendations into
+  editable OKF skeleton files with valid lifecycle/provenance frontmatter and
+  navigation. Suggested skeletons visibly require proposal review; the agent
+  enriches knowledge instead of rebuilding document syntax from memory.
 - Capability 018 is complete with 339 passing offline tests. Its V11 real run is
   accepted for confirmed Domain and shared-navigation qualification; no V12
   numeric-snapshot iteration was authorized.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.
-- Catalog 6.0 has 22 provider-neutral roles. Terraform Detector v1 and AWS
-  Profile v1 map supported resource evidence to generic Function, Server,
-  Queue, Database, Database Table and Object Storage roles; provider/product
-  remain metadata. Foreign extensions remain open-world compatible.
+- Catalog 7.0 has eight Initial Ingest roles: Repository, Domain, System,
+  Component, Function, Interface, Flow and Resource; Entity/Metric are
+  enrichment-only. Terraform/AWS profiles classify technology evidence.
+  Internal queues/topics/data/hosts embed in a useful parent unless independent
+  boundary evidence promotes them. Foreign extensions remain open-world compatible.
 - Hub retrieval is progressively scoped through root, Domain and System
   navigation, deterministic search and bounded inbound/outbound traversal. A
   broad ambiguous query asks for Domain scope instead of returning Hub-wide

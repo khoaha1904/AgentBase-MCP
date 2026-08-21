@@ -9,7 +9,7 @@ import { createHubRuntimeActions } from "../query/runtime-actions.ts";
 
 const repositoryGuidance = {
   candidates: [{ id: "repository", identityHint: "source", identityBasis: "checkout root",
-    queryValue: "repository", evidenceIds: ["readme"] }],
+    queryValue: "repository", evidenceIds: ["readme"], disposition: "concept" as const }],
   semanticObservations: [{ id: "readme", candidateId: "repository", role: "documentation" as const,
     signal: "repository", source: { path: "README.md", startLine: 1, endLine: 1 } }],
   resourceObservations: [],
@@ -38,16 +38,13 @@ test("[AB-HUB-SETUP-006..008][SC-003] local-only Hub accepts, queries and invent
         subjectDirectory: `repositories/repo-${sequence}`,
         guidanceRequest: repositoryGuidance }) as { sessionId: string; bundleRoot: string; sourceRepositoryId: string;
           source: { repositoryId: string; commit: string | null; dirty: boolean; dirtyDigest: string | null; limitations: readonly string[] } };
-      fs.mkdirSync(path.join(prepared.bundleRoot, `repositories/repo-${sequence}`), { recursive: true });
-      fs.appendFileSync(path.join(prepared.bundleRoot, "index.md"), `\n* [Repo ${sequence}](repositories/repo-${sequence}/) - repository\n`);
-      fs.writeFileSync(path.join(prepared.bundleRoot, `repositories/repo-${sequence}/index.md`),
-        `# Repo ${sequence}\n\n* [Repository](repository.md) - identity\n`);
-      fs.writeFileSync(path.join(prepared.bundleRoot, `repositories/repo-${sequence}/repository.md`),
+      fs.writeFileSync(path.join(prepared.bundleRoot, `repositories/repo-${sequence}.md`),
         `---\ntype: Repository\ntitle: Repo ${sequence}\ndescription: Repository ${sequence}\nstatus: draft\n`
         + `generated: { by: 'agentbase/0.0.0', at: '2026-08-13T00:00:00Z' }\n`
         + `sources:\n  - id: documentation\n    resource: repository://${prepared.sourceRepositoryId}/README.md#L1-L1\n`
         + `  - id: implementation\n    resource: repository://${prepared.sourceRepositoryId}/README.md#L1-L1\n`
-        + `agentbase:\n  live_claims:\n    - id: AB-CLAIM-repo-${sequence}-doc\n`
+        + `agentbase:\n  repository:\n    id: ${prepared.sourceRepositoryId}\n    display_name: source\n`
+        + `    aliases: { remotes: [], root_commits: [] }\n  live_claims:\n    - id: AB-CLAIM-repo-${sequence}-doc\n`
         + `      subject: repositories/repo-${sequence}\n      property: repository.purpose\n      role: documentation\n`
         + `      source_id: documentation\n      target: { kind: text, name: Purpose }\n`
         + `      observed: { commit: ${prepared.source?.commit ?? "a".repeat(40)}, dirty: false, dirty_digest: null }\n`
@@ -79,7 +76,7 @@ test("[AB-HUB-SETUP-006..008][SC-003] local-only Hub accepts, queries and invent
         assert.ok(guidancePath);
         await actions.accept(answered.proposal.id, answered.proposal.diffDigest);
         assert.match(JSON.stringify(await actions.read(guidancePath)), /owner-confirmed/);
-        const live = await actions.readLiveEvidence("repositories/repo-1/repository.md", prepared.source) as {
+        const live = await actions.readLiveEvidence("repositories/repo-1.md", prepared.source) as {
           claims: readonly { role: string }[];
         };
         assert.deepEqual([...live.claims.map((claim) => claim.role), "maintainer-guidance"].sort(),
@@ -92,7 +89,7 @@ test("[AB-HUB-SETUP-006..008][SC-003] local-only Hub accepts, queries and invent
     assert.equal((await restartedActions.listQuestions({ status: "resolved" }) as readonly unknown[]).length, 1);
     const searched = await actions.search("Repo 2") as { status: string; matches: readonly { path: string }[] };
     assert.equal(searched.status, "ok");
-    assert.equal(searched.matches.some((match) => match.path === "repositories/repo-2/repository.md"), true);
+    assert.equal(searched.matches.some((match) => match.path === "repositories/repo-2.md"), true);
     assert.equal((await runGit({ args: ["remote"], cwd: configured.localRoot, operation: "verify no local Hub remote" })).stdout, "");
     await assert.rejects(actions.submitMany(["x"]), /first bootstrap/);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }

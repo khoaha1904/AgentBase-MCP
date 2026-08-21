@@ -33,8 +33,8 @@ The scenario must show:
 1. repository/Domain preflight and confirmation evidence;
 2. one bounded graph/evidence round;
 3. qualified candidates with exact source references;
-4. generic `Function`, `Queue` and `Server` recommendations with AWS/Terraform
-   profile provenance;
+4. a generic `Function` recommendation plus embedded queue/data/hosting
+   knowledge with AWS/Terraform profile provenance;
 5. one valid proposal inspection marked partial when coverage is limited;
 6. zero Accept, submit, synchronize, provider CLI or network operations.
 
@@ -49,9 +49,7 @@ redacted-secret, offline tests and diff checks all pass.
 
 ## Optional real qualification
 
-Do not run automatically. After the owner confirms a usable agent account and
-authorizes the benchmark, run the repository's opt-in OKF benchmark three times
-against the accepted representative repository. Record validity, reviewability,
-elapsed time, limitations and correction count. Qualification requires three
-valid previews and median elapsed time no greater than 10 minutes; it never
-publishes or rebuilds a Hub PR.
+Do not run automatically. The owner has authorized exactly the first V15 run
+after the catalog-7 offline gate passes. Record validity, reviewability, elapsed
+time, standalone concepts, embedded knowledge, limitations and correction
+count. Do not add a replacement run, publish or rebuild a Hub PR.

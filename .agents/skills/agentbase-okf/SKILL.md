@@ -33,12 +33,22 @@ repository as read-only.
 3. Preserve every existing file byte-for-byte unless it is an explicit
    unverified `agentbase/` draft. When new evidence conflicts with protected
    knowledge, keep the protected bytes and report the unresolved conflict.
-4. Create the smallest independently useful linked concept set. A separate
+4. For Initial Ingest, begin with the exact skeleton files returned by prepare.
+   Preserve their paths and generated lifecycle/provenance fields; enrich the
+   Markdown knowledge and add only evidence-backed metadata or relations. Do
+   not reconstruct frontmatter from memory. A skeleton produced from semantic
+   `suggested` guidance keeps its visible role-review limitation until the
+   proposal is reviewed; it is not exact truth. Preserve the prepared bounded
+   `Embedded Knowledge` table as searchable human-readable knowledge in its
+   parent. An embedded row has no OKF identity, standalone file, navigation or
+   graph relationship. Do not promote or split it during this authoring pass.
+   Create the smallest independently
+   useful linked concept set. A separate
    concept needs a stable identity plus an independent contract, ownership,
    lifecycle, failure/operational boundary, audience or important graph role.
    Do not turn every route, handler, function or infrastructure block into a
    concept merely because it is concrete.
-5. Keep navigation progressive. The root `index.md` carries `okf_version:
+5. Keep the prepared navigation progressive. The root `index.md` carries `okf_version:
    "0.2"` and links only existing Domain, System and Repository entrypoint
    indexes. Preserve every existing nonblank root/category index line exactly
    and in order; repository authoring may append navigation but must never
@@ -46,10 +56,14 @@ repository as read-only.
    `log.md`; do not generate one.
 6. Validate created/modified concepts with `validate_okf_changes`, supplying
    only their full Markdown plus unchanged target summaries from continuity or
-   exact search/traversal. For every supplied concept or target, `identity` is
+   exact search/traversal. Read each changed file and send its complete Markdown
+   document bytes as `content`, never its path or a wrapper object. For every
+   supplied concept or target, `identity` is
    exactly its normalized path relative to the OKF root with `.md` removed;
-   never include an outer `okf/` prefix. Then run AgentBase final validation and diff. Repair
-   only proposal files. Present warnings, limitations, and the complete diff.
+   never include an outer `okf/` prefix. Apply relationship guidance from the
+   exact frontmatter `type`; a display name or prose never changes the schema.
+   Then run AgentBase final validation and diff. Repair only proposal files.
+   Present warnings, limitations, and the complete diff.
 7. Stop before apply unless the maintainer explicitly authorizes applying that
    exact validated proposal.
 

@@ -1,0 +1,1 @@
+2026-08-21T09:12:32.765235Z ERROR codex_core::tools::router: error=exec_command failed for `/bin/bash -lc "find . -type f -maxdepth 4 -print -exec sed -n '1,220p' {} \\;"`: CreateProcess { message: "Rejected(\"Failed to create unified exec process: No such file or directory (os error 2)\")" }

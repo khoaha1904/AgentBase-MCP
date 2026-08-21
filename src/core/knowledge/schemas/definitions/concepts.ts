@@ -10,7 +10,7 @@ export type { OkfConceptSchema } from "../definition.ts";
 export const OKF_CONCEPT_SCHEMAS: readonly OkfConceptSchema[] = [
   ...FOUNDATION_SCHEMAS,
   ...SOFTWARE_SCHEMAS,
-  ...DATA_SCHEMAS,
   ...INFRASTRUCTURE_SCHEMAS,
+  ...DATA_SCHEMAS,
   ...GOVERNANCE_SCHEMAS,
 ];

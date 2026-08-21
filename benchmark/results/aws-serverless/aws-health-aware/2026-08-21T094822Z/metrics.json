@@ -1,0 +1,78 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-health-aware",
+  "runId": "2026-08-21T094822Z",
+  "arm": "mcp",
+  "expectedConcepts": 8,
+  "actualConcepts": 5,
+  "matchedConcepts": 3,
+  "referenceConceptCoveragePercent": 38,
+  "recognizedSchemaAgreementPercent": 100,
+  "metadataCompletenessPercent": 100,
+  "provenanceCoveragePercent": 22,
+  "referenceRelationshipCoveragePercent": 13,
+  "conflictVisibilityPercent": 100,
+  "liveEvidenceReferenceCoveragePercent": 100,
+  "classifications": {
+    "concepts": {
+      "confirmed": [
+        "domains/health-operations",
+        "repositories/aws-health-aware",
+        "resources/health-event-state"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "components/health-alert-processor",
+        "resources/account-exclusion-input"
+      ],
+      "missingReference": [
+        "aws-health-aware-system",
+        "aha-infrastructure-definition",
+        "aha-lambda-function-primary-region",
+        "aha-lambda-schedule-primary-region",
+        "aws-health-alerting-flow"
+      ]
+    },
+    "relationships": {
+      "confirmed": [
+        "aws-health-aware-repository|part-of|health-operations-domain"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "components/health-alert-processor|writes-to|resources/health-event-state",
+        "components/health-alert-processor|reads-from|resources/health-event-state",
+        "components/health-alert-processor|implemented-in|repositories/aws-health-aware"
+      ],
+      "missingReference": [
+        "aws-health-aware-system|part-of|health-operations-domain",
+        "aha-lambda-function-primary-region|part-of|aws-health-aware-system",
+        "aha-lambda-function-primary-region|declared-by|aha-infrastructure-definition",
+        "aha-dynamodb-table|declared-by|aha-infrastructure-definition",
+        "aha-lambda-schedule-primary-region|part-of|aws-health-aware-system",
+        "aha-lambda-function-primary-region|reads-from|aha-dynamodb-table",
+        "aws-health-alerting-flow|part-of|aws-health-aware-system"
+      ]
+    }
+  },
+  "validation": {
+    "passed": true,
+    "failures": []
+  },
+  "ownerReview": {
+    "status": "needs_revision",
+    "findings": [
+      "domains/health-operations.md: confirmed Domain does not navigate to a System",
+      "domains/health-operations.md: Markdown body lacks reviewable substance",
+      "resources/account-exclusion-input.md: owner review needs an explicit Limitations section"
+    ]
+  },
+  "authoringAssessment": {
+    "status": "reviewable",
+    "hardFailures": [],
+    "limitations": [
+      "Deterministic source-path checks do not prove that authored claims are semantically supported; human review is required.",
+      "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept."
+    ]
+  },
+  "okfTreeDigest": "sha256:ea02a47eb0ad6423ddbde45c922993905c3af0b46d84d15ee6c71865863f7051"
+}

@@ -1,13 +1,13 @@
 {
   "suite": "aws-serverless",
-  "version": 13,
-  "catalogVersion": "6.0.0",
-  "promptVersion": "okf-author-v13",
-  "directPromptVersion": "okf-author-direct-v13",
+  "version": 15,
+  "catalogVersion": "7.0.0",
+  "promptVersion": "okf-author-v15",
+  "directPromptVersion": "okf-author-direct-v15",
   "agent": {
     "provider": "codex-cli",
     "executable": "codex",
-    "version": "codex-cli 0.147.0",
+    "version": "codex-cli 0.149.0",
     "model": "gpt-5.6-terra",
     "reasoningEffort": "medium",
     "timeoutMs": 900000
@@ -23,19 +23,7 @@
         "title": "Health Operations",
         "evidenceResource": "agentbase://owner-guidance/domains/health-operations"
       },
-      "expectation": "expected/aws-health-aware.json"
-    },
-    {
-      "id": "aws-serverless-shopping-cart",
-      "kind": "sam-backend-vue-frontend",
-      "path": "../fixtures/source-repos/multiservice-feasibility/aws-serverless-shopping-cart",
-      "commit": "66a863f1b7a2a7f319adddce6a55e090ce9f6734",
-      "confirmedDomain": {
-        "identity": "domains/commerce",
-        "title": "Commerce",
-        "evidenceResource": "agentbase://owner-guidance/domains/commerce"
-      },
-      "expectation": "expected/aws-serverless-shopping-cart.json"
+      "expectation": "expected/aws-health-aware-v15.json"
     }
   ]
 }

@@ -42,7 +42,7 @@ test("[AB-BENCH-038][AB-BENCH-040] frontend, backend and infrastructure enrich o
     write(authored1, "systems/shopping-cart.md", concept("System", "Shopping cart", [[FRONTEND, "src/App.vue"]],
       "# Purpose\n\nDelivers the shopping cart capability through the [cart client](../components/cart-client.md)."
         + "\n\n# Limitations\n\nBackend and deployment details are not known yet."));
-    write(authored1, "components/cart-client.md", concept("Software Component", "Cart client", [[FRONTEND, "src/App.vue"]],
+    write(authored1, "components/cart-client.md", concept("Component", "Cart client", [[FRONTEND, "src/App.vue"]],
       "# Responsibility\n\nStarts cart interactions in the [shopping cart system](../systems/shopping-cart.md).",
       "relationships:\n  - { kind: part-of, target: systems/shopping-cart, evidence: [source-1] }\n"));
     const first = prepareNewHubProposal({
@@ -58,14 +58,14 @@ test("[AB-BENCH-038][AB-BENCH-040] frontend, backend and infrastructure enrich o
       [FRONTEND, "src/App.vue"], [BACKEND, "src/cart.ts"],
     ], "# Purpose\n\nDelivers the shopping cart capability through the [cart client](../components/cart-client.md)"
       + " and [cart service](../components/cart-service.md).\n\n# Limitations\n\nDeployment identity is not known yet."));
-    write(authored2, "components/cart-service.md", concept("Service", "Cart service", [[BACKEND, "src/cart.ts"]],
+    write(authored2, "components/cart-service.md", concept("Component", "Cart service", [[BACKEND, "src/cart.ts"]],
       "# Responsibility\n\nOwns stable cart behavior in the [shopping cart system](../systems/shopping-cart.md).",
       "relationships:\n  - { kind: part-of, target: systems/shopping-cart, evidence: [source-1] }\n"));
     const second = prepareRefreshHubProposal({
       hub, baseCommit: "b".repeat(40), sourceRepositoryId: BACKEND, hubBundleRoot: base2,
       authoredBundleRoot: authored2, proposalRoot: path.join(root, "proposal-2"),
       subjectDirectory: "systems/shopping-cart", evidenceDigest: `sha256:${"2".repeat(64)}`,
-      signals: ["service"], createdAt: CREATED,
+      signals: ["workload component", "independent workload, build, runtime, deployment or ownership boundary"], createdAt: CREATED,
     });
 
     const base3 = path.join(root, "base-3"), authored3 = path.join(root, "authored-3");
@@ -76,12 +76,12 @@ test("[AB-BENCH-038][AB-BENCH-040] frontend, backend and infrastructure enrich o
       + "[cart service](../components/cart-service.md), [add-item flow](../flows/add-cart-item.md) and "
       + "[declared infrastructure](../infrastructure/shopping-cart.md).\n\n# Limitations\n\nNo applied environment is evidenced."));
     write(authored3, "infrastructure/shopping-cart.md", concept(
-      "Infrastructure Definition", "Shopping cart infrastructure", [[INFRA, "main.tf"]],
+      "Resource", "Shopping cart infrastructure", [[INFRA, "main.tf"]],
       "# Purpose\n\nDeclares desired infrastructure for the [shopping cart system](../systems/shopping-cart.md).",
       "configuration_root: .\ndeclared_resources: [cart-service]\nrelationships:\n"
         + "  - { kind: part-of, target: systems/shopping-cart, evidence: [source-1] }\n",
     ));
-    write(authored3, "flows/add-cart-item.md", concept("Business Flow", "Add cart item", [
+    write(authored3, "flows/add-cart-item.md", concept("Flow", "Add cart item", [
       [FRONTEND, "src/App.vue"], [BACKEND, "src/cart.ts"], [INFRA, "main.tf"],
     ], "# Purpose\n\nThe [cart client](../components/cart-client.md) invokes the [cart service](../components/cart-service.md).\n\n"
       + "The flow is part of the [shopping cart system](../systems/shopping-cart.md).",
@@ -92,7 +92,7 @@ test("[AB-BENCH-038][AB-BENCH-040] frontend, backend and infrastructure enrich o
       hub, baseCommit: "c".repeat(40), sourceRepositoryId: INFRA, hubBundleRoot: base3,
       authoredBundleRoot: authored3, proposalRoot: path.join(root, "proposal-3"),
       subjectDirectory: "systems/shopping-cart", evidenceDigest: `sha256:${"3".repeat(64)}`,
-      signals: ["terraform root configuration", "business flow"], createdAt: CREATED,
+      signals: ["operated resource", "independent cross-boundary, ownership, lifecycle, failure, security or operational evidence", "business flow", "trigger", "observable outcome", "supporting concept evidence"], createdAt: CREATED,
     });
 
     const bundle = loadOkfBundle(third.bundleRoot, { requireAgentBaseRootIndex: true });

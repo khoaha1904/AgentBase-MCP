@@ -5,9 +5,9 @@
 - Only the root `index.md` may have OKF frontmatter; category indexes MUST NOT have frontmatter and contain navigation Markdown only.
 - Keep one canonical concept file; indexes link to it and never copy it.
 - Root navigation grows with Domain and fallback entrypoints, not every entity.
-- A Domain concept links its Systems and critical Business Flows. A System
-  concept links the components, interfaces, flows, resources and infrastructure
-  needed to understand that system.
+- A Domain concept links its Systems and critical Flows. A System concept links
+  the components, functions, interfaces, flows and independently useful
+  resources needed to understand that system.
 - When Domain evidence is absent, use bounded System and Repository indexes;
   never invent a Domain merely to satisfy the layout.
 - Prefer domain-scoped Hub search for broad terms. An exact concept, resource or
@@ -30,20 +30,25 @@
 - Keep repository-specific purpose, source structure, build, test and entry
   points in a Repository concept. Link to canonical entities instead of copying
   their architecture or contracts.
-- Group related CRUD/HTTP operations into one API Surface with a Markdown
-  operations table. Split an API Endpoint only for an independent consumer,
+- Group related CRUD/HTTP operations into one Interface with a Markdown
+  operations table. Split another Interface only for an independent consumer,
   owner, version, policy, SLA or lifecycle boundary.
 - Keep an implementation-only function or handler inside its component/API/flow.
   Split a Function only for independent triggers, deployment, scaling,
   permissions, failure or operational behavior. Provider/product belongs in
   metadata and evidence, never in the schema type.
-- Treat an architecture node and a Markdown knowledge unit separately. A
-  Server is a compute host, not an application component; workloads connect to
-  it with `runs-on` only when placement evidence exists.
-- Distinguish desired-state Infrastructure Definition, genuinely reusable
-  Infrastructure Module and externally evidenced Deployment. Terraform remains
-  source-tool metadata. Source declarations do
-  not prove an account, region, ARN or deployed instance.
+- Treat an architecture node and a Markdown knowledge unit separately. EC2, VM
+  and physical-host evidence describes hosting; it never creates a Server
+  concept. Create a Component for an independently useful evidenced service,
+  worker or process on that host. If no workload boundary is known, keep the
+  host as embedded knowledge or a limitation.
+- SQS/SNS/event buses, tables, buckets and databases default to embedded
+  knowledge in the Function, Component or System that uses them. Promote one
+  to Interface only for an independently evidenced shared contract, or to
+  Resource for cross-boundary use or independently evidenced ownership,
+  lifecycle, failure, security or operational value.
+- Terraform remains source-tool metadata. Source declarations do not prove an
+  account, region, ARN or deployed instance.
 
 Unknown OKF types and extension fields are valid. Preserve their relationship
 predicates as unjudged extensions. New known AgentBase concepts use only the

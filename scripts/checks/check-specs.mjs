@@ -27,13 +27,13 @@ const REQUIREMENT_GROUPS = [
   ["MCP surface", "docs/contracts/code-graph.md", ids("AB-MCP", 14), "SPEC-GRAPH-LIVING-MISSING", "SPEC-MCP-ID-MISSING"],
   ["OKF proposal", "docs/contracts/okf.md", ids("AB-MVP", 16, 8), "SPEC-OKF-LIVING-MISSING", "SPEC-MVP-ID-MISSING"],
   ["observations", "docs/contracts/okf.md", ids("AB-OBS", 7), "SPEC-OKF-LIVING-MISSING", "SPEC-OBS-ID-MISSING"],
-  ["schema catalog", "docs/contracts/okf.md", ids("AB-SCHEMA", 35), "SPEC-OKF-LIVING-MISSING", "SPEC-SCHEMA-ID-MISSING"],
+  ["schema catalog", "docs/contracts/okf.md", ids("AB-SCHEMA", 36), "SPEC-OKF-LIVING-MISSING", "SPEC-SCHEMA-ID-MISSING"],
   ["live claims", "docs/contracts/okf.md", ids("AB-CLAIM", 5), "SPEC-OKF-LIVING-MISSING", "SPEC-CLAIM-ID-MISSING"],
-  ["initial ingest", "docs/contracts/okf.md", ids("AB-INGEST", 10), "SPEC-OKF-LIVING-MISSING", "SPEC-INGEST-ID-MISSING"],
+  ["initial ingest", "docs/contracts/okf.md", ids("AB-INGEST", 11), "SPEC-OKF-LIVING-MISSING", "SPEC-INGEST-ID-MISSING"],
   ["product", "docs/PRODUCT.md", [...ids("AB-PRODUCT", 5), ...ids("AB-MIGRATION", 2)], "SPEC-PRODUCT-LIVING-MISSING", "SPEC-PRODUCT-ID-MISSING"],
   ["local Hub", "docs/contracts/hub.md", [...ids("AB-LOCAL-HUB", 16), "AB-QUERY-001", ...ids("AB-HUB-SETUP", 17)], "SPEC-HUB-LIVING-MISSING", "SPEC-HUB-ID-MISSING"],
   ["installation", "docs/contracts/installation.md", ids("AB-INSTALL", 24), "SPEC-INSTALL-LIVING-MISSING", "SPEC-INSTALL-ID-MISSING"],
-  ["benchmark", "docs/contracts/benchmark.md", ids("AB-BENCH", 43), "SPEC-BENCH-LIVING-MISSING", "SPEC-BENCH-ID-MISSING"],
+  ["benchmark", "docs/contracts/benchmark.md", ids("AB-BENCH", 44), "SPEC-BENCH-LIVING-MISSING", "SPEC-BENCH-ID-MISSING"],
 ];
 
 const CURRENT_DOCUMENTS = [

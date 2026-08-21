@@ -16,17 +16,36 @@ the repository, not an authoring prompt. Stop before Accept or Publish.
    primary-Domain confirmation.
 2. **Discover** — Follow `use-codebase-memory` for one repository map and one
    bounded architecture pass. Reuse a fresh graph; never ingest graph records.
-3. **Investigate** — Shortlist candidates. Require both stable identity and
-   independent query/link value. Resolve every promoted claim or relation to an
-   exact source path/span; keep important ambiguity as a Question or limitation.
+3. **Investigate** — Detect technology, then decide promotion before selecting
+   a schema. A standalone candidate needs stable identity and an independent query/link value,
+   plus an evidenced deployment, ownership, contract, cross-boundary,
+   failure or operational boundary. An independently deployed function may be
+   a `Function`. SQS/SNS/event buses, tables, buckets, databases and compute
+   hosts default to `embedded` knowledge in the Function, Component or System
+   that uses them; declare that parent in `parent_candidate_id`. EC2/VM evidence
+   is a host reference, never a Server concept. Promote an evidenced workload
+   on that host as `Component`; if no workload is known, retain only the host
+   reference or a limitation. Resolve every retained item to an exact source
+   path/span and keep important ambiguity as a Question or limitation.
 4. **Author** — Call `get_okf_authoring_schemas` exactly once with the qualified
-   candidates plus exact semantic/resource observations. Pass that same
-   evidence-bearing request to `prepare_hub_okf`; never replace it with free
-   text `signals` or supply an opaque evidence digest. Persist the confirmed
+   candidates plus exact semantic/resource observations. Every candidate declares
+   `disposition: concept` or `disposition: embedded`; embedded candidates have
+   no `suggested_type`. Each evidence ID is
+   owned by one candidate: a candidate may cite only observations whose
+   `candidate_id` equals that candidate's `id`. For a semantic-only candidate,
+   include one released provider-neutral `suggested_type` to expose the agent's
+   intended role. Treat a returned `suggested` role as reviewable, never exact;
+   structured mapping wins and semantic disagreement remains ambiguous. Pass that same evidence-bearing
+   request to `prepare_hub_okf`; never replace it with free text `signals` or
+   supply an opaque evidence digest. Persist the confirmed
    primary Domain as an owner-evidenced `Repository part-of Domain` relation.
-   Run one bounded active-Hub identity match, then follow
-   `agentbase-okf` inside the returned workspace. Create only useful concepts
-   and required navigation.
+   Run one bounded active-Hub identity match, then follow `agentbase-okf` inside
+   the returned workspace. Enrich the returned OKF skeletons instead of
+   rebuilding their frontmatter or navigation from memory. Preserve the visible
+   review limitation on every suggested skeleton. Preserve the one prepared
+   Embedded Knowledge table in its parent. An embedded item has no OKF identity,
+   standalone file, navigation or graph relationship. Create only useful
+   concepts and required navigation.
 5. **Validate** — Run changed-set and final validation. Make at most one repair
    from exact failures. Inspect and present the complete proposal diff,
    Questions, limitations and partial-coverage status.

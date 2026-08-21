@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-20
 
-**Status**: Implemented — V13 external qualification failed; correction required
+**Status**: In progress — catalog 7.0 simplification approved
 
 **Input**: Build the first independently useful AgentBase Ingest slice: read one
 authorized local repository, confirm its primary Domain, discover a sparse set
@@ -28,9 +28,9 @@ produce one reviewable Hub proposal without accepting or publishing it.
   incomplete; later Refresh can build more knowledge.
 - A candidate needs stable identity and independent query/link value. There is
   no numeric confidence or completeness score.
-- Catalog `6.0.0` contains provider-neutral architectural roles. AWS and
-  Terraform knowledge are separately versioned mapping profiles used in one
-  deterministic guidance operation.
+- Catalog `7.0.0` contains a small provider-neutral authoring core. AWS and
+  Terraform knowledge classify technology evidence but do not decide whether a
+  resource deserves a standalone concept.
 - Hub knowledge stores claims, evidence and references, not a second source
   tree or Code Graph. A small non-sensitive value may be shown only as an
   attributed observation, never as timeless current truth.
@@ -87,10 +87,11 @@ retains exact source references and contains no copied source or graph dump.
 1. **Given** a repository with a documented purpose, architecture boundaries
    and exact source evidence, **When** Ingest completes, **Then** it proposes
    only candidates that pass both identity and query/link-value gates.
-2. **Given** Terraform declares an AWS Lambda, SQS queue and EC2 instance,
-   **When** authoring guidance is requested, **Then** the proposed concept types
-   are `Function`, `Queue` and `Server`, with separately attributed AWS,
-   product, Terraform and source-resource metadata.
+2. **Given** Terraform declares an AWS Lambda, internal SQS queue and EC2 host,
+   **When** authoring guidance is requested, **Then** the Lambda may become a
+   `Function`, the queue is searchable embedded knowledge in its consumer and
+   EC2 remains hosting evidence while independently evidenced workloads become
+   `Component` concepts.
 3. **Given** a claim discovered through the Code Graph, **When** it enters the
    proposal, **Then** it cites an exact authorized repository source; a graph
    summary without source evidence remains a signal, limitation or Question.
@@ -195,33 +196,76 @@ accepted.
   derive its proposal evidence digest from the validated guidance request and
   exact repository source state rather than requiring the agent to invent or
   supply an opaque digest.
-- **AB-SCHEMA-030**: Catalog `6.0.0` MUST expose exactly the 22 approved
-  provider-neutral roles: `Repository`, `Domain`, `Domain Entity`, `System`,
-  `Metric`, `Business Flow`, `Maintainer Guidance`, `Software Component`,
-  `Service`, `Function`, `API Surface`, `API Endpoint`, `Event`, `Server`,
-  `Database`, `Database Table`, `Queue`, `Object Storage`, `Infrastructure
-  Definition`, `Infrastructure Module`, `Deployment` and `Cross-Repository
-  Relationship`. It MUST retire `AWS Lambda`, `AWS SQS Queue` and `Terraform
-  Module` from new AgentBase authoring while preserving readable unknown
-  foreign OKF types.
+- **AB-INGEST-011**: For a new Initial Ingest, proposal preparation MUST turn
+  each promoted exact or advisory suggested candidate recommendation into an editable OKF skeleton with a
+  canonical path, valid document frontmatter and normalized evidence sources.
+  It MUST also prepare the Repository, confirmed Domain and required navigation
+  without asking the agent to reconstruct OKF document syntax. The concept
+  schema defines what knowledge belongs in the concept; the OKF document
+  template defines how that knowledge is encoded; the generated skeleton is
+  the proposal file the agent enriches before changed-set validation.
+  A generated Flow skeleton MUST contain an explicit empty `flow_steps` edit
+  point and MUST NOT invent endpoints; normal changed-set validation MUST reject
+  it until the agent supplies a non-empty linked, evidenced step sequence.
+  A prepared System skeleton MUST carry the confirmed primary-Domain relation
+  with owner evidence so canonical inbound Domain navigation is derivable.
+- **AB-SCHEMA-030**: Catalog `7.0.0` MUST expose eight provider-neutral Initial
+  Ingest roles: `Repository`, `Domain`, `System`, `Component`, `Function`,
+  `Interface`, `Flow` and `Resource`. `Entity` and `Metric` remain
+  enrichment-only roles; governance documents are workflow-owned rather than
+  Initial Ingest choices. Legacy and foreign OKF types remain readable and
+  protected, but new authoring MUST use the catalog 7 roles.
 - **AB-SCHEMA-031**: One bounded guidance operation MUST accept
   provenance-bearing semantic and structured resource observations, run source
-  detector mapping, provider mapping and generic schema selection, and return
-  exact/ambiguous/unsupported results without trusting caller-supplied provider,
-  product or schema guesses.
-- **AB-SCHEMA-032**: AWS Profile `1.0.0` MUST map EC2, Lambda, SQS, S3, RDS and
-  DynamoDB table observations to generic roles and technology metadata without
-  asserting deployed state, account, region, ARN or runtime values.
+  detector mapping, provider mapping, promotion and generic schema selection,
+  and return `exact`, `suggested`, `embedded`, `ambiguous` or `unsupported`.
+  A candidate MAY declare one released provider-neutral `suggested_type` as
+  transparent intent and MUST declare whether it is proposed as a standalone
+  concept or embedded knowledge; embedded knowledge MUST identify its parent.
+  The caller MUST NOT supply provider, product or an exact schema assertion.
+- **AB-SCHEMA-032**: AWS Profile `2.0.0` MUST classify EC2, Lambda, SQS, SNS,
+  EventBridge, S3, RDS and DynamoDB observations as technology evidence without
+  automatically turning each resource into a concept or asserting deployed
+  state, account, region, ARN or runtime values.
 - **AB-SCHEMA-033**: Terraform Detector `1.0.0` MUST validate bounded
   source-native resource/module observations, retain exact evidence references
   and treat unresolved type/address indirection as ambiguous rather than
-  inventing identity.
+  inventing identity. Detection MUST NOT decide standalone concept promotion.
+  A deployable function with exact handler/trigger or lifecycle evidence MAY be
+  promoted deterministically to `Function`; other cloud resources default to
+  embedded knowledge unless independent boundary evidence supports promotion.
 - **AB-SCHEMA-034**: Guidance results MUST identify the catalog, detector and
   provider-profile versions independently, matched evidence, missing evidence,
-  technology metadata and complete selected-schema guidance.
+  technology metadata, promotion outcome and complete selected-schema guidance.
+  Semantic-only selection MUST remain advisory. System guidance MUST require a
+  separate capability candidate with cooperating concepts; Component MUST
+  represent an independently useful workload/build/ownership unit rather than
+  the host on which it happens to run.
 - **AB-SCHEMA-035**: New AgentBase drafts using a retired vendor/source-tool
   type MUST fail with replacement guidance; arbitrary foreign unknown types
   MUST remain portable, readable and protected.
+- **AB-SCHEMA-036**: Promotion MUST be evaluated before rendering. Lambda-like
+  independently deployed functions MAY return `exact`; other evidence-bound
+  standalone roles MAY return `suggested`; non-promoted cloud resources MUST
+  return `embedded` with their parent and sources. Unsupported or conflicting
+  promotion evidence MUST remain `ambiguous`/`unsupported`. Suggested skeletons
+  require proposal review and MUST NOT be auto-accepted or published.
+- **AB-SCHEMA-037**: SQS queues, SNS topics, event buses, tables, buckets,
+  databases and compute hosts MUST default to embedded knowledge in the
+  Function, Component or System that uses them. A resource MAY become a
+  standalone `Interface` when it represents a shared message/API contract, or
+  `Resource` when it has cross-boundary use or independently evidenced
+  ownership, lifecycle, failure, security or operational value. A declaration
+  alone is insufficient promotion evidence.
+- **AB-SCHEMA-038**: EC2, VM or physical-host evidence MUST describe hosting and
+  technology, not create a `Server` concept. Independently useful services,
+  workers or processes evidenced on that host become `Component` concepts. If
+  no workload boundary is evidenced, Initial Ingest MUST retain the host as a
+  Repository/System reference or limitation rather than inventing a component.
+- **AB-SCHEMA-039**: Embedded knowledge MUST remain human-readable and
+  searchable in its parent with role, provider-neutral kind, technology and
+  exact source references. It MUST NOT receive a concept identity, graph edge
+  or standalone Markdown document until later promotion.
 - **AB-CLAIM-005**: A small directly evidenced non-sensitive scalar or
   identifier MAY be retained as an optional observed snapshot only with its
   claim, exact source, source revision and observed time. It MUST be bounded,
@@ -243,8 +287,9 @@ accepted.
   evidence ID and exact repository reference.
 - **Candidate**: Temporary proposed identity, supporting evidence, independent
   query/link value and unresolved ambiguity; never a Hub entity.
-- **Guidance Result**: Generic schema recommendation, technology metadata,
-  mapping versions, matched/missing evidence and selection status.
+- **Guidance Result**: Promotion outcome, optional generic schema recommendation,
+  parent identity for embedded knowledge, technology metadata, mapping versions
+  and matched/missing evidence.
 - **Observed Snapshot**: Optional small human-readable value with claim,
   evidence, revision, time and non-current semantics.
 - **Initial Ingest Outcome**: Valid partial/full no-change or proposal preview,
@@ -258,20 +303,26 @@ accepted.
   preview in which 100% of attributed claims and canonical relations cite at
   least one exact authorized source or explicit owner guidance.
 - **SC-002**: Five repeated runs over identical fixed evidence produce the same
-  normalized candidate outcomes, schema recommendations and proposed knowledge
-  tree, excluding declared run IDs and timestamps.
-- **SC-003**: Fixture coverage demonstrates all 22 authorable catalog roles,
-  all six AWS mappings, Terraform exact/ambiguous/unsupported outcomes and 100%
-  rejection of the three retired AgentBase authoring types.
+  normalized promotion outcomes, schema recommendations, embedded knowledge and
+  proposed knowledge tree, excluding declared run IDs and timestamps.
+- **SC-003**: Fixture coverage demonstrates all eight Initial Ingest roles,
+  enrichment isolation, supported AWS technology classifications, Terraform
+  exact/embedded/ambiguous/unsupported outcomes and rejection of legacy
+  AgentBase authoring types.
 - **SC-004**: Partial-coverage, no-change, source-mutation, cleanup-failure,
   first-repair-success and repair-exhausted scenarios each produce the specified
   distinct outcome with zero implicit Accept or Publish operations.
 - **SC-005**: On the accepted representative repository and qualified host-agent
   environment, three consecutive opt-in runs produce valid reviewable previews
   with a median elapsed time no greater than 10 minutes. Measurement records
-  limitations and is not part of the offline gate. V13 runs the real isolated
-  local-Hub Preflight through Inspect lifecycle under catalog `6.0.0`, requires
-  the packaged Initial Ingest tool sequence and never Accepts or publishes.
+  limitations and is not part of the offline gate. The first catalog 7 run uses
+  the real isolated local-Hub Preflight through Inspect lifecycle, requires the
+  packaged Initial Ingest tool sequence and never Accepts or publishes.
+- **SC-007**: A serverless fixture with internal messaging MUST produce its
+  Function/System knowledge without orphan Queue, Topic, Table, Bucket or
+  Server concepts, while retaining their searchable exact evidence in a parent.
+  A VM fixture with multiple evidenced workloads MUST produce Components for
+  those workloads rather than one oversized Server concept.
 - **SC-006**: The canonical offline repository verification passes without
   network access, provider credentials, provider CLI calls, model calls or
   source-repository mutation.
@@ -280,6 +331,8 @@ accepted.
 
 - Refresh, source-diff reconciliation, removal proposals or OKF freshness.
 - Multi-repository Batch Ingest, batch checkpoints or batch PR membership.
+- SAM/CloudFormation or mixed frontend/backend benchmark qualification; the
+  current MVP benchmark scope is pinned Terraform repositories only.
 - Domain Enrichment, AWS CLI execution, cloud login or deployed-state proof.
 - Accept, local Hub commit, PR creation, publication, synchronization or merge.
 - Cross-repository discovery, automatic repository clone or remote Code Graph.
@@ -287,8 +340,7 @@ accepted.
   database.
 - Azure/GCP production profiles, a provider documentation scraper or a second
   source parser.
-- Conversion of existing drafts, dual catalog compatibility or automatic Hub
-  migration.
+- Automatic conversion of accepted legacy concepts or dual authoring catalogs.
 
 ## Assumptions
 
@@ -298,7 +350,8 @@ accepted.
   validation, inspection and recovery boundaries remain reusable unless focused
   tests prove replacement is simpler or safer.
 - Existing obsolete proposals can be discarded by the owner; no Published
-  concept depends on catalog `5.x` vendor-specific types.
+  concept depends on catalog `5.x` or `6.x`, so catalog 7 is a clean authoring
+  cutover without a Hub migration PR.
 - Host-agent reasoning is available during real Ingest, but deterministic
   fixtures and canonical verification remain model-free.
 - Real benchmark execution requires a separately authorized usable agent

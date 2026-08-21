@@ -4,10 +4,11 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { loadOkfBundle, validateOkfRelationships } from "../../../core/knowledge/index.ts";
 import { runGit } from "../../../providers/github-hub/index.ts";
 import { createHubRuntimeActions } from "../query/runtime-actions.ts";
 
-test("[AB-INGEST-004..006][AB-INGEST-008] evidence guidance produces one generic inspectable preview and stops", async () => {
+test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011] preparation renders one generic inspectable skeleton bundle and stops", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-initial-ingest-"));
   const source = path.join(root, "vehicle-events");
   const environment = { HOME: root, XDG_CONFIG_HOME: path.join(root, "config"), XDG_DATA_HOME: path.join(root, "data") };
@@ -31,12 +32,30 @@ test("[AB-INGEST-004..006][AB-INGEST-008] evidence guidance produces one generic
     assert.equal(preflight.repository.kind, "new");
     const guidanceRequest = {
       candidates: [
-        { id: "repository", identityHint: "vehicle-events", identityBasis: "checkout root", queryValue: "source identity", evidenceIds: ["readme"] },
-        { id: "publisher", identityHint: "publisher", identityBasis: "Terraform address", queryValue: "independent runtime", evidenceIds: ["function"] },
-        { id: "events", identityHint: "events", identityBasis: "Terraform address", queryValue: "asynchronous boundary", evidenceIds: ["queue"] },
+        { id: "repository", identityHint: "vehicle-events", identityBasis: "checkout root", queryValue: "source identity",
+          evidenceIds: ["readme"], disposition: "concept" as const },
+        { id: "publisher", identityHint: "publisher", identityBasis: "Terraform address", queryValue: "independent runtime",
+          evidenceIds: ["function"], disposition: "concept" as const },
+        { id: "events", identityHint: "vehicle-events", identityBasis: "Terraform address",
+          queryValue: "Internal trigger transport for the publisher", evidenceIds: ["queue"],
+          disposition: "embedded" as const, parentCandidateId: "publisher" },
+        { id: "system", identityHint: "vehicle-events", identityBasis: "README capability",
+          queryValue: "Coordinates event publication and delivery", evidenceIds: ["system-docs"],
+          disposition: "concept" as const, suggestedType: "System" },
+        { id: "flow", identityHint: "publish-vehicle-event", identityBasis: "documented end-to-end behavior",
+          queryValue: "Publishes a vehicle event for asynchronous delivery", evidenceIds: ["flow-docs"],
+          disposition: "concept" as const, suggestedType: "Flow" },
       ],
-      semanticObservations: [{ id: "readme", candidateId: "repository", role: "documentation" as const,
-        signal: "repository", source: { path: "README.md", startLine: 1, endLine: 3 } }],
+      semanticObservations: [
+        { id: "readme", candidateId: "repository", role: "documentation" as const,
+          signal: "repository", source: { path: "README.md", startLine: 1, endLine: 3 } },
+        { id: "system-docs", candidateId: "system", role: "documentation" as const,
+          signal: "Coordinates several cooperating parts to deliver one recognizable capability",
+          source: { path: "README.md", startLine: 1, endLine: 3 } },
+        { id: "flow-docs", candidateId: "flow", role: "documentation" as const,
+          signal: "end-to-end flow with a trigger, observable outcome and supporting concept evidence",
+          source: { path: "README.md", startLine: 1, endLine: 3 } },
+      ],
       resourceObservations: [
         { id: "function", candidateId: "publisher", sourceTool: "terraform" as const,
           resourceType: "aws_lambda_function", address: "aws_lambda_function.publisher", source: { path: "main.tf", startLine: 1, endLine: 3 } },
@@ -52,49 +71,51 @@ test("[AB-INGEST-004..006][AB-INGEST-008] evidence guidance produces one generic
         evidenceResource: "agentbase://owner-guidance/domains/vehicle-data",
       },
       coverage: { partial: true, limitations: ["runtime consumers were not present in this repository"] },
-    }) as { sessionId: string; bundleRoot: string; sourceRepositoryId: string; selectedSchemas: string[] };
-    assert.deepEqual(prepared.selectedSchemas.sort(), ["Domain", "Function", "Queue", "Repository"]);
-
-    const write = (relative: string, content: string) => {
-      const target = path.join(prepared.bundleRoot, relative);
-      fs.mkdirSync(path.dirname(target), { recursive: true });
-      fs.writeFileSync(target, content);
-    };
-    fs.appendFileSync(path.join(prepared.bundleRoot, "index.md"), [
-      "", "* [Domains](domains/index.md) - business domains", "* [Repositories](repositories/vehicle-events.md) - source",
-      "* [Components](components/index.md) - runtime", "",
-    ].join("\n"));
-    write("domains/index.md", "# Domains\n\n* [Vehicle Data](vehicle-data.md) - owner-confirmed domain\n");
-    write("components/index.md", "# Components\n\n* [Publisher](publisher.md) - event publisher\n");
-    write("resources/index.md", "# Resources\n\n* [Vehicle events](vehicle-events.md) - asynchronous queue\n");
-    const generated = "status: draft\ngenerated: { by: agentbase/0.0.0, at: 2026-08-21T00:00:00Z }\n";
-    write("domains/vehicle-data.md", [
-      "---", "type: Domain", "title: Vehicle Data", "description: Vehicle data business domain", generated.trimEnd(),
-      "sources:", "  - { id: owner-domain, resource: agentbase://owner-guidance/domains/vehicle-data }",
-      `  - { id: readme, resource: repository://${prepared.sourceRepositoryId}/README.md#L1-L3 }`,
-      "---", "", "# Purpose", "", "Owner-confirmed boundary for [vehicle-event source](../repositories/vehicle-events.md).", "",
-    ].join("\n"));
-    write("repositories/vehicle-events.md", [
-      "---", "type: Repository", "title: Vehicle events", "description: Vehicle event source repository", generated.trimEnd(),
-      "sources:", `  - { id: readme, resource: repository://${prepared.sourceRepositoryId}/README.md#L1-L3 }`,
-      "  - { id: owner-domain, resource: agentbase://owner-guidance/domains/vehicle-data }",
-      "relationships:", "  - { kind: part-of, target: domains/vehicle-data, evidence: [owner-domain] }",
-      "agentbase:", "  repository:", `    id: ${prepared.sourceRepositoryId}`, "    display_name: vehicle-events",
-      "    aliases:", "      remotes: []", `      root_commits: [${preflight.repository.repository.rootCommits[0]}]`,
-      "---", "", "# Purpose", "", "Provides the [publisher](../components/publisher.md) in [Vehicle Data](../domains/vehicle-data.md).", "",
-    ].join("\n"));
-    write("components/publisher.md", [
-      "---", "type: Function", "title: Vehicle publisher", "description: Publishes vehicle events", generated.trimEnd(),
-      "sources:", `  - { id: function, resource: repository://${prepared.sourceRepositoryId}/main.tf#L1-L3 }`,
-      "relationships:", "  - { kind: publishes-to, target: resources/vehicle-events, evidence: [function] }",
-      "---", "", "# Responsibility", "", "Publishes to the [vehicle event queue](../resources/vehicle-events.md).", "",
-      "# Limitations", "", "Runtime consumers are not evidenced in this repository.", "",
-    ].join("\n"));
-    write("resources/vehicle-events.md", [
-      "---", "type: Queue", "title: Vehicle events", "description: Asynchronous vehicle-event boundary", generated.trimEnd(),
-      "sources:", `  - { id: queue, resource: repository://${prepared.sourceRepositoryId}/main.tf#L4-L6 }`,
-      "---", "", "# Purpose", "", "Carries vehicle events; its deployed ARN is not claimed by source evidence.", "",
-    ].join("\n"));
+    }) as { sessionId: string; bundleRoot: string; sourceRepositoryId: string; selectedSchemas: string[];
+      skeletons: readonly { identity: string; path: string; type: string }[] };
+    assert.deepEqual(prepared.selectedSchemas.sort(), ["Domain", "Flow", "Function", "Repository", "System"]);
+    assert.deepEqual(prepared.skeletons.map((item) => item.type).sort(), ["Domain", "Flow", "Function", "Repository", "System"]);
+    const skeletonBundle = loadOkfBundle(prepared.bundleRoot, { requireAgentBaseRootIndex: true });
+    assert.deepEqual([...skeletonBundle.concepts.values()].map((concept) => concept.type).sort(),
+      ["Domain", "Flow", "Function", "Repository", "System"]);
+    assert.deepEqual(skeletonBundle.concepts.get("components/publisher")?.frontmatter.agentbase, {
+      technology: { kind: "runtime-function", provider: "aws", product: "lambda",
+        sourceTool: "terraform", resourceType: "aws_lambda_function" },
+    });
+    assert.equal(skeletonBundle.concepts.get("repositories/vehicle-events")?.body.includes("components/publisher.md"), true);
+    const publisherBody = skeletonBundle.concepts.get("components/publisher")?.body ?? "";
+    assert.match(publisherBody, /# Embedded Knowledge/);
+    assert.match(publisherBody, /Vehicle-events \| Internal trigger transport for the publisher \| message-queue \| aws \/ sqs; terraform:aws_sqs_queue/i);
+    assert.match(publisherBody, /repository:\/\/repository-[a-z0-9-]+\/main\.tf#L4-L6/);
+    assert.equal(skeletonBundle.concepts.has("resources/vehicle-events"), false);
+    assert.equal(prepared.skeletons.some((item) => item.identity.includes("events") && item.type === "Resource"), false);
+    assert.match(skeletonBundle.concepts.get("systems/vehicle-events")?.body ?? "", /suggested.*proposal review/i);
+    assert.deepEqual(skeletonBundle.concepts.get("systems/vehicle-events")?.frontmatter.relationships, [
+      { kind: "part-of", target: "domains/vehicle-data", evidence: ["owner-domain"] },
+    ]);
+    const flow = skeletonBundle.concepts.get("flows/publish-vehicle-event");
+    assert.deepEqual(flow?.frontmatter.flow_steps, []);
+    const unfilled = validateOkfRelationships(
+      [...skeletonBundle.concepts].map(([identity, concept]) => ({ identity, concept })),
+      { sourceIdentities: new Set(["flows/publish-vehicle-event"]),
+        strictSourceIdentities: new Set(["flows/publish-vehicle-event"]) },
+    );
+    assert.match(unfilled.failures.join("\n"), /flow_steps must be a non-empty list/);
+    const flowPath = path.join(prepared.bundleRoot, "flows/publish-vehicle-event.md");
+    fs.writeFileSync(flowPath, fs.readFileSync(flowPath, "utf8")
+      .replace("flow_steps: []", [
+        "flow_steps:",
+        "  - order: 1",
+        "    source: systems/vehicle-events",
+        "    action: invokes",
+        "    target: components/publisher",
+        "    mode: asynchronous",
+        "    evidence: [flow-docs]",
+      ].join("\n"))
+      .replace("# Limitations", [
+        "[Vehicle events](../systems/vehicle-events.md) invokes the [publisher](../components/publisher.md).",
+        "", "# Limitations",
+      ].join("\n")));
 
     const finalized = await actions.finalize(prepared.sessionId) as {
       proposal: { id: string; phase: string; selectedSchemas: string[] };

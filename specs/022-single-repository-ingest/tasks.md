@@ -93,6 +93,61 @@ and record reproducible evidence.
 - [x] T028 Implement immutable catalog-6.0 V13 prompts and an isolated fake-tested Initial Ingest benchmark lifecycle that requires Preflight through Inspect and rejects Accept/Publish operations
 - [x] T029 After separate owner authorization and usable account confirmation, run exactly three sequential representative V13 Ingest benchmarks and append validity/reviewability/timing evidence to `specs/022-single-repository-ingest/verification.md`; do not rebuild or publish a Hub PR
 - [ ] T030 Mark capability 022 completed in `specs/022-single-repository-ingest/spec.md` and `specs/CURRENT.md` only after every required task, offline gate and authorized qualification pass; otherwise retain `implemented — external qualification pending`
+- [x] T031 Record and implement AB-INGEST-011 by rendering deterministic
+  Concept Schema → OKF Template → editable Skeleton output during new Initial
+  Ingest preparation, with focused authoring/runtime coverage
+- [x] T032 Update the Ingest/OKF skills and current OKF contract, run the full
+  offline gate and append correction evidence; do not run another model-backed
+  benchmark without separate owner authorization
+- [x] T033 Correct the V13 inspect schema/dispatcher drift and make changed-set
+  relationship guidance follow exact frontmatter type, with focused regression
+  coverage and the complete offline gate; leave model requalification pending
+- [x] T034 Separate post-qualification OKF/MCP stability from benchmark-only
+  scoring, expose candidate-local evidence and full-Markdown tool contracts,
+  and score V13 provenance with the durable Hub Repository identity
+- [x] T035 Prioritize exact supported structured mappings over incidental
+  semantic role words, clarify separate evidenced System candidates and prevent
+  contextual benchmark prose from creating false wrong-schema contradictions;
+  verify offline without another model run
+- [x] T036 Add evidence-bound `suggested_type`, exact/suggested/ambiguous
+  precedence, review-limited suggested skeletons and immutable V14 benchmark
+  contracts in `src/core/knowledge/schemas/guidance.ts`, MCP adapters,
+  `src/app/hub-okf/authoring/initial-ingest-skeleton.ts`, product skills and
+  `benchmark/prompts/`; verify offline without running a model benchmark
+- [x] T037 After owner authorization, run exactly three sequential V14
+  Health → Shopping → Health qualifications, retain the failed evidence and
+  record the separate OKF/authoring and benchmark findings without Accept,
+  Publish, provider CLI or Hub PR operations
+- [x] T038 Update feature 022 requirements, design, MCP contract, requirement
+  checklist and tasks for the owner-approved catalog-7 Detect → Promote → Render
+  cutover in `specs/022-single-repository-ingest/`
+- [x] T039 [US2] Replace catalog-6 authoring roles with the catalog-7 core and
+  enrichment split in `src/core/knowledge/schemas/` with requirement-linked tests
+- [x] T040 [US2] Separate provider technology detection from standalone
+  promotion and add embedded-parent guidance in `src/core/knowledge/schemas/guidance.ts`
+  and `src/app/codebase-memory-mcp/okf-schema-tools.ts`
+- [x] T041 [US2] Render promoted skeletons plus bounded searchable embedded
+  knowledge in `src/app/hub-okf/authoring/initial-ingest-skeleton.ts` and MCP adapters
+- [x] T042 [US2] Update Ingest/OKF skills and living OKF/architecture contracts
+  for Function, Component, embedded resource and VM-workload boundaries
+- [x] T043 [US3] Replace V14 one-file-per-resource benchmark expectations with
+  V15 required-concept/embedded-knowledge evidence in `benchmark/` and focused tests
+- [x] T044 Run focused catalog/guidance/authoring/benchmark tests, `npm run verify`
+  and record exact offline evidence in `verification.md`
+- [x] T045 After the offline gate passes, run exactly one owner-authorized V15
+  model benchmark, retain its evidence and report OKF issues separately from
+  benchmark issues without Accept, Publish, provider CLI or Hub PR operations
+- [x] T046 Narrow the current V15 MVP manifest and expectation set to the pinned
+  Terraform fixture, retain SAM history without making it selectable, and add
+  AB-BENCH-046 regression coverage
+- [x] T047 Fix the V15 Flow skeleton preparation gate and failed-versus-absent
+  benchmark diagnostic with AB-INGEST-011/AB-BENCH-043 regressions; retain the
+  existing Terraform embedded-resource behavior without adding another detector
+- [x] T048 Apply the early-development test policy across the repository: retain
+  only specification flows, public design contracts, current V15/Catalog 7 and
+  selected end-to-end boundaries; remove function-level, meta, routing,
+  historical and exhaustive matrix coverage; verify the reduced offline suite
+  without changing runtime behavior
 
 ---
 
@@ -107,7 +162,10 @@ and record reproducible evidence.
 - US3 follows the working proposal flow: T020 → T021/T022 → T023/T024.
 - T025–T028 require all offline story checkpoints. T029 is separately
   authorized external qualification, and T030 keeps the capability open until
-  that accepted success criterion is evidenced.
+  that accepted success criterion is evidenced. T033 corrects deterministic
+  defects found by T029 without treating offline guidance tests as a new
+  accepted model qualification. T034 corrects benchmark measurement and shared
+  authoring contracts but likewise leaves model stability pending.
 
 ## Parallel Opportunities
 

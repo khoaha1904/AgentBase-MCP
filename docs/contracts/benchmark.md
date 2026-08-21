@@ -16,7 +16,10 @@ benchmarks.
   OKF and records limitations instead of inventing evidence.
 - **AB-BENCH-004** — Expectations define semantic concept identity, concrete
   schema, required metadata/evidence paths and directed relationships without
-  prescribing prose, paths or slugs.
+  prescribing prose, paths or slugs. A wrong-schema contradiction requires the
+  reference identity in the concept's canonical identity or title; a contextual
+  description, body mention or navigation link cannot turn missing coverage
+  into a contradiction.
 - **AB-BENCH-005** — Finalization reports OKF conformance, non-exhaustive
   concept/relationship classifications, recognized-schema agreement, reference
   coverage, metadata completeness and provenance separately.
@@ -143,6 +146,23 @@ benchmarks.
   inspect; it fails on missing stages or any Accept, bootstrap, submit or
   synchronize call. Only the finalized proposal bundle becomes a scored
   artifact and the source plus owner-native Hub remain unchanged.
+- **AB-BENCH-044** — V14 preserves the V13 lifecycle and catalog while making
+  semantic-only role intent explicit through evidence-bound `suggested_type`.
+  It requires structured mappings to remain `exact`, semantic roles to remain
+  reviewable suggestions and immutable V13 prompts/results to remain unchanged.
+- **AB-BENCH-045** — V15 preserves the Initial Ingest lifecycle but qualifies
+  catalog `7.0.0` through Detect → Promote → Render. Expectations separate
+  `requiredConcepts` from `embeddedKnowledge`: ordinary internal queues, topics,
+  tables, buckets, infrastructure definitions and hosts receive credit only when
+  an allowed useful parent records the knowledge with exact repository evidence;
+  they are not required as standalone concept files. Guidance failure is
+  Incomplete, Finalize runs exactly once without retry, and only released type
+  names plus canonical relationship directions are valid.
+- **AB-BENCH-046** — The current MVP qualification suite contains only pinned
+  Terraform repositories. SAM/CloudFormation and mixed frontend/backend
+  fixtures are outside the current qualification scope. Their immutable prompts,
+  expectations and retained results remain historical evidence but are not
+  selectable from the current manifest.
 
 ## Context A/B interpretation
 

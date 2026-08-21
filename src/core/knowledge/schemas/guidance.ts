@@ -2,7 +2,7 @@ import type { OkfConceptSchema } from "./definition.ts";
 import { AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, getOkfConceptSchema, selectOkfConceptSchemas } from "./catalog.ts";
 import { AWS_PROVIDER_PROFILE, mapAwsResource } from "./profiles/aws.ts";
 import { TERRAFORM_DETECTOR_PROFILE, detectTerraformResource } from "./profiles/terraform.ts";
-import type { DetectedResource } from "./profiles/definition.ts";
+import type { DetectedResource, ProviderResourceMapping } from "./profiles/definition.ts";
 
 export type ObservationSource = Readonly<{ path: string; startLine: number; endLine: number }>;
 
@@ -12,6 +12,9 @@ export type ConceptCandidate = Readonly<{
   identityBasis: string;
   queryValue: string;
   evidenceIds: readonly string[];
+  disposition: "concept" | "embedded";
+  parentCandidateId?: string;
+  suggestedType?: string;
 }>;
 
 export type SemanticObservation = Readonly<{
@@ -38,6 +41,7 @@ export type OkfAuthoringGuidanceRequest = Readonly<{
 }>;
 
 export type TechnologyMetadata = Readonly<{
+  kind?: string;
   provider?: string;
   product?: string;
   sourceTool?: string;
@@ -48,7 +52,9 @@ export type MappingProfileVersion = Readonly<{ id: string; version: string }>;
 
 export type OkfAuthoringRecommendation = Readonly<{
   candidateId: string;
-  status: "exact" | "ambiguous" | "unsupported";
+  disposition: "concept" | "embedded";
+  parentCandidateId?: string;
+  status: "exact" | "suggested" | "embedded" | "ambiguous" | "unsupported";
   schema?: OkfConceptSchema;
   matchedEvidence: readonly string[];
   missingEvidence: readonly string[];
@@ -63,17 +69,18 @@ export type OkfAuthoringGuidance = Readonly<{
   recommendations: readonly OkfAuthoringRecommendation[];
 }>;
 
-type MappedResource = Readonly<{
+type TechnologyDetection = Readonly<{
   observation: ResourceObservation;
   result: DetectedResource;
-  schemaType: string;
-  product?: string;
+  mapping?: ProviderResourceMapping;
 }>;
 
 const ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 
 function requireText(value: string, name: string, maximum = 512): void {
-  if (typeof value !== "string" || !value.trim() || Buffer.byteLength(value) > maximum) throw new Error(`${name} must be a bounded non-empty string`);
+  if (typeof value !== "string" || !value.trim() || Buffer.byteLength(value) > maximum) {
+    throw new Error(`${name} must be a bounded non-empty string`);
+  }
 }
 
 function requireExactKeys(value: object, expected: readonly string[], name: string): void {
@@ -100,13 +107,38 @@ function validateRequest(request: OkfAuthoringGuidanceRequest): void {
   }
   const candidates = new Map<string, ConceptCandidate>();
   for (const candidate of request.candidates) {
-    requireExactKeys(candidate, ["id", "identityHint", "identityBasis", "queryValue", "evidenceIds"], "candidate");
+    requireExactKeys(candidate, ["id", "identityHint", "identityBasis", "queryValue", "evidenceIds", "disposition",
+      ...(candidate.parentCandidateId === undefined ? [] : ["parentCandidateId"]),
+      ...(candidate.suggestedType === undefined ? [] : ["suggestedType"])], "candidate");
     if (!ID.test(candidate.id) || candidates.has(candidate.id)) throw new Error("candidate IDs must be unique and bounded");
     requireText(candidate.identityHint, "candidate identity hint");
     requireText(candidate.identityBasis, "candidate identity basis");
     requireText(candidate.queryValue, "candidate query value");
-    if (!candidate.evidenceIds.length || candidate.evidenceIds.length > 64) throw new Error("candidate evidence IDs must be a bounded non-empty list");
+    if (!(["concept", "embedded"] as const).includes(candidate.disposition)) throw new Error("candidate disposition is invalid");
+    if (candidate.suggestedType !== undefined) {
+      requireText(candidate.suggestedType, "candidate suggested type", 256);
+      if (getOkfConceptSchema(candidate.suggestedType)?.authoringScope !== "initial-ingest") {
+        throw new Error("candidate suggested type must name a released Initial Ingest schema");
+      }
+    }
+    if (candidate.disposition === "embedded" && candidate.suggestedType !== undefined) {
+      throw new Error("embedded candidate cannot request a standalone schema");
+    }
+    if (candidate.disposition === "concept" && candidate.parentCandidateId !== undefined) {
+      throw new Error("concept candidate cannot name an embedded parent");
+    }
+    if (!candidate.evidenceIds.length || candidate.evidenceIds.length > 64) {
+      throw new Error("candidate evidence IDs must be a bounded non-empty list");
+    }
     candidates.set(candidate.id, candidate);
+  }
+  for (const candidate of candidates.values()) {
+    if (candidate.disposition === "embedded") {
+      const parent = candidate.parentCandidateId ? candidates.get(candidate.parentCandidateId) : undefined;
+      if (!parent || parent.disposition !== "concept" || parent.id === candidate.id) {
+        throw new Error("embedded candidate parent must name a concept candidate");
+      }
+    }
   }
   const observations = [...request.semanticObservations, ...request.resourceObservations];
   const observationIds = new Set<string>();
@@ -137,53 +169,95 @@ function validateRequest(request: OkfAuthoringGuidanceRequest): void {
   }
 }
 
+function technologyFrom(detection: TechnologyDetection | undefined): TechnologyMetadata {
+  if (!detection) return {};
+  return {
+    ...(detection.mapping?.technologyKind ? { kind: detection.mapping.technologyKind } : {}),
+    ...(detection.result.provider ? { provider: detection.result.provider } : {}),
+    ...(detection.mapping?.product ? { product: detection.mapping.product } : {}),
+    sourceTool: detection.result.sourceTool,
+    resourceType: detection.result.resourceType,
+  };
+}
+
 export function getOkfAuthoringGuidance(request: OkfAuthoringGuidanceRequest): OkfAuthoringGuidance {
   validateRequest(request);
   const recommendations = request.candidates.map((candidate): OkfAuthoringRecommendation => {
     const semantic = request.semanticObservations.filter((item) => item.candidateId === candidate.id);
     const resources = request.resourceObservations.filter((item) => item.candidateId === candidate.id);
-    const detected = resources.map((observation) => ({ observation, result: detectTerraformResource(observation) }));
-    const mapped: readonly MappedResource[] = detected.flatMap(({ observation, result }): MappedResource[] => {
-      if (result.status !== "exact") return [];
-      if (result.resourceType === "module") return [{
-        observation, result, schemaType: "Infrastructure Module",
-      }];
-      const mapping = result.provider === "aws" ? mapAwsResource(result.resourceType) : undefined;
-      return mapping ? [{ observation, result, schemaType: mapping.schemaType, product: mapping.product }] : [];
+    const detections: readonly TechnologyDetection[] = resources.map((observation): TechnologyDetection => {
+      const result = detectTerraformResource(observation);
+      const mapping = result.status === "exact" && result.provider === "aws" ? mapAwsResource(result.resourceType) : undefined;
+      return mapping ? { observation, result, mapping } : { observation, result };
     });
-    const semanticSelections = selectOkfConceptSchemas(semantic.map((item) => item.signal));
-    const schemaTypes = [...new Set([...mapped.map((item) => item.schemaType), ...semanticSelections.map((item) => item.type)])];
-    const limitations = detected.flatMap((item) => item.result.limitations);
-    if (schemaTypes.length !== 1) return {
+    const limitations = detections.flatMap((item) => item.result.limitations);
+    const mapped = detections.filter((item) => item.mapping);
+    const distinctTechnologies = new Set(mapped.map((item) => `${item.mapping!.product}\0${item.mapping!.technologyKind}`));
+    const technology = technologyFrom(mapped[0] ?? detections[0]);
+    const base = {
       candidateId: candidate.id,
-      status: schemaTypes.length || detected.some((item) => item.result.status === "ambiguous") ? "ambiguous" : "unsupported",
+      disposition: candidate.disposition,
       matchedEvidence: candidate.evidenceIds,
       missingEvidence: [],
-      technology: {},
+      technology,
       ...(resources.length ? { detectorProfile: TERRAFORM_DETECTOR_PROFILE } : {}),
-      limitations: [...limitations, schemaTypes.length
-        ? `evidence maps to multiple schema roles: ${schemaTypes.join(", ")}`
-        : "no released provider-neutral schema mapping was established"],
+      ...(mapped.length ? { providerProfile: AWS_PROVIDER_PROFILE } : {}),
+    } as const;
+    if (detections.some((item) => item.result.status === "ambiguous") || distinctTechnologies.size > 1) return {
+      ...base,
+      status: "ambiguous",
+      limitations: [...limitations, ...(distinctTechnologies.size > 1 ? ["evidence identifies multiple technology resources"] : [])],
     };
-    const schema = getOkfConceptSchema(schemaTypes[0]!);
-    if (!schema) throw new Error(`mapped schema is not released: ${schemaTypes[0]}`);
-    const resource = mapped.find((item) => item.schemaType === schema.type);
-    const semanticSelection = semanticSelections.find((item) => item.type === schema.type);
+    if (candidate.disposition === "embedded") {
+      if (!mapped.length) return {
+        ...base,
+        parentCandidateId: candidate.parentCandidateId!,
+        status: "unsupported",
+        limitations: [...limitations, "embedded technology kind is not supported by a released provider profile"],
+      };
+      return {
+        ...base,
+        parentCandidateId: candidate.parentCandidateId!,
+        status: "embedded",
+        limitations: [...limitations, `embedded in ${candidate.parentCandidateId}; technology detection does not promote a concept`],
+      };
+    }
+    const exactFunction = mapped.length === 1 && mapped[0]?.mapping?.product === "lambda";
+    const semanticSelections = selectOkfConceptSchemas(semantic.map((item) => item.signal));
+    const semanticTypes = [...new Set(semanticSelections.map((item) => item.type))];
+    if (exactFunction) {
+      const schema = getOkfConceptSchema("Function")!;
+      return {
+        ...base,
+        status: "exact",
+        schema,
+        missingEvidence: semanticSelections.find((item) => item.type === "Function")?.missingEvidence ?? [],
+        limitations: [...limitations, ...(candidate.suggestedType && candidate.suggestedType !== "Function"
+          ? [`exact structured mapping Function overrides suggested type ${candidate.suggestedType}`] : [])],
+      };
+    }
+    if (candidate.suggestedType
+      && ((semanticTypes.length === 1 && semanticTypes[0] !== candidate.suggestedType)
+        || (semanticTypes.length > 1 && !semanticTypes.includes(candidate.suggestedType)))) return {
+      ...base,
+      status: "ambiguous",
+      limitations: [...limitations, `suggested type ${candidate.suggestedType} conflicts with semantic roles: ${semanticTypes.join(", ")}`],
+    };
+    const schemaType = candidate.suggestedType ?? (semanticTypes.length === 1 ? semanticTypes[0] : undefined);
+    if (!schemaType) return {
+      ...base,
+      status: semanticTypes.length > 1 ? "ambiguous" : "unsupported",
+      limitations: [...limitations, semanticTypes.length > 1
+        ? `evidence maps to multiple schema roles: ${semanticTypes.join(", ")}`
+        : "no released provider-neutral schema promotion was established"],
+    };
+    const schema = getOkfConceptSchema(schemaType)!;
     return {
-      candidateId: candidate.id,
-      status: "exact",
+      ...base,
+      status: "suggested",
       schema,
-      matchedEvidence: candidate.evidenceIds,
-      missingEvidence: semanticSelection?.missingEvidence ?? [],
-      technology: resource ? {
-        ...(resource.result.provider ? { provider: resource.result.provider } : {}),
-        ...(resource.product ? { product: resource.product } : {}),
-        sourceTool: resource.result.sourceTool,
-        resourceType: resource.result.resourceType,
-      } : {},
-      ...(resources.length ? { detectorProfile: TERRAFORM_DETECTOR_PROFILE } : {}),
-      ...(resource?.result.provider === "aws" ? { providerProfile: AWS_PROVIDER_PROFILE } : {}),
-      limitations,
+      missingEvidence: semanticSelections.find((item) => item.type === schema.type)?.missingEvidence ?? [],
+      limitations: [...limitations, `${schema.type} is an evidence-bound semantic suggestion and requires proposal review`],
     };
   });
   return { catalogVersion: AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, recommendations };

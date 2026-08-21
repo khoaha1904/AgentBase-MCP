@@ -7,6 +7,7 @@ import { getOkfAuthoringGuidance, selectOkfConceptSchemas } from "../../../core/
 import { GitHubHubApi } from "../../../providers/github-hub/index.ts";
 import { discoverRepositorySourceState } from "../../repository-okf/index.ts";
 import { beginHubAuthoringSession, finalizeHubAuthoringSession } from "../authoring/authoring-session.ts";
+import { writeInitialIngestSkeletons } from "../authoring/initial-ingest-skeleton.ts";
 import { acceptHubProposal } from "../review/accept.ts";
 import { resolveHubConfiguration, type OptionalHubConfiguration } from "../configuration/configuration.ts";
 import { admitPersistentLocalHub } from "../workspace/local-hub.ts";
@@ -135,11 +136,11 @@ export function createHubRuntimeActions(
         ? initialEvidenceDigest(sourceRepositoryId, source, input.guidanceRequest)
         : input.evidenceDigest!;
       const selectedSchemas = guidance
-        ? [...new Set(guidance.recommendations.flatMap((item) => item.status === "exact" && item.schema ? [item.schema.type] : []))]
+        ? [...new Set(guidance.recommendations.flatMap((item) => ["exact", "suggested"].includes(item.status) && item.schema ? [item.schema.type] : []))]
         : selectOkfConceptSchemas(signals).map((item) => item.type);
       if (input.mode === "new" && !selectedSchemas.includes("Repository")) selectedSchemas.unshift("Repository");
       if (input.confirmedDomain && !selectedSchemas.includes("Domain")) selectedSchemas.push("Domain");
-      if (!selectedSchemas.length) throw new Error("authoring guidance did not establish any exact schema role");
+      if (!selectedSchemas.length) throw new Error("authoring guidance did not establish any exact or suggested schema role");
       const session = beginHubAuthoringSession({
         stateRoot,
         mode: input.mode,
@@ -156,6 +157,17 @@ export function createHubRuntimeActions(
         ...(input.coverage ? { coverage: input.coverage } : {}),
         createdAt: new Date().toISOString(),
       });
+      const skeletons = input.mode === "new" && input.guidanceRequest && guidance
+        ? writeInitialIngestSkeletons({
+          bundleRoot: session.bundleRoot,
+          subjectDirectory: input.subjectDirectory,
+          sourceRepositoryId,
+          repository: repository.repository.repository,
+          ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),
+          request: input.guidanceRequest,
+          guidance,
+          createdAt: session.createdAt,
+        }) : [];
       return {
         sessionId: session.id,
         bundleRoot: session.bundleRoot,
@@ -167,6 +179,7 @@ export function createHubRuntimeActions(
         repositoryResolution: repository.repository,
         ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),
         continuity,
+        skeletons,
       };
     },
     async finalize(sessionId, questions) {

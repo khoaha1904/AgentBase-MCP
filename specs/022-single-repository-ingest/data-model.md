@@ -64,6 +64,8 @@ The caller does not supply provider, product or schema output fields.
 - identity hint and identity-basis explanation
 - independent query/link-value explanation
 - supporting observation IDs
+- optional released provider-neutral suggested type, explicitly supplied as
+  evidence-bound agent intent rather than verified truth
 - missing evidence/ambiguity
 
 State:
@@ -80,7 +82,10 @@ in Hub and has no Published lifecycle.
 ## Guidance Recommendation
 
 - candidate ID
-- status: `exact`, `ambiguous` or `unsupported`
+- status: `exact`, `suggested`, `embedded`, `ambiguous` or `unsupported`
+- proposed disposition: standalone concept or embedded knowledge
+- parent candidate/identity when embedded
+- promotion basis and exact supporting observation IDs
 - provider-neutral schema type or bounded fallback
 - matched/missing observation IDs
 - technology metadata supported by evidence
@@ -89,6 +94,36 @@ in Hub and has no Published lifecycle.
 - provider profile ID/version, when used
 - complete schema authoring guidance
 - warnings and limitations
+
+`exact` requires one deterministic structured mapping. `suggested` is a
+reviewable semantic classification. `embedded` retains detected technology and
+evidence in a parent without creating a concept. Technology detection does not
+override promotion; conflicting promotion evidence is `ambiguous`.
+
+## Embedded Knowledge
+
+- run-local candidate ID and stable display name
+- parent candidate/identity
+- provider-neutral kind and concise role
+- optional provider/product/source-tool/resource-type metadata
+- exact source IDs
+
+Embedded knowledge is rendered inside the parent Markdown body. It has no OKF
+identity, standalone path, lifecycle or graph relationship. Refresh may later
+propose promotion when cross-repository or independent operational evidence is
+available; missing later evidence never deletes accepted knowledge implicitly.
+
+## OKF Authoring Layers
+
+- **Concept Schema** defines what belongs in one concept: semantic role,
+  required fields, useful sections, evidence rules and allowed relations.
+- **OKF Document Template** is the shared deterministic encoding for a valid
+  OKF concept document and navigation file.
+- **OKF Skeleton** is a concrete proposal file rendered from the selected
+  schema, candidate, canonical Repository/Domain context and exact evidence.
+  The agent enriches its knowledge body and relations; it does not recreate the
+  lifecycle or provenance frontmatter. A suggested skeleton includes a visible
+  limitation that its type remains subject to proposal review.
 
 ## Observed Snapshot
 

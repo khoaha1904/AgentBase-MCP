@@ -109,9 +109,13 @@ and returns visible recovery rather than hidden retry.
   authorized current-repository binding.
 - `agentbase-ingest` owns the five-stage host-agent workflow: Preflight,
   Discover, Investigate, Author and Validate. MCP remains deterministic and
-  bounded: it resolves Repository/Domain context, maps exact observations with
-  catalog/profile versions, prepares one isolated workspace and validates one
-  proposal. It contains no reasoning engine or persistent candidate database.
+  bounded: it resolves Repository/Domain context, classifies exact technology
+  evidence, validates standalone-versus-embedded promotion and exposes catalog/
+  profile versions. It renders promoted skeletons plus embedded source-backed
+  knowledge in one isolated workspace and validates one proposal. Concept
+  Schema owns meaning; the shared
+  document renderer owns OKF encoding. MCP contains no reasoning engine,
+  template language or persistent candidate database.
 - Catalog roles are provider-neutral. Terraform Detector v1 normalizes source
   resources and AWS Profile v1 maps supported products to generic roles;
   provider/product/source-tool remain metadata and evidence.

@@ -52,12 +52,14 @@ AgentBase targets Google OKF v0.2 at pinned source commit
 An OKF bundle is linked Markdown with YAML frontmatter, bundle-relative concept
 IDs and reserved index/log rules. Conformance does not prove semantic truth.
 
-AgentBase catalog 6.0 supplies provider-neutral software, data, infrastructure,
-business and guidance roles. Versioned Terraform detection and AWS mapping
-profiles attach technology metadata without multiplying schema types per cloud.
-Selection is evidence-driven and sparse; unknown valid OKF types remain
-readable and protected. Missing evidence becomes a limitation or a governed
-Question, never an invented field.
+AgentBase catalog 7.0 supplies a small provider-neutral authoring core.
+Versioned Terraform detection and AWS mapping profiles attach technology
+metadata without deciding that every cloud resource deserves a concept.
+Promotion is evidence-driven and sparse: internal resources remain searchable
+inside a useful parent, while independent runtime, contract or operational
+boundaries may become concepts. Unknown valid OKF types remain readable and
+protected. Missing evidence becomes a limitation or governed Question, never
+an invented field.
 
 A **Concept Schema** is one reusable released catalog definition. A **Concept
 Instance** is one concrete provenance-bearing Hub document created from

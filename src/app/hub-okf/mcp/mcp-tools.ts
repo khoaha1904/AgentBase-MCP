@@ -54,7 +54,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "prepare_hub_okf",
-    description: "Prepare a local new or refresh AgentBase Hub OKF proposal without publishing. The returned selectedSchemas is the hard allowlist for authored known types; Initial Ingest always includes Repository.",
+    description: "Prepare a local new or refresh AgentBase Hub OKF proposal without publishing. New Initial Ingest returns editable skeletons only for promoted concepts and embeds non-promoted resource knowledge in its parent. selectedSchemas is the hard allowlist; Initial Ingest always includes Repository.",
     inputSchema: {
       type: "object",
       properties: {
@@ -84,7 +84,7 @@ export const HUB_OKF_TOOLS = [
         },
         guidance_request: {
           type: "object",
-          description: "Required for new Initial Ingest; bounded source-backed candidates and observations.",
+          description: "Required for new Initial Ingest; bounded source-backed candidates and observations. Every candidate declares disposition concept or embedded. Embedded candidates require parent_candidate_id and receive no concept identity, path or relationship. Each evidence_ids list may cite only observations whose candidate_id equals that candidate id.",
           properties: {
             candidates: { type: "array", minItems: 1, maxItems: 64, items: { type: "object" } },
             semantic_observations: { type: "array", maxItems: 64, items: { type: "object" } },
@@ -129,8 +129,8 @@ export const HUB_OKF_TOOLS = [
     description: "Inspect one immutable local Hub proposal and its bounded full diff.",
     inputSchema: {
       type: "object",
-      properties: { transaction_id: { type: "string", minLength: 1 } },
-      required: ["transaction_id"], additionalProperties: false,
+      properties: { proposal_id: { type: "string", minLength: 1 } },
+      required: ["proposal_id"], additionalProperties: false,
     },
   },
   {

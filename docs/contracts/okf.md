@@ -108,13 +108,11 @@ Normative OKF source is pinned to commit
 - **AB-SCHEMA-005, AB-SCHEMA-006** — Unknown OKF types/extensions remain valid
   and protected. The catalog is distinct from MCP input schemas and provider
   graph schemas; raw graph data is never copied wholesale into Hub.
-- **AB-SCHEMA-007** — Catalog 6.0 contains exactly 22 authoring roles:
-  Repository, Domain, Domain Entity, System, Software Component, Service,
-  Function, Server, API Surface, API Endpoint, Event, Metric, Database,
-  Database Table, Queue, Object Storage, Infrastructure Definition,
-  Infrastructure Module, Deployment, Business Flow, Cross-Repository
-  Relationship and Maintainer Guidance. Foreign types, including legacy Open
-  Question, remain readable through open-world OKF compatibility.
+- **AB-SCHEMA-007** — Catalog 7.0 contains eight Initial Ingest roles:
+  Repository, Domain, System, Component, Function, Interface, Flow and Resource.
+  Entity and Metric are enrichment-only roles. Maintainer Guidance and Question
+  are workflow-owned governance documents, not architecture choices. Legacy and
+  foreign types remain readable through open-world OKF compatibility.
 - **AB-SCHEMA-008** — Selection recommends the smallest independently useful
   type supported by evidence. Concrete implementation detail remains inside its
   useful parent unless an independent contract, ownership, lifecycle, failure,
@@ -141,20 +139,17 @@ Normative OKF source is pinned to commit
   each and 4 MiB total, in one content-only bundle call. It reports per-concept
   draft/schema failures together with cross-document relationship failures and
   never reads a caller-selected output path.
-- **AB-SCHEMA-015** — Advisory selection matches normalized rule words anywhere
-  in one natural-language evidence signal while retaining word boundaries,
-  deterministic order and evidence-local specific-type shadowing. A
-  specialization shadows its fallback only when it covers every signal that
-  selected the fallback; distinct evidence for a parent and specialization
-  retains both. Catalog phrases include admitted singular/plural wording;
-  repository names or benchmark identities are never selection rules.
-- **AB-SCHEMA-016** — Canonical Domain, Domain Entity, System, Component,
-  Interface, Flow, Metric, Resource, Infrastructure, Deployment and Repository
-  paths classify one identity per entity; links express containment,
-  implementation and evidence.
-- **AB-SCHEMA-017** — Related operations share an API Surface; implementation-
-  only handlers stay in their useful parent; infrastructure definition,
-  reusable module and evidenced deployment remain distinct.
+- **AB-SCHEMA-015** — Guidance separates technology detection from promotion.
+  Semantic evidence may support one advisory catalog-7 role but incidental role
+  words never override the standalone/embedded boundary. Repository names and
+  benchmark identities are never selection rules.
+- **AB-SCHEMA-016** — Canonical Domain, System, Component, Function, Interface,
+  Flow, Resource and Repository paths classify one identity per useful entity;
+  links express relationships and evidence. Entity/Metric paths are added only
+  during enrichment.
+- **AB-SCHEMA-017** — Related operations and events share one Interface when
+  they form a consumer or cross-boundary contract. Implementation-only handlers,
+  routes and infrastructure declarations stay in their useful parent.
 - **AB-SCHEMA-018** — Domain is optional and never inferred from a repository
   name. Repository concepts retain source-specific knowledge and link to
   canonical entities without copying their contracts. Existing Open Question
@@ -170,13 +165,19 @@ Normative OKF source is pinned to commit
   contiguous order, exact endpoints, one canonical action, sync/async mode and
   evidence. Invalid endpoints, modes, evidence or known-schema predicates fail
   authoring validation.
+- **AB-INGEST-011** — Initial Ingest preparation renders editable skeletons for
+  promoted candidates. A Flow skeleton contains `flow_steps: []` as an explicit
+  edit point because endpoints cannot be inferred safely; preparation may return
+  that skeleton, but normal changed-set/final proposal validation rejects it
+  until the agent supplies non-empty linked and evidenced steps.
 - **AB-SCHEMA-021** — `validate_okf_changes` accepts 1–64 full changed concepts
   and at most 512 unchanged identity/path/type target summaries. Validation has
   no dependency on total Hub size and receives no unchanged concept body.
 - **AB-SCHEMA-022** — Architecture nodes and useful knowledge units are not
-  forced into one technology-shaped granularity. Operationally independent
+  forced into technology-shaped granularity. Operationally independent
   Functions remain concepts; implementation-only handlers stay in their
-  parent. Server means a compute host; evidenced workloads use `runs-on`.
+  parent. Compute hosts are hosting evidence; evidenced workloads become
+  Components, not children of an automatically authored Server concept.
 - **AB-SCHEMA-023** — A persisted concept identity is its normalized path
   relative to the OKF root with `.md` removed. Changed concepts and unchanged
   target summaries MUST use that identity, and validation rejects ephemeral
@@ -185,12 +186,12 @@ Normative OKF source is pinned to commit
   Domain with exact `domains/<slug>` identity and title. It validates before
   session creation, selects Domain guidance and returns deterministic
   `agentbase://owner-guidance/<identity>` evidence. Finalization requires the
-  Domain plus a current-source System `part-of` edge citing that owner evidence;
+  Domain plus a current-source Repository `part-of` edge citing that owner evidence;
   absent input never authorizes Domain inference.
 - **AB-SCHEMA-025** — Product and authoring language distinguishes a reusable
-  catalog Concept Schema from a repository-specific Concept Instance. One
-  schema may yield many instances; each instance declares one concrete type.
-- **AB-SCHEMA-026** — `Domain Entity` represents a stable evidenced business
+  catalog Concept Schema/template from a repository-specific Concept Instance.
+  One schema may yield many instances; each instance declares one catalog type.
+- **AB-SCHEMA-026** — Enrichment-only `Entity` represents a stable evidenced business
   object or value identity shared across useful contracts, flows or systems.
   An implementation class or data structure without that boundary remains in
   its useful parent.
@@ -198,31 +199,58 @@ Normative OKF source is pinned to commit
   definition, producer or calculation. A current change-prone numeric
   observation is not required and remains a live reference rather than
   timeless Metric prose.
-- **AB-SCHEMA-028** — One evidence signal selects the most concrete supported
-  specialization instead of its fallback for the same entity. Distinct evidence
-  may retain both recommendations for separate useful instances; schemas are
-  not merged onto one instance.
-- **AB-SCHEMA-029** — Catalog 6.0 is a clean authoring cutover because no
-  concepts were published under vendor-specific types. Unknown valid OKF types
-  remain portable, protected and semantically unjudged by AgentBase.
+- **AB-SCHEMA-028** — Promotion precedes schema selection. One detected resource
+  may be embedded in a parent, or promoted once to the smallest supported role;
+  detection never creates parallel parent/specialization concepts by itself.
+- **AB-SCHEMA-029** — Catalog 7.0 is a clean authoring cutover because no
+  catalog-6 concepts were Published. Unknown and legacy valid OKF types remain
+  portable, protected and semantically unjudged by AgentBase.
 - **AB-SCHEMA-030** — Catalog roles describe provider-neutral architecture;
   provider, product, source tool and source resource type are technology
   metadata attached to evidence-backed recommendations.
 - **AB-SCHEMA-031** — One bounded guidance call requires each candidate's stable
-  identity basis, independent query/link value and exact owned observations;
-  caller-supplied provider/product/schema fields and unknown fields are rejected.
-- **AB-SCHEMA-032** — Terraform Detector v1 and AWS Profile v1 are independently
+  identity basis, query/link value, concept/embedded disposition, embedded
+  parent when applicable and exact owned observations.
+  Caller-supplied provider, product, exact schema assertions and unknown fields
+  are rejected; optional `suggested_type` is limited to a released
+  catalog-7 role and exposes evidence-bound agent intent only.
+- **AB-SCHEMA-032** — Terraform Detector v1 and AWS Profile v2 are independently
   versioned data contracts, not cloud SDKs or new concept taxonomies.
-- **AB-SCHEMA-033** — AWS `instance`, Lambda function, SQS queue, S3 bucket, RDS
-  instance and DynamoDB table map deterministically to Server, Function, Queue,
-  Object Storage, Database and Database Table. Indirection or unsupported input
-  remains ambiguous/unsupported with limitations rather than guessed metadata.
+- **AB-SCHEMA-033** — AWS EC2/VM, Lambda, SQS, SNS, EventBridge, S3, RDS and
+  DynamoDB observations map deterministically to technology metadata. A
+  concept-disposition Lambda with independent runtime evidence may map exactly
+  to Function. Other cloud resources default to embedded knowledge and do not
+  select Server, Queue, Table, Bucket or Database concepts. Indirection or
+  unsupported input remains ambiguous/unsupported rather than guessed.
 - **AB-SCHEMA-034** — Guidance returns catalog/detector/provider-profile
   versions, exact matched and missing evidence, technology metadata,
-  limitations and the complete selected generic schema.
-- **AB-SCHEMA-035** — New AgentBase drafts using `AWS Lambda`, `AWS SQS Queue` or
-  `Terraform Module` fail with Function, Queue or Infrastructure Module
-  replacement guidance. Arbitrary foreign types remain readable and protected.
+  limitations, promotion outcome and the complete selected generic schema when
+  standalone. Semantic-only guidance remains advisory. A System candidate is
+  separate from Repository/Component candidates and needs a recognizable
+  capability plus cooperating concepts; no keyword alone forces a System.
+- **AB-SCHEMA-035** — New AgentBase drafts using catalog-6 or vendor-specific
+  authoring types fail with catalog-7 re-ingest/replacement guidance. Queue,
+  Server, Table and similar types are not blindly aliased to Resource because
+  they may need embedding instead. Arbitrary foreign types remain protected.
+- **AB-SCHEMA-036** — Guidance status is `exact`, `suggested`, `embedded`,
+  `ambiguous` or `unsupported`. Detection never overrides disposition.
+  Evidence-bound standalone roles may return suggested; internal resource
+  evidence returns embedded; conflicts remain ambiguous. Suggested skeletons
+  retain a proposal-review limitation and receive no confidence score or
+  automatic Accept/Publish authority.
+- **AB-SCHEMA-037** — Queue, topic, event-bus, table, bucket, database and host
+  evidence defaults to a searchable evidence table inside its Function,
+  Component or System parent. It may promote to Interface for an independent
+  shared contract, or Resource for cross-boundary/independently operated value.
+  A declaration alone is insufficient promotion evidence.
+- **AB-SCHEMA-038** — EC2, VM and physical-host evidence describes hosting.
+  Independently evidenced services, workers and processes running there become
+  Component concepts. If no workload is evidenced, retain a reference or
+  limitation and do not invent a Component or Server.
+- **AB-SCHEMA-039** — Embedded knowledge stores display name, concise role,
+  provider-neutral kind, optional technology metadata and exact sources in its
+  parent. It has no concept identity, standalone document or graph edge until a
+  later reviewed promotion.
 
 ## Single-repository Initial Ingest
 
@@ -247,3 +275,11 @@ Normative OKF source is pinned to commit
   `Repository part-of Domain` relation. New preparation derives its evidence
   digest from the validated guidance request and exact repository source state;
   the agent does not supply an opaque digest.
+- **AB-INGEST-011** — Concept Schema defines what knowledge belongs in a
+  concept; the shared OKF document template defines its encoding. New Initial
+  Ingest preparation renders editable skeleton files for exact and suggested recommendations,
+  Repository, confirmed Domain and navigation with canonical paths, valid
+  lifecycle fields and normalized sources. Suggested files state that their
+  role requires proposal review. A prepared System carries the owner-evidenced
+  primary-Domain relation so inbound Domain navigation is derivable. The agent
+  enriches these files rather than reconstructing OKF frontmatter.

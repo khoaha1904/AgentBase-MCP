@@ -7,7 +7,7 @@
 Deliver one public Initial Ingest workflow by composing the existing managed
 Code Graph, Hub authoring session and proposal inspection boundaries. Replace
 the catalog's vendor-shaped, source-less selector with provider-neutral catalog
-6.0 plus evidence-bearing Terraform/AWS profile guidance; add stable Hub
+7.0 plus separated technology detection and concept promotion; add stable Hub
 Repository identity resolution and optional bounded observed snapshots. Keep
 semantic decisions in the host Agent skill and deterministic authority,
 mapping, validation and recovery in MCP/runtime code.
@@ -39,9 +39,9 @@ qualified real-run median no greater than 10 minutes
 provider CLI, credentials, remote clone, automatic Accept/Publish, raw graph or
 source copy; exact evidence for every attributed claim
 
-**Scale/Scope**: Catalog 6.0 with 22 roles, AWS profile with 6 mappings,
-Terraform detector v1, one repository and at most the existing bounded 64
-candidate/concept change envelope
+**Scale/Scope**: Catalog 7.0 with eight Initial Ingest roles, two enrichment
+roles, AWS profile v2 technology classifications, Terraform detector v1, one
+repository and at most the existing bounded 64 candidate/change envelope
 
 ## Constitution Check
 
@@ -60,7 +60,7 @@ candidate/concept change envelope
 - **Specification and Verification — PASS**: New stable `AB-INGEST-*`,
   `AB-SCHEMA-*`, `AB-CLAIM-005` and `AB-LOCAL-HUB-016` requirements receive
   focused offline tests before behavior becomes current.
-- **Dependency/provider/schema gate — PASS**: Catalog 6.0 is an owner-approved
+- **Dependency/provider/schema gate — PASS**: Catalog 7.0 is an owner-approved
   major clean cutover. AWS/Terraform profiles are data/rules inside the current
   runtime; no provider process, credential boundary or dependency is added.
 - **Migration/recovery gate — PASS**: Owner confirmed no Published concepts and
@@ -88,14 +88,13 @@ the Hub boundary resolves a strong existing Repository match or assigns the
 initial deterministic ID and returns that ID to the run. Accepted Repository
 knowledge stores the ID and aliases; later runs match aliases before assigning.
 
-### 3. Replace string matching at its owner
+### 3. Separate detection, promotion and rendering
 
-Catalog definitions keep only provider-neutral architectural roles. One schema
-guidance operation validates evidence-bearing candidates, semantic observations
-and structured resource observations, applies Terraform Detector v1 and AWS
-Profile v1, then returns complete generic schema guidance. Existing list/get and
-bundle validators remain, while source-less `signals` authoring is removed from
-the new workflow.
+Catalog definitions keep only the small provider-neutral authoring core. One
+guidance operation validates candidates and observations, applies Terraform
+Detector v1 plus AWS Profile v2 to technology evidence, then evaluates the
+caller-visible concept/embedded disposition before returning schema guidance.
+Detection never creates a file. Existing list/get and bundle validators remain.
 
 ### 4. Extend evidence rather than store source
 
@@ -112,15 +111,36 @@ Refresh-only omission deletion and stale reconciliation are not modified in
 this slice except where catalog input types must compile; Phase 2 will replace
 their behavior under its own requirements.
 
-### 6. Qualify the real workflow, not the retired prompt contract
+### 6. Qualify the real workflow, not a one-file-per-resource contract
 
-V13 uses an isolated local-only Hub per run and exercises status/setup,
+V15 uses an isolated local-only Hub per run and exercises status/setup,
 Preflight, one graph index/architecture pass, evidence-bearing guidance,
 prepare, changed-set validation, finalize and inspect. New preparation derives
 its evidence digest from validated observations plus exact source state. The
 confirmed primary Domain is stored on the Repository relation. The harness
 copies only the finalized proposal bundle into benchmark artifacts and rejects
 Accept, submit, synchronize or bootstrap calls.
+
+### 7. Make sparse OKF packaging deterministic
+
+Keep concept meaning in the existing catalog schema and reuse the existing OKF
+renderer as the document template. During new-proposal preparation, render one
+editable skeleton per promoted exact or advisory suggested recommendation plus the required Repository,
+confirmed Domain and navigation. Bind type, draft lifecycle, generation data,
+repository identity and normalized sources in MCP code; the agent enriches the
+Markdown knowledge and supported relations rather than reconstructing YAML.
+Embedded recommendations become one searchable source-backed table in their
+parent and receive no identity or graph edge. Do not add a second schema system,
+template language or authoring database.
+
+### 8. Make promotion intent explicit but non-authoritative
+
+Let the host agent declare concept or embedded disposition and attach one
+released provider-neutral `suggested_type` only to a standalone candidate.
+Technology mappings remain authoritative metadata but cannot override
+disposition. A suggestion produces an editable draft skeleton with a visible
+review limitation; embedded knowledge remains in its parent. Neither receives
+a confidence score or automatic acceptance/publication authority.
 
 ## Project Structure
 
@@ -152,10 +172,10 @@ src/core/knowledge/
 │   ├── repository-identity.ts        # canonical ID and alias contract
 │   └── live-claims.ts                # optional observed snapshot
 └── schemas/
-    ├── catalog.ts                    # catalog 6.0 and generic selection
+    ├── catalog.ts                    # catalog 7.0 and generic selection
     ├── definition.ts                 # provider-neutral schema shape
     ├── guidance.ts                   # evidence-bearing one-call mapping
-    ├── definitions/                  # 22 generic roles
+    ├── definitions/                  # compact core/enrichment/governance roles
     └── profiles/
         ├── definition.ts
         ├── aws.ts
@@ -188,20 +208,20 @@ sufficient.
 
 ## Compatibility and Cutover
 
-- Bump the AgentBase catalog from `5.1.0` to `6.0.0` atomically with definitions,
+- Bump the AgentBase catalog from `6.0.0` to `7.0.0` atomically with definitions,
   guidance, validators, skill instructions and fixtures.
 - New AgentBase authoring rejects the retired exact types with replacement
   guidance; unrelated foreign types retain existing open-world behavior.
-- Existing unaccepted proposals are not converted. No Published Hub content,
+- Existing unaccepted proposals are regenerated or discarded. No Published Hub content,
   Git history or remote main is rewritten.
 - Preserve lower-level Hub Accept/Publish tools but do not call them from the
   Initial Ingest skill. Existing Refresh entrypoints compile against catalog
-  6.0 but receive no new product guarantees in this capability.
+  7.0 but receive no new product guarantees in this capability.
 
 ## Verification Strategy
 
-1. Focused catalog/profile tests prove all 22 roles, AWS mappings, Terraform
-   outcomes, version provenance and retired-type handling.
+1. Focused catalog/profile tests prove the core/enrichment split, technology
+   detection, promotion/embedding outcomes, version provenance and legacy-type handling.
 2. Repository/Hub identity tests prove new assignment, alias reuse, rename,
    ambiguous fork and no path/name-derived reassignment.
 3. Evidence/candidate tests prove both qualification gates, exact-source
@@ -209,7 +229,7 @@ sufficient.
 4. MCP and Hub authoring integration tests prove one guidance call, one proposal
    preview, one repair ceiling and no Accept/Publish/provider CLI side effects.
 5. Skill checks prove stage order, Domain confirmation and explicit stop points.
-6. `npm run verify` is the canonical offline gate. V13 first proves the real
+6. `npm run verify` is the canonical offline gate. V15 first proves the real
    isolated proposal lifecycle with a fake executable, then the representative
    three-run model benchmark occurs only after separate owner authorization and
    usable account confirmation.
@@ -217,3 +237,48 @@ sufficient.
 ## Complexity Tracking
 
 No constitution violation or approved exception.
+
+## Catalog 7.0 simplification
+
+Catalog 7.0 is a clean authoring cutover inside the still-active capability.
+No Published concept requires migration. Legacy/foreign types remain readable,
+but new Initial Ingest uses only Repository, Domain, System, Component,
+Function, Interface, Flow and Resource; Entity and Metric are enrichment-only.
+
+The implementation separates three decisions that catalog 6.0 conflated:
+
+```text
+Detect technology evidence → decide promotion → render schema/template
+```
+
+Provider profiles classify source resources and retain metadata. They do not
+select a standalone schema. Function resources with exact independent runtime
+evidence may promote deterministically. Queue/topic/event-bus/table/bucket/
+database/host resources default to embedded knowledge attached to a promoted
+parent. A caller may propose standalone Interface or Resource only with exact
+evidence for a shared contract, cross-boundary use or independent operational,
+ownership, lifecycle, failure or security value. Unsupported promotion is
+reviewable ambiguity, not a guessed file.
+
+Embedded knowledge is rendered as one bounded human-readable table in its
+parent. Rows contain a stable display name, role, provider-neutral kind,
+technology metadata and sources; they have no concept identity or graph edge.
+EC2/VM evidence becomes hosting metadata. Independently evidenced workloads on
+the host become Component concepts; an otherwise opaque host remains a
+reference/limitation.
+
+Catalog/version, profile data, guidance, skeleton preparation, MCP schemas,
+skills and benchmark expectations change atomically. The benchmark distinguishes
+required standalone concepts from required embedded knowledge and must not
+reward one-file-per-cloud-resource authoring. V14 prompts/results remain
+immutable historical evidence; the next prompt version is V15.
+
+The V15 MVP manifest qualifies Terraform repositories only. The prior SAM and
+mixed frontend/backend fixture, expectations and results remain historical
+evidence outside the selectable current suite; no SAM/CloudFormation detector
+or parity behavior is added to this capability.
+
+Constitution re-check: the design remains local-first, evidence-bound,
+provider-neutral and non-destructive; it adds no dependency, daemon, network,
+credential or publication behavior. The catalog major version is owner-approved
+and safe because there is no Published catalog-6 knowledge.

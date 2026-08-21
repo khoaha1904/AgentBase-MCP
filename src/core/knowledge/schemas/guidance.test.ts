@@ -1,48 +1,119 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getOkfAuthoringGuidance } from "./guidance.ts";
+import { getOkfAuthoringGuidance, type SemanticObservation } from "./guidance.ts";
 
 const source = { path: "infra/main.tf", startLine: 1, endLine: 8 };
 
-function resource(candidateId: string, resourceType: string) {
+function resource(candidateId: string, resourceType: string, disposition: "concept" | "embedded" = "concept") {
   return {
     candidates: [{ id: candidateId, identityHint: candidateId, identityBasis: "Terraform address",
-      queryValue: "Other concepts link to this resource", evidenceIds: [`evidence.${candidateId}`] }],
-    semanticObservations: [],
+      queryValue: "Runtime or supporting resource role", evidenceIds: [`evidence.${candidateId}`], disposition,
+      ...(disposition === "embedded" ? { parentCandidateId: "parent" } : {}) }],
+    semanticObservations: [] as SemanticObservation[],
     resourceObservations: [{ id: `evidence.${candidateId}`, candidateId, sourceTool: "terraform" as const,
       resourceType, address: `module.app.${resourceType}.${candidateId}`, source }],
   };
 }
 
-for (const [resourceType, schema, product] of [
-  ["aws_instance", "Server", "ec2"],
-  ["aws_lambda_function", "Function", "lambda"],
-  ["aws_sqs_queue", "Queue", "sqs"],
-  ["aws_s3_bucket", "Object Storage", "s3"],
-  ["aws_db_instance", "Database", "rds"],
-  ["aws_dynamodb_table", "Database Table", "dynamodb"],
-] as const) {
-  test(`[AB-SCHEMA-031..034] Terraform ${resourceType} maps through AWS profile to ${schema}`, () => {
-    const result = getOkfAuthoringGuidance(resource(resourceType.replaceAll("_", "."), resourceType));
-    const recommendation = result.recommendations[0]!;
-    assert.equal(result.catalogVersion, "6.0.0");
-    assert.equal(recommendation.status, "exact");
-    assert.equal(recommendation.schema?.type, schema);
-    assert.deepEqual(recommendation.detectorProfile, { id: "terraform", version: "1.0.0" });
-    assert.deepEqual(recommendation.providerProfile, { id: "aws", version: "1.0.0" });
-    assert.equal(recommendation.technology.product, product);
+test("[AB-SCHEMA-032..036] concept-disposition Lambda maps exactly to Function", () => {
+  const result = getOkfAuthoringGuidance(resource("runtime", "aws_lambda_function"));
+  const recommendation = result.recommendations[0]!;
+  assert.equal(result.catalogVersion, "7.0.0");
+  assert.equal(recommendation.status, "exact");
+  assert.equal(recommendation.disposition, "concept");
+  assert.equal(recommendation.schema?.type, "Function");
+  assert.deepEqual(recommendation.detectorProfile, { id: "terraform", version: "1.0.0" });
+  assert.deepEqual(recommendation.providerProfile, { id: "aws", version: "2.0.0" });
+  assert.deepEqual(recommendation.technology, {
+    kind: "runtime-function", provider: "aws", product: "lambda", sourceTool: "terraform", resourceType: "aws_lambda_function",
   });
-}
+});
+
+test("[AB-SCHEMA-032][AB-SCHEMA-037] supporting Terraform resources remain embedded technology evidence", () => {
+  for (const [resourceType, product, kind] of [
+    ["aws_instance", "ec2", "compute-host"],
+    ["aws_sqs_queue", "sqs", "message-queue"],
+    ["aws_sns_topic", "sns", "message-topic"],
+    ["aws_cloudwatch_event_bus", "eventbridge", "event-bus"],
+    ["aws_s3_bucket", "s3", "object-storage"],
+    ["aws_db_instance", "rds", "database"],
+    ["aws_dynamodb_table", "dynamodb", "database-table"],
+  ] as const) {
+    const input = resource(resourceType.replaceAll("_", "."), resourceType, "embedded");
+    input.candidates.unshift({ id: "parent", identityHint: "runtime", identityBasis: "workload boundary",
+      queryValue: "Independent runtime", evidenceIds: ["docs.parent"], disposition: "concept" });
+    input.semanticObservations.push({ id: "docs.parent", candidateId: "parent", role: "implementation" as const,
+      signal: "runtime function with independent trigger", source });
+    const recommendation = getOkfAuthoringGuidance(input).recommendations[1]!;
+    assert.equal(recommendation.status, "embedded", resourceType);
+    assert.equal(recommendation.disposition, "embedded", resourceType);
+    assert.equal(recommendation.parentCandidateId, "parent", resourceType);
+    assert.equal(recommendation.schema, undefined, resourceType);
+    assert.equal(recommendation.technology.product, product, resourceType);
+    assert.equal(recommendation.technology.kind, kind, resourceType);
+  }
+});
+
+test("[AB-SCHEMA-031][AB-SCHEMA-036] embedded candidates require a concept parent and cannot request a schema", () => {
+  const noParent = resource("queue", "aws_sqs_queue", "embedded");
+  assert.throws(() => getOkfAuthoringGuidance(noParent), /embedded candidate parent must name a concept candidate/);
+  const input = resource("queue", "aws_sqs_queue", "embedded");
+  input.candidates.unshift({ id: "parent", identityHint: "runtime", identityBasis: "workload boundary",
+    queryValue: "Independent runtime", evidenceIds: ["docs.parent"], disposition: "concept" });
+  input.semanticObservations.push({ id: "docs.parent", candidateId: "parent", role: "implementation" as const,
+    signal: "runtime function", source });
+  (input.candidates[1] as Record<string, unknown>).suggestedType = "Resource";
+  assert.throws(() => getOkfAuthoringGuidance(input), /embedded candidate cannot request a standalone schema/);
+});
+
+test("[AB-SCHEMA-034][AB-SCHEMA-036] semantic standalone intent remains suggested", () => {
+  const result = getOkfAuthoringGuidance({
+    candidates: [{ id: "capability", identityHint: "health-aware", identityBasis: "README capability",
+      queryValue: "Coordinates cooperating runtimes", evidenceIds: ["docs.capability"], disposition: "concept" as const,
+      suggestedType: "System" }],
+    semanticObservations: [{ id: "docs.capability", candidateId: "capability", role: "documentation" as const,
+      signal: "software system capability with cooperating components", source }],
+    resourceObservations: [],
+  });
+  assert.equal(result.recommendations[0]?.status, "suggested");
+  assert.equal(result.recommendations[0]?.schema?.type, "System");
+  assert.match(result.recommendations[0]?.limitations.join(" ") ?? "", /proposal review/i);
+});
+
+test("[AB-SCHEMA-033][AB-SCHEMA-036] detection does not promote non-Lambda resources", () => {
+  const unpromoted = getOkfAuthoringGuidance(resource("internal-queue", "aws_sqs_queue")).recommendations[0]!;
+  assert.equal(unpromoted.status, "unsupported");
+  assert.equal(unpromoted.schema, undefined);
+  assert.equal(unpromoted.technology.kind, "message-queue");
+
+  const input = resource("queue", "aws_sqs_queue");
+  const result = getOkfAuthoringGuidance({ ...input,
+    candidates: [{ ...input.candidates[0]!, suggestedType: "Interface" }],
+  });
+  assert.equal(result.recommendations[0]?.status, "suggested");
+  assert.equal(result.recommendations[0]?.schema?.type, "Interface");
+  assert.equal(result.recommendations[0]?.technology.product, "sqs");
+});
 
 test("[AB-SCHEMA-033] unresolved Terraform indirection remains ambiguous", () => {
-  const input = resource("queue", "${var.resource_type}");
-  const result = getOkfAuthoringGuidance(input);
+  const result = getOkfAuthoringGuidance(resource("queue", "${var.resource_type}"));
   assert.equal(result.recommendations[0]?.status, "ambiguous");
   assert.match(result.recommendations[0]?.limitations.join(" ") ?? "", /unresolved/);
 });
 
-test("[AB-INGEST-005][AB-SCHEMA-031] source-less or cross-candidate evidence is rejected", () => {
+test("[AB-SCHEMA-031][AB-SCHEMA-035] suggested type accepts only Initial Ingest catalog roles", () => {
+  for (const suggestedType of ["Entity", "Metric", "Maintainer Guidance", "AWS Lambda", "Queue"]) {
+    assert.throws(() => getOkfAuthoringGuidance({
+      candidates: [{ id: "runtime", identityHint: "runtime", identityBasis: "source boundary",
+        queryValue: "independent runtime", evidenceIds: ["docs.runtime"], disposition: "concept" as const, suggestedType }],
+      semanticObservations: [{ id: "docs.runtime", candidateId: "runtime", role: "documentation" as const, signal: "runtime boundary", source }],
+      resourceObservations: [],
+    }), /suggested type must name a released Initial Ingest schema/);
+  }
+});
+
+test("[AB-INGEST-005][AB-SCHEMA-031] source-less evidence is rejected", () => {
   const input = resource("queue", "aws_sqs_queue");
   assert.throws(() => getOkfAuthoringGuidance({ ...input,
     resourceObservations: [{ ...input.resourceObservations[0]!, source: { path: "../secret", startLine: 1, endLine: 1 } }],

@@ -1,27 +1,13 @@
 {
-  "catalogVersion": "6.0.0",
+  "catalogVersion": "7.0.0",
   "cases": [
     { "type": "Repository", "signals": ["repository", "admitted repository identity"] },
     { "type": "Domain", "signals": ["business domain", "business boundary or explicit owner guidance"] },
-    { "type": "Domain Entity", "signals": ["business entity", "stable business identity and meaning or lifecycle evidence"] },
     { "type": "System", "signals": ["software system", "recognizable capability and cooperating entity evidence"] },
-    { "type": "Software Component", "signals": ["software component", "independent build, runtime, deployment or ownership boundary"] },
-    { "type": "Service", "signals": ["service", "service boundary or deployment identity"] },
+    { "type": "Component", "signals": ["software component", "independent workload, build, runtime, deployment or ownership boundary"] },
     { "type": "Function", "signals": ["runtime function", "independent trigger, deployment, scaling, permission, failure or operational boundary"] },
-    { "type": "Server", "signals": ["compute host", "host identity or independent operational boundary"] },
-    { "type": "API Surface", "signals": ["http routes", "consumer boundary and related operation evidence"] },
-    { "type": "API Endpoint", "signals": ["independent endpoint", "independent policy, owner, lifecycle or consumer boundary"] },
-    { "type": "Event", "signals": ["event type", "event name and producer or consumer evidence"] },
-    { "type": "Metric", "signals": ["performance metric", "stable metric definition and producer or calculation evidence"] },
-    { "type": "Database", "signals": ["database instance", "database identity and ownership or lifecycle evidence"] },
-    { "type": "Database Table", "signals": ["database table", "table identity or schema evidence"] },
-    { "type": "Queue", "signals": ["message queue", "queue identity", "producer or consumer evidence"] },
-    { "type": "Object Storage", "signals": ["storage bucket", "storage identity and ownership or data-lifecycle evidence"] },
-    { "type": "Infrastructure Definition", "signals": ["configuration root", "configuration root and declared resource evidence"] },
-    { "type": "Infrastructure Module", "signals": ["infrastructure module", "reusable module root and input/output contract evidence"] },
-    { "type": "Deployment", "signals": ["deployed environment", "external evidence of environment and applied resource identity"] },
-    { "type": "Business Flow", "signals": ["business flow", "trigger", "observable outcome", "supporting system evidence"] },
-    { "type": "Cross-Repository Relationship", "signals": ["integration contract", "source endpoint", "target endpoint", "independent contract or mapping evidence"] },
-    { "type": "Maintainer Guidance", "signals": ["maintainer guidance", "explicit maintainer instruction"] }
+    { "type": "Interface", "signals": ["interface contract", "contract identity and producer, consumer or handler evidence"] },
+    { "type": "Flow", "signals": ["business flow", "trigger", "observable outcome", "supporting concept evidence"] },
+    { "type": "Resource", "signals": ["operated resource", "independent cross-boundary, ownership, lifecycle, failure, security or operational evidence"] }
   ]
 }
