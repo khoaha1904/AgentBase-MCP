@@ -276,4 +276,11 @@ Interface/Resource promotion retains candidate-owned semantic evidence, and all
 source/schema/relation gates remain unchanged. The simplified code and full
 50-test gate pass; a fresh sequential probe is next.
 
+Post-fix probe `2026-08-21T172146Z` confirms standalone sharing now passes for
+System, Function and Flow. It stopped on the remaining embedded self-only rule:
+configured delivery had its own README anchor and added the Flow's EventBridge
+source, but MCP rejected that second source. No draft was scored and no replica
+ran. The proposed final attribution adjustment requires one own embedded anchor
+while permitting additional shared observations.
+
 Most recent completed capability: `021-agentstack-foundation`.

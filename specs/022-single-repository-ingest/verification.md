@@ -931,3 +931,15 @@ The implementation deletes the role-specific exception logic. Existing tests
 cover shared System and Flow support/promotion plus embedded rejection without
 increasing the repository count. `npm run verify` passes every deterministic
 check and 50/50 tests.
+
+## Post-AB-SCHEMA-048 probe — 2026-08-22
+
+Probe `2026-08-21T172146Z` passed the previously failing standalone System,
+Function and Flow evidence-sharing shapes. It stopped because the embedded
+configured-delivery candidate cited one own README observation plus the Flow's
+EventBridge implementation observation. The remaining embedded self-only rule
+rejected the second source before Prepare.
+
+This is not a recurrence of standalone exclusive ownership. It exposes the
+remaining embedded boundary: useful embedded knowledge can be multi-source too.
+No draft was created or scored, and AB-BENCH-048 stopped before a replica.

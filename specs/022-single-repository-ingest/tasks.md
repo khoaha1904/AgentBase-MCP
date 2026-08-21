@@ -266,6 +266,9 @@ and record reproducible evidence.
 - [x] T085 [US2] Add AB-SCHEMA-048, replace exclusive ownership with attributable
   shared evidence for standalone concepts, preserve embedded and
   Interface/Resource gates, and remove obsolete role-specific exception logic
+- [x] T086 Retain post-AB-SCHEMA-048 probe `2026-08-21T172146Z`, confirm
+  standalone sharing passes, classify embedded own-plus-Flow evidence rejection
+  as the remaining attribution boundary, and stop before a replica
 
 ---
 

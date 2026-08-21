@@ -125,6 +125,9 @@ is the portable archive.
   role exception. AB-SCHEMA-048 now supersedes narrow 046/047: observations
   retain primary attribution but are shareable among standalone concepts;
   embedded and Interface/Resource boundary gates remain strict.
+- Probe `2026-08-21T172146Z` confirms standalone sharing passes, then exposes
+  the remaining embedded case: an own README anchor plus shared Flow evidence is
+  still rejected. No draft was produced and no replica ran.
 - Post-fix probe `2026-08-21T154146Z` proves duplicate navigation is gone and
   again passes the complete lifecycle. It is not replica-qualified: the model
   reintroduced an optional Flow, selected CloudFormation/handler evidence over
