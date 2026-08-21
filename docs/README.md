@@ -126,6 +126,10 @@ is the portable archive.
   remain diagnostics or authoring heuristics; source, shape, safety, identity
   and declared-relation integrity remain hard gates. No new model run was used
   to make this offline correction.
+- Probe `2026-08-21T161342Z` did not reach OKF authoring: MCP rejected a Resource
+  whose candidate already had exact semantic evidence because the same semantic
+  observation ID was not repeated inside `promotion.evidence_ids`. This is a
+  request-shape restriction in MCP, not an OKF/scorer finding; no replica ran.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.

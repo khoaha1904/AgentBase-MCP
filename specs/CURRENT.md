@@ -177,4 +177,12 @@ authoring heuristics, not validity gates. Hard gates remain source truth, shape,
 safety, identity and declared-relation integrity. No replacement model run has
 been executed for this correction.
 
+Owner-authorized probe `2026-08-21T161342Z` then stopped after 83,382 ms at
+schema guidance, before any OKF draft existed. The Resource candidate carried a
+compatible operational basis plus exact candidate-owned semantic evidence, but
+MCP additionally required that semantic observation ID to be repeated inside
+`promotion.evidence_ids`; the agent listed its structured Terraform evidence
+there instead. This is a redundant MCP request-shape restriction, not an OKF or
+scorer result. AB-BENCH-048 stopped before a replica.
+
 Most recent completed capability: `021-agentstack-foundation`.

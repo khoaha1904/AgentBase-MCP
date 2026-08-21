@@ -763,3 +763,19 @@ Terraform is high-priority rather than mandatory completeness, and Flow
 endpoint count is an authoring heuristic rather than schema validity. Structural
 source, shape, safety, identity and declared-relation checks remain hard gates.
 This correction is verified offline; no new model qualification was run.
+
+## V15 partial-acceptance probe — 2026-08-21
+
+Owner-authorized probe `2026-08-21T161342Z` stopped after 83,382 ms at
+`get_okf_authoring_schemas`; no proposal was prepared, finalized or scored. The
+agent proposed System, Function and Resource candidates and supplied an exact
+candidate-owned semantic observation for the Resource. MCP nevertheless
+rejected the request because the Resource's `promotion.evidence_ids` repeated
+only its structured Terraform observations rather than also repeating that
+semantic observation.
+
+This is an MCP request-shape restriction, not an OKF quality finding or scorer
+failure. Candidate ownership, compatible operational promotion basis and exact
+semantic evidence were present; the remaining requirement concerns which
+nested evidence-ID list repeats the already supplied observation. AB-BENCH-048
+therefore stopped the sequence before a replica.

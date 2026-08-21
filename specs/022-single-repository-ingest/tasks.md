@@ -219,6 +219,9 @@ and record reproducible evidence.
   make semantic keywords diagnostic, allow sparse Domain-to-Repository
   navigation, and remove repository-specific Terraform and Flow completeness
   gates without weakening source, shape, safety or relation integrity
+- [x] T071 Retain probe `2026-08-21T161342Z`, classify its pre-authoring failure
+  as a redundant Resource-promotion request-shape restriction in MCP, and stop
+  before a replica under AB-BENCH-048
 
 ---
 
