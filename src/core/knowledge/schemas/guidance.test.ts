@@ -19,7 +19,9 @@ function resource(candidateId: string, resourceType: string, disposition: "conce
 }
 
 test("[AB-SCHEMA-032..036] concept-disposition Lambda maps exactly to Function", () => {
-  const result = getOkfAuthoringGuidance(resource("runtime", "aws_lambda_function"));
+  const input = resource("runtime", "aws_lambda_function");
+  const result = getOkfAuthoringGuidance({ ...input, candidates: [{ ...input.candidates[0]!, suggestedType: "Function",
+    promotion: { basis: "operational" as const, evidenceIds: ["evidence.runtime"] } }] });
   const recommendation = result.recommendations[0]!;
   assert.equal(result.catalogVersion, "7.0.0");
   assert.equal(recommendation.status, "exact");
@@ -109,7 +111,7 @@ test("[AB-SCHEMA-033][AB-SCHEMA-036][AB-SCHEMA-042] detection does not promote n
   assert.throws(() => getOkfAuthoringGuidance({ ...input,
     candidates: [{ ...input.candidates[0]!, suggestedType: "Resource",
       promotion: { basis: "operational" as const, evidenceIds: ["evidence.queue"] } }],
-  }), /candidate-owned semantic evidence/);
+  }), /Interface\/Resource promotion requires semantic evidence/);
 });
 
 test("[AB-SCHEMA-033][AB-SCHEMA-040] Terraform-family evidence is bounded and source-truthful", () => {

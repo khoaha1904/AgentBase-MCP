@@ -187,9 +187,13 @@ function validateRequest(request: OkfAuthoringGuidanceRequest): void {
     if (candidate.evidenceIds.some((id) => observations.find((item) => item.id === id)?.candidateId !== candidate.id)) {
       throw new Error(`candidate ${candidate.id} cites evidence owned by another candidate`);
     }
-    if (candidate.promotion?.evidenceIds.some((id) => !candidate.evidenceIds.includes(id)
-      || !request.semanticObservations.some((item) => item.id === id && item.candidateId === candidate.id))) {
-      throw new Error(`candidate ${candidate.id} promotion must cite candidate-owned semantic evidence`);
+    if (candidate.promotion?.evidenceIds.some((id) => !candidate.evidenceIds.includes(id))) {
+      throw new Error(`candidate ${candidate.id} promotion must cite candidate-owned evidence`);
+    }
+    if (["Interface", "Resource"].includes(candidate.suggestedType ?? "") && candidate.promotion
+      && !candidate.promotion.evidenceIds.some((id) => request.semanticObservations
+        .some((item) => item.id === id && item.candidateId === candidate.id))) {
+      throw new Error(`candidate ${candidate.id} Interface/Resource promotion requires semantic evidence`);
     }
   }
 }

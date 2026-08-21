@@ -266,7 +266,9 @@ Normative OKF source is pinned to commit
   the requested role. Declaration evidence, caller prose and `suggested_type`
   alone return no standalone schema; insufficient knowledge remains suitable
   for embedding in a useful parent. Other suggested roles may carry the same
-  evidence as transparent agent intent, but it never overrides schema selection.
+  candidate-owned semantic or structured evidence as transparent agent intent,
+  but it never overrides schema selection. Interface/Resource promotion must
+  include at least one candidate-owned semantic observation.
 
 ## Single-repository Initial Ingest
 

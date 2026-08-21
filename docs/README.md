@@ -88,6 +88,10 @@ is the portable archive.
   correctly embedded DynamoDB/delivery details but MCP rejected promotion
   evidence attached to Function intent. Other roles now accept that evidence as
   non-authoritative intent; the strict Interface/Resource gate is unchanged.
+- Replacement `2026-08-21T151424Z` passed that first restriction but exposed a
+  second: Function structured promotion evidence was still forced to be
+  semantic. Other roles now accept candidate-owned structured evidence; the
+  Interface/Resource semantic gate and Terraform source-truth guard remain.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.

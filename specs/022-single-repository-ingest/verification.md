@@ -646,3 +646,14 @@ AB-SCHEMA-042 is clarified minimally: other suggested concept roles may retain
 candidate-owned promotion evidence as transparent intent, while only
 Interface/Resource use it as a mandatory promotion gate and it never overrides
 schema selection. No benchmark replacement is included in this correction.
+
+Owner-authorized replacement `2026-08-21T151424Z` again stopped at its one
+guidance call after 78,512 ms. The earlier role restriction was gone, but the
+validator still required every Function promotion source to be semantic. The
+agent cited candidate-owned structured Lambda/schedule evidence, exposing a
+second over-strict layer. It also mislabeled CloudFormation YAML observations
+as Terraform; that separate source-truth error remains correctly unsupported.
+
+AB-SCHEMA-042 now permits other roles to cite candidate-owned semantic or
+structured promotion evidence as non-authoritative intent. Interface/Resource
+still require at least one semantic promotion source and a semantic role match.

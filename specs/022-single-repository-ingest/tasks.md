@@ -187,6 +187,10 @@ and record reproducible evidence.
   Function promotion-field rejection as an AB-SCHEMA-042 contract-usability
   defect, permit non-authoritative promotion intent on other suggested roles
   and verify offline without a replacement run
+- [x] T062 Retain replacement run `2026-08-21T151424Z`, distinguish the fixed
+  role restriction from the remaining Function semantic-only restriction and
+  CloudFormation source-label error, then permit non-authoritative structured
+  evidence on other roles without weakening the Interface/Resource gate
 
 ---
 

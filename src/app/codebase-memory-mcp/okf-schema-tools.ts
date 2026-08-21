@@ -117,7 +117,7 @@ export const OKF_SCHEMA_TOOLS = [
               description: "Optional released provider-neutral role proposed by the host agent; advisory, evidence-bound and never exact truth.",
             }, promotion: {
               type: "object",
-              description: "Candidate-owned semantic evidence for standalone promotion intent. Required to promote Interface/Resource; advisory and non-authoritative for other roles.",
+              description: "Candidate-owned evidence for standalone promotion intent. Interface/Resource must include semantic evidence; other roles may cite structured evidence but the field remains advisory.",
               properties: {
                 basis: { type: "string", enum: ["shared-contract", "cross-boundary", "ownership", "lifecycle", "failure", "security", "operational"] },
                 evidence_ids: { type: "array", minItems: 1, maxItems: 64, items: { type: "string" } },

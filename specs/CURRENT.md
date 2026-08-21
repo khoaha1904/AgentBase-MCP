@@ -110,4 +110,11 @@ promotion evidence on other suggested roles as non-authoritative intent while
 retaining the strict Interface/Resource gate. Replacement qualification remains
 separately authorized.
 
+Replacement run `2026-08-21T151424Z` proved the role restriction was removed
+but exposed a second over-strict layer: Function promotion evidence was still
+forced to be semantic even when its candidate-owned structured evidence was
+appropriate. That restriction is removed for other roles; Interface/Resource
+still require semantic evidence. The run also mislabeled CloudFormation YAML as
+Terraform, which remains a real source-truth authoring error.
+
 Most recent completed capability: `021-agentstack-foundation`.
