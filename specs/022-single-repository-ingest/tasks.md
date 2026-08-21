@@ -148,6 +148,9 @@ and record reproducible evidence.
   selected end-to-end boundaries; remove function-level, meta, routing,
   historical and exhaustive matrix coverage; verify the reduced offline suite
   without changing runtime behavior
+- [x] T049 Record and finalize the owner-authorized V15 Terraform Health
+  requalification; separate lifecycle success and real OKF findings from the
+  mixed-source Terraform expectation mismatch without running another model
 
 ---
 

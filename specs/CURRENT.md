@@ -22,8 +22,7 @@ Flow schema's required `flow_steps`; its own validator rejected the generated
 draft before author editing. The trace also exposes a non-causal diagnostic
 wording issue for failed required calls and a secondary embedded-knowledge gap
 for semantic-only CloudFormation evidence. No replacement run, Accept, Publish,
-provider CLI or Hub PR occurred. Capability 022 remains active and V15 is not
-accepted. The current MVP qualification manifest is now Terraform-only; prior
+provider CLI or Hub PR occurred. The current MVP qualification manifest is now Terraform-only; prior
 SAM/Shopping Cart artifacts remain historical and are not selectable.
 
 The blocking Flow preparation defect from that run is now verified offline.
@@ -34,6 +33,16 @@ calls that never occurred. Superseded prompt prose/existence tests were removed
 while representative runner generations remain covered; homogeneous case
 matrices now use table-driven contracts. The early-development gate now passes
 50 spec, design-contract and end-to-end tests.
-No new model qualification has been run.
+
+The owner-authorized V15 requalification `2026-08-21T132954Z` completed the
+entire lifecycle in 183,391 ms with no tool failure. Its four authored concepts
+are valid and reviewable with 100% schema agreement and metadata completeness.
+It remains `needs_revision`: the Flow probe is missing, the confirmed Domain
+does not navigate to the System and its body is shallow. Embedded DynamoDB,
+schedule and delivery knowledge is present in the Function prose, but the
+Terraform-only scorer reports 0% because the agent cited CloudFormation and
+handler paths from the mixed-source repository rather than the expected
+Terraform file. V15 is therefore not yet accepted; no Accept, Publish, provider
+CLI or Hub PR operation occurred.
 
 Most recent completed capability: `021-agentstack-foundation`.

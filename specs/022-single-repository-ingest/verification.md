@@ -499,3 +499,20 @@ The suite decreased from 391 tests in the feature peak to 50 tests, from 82 to
 decreased from about 30 seconds to about 5.2 seconds. `npm run verify` passes with
 all specification, TypeScript, dependency, Knip, Gitleaks, test and diff gates.
 No production source or model benchmark behavior changed.
+
+## V15 Terraform Health requalification — 2026-08-21
+
+Owner-authorized run `2026-08-21T132954Z` completed the complete Initial Ingest
+lifecycle in 183,391 ms with no required-tool failure. Deterministic finalization
+passed OKF validation and classified the bundle as `reviewable`: four matched
+concepts, 80% reference concept coverage, 100% schema agreement, 100% metadata
+completeness, 50% provenance coverage and 75% relationship coverage.
+
+Owner review remains `needs_revision`. The output omits the expected alerting
+Flow, the confirmed Domain does not navigate to the System and the Domain prose
+is shallow. DynamoDB state, the EventBridge schedule and delivery integrations
+are present as embedded Function knowledge. Their benchmark coverage is 0%
+because the agent cited CloudFormation/handler evidence from the same repository
+while the current expectation requires the Terraform path. This is a
+qualification-scope mismatch, distinct from the real navigation and Flow gaps.
+No Accept, Publish, provider CLI or Hub PR operation occurred.

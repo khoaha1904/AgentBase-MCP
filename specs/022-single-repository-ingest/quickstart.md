@@ -49,7 +49,7 @@ redacted-secret, offline tests and diff checks all pass.
 
 ## Optional real qualification
 
-Do not run automatically. The owner has authorized exactly the first V15 run
+Do not run automatically. The owner has authorized the recorded V15 runs
 after the catalog-7 offline gate passes. Record validity, reviewability, elapsed
 time, standalone concepts, embedded knowledge, limitations and correction
 count. Do not add a replacement run, publish or rebuild a Hub PR.

@@ -49,7 +49,9 @@ is the portable archive.
   1/3 and exposed that catalog 6 conflates technology detection, concept
   promotion and rendering. Catalog 7.0 passes the offline gate; the generated
   Flow-skeleton defect exposed by its first V15 qualification is fixed and
-  verified offline, while model requalification remains pending.
+  verified offline. The owner-authorized V15 requalification now passes the
+  lifecycle and produces a valid reviewable bundle, but still needs semantic
+  revision for Domain navigation, Flow coverage and Terraform evidence scope.
 - Initial Ingest now resolves a durable Repository identity, requires bounded
   Domain confirmation, uses the graph only as a private map and stops at one
   sparse, inspectable proposal preview. Partial coverage is valid and visible;

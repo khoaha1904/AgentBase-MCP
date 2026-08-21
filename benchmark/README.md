@@ -159,6 +159,17 @@ Prepare now returns an editable empty Flow-step slot, final validation still
 requires real steps, and failed calls are reported as failed rather than absent.
 This correction is not a new model qualification.
 
+The owner-authorized requalification, Health `2026-08-21T132954Z`, completed the
+V15 lifecycle with no tool failure and produced a valid `reviewable` bundle in
+183,391 ms. It authored Domain, Repository, System and Function with 100% schema
+agreement and metadata completeness. Owner review remains `needs_revision`:
+the Flow probe is absent, the Domain does not navigate to the System and its
+body is shallow. The Function prose contains DynamoDB state, schedule and
+delivery knowledge, but embedded coverage scores 0% because the agent cited
+CloudFormation/handler evidence while the Terraform-only expectation requires
+the Terraform path. The retained result separates this qualification-scope
+mismatch from the real OKF navigation and missing-Flow findings.
+
 Expectations do not prescribe prose or agent slugs. Bounded identity terms and
 evidence match concept instances; the scorer then evaluates concrete schema
 choices, required semantic metadata, source provenance and directed concept
