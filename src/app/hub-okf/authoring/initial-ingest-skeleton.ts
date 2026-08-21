@@ -243,8 +243,11 @@ export function writeInitialIngestSkeletons(options: WriteInitialIngestSkeletons
         sources: [ownerSource!, repositorySources[0]!],
       };
       const repositoryLink = path.posix.relative(path.posix.dirname(domainPath), repositoryPath);
+      const systemLinks = conceptEntries.filter((item) => item.type === "System").map((item) =>
+        `* [${item.title}](${path.posix.relative(path.posix.dirname(domainPath), item.path)}) - System`);
       write(options.bundleRoot, domainPath, document(domainPath, "Domain", frontmatter,
-        `# Purpose\n\nOwner-confirmed business boundary for [${options.repository.displayName}](${repositoryLink}).`));
+        ["# Purpose", "", `Owner-confirmed business boundary for [${options.repository.displayName}](${repositoryLink}).`,
+          ...(systemLinks.length ? ["", "# Systems", "", ...systemLinks] : [])].join("\n")));
       skeletons.push({ identity: options.confirmedDomain.identity, path: domainPath, type: "Domain" });
       conceptEntries.push({ path: domainPath, type: "Domain", title: options.confirmedDomain.title });
     }

@@ -5,6 +5,7 @@ import test from "node:test";
 
 import { parseConceptDocument } from "../../src/core/knowledge/index.ts";
 import { createAuthoringAssessment, createPairComparison, scoreSemanticBenchmark } from "./benchmark-okf.mjs";
+import { validateFinalChangeCoverage } from "./benchmark-agent.mjs";
 
 const repositoryId = "repository-example-aaaaaaaaaaaa";
 
@@ -69,9 +70,12 @@ test("[AB-BENCH-045] embedded infrastructure is scored through its useful parent
       requiredSourcePaths: ["main.tf"], allowedParentTypes: ["Component", "Function", "System", "Flow"] }],
   };
   const queue = concept("resources/delete-queue.md", "Resource", "delete-queue", {}, ["main.tf"], "Delete queue.");
-  assert.equal(scoreSemanticBenchmark(expectation, {
+  const standalone = scoreSemanticBenchmark(expectation, {
     concepts: new Map([[queue.conceptId, queue]]), warnings: [],
-  }, repositoryId).embeddedKnowledgeCoveragePercent, 0);
+  }, repositoryId);
+  assert.equal(standalone.embeddedKnowledgeCoveragePercent, 0);
+  assert.equal(standalone.referenceConceptCoveragePercent, null);
+  assert.deepEqual(standalone.ratios.referenceConceptCoverage, { matched: 0, total: 0, percent: null });
   const parent = concept("components/migration.md", "Component", "migration", {}, ["main.tf"],
     "The migration component sends delete work through its internal queue.\n\n## Limitations\n\nRuntime state is unknown.");
   assert.equal(scoreSemanticBenchmark(expectation, {
@@ -90,6 +94,10 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
   const expected = JSON.parse(fs.readFileSync(path.join(root, manifest.repositories[0].expectation), "utf8"));
   assert.ok(expected.requiredConcepts.length > 0);
   assert.ok(expected.embeddedKnowledge.length > 0);
+  assert.equal(expected.requiredConcepts.some((item) => item.type === "Flow"), false);
+  assert.ok(expected.embeddedKnowledge.some((item) => item.key === "aha-alert-processing"));
+  assert.deepEqual(validateFinalChangeCoverage(["repositories/a", "systems/a"], ["repositories/a", "systems/a"]), []);
+  assert.match(validateFinalChangeCoverage(["repositories/a"], ["domains/a", "repositories/a"])[0], /omitted.*domains\/a/);
 });
 
 test("[AB-BENCH-013..017] pair comparison reports quality and efficiency without a winner", () => {

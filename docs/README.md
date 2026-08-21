@@ -77,6 +77,13 @@ is the portable archive.
   `needs_revision`: Domain navigation/prose is weak, Flow provenance is 83%,
   and manual review flags likely Interface/Resource over-promotion to supply
   Flow endpoints.
+- The post-run semantic correction is implemented offline. Interface/Resource
+  promotion now needs compatible candidate-owned semantic boundary evidence;
+  new Domain drafts navigate their prepared Systems; Flow guidance requires
+  trigger/outcome/interaction provenance. Benchmark ratios expose counts and
+  `n/a`, name unjudged identities, require final validation coverage and no
+  longer require Flow for the one-runtime Terraform fixture. Requalification
+  remains separately owner-authorized.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.

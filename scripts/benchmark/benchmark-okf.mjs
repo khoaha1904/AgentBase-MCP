@@ -515,24 +515,35 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
   const unjudgedConcepts = [...actual.keys()].filter((key) => !usedActual.has(key));
   const missingReferenceConcepts = [...expected.keys()].filter((key) => !assignments.has(key));
   const unjudgedRelationships = [...actualRelationships].filter((item) => !confirmedAuthoredRelationships.has(item));
-  const percent = (part, total) => total ? Math.round((part / total) * 100) : 100;
+  const ratio = (part, total) => ({ matched: part, total, percent: total ? Math.round((part / total) * 100) : null });
   const contradictionFailures = contradictedConcepts.map((item) =>
     `Reference ${item.expected} matched ${item.actual} but expected schema ${item.expectedType}, found ${item.actualType}`);
   const conflictVisibility = assessConflictVisibility(expectation.conflicts, bundle.concepts, repositoryId);
   const liveEvidence = assessLiveEvidence(expectation.liveEvidence, bundle.concepts);
   const embeddedKnowledge = assessEmbeddedKnowledge(expectation.embeddedKnowledge, bundle.concepts, repositoryId);
+  const ratios = {
+    referenceConceptCoverage: ratio(matchedKeys.length, expected.size),
+    recognizedSchemaAgreement: ratio(confirmedConcepts.length, matchedKeys.length),
+    metadataCompleteness: ratio(metadataPresent, metadataRequired),
+    provenanceCoverage: ratio(evidencePresent, evidenceRequired),
+    referenceRelationshipCoverage: ratio(confirmedRelationships.length, expectation.relationships.length),
+    conflictVisibility: ratio(conflictVisibility.visible, conflictVisibility.required),
+    liveEvidenceReferenceCoverage: ratio(liveEvidence.matched, liveEvidence.required),
+    embeddedKnowledgeCoverage: ratio(embeddedKnowledge.matched, embeddedKnowledge.required),
+  };
   const metrics = {
     expectedConcepts: expected.size,
     actualConcepts: actual.size,
     matchedConcepts: matchedKeys.length,
-    referenceConceptCoveragePercent: percent(matchedKeys.length, expected.size),
-    recognizedSchemaAgreementPercent: percent(confirmedConcepts.length, matchedKeys.length),
-    metadataCompletenessPercent: percent(metadataPresent, metadataRequired),
-    provenanceCoveragePercent: percent(evidencePresent, evidenceRequired),
-    referenceRelationshipCoveragePercent: percent(confirmedRelationships.length, expectation.relationships.length),
-    conflictVisibilityPercent: percent(conflictVisibility.visible, conflictVisibility.required),
-    liveEvidenceReferenceCoveragePercent: percent(liveEvidence.matched, liveEvidence.required),
-    embeddedKnowledgeCoveragePercent: percent(embeddedKnowledge.matched, embeddedKnowledge.required),
+    referenceConceptCoveragePercent: ratios.referenceConceptCoverage.percent,
+    recognizedSchemaAgreementPercent: ratios.recognizedSchemaAgreement.percent,
+    metadataCompletenessPercent: ratios.metadataCompleteness.percent,
+    provenanceCoveragePercent: ratios.provenanceCoverage.percent,
+    referenceRelationshipCoveragePercent: ratios.referenceRelationshipCoverage.percent,
+    conflictVisibilityPercent: ratios.conflictVisibility.percent,
+    liveEvidenceReferenceCoveragePercent: ratios.liveEvidenceReferenceCoverage.percent,
+    embeddedKnowledgeCoveragePercent: ratios.embeddedKnowledgeCoverage.percent,
+    ratios,
     classifications: {
       concepts: {
         confirmed: confirmedConcepts,
@@ -579,6 +590,7 @@ function reportFor(entry, run, metrics) {
       + `\n## Hard failures\n\n${metrics.authoringAssessment.hardFailures.map((item) => `- ${item}`).join("\n")}\n`
       + `\n## Limitations\n\n${metrics.authoringAssessment.limitations.map((item) => `- ${item}`).join("\n")}\n`;
   }
+  const measured = (value, ratio) => `${value === null ? "n/a" : `${value}%`} (${ratio.matched}/${ratio.total})`;
   return `# ${entry.id} — agent OKF benchmark\n\n`
     + `- Agent: ${agent}\n`
     + `- Catalog/prompt: ${catalogPrompt}\n`
@@ -586,16 +598,20 @@ function reportFor(entry, run, metrics) {
     + `- OKF validation: ${metrics.validation.passed ? "passed" : "failed"}\n`
     + `- Authoring assessment: ${metrics.authoringAssessment.status}\n`
     + `- Owner review: ${metrics.ownerReview.status}\n`
-    + `- Reference concept coverage: ${metrics.referenceConceptCoveragePercent}%\n`
-    + `- Recognized schema agreement: ${metrics.recognizedSchemaAgreementPercent}%\n`
-    + `- Metadata completeness: ${metrics.metadataCompletenessPercent}%\n`
-    + `- Provenance coverage: ${metrics.provenanceCoveragePercent}%\n`
-    + `- Reference relationship coverage: ${metrics.referenceRelationshipCoveragePercent}%\n`
-    + `- Source-conflict visibility: ${metrics.conflictVisibilityPercent}%\n`
-    + `- Live-evidence reference coverage: ${metrics.liveEvidenceReferenceCoveragePercent}%\n`
-    + `- Embedded-knowledge coverage: ${metrics.embeddedKnowledgeCoveragePercent}%\n`
+    + `- Reference concept coverage: ${measured(metrics.referenceConceptCoveragePercent, metrics.ratios.referenceConceptCoverage)}\n`
+    + `- Recognized schema agreement: ${measured(metrics.recognizedSchemaAgreementPercent, metrics.ratios.recognizedSchemaAgreement)}\n`
+    + `- Metadata completeness: ${measured(metrics.metadataCompletenessPercent, metrics.ratios.metadataCompleteness)}\n`
+    + `- Provenance coverage: ${measured(metrics.provenanceCoveragePercent, metrics.ratios.provenanceCoverage)}\n`
+    + `- Reference relationship coverage: ${measured(metrics.referenceRelationshipCoveragePercent, metrics.ratios.referenceRelationshipCoverage)}\n`
+    + `- Source-conflict visibility: ${measured(metrics.conflictVisibilityPercent, metrics.ratios.conflictVisibility)}\n`
+    + `- Live-evidence reference coverage: ${measured(metrics.liveEvidenceReferenceCoveragePercent, metrics.ratios.liveEvidenceReferenceCoverage)}\n`
+    + `- Embedded-knowledge coverage: ${measured(metrics.embeddedKnowledgeCoveragePercent, metrics.ratios.embeddedKnowledgeCoverage)}\n`
     + `- Unjudged concepts / relationships: ${metrics.classifications.concepts.unjudged.length} / ${metrics.classifications.relationships.unjudged.length}\n`
     + `- Missing reference concepts / relationships: ${metrics.classifications.concepts.missingReference.length} / ${metrics.classifications.relationships.missingReference.length}\n`
+    + (metrics.classifications.concepts.unjudged.length
+      ? `\n## Unjudged concepts\n\n${metrics.classifications.concepts.unjudged.map((item) => `- ${item}`).join("\n")}\n` : "")
+    + (metrics.classifications.relationships.unjudged.length
+      ? `\n## Unjudged relationships\n\n${metrics.classifications.relationships.unjudged.map((item) => `- ${item}`).join("\n")}\n` : "")
     + (metrics.authoringAssessment.hardFailures.length
       ? `\n## Hard failures\n\n${metrics.authoringAssessment.hardFailures.map((item) => `- ${item}`).join("\n")}\n` : "")
     + (metrics.ownerReview.findings.length
@@ -611,14 +627,17 @@ function invalidMetrics(suite, repository, runId, error) {
     expectedConcepts: 0,
     actualConcepts: 0,
     matchedConcepts: 0,
-    referenceConceptCoveragePercent: 0,
-    recognizedSchemaAgreementPercent: 0,
-    metadataCompletenessPercent: 0,
-    provenanceCoveragePercent: 0,
-    referenceRelationshipCoveragePercent: 0,
-    conflictVisibilityPercent: 0,
-    liveEvidenceReferenceCoveragePercent: 0,
-    embeddedKnowledgeCoveragePercent: 0,
+    referenceConceptCoveragePercent: null,
+    recognizedSchemaAgreementPercent: null,
+    metadataCompletenessPercent: null,
+    provenanceCoveragePercent: null,
+    referenceRelationshipCoveragePercent: null,
+    conflictVisibilityPercent: null,
+    liveEvidenceReferenceCoveragePercent: null,
+    embeddedKnowledgeCoveragePercent: null,
+    ratios: Object.fromEntries(["referenceConceptCoverage", "recognizedSchemaAgreement", "metadataCompleteness",
+      "provenanceCoverage", "referenceRelationshipCoverage", "conflictVisibility", "liveEvidenceReferenceCoverage",
+      "embeddedKnowledgeCoverage"].map((key) => [key, { matched: 0, total: 0, percent: null }])),
     classifications: {
       concepts: { confirmed: [], contradicted: [], unjudged: [], missingReference: [] },
       relationships: { confirmed: [], contradicted: [], unjudged: [], missingReference: [] },
@@ -755,10 +774,15 @@ export function scoringRepositoryId(runData) {
 }
 
 function pairReportFor(comparison) {
+  const measured = (metrics, field, ratio) => {
+    const value = metrics[field];
+    const counts = metrics.ratios?.[ratio];
+    return `${value === null ? "n/a" : `${value}%`}${counts ? ` (${counts.matched}/${counts.total})` : ""}`;
+  };
   const quality = (arm) => {
     const metrics = comparison.quality[arm];
     return metrics
-      ? `- ${arm}: assessment ${metrics.authoringAssessment?.status ?? "invalid"}; owner review ${metrics.ownerReview?.status ?? "needs_revision"}; validation ${metrics.validation.passed ? "passed" : "failed"}; reference concepts ${metrics.referenceConceptCoveragePercent}%; embedded knowledge ${metrics.embeddedKnowledgeCoveragePercent ?? "n/a"}%; recognized schemas ${metrics.recognizedSchemaAgreementPercent}%; metadata ${metrics.metadataCompletenessPercent}%; provenance ${metrics.provenanceCoveragePercent}%; reference relationships ${metrics.referenceRelationshipCoveragePercent}%; source conflicts ${metrics.conflictVisibilityPercent ?? "n/a"}%; unjudged concepts/relationships ${metrics.classifications?.concepts.unjudged.length ?? 0}/${metrics.classifications?.relationships.unjudged.length ?? 0}`
+      ? `- ${arm}: assessment ${metrics.authoringAssessment?.status ?? "invalid"}; owner review ${metrics.ownerReview?.status ?? "needs_revision"}; validation ${metrics.validation.passed ? "passed" : "failed"}; reference concepts ${measured(metrics, "referenceConceptCoveragePercent", "referenceConceptCoverage")}; embedded knowledge ${measured(metrics, "embeddedKnowledgeCoveragePercent", "embeddedKnowledgeCoverage")}; recognized schemas ${measured(metrics, "recognizedSchemaAgreementPercent", "recognizedSchemaAgreement")}; metadata ${measured(metrics, "metadataCompletenessPercent", "metadataCompleteness")}; provenance ${measured(metrics, "provenanceCoveragePercent", "provenanceCoverage")}; reference relationships ${measured(metrics, "referenceRelationshipCoveragePercent", "referenceRelationshipCoverage")}; source conflicts ${measured(metrics, "conflictVisibilityPercent", "conflictVisibility")}; unjudged concepts/relationships ${metrics.classifications?.concepts.unjudged.length ?? 0}/${metrics.classifications?.relationships.unjudged.length ?? 0}`
       : `- ${arm}: unavailable`;
   };
   const efficiency = (arm) => {

@@ -37,16 +37,6 @@
         "terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf",
         "handler.py"
       ]
-    },
-    {
-      "key": "aws-health-alerting-flow",
-      "identityTerms": ["alert", "processing"],
-      "type": "Flow",
-      "requiredMetadata": [],
-      "requiredSourcePaths": [
-        "terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf",
-        "handler.py"
-      ]
     }
   ],
   "embeddedKnowledge": [
@@ -67,12 +57,17 @@
       "requiredTerms": ["schedule"],
       "requiredSourcePaths": ["terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf"],
       "allowedParentTypes": ["System", "Function", "Flow"]
+    },
+    {
+      "key": "aha-alert-processing",
+      "requiredTerms": ["health", "event", "alert"],
+      "requiredSourcePaths": ["handler.py"],
+      "allowedParentTypes": ["System", "Function"]
     }
   ],
   "relationships": [
     { "from": "aws-health-aware-repository", "to": "health-operations-domain", "kind": "part-of" },
     { "from": "aws-health-aware-system", "to": "health-operations-domain", "kind": "part-of" },
-    { "from": "aha-lambda-function-primary-region", "to": "aws-health-aware-system", "kind": "part-of" },
-    { "from": "aws-health-alerting-flow", "to": "aws-health-aware-system", "kind": "part-of" }
+    { "from": "aha-lambda-function-primary-region", "to": "aws-health-aware-system", "kind": "part-of" }
   ]
 }

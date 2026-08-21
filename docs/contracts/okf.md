@@ -261,6 +261,11 @@ Normative OKF source is pinned to commit
   orchestration; exact provider resources cite the referenced Terraform file.
   SAM/CloudFormation/YAML is unsupported and cannot be relabeled as either
   source tool.
+- **AB-SCHEMA-042** — Standalone Interface/Resource intent requires a compatible
+  promotion basis plus exact candidate-owned semantic observations that select
+  the requested role. Declaration evidence, caller prose and `suggested_type`
+  alone return no standalone schema; insufficient knowledge remains suitable
+  for embedding in a useful parent.
 
 ## Single-repository Initial Ingest
 
@@ -293,3 +298,5 @@ Normative OKF source is pinned to commit
   role requires proposal review. A prepared System carries the owner-evidenced
   primary-Domain relation so inbound Domain navigation is derivable. The agent
   enriches these files rather than reconstructing OKF frontmatter.
+- **AB-INGEST-012** — A new confirmed Domain skeleton lists every System newly
+  prepared under it. Preparation never rewrites an existing Domain document.

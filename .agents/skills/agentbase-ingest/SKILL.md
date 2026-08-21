@@ -39,7 +39,10 @@ the repository, not an authoring prompt. Stop before Accept or Publish.
    owned by one candidate: a candidate may cite only observations whose
    `candidate_id` equals that candidate's `id`. For a semantic-only candidate,
    include one released provider-neutral `suggested_type` to expose the agent's
-   intended role. Treat a returned `suggested` role as reviewable, never exact;
+   intended role. Standalone `Interface` or `Resource` intent also requires a
+   compatible `promotion` basis and exact candidate-owned semantic
+   `evidence_ids`; if that boundary is not evidenced, submit the knowledge as
+   embedded in its useful parent. Treat a returned `suggested` role as reviewable, never exact;
    structured mapping wins and semantic disagreement remains ambiguous. Pass that same evidence-bearing
    request to `prepare_hub_okf`; never replace it with free text `signals` or
    supply an opaque evidence digest. Persist the confirmed

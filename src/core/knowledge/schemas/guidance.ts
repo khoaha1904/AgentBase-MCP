@@ -6,6 +6,9 @@ import type { DetectedResource, ProviderResourceMapping } from "./profiles/defin
 
 export type ObservationSource = Readonly<{ path: string; startLine: number; endLine: number }>;
 export type ResourceSourceTool = "terraform" | "terragrunt";
+export type PromotionBasis = "shared-contract" | "cross-boundary" | "ownership" | "lifecycle"
+  | "failure" | "security" | "operational";
+export type PromotionEvidence = Readonly<{ basis: PromotionBasis; evidenceIds: readonly string[] }>;
 
 export type ConceptCandidate = Readonly<{
   id: string;
@@ -16,6 +19,7 @@ export type ConceptCandidate = Readonly<{
   disposition: "concept" | "embedded";
   parentCandidateId?: string;
   suggestedType?: string;
+  promotion?: PromotionEvidence;
 }>;
 
 export type SemanticObservation = Readonly<{
@@ -77,6 +81,9 @@ type TechnologyDetection = Readonly<{
 }>;
 
 const ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+const PROMOTION_BASES: readonly PromotionBasis[] = [
+  "shared-contract", "cross-boundary", "ownership", "lifecycle", "failure", "security", "operational",
+];
 
 function requireText(value: string, name: string, maximum = 512): void {
   if (typeof value !== "string" || !value.trim() || Buffer.byteLength(value) > maximum) {
@@ -110,7 +117,8 @@ function validateRequest(request: OkfAuthoringGuidanceRequest): void {
   for (const candidate of request.candidates) {
     requireExactKeys(candidate, ["id", "identityHint", "identityBasis", "queryValue", "evidenceIds", "disposition",
       ...(candidate.parentCandidateId === undefined ? [] : ["parentCandidateId"]),
-      ...(candidate.suggestedType === undefined ? [] : ["suggestedType"])], "candidate");
+      ...(candidate.suggestedType === undefined ? [] : ["suggestedType"]),
+      ...(candidate.promotion === undefined ? [] : ["promotion"])], "candidate");
     if (!ID.test(candidate.id) || candidates.has(candidate.id)) throw new Error("candidate IDs must be unique and bounded");
     requireText(candidate.identityHint, "candidate identity hint");
     requireText(candidate.identityBasis, "candidate identity basis");
@@ -124,6 +132,16 @@ function validateRequest(request: OkfAuthoringGuidanceRequest): void {
     }
     if (candidate.disposition === "embedded" && candidate.suggestedType !== undefined) {
       throw new Error("embedded candidate cannot request a standalone schema");
+    }
+    if (candidate.promotion !== undefined) {
+      requireExactKeys(candidate.promotion, ["basis", "evidenceIds"], "candidate promotion");
+      if (!PROMOTION_BASES.includes(candidate.promotion.basis)) throw new Error("candidate promotion basis is invalid");
+      if (!candidate.promotion.evidenceIds.length || candidate.promotion.evidenceIds.length > 64) {
+        throw new Error("candidate promotion evidence IDs must be a bounded non-empty list");
+      }
+      if (candidate.disposition !== "concept" || !["Interface", "Resource"].includes(candidate.suggestedType ?? "")) {
+        throw new Error("candidate promotion is only valid for standalone Interface or Resource intent");
+      }
     }
     if (candidate.disposition === "concept" && candidate.parentCandidateId !== undefined) {
       throw new Error("concept candidate cannot name an embedded parent");
@@ -168,6 +186,10 @@ function validateRequest(request: OkfAuthoringGuidanceRequest): void {
     if (candidate.evidenceIds.some((id) => !observationIds.has(id))) throw new Error(`candidate ${candidate.id} cites unknown evidence`);
     if (candidate.evidenceIds.some((id) => observations.find((item) => item.id === id)?.candidateId !== candidate.id)) {
       throw new Error(`candidate ${candidate.id} cites evidence owned by another candidate`);
+    }
+    if (candidate.promotion?.evidenceIds.some((id) => !candidate.evidenceIds.includes(id)
+      || !request.semanticObservations.some((item) => item.id === id && item.candidateId === candidate.id))) {
+      throw new Error(`candidate ${candidate.id} promotion must cite candidate-owned semantic evidence`);
     }
   }
 }
@@ -246,6 +268,18 @@ export function getOkfAuthoringGuidance(request: OkfAuthoringGuidanceRequest): O
       status: "ambiguous",
       limitations: [...limitations, `suggested type ${candidate.suggestedType} conflicts with semantic roles: ${semanticTypes.join(", ")}`],
     };
+    if (candidate.suggestedType === "Interface" || candidate.suggestedType === "Resource") {
+      const compatibleBases = candidate.suggestedType === "Interface"
+        ? ["shared-contract", "cross-boundary"]
+        : ["cross-boundary", "ownership", "lifecycle", "failure", "security", "operational"];
+      if (!candidate.promotion || !compatibleBases.includes(candidate.promotion.basis)
+        || !semanticSelections.some((item) => item.type === candidate.suggestedType)) return {
+        ...base,
+        status: "unsupported",
+        limitations: [...limitations,
+          `${candidate.suggestedType} requires a compatible promotion basis and candidate-owned semantic evidence selecting that role; declaration or suggested type alone remains embedded knowledge`],
+      };
+    }
     const schemaType = candidate.suggestedType ?? (semanticTypes.length === 1 ? semanticTypes[0] : undefined);
     if (!schemaType) return {
       ...base,

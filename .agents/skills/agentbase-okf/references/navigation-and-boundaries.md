@@ -46,7 +46,9 @@
   knowledge in the Function, Component or System that uses them. Promote one
   to Interface only for an independently evidenced shared contract, or to
   Resource for cross-boundary use or independently evidenced ownership,
-  lifecycle, failure, security or operational value.
+  lifecycle, failure, security or operational value. The guidance request must
+  name that promotion basis and cite candidate-owned semantic observations;
+  a declaration or `suggested_type` alone is insufficient.
 - Terraform/Terragrunt remains source-tool metadata. The label must match the
   exact source path; provider resources reached through Terragrunt cite their
   referenced Terraform module. Source declarations do not prove an account,

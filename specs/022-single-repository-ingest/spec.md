@@ -214,6 +214,9 @@ accepted.
   it until the agent supplies a non-empty linked, evidenced step sequence.
   A prepared System skeleton MUST carry the confirmed primary-Domain relation
   with owner evidence so canonical inbound Domain navigation is derivable.
+- **AB-INGEST-012**: A newly prepared Domain skeleton MUST list every newly
+  prepared System that belongs to it. Preparation MUST NOT rewrite an existing
+  Domain document; later authoring remains proposal-reviewed.
 - **AB-SCHEMA-030**: Catalog `7.0.0` MUST expose eight provider-neutral Initial
   Ingest roles: `Repository`, `Domain`, `System`, `Component`, `Function`,
   `Interface`, `Flow` and `Resource`. `Entity` and `Metric` remain
@@ -285,6 +288,12 @@ accepted.
   guidance MUST state that `source` and `target` are identities of concepts in
   the changed set or supplied target summaries, never embedded knowledge or
   free text; implementation detail MUST NOT be promoted only to complete Flow.
+- **AB-SCHEMA-042**: A standalone `Interface` or `Resource` suggestion MUST
+  include an applicable promotion basis and exact candidate-owned semantic
+  evidence that also supports that schema role. Resource declaration evidence,
+  caller prose or `suggested_type` alone MUST NOT create a skeleton. When this
+  boundary is not established, guidance MUST return no standalone schema so the
+  knowledge can remain embedded in a useful parent.
 - **AB-CLAIM-005**: A small directly evidenced non-sensitive scalar or
   identifier MAY be retained as an optional observed snapshot only with its
   claim, exact source, source revision and observed time. It MUST be bounded,
@@ -342,6 +351,12 @@ accepted.
   Server concepts, while retaining their searchable exact evidence in a parent.
   A VM fixture with multiple evidenced workloads MUST produce Components for
   those workloads rather than one oversized Server concept.
+- **SC-008**: Offline qualification reports every scored ratio with its
+  numerator and denominator, reports a zero-denominator metric as unavailable,
+  names unjudged authored identities, and rejects a lifecycle whose final
+  changed-set validation omits any finalized concept. A single-runtime fixture
+  MUST NOT require a Flow or extra endpoint concepts solely for benchmark
+  coverage.
 - **SC-006**: The canonical offline repository verification passes without
   network access, provider credentials, provider CLI calls, model calls or
   source-repository mutation.

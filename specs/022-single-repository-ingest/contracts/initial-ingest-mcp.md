@@ -66,6 +66,13 @@ provider, product, exact schema assertion or unknown extra field is rejected.
 The optional `suggested_type` must name a released provider-neutral catalog role
 and remains evidence-bound and advisory. `disposition: embedded` requires a
 parent in the same request and cannot request a standalone schema.
+Standalone `Interface` or `Resource` intent additionally supplies
+`promotion: { basis, evidence_ids }`. Basis is one of `shared-contract`,
+`cross-boundary`, `ownership`, `lifecycle`, `failure`, `security` or
+`operational`; its evidence IDs must name semantic observations owned by that
+candidate. The basis must fit the requested role and the semantic observations
+must select that role. A resource declaration or suggested type alone returns
+no standalone schema.
 
 `source_tool` is `terraform` or `terragrunt` and must match the exact evidence
 path. Terraform cites `.tf`/`.tf.json`; Terragrunt cites `terragrunt.hcl` for
@@ -112,6 +119,7 @@ skeleton has a canonical path, selected type, valid draft/generation fields and
 normalized sources. The agent enriches these files instead of rebuilding OKF
 frontmatter. Suggested skeletons contain a visible role-review limitation;
 System skeletons carry the owner-evidenced confirmed-Domain relation;
+new Domain skeletons list the newly prepared Systems that belong to them;
 preparation does not Accept or publish.
 Embedded recommendations are rendered as a bounded searchable table in their
 parent skeleton with role, kind, technology and exact source references. They

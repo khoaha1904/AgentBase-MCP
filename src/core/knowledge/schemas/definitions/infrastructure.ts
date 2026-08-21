@@ -13,6 +13,7 @@ export const INFRASTRUCTURE_SCHEMAS: readonly OkfConceptSchema[] = [
       flowStepGuidance: {
         requiredFields: ["order", "source", "action", "target", "mode", "evidence"],
         endpointRule: "source and target must be identities of concepts supplied in the changed set or target summaries; never use embedded knowledge or free text",
+        sourceRule: "sources must prove the trigger, outcome and every described interaction; embedded triggers and resources remain evidence, not endpoint identities",
         actions: ["invokes", "publishes", "delivers", "reads", "writes"],
         modes: ["synchronous", "asynchronous"],
         evidence: "ordered interactions and source evidence",

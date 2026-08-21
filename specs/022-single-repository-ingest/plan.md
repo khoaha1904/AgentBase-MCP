@@ -285,6 +285,32 @@ mixed frontend/backend fixture, expectations and results remain historical
 evidence outside the selectable current suite; no SAM/CloudFormation detector
 or parity behavior is added to this capability.
 
+## V15 semantic correction slice
+
+Reuse the existing candidate and observation contract. Add one optional,
+bounded promotion record only for standalone `Interface`/`Resource` intent:
+an enumerated boundary basis plus exact candidate-owned semantic observation
+IDs. Guidance requires both that record and an existing semantic schema match;
+structured resource declaration remains technology evidence only. No scorer,
+reasoning engine, confidence model or new catalog role is added.
+
+New Domain skeleton rendering derives a `# Systems` list from the System
+skeletons already prepared in the same proposal. Existing Domain documents are
+left untouched. Flow guidance additionally states that sources must support the
+trigger, outcome and described interactions; embedded details remain evidence,
+not endpoint identities.
+
+Benchmark scoring retains the current non-exhaustive expectation model but
+stores numerator/denominator beside each percentage, emits `null`/`n/a` for a
+zero denominator, names unjudged identities in the report and verifies that the
+last successful changed-set validation covers every finalized concept. The
+single-Lambda Terraform fixture scores processing/schedule knowledge as
+embedded and no longer requires a Flow that would manufacture endpoints.
+
+Constitution re-check: this slice stays deterministic, local, provider-neutral
+and non-destructive. It adds no dependency, credential, migration, process or
+network behavior and preserves the 50-test design-level gate.
+
 Constitution re-check: the design remains local-first, evidence-bound,
 provider-neutral and non-destructive; it adds no dependency, daemon, network,
 credential or publication behavior. The catalog major version is owner-approved

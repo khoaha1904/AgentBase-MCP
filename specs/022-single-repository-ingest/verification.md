@@ -608,3 +608,26 @@ granularity rule. These are OKF authoring findings, not benchmark defects.
 
 No Accept, Publish, provider CLI or Hub PR operation occurred. No replacement
 run was started.
+
+## V15 semantic correction — 2026-08-21
+
+Expert review of `2026-08-21T143803Z` confirmed that the main OKF defect was
+over-promotion, while benchmark 0/0 percentages and the required Flow overstated
+quality. AB-SCHEMA-042 now requires standalone Interface/Resource intent to
+carry a compatible promotion basis backed by candidate-owned semantic evidence
+that selects that schema. Exact Lambda-to-Function mapping is unchanged; IaC
+declaration or `suggested_type` alone returns no standalone schema.
+
+AB-INGEST-012 makes a new confirmed Domain skeleton list every System prepared
+in the same proposal, without rewriting an existing Domain. Released Flow
+guidance requires source evidence for trigger, outcome and each described
+interaction while retaining concept-only endpoints.
+
+AB-BENCH-047 records numerator/denominator for every ratio, returns unavailable
+for 0/0, lists unjudged identities and rejects a lifecycle when the last
+successful changed-set validation omits a finalized concept. The current
+single-Lambda Terraform expectation no longer requires Flow; alert processing
+is measured as embedded knowledge under System/Function. Focused tests pass
+19/19 and `npm run verify` passes specification, TypeScript, dependency, Knip,
+Gitleaks, 50/50 design-level test and diff gates.
+No model benchmark, Accept, Publish, provider CLI or Hub PR operation ran.

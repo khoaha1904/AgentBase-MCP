@@ -48,6 +48,7 @@ test("[AB-SCHEMA-030][AB-SCHEMA-038] schemas describe useful boundaries rather t
   assert.ok(flowGuidance?.actions.includes("invokes"));
   assert.deepEqual(flowGuidance?.requiredFields, ["order", "source", "action", "target", "mode", "evidence"]);
   assert.match(flowGuidance?.endpointRule ?? "", /identities of concepts.*never use embedded knowledge or free text/);
+  assert.match(flowGuidance?.sourceRule ?? "", /prove the trigger, outcome and every described interaction/);
 });
 
 test("[AB-SCHEMA-035] catalog-6 authoring types fail while foreign types remain open-world", () => {

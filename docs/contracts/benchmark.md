@@ -163,6 +163,12 @@ benchmarks.
   fixtures are outside the current qualification scope. Their immutable prompts,
   expectations and retained results remain historical evidence but are not
   selectable from the current manifest.
+- **AB-BENCH-047** — Every scored ratio reports numerator and denominator; a
+  zero denominator is unavailable rather than 100%. Reports name unjudged
+  concepts/relationships and the final successful `validate_okf_changes` call
+  must cover every finalized changed concept. A single-runtime fixture does not
+  require Flow or endpoint concepts merely for reference coverage; its bounded
+  behavior may be scored as embedded knowledge.
 
 ## Context A/B interpretation
 

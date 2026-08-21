@@ -90,4 +90,15 @@ a delivery Interface with no single shared contract and an internally used
 DynamoDB Resource without independent-boundary evidence. Lifecycle and scorer
 behaved correctly; these are OKF authoring/granularity findings.
 
+The focused semantic correction after expert review is now implemented
+offline. AB-SCHEMA-042 prevents `suggested_type` or resource declaration alone
+from promoting Interface/Resource; a compatible promotion basis must cite
+candidate-owned semantic observations that select the role. AB-INGEST-012 makes
+new Domain skeletons navigate every prepared System, and Flow guidance now
+requires sources for trigger, outcome and described interactions. AB-BENCH-047
+reports ratios with numerator/denominator and `n/a` for 0/0, names unjudged
+identities, requires the last changed-set validation to cover the finalized
+bundle and removes required Flow from the single-runtime fixture. Offline
+verification is the current gate; no replacement model benchmark has run.
+
 Most recent completed capability: `021-agentstack-foundation`.

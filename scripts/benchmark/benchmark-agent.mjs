@@ -119,6 +119,7 @@ export function summarizeAgentEvents(events) {
   const authoringActivity = {};
   const mcpTools = {};
   let usage = null;
+  let finalValidationIdentities = null;
   for (const line of events.split("\n")) {
     try {
       const event = JSON.parse(line);
@@ -140,6 +141,10 @@ export function summarizeAgentEvents(events) {
             authoringToolCalls += 1;
             authoringArgumentBytes += argumentBytes;
             authoringResultBytes += resultBytes;
+          }
+          if (item.tool === "validate_okf_changes" && item.status === "completed" && Array.isArray(item.arguments?.changes)) {
+            finalValidationIdentities = item.arguments.changes.map((change) => change?.identity)
+              .filter((identity) => typeof identity === "string").sort();
           }
         }
         if (item?.type === "command_execution") commandExecutions += 1;
@@ -171,9 +176,36 @@ export function summarizeAgentEvents(events) {
       mcpTools: Object.fromEntries(Object.entries(mcpTools).sort(([left], [right]) => left.localeCompare(right))),
       observedSourceReadBytes: null,
       limitation: "event trace does not prove complete source-read volume",
+      finalValidationIdentities,
     },
     completedTools: [...completed].sort(),
   };
+}
+
+function conceptIdentities(root) {
+  const identities = [];
+  const visit = (directory) => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const absolute = path.join(directory, entry.name);
+      if (entry.isDirectory()) visit(absolute);
+      else if (entry.isFile() && entry.name.endsWith(".md") && !["index.md", "log.md", "README.md"].includes(entry.name)) {
+        identities.push(path.relative(root, absolute).split(path.sep).join("/").slice(0, -3));
+      }
+    }
+  };
+  visit(root);
+  return identities.sort();
+}
+
+export function validateFinalChangeCoverage(validatedIdentities, finalizedIdentities) {
+  if (!Array.isArray(validatedIdentities)) return ["final successful validate_okf_changes identities are unavailable"];
+  const validated = new Set(validatedIdentities);
+  const missing = finalizedIdentities.filter((identity) => !validated.has(identity));
+  const extra = validatedIdentities.filter((identity) => !finalizedIdentities.includes(identity));
+  return [
+    ...(missing.length ? [`final validate_okf_changes omitted finalized concepts: ${missing.join(", ")}`] : []),
+    ...(extra.length ? [`final validate_okf_changes included non-finalized concepts: ${extra.join(", ")}`] : []),
+  ];
 }
 
 function toolUsage(completedTools, arm, promptVersion) {
@@ -285,6 +317,7 @@ export function runAgentRepository({
   fs.writeFileSync(eventsFile, portable(result.stdout || ""));
   if (fs.existsSync(finalMessage)) fs.writeFileSync(finalMessage, portable(fs.readFileSync(finalMessage, "utf8")));
   if (result.stderr) fs.writeFileSync(path.join(root, "agent-stderr.txt"), portable(result.stderr.slice(0, 1024 * 1024)));
+  const summary = summarizeAgentEvents(result.stdout || "");
   let failure;
   try {
     const after = discoverRepositorySourceState(repository);
@@ -293,11 +326,13 @@ export function runAgentRepository({
     }
     if (result.status !== 0) throw new Error(`agent exited ${result.status ?? `by ${result.signal ?? "timeout"}`}`);
     validateAgentWorkspace(workspace);
+    const coverageFailures = initialIngestPromptVersions.has(promptVersion)
+      ? validateFinalChangeCoverage(summary.activity.finalValidationIdentities, conceptIdentities(path.join(workspace, "okf"))) : [];
+    if (coverageFailures.length) throw new Error(coverageFailures.join("; "));
     fs.cpSync(path.join(workspace, "okf"), path.join(root, "okf"), { recursive: true });
   } catch (error) {
     failure = error instanceof Error ? error.message : "unknown agent failure";
   }
-  const summary = summarizeAgentEvents(result.stdout || "");
   const usage = toolUsage(summary.completedTools, arm, promptVersion);
   const v13LifecycleFailures = initialIngestPromptVersions.has(promptVersion)
     ? validateV13Lifecycle(summary.activity.mcpTools) : [];

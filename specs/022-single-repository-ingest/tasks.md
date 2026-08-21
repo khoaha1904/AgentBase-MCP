@@ -165,6 +165,24 @@ and record reproducible evidence.
 - [x] T055 Retain owner-authorized V15 run `2026-08-21T143803Z`, record its
   successful lifecycle separately from Domain/provenance and over-promotion
   owner-review findings, and do not run a replacement
+- [x] T056 [US2] Record AB-SCHEMA-042 promotion evidence and AB-INGEST-012
+  Domain navigation contracts in `docs/contracts/okf.md`,
+  `specs/022-single-repository-ingest/contracts/initial-ingest-mcp.md` and the
+  active design artifacts
+- [x] T057 [US2] Enforce candidate-owned semantic promotion for standalone
+  Interface/Resource guidance in `src/core/knowledge/schemas/guidance.ts` and
+  `src/app/codebase-memory-mcp/okf-schema-tools.ts`, extending the existing
+  guidance design test
+- [x] T058 [US2] Render new Domain-to-System navigation and publish complete
+  Flow provenance guidance in `src/app/hub-okf/authoring/initial-ingest-skeleton.ts`
+  and `src/core/knowledge/schemas/definitions/infrastructure.ts`, extending
+  existing authoring/catalog tests
+- [x] T059 [US3] Implement truthful AB-BENCH-047 ratio, unjudged identity and
+  final validation-coverage reporting in `scripts/benchmark/benchmark-okf.mjs`
+  and `scripts/benchmark/benchmark-agent.mjs`, then make Flow optional in the
+  current single-runtime expectation
+- [x] T060 Run focused tests and `npm run verify`, record offline evidence,
+  converge the active artifacts and do not run a model benchmark
 
 ---
 

@@ -115,6 +115,14 @@ export const OKF_SCHEMA_TOOLS = [
             }, suggested_type: {
               type: "string",
               description: "Optional released provider-neutral role proposed by the host agent; advisory, evidence-bound and never exact truth.",
+            }, promotion: {
+              type: "object",
+              description: "Required for standalone Interface/Resource intent. Must cite candidate-owned semantic evidence; declarations and suggested_type alone never promote.",
+              properties: {
+                basis: { type: "string", enum: ["shared-contract", "cross-boundary", "ownership", "lifecycle", "failure", "security", "operational"] },
+                evidence_ids: { type: "array", minItems: 1, maxItems: 64, items: { type: "string" } },
+              },
+              required: ["basis", "evidence_ids"], additionalProperties: false,
             }, evidence_ids: {
               type: "array", minItems: 1, maxItems: 64,
               description: "IDs from observations in this request whose candidate_id equals this candidate id; never another candidate's evidence or repository:// source URIs.",
@@ -187,12 +195,19 @@ function guidanceRequest(args: Readonly<Record<string, unknown>>): OkfAuthoringG
       const raw = value as Readonly<Record<string, unknown>>;
       const item = object(value, "candidate", ["id", "identity_hint", "identity_basis", "query_value", "evidence_ids", "disposition",
         ...(raw?.parent_candidate_id === undefined ? [] : ["parent_candidate_id"]),
-        ...(raw?.suggested_type === undefined ? [] : ["suggested_type"])]);
+        ...(raw?.suggested_type === undefined ? [] : ["suggested_type"]),
+        ...(raw?.promotion === undefined ? [] : ["promotion"])]);
+      const promotion = item.promotion === undefined ? undefined
+        : object(item.promotion, "candidate promotion", ["basis", "evidence_ids"]);
       return { id: item.id as string, identityHint: item.identity_hint as string, identityBasis: item.identity_basis as string,
         queryValue: item.query_value as string, evidenceIds: array(item.evidence_ids, "candidate evidence_ids") as string[],
         disposition: item.disposition as "concept" | "embedded",
         ...(item.parent_candidate_id === undefined ? {} : { parentCandidateId: item.parent_candidate_id as string }),
-        ...(item.suggested_type === undefined ? {} : { suggestedType: item.suggested_type as string }) };
+        ...(item.suggested_type === undefined ? {} : { suggestedType: item.suggested_type as string }),
+        ...(promotion === undefined ? {} : { promotion: {
+          basis: promotion.basis as "shared-contract" | "cross-boundary" | "ownership" | "lifecycle" | "failure" | "security" | "operational",
+          evidenceIds: array(promotion.evidence_ids, "candidate promotion evidence_ids") as string[],
+        } }) };
     }),
     semanticObservations: array(args.semantic_observations, "semantic_observations").map((value) => {
       const item = object(value, "semantic observation", ["id", "candidate_id", "role", "signal", "source"]);

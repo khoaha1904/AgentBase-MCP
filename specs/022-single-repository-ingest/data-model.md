@@ -70,6 +70,8 @@ The caller does not supply provider, product or schema output fields.
 - supporting observation IDs
 - optional released provider-neutral suggested type, explicitly supplied as
   evidence-bound agent intent rather than verified truth
+- optional standalone promotion record for Interface/Resource: one enumerated
+  boundary basis plus exact candidate-owned semantic observation IDs
 - missing evidence/ambiguity
 
 State:
@@ -103,6 +105,9 @@ in Hub and has no Published lifecycle.
 reviewable semantic classification. `embedded` retains detected technology and
 evidence in a parent without creating a concept. Technology detection does not
 override promotion; conflicting promotion evidence is `ambiguous`.
+Interface/Resource suggestion additionally requires a matching semantic role
+and a compatible promotion record. A declaration or suggested type alone
+returns no standalone schema.
 
 ## Embedded Knowledge
 

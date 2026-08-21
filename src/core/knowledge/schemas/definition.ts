@@ -17,6 +17,7 @@ export type OkfConceptSchema = Readonly<{
   flowStepGuidance?: Readonly<{
     requiredFields: readonly ["order", "source", "action", "target", "mode", "evidence"];
     endpointRule: string;
+    sourceRule: string;
     actions: readonly string[];
     modes: readonly string[];
     evidence: string;

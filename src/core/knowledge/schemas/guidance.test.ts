@@ -83,7 +83,7 @@ test("[AB-SCHEMA-034][AB-SCHEMA-036] semantic standalone intent remains suggeste
   assert.match(result.recommendations[0]?.limitations.join(" ") ?? "", /proposal review/i);
 });
 
-test("[AB-SCHEMA-033][AB-SCHEMA-036] detection does not promote non-Lambda resources", () => {
+test("[AB-SCHEMA-033][AB-SCHEMA-036][AB-SCHEMA-042] detection does not promote non-Lambda resources", () => {
   const unpromoted = getOkfAuthoringGuidance(resource("internal-queue", "aws_sqs_queue")).recommendations[0]!;
   assert.equal(unpromoted.status, "unsupported");
   assert.equal(unpromoted.schema, undefined);
@@ -93,9 +93,23 @@ test("[AB-SCHEMA-033][AB-SCHEMA-036] detection does not promote non-Lambda resou
   const result = getOkfAuthoringGuidance({ ...input,
     candidates: [{ ...input.candidates[0]!, suggestedType: "Interface" }],
   });
-  assert.equal(result.recommendations[0]?.status, "suggested");
-  assert.equal(result.recommendations[0]?.schema?.type, "Interface");
+  assert.equal(result.recommendations[0]?.status, "unsupported");
+  assert.equal(result.recommendations[0]?.schema, undefined);
   assert.equal(result.recommendations[0]?.technology.product, "sqs");
+
+  const promoted = getOkfAuthoringGuidance({ ...input,
+    candidates: [{ ...input.candidates[0]!, evidenceIds: ["evidence.queue", "docs.contract"],
+      suggestedType: "Interface", promotion: { basis: "shared-contract" as const, evidenceIds: ["docs.contract"] } }],
+    semanticObservations: [{ id: "docs.contract", candidateId: "queue", role: "documentation" as const,
+      signal: "shared message contract with producer and consumer evidence", source }],
+  }).recommendations[0]!;
+  assert.equal(promoted.status, "suggested");
+  assert.equal(promoted.schema?.type, "Interface");
+
+  assert.throws(() => getOkfAuthoringGuidance({ ...input,
+    candidates: [{ ...input.candidates[0]!, suggestedType: "Resource",
+      promotion: { basis: "operational" as const, evidenceIds: ["evidence.queue"] } }],
+  }), /candidate-owned semantic evidence/);
 });
 
 test("[AB-SCHEMA-033][AB-SCHEMA-040] Terraform-family evidence is bounded and source-truthful", () => {

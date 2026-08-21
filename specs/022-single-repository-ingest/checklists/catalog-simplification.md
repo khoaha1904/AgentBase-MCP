@@ -22,6 +22,9 @@
 - [x] CHK008 Is the clean catalog cutover justified by the absence of Published catalog-6 concepts? [Assumption]
 - [x] CHK009 Are unsafe automatic aliases from Queue/Server/Table to Resource explicitly excluded? [Migration]
 - [x] CHK010 Does qualification measure required concepts and embedded knowledge without enforcing one file per cloud resource? [Measurability, SC-007]
+- [x] CHK011 Is `suggested_type` explicitly insufficient to promote Interface/Resource without candidate-owned semantic boundary evidence? [Clarity, AB-SCHEMA-042]
+- [x] CHK012 Does the one-runtime qualification avoid requiring a Flow or endpoint concepts solely to improve coverage? [Consistency, SC-008]
+- [x] CHK013 Are zero-denominator metrics, unjudged identities and final validation coverage objectively reported? [Measurability, SC-008]
 
 ## Notes
 

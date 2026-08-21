@@ -93,6 +93,8 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011] preparation renders one
     assert.deepEqual(skeletonBundle.concepts.get("systems/vehicle-events")?.frontmatter.relationships, [
       { kind: "part-of", target: "domains/vehicle-data", evidence: ["owner-domain"] },
     ]);
+    assert.match(skeletonBundle.concepts.get("domains/vehicle-data")?.body ?? "",
+      /# Systems[\s\S]*\[Vehicle-events\]\(\.\.\/systems\/vehicle-events\.md\)/);
     const flow = skeletonBundle.concepts.get("flows/publish-vehicle-event");
     assert.deepEqual(flow?.frontmatter.flow_steps, []);
     const unfilled = validateOkfRelationships(
