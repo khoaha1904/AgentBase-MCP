@@ -166,7 +166,9 @@ Normative OKF source is pinned to commit
   evidence. Released Flow guidance exposes the exact
   `order/source/action/target/mode/evidence` serialized shape. Invalid endpoints,
   modes, evidence or known-schema predicates fail authoring validation with an
-  actionable diagnostic.
+  actionable diagnostic. Guidance states that `source` and `target` are
+  identities of supplied concepts; embedded knowledge and free text are not
+  endpoints and are not promoted merely to complete a Flow.
 - **AB-INGEST-011** — Initial Ingest preparation renders editable skeletons for
   promoted candidates. A Flow skeleton contains `flow_steps: []` as an explicit
   edit point because endpoints cannot be inferred safely; preparation may return

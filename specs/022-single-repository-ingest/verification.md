@@ -575,3 +575,15 @@ Classification: AB-SCHEMA-041 passed; OKF authoring/repair failed; MCP guidance
 could make the concept-only endpoint rule more explicit; benchmark lifecycle
 and scorer were not the cause. No Accept, Publish, provider CLI or Hub PR
 operation occurred, and no replacement run was started.
+
+## Flow endpoint guidance correction — 2026-08-21
+
+AB-SCHEMA-041 now publishes one concept-only endpoint rule alongside the exact
+Flow field shape. `source` and `target` must resolve to the changed concept set
+or supplied target summaries; embedded knowledge and free text are excluded,
+and implementation details are not promoted merely to make a Flow valid. The
+existing catalog design test covers the additive response contract without
+increasing the test count.
+
+`npm run verify` passes specification, TypeScript, dependency, Knip, Gitleaks,
+50/50 test and diff gates. No model benchmark was run.

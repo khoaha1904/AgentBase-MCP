@@ -281,7 +281,10 @@ accepted.
 - **AB-SCHEMA-041**: Released Flow schema guidance MUST expose the exact
   `order/source/action/target/mode/evidence` field shape consumed by changed-set
   and final validation. A malformed step diagnostic MUST name the required
-  scalar fields so the single permitted repair can be deterministic.
+  scalar fields so the single permitted repair can be deterministic. The same
+  guidance MUST state that `source` and `target` are identities of concepts in
+  the changed set or supplied target summaries, never embedded knowledge or
+  free text; implementation detail MUST NOT be promoted only to complete Flow.
 - **AB-CLAIM-005**: A small directly evidenced non-sensitive scalar or
   identifier MAY be retained as an optional observed snapshot only with its
   claim, exact source, source revision and observed time. It MUST be bounded,

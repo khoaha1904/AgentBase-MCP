@@ -12,6 +12,7 @@ export const INFRASTRUCTURE_SCHEMAS: readonly OkfConceptSchema[] = [
       relationshipGuidance: [{ kind: "part-of", targetTypes: ["Domain", "System"], evidence: "business or system boundary evidence" }],
       flowStepGuidance: {
         requiredFields: ["order", "source", "action", "target", "mode", "evidence"],
+        endpointRule: "source and target must be identities of concepts supplied in the changed set or target summaries; never use embedded knowledge or free text",
         actions: ["invokes", "publishes", "delivers", "reads", "writes"],
         modes: ["synchronous", "asynchronous"],
         evidence: "ordered interactions and source evidence",

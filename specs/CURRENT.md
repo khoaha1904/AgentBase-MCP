@@ -75,4 +75,10 @@ the schedule endpoint in its single repair; Finalize correctly rejected it and
 Inspect did not run. This is an OKF authoring/repair failure plus a remaining
 guidance-usability gap, not a scorer defect.
 
+That guidance gap is now corrected under AB-SCHEMA-041. The released Flow
+schema states that `source` and `target` must resolve to concepts in the changed
+set or supplied targets; embedded knowledge and free text are forbidden, and
+implementation detail is not promoted merely to complete a Flow. Validator and
+concept granularity remain unchanged.
+
 Most recent completed capability: `021-agentstack-foundation`.

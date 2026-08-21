@@ -160,6 +160,8 @@ and record reproducible evidence.
   actionable malformed-step diagnostic in the existing schema contract
 - [x] T053 Retain owner-authorized V15 run `2026-08-21T142407Z` and separate
   its successful Flow parsing from invalid embedded endpoints and repair
+- [x] T054 Clarify AB-SCHEMA-041 Flow guidance with concept-only endpoint
+  identities while preserving embedded-resource granularity
 
 ---
 

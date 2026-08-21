@@ -38,7 +38,10 @@ For every new or modified AgentBase concept:
 - give every relationship a non-empty `evidence` list resolving to stable
   `sources[].id` values;
 - give every Business Flow ordered `flow_steps` with exact source and target
-  identities, canonical action, sync/async mode and source evidence;
+  concept identities, canonical action, sync/async mode and source evidence;
+  both endpoints must exist in the changed concept set or supplied target
+  summaries; embedded knowledge and free text are never Flow endpoints, and
+  must not be promoted merely to complete a Flow;
 - use one canonical path per entity under the role-oriented roots `domains/`,
   `entities/`, `systems/`, `components/`, `interfaces/`, `flows/`, `metrics/`,
   `resources/` or `repositories/`;
