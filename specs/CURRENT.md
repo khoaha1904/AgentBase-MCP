@@ -117,4 +117,11 @@ appropriate. That restriction is removed for other roles; Interface/Resource
 still require semantic evidence. The run also mislabeled CloudFormation YAML as
 Terraform, which remains a real source-truth authoring error.
 
+Run `2026-08-21T151815Z` then passed guidance with exact Terraform DynamoDB
+evidence, embedded endpoint configuration and no promoted Resource, but Prepare
+rejected the unchanged request because its parser lacked the new promotion
+field. That MCP adapter drift is corrected. Qualification now follows
+AB-BENCH-048: sequential probe, stop on hard/obvious failure, one replica only
+after an unblocked valid run, and a third run only for final acceptance.
+
 Most recent completed capability: `021-agentstack-foundation`.

@@ -48,13 +48,20 @@ function guidanceRequest(value: unknown): OkfAuthoringGuidanceRequest {
       const raw = item as Record<string, unknown>;
       const current = record(item, "candidate", ["id", "identity_hint", "identity_basis", "query_value", "evidence_ids", "disposition",
         ...(raw?.parent_candidate_id === undefined ? [] : ["parent_candidate_id"]),
-        ...(raw?.suggested_type === undefined ? [] : ["suggested_type"])]);
+        ...(raw?.suggested_type === undefined ? [] : ["suggested_type"]),
+        ...(raw?.promotion === undefined ? [] : ["promotion"])]);
+      const promotion = current.promotion === undefined ? undefined
+        : record(current.promotion, "candidate promotion", ["basis", "evidence_ids"]);
       return { id: current.id as string, identityHint: current.identity_hint as string,
         identityBasis: current.identity_basis as string, queryValue: current.query_value as string,
         evidenceIds: list(current.evidence_ids, "evidence_ids") as string[],
         disposition: current.disposition as "concept" | "embedded",
         ...(current.parent_candidate_id === undefined ? {} : { parentCandidateId: current.parent_candidate_id as string }),
-        ...(current.suggested_type === undefined ? {} : { suggestedType: current.suggested_type as string }) };
+        ...(current.suggested_type === undefined ? {} : { suggestedType: current.suggested_type as string }),
+        ...(promotion === undefined ? {} : { promotion: {
+          basis: promotion.basis as "shared-contract" | "cross-boundary" | "ownership" | "lifecycle" | "failure" | "security" | "operational",
+          evidenceIds: list(promotion.evidence_ids, "promotion evidence_ids") as string[],
+        } }) };
     }),
     semanticObservations: list(input.semantic_observations, "semantic_observations").map((item) => {
       const current = record(item, "semantic observation", ["id", "candidate_id", "role", "signal", "source"]);

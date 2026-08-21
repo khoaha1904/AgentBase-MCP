@@ -191,6 +191,12 @@ and record reproducible evidence.
   role restriction from the remaining Function semantic-only restriction and
   CloudFormation source-label error, then permit non-authoritative structured
   evidence on other roles without weakening the Interface/Resource gate
+- [x] T063 Retain run `2026-08-21T151815Z`, fix promotion-field drift between
+  guidance and Prepare parsing in `src/app/hub-okf/mcp/mcp-tool-call.ts`, and
+  extend the existing public MCP design test
+- [x] T064 Record AB-BENCH-048 sequential probe/replica/acceptance policy in the
+  living benchmark contract and active capability; do not parallelize runs or
+  repeat a probe with a hard or obvious blocker
 
 ---
 

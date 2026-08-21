@@ -657,3 +657,18 @@ as Terraform; that separate source-truth error remains correctly unsupported.
 AB-SCHEMA-042 now permits other roles to cite candidate-owned semantic or
 structured promotion evidence as non-authoritative intent. Interface/Resource
 still require at least one semantic promotion source and a semantic role match.
+
+Owner-authorized run `2026-08-21T151815Z` progressed through guidance in
+103,448 ms. It used the exact Terraform file for DynamoDB, kept endpoint
+configuration embedded and received `unsupported` for standalone Resource, so
+the promotion gate behaved as designed. Prepare then rejected the required
+unchanged request because its duplicated parser had not added the new
+`promotion` field. This is MCP adapter drift, not model/OKF quality.
+
+Prepare now parses the same bounded promotion record as guidance. AB-BENCH-048
+also records the owner decision: run one sequential probe; stop on a hard or
+obvious blocker; run an identical replica only after a valid unblocked result;
+reserve the third run for final acceptance.
+
+Post-fix verification passed `npm run verify`: specification checks, typecheck,
+dependency/unused-code/secret gates and all 50 design-level tests passed.

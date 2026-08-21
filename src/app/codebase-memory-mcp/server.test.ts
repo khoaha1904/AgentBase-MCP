@@ -47,10 +47,18 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010] official client lists and
     assert.equal(hubStatus.isError, undefined);
     assert.match(hubStatus.content[0]?.type === "text" ? hubStatus.content[0].text : "", /unconfigured/);
     const unconfiguredHub = await client.callTool({ name: "prepare_hub_okf", arguments: {
-      mode: "new", source_repository: repo, evidence_digest: `sha256:${"a".repeat(64)}`,
-      subject_directory: "repositories/acme", signals: ["repository"],
+      mode: "new", source_repository: repo, subject_directory: "repositories/acme",
+      guidance_request: {
+        candidates: [{ id: "system", identity_hint: "acme", identity_basis: "documented capability",
+          query_value: "Acme capability", disposition: "concept", suggested_type: "System",
+          evidence_ids: ["docs.system"], promotion: { basis: "operational", evidence_ids: ["docs.system"] } }],
+        semantic_observations: [{ id: "docs.system", candidate_id: "system", role: "documentation",
+          signal: "software system capability", source: { path: "README.md", start_line: 1, end_line: 1 } }],
+        resource_observations: [],
+      },
     } });
     assert.equal(unconfiguredHub.isError, true);
+    assert.match(unconfiguredHub.content[0]?.type === "text" ? unconfiguredHub.content[0].text : "", /not configured/);
     const schemas = await client.callTool({ name: "list_okf_schemas", arguments: {} });
     assert.equal(schemas.isError, undefined);
     const before = await client.callTool({ name: "search_graph", arguments: { project: "fixture" } });

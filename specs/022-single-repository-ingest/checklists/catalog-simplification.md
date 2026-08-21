@@ -25,6 +25,7 @@
 - [x] CHK011 Is `suggested_type` explicitly insufficient to promote Interface/Resource without candidate-owned semantic boundary evidence? [Clarity, AB-SCHEMA-042]
 - [x] CHK012 Does the one-runtime qualification avoid requiring a Flow or endpoint concepts solely to improve coverage? [Consistency, SC-008]
 - [x] CHK013 Are zero-denominator metrics, unjudged identities and final validation coverage objectively reported? [Measurability, SC-008]
+- [x] CHK014 Does qualification stop after a hard/obvious probe failure and reserve sequential replicas for stability or final acceptance? [Clarity, AB-BENCH-048]
 
 ## Notes
 

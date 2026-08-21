@@ -169,6 +169,12 @@ benchmarks.
   must cover every finalized changed concept. A single-runtime fixture does not
   require Flow or endpoint concepts merely for reference coverage; its bounded
   behavior may be scored as embedded knowledge.
+- **AB-BENCH-048** — Qualification runs are sequential. Run one probe first;
+  stop without a replica on any hard lifecycle/deterministic failure or clear
+  quality blocker. Only a valid run without a clear blocker authorizes one
+  identical sequential replica for stability comparison. Compare promotion,
+  identities, sources and relations across both runs. A third consecutive run
+  is reserved for final acceptance evidence, never routine debugging.
 
 ## Context A/B interpretation
 

@@ -307,6 +307,12 @@ last successful changed-set validation covers every finalized concept. The
 single-Lambda Terraform fixture scores processing/schedule knowledge as
 embedded and no longer requires a Flow that would manufacture endpoints.
 
+Qualification uses a sequential stability ladder: one probe during correction;
+stop on a hard or obvious blocker; otherwise run one identical replica and
+compare semantic outputs. Run three is only the existing final-acceptance gate.
+Parallel model runs are excluded because shared resource/cache/rate contention
+would confound model variance.
+
 Constitution re-check: this slice stays deterministic, local, provider-neutral
 and non-destructive. It adds no dependency, credential, migration, process or
 network behavior and preserves the 50-test design-level gate.

@@ -92,6 +92,10 @@ is the portable archive.
   second: Function structured promotion evidence was still forced to be
   semantic. Other roles now accept candidate-owned structured evidence; the
   Interface/Resource semantic gate and Terraform source-truth guard remain.
+- Run `2026-08-21T151815Z` passed guidance and correctly declined Resource, then
+  exposed promotion-field drift in the Prepare parser. That adapter is aligned.
+  Benchmark policy is now sequential: stop after a blocked probe; replicate
+  only a valid unblocked run; reserve run three for final acceptance.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.

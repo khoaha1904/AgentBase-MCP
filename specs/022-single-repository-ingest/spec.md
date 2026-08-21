@@ -297,6 +297,11 @@ accepted.
   carry candidate-owned semantic or structured promotion evidence as
   transparent intent, but it MUST NOT override semantic or structured schema
   selection. Interface/Resource promotion MUST include semantic evidence.
+- **AB-BENCH-048**: Model qualification MUST run sequentially. One probe MUST
+  stop the sequence when it has a hard lifecycle/deterministic failure or a
+  clear quality blocker. Only a valid probe without a clear blocker MAY trigger
+  one identical replica for comparison of promotion, identities, sources and
+  relationships. A third consecutive run is reserved for final acceptance.
 - **AB-CLAIM-005**: A small directly evidenced non-sensitive scalar or
   identifier MAY be retained as an optional observed snapshot only with its
   claim, exact source, source revision and observed time. It MUST be bounded,
