@@ -159,4 +159,14 @@ endpoint boundaries and explicitly excludes a System plus its single contained
 Function. This is guidance clarification, not a repository scanner, Flow
 inference engine, candidate-count heuristic or new schema.
 
+Owner-authorized probe `2026-08-21T155217Z` completed the lifecycle in 175,109
+ms and verifies AB-SCHEMA-043/044 behavior: it uses exact Terraform resource
+observations, reaches 100% embedded coverage and authors no Flow. It exposes a
+different semantic-selection usability gap. The model proposed a System but
+phrased its observation as “the repository describes” the capability; schema
+selection matched only Repository, marked the suggested System ambiguous and
+Prepare omitted it. Reference concept/provenance coverage is 75% and reference
+relationship coverage is 33%; missing Domain → System navigation is downstream
+of that omitted System. AB-BENCH-048 stopped before a replica.
+
 Most recent completed capability: `021-agentstack-foundation`.

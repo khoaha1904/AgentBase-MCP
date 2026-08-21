@@ -730,3 +730,20 @@ case. Model behavior remains unqualified until a later sequential probe.
 
 `npm run verify` passes specification checks, TypeScript, dependency rules,
 Knip, Gitleaks, `git diff --check` and all 50 design-level tests.
+
+## V15 source/Flow correction probe — 2026-08-21
+
+Owner-authorized probe `2026-08-21T155217Z` completed the full lifecycle in
+175,109 ms. Compared with `2026-08-21T154146Z`, it restores exact Terraform
+resource observations, raises embedded coverage from 25% to 100%, removes the
+optional Flow and retains unique navigation. AB-SCHEMA-043/044 therefore behave
+as intended.
+
+A new semantic-selection gap blocks a replica. The agent still proposed an AWS
+Health Aware System, but its observation signal said “the repository describes”
+the notification capability. Selection matched only the Repository role,
+conflicted with `suggested_type: System` and returned `ambiguous`; Prepare
+correctly omitted that candidate. The bundle consequently has 75% reference
+concept/provenance coverage, 33% relationship coverage and no Domain → System
+navigation. This is semantic-guidance/selection usability, not an OKF lifecycle
+or scorer defect. AB-BENCH-048 stopped the sequence before a replica.

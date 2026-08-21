@@ -212,6 +212,9 @@ and record reproducible evidence.
   investigation guidance, exclude the single-contained-runtime Flow case from
   released guidance and extend the existing catalog test without a new engine
   or test case
+- [x] T069 Retain probe `2026-08-21T155217Z`, confirm source/Flow corrections,
+  trace the missing System to source-container wording in its semantic signal,
+  classify downstream Domain navigation separately and stop before a replica
 
 ---
 

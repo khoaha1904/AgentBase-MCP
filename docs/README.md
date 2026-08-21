@@ -114,6 +114,11 @@ is the portable archive.
   supported IaC cannot be replaced by unsupported semantic IaC, and a System
   plus its single contained Function does not justify a standalone Flow. No
   scanner, inference engine or new schema is added.
+- Probe `2026-08-21T155217Z` confirms both corrections: exact Terraform returns,
+  embedded coverage is 100% and no Flow is authored. It is not
+  replica-qualified because the System observation said “repository describes,”
+  semantic selection classified it only as Repository and Prepare omitted the
+  resulting ambiguous System. Domain navigation then remained incomplete.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.
