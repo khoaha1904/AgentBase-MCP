@@ -1,0 +1,73 @@
+{
+  "suite": "aws-serverless",
+  "repository": "aws-health-aware",
+  "runId": "2026-08-21T143803Z",
+  "arm": "mcp",
+  "expectedConcepts": 5,
+  "actualConcepts": 7,
+  "matchedConcepts": 5,
+  "referenceConceptCoveragePercent": 100,
+  "recognizedSchemaAgreementPercent": 100,
+  "metadataCompletenessPercent": 100,
+  "provenanceCoveragePercent": 83,
+  "referenceRelationshipCoveragePercent": 100,
+  "conflictVisibilityPercent": 100,
+  "liveEvidenceReferenceCoveragePercent": 100,
+  "embeddedKnowledgeCoveragePercent": 100,
+  "classifications": {
+    "concepts": {
+      "confirmed": [
+        "domains/health-operations",
+        "repositories/aws-health-aware",
+        "systems/aws-health-aware",
+        "components/aws-health-aware-health-poller",
+        "flows/aws-health-aware-health-alert-processing"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "interfaces/aws-health-aware-notification-delivery",
+        "resources/aws-health-aware-health-event-state"
+      ],
+      "missingReference": []
+    },
+    "relationships": {
+      "confirmed": [
+        "aws-health-aware-repository|part-of|health-operations-domain",
+        "aws-health-aware-system|part-of|health-operations-domain",
+        "aha-lambda-function-primary-region|part-of|aws-health-aware-system",
+        "aws-health-alerting-flow|part-of|aws-health-aware-system"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "components/aws-health-aware-health-poller|provides|interfaces/aws-health-aware-notification-delivery",
+        "components/aws-health-aware-health-poller|depends-on|resources/aws-health-aware-health-event-state",
+        "components/aws-health-aware-health-poller|implemented-in|repositories/aws-health-aware",
+        "interfaces/aws-health-aware-notification-delivery|part-of|systems/aws-health-aware",
+        "interfaces/aws-health-aware-notification-delivery|implemented-in|repositories/aws-health-aware",
+        "resources/aws-health-aware-health-event-state|part-of|systems/aws-health-aware",
+        "resources/aws-health-aware-health-event-state|implemented-in|repositories/aws-health-aware"
+      ],
+      "missingReference": []
+    }
+  },
+  "validation": {
+    "passed": true,
+    "failures": []
+  },
+  "ownerReview": {
+    "status": "needs_revision",
+    "findings": [
+      "domains/health-operations.md: confirmed Domain does not navigate to a System",
+      "domains/health-operations.md: Markdown body lacks reviewable substance"
+    ]
+  },
+  "authoringAssessment": {
+    "status": "reviewable",
+    "hardFailures": [],
+    "limitations": [
+      "Deterministic source-path checks do not prove that authored claims are semantically supported; human review is required.",
+      "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept."
+    ]
+  },
+  "okfTreeDigest": "sha256:f7382f96a51807df35491fa36f5d495dba2549d7d55e01afa147c01287394584"
+}

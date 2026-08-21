@@ -587,3 +587,24 @@ increasing the test count.
 
 `npm run verify` passes specification, TypeScript, dependency, Knip, Gitleaks,
 50/50 test and diff gates. No model benchmark was run.
+
+## V15 concept-endpoint qualification — 2026-08-21
+
+Owner-authorized run `2026-08-21T143803Z` completed Preflight through Inspect in
+225,128 ms with no tool failure. Its seven-concept bundle is valid and
+reviewable: 100% reference concept coverage, schema agreement, metadata,
+reference relationships, conflict visibility, live references and embedded
+knowledge; provenance is 83%.
+
+The concept-only endpoint guidance succeeded mechanically. Owner acceptance is
+still `needs_revision`. The confirmed Domain is shallow and does not navigate
+to the System, and the Flow omits the Terraform source supporting its schedule
+trigger. Manual review additionally flags two unjudged concepts as likely
+over-promotion: the notification Interface states that no single shared payload
+contract exists, while the DynamoDB Resource is supported by declaration and
+internal usage without independent ownership/lifecycle/failure evidence. They
+appear to have been promoted to provide Flow endpoints despite the explicit
+granularity rule. These are OKF authoring findings, not benchmark defects.
+
+No Accept, Publish, provider CLI or Hub PR operation occurred. No replacement
+run was started.

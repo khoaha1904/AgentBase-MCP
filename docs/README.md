@@ -72,6 +72,11 @@ is the portable archive.
   invalid before Inspect because its Flow uses embedded labels rather than
   existing concept identities as endpoints. Finalize correctly blocked it; the
   scorer did not run.
+- V15 Health run `2026-08-21T143803Z` passes the full lifecycle with a valid
+  reviewable bundle and complete reference/embedded coverage. It remains
+  `needs_revision`: Domain navigation/prose is weak, Flow provenance is 83%,
+  and manual review flags likely Interface/Resource over-promotion to supply
+  Flow endpoints.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.

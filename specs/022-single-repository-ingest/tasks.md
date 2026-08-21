@@ -162,6 +162,9 @@ and record reproducible evidence.
   its successful Flow parsing from invalid embedded endpoints and repair
 - [x] T054 Clarify AB-SCHEMA-041 Flow guidance with concept-only endpoint
   identities while preserving embedded-resource granularity
+- [x] T055 Retain owner-authorized V15 run `2026-08-21T143803Z`, record its
+  successful lifecycle separately from Domain/provenance and over-promotion
+  owner-review findings, and do not run a replacement
 
 ---
 

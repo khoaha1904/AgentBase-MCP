@@ -194,6 +194,19 @@ correctly rejected it. No Inspect or scorable bundle followed. This is an OKF
 authoring/repair failure with a remaining guidance-usability gap around concept
 endpoint identities; the benchmark scorer did not cause the failure.
 
+Owner-authorized run `2026-08-21T143803Z` completes the full V15 lifecycle in
+225,128 ms and produces a valid reviewable seven-concept bundle. Reference
+concept, schema, metadata, relationship and embedded-knowledge coverage are
+100%; provenance is 83%. The concept-only endpoint rule worked, but manual
+owner review does not accept the result yet. The agent promoted a notification
+Interface whose own body says no single shared payload contract exists, and a
+DynamoDB Resource supported only by declaration/internal usage rather than an
+independent boundary. These two unjudged concepts appear to supply Flow
+endpoints despite the no-promotion-for-Flow rule. The Domain remains shallow
+and does not navigate to the System, while the Flow omits Terraform trigger
+provenance. These are real OKF authoring/granularity findings; lifecycle and
+scorer behaved correctly.
+
 Expectations do not prescribe prose or agent slugs. Bounded identity terms and
 evidence match concept instances; the scorer then evaluates concrete schema
 choices, required semantic metadata, source provenance and directed concept

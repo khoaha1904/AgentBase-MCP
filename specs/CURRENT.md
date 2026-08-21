@@ -81,4 +81,13 @@ set or supplied targets; embedded knowledge and free text are forbidden, and
 implementation detail is not promoted merely to complete a Flow. Validator and
 concept granularity remain unchanged.
 
+Owner-authorized run `2026-08-21T143803Z` then passes the complete lifecycle in
+225,128 ms. Its valid reviewable bundle reaches 100% reference concept, schema,
+metadata, relationship and embedded-knowledge coverage with 83% provenance.
+It is not accepted yet: Domain navigation/body remains weak, the Flow omits its
+Terraform trigger source, and manual review identifies likely over-promotion of
+a delivery Interface with no single shared contract and an internally used
+DynamoDB Resource without independent-boundary evidence. Lifecycle and scorer
+behaved correctly; these are OKF authoring/granularity findings.
+
 Most recent completed capability: `021-agentstack-foundation`.
