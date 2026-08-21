@@ -25,7 +25,10 @@ export const FOUNDATION_SCHEMAS: readonly OkfConceptSchema[] = [
         "Which independently useful concepts cooperate to deliver it?",
         "Which repository sources prove the boundary?",
       ],
-      relationshipGuidance: [{ kind: "part-of", targetTypes: ["Domain"], evidence: "business boundary or owner guidance" }],
+      relationshipGuidance: [
+        { kind: "part-of", targetTypes: ["Domain"], evidence: "business boundary or owner guidance" },
+        { kind: "implemented-in", targetTypes: ["Repository"], evidence: "source ownership evidence" },
+      ],
     },
   ),
   defineSchema(

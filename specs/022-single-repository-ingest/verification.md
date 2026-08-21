@@ -799,3 +799,8 @@ concepts. Finalize correctly rejected the relation and no artifact was scored.
 This is a schema-relation consistency question, distinct from the fixed Resource
 promotion gate and from benchmark/scorer behavior. AB-BENCH-048 stopped before
 a replica.
+
+AB-SCHEMA-045 now adds the canonical source-ownership direction to released
+System guidance. Repository is the only allowed target and ordinary exact
+evidence plus resolving-link validation remains unchanged. The focused catalog
+check and full 50-test gate pass offline.

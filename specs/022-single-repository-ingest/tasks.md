@@ -228,6 +228,9 @@ and record reproducible evidence.
 - [x] T073 Retain replacement probe `2026-08-21T162053Z`, confirm the Resource
   promotion fix in real execution, classify the remaining System-to-Repository
   relation rejection separately, and stop before a replica
+- [x] T074 [US2] Add AB-SCHEMA-045 System-to-Repository source ownership to the
+  released schema, preserve strict evidence/link/target validation and cover it
+  in the existing catalog boundary test
 
 ---
 

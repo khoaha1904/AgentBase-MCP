@@ -313,6 +313,10 @@ accepted.
   default. A standalone Flow SHOULD be created only when it adds independent
   query or navigation value across evidenced concept identities. Endpoint count
   MUST NOT be a schema-validity rule.
+- **AB-SCHEMA-045**: A source-backed System MAY declare canonical
+  `implemented-in -> Repository` with exact source-ownership evidence and a
+  resolving Markdown link. Missing evidence, missing links, inverse duplicates
+  and non-Repository targets MUST remain invalid.
 - **AB-BENCH-048**: Model qualification MUST run sequentially. One probe MUST
   stop the sequence when it has a hard lifecycle/deterministic failure or a
   clear quality blocker. Only a valid probe without a clear blocker MAY trigger

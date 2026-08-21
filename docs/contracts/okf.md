@@ -321,3 +321,7 @@ Normative OKF source is pinned to commit
   delivery sequence embedded. Create a standalone Flow when it adds independent
   query or navigation value across evidenced concept identities. Endpoint count
   is an authoring heuristic, not a schema-validity rule.
+- **AB-SCHEMA-045** — A source-backed System may declare the canonical
+  `implemented-in -> Repository` direction with exact source-ownership evidence
+  and a resolving Markdown link. Validation still rejects missing evidence,
+  missing links, inverse duplicates and non-Repository targets.

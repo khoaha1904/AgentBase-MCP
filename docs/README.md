@@ -138,6 +138,9 @@ is the portable archive.
   source-backed `implemented-in -> Repository` relation because released System
   guidance does not judge it. This separate schema-consistency finding stopped
   the sequence before a replica; no bundle was scored.
+- AB-SCHEMA-045 now judges only the evidenced canonical
+  `System implemented-in Repository` direction. Focused and full offline gates
+  pass without relaxing any other relationship.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.

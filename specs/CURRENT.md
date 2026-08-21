@@ -198,4 +198,9 @@ correctly rejected it, no OKF artifact was scored and no replica ran. This is a
 separate schema-relation consistency issue, not a recurrence of the promotion
 bug or a benchmark failure.
 
+AB-SCHEMA-045 fixes that deterministic inconsistency offline by allowing only
+the evidenced canonical `System implemented-in Repository` direction. The
+focused reproduction and full 50-test gate pass; no other relationship rule was
+relaxed.
+
 Most recent completed capability: `021-agentstack-foundation`.
