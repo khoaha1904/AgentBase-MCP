@@ -280,6 +280,9 @@ and record reproducible evidence.
   `scripts/benchmark/benchmark-okf.test.mjs` and `benchmark/prompts/okf-author-v15.md`
 - [x] T090 Run focused requirement-linked checks and `npm run verify`, record
   deterministic evidence in `specs/022-single-repository-ingest/verification.md`
+- [x] T091 Retain sequential recovery probe `2026-08-21T174630Z` and replica
+  `2026-08-21T175143Z`, compare lifecycle, OKF quality and semantic stability,
+  and stop before a third run under AB-BENCH-048
 
 ---
 
@@ -298,7 +301,7 @@ and record reproducible evidence.
   defects found by T029 without treating offline guidance tests as a new
   accepted model qualification. T034 corrects benchmark measurement and shared
   authoring contracts but likewise leaves model stability pending.
-- T087–T090 apply the independent pre-state correction and post-state repair
+- T087–T091 apply the independent pre-state correction and post-state repair
   policy, then close only after the complete deterministic gate passes.
 
 ## Parallel Opportunities

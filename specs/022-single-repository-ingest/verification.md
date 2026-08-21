@@ -959,3 +959,32 @@ not appear first-pass clean. Focused MCP/guidance/benchmark checks passed 15/15.
 The complete `npm run verify` gate passed specification checks, TypeScript,
 dependency rules, Knip, Gitleaks, 50/50 tests and `git diff --check`. No model
 benchmark, proposal, Accept, Publish or Hub PR was run.
+
+## Bounded-recovery probe and replica — 2026-08-22
+
+Owner-authorized probe `2026-08-21T174630Z` completed in 262,081 ms. Its first
+guidance request failed with retryable `INVALID_ARGUMENT` because one embedded
+candidate cited another candidate's evidence. The agent corrected the request
+once, guidance passed, changed-set validation used its separate one repair, and
+Prepare/Finalize/Inspect each completed exactly once. The resulting six-concept
+bundle is `review_ready`; every applicable reference, schema, provenance,
+relationship and embedded-knowledge ratio is 100% with no hard failure.
+
+Sequential replica `2026-08-21T175143Z` completed first-pass guidance and the
+full lifecycle in 184,163 ms. Its smaller four-concept bundle is also
+`review_ready` with every applicable ratio at 100%, no contradicted or missing
+reference concept and no owner-review finding. It keeps DynamoDB, schedule and
+delivery knowledge embedded instead of promoting the probe's optional Resource
+and Flow.
+
+The two runs therefore prove bounded recovery and truthful sparse output, but
+not exact semantic determinism: the Function slug and optional promotion
+granularity differ. Both choices are evidenced and valid, so this is a
+stability diagnostic rather than a product failure; AB-BENCH-050 forbids a new
+cross-repository rule from this single fixture. No third run was started.
+
+Benchmark-only limitation: the recovery instructions changed the active V15
+prompt without a new immutable prompt identity. Both new runs retained the same
+exact prompt and are comparable with each other, but they must not be treated
+as prompt-identical replicas of older V15 evidence. A future prompt behavior
+change must use a new identity under AB-BENCH-024.

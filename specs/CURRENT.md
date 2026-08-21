@@ -290,4 +290,15 @@ Prepare, Finalize and uncertain state failures still stop safely. V15 lifecycle
 accounting retains first-attempt diagnostics and correction usage. The complete
 offline gate passes 50/50 tests; no replacement model probe has run.
 
+Recovery probe `2026-08-21T174630Z` and sequential replica
+`2026-08-21T175143Z` both complete the lifecycle as `review_ready` with 100% on
+every applicable reference ratio. The probe demonstrates one failed retryable
+guidance request followed by one successful correction; the replica passes
+guidance first time. Both remain truthful, but optional granularity varies: six
+concepts with standalone Resource/Flow versus four concepts with those details
+embedded. This is a stability diagnostic, not a hard failure, and no third run
+was started. Because recovery prose changed under the existing V15 prompt name,
+these runs are mutually comparable but not prompt-identical to older V15 runs;
+future prompt behavior changes require a new AB-BENCH-024 identity.
+
 Most recent completed capability: `021-agentstack-foundation`.
