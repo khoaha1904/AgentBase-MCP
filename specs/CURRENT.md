@@ -141,4 +141,14 @@ by current evidence and build up over later ingests, without fabricated domain
 claims. The existing Initial Ingest lifecycle test covers the exact duplicate
 reproduction; no new test case or dependency is added.
 
+Owner-authorized post-fix probe `2026-08-21T154146Z` completed the lifecycle in
+192,735 ms and confirms that no category entry is duplicated. All four reference
+concepts and all three reference relationships are present with 100% schema
+agreement. It regresses semantically versus `2026-08-21T152548Z`: the model
+again promoted an optional Flow, cited CloudFormation/handler paths instead of
+the Terraform qualification source, reached only 75% provenance and 25%
+embedded coverage, and left the prepared Domain body unchanged. These are OKF
+source/granularity findings rather than lifecycle or scorer failures.
+AB-BENCH-048 stopped the sequence before a replica.
+
 Most recent completed capability: `021-agentstack-foundation`.

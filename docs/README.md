@@ -105,6 +105,11 @@ is the portable archive.
   loader and tells agents that Prepare already owns root/category entries. A
   first Domain stays sparse and summarizes only current evidence instead of
   inventing a complete domain definition.
+- Post-fix probe `2026-08-21T154146Z` proves duplicate navigation is gone and
+  again passes the complete lifecycle. It is not replica-qualified: the model
+  reintroduced an optional Flow, selected CloudFormation/handler evidence over
+  the Terraform qualification source and fell to 75% provenance plus 25%
+  embedded coverage. The sparse Domain review finding also remains.
 - OKF authoring uses one entity-centered graph: repositories provide evidence,
   Domain remains optional, and system/component/interface/resource/
   infrastructure identities are not copied into repository trees.

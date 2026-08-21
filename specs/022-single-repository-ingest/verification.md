@@ -704,3 +704,19 @@ minimum word count that would reward fabricated scope.
 Offline verification passes specification checks, TypeScript, dependency
 rules, Knip, Gitleaks, `git diff --check` and all 50 design-level tests. No
 model benchmark, Accept, Publish, provider CLI or Hub PR operation ran.
+
+## V15 post-navigation probe — 2026-08-21
+
+Owner-authorized probe `2026-08-21T154146Z` completed the full lifecycle in
+192,735 ms. AB-INGEST-013 behaved correctly: every root/category index contains
+one target row and no duplicate survived. The four reference concepts, three
+reference relationships and recognized schemas remain at 100%.
+
+Compared with `2026-08-21T152548Z`, the probe introduced a new optional Flow and
+changed source strategy from exact Terraform evidence to semantic
+CloudFormation/handler spans. The resulting bundle remains truthful and
+reviewable, but it no longer qualifies the Terraform-only target: provenance
+fell from 100% to 75% and embedded knowledge from 100% to 25%. Its prepared
+Domain body also remains unchanged and below the owner-review usefulness
+heuristic. These are OKF granularity/source-selection findings; lifecycle and
+scoring operated correctly. AB-BENCH-048 therefore stopped before a replica.

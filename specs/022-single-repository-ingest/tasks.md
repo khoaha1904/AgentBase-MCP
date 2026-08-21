@@ -204,6 +204,10 @@ and record reproducible evidence.
   shared OKF bundle loader, clarify prepared-navigation ownership in product and
   qualification guidance, and cover the observed reproduction in the existing
   lifecycle test without adding a new test case
+- [x] T067 Retain post-fix probe `2026-08-21T154146Z`, confirm duplicate
+  navigation is resolved, classify optional Flow/source-selection and embedded
+  coverage regression separately from lifecycle/scorer behavior, and stop
+  before a replica under AB-BENCH-048
 
 ---
 
