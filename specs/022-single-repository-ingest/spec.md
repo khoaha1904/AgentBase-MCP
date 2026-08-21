@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-20
 
-**Status**: In progress — catalog 7.0 simplification approved
+**Status**: Completed — accepted Initial Ingest MVP
 
 **Input**: Build the first independently useful AgentBase Ingest slice: read one
 authorized local repository, confirm its primary Domain, discover a sparse set
@@ -18,6 +18,10 @@ produce one reviewable Hub proposal without accepting or publishing it.
   replacement is allowed when it gives a simpler long-term boundary.
 - Phase 1 handles exactly one local repository. Batch Ingest, Refresh, Domain
   Enrichment and OKF freshness reporting are later capabilities.
+- Initial Ingest qualification closes after one unblocked probe and one
+  sequential replica are both `review_ready`. Evidence-backed optional
+  promotion variance remains diagnostic; a third run is reserved for a future
+  final-release qualification rather than blocking the next capability.
 - A public Ingest skill orchestrates the workflow. MCP tools provide bounded
   graph, source, guidance, Hub and validation operations; AgentBase does not add
   a model SDK or ask the user to write an authoring prompt.
@@ -405,11 +409,13 @@ accepted.
   exhausted-budget scenarios each produce the specified distinct outcome with
   zero implicit Accept or Publish operations.
 - **SC-005**: On the accepted representative repository and qualified host-agent
-  environment, three consecutive opt-in runs produce valid reviewable previews
-  with a median elapsed time no greater than 10 minutes. Measurement records
-  limitations and is not part of the offline gate. The first catalog 7 run uses
-  the real isolated local-Hub Preflight through Inspect lifecycle, requires the
-  packaged Initial Ingest tool sequence and never Accepts or publishes.
+  environment, one unblocked probe and one identical sequential replica MUST
+  produce valid reviewable previews with a median elapsed time no greater than
+  10 minutes. Measurement records limitations and semantic variance and is not
+  part of the offline gate. The catalog 7 runs use the real isolated local-Hub
+  Preflight through Inspect lifecycle, require the packaged Initial Ingest tool
+  sequence and never Accept or publish. A third run is not required for this
+  MVP acceptance.
 - **SC-007**: A serverless fixture with internal messaging MUST produce its
   Function/System knowledge without orphan Queue, Topic, Table, Bucket or
   Server concepts, while retaining their searchable exact evidence in a parent.

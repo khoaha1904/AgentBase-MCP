@@ -1,6 +1,6 @@
 # Current capability
 
-Active capability: [`022-single-repository-ingest`](022-single-repository-ingest/spec.md).
+Active capability: None.
 
 Capability 022 is the first implementation slice of the approved AgentBase
 knowledge design. It connects one authorized local repository to a bounded,
@@ -301,4 +301,4 @@ was started. Because recovery prose changed under the existing V15 prompt name,
 these runs are mutually comparable but not prompt-identical to older V15 runs;
 future prompt behavior changes require a new AB-BENCH-024 identity.
 
-Most recent completed capability: `021-agentstack-foundation`.
+Most recent completed: [`022-single-repository-ingest`](022-single-repository-ingest/spec.md).

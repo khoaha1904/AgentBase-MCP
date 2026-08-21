@@ -988,3 +988,12 @@ prompt without a new immutable prompt identity. Both new runs retained the same
 exact prompt and are comparable with each other, but they must not be treated
 as prompt-identical replicas of older V15 evidence. A future prompt behavior
 change must use a new identity under AB-BENCH-024.
+
+## Capability acceptance — 2026-08-22
+
+The owner accepted the two sequential `review_ready` runs as sufficient MVP
+qualification and classified evidence-backed optional promotion variance as a
+diagnostic rather than an acceptance failure. SC-005 now reflects the actual
+AB-BENCH-048 probe/replica policy; a third run is reserved for later release
+qualification. Capability 022 is complete. Refresh, Batch and Domain Enrichment
+remain separate future capabilities.

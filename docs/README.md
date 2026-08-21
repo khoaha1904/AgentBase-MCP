@@ -45,13 +45,10 @@ is the portable archive.
 
 ## Current checkpoint
 
-- Active capability: `022-single-repository-ingest`. V14 passed lifecycle only
-  1/3 and exposed that catalog 6 conflates technology detection, concept
-  promotion and rendering. Catalog 7.0 passes the offline gate; the generated
-  Flow-skeleton defect exposed by its first V15 qualification is fixed and
-  verified offline. The owner-authorized V15 requalification now passes the
-  lifecycle and produces a valid reviewable bundle, but still needs semantic
-  revision for Domain navigation, Flow coverage and Terraform evidence scope.
+- Active capability: none. Capability 022 completed the catalog-7 Initial
+  Ingest MVP with a clean 50-test offline gate plus one `review_ready` probe and
+  one `review_ready` sequential replica. Refresh, Batch and Domain Enrichment
+  remain later capabilities.
 - Initial Ingest now resolves a durable Repository identity, requires bounded
   Domain confirmation, uses the graph only as a private map and stops at one
   sparse, inspectable proposal preview. Partial coverage is valid and visible;
