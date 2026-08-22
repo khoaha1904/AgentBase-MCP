@@ -179,7 +179,8 @@ async function reconcilePublicationBranch(
     const timestamp = (await git({ args: ["show", "-s", "--format=%cI", baseCommit], cwd: options.localHub.root,
       operation: "read reconciliation timestamp", maximumOutputBytes: 256 })).stdout.trim();
     try {
-      await git({ args: ["merge", "--no-edit", baseCommit], cwd: candidateRoot,
+      await git({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost",
+        "merge", "--no-edit", baseCommit], cwd: candidateRoot,
         operation: `reconcile publication branch ${unit.branch}`, commitTimestamp: timestamp,
         ...(options.signal ? { signal: options.signal } : {}) });
     } catch (error) {
@@ -206,7 +207,8 @@ async function reconcilePublicationBranch(
           await git({ args: ["add", "--", relative], cwd: candidateRoot,
             operation: "stage reconciled append-only index" });
         }
-        await git({ args: ["commit", "--no-edit"], cwd: candidateRoot,
+        await git({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost",
+          "commit", "--no-edit"], cwd: candidateRoot,
           operation: `complete publication branch reconciliation ${unit.branch}`, commitTimestamp: timestamp,
           ...(options.signal ? { signal: options.signal } : {}) });
       } catch (repairError) {
@@ -246,7 +248,8 @@ async function replayProposal(
     const timestamp = (await git({ args: ["show", "-s", "--format=%cI", proposal.commit], cwd: options.localHub.root,
       operation: "read accepted proposal timestamp", maximumOutputBytes: 256 })).stdout.trim();
     try {
-      await git({ args: ["cherry-pick", proposal.commit], cwd: candidateRoot,
+      await git({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost",
+        "cherry-pick", proposal.commit], cwd: candidateRoot,
         operation: `replay accepted Hub proposal ${proposal.id}`, commitTimestamp: timestamp,
         ...(options.signal ? { signal: options.signal } : {}) });
     } catch (error) {
@@ -287,7 +290,8 @@ async function replayProposal(
           await git({ args: ["add", "--", relative], cwd: candidateRoot,
             operation: "stage selected append-only index contribution" });
         }
-        await git({ args: ["cherry-pick", "--continue"], cwd: candidateRoot,
+        await git({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost",
+          "cherry-pick", "--continue"], cwd: candidateRoot,
           operation: `complete accepted Hub proposal replay ${proposal.id}`, commitTimestamp: timestamp,
           ...(options.signal ? { signal: options.signal } : {}) });
       } catch (repairError) {
