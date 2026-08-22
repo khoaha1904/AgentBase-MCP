@@ -1,4 +1,4 @@
-# Installation contract
+# Installation requirements
 
 `./install.sh` prepares exact dependencies, optionally stores one Hub token and
 transactionally registers the current checkout as user-global stdio MCP in

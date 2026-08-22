@@ -1,6 +1,6 @@
-# Code Graph contract
+# Code Graph runtime requirements
 
-Current contract for managed Codebase Memory, graph evidence, freshness and the
+Current requirements for managed Codebase Memory, graph evidence, freshness and the
 agent-facing stdio MCP. The graph remains detailed, private and disposable.
 
 ## Managed provider and evidence

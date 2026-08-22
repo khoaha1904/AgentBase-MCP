@@ -9,31 +9,33 @@ const ids = (prefix, count, start = 1) => Array.from(
 );
 
 const DOCUMENT_ROUTES = [
-  "docs/PRODUCT.md",
-  "docs/ARCHITECTURE.md",
-  "docs/contracts/foundation.md",
-  "docs/contracts/code-graph.md",
-  "docs/contracts/okf.md",
-  "docs/contracts/hub.md",
-  "docs/contracts/installation.md",
-  "docs/contracts/benchmark.md",
+  "docs/present/README.md",
+  "docs/present/00-product-scope-and-authority.md",
+  "docs/design/README.md",
+  "docs/design/00-architecture.md",
+  "docs/design/01-repository-reading/05-runtime-requirements.md",
+  "docs/design/05-knowledge-entry/06-runtime-requirements.md",
+  "docs/design/11-review-and-publish/01-runtime-requirements.md",
+  "docs/design/12-version-scope/01-foundation-requirements.md",
+  "docs/design/12-version-scope/02-installation-requirements.md",
+  "docs/design/12-version-scope/03-benchmark-requirements.md",
 ];
 
 const REQUIREMENT_GROUPS = [
-  ["foundation", "docs/contracts/foundation.md", ids("AB-FND", 19), "SPEC-LIVING-MISSING", "SPEC-ID-MISSING"],
-  ["managed graph", "docs/contracts/code-graph.md", ids("AB-MVP", 7), "SPEC-MVP-LIVING-MISSING", "SPEC-MVP-ID-MISSING"],
-  ["graph lifecycle", "docs/contracts/code-graph.md", ids("AB-GRAPH", 14), "SPEC-GRAPH-LIVING-MISSING", "SPEC-GRAPH-ID-MISSING"],
-  ["graph freshness", "docs/contracts/code-graph.md", ids("AB-REFRESH", 12), "SPEC-GRAPH-LIVING-MISSING", "SPEC-REFRESH-ID-MISSING"],
-  ["MCP surface", "docs/contracts/code-graph.md", ids("AB-MCP", 14), "SPEC-GRAPH-LIVING-MISSING", "SPEC-MCP-ID-MISSING"],
-  ["OKF proposal", "docs/contracts/okf.md", ids("AB-MVP", 16, 8), "SPEC-OKF-LIVING-MISSING", "SPEC-MVP-ID-MISSING"],
-  ["observations", "docs/contracts/okf.md", ids("AB-OBS", 7), "SPEC-OKF-LIVING-MISSING", "SPEC-OBS-ID-MISSING"],
-  ["schema catalog", "docs/contracts/okf.md", ids("AB-SCHEMA", 36), "SPEC-OKF-LIVING-MISSING", "SPEC-SCHEMA-ID-MISSING"],
-  ["live claims", "docs/contracts/okf.md", ids("AB-CLAIM", 5), "SPEC-OKF-LIVING-MISSING", "SPEC-CLAIM-ID-MISSING"],
-  ["initial ingest", "docs/contracts/okf.md", ids("AB-INGEST", 11), "SPEC-OKF-LIVING-MISSING", "SPEC-INGEST-ID-MISSING"],
-  ["product", "docs/PRODUCT.md", [...ids("AB-PRODUCT", 5), ...ids("AB-MIGRATION", 2)], "SPEC-PRODUCT-LIVING-MISSING", "SPEC-PRODUCT-ID-MISSING"],
-  ["local Hub", "docs/contracts/hub.md", [...ids("AB-LOCAL-HUB", 16), "AB-QUERY-001", ...ids("AB-HUB-SETUP", 17)], "SPEC-HUB-LIVING-MISSING", "SPEC-HUB-ID-MISSING"],
-  ["installation", "docs/contracts/installation.md", ids("AB-INSTALL", 24), "SPEC-INSTALL-LIVING-MISSING", "SPEC-INSTALL-ID-MISSING"],
-  ["benchmark", "docs/contracts/benchmark.md", ids("AB-BENCH", 44), "SPEC-BENCH-LIVING-MISSING", "SPEC-BENCH-ID-MISSING"],
+  ["foundation", "docs/design/12-version-scope/01-foundation-requirements.md", ids("AB-FND", 19), "SPEC-LIVING-MISSING", "SPEC-ID-MISSING"],
+  ["managed graph", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-MVP", 7), "SPEC-MVP-LIVING-MISSING", "SPEC-MVP-ID-MISSING"],
+  ["graph lifecycle", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-GRAPH", 14), "SPEC-GRAPH-LIVING-MISSING", "SPEC-GRAPH-ID-MISSING"],
+  ["graph freshness", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-REFRESH", 12), "SPEC-GRAPH-LIVING-MISSING", "SPEC-REFRESH-ID-MISSING"],
+  ["MCP surface", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-MCP", 14), "SPEC-GRAPH-LIVING-MISSING", "SPEC-MCP-ID-MISSING"],
+  ["OKF proposal", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-MVP", 16, 8), "SPEC-OKF-LIVING-MISSING", "SPEC-MVP-ID-MISSING"],
+  ["observations", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-OBS", 7), "SPEC-OKF-LIVING-MISSING", "SPEC-OBS-ID-MISSING"],
+  ["schema catalog", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-SCHEMA", 36), "SPEC-OKF-LIVING-MISSING", "SPEC-SCHEMA-ID-MISSING"],
+  ["live claims", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-CLAIM", 5), "SPEC-OKF-LIVING-MISSING", "SPEC-CLAIM-ID-MISSING"],
+  ["initial ingest", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-INGEST", 11), "SPEC-OKF-LIVING-MISSING", "SPEC-INGEST-ID-MISSING"],
+  ["product", "docs/present/00-product-scope-and-authority.md", [...ids("AB-PRODUCT", 5), ...ids("AB-MIGRATION", 2)], "SPEC-PRODUCT-LIVING-MISSING", "SPEC-PRODUCT-ID-MISSING"],
+  ["local Hub", "docs/design/11-review-and-publish/01-runtime-requirements.md", [...ids("AB-LOCAL-HUB", 16), "AB-QUERY-001", ...ids("AB-HUB-SETUP", 17)], "SPEC-HUB-LIVING-MISSING", "SPEC-HUB-ID-MISSING"],
+  ["installation", "docs/design/12-version-scope/02-installation-requirements.md", ids("AB-INSTALL", 24), "SPEC-INSTALL-LIVING-MISSING", "SPEC-INSTALL-ID-MISSING"],
+  ["benchmark", "docs/design/12-version-scope/03-benchmark-requirements.md", ids("AB-BENCH", 44), "SPEC-BENCH-LIVING-MISSING", "SPEC-BENCH-ID-MISSING"],
 ];
 
 const CURRENT_DOCUMENTS = [
@@ -79,9 +81,9 @@ export function checkSpecifications(root) {
   for (const [label, relative, requirements, missingCode, idCode] of REQUIREMENT_GROUPS) {
     const source = checkedFiles.has(relative) ? checkedFiles.get(relative) : read(root, relative);
     checkedFiles.set(relative, source);
-    if (!source) errors.push({ code: missingCode, message: `${label} current contract is required at ${relative}` });
+    if (!source) errors.push({ code: missingCode, message: `${label} current requirements are required at ${relative}` });
     else for (const requirement of requirements) {
-      if (!source.includes(requirement)) errors.push({ code: idCode, message: `${requirement} is missing from the ${label} contract` });
+      if (!source.includes(requirement)) errors.push({ code: idCode, message: `${requirement} is missing from the ${label} requirements` });
     }
   }
 
@@ -117,10 +119,6 @@ export function checkSpecifications(root) {
   }
 
   const ignore = read(root, ".gitignore");
-  if (!ignore?.split(/\r?\n/).includes("docs/.archived/")) {
-    errors.push({ code: "SPEC-ARCHIVE-NOT-IGNORED", message: "docs/.archived/ must remain local and Git-ignored" });
-  }
-
   return errors;
 }
 

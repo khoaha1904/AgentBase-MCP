@@ -1,0 +1,27 @@
+# 02 — Hub, Domain và Repository model
+
+> Trạng thái: Technical design draft — chờ owner review toàn phần.
+
+High-level decision:
+[Hub, Domain và Repository được tổ chức thế nào?](../../present/02-hub-domains-and-repositories.md)
+
+## Phân rã dự kiến
+
+- [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — Domain baseline và
+  quyết định một Git repository có một primary Domain.
+- [`01-core-entities.md`](01-core-entities.md) — Hub, Domain, Repository và
+  ranh giới ownership.
+- [`02-domain-confirmation.md`](02-domain-confirmation.md) — đọc README/docs,
+  đề xuất, cảnh báo và xác nhận Domain.
+- [`03-batch-domain-assignment.md`](03-batch-domain-assignment.md) — gán Domain
+  cho batch và xử lý repository bất thường.
+- [`04-monorepo-scopes.md`](04-monorepo-scopes.md) — Git-root identity và
+  subproject evidence scope.
+- [`05-cross-domain-navigation.md`](05-cross-domain-navigation.md) — liên kết
+  sang Domain khác mà không đổi repository ownership.
+
+## Impact
+
+**Contained change.** Tái sử dụng Domain concept, owner guidance, `part-of` và
+query graph hiện tại. Runtime work sau này giới hạn ở schema/validation cho
+Repository primary Domain và host-skill preflight; không thêm registry/database.

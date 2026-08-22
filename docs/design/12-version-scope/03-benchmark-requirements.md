@@ -1,4 +1,4 @@
-# Agent-driven OKF benchmark contract
+# Agent-driven OKF benchmark requirements
 
 The benchmark measures whether a real explicit host coding agent can use
 AgentBase MCP graph/schema tools to investigate pinned repositories and author

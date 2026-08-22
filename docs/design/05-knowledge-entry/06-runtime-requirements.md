@@ -1,6 +1,6 @@
-# Evidence and OKF contract
+# Evidence and OKF runtime requirements
 
-Current contract for explicit observations, repository-local OKF proposals and
+Current requirements for explicit observations, repository-local OKF proposals and
 the AgentBase concept schema catalog. Google OKF v0.2 is the portable format;
 AgentBase lifecycle fields and types are producer conventions.
 

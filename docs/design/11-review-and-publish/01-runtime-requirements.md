@@ -1,4 +1,4 @@
-# AgentBase-Hub contract
+# AgentBase-Hub runtime requirements
 
 AgentBase-Hub is optional until the first Hub-dependent action. Indexing, graph
 queries and ordinary coding never create Hub state, commits or publication.

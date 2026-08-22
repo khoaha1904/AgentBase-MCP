@@ -128,7 +128,7 @@ and returns visible recovery rather than hidden retry.
 ## Navigation and change rules
 
 For a change, read `docs/README.md`, `specs/CURRENT.md`, this ownership index,
-the single affected domain contract, its public entrypoint and focused tests.
+the single affected design/requirements route, its public entrypoint and focused tests.
 Read a numbered capability only when it is active or directly explains the
 behavior being changed.
 

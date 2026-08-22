@@ -1,0 +1,27 @@
+# 01 — Repository reading
+
+> Trạng thái: Core local reading flow đã implement; remote clone vẫn ngoài scope.
+
+High-level decision:
+[MCP đọc một dự án như thế nào?](../../present/01-how-mcp-reads-a-repository.md)
+
+## Phân rã
+
+- [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — graph, evidence và
+  skill baseline; xác định phần tái sử dụng và gap.
+- [`01-skill-orchestration.md`](01-skill-orchestration.md) — Ingest/Refresh
+  skill điều phối Agent và MCP.
+- [`02-code-graph-lifecycle.md`](02-code-graph-lifecycle.md) — tạo, dùng, làm
+  mới và loại bỏ Code Graph.
+- [`03-source-evidence-resolution.md`](03-source-evidence-resolution.md) — từ
+  graph quay lại source để lấy evidence.
+- [`04-reading-boundaries-and-failures.md`](04-reading-boundaries-and-failures.md)
+  — local/workspace boundary, giới hạn đọc và failure outcome.
+- [`05-runtime-requirements.md`](05-runtime-requirements.md) — current graph,
+  refresh và MCP `AB-*` requirements.
+
+## Implementation delta hiện tại
+
+`use-codebase-memory`, Initial Ingest và Refresh đã nối managed Codebase Memory,
+exact source reads và evidence validation. Graph vẫn private/rebuildable và chỉ
+dùng cho repo local/workspace. Multi-repository orchestration còn ở phần 09.

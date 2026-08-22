@@ -64,8 +64,7 @@ offline and uses fakes, captured responses, disposable Git and fake GitHub HTTP.
 
 ## Documentation
 
-Start at [`docs/README.md`](docs/README.md). It routes agents to one affected
-contract instead of requiring the full documentation set. Current behavior is
-tracked under `docs/contracts/`; numbered `specs/` directories preserve change
-history. Superseded local docs are under ignored `docs/.archived/` and are never
-current authority.
+Start at [`docs/README.md`](docs/README.md). It routes agents to the smallest
+affected product decision or technical design instead of requiring the full
+documentation set. Current behavior is tracked under `docs/design/`; numbered
+`specs/` directories preserve change history.

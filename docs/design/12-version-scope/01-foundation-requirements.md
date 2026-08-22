@@ -1,15 +1,15 @@
-# Foundation contract
+# Foundation requirements
 
 Current accepted repository navigation, architecture controls and deterministic
 foundation behavior. Numbered `specs/` directories record changes and do not
-override this contract after completion.
+override these requirements after completion.
 
 ## Session and history
 
 - **AB-FND-001** — A new session reads `AGENTS.md`, `docs/README.md`,
   `specs/CURRENT.md` and Git status, then loads only the affected domain docs.
-- **AB-FND-002** — Current requirements live under `docs/contracts/` (plus
-  product requirements in `docs/PRODUCT.md`); `specs/CURRENT.md` selects at most
+- **AB-FND-002** — Current product direction lives under `docs/present/` and
+  current design/requirements under `docs/design/`; `specs/CURRENT.md` selects at most
   one active capability and completed numbered capabilities are historical.
 - **AB-FND-003** — Sibling legacy AgentBase repositories are read-only evidence,
   never dependencies or mutation targets.
