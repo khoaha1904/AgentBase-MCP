@@ -1,63 +1,64 @@
-# 08 — Live reference cho dữ liệu dễ thay đổi
+# 08 — Observed snapshots và source references
 
-> Trạng thái: Live-reference/snapshot contract đã có; provider resolution còn deferred.
+> Trạng thái: Snapshot-first repository runtime đã implement; provider observation và freshness automation còn deferred.
 
 ## Câu trả lời ngắn
 
-Giá trị quan trọng, hay thay đổi và thường được hỏi có thể giữ live reference
-kèm snapshot gần nhất. Hub không sao chép hàng loạt config của repository.
+Hub lưu một số giá trị nhỏ, hữu ích dưới dạng **đã quan sát**, kèm source file,
+revision và thời điểm. AgentBase không xây live-reference engine tới từng symbol,
+function hoặc config field.
 
 ```text
-TTL snapshot: 7 ngày
-Source: crawler-api / config/queue.ts / VEHICLE_TTL
-Commit + observed time: abc123 / 2026-08-20
+Observed values:
+- TTL: 7 ngày
+- Batch size: 100
+
+Source: crawler-api / config/queue.ts
+Observed: commit abc123 / 2026-08-22
 ```
+
+Một file reference có thể làm provenance cho nhiều observed values. Hub không
+snapshot toàn bộ config, source hoặc provider response.
 
 ## Khi query
 
-- Có quyền source: Agent resolve reference và trả giá trị hiện tại.
-- Không có quyền: Agent trả snapshot cùng commit/thời điểm và cảnh báo có thể
-  stale.
-- Reference hỏng hoặc không resolve được: giữ snapshot, tạo Question và chờ
-  Refresh hoặc người dùng xử lý.
+- Query bình thường trả snapshot cùng revision/time và freshness warning.
+- Nếu user hỏi **giá trị hiện tại** và source có local/workspace, Agent dùng MCP
+  đọc file/code graph bình thường; không gọi một symbol resolver riêng.
+- Source repository khác chỉ được đọc qua bounded MCP repository access bằng
+  MCP-managed token. Agent không tự dùng `gh` hoặc credential riêng.
+- Không có quyền/source unavailable: trả observed snapshot và nói rõ không xác
+  minh được current value.
+- File reference hỏng: giữ snapshot; Refresh hoặc maintainer có thể đề xuất một
+  shared Question qua proposal để review.
 
-Reference dùng repository, path và symbol/config key; không chỉ dùng số dòng.
-Snapshot chỉ dành cho giá trị nhỏ có ích ở mức knowledge. Snapshot luôn được
-trình bày là giá trị **đã quan sát** tại source revision/thời điểm cụ thể, không
-được diễn đạt như current truth và không cần một TTL engine riêng.
+Snapshot không được diễn đạt như current truth. Exact age/revision được hiển thị;
+không cần một TTL threshold engine hay tự động Refresh.
 
-Nếu giá trị hiện trực tiếp trong code, config hoặc docs và không nhạy cảm,
-Ingest/Refresh có thể ghi snapshot cùng provenance ngay. Nếu phải gọi provider
-CLI mới lấy được tên, ARN hoặc giá trị, Ingest chỉ giữ reference/candidate hoặc
-Question; Domain Enrichment mới resolve và bổ sung theo batch.
+## Khi nào lưu snapshot?
 
-Provider CLI resolution không chạy trong Ingest. Nó thuộc Domain Enrichment
-sau khi người dùng đã login, và chỉ resolve resource/value liên quan tới các
-concept, Questions hoặc relation candidates đang được review.
-
-Nếu source nằm ở GitHub repository khác, việc resolve remote sau này phải đi
-qua MCP và credential do MCP quản lý; agent không tự dùng `gh` hay credential
-riêng. Provider CLI là boundary khác: người dùng login CLI trước, rồi cho phép
-MCP dùng session đó trong luồng enrichment đã xác nhận.
+- Giá trị nhỏ, non-sensitive, dễ đọc và hữu ích khi con người/query xem Hub.
+- Giá trị hiện trực tiếp trong code/config/docs có thể được Ingest/Refresh ghi.
+- Canonical ARN/name/account/region nằm ở external identity metadata khi provider
+  evidence xác minh, không duplicate thành snapshots. Chỉ operational scalar
+  nhỏ mới dùng observed value; provider CLI thuộc Domain Enrichment.
+- Thiếu detail nhỏ không có query value thì bỏ, không snapshot cho đủ coverage.
 
 ## Quyền và dữ liệu nhạy cảm
 
-Hub là một trust boundary chung. Ai có quyền Hub có thể đọc toàn bộ Published
-knowledge; không có ACL theo Domain, concept hoặc field.
+Hub là một trust boundary chung: ai đọc được Hub thì đọc được mọi snapshot.
+Credential, token, secret, signed URL, connection string và dữ liệu nhạy cảm
+tương đương tuyệt đối không được snapshot hoặc publish.
 
-Credential, token, secret và giá trị nhạy cảm tương đương không được phép
-Ingest hoặc publish, dù Hub chạy nội bộ trên GitHub Enterprise. MCP có thể giữ
-tên/reference cho biết một config dùng secret, nhưng không lưu hoặc resolve giá
-trị thật.
+Reference có thể nói config sử dụng một secret hoặc Parameter Store path, nhưng
+không lưu/resolve secret value. Giá trị bị loại không làm các knowledge item an
+toàn khác fail. Secret đã Published phải bị ngừng trả, gỡ qua reviewed proposal
+và rotate ngoài AgentBase khi cần; MVP không xây incident-management system.
 
-Nếu phát hiện trong Ingest/Refresh, MCP bỏ riêng giá trị nhạy cảm, cảnh báo nguồn
-bị loại và cho các item an toàn tiếp tục. Secret đã nằm trong Local Draft bị
-loại khỏi query và không được publish. Nếu đã Published, MCP ngừng trả giá trị,
-cảnh báo maintainer gỡ khỏi Hub và rotate credential liên quan. Phiên bản đầu
-không xây thêm một hệ thống quản lý security incident riêng.
+## Boundary
 
-## Còn để low-level quyết định
-
-- Cú pháp/resolver cho repository, path và symbol.
-- Ngưỡng stale và cách xử lý symbol đổi tên/di chuyển.
-- Thời điểm phát hiện reference hỏng; outcome high-level luôn là tạo Question.
+- Source reference là provenance/file navigation, không phải executable locator.
+- Snapshot là observed knowledge, không phải source thứ hai.
+- Đọc current source là normal MCP source-reading action theo nhu cầu.
+- Provider lookup chỉ chạy trong confirmed Domain Enrichment, không trong Ingest
+  hoặc ordinary Hub query.

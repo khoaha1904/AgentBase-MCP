@@ -67,30 +67,62 @@ Normative OKF source is pinned to commit
 - **AB-OBS-007** — Observation preserves package-private admission, private
   cache, bounded process/session, source integrity and confirmed cleanup.
 
-## Live claims
+## Observed values
 
-- **AB-CLAIM-001** — Distinct claims about one subject/property retain their
-  own stable identity, role and provenance. Conflict never silently merges the
-  claims or selects a canonical winner.
-- **AB-CLAIM-002** — A newly authored volatile implementation/configuration
-  value is an `agentbase.live_claims` reference, not a durable scalar. Each
-  reference binds one same-concept repository source, semantic target and the
-  clean commit or dirty digest observed during authoring; `value` is forbidden.
-- **AB-CLAIM-003** — Durable policy and explicit human decisions may contain a
+- **AB-CLAIM-001 (retired)** — Legacy distinct live-claim identity; superseded
+  by AB-VALUE-001 without reassigning this stable ID.
+- **AB-CLAIM-002 (retired)** — Legacy scalar-forbidden semantic live locator;
+  superseded by snapshot-first AB-VALUE-002/004.
+- **AB-CLAIM-003 (retired)** — Legacy live-claim policy separation; superseded
+  by AB-VALUE-003.
+- **AB-CLAIM-004 (retired)** — Legacy target-kind vocabulary; removed by the
+  clean cutover and not reassigned.
+- **AB-CLAIM-005 (retired)** — Legacy optional live-claim snapshot; superseded
+  by the first-class bounded contract AB-VALUE-002/005.
+- **AB-VALUE-001** — Distinct observed values about one subject/property retain
+  their own stable identity, role and provenance. Conflict never silently merges
+  observations or selects a canonical winner.
+- **AB-VALUE-002** — A useful non-sensitive implementation/configuration or
+  provider-observed operational value
+  may be stored in `agentbase.observed_values` as one bounded scalar/single-line
+  identifier. It binds a source, exact source revision/digest and
+  RFC3339 observation time and is always presented as observed, never current.
+- **AB-VALUE-003** — Durable policy and explicit human decisions may contain a
   literal only as separately attributed Maintainer Guidance. They remain
-  distinguishable from documentation, implementation and configuration claims.
-- **AB-CLAIM-004** — `agentbase.live_claims[].target.kind` is exactly one of
-  `symbol`, `function`, `config-field` or `text`. Concept type names are not
-  live-reference target kinds, and host-agent guidance enumerates the complete
-  vocabulary.
-- **AB-CLAIM-005** — A claim observation may carry one optional non-current
-  `snapshot` only with exact source revision and RFC3339 observed time. It is
-  one scalar or single-line identifier of at most 256 UTF-8 bytes. Multiline,
-  oversized and obviously secret-like values fail validation; proposal review
-  remains the final sensitivity guard.
-- Live-claim IDs are bundle-unique and refresh cannot remove an accepted ID.
-  A later reviewed proposal may move the same semantic reference while all
-  protected knowledge and human guidance keep their normal lifecycle rules.
+  distinguishable from documentation, implementation, configuration and
+  provider observations.
+- **AB-VALUE-004** — One normalized file-level Repository source may support
+  multiple observed values; an optional line span is evidence at the observed
+  revision, not a durable locator. The contract has no symbol/function/config
+  target or resolver instruction. Explicit current-value requests use ordinary
+  authorized MCP source reading.
+- **AB-VALUE-005** — Observed values are finite number/boolean/string scalars of
+  at most 256 UTF-8 bytes and one line. Multiline, oversized and obviously
+  secret-like candidates are filtered with a warning while safe authoring
+  continues; an unsafe entry present in an authored bundle fails proposal
+  validation. Query redacts only that value. Proposal review remains the final
+  sensitivity gate. Values without query value are omitted rather than copied
+  for coverage.
+- **AB-VALUE-006** — An observed value belongs to the concept containing it;
+  `subject` must equal that concept's canonical identity. MCP deterministically
+  creates new IDs and Refresh/Enrichment preserves a matched stream ID,
+  including reviewed source-file moves and later provider observations.
+- **AB-VALUE-007** — Clean repository evidence requires a commit with
+  `dirty: false` and null digest. Dirty evidence requires a digest plus current
+  HEAD when one exists; an unborn repository uses null commit plus digest.
+  Observation time is always required.
+- **AB-VALUE-008** — Provider-derived values enter only a confirmed Domain
+  Enrichment proposal. One normalized provider-observation source may support
+  multiple bounded operational values with role `provider` and retains released profile version, confirmed
+  authority/location, native resource identity, observation time and evidence
+  digest without raw response or credential context. Canonical external identity
+  fields remain solely in Part 06 metadata and are not duplicated as values.
+  Source scope remains stable across observations; evidence digest/time update
+  and are recomputable from persisted normalized source metadata plus associated
+  observed entries.
+- Observed-value IDs are bundle-unique and Refresh omission cannot remove an
+  accepted ID. A reviewed Refresh may update exact attributable value/source
+  state; protected knowledge and human Guidance keep normal lifecycle rules.
 
 ## Refresh contribution lifecycle
 
@@ -214,7 +246,7 @@ Normative OKF source is pinned to commit
   its useful parent.
 - **AB-SCHEMA-027** — `Metric` represents a stable named measure and evidenced
   definition, producer or calculation. A current change-prone numeric
-  observation is not required and remains a live reference rather than
+  observation is not required and remains a bounded observed value rather than
   timeless Metric prose.
 - **AB-SCHEMA-028** — Promotion precedes schema selection. One detected resource
   may be embedded in a parent, or promoted once to the smallest supported role;

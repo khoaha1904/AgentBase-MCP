@@ -96,7 +96,7 @@ checkpoint tự nhiên là trước benchmark mới, trước PR và trước ca
 5. [Knowledge entry](05-knowledge-entry/README.md)
 6. [Cross-repository relations](06-cross-repository-relations/README.md)
 7. [Conflicts, Questions và Guidance](07-conflicts-and-questions/README.md)
-8. [Live references](08-live-references/README.md)
+8. [Observed snapshots and source references](08-live-references/README.md)
 9. [Ingest và Refresh](09-ingest-and-refresh/README.md)
 10. [Query routing](10-query-routing/README.md)
 11. [Review và Publish](11-review-and-publish/README.md)
@@ -111,7 +111,9 @@ checkpoint tự nhiên là trước benchmark mới, trước PR và trước ca
 | 03 | Evidence-bearing candidate/guidance implemented; candidate UI còn deferred |
 | 04 | Catalog 7 implemented; catalog 6 design đã superseded |
 | 05 | Proposal/template/Local Hub foundation implemented; overlay UX còn draft |
-| 06–08 | Contracts/foundation từng phần; Domain Enrichment/provider resolution chưa implement |
+| 06 | Cross-repository relation/identity/enrichment design hoàn tất; runtime chưa implement |
+| 07 | Shared Question/conflict/guidance design hoàn tất; runtime vẫn private-ledger foundation |
+| 08 | Repository snapshot-first runtime implemented; provider/freshness còn deferred |
 | 09 | Single-repository Init + Refresh implemented; batch/enrichment/freshness deferred |
 | 10 | Query foundation implemented; overlay/freshness presentation chưa hoàn chỉnh |
 | 11 | Reviewable batch publication và exact same-Repository Init/Refresh stack implemented |
@@ -132,7 +134,7 @@ Không bắt buộc đi theo số thứ tự. Dependency order hiện tại là:
 → 01 Repository reading
 → 03 Concept discovery
 → 09 Ingest/Refresh orchestration
-→ 06 Relations → 07 Conflicts → 08 Live references
+→ 06 Relations → 07 Conflicts → 08 Observed snapshots
 → 10 Query → 11 Publish
 → 12 Cross-cutting scope check
 ```

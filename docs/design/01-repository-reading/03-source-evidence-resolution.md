@@ -19,8 +19,8 @@ optional small observed snapshot
 
 ## Evidence bắt buộc
 
-Attributed claim phải trỏ được về repository identity, source revision, relative
-path và line span hoặc symbol/config key phù hợp. Graph summary không có exact
+Attributed claim phải trỏ được về repository identity, source revision và
+relative file path; line span là optional evidence hint. Graph summary không có exact
 source chỉ là discovery signal; nó không đủ để trở thành claim.
 
 Không resolve được exact source thì Agent giữ limitation, candidate hoặc
@@ -54,7 +54,6 @@ Domain Enrichment sau nhiều repository mới:
 
 ## Baseline gap
 
-Current evidence model giữ statement và source location nhưng live-claim
-validation đang cấm scalar snapshot. Implementation sau này phải bảo đảm Agent
-đã đọc exact source trước authoring và mở optional observed snapshot có
-provenance; không mở quyền lưu arbitrary source content.
+Current runtime đã hỗ trợ optional bounded snapshot nhưng còn mang semantic live
+target. Phần 08 clean-cutover sang file-level observed values; không mở quyền lưu
+arbitrary source content.

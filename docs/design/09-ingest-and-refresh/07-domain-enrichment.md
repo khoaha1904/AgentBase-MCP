@@ -10,15 +10,16 @@ credential hoặc scan account để tự tìm việc.
 
 ## Input
 
-Domain Enrichment bắt đầu từ Published/local accepted knowledge:
+Domain Enrichment bắt đầu từ knowledge đã merge vào Published Hub `main`:
 
-- Repository concepts và source/provider references;
+- Repository concepts và source/provider references tại exact Published commit;
 - Questions/limitations cần external verification;
 - resource identity và relation candidates;
 - provider/account/region hints đã có evidence.
 
-Repo không local vẫn dùng Hub knowledge/reference. Workflow không clone repo và
-không dựng Code Graph cho remote-only sources.
+Local Draft và repository còn ở open Init/Refresh PR chưa merge không phải
+Enrichment input. Repo không local vẫn dùng Published Hub knowledge/reference;
+workflow không clone repo và không dựng Code Graph cho remote-only sources.
 
 ## Execution
 

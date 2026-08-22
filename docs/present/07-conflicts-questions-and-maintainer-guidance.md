@@ -8,6 +8,10 @@ Hub cho phép nhiều claim mâu thuẫn cùng tồn tại nếu mỗi claim gi�
 Question ghi điều chưa rõ; câu trả lời của người dùng là evidence có phạm vi,
 không phải sự thật tuyệt đối.
 
+Question cũng là shared Hub knowledge. Trước Accept nó nằm trong proposal; sau
+Accept/Publish, máy khác pull Hub có thể đọc cùng trạng thái và provenance.
+Private machine ledger nếu có chỉ là cache dựng lại được, không phải authority.
+
 ## Xung đột được giữ thế nào?
 
 - Nhiều nguồn cùng hỗ trợ một claim được giữ làm provenance.
@@ -53,6 +57,12 @@ Questions không cần chặn từng lần Ingest. Domain Enrichment có thể g
 của nhiều repository trong cùng Domain, lấy thêm provider evidence và cho người
 dùng xử lý theo batch. Mọi câu trả lời, state transition và relation phát sinh
 vẫn tạo Local Draft mới trước khi publish.
+
+Domain Enrichment tự xác minh trước. Kết quả deterministic chỉ cần show cùng
+evidence; trường hợp có lựa chọn hợp lý nhưng chưa đủ authority được hỏi với một
+recommended option; trường hợp chưa có đáp án đáng tin được hỏi trực tiếp cùng
+context/example và có thể defer. Recommendation chưa được người dùng chọn không
+trở thành Maintainer Guidance.
 
 ## Knowledge đã sai hoặc lỗi thời
 

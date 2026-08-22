@@ -6,7 +6,7 @@ import {
   readRepositoryIdentityRecord,
   resolveRepositoryIdentity,
   readHubConcept,
-  readLiveClaims,
+  readObservedValuesForQuery,
   searchHubConcepts,
   traverseHubConcepts,
   type HubQueryMatch,
@@ -18,34 +18,29 @@ import {
   type HubSearchResult,
   type HubTraversalOptions,
   type HubTraversalResult,
-  type LiveClaim,
+  type ObservedValue,
   type RepositoryIdentityHints,
   type RepositoryIdentityResolution,
 } from "../../../core/knowledge/index.ts";
 import { runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
 import type { AdmittedLocalHubState } from "../../../core/hub/index.ts";
+import { listPendingHubProposals } from "../review/pending.ts";
 
 export type HubQueryGit = (request: GitRequest) => Promise<GitOutput>;
 
-export type LiveSourceBinding = Readonly<{
-  repositoryId: string;
-  commit: string | null;
-  dirty: boolean;
-  dirtyDigest: string | null;
-  limitations: readonly string[];
+export type HubObservedValue = ObservedValue & Readonly<{
+  age_milliseconds: number;
+  source_access: "not-checked";
+  sensitivity_warning?: "obvious-sensitive-value-redacted";
 }>;
 
-export type BoundLiveClaim = LiveClaim & Readonly<{
-  status: "ready" | "unavailable" | "repository-mismatch";
-  currentSource?: LiveSourceBinding;
-  limitations: readonly string[];
-}>;
-
-export type HubLiveEvidence = Readonly<{
+export type HubObservedValues = Readonly<{
   commit: string;
   path: string;
   conceptId: string;
-  claims: readonly BoundLiveClaim[];
+  publication_layer: "published" | "local-draft";
+  proposal_id?: string;
+  values: readonly HubObservedValue[];
 }>;
 
 export type InitialIngestHubContext = Readonly<{
@@ -135,26 +130,42 @@ export function readActiveHubConcept(
   return readHubConcept(reader(localHub, git), relativePath);
 }
 
-export async function readActiveHubLiveEvidence(
+export async function readActiveHubObservedValues(
   localHub: AdmittedLocalHubState,
   relativePath: string,
-  source: LiveSourceBinding | undefined,
   git: HubQueryGit = runGit,
-): Promise<HubLiveEvidence> {
+  now: () => Date = () => new Date(),
+): Promise<HubObservedValues> {
   const normalized = normalizeHubConceptPath(relativePath);
   const currentReader = reader(localHub, git);
   const concept = parseConceptDocument(normalized, await currentReader.readMarkdown(normalized));
-  const claims = readLiveClaims(concept).map((claim): BoundLiveClaim => {
-    const repositoryId = claim.source.resource.match(/^repository:\/\/(repository-[a-z0-9-]+-[a-f0-9]{12})\//)?.[1];
-    if (!source) return { ...claim, status: "unavailable", limitations: ["no authorized repository is bound"] };
-    if (source.repositoryId !== repositoryId) return {
-      ...claim, status: "repository-mismatch", currentSource: source,
-      limitations: [`authorized repository ${source.repositoryId} does not match ${repositoryId ?? "the claim source"}`],
-    };
+  const observedAt = now().getTime();
+  if (!Number.isFinite(observedAt)) throw new Error("observed-value query time is invalid");
+  const values = readObservedValuesForQuery(concept).map((value): HubObservedValue => {
+    const { sensitivityWarning, ...snapshot } = value;
     return {
-      ...claim, status: "ready", currentSource: source,
-      limitations: [...source.limitations, ...(source.dirty ? ["current source is dirty; observation is not accepted knowledge"] : [])],
+      ...snapshot,
+      age_milliseconds: observedAt - Date.parse(value.observed.at),
+      source_access: "not-checked",
+      ...(sensitivityWarning ? { sensitivity_warning: sensitivityWarning } : {}),
     };
   });
-  return { commit: localHub.activeHead, path: normalized, conceptId: concept.conceptId, claims };
+  if (localHub.activeHead === localHub.remoteBase) return {
+    commit: localHub.activeHead,
+    path: normalized,
+    conceptId: concept.conceptId,
+    publication_layer: "published",
+    values,
+  };
+  const pending = await listPendingHubProposals(localHub, git);
+  const proposal = pending.at(-1);
+  if (!proposal || proposal.commit !== localHub.activeHead) throw new Error("active Local Draft has no attributable pending proposal");
+  return {
+    commit: localHub.activeHead,
+    path: normalized,
+    conceptId: concept.conceptId,
+    publication_layer: "local-draft",
+    proposal_id: proposal.id,
+    values,
+  };
 }

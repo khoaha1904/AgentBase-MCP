@@ -4,6 +4,7 @@ import { isDeepStrictEqual } from "node:util";
 
 import { computeOkfTreeDigest, loadOkfBundle } from "../documents/okf-bundle.ts";
 import { validateAgentBaseDraft, type ConceptDocument, type OkfValue } from "../documents/okf-document.ts";
+import { parseQuestionDocument, validateQuestionTransition } from "../governance/questions.ts";
 import { validateConceptAgainstSchema } from "../schemas/catalog.ts";
 
 export type ProposalState = "prepared" | "generated";
@@ -172,7 +173,7 @@ function unknownValueFailures(base: ConceptDocument, proposed: ConceptDocument):
   for (const [key, value] of Object.entries(base.frontmatter)) {
     if (key === "agentbase") {
       const previous = { ...(mapping(value) ?? {}) }, next = { ...(mapping(proposed.frontmatter[key]) ?? {}) };
-      delete previous.live_claims; delete next.live_claims;
+      delete previous.observed_values; delete next.observed_values;
       if (base.type === "Repository" && proposed.type === "Repository") {
         const previousRepository = { ...(mapping(previous.repository) ?? {}) };
         const nextRepository = { ...(mapping(next.repository) ?? {}) };
@@ -218,12 +219,23 @@ export function validateBundleProposal(
   for (const concept of proposed.concepts.values()) {
     const base = current.concepts.get(concept.conceptId);
     const changed = !base || !bytes(currentBundleRoot, base.path).equals(bytes(proposedRoot, concept.path));
-    if (changed && (!base || isMutableAgentBaseDraft(base))) {
+    if (changed && concept.type === "Question") {
+      try {
+        const nextQuestion = parseQuestionDocument(concept);
+        const previousQuestion = base?.type === "Question" ? parseQuestionDocument(base) : undefined;
+        failures.push(...validateQuestionTransition(previousQuestion, nextQuestion)
+          .map((failure) => `${concept.path}: ${failure}`));
+      } catch (error) {
+        failures.push(error instanceof Error ? error.message : `${concept.path}: Question validation failed`);
+      }
+    } else if (changed && (!base || isMutableAgentBaseDraft(base))) {
       failures.push(...(!base && options.maintainerGuidance?.conceptId === concept.conceptId
         ? maintainerGuidanceFailures(concept, options.maintainerGuidance)
         : validateAgentBaseDraft(concept)));
     }
-    if (changed && base && isMutableAgentBaseDraft(base)) failures.push(...unknownValueFailures(base, concept));
+    if (changed && base && isMutableAgentBaseDraft(base) && concept.type !== "Question") {
+      failures.push(...unknownValueFailures(base, concept));
+    }
     failures.push(...continuitySourceFailures(concept, baseDraftPaths));
   }
   const producerValidation = { passed: failures.length === 0, failures: failures.sort(), warnings: proposed.warnings };
@@ -257,6 +269,8 @@ export function diffBundleProposal(currentBundleRoot: string, proposalRoot: stri
     }
     if (inProposed) return { path: relative, change: "modified", allowed: true };
     const concept = current.concepts.get(relative.endsWith(".md") ? relative.slice(0, -3) : "");
+    if (concept?.type === "Question") return { path: relative, change: "prohibited-deletion", allowed: false,
+      reason: "Question documents require a dedicated governed transition" };
     if (concept && isMutableAgentBaseDraft(concept)) return { path: relative, change: "deleted-agentbase-draft", allowed: true };
     return { path: relative, change: "prohibited-deletion", allowed: false, reason: "existing content is protected by default" };
   });

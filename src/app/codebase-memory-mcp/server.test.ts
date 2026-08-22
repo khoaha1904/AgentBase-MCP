@@ -7,11 +7,15 @@ import test from "node:test";
 import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 
 import type { ScopedSession } from "../../providers/codebase-memory/index.ts";
-import { createHubRuntimeActions, HUB_OKF_TOOLS } from "../hub-okf/index.ts";
+import {
+  createHubRuntimeActions, HUB_OKF_TOOLS, readActiveHubObservedValues,
+} from "../hub-okf/index.ts";
+import {
+  normalizeRepositoryObservedValues, parseConceptDocument, renderConceptDocument,
+} from "../../core/knowledge/index.ts";
 import { createAgentBaseMcpServer } from "./server.ts";
 import { SAFE_TOOLS } from "./tool-manifest.ts";
 import { OKF_SCHEMA_TOOLS } from "./okf-schema-tools.ts";
-import { runGit } from "../../providers/github-hub/index.ts";
 
 test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official client lists and calls the safe server surface", async () => {
   const repo = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-server-repo-"));
@@ -19,11 +23,14 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
   let closes = 0;
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const runtimeActions = createHubRuntimeActions({ HOME: state, XDG_CONFIG_HOME: path.join(state, "config") }, path.join(state, "hub-runtime"));
-  let liveSource: unknown;
+  let observedReads = 0;
   const current = createAgentBaseMcpServer({
     projectRoot: "/agentbase",
     stateRoot: state,
-    hubActions: { ...runtimeActions, async readLiveEvidence(_relativePath, source) { liveSource = source; return source; } },
+    hubActions: { ...runtimeActions, async readObservedValues(relativePath) {
+      observedReads += 1;
+      return { path: relativePath, values: [], source_access: "not-checked" };
+    } },
     providerFactory: async () => ({
       pid: 991,
       tools: SAFE_TOOLS,
@@ -47,6 +54,8 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
     const finalizeTool = tools.tools.find((tool) => tool.name === "finalize_hub_okf_proposal");
     assert.match(prepareTool?.description ?? "", /changed paths, observed source state and known gaps/);
     assert.ok("lifecycle_intents" in ((finalizeTool?.inputSchema.properties ?? {}) as Record<string, unknown>));
+    assert.match(JSON.stringify(finalizeTool?.inputSchema), /observation_refs/);
+    assert.doesNotMatch(JSON.stringify(finalizeTool?.inputSchema), /claim_ids/);
     const hubStatus = await client.callTool({ name: "get_hub_status", arguments: {} });
     assert.equal(hubStatus.isError, undefined);
     assert.match(hubStatus.content[0]?.type === "text" ? hubStatus.content[0].text : "", /unconfigured/);
@@ -85,9 +94,10 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
     assert.equal(before.isError, true);
     const indexed = await client.callTool({ name: "index_repository", arguments: { repo_path: repo } });
     assert.equal(indexed.content[0]?.type, "text");
-    const live = await client.callTool({ name: "read_hub_live_evidence", arguments: { path: "systems/checkout.md" } });
-    assert.equal(live.isError, undefined);
-    assert.match(JSON.stringify(liveSource), /repository-agentbase-server-repo-/);
+    const observed = await client.callTool({ name: "read_hub_observed_values", arguments: { path: "systems/checkout.md" } });
+    assert.equal(observed.isError, undefined);
+    assert.match(observed.content[0]?.type === "text" ? observed.content[0].text : "", /"source_access":"not-checked"/);
+    assert.equal(observedReads, 1);
     const queried = await client.callTool({ name: "get_architecture", arguments: { project: "fixture" } });
     assert.equal(queried.content[0]?.type === "text" ? queried.content[0].text : "", "forwarded:get_architecture");
   } finally {
@@ -99,60 +109,77 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
   assert.equal(closes, 1);
 });
 
-test("[AB-QUERY-006..008][SC-001/003] host workflow rereads changed source and never falls back for missing evidence", async () => {
-  const repo = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-live-source-"));
-  const state = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-live-state-"));
+test("[AB-QUERY-006..009][SC-001/003] observed-value query never binds or probes repository source", async () => {
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-observed-source-"));
+  const state = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-observed-state-"));
   const setting = path.join(repo, "config.ts");
-  fs.writeFileSync(setting, "export const SESSION_TTL_DAYS = 7;\n");
-  await runGit({ args: ["init", "-b", "main"], cwd: repo, operation: "initialize live source" });
-  await runGit({ args: ["add", "config.ts"], cwd: repo, operation: "stage live source" });
-  await runGit({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit", "-m", "fixture"],
-    cwd: repo, operation: "commit live source", commitTimestamp: "2026-08-17T00:00:00Z" });
+  fs.writeFileSync(setting, "export const SESSION_TTL_DAYS = 30;\n");
+  const baseCommit = "1".repeat(40), draftCommit = "2".repeat(40);
+  const repositoryId = "repository-checkout-123456789abc";
+  const authored = parseConceptDocument("systems/checkout.md", [
+    "---", "type: System", "status: draft",
+    "generated: { by: agentbase/0.0.0, at: '2026-08-17T00:00:00Z' }",
+    "sources:", "  - id: ttl-source", `    resource: repository://${repositoryId}/config.ts`,
+    "agentbase:", "  observed_values:", "    - subject: systems/checkout",
+    "      property: session.ttl", "      role: configuration", "      value: 7", "      source_id: ttl-source",
+    "---", "# Checkout",
+  ].join("\n"));
+  const concept = normalizeRepositoryObservedValues(authored, {
+    repositoryId, sourceState: { commit: "3".repeat(40), dirty: false, dirtyDigest: null },
+    observedAt: "2026-08-17T00:00:00Z",
+  });
+  const conceptBytes = renderConceptDocument(concept);
+  const queryGit = async (request: Readonly<{ operation: string }>) => ({
+    stdout: request.operation === "read local Hub concept" ? conceptBytes
+      : request.operation === "list pending ancestry" ? `${draftCommit}\n`
+        : request.operation === "read pending proposal trailers" ? [
+          "AgentBase-Proposal-ID: abcdef0123456789abcdef01",
+          "AgentBase-Subject: systems/checkout",
+          `AgentBase-Source-ID: ${repositoryId}`,
+          `AgentBase-Evidence-Digest: sha256:${"4".repeat(64)}`,
+          `AgentBase-Diff-Digest: sha256:${"5".repeat(64)}`,
+          "AgentBase-Schema-Catalog: 7.0.0",
+          "AgentBase-Proposal-Mode: refresh",
+        ].join("\n")
+          : request.operation === "resolve pending proposal parent" ? `${baseCommit}\n` : "",
+    stderr: "",
+  });
+  const queried = await readActiveHubObservedValues({
+    kind: "local-only", root: repo, localHubId: "6".repeat(24), baseCommit,
+    remoteBase: baseCommit, activeHead: draftCommit, catalogVersion: "7.0.0",
+  }, "systems/checkout.md", queryGit, () => new Date("2026-08-22T00:00:00Z"));
+  assert.equal(queried.publication_layer, "local-draft");
+  assert.equal(queried.proposal_id, "abcdef0123456789abcdef01");
+  assert.equal(queried.values[0]?.age_milliseconds, 432_000_000);
+  assert.equal(queried.values[0]?.source_access, "not-checked");
   const runtimeActions = createHubRuntimeActions({ HOME: state, XDG_CONFIG_HOME: path.join(state, "config") }, path.join(state, "hub"));
-  const sources: Array<{ repositoryId: string; dirty: boolean; dirtyDigest: string | null }> = [];
+  let reads = 0;
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const current = createAgentBaseMcpServer({
     projectRoot: "/agentbase", stateRoot: state,
-    hubActions: { ...runtimeActions, async readLiveEvidence(_path, source) {
-      assert.ok(source); sources.push(source);
-      return { claims: [
-        { id: "AB-CLAIM-ttl", role: "configuration", status: "ready", target: { kind: "symbol", name: "SESSION_TTL_DAYS" }, currentSource: source },
-        { id: "AB-CLAIM-other", role: "documentation", status: "repository-mismatch", limitations: ["claim belongs to another repository"] },
-      ] };
+    hubActions: { ...runtimeActions, async readObservedValues(relativePath) {
+      reads += 1;
+      return { commit: "a".repeat(40), path: relativePath, conceptId: "systems/checkout",
+        publication_layer: "published", values: [{ id: `AB-OBS-${"b".repeat(24)}`, value: 7,
+          observed: { commit: "c".repeat(40), dirty: false, dirtyDigest: null, at: "2026-08-17T00:00:00Z" },
+          age_milliseconds: 432_000_000, source_access: "not-checked" }] };
     } },
     providerFactory: async () => ({
       pid: 992, tools: SAFE_TOOLS,
-      async invoke(name, argumentsValue) {
-        if (name === "search_graph") return { content: [{ type: "text", text: fs.existsSync(setting)
-          ? "SESSION_TTL_DAYS config.ts:1" : "unavailable: SESSION_TTL_DAYS was not found" }] };
-        if (name === "get_code_snippet") return { content: [{ type: "text", text: fs.existsSync(setting)
-          ? fs.readFileSync(setting, "utf8") : "unavailable: no current snippet" }] };
-        return { content: [{ type: "text", text: `forwarded:${name}:${JSON.stringify(argumentsValue)}` }] };
-      },
+      async invoke(name, argumentsValue) { return { content: [{ type: "text", text: `forwarded:${name}:${JSON.stringify(argumentsValue)}` }] }; },
       async close() { return { status: "clean", pid: 992, graceful: true, forced: false, stderrBytes: 0 }; },
     }),
   });
-  const client = new Client({ name: "agentbase-live-test", version: "0.0.0" });
+  const client = new Client({ name: "agentbase-observed-test", version: "0.0.0" });
   try {
     await current.connect(serverTransport); await client.connect(clientTransport);
     await client.callTool({ name: "index_repository", arguments: { repo_path: repo } });
-    const bound = await client.callTool({ name: "read_hub_live_evidence", arguments: { path: "systems/checkout.md" } });
-    assert.match(bound.content[0]?.type === "text" ? bound.content[0].text : "", /repository-mismatch/);
-    const first = await client.callTool({ name: "get_code_snippet", arguments: { qualified_name: "SESSION_TTL_DAYS", project: "fixture" } });
-    assert.match(first.content[0]?.type === "text" ? first.content[0].text : "", /7/);
-
-    fs.writeFileSync(setting, "export const SESSION_TTL_DAYS = 30;\n");
-    const dirty = await client.callTool({ name: "read_hub_live_evidence", arguments: { path: "systems/checkout.md" } });
-    assert.match(dirty.content[0]?.type === "text" ? dirty.content[0].text : "", /\"dirty\":true/);
-    const changed = await client.callTool({ name: "get_code_snippet", arguments: { qualified_name: "SESSION_TTL_DAYS", project: "fixture" } });
-    const changedText = changed.content[0]?.type === "text" ? changed.content[0].text : "";
-    assert.match(changedText, /30/); assert.doesNotMatch(changedText, /= 7/);
-    assert.equal(sources.at(-1)?.dirty, true); assert.match(sources.at(-1)?.dirtyDigest ?? "", /^sha256:[a-f0-9]{64}$/);
-
-    fs.rmSync(setting);
-    const missing = await client.callTool({ name: "get_code_snippet", arguments: { qualified_name: "SESSION_TTL_DAYS", project: "fixture" } });
-    const missingText = missing.content[0]?.type === "text" ? missing.content[0].text : "";
-    assert.match(missingText, /unavailable/); assert.doesNotMatch(missingText, /7|30/);
+    const snapshot = await client.callTool({ name: "read_hub_observed_values", arguments: { path: "systems/checkout.md" } });
+    const snapshotText = snapshot.content[0]?.type === "text" ? snapshot.content[0].text : "";
+    assert.match(snapshotText, /\"value\":7/);
+    assert.match(snapshotText, /\"source_access\":\"not-checked\"/);
+    assert.doesNotMatch(snapshotText, /SESSION_TTL_DAYS|repositoryRoot|currentSource/);
+    assert.equal(reads, 1);
   } finally {
     await client.close(); await current.close();
     fs.rmSync(repo, { recursive: true, force: true }); fs.rmSync(state, { recursive: true, force: true });

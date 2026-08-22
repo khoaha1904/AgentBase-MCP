@@ -17,7 +17,7 @@ import {
   assertConfirmedDomainAssignment,
   validateOkfRelationships,
   validatePublishableAgentBaseDraft,
-  validateBundleLiveClaims,
+  validateBundleObservedValues,
   validateBundleProposal,
   type ProposalDiff,
   type ConfirmedDomain,
@@ -36,6 +36,7 @@ export type PrepareNewHubOptions = Readonly<{
   evidenceDigest: string;
   signals: readonly string[];
   selectedSchemas?: readonly string[];
+  questionPaths?: readonly string[];
   createdAt: string;
 }>;
 export type PrepareNewLocalHubOptions = Omit<PrepareNewHubOptions, "hub"> & Readonly<{ localHubId: string }>;
@@ -75,8 +76,8 @@ export function prepareNewHubProposal(
     : selectOkfConceptSchemas(options.signals).map((item) => item.type);
   const authored = loadOkfBundle(options.authoredBundleRoot, { requireAgentBaseRootIndex: true });
   const base = loadOkfBundle(options.hubBundleRoot);
-  const liveClaimFailures = validateBundleLiveClaims(authored.concepts.values());
-  if (liveClaimFailures.length) throw new Error(`authored live claims failed validation: ${liveClaimFailures.join("; ")}`);
+  const observedValueFailures = validateBundleObservedValues(authored.concepts.values());
+  if (observedValueFailures.length) throw new Error(`authored observed values failed validation: ${observedValueFailures.join("; ")}`);
   for (const relative of base.files.filter((item) => path.posix.basename(item) === "index.md")) {
     const target = path.join(options.authoredBundleRoot, ...relative.split("/"));
     if (!fs.existsSync(target) || !preservesNonblankLines(
@@ -85,7 +86,17 @@ export function prepareNewHubProposal(
     )) throw new Error(`new Hub proposal must preserve existing index lines: ${relative}`);
   }
   const createdIdentities = new Set<string>();
+  const questionPaths = new Set(options.questionPaths ?? []);
   for (const concept of authored.concepts.values()) {
+    if (concept.type === "Question") {
+      const previous = base.concepts.get(concept.conceptId);
+      const changed = !previous || !fs.readFileSync(path.join(options.hubBundleRoot, previous.path))
+        .equals(fs.readFileSync(path.join(options.authoredBundleRoot, concept.path)));
+      if (changed && !questionPaths.has(concept.path)) {
+        throw new Error(`Question document change was not produced by the dedicated renderer: ${concept.path}`);
+      }
+      continue;
+    }
     if (!base.concepts.has(concept.conceptId) && !selected.includes(concept.type)) {
       throw new Error(`authored concept requires unselected schema: ${concept.type}`);
     }

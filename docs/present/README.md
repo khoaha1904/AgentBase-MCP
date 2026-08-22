@@ -48,7 +48,7 @@ liệu mơ hồ, không tự chọn một nguồn xung đột làm sự thật v
 5. [Kiến thức từ repository được đưa vào Hub thế nào?](05-how-repository-knowledge-enters-the-hub.md)
 6. [Quan hệ giữa nhiều repository và nhiều Domain](06-cross-repository-and-cross-domain-relationships.md)
 7. [Dữ liệu xung đột, Questions và Maintainer Guidance](07-conflicts-questions-and-maintainer-guidance.md)
-8. [Live reference cho dữ liệu dễ thay đổi](08-live-references-for-change-prone-values.md)
+8. [Observed snapshots và source references](08-live-references-for-change-prone-values.md)
 9. [Ingest và Refresh](09-ingest-and-refresh.md)
 10. [Query từ Code Graph và Hub](10-querying-code-graph-and-hub.md)
 11. [Review và Publish](11-review-accept-and-publish.md)
@@ -61,7 +61,7 @@ Cả 12 phần high-level đã được review như một tổng thể.
 | Phần | Implementation hiện tại |
 |---|---|
 | 01–05 | Có foundation chạy được: local Code Graph, catalog 7, OKF template, proposal và Local Hub |
-| 06–08 | Có provenance, protected evidence, Questions/live-reference foundation; cross-repository enrichment còn deferred |
+| 06–08 | Relation/Question design đã hoàn tất; observed snapshot foundation có, source/provider enrichment còn deferred |
 | 09 | Single-repository Initial Ingest và Refresh đã implement/qualify; batch, Domain Enrichment và freshness report chưa implement |
 | 10 | Query Hub và exact local-source routing có foundation; overlay/freshness presentation chưa hoàn chỉnh |
 | 11 | Review, Accept, rich batch PR và exact same-Repository Init/Refresh PR stack đã có; MCP không merge hoặc rebase các Init độc lập |

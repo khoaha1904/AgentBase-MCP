@@ -4,7 +4,6 @@ import { fromJsonSchema, McpServer, type CallToolResult, type Transport } from "
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 
 import { callHubOkfTool, HUB_OKF_TOOLS, tryCreateHubRuntimeActions, type HubOkfToolName, type HubToolActions } from "../hub-okf/index.ts";
-import { discoverRepositorySourceState } from "../repository-okf/index.ts";
 import { GatewaySession, type GatewaySessionOptions } from "./gateway-session.ts";
 import { SAFE_TOOLS } from "./tool-manifest.ts";
 import { callOkfSchemaTool, OKF_SCHEMA_TOOLS, type OkfSchemaToolName } from "./okf-schema-tools.ts";
@@ -23,13 +22,10 @@ export function createAgentBaseMcpServer(options: GatewaySessionOptions & Readon
   for (const tool of HUB_OKF_TOOLS) {
     server.registerTool(tool.name, { description: tool.description, inputSchema: fromJsonSchema(tool.inputSchema) },
       async (argumentsValue): Promise<CallToolResult> => {
-        const source = tool.name === "read_hub_live_evidence" && gateway.repositoryRoot
-          ? discoverRepositorySourceState(gateway.repositoryRoot) : undefined;
         return callHubOkfTool(
           tool.name as HubOkfToolName,
           argumentsValue as Record<string, unknown>,
           hubActions,
-          source ? { liveSource: source } : {},
         );
       });
   }

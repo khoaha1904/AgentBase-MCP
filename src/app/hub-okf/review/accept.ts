@@ -15,8 +15,6 @@ import {
   releaseHubMutationLock,
   writeAtomicJson,
 } from "./proposal-state.ts";
-import { readQuestionProposalAttachment } from "../authoring/question-recovery.ts";
-import { applyQuestionDeclarations } from "../authoring/questions.ts";
 
 export type AcceptHubOptions = Readonly<{
   stateRoot: string;
@@ -82,7 +80,6 @@ export async function acceptHubProposal(options: AcceptHubOptions): Promise<Loca
   if (proposal.baseCommit !== options.localHub.activeHead) throw new Error("local Hub advanced after proposal review");
   const bundleRoot = path.join(options.proposalRoot, "bundle");
   if (computeOkfTreeDigest(bundleRoot) !== proposal.treeDigest) throw new Error("reviewed proposal bytes changed after inspection");
-  const questions = readQuestionProposalAttachment(options.proposalRoot, proposal);
   const lock = acquireHubMutationLock(options.stateRoot, `accept:${proposal.id}`);
   const transactionRoot = path.join(path.resolve(options.stateRoot), "transactions", `accept-${proposal.id}`);
   const candidateRoot = path.join(transactionRoot, "candidate");
@@ -141,8 +138,6 @@ export async function acceptHubProposal(options: AcceptHubOptions): Promise<Loca
       acceptedAt,
     });
     writeAtomicJson(path.join(options.proposalRoot, "accepted.json"), accepted);
-    if (questions) applyQuestionDeclarations(options.stateRoot, options.localHub, questions.declarations,
-      proposal.id, questions.createdAt, questions.sourceRepositoryId, questions.claims);
     writeAtomicJson(transactionPath, { phase: "advanced", proposalId: proposal.id, originalHead: current, acceptedCommit, candidateRoot });
     await git({ args: ["worktree", "remove", "--force", candidateRoot], cwd: options.localHub.root, operation: "remove accept candidate" });
     fs.rmSync(transactionRoot, { recursive: true, force: true });

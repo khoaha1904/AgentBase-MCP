@@ -13,7 +13,7 @@ Mỗi loại knowledge giữ identity tự nhiên trong OKF/Hub, còn proposal c
 | Concept | normalized OKF path không có `.md` | proposal thay đổi file đó |
 | Claim có cấu trúc | stable claim ID trong concept | proposal thay đổi concept |
 | Relation | source concept + predicate + target identity | proposal chứa edge |
-| Question | stable governed-question ID | proposal attachment/guidance proposal |
+| Question | stable ID + `questions/<id>.md` | proposal changes shared document |
 | Evidence | source ID trong concept + repository URI | proposal chứa evidence |
 | Navigation index | exact path/line dependency | proposal chứa navigation change |
 | Proposal/change set | proposal ID + accepted Git commit + diff digest | publication unit |
@@ -33,6 +33,6 @@ document chứa nó. Không thêm ID cho mọi paragraph hoặc YAML field.
 
 ## Baseline reuse
 
-Giữ `ProposalMetadata`, `LocalProposal`, commit trailers, OKF concept path,
-live-claim ID và governed-question ID hiện tại. Không migration Hub content cho
-publication unit.
+Giữ `ProposalMetadata`, `LocalProposal`, commit trailers, OKF concept path và
+stable observed-value ID. Question document clean cutover thuộc phần 07; publication unit
+vẫn là proposal commit và không cần một parallel database.

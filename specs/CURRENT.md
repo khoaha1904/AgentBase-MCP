@@ -1,7 +1,24 @@
 # Current capability
 
-Active capability: None. Most recent completed:
-[`026-independent-hub-prs`](026-independent-hub-prs/spec.md).
+Active capability: None.
+Most recent completed: [`028-shared-question-documents`](028-shared-question-documents/spec.md).
+
+Capability 028 replaces the unpublished private Question ledger/sidecar with
+bounded shared Question Markdown in the ordinary Hub proposal tree. Exact-
+revision answers propose Guidance plus Question transition atomically; accepted
+state remains unchanged until ordinary Accept. Another state root rebuilds the
+same Question view from Hub, stale answers and orphan Guidance fail before
+mutation, and generic Ingest/Refresh cannot edit Question bytes outside exact
+dedicated-renderer paths. The complete 50-test offline gate passes.
+
+Capability 027 clean-cuts the unpublished live-reference contract into small,
+readable repository observed-value snapshots. Finalize owns deterministic IDs,
+exact source state and the Markdown view; Refresh reconciles per Repository and
+Questions use natural observation references. Snapshot query labels exact Hub
+layer/age without probing source access and redacts an unsafe historical scalar
+without hiding safe siblings. Provider observations, automated freshness and
+shared Question documents remain deferred. The complete 50-test offline gate
+passes.
 
 Capability 026 separates local draft storage order from publication dependency.
 Independent Repository Init proposals may be reviewed in parallel against the
@@ -347,5 +364,3 @@ embedded. This is a stability diagnostic, not a hard failure, and no third run
 was started. Because recovery prose changed under the existing V15 prompt name,
 these runs are mutually comparable but not prompt-identical to older V15 runs;
 future prompt behavior changes require a new AB-BENCH-024 identity.
-
-Most recent completed: [`022-single-repository-ingest`](022-single-repository-ingest/spec.md).

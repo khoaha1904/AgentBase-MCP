@@ -64,6 +64,7 @@ export {
   createRepositorySourceResource,
   OkfValidationError,
   parseConceptDocument,
+  parseRepositorySourceResource,
   renderConceptDocument,
   repositorySourceResources,
   validateAgentBaseDraft,
@@ -72,6 +73,7 @@ export {
   type OkfFrontmatter,
   type OkfScalar,
   type OkfValue,
+  type RepositorySourceResource,
   type VerificationEvent,
 } from "./documents/okf-document.ts";
 export { computeOkfTreeDigest, loadOkfBundle, type LoadOkfBundleOptions, type OkfBundle } from "./documents/okf-bundle.ts";
@@ -118,12 +120,37 @@ export {
   type RepositoryIdentityResolution,
 } from "./governance/repository-identity.ts";
 export {
-  readLiveClaims,
-  validateBundleLiveClaims,
-  type LiveClaim,
-  type LiveClaimRole,
-  type LiveClaimTargetKind,
-} from "./governance/live-claims.ts";
+  createObservedValueId,
+  normalizeRepositoryObservedValues,
+  observedValueSafetyFailure,
+  readObservedValues,
+  readObservedValuesForQuery,
+  renderObservedValuesSection,
+  validateBundleObservedValues,
+  type NormalizeRepositoryObservedValuesOptions,
+  type ObservedValue,
+  type ObservedValueIdInput,
+  type ObservedValueRole,
+  type ObservedValueScalar,
+  type QueryObservedValue,
+  type RepositoryObservedValueState,
+} from "./governance/observed-values.ts";
+export {
+  createQuestionId,
+  mergeOpenQuestion,
+  parseQuestionDocument,
+  renderQuestionBody,
+  renderQuestionDocument,
+  renderQuestionIndex,
+  resolveQuestion,
+  validateQuestionTransition,
+  type CandidateEvidenceQuestionReference,
+  type OwnedItemQuestionReference,
+  type QuestionKind,
+  type QuestionReference,
+  type QuestionState,
+  type SharedQuestion,
+} from "./governance/questions.ts";
 export {
   applyBundleProposal,
   recoverBundleSwitch,

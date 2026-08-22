@@ -28,7 +28,9 @@ Query thêm derived information cạnh result, không rewrite Markdown:
 observed 47 days ago at revision abc123
 ```
 
-Nếu authorized local source được bind:
+Ordinary snapshot query không probe source và trả `not-checked`. Nếu một
+explicit current-source/Refresh operation đã có authorized source state, response
+có thể bổ sung:
 
 - exact source match: observed revision still matches current source;
 - source advanced: refresh may be useful;
@@ -54,7 +56,7 @@ không push thẳng `main` và không kích hoạt Refresh.
 
 ## Baseline gap
 
-Current live-evidence query chỉ có `ready`, `unavailable` và
-`repository-mismatch`; nó chưa compare observed/current revision hoặc render
-age. Proposal/source state đã có phần lớn revision/time inputs, nhưng multi-source
-contribution freshness và derived report chưa implemented.
+Legacy live-evidence query chỉ có `ready`, `unavailable` và
+`repository-mismatch`; snapshot-first runtime chưa replace contract đó hoặc
+render age. Proposal/source state đã có phần lớn revision/time inputs, nhưng
+multi-source contribution freshness và derived report chưa implemented.

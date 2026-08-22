@@ -10,9 +10,9 @@ import {
   getOkfConceptSchema,
   loadOkfBundle,
   parseConceptDocument,
-  readLiveClaims,
+  readObservedValues,
   validateAgentBaseDraft,
-  validateBundleLiveClaims,
+  validateBundleObservedValues,
   validateConceptAgainstSchema,
   validateOkfRelationships,
 } from "../../src/core/knowledge/index.ts";
@@ -22,7 +22,7 @@ const projectRoot = path.resolve(import.meta.dirname, "../..");
 const runIdPattern = /^\d{4}-\d{2}-\d{2}T\d{6}Z$/;
 const authoringGoal = "okf-v0.2-semantic-authoring-v1";
 const assessmentLimitations = [
-  "Deterministic source-path checks do not prove that authored claims are semantically supported; human review is required.",
+  "Deterministic source-path checks do not prove that authored observations are semantically supported; human review is required.",
   "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept.",
 ];
 
@@ -371,23 +371,22 @@ function assessConflictVisibility(conflicts, concepts, repositoryId) {
   return { visible, required: conflicts.length, findings };
 }
 
-function assessLiveEvidence(expectations, concepts) {
+function assessObservedValues(expectations, concepts) {
   if (!Array.isArray(expectations) || !expectations.length) return { matched: 0, required: 0, findings: [] };
-  const claims = [...concepts.values()].flatMap((concept) => {
-    try { return readLiveClaims(concept); } catch { return []; }
+  const observations = [...concepts.values()].flatMap((concept) => {
+    try { return readObservedValues(concept); } catch { return []; }
   });
   const findings = [];
   let matched = 0;
   for (const expected of expectations) {
-    const grouped = claims.filter((claim) => claim.property === expected.property
-      && (!expected.subject || claim.subject === expected.subject));
-    const roles = new Set(grouped.map((claim) => claim.role));
-    const paths = grouped.map((claim) => claim.source.resource.match(/^repository:\/\/[^/]+\/(.+)#L\d+-L\d+$/)?.[1])
-      .filter(Boolean).map((value) => value.split("/").map(decodeURIComponent).join("/"));
+    const grouped = observations.filter((value) => value.property === expected.property
+      && (!expected.subject || value.subject === expected.subject));
+    const roles = new Set(grouped.map((value) => value.role));
+    const paths = grouped.map((value) => value.source.relativePath).filter(Boolean);
     const complete = (expected.roles ?? []).every((role) => roles.has(role))
       && (expected.requiredSourcePaths ?? []).every((required) => paths.includes(required));
     if (complete) matched += 1;
-    else findings.push(`${expected.key}: live evidence references or source roles are incomplete`);
+    else findings.push(`${expected.key}: observed values or source roles are incomplete`);
   }
   return { matched, required: expectations.length, findings };
 }
@@ -427,7 +426,7 @@ export function assessLiveResolutionCases(cases) {
 }
 
 export function scoreSemanticBenchmark(expectation, bundle, repositoryId, repositoryRoot) {
-  const failures = [...bundle.warnings, ...validateBundleLiveClaims(bundle.concepts.values())];
+  const failures = [...bundle.warnings, ...validateBundleObservedValues(bundle.concepts.values())];
   const actual = new Map();
   for (const concept of bundle.concepts.values()) {
     failures.push(...validateAgentBaseDraft(concept), ...validateConceptAgainstSchema(concept));
@@ -533,7 +532,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
   const contradictionFailures = contradictedConcepts.map((item) =>
     `Reference ${item.expected} matched ${item.actual} but expected schema ${item.expectedType}, found ${item.actualType}`);
   const conflictVisibility = assessConflictVisibility(expectation.conflicts, bundle.concepts, repositoryId);
-  const liveEvidence = assessLiveEvidence(expectation.liveEvidence, bundle.concepts);
+  const observedValues = assessObservedValues(expectation.observedValues, bundle.concepts);
   const embeddedKnowledge = assessEmbeddedKnowledge(expectation.embeddedKnowledge, bundle.concepts, repositoryId);
   const ratios = {
     referenceConceptCoverage: ratio(matchedKeys.length, expected.size),
@@ -542,7 +541,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
     provenanceCoverage: ratio(evidencePresent, evidenceRequired),
     referenceRelationshipCoverage: ratio(confirmedRelationships.length, expectation.relationships.length),
     conflictVisibility: ratio(conflictVisibility.visible, conflictVisibility.required),
-    liveEvidenceReferenceCoverage: ratio(liveEvidence.matched, liveEvidence.required),
+    observedValueCoverage: ratio(observedValues.matched, observedValues.required),
     embeddedKnowledgeCoverage: ratio(embeddedKnowledge.matched, embeddedKnowledge.required),
   };
   const metrics = {
@@ -555,7 +554,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
     provenanceCoveragePercent: ratios.provenanceCoverage.percent,
     referenceRelationshipCoveragePercent: ratios.referenceRelationshipCoverage.percent,
     conflictVisibilityPercent: ratios.conflictVisibility.percent,
-    liveEvidenceReferenceCoveragePercent: ratios.liveEvidenceReferenceCoverage.percent,
+    observedValueCoveragePercent: ratios.observedValueCoverage.percent,
     embeddedKnowledgeCoveragePercent: ratios.embeddedKnowledgeCoverage.percent,
     ratios,
     classifications: {
@@ -576,7 +575,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
   };
   const ownerReview = assessOwnerReviewUsefulness(bundle.concepts, {
       navigationFindings: expectation.version >= 6 ? progressiveNavigationFindings(bundle, expectation, repositoryId) : [],
-      conflictFindings: [...conflictVisibility.findings, ...liveEvidence.findings, ...embeddedKnowledge.findings],
+      conflictFindings: [...conflictVisibility.findings, ...observedValues.findings, ...embeddedKnowledge.findings],
     });
   const authoringAssessment = createAuthoringAssessment({
       actualConcepts: actual.size,
@@ -623,7 +622,7 @@ function reportFor(entry, run, metrics) {
     + `- Provenance coverage: ${measured(metrics.provenanceCoveragePercent, metrics.ratios.provenanceCoverage)}\n`
     + `- Reference relationship coverage: ${measured(metrics.referenceRelationshipCoveragePercent, metrics.ratios.referenceRelationshipCoverage)}\n`
     + `- Source-conflict visibility: ${measured(metrics.conflictVisibilityPercent, metrics.ratios.conflictVisibility)}\n`
-    + `- Live-evidence reference coverage: ${measured(metrics.liveEvidenceReferenceCoveragePercent, metrics.ratios.liveEvidenceReferenceCoverage)}\n`
+    + `- Observed-value coverage: ${measured(metrics.observedValueCoveragePercent, metrics.ratios.observedValueCoverage)}\n`
     + `- Embedded-knowledge coverage: ${measured(metrics.embeddedKnowledgeCoveragePercent, metrics.ratios.embeddedKnowledgeCoverage)}\n`
     + `- Unjudged concepts / relationships: ${metrics.classifications.concepts.unjudged.length} / ${metrics.classifications.relationships.unjudged.length}\n`
     + `- Missing reference concepts / relationships: ${metrics.classifications.concepts.missingReference.length} / ${metrics.classifications.relationships.missingReference.length}\n`
@@ -652,10 +651,10 @@ function invalidMetrics(suite, repository, runId, error) {
     provenanceCoveragePercent: null,
     referenceRelationshipCoveragePercent: null,
     conflictVisibilityPercent: null,
-    liveEvidenceReferenceCoveragePercent: null,
+    observedValueCoveragePercent: null,
     embeddedKnowledgeCoveragePercent: null,
     ratios: Object.fromEntries(["referenceConceptCoverage", "recognizedSchemaAgreement", "metadataCompleteness",
-      "provenanceCoverage", "referenceRelationshipCoverage", "conflictVisibility", "liveEvidenceReferenceCoverage",
+      "provenanceCoverage", "referenceRelationshipCoverage", "conflictVisibility", "observedValueCoverage",
       "embeddedKnowledgeCoverage"].map((key) => [key, { matched: 0, total: 0, percent: null }])),
     classifications: {
       concepts: { confirmed: [], contradicted: [], unjudged: [], missingReference: [] },

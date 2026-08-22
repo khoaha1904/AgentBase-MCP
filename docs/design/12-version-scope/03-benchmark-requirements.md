@@ -135,10 +135,12 @@ benchmarks.
   provenance and honest uncertainty are primary; token use remains diagnostic.
 - **AB-BENCH-041** — Confirmed-Domain qualification requires exact owner input,
   valid shared navigation and preservation of all prior nonblank index lines.
-- **AB-BENCH-042** — Live-evidence qualification scores validated reference
-  coverage, current-resolution status, role-separated conflict presentation,
-  unavailable-source behavior and absence of durable volatile scalars. It does
-  not require a numeric snapshot or choose an evidence winner.
+- **AB-BENCH-042** — Observed-value qualification scores only useful bounded
+  snapshots with file provenance, revision/time, role-separated conflict
+  presentation, unavailable-source degradation and sensitive/coverage bounds.
+  An explicit current-value probe may use normal authorized source reading, but
+  ordinary Hub query performs no access probe or resolver call and no score
+  requires complete configuration capture or an evidence winner.
 - **AB-BENCH-043** — V13 qualifies catalog `6.0.0` through the actual
   single-repository Initial Ingest lifecycle in an isolated local-only Hub. It
   requires status/setup, Preflight, one index/architecture pass,
@@ -451,20 +453,24 @@ It is accepted as the real AB-BENCH-041 Domain/navigation qualification.
 Owner review does not treat its literal TTL diagnostic as durable truth. The
 bundle mentions incompatible seven-day documentation and 30-day migration
 behavior but lacks complete source coverage and retains volatile numeric
-snapshots. Capability 019 supersedes that scoring model with governed questions
-and live source references. Open Hub PR #7 remains the earlier V9 proposal and
+snapshots. Capability 019 then superseded that scoring model with governed
+questions and portable live source references. The current Part 08 design
+supersedes that resolver direction again with bounded observed snapshots,
+shared file-level source references and ordinary authorized source reads.
+Open Hub PR #7 remains the earlier V9 proposal and
 is not rebuilt, replaced or merged until capability 019 separately qualifies
 publication.
 
-AB-BENCH-042 is covered offline by expectation format v8 and deterministic
-live-resolution cases. V12 run `2026-08-17T063359Z` is retained as invalid real
-evidence: it authored live references but used target kinds outside the portable
+AB-BENCH-042 was covered offline by expectation format v8 and deterministic
+live-resolution cases. V12 run `2026-08-17T063359Z` is retained as invalid
+historical evidence: it authored live references but used target kinds outside the portable
 contract, added forbidden category-index frontmatter and omitted the required
 cart-retention documentation/implementation reference set. It scored 0% live-
-evidence reference coverage and is not publication evidence. A later prompt
-iteration must state the exact portable target kinds and root-only frontmatter
-rule while requiring relevant volatile-property investigation without exposing
-hidden fixture answers. Qualification and publication remain separately opt-in.
+evidence reference coverage and is not publication evidence. At that time the
+next prompt needed the exact portable target kinds and root-only frontmatter
+rule. These V12 findings explain that historical contract;
+they do not reintroduce a live-reference resolver into the current design.
+Qualification and publication remain separately opt-in.
 
 ## V13 Initial Ingest qualification
 

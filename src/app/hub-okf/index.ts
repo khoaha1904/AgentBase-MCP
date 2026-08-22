@@ -48,7 +48,14 @@ export {
 } from "./authoring/authoring-session.ts";
 export { admitPersistentLocalHub, type LocalHubGit } from "./workspace/local-hub.ts";
 export { acceptHubProposal, type AcceptHubOptions } from "./review/accept.ts";
-export { readActiveHubConcept, searchActiveHub, type HubQueryGit } from "./query/query.ts";
+export {
+  readActiveHubConcept,
+  readActiveHubObservedValues,
+  searchActiveHub,
+  type HubObservedValue,
+  type HubObservedValues,
+  type HubQueryGit,
+} from "./query/query.ts";
 export { listPendingHubProposals, selectPendingPrefix, type PendingHubProposal } from "./review/pending.ts";
 export {
   publishPendingHubProposals,

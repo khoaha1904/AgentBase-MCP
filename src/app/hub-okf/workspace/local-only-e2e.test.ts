@@ -45,27 +45,40 @@ test("[AB-HUB-SETUP-006..008][SC-003] local-only Hub accepts, queries and invent
         + `sources:\n  - id: documentation\n    resource: repository://${prepared.sourceRepositoryId}/README.md#L1-L1\n`
         + `  - id: implementation\n    resource: repository://${prepared.sourceRepositoryId}/README.md#L1-L1\n`
         + `agentbase:\n  repository:\n    id: ${prepared.sourceRepositoryId}\n    display_name: source\n`
-        + `    aliases: { remotes: [], root_commits: [] }\n  live_claims:\n    - id: AB-CLAIM-repo-${sequence}-doc\n`
-        + `      subject: repositories/repo-${sequence}\n      property: repository.purpose\n      role: documentation\n`
-        + `      source_id: documentation\n      target: { kind: text, name: Purpose }\n`
-        + `      observed: { commit: ${prepared.source?.commit ?? "a".repeat(40)}, dirty: false, dirty_digest: null }\n`
-        + `    - id: AB-CLAIM-repo-${sequence}-code\n      subject: repositories/repo-${sequence}\n`
+        + `    aliases: { remotes: [], root_commits: [] }\n  observed_values:\n`
+        + `    - subject: repositories/repo-${sequence}\n      property: repository.purpose\n      role: documentation\n`
+        + `      value: 'Repository ${sequence}'\n      source_id: documentation\n`
+        + `    - subject: repositories/repo-${sequence}\n`
         + `      property: repository.purpose\n      role: implementation\n      source_id: implementation\n`
-        + `      target: { kind: text, name: Purpose implementation }\n`
-        + `      observed: { commit: ${prepared.source?.commit ?? "a".repeat(40)}, dirty: false, dirty_digest: null }\n`
+        + `      value: 'Repository ${sequence} implementation'\n`
         + `---\n\n# Purpose\n\nRepo ${sequence}.\n`);
       const finalized = await actions.finalize(prepared.sessionId, sequence === 1 ? [{
         subject: "repositories/repo-1", property: "repository.purpose",
-        claimIds: ["AB-CLAIM-repo-1-doc", "AB-CLAIM-repo-1-code"], missingEvidence: [],
+        observationRefs: [
+          { role: "documentation", sourceId: "documentation" },
+          { role: "implementation", sourceId: "implementation" },
+        ], missingEvidence: [],
       }] : []) as { proposal: { id: string; diffDigest: string } };
+      if (sequence === 1) {
+        const inspected = await actions.inspect(finalized.proposal.id) as {
+          inspection: { entries: readonly { path: string; change: string }[] };
+        };
+        assert.equal(inspected.inspection.entries.some((entry) =>
+          entry.change === "created" && /^questions\/question-[a-f0-9]{24}\.md$/.test(entry.path)), true);
+        assert.equal(inspected.inspection.entries.some((entry) =>
+          entry.change === "created" && entry.path === "questions/index.md"), true);
+        assert.equal(fs.existsSync(path.join(root, "state", "proposals", finalized.proposal.id, "questions.json")), false);
+      }
       await actions.accept(finalized.proposal.id, finalized.proposal.diffDigest);
       if (sequence === 1) {
-        const [question] = await actions.listQuestions({ status: "pending" }) as readonly {
-          id: string; revision: number; claims: readonly { role: string; source: { resource: string } }[];
+        assert.equal(fs.existsSync(path.join(root, "state", "questions")), false);
+        const secondMachineActions = createHubRuntimeActions(environment, path.join(root, "state-second"));
+        const [question] = await secondMachineActions.listQuestions({ status: "open" }) as readonly {
+          id: string; revision: number; observations: readonly { role: string; source: { resource: string } }[];
         }[];
         assert.ok(question);
-        assert.deepEqual(question.claims.map((claim) => claim.role).sort(), ["documentation", "implementation"]);
-        assert.equal(question.claims.every((claim) => claim.source.resource.startsWith("repository://")), true);
+        assert.deepEqual(question.observations.map((value) => value.role).sort(), ["documentation", "implementation"]);
+        assert.equal(question.observations.every((value) => value.source.resource.startsWith("repository://")), true);
         const answered = await actions.answerQuestion({ questionId: question.id, revision: question.revision,
           answer: "Repository purpose is owner-confirmed.", maintainer: "human:khoa" }) as {
           question: { status: string };
@@ -73,15 +86,20 @@ test("[AB-HUB-SETUP-006..008][SC-003] local-only Hub accepts, queries and invent
           inspection: { entries: readonly { path: string; change: string }[] };
         };
         assert.equal(answered.question.status, "resolved");
-        const guidancePath = answered.inspection.entries.find((entry) => entry.change === "created")?.path;
+        assert.equal((await actions.listQuestions({ status: "open" }) as readonly unknown[]).length, 1);
+        assert.equal((await actions.listQuestions({ status: "resolved" }) as readonly unknown[]).length, 0);
+        const changed = answered.inspection.entries.filter((entry) => entry.change !== "preserved");
+        assert.deepEqual(changed.map((entry) => entry.change).sort(), ["created", "modified"]);
+        const guidancePath = changed.find((entry) => entry.change === "created")?.path;
         assert.ok(guidancePath);
         await actions.accept(answered.proposal.id, answered.proposal.diffDigest);
+        await assert.rejects(actions.answerQuestion({ questionId: question.id, revision: question.revision,
+          answer: "A stale answer.", maintainer: "human:khoa" }), /revision changed/);
         assert.match(JSON.stringify(await actions.read(guidancePath)), /owner-confirmed/);
-        const live = await actions.readLiveEvidence("repositories/repo-1.md", prepared.source) as {
-          claims: readonly { role: string }[];
+        const observed = await actions.readObservedValues("repositories/repo-1.md") as {
+          values: readonly { role: string }[];
         };
-        assert.deepEqual([...live.claims.map((claim) => claim.role), "maintainer-guidance"].sort(),
-          ["documentation", "implementation", "maintainer-guidance"]);
+        assert.deepEqual(observed.values.map((value) => value.role).sort(), ["documentation", "implementation"]);
       }
     }
     const pending = await actions.listPending() as readonly unknown[];
@@ -93,6 +111,13 @@ test("[AB-HUB-SETUP-006..008][SC-003] local-only Hub accepts, queries and invent
     assert.equal(searched.matches.some((match) => match.path === "repositories/repo-2.md"), true);
     assert.equal((await runGit({ args: ["remote"], cwd: configured.localRoot, operation: "verify no local Hub remote" })).stdout, "");
     await assert.rejects(actions.submitMany(["x"]), /first bootstrap/);
+
+    await runGit({ args: ["rm", "questions/index.md", ...fs.readdirSync(path.join(configured.localRoot, "questions"))
+      .filter((name) => name.startsWith("question-")).map((name) => `questions/${name}`)],
+    cwd: configured.localRoot, operation: "create orphan Guidance fixture" });
+    await runGit({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit", "-m", "orphan Guidance fixture"],
+      cwd: configured.localRoot, operation: "commit orphan Guidance fixture", commitTimestamp: "2026-08-13T00:00:00Z" });
+    await assert.rejects(restartedActions.listQuestions({}), /no shared Question document.*regenerate.*migrate/);
 
     await runGit({ args: ["rm", "README.md"], cwd: configured.localRoot, operation: "remove legacy Hub README fixture" });
     await runGit({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit", "-m", "legacy Hub without README"],

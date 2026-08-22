@@ -3,16 +3,17 @@
 Record source-visible uncertainty in the affected concept's Limitations. Do not
 create new `Open Question` concepts: the type remains readable only for legacy
 compatibility. Submit material conflicts as governed question declarations when
-finalizing the proposal; keep every linked claim and source role.
+finalizing the proposal; identify each linked observation by subject, property,
+role and source ID.
 
-For a volatile-value query, call `read_hub_live_evidence` on the accepted concept.
-Resolve only entries marked `ready`: use `search_graph` for the semantic target
-and `get_code_snippet` for the exact current source. Treat missing, ambiguous,
-computed or mismatched targets as unavailable/stale/indeterminate and never fall
-back to a prior literal. Present documentation, implementation/configuration and
-accepted Maintainer Guidance separately with current source identity; if they
-disagree, say so and do not select a winner. A dirty-source observation is useful
-current evidence but never accepted knowledge.
+For a volatile-value query, call `read_hub_observed_values` on the accepted
+concept. Present the stored snapshot with its source revision, observation time,
+age and Published/Local Draft layer. Do not probe repository access or imply the
+snapshot is current. If the user explicitly needs the current value, use normal
+graph/file tools only when that repository is already authorized and local.
+Present documentation, implementation/configuration and accepted Maintainer
+Guidance separately; if they disagree, say so and do not select a winner. A dirty
+source observation remains useful evidence but is never timeless truth.
 
 Respect a matching maintainer defer directive until it is removed or explicitly
 reopened.

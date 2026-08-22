@@ -16,16 +16,15 @@ For every new or modified AgentBase concept:
   `generated.at` to the meaningful content-change time;
 - omit `verified`; never impersonate a human or process verifier;
 - preserve unknown frontmatter values when modifying an owned draft;
-- attach important claims to `sources` entries from current repository evidence;
-- use stable source IDs and matching Markdown footnotes for attributed claims;
-- represent a change-prone configuration or implementation scalar under
-  `agentbase.live_claims` with a stable claim ID, subject/property/role, one
-  `sources[].id`, semantic target and the prepare source identity; never include
-  a value is optional and only valid as a small `observed.snapshot` with exact
-  revision and `observed.at`; always describe it as observed, never current;
-- `agentbase.live_claims[].target.kind` is exactly one of `symbol`, `function`,
-  `config-field` or `text`; concept types such as Resource or Function are
-  never live-reference target kinds;
+- attach important knowledge to `sources` entries from current repository evidence;
+- use stable source IDs and matching Markdown footnotes for attributed knowledge;
+- represent a useful, non-sensitive configuration or implementation scalar under
+  `agentbase.observed_values` with exact `subject`, semantic `property`, evidence
+  `role`, scalar `value` and matching `source_id`; omit generated `id`, source state
+  and the rendered Observed values table because Finalize owns them;
+- describe every stored scalar as an observation, never as timeless or current;
+- omit secrets, bulky payloads, compound structures and values that are not useful
+  to a human reader; keep only the ordinary source reference for those facts;
 - encode source code as
   `repository://<repository-id>/<encoded-relative-path>#L<start>-L<end>`;
 - never expose checkout roots, provider cache paths, secrets, credentials, or

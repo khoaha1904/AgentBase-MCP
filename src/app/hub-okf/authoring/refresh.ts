@@ -16,7 +16,7 @@ import {
   prepareBundleProposal,
   repositorySourceResources,
   renderConceptDocument,
-  readLiveClaims,
+  readObservedValues,
   readRepositoryIdentityRecord,
   selectOkfConceptSchemas,
   validateConceptAgainstSchema,
@@ -24,7 +24,7 @@ import {
   validatePublishableAgentBaseDraft,
   validateOkfRelationships,
   validateBundleProposal,
-  validateBundleLiveClaims,
+  validateBundleObservedValues,
   type ConceptDocument,
   type ConfirmedDomain,
   type HubLifecycleIntent,
@@ -45,6 +45,7 @@ export type PrepareRefreshHubOptions = Readonly<{
   evidenceDigest: string;
   signals: readonly string[];
   selectedSchemas?: readonly string[];
+  questionPaths?: readonly string[];
   lifecycleIntents?: readonly HubLifecycleIntent[];
   createdAt: string;
 }>;
@@ -79,13 +80,27 @@ function preservesLines(previous: Buffer, proposed: Buffer): boolean {
   for (const line of next) if (line === retained[cursor]) cursor += 1;
   return cursor === retained.length;
 }
-function preservesLiveClaimIdentities(previous: ConceptDocument, proposed: ConceptDocument): boolean {
-  const next = new Set(readLiveClaims(proposed).map((claim) => claim.id));
-  return readLiveClaims(previous).every((claim) => next.has(claim.id));
+function preservesObservedValueIdentities(previous: ConceptDocument, proposed: ConceptDocument): boolean {
+  const next = new Set(readObservedValues(proposed).map((value) => value.id));
+  return readObservedValues(previous).every((value) => next.has(value.id));
 }
 function mapping(value: OkfValue | undefined): Readonly<Record<string, OkfValue>> | undefined {
   return value !== null && typeof value === "object" && !Array.isArray(value)
     ? value as Readonly<Record<string, OkfValue>> : undefined;
+}
+const OBSERVED_START = "<!-- agentbase:observed-values:start -->";
+const OBSERVED_END = "<!-- agentbase:observed-values:end -->";
+function replaceObservedSection(previousBody: string, proposedBody: string): string {
+  const sectionStart = proposedBody.indexOf(OBSERVED_START);
+  const sectionEnd = proposedBody.indexOf(OBSERVED_END);
+  const section = sectionStart >= 0 && sectionEnd >= sectionStart
+    ? proposedBody.slice(sectionStart, sectionEnd + OBSERVED_END.length) : "";
+  const previousStart = previousBody.indexOf(OBSERVED_START);
+  const previousEnd = previousBody.indexOf(OBSERVED_END);
+  const without = previousStart >= 0 && previousEnd >= previousStart
+    ? `${previousBody.slice(0, previousStart)}${previousBody.slice(previousEnd + OBSERVED_END.length)}`.trimEnd()
+    : previousBody.trimEnd();
+  return `${without}${section ? `${without ? "\n\n" : ""}${section}` : ""}\n`;
 }
 function preserveSharedConcept(
   previous: ConceptDocument,
@@ -105,11 +120,15 @@ function preserveSharedConcept(
   for (const source of currentSources) {
     if (!sources.some((existing) => JSON.stringify(existing) === JSON.stringify(source))) sources.push(source);
   }
+  const previousAgentbase = { ...(mapping(previous.frontmatter.agentbase) ?? {}) };
+  const proposedAgentbase = mapping(proposed.frontmatter.agentbase) ?? {};
+  if (proposedAgentbase.observed_values === undefined) delete previousAgentbase.observed_values;
+  else previousAgentbase.observed_values = proposedAgentbase.observed_values;
   let frontmatter: OkfFrontmatter = { ...previous.frontmatter, sources };
+  if (Object.keys(previousAgentbase).length) frontmatter = { ...frontmatter, agentbase: previousAgentbase };
+  else delete (frontmatter as Record<string, OkfValue>).agentbase;
   if (readRepositoryIdentityRecord(previous)?.id === sourceRepositoryId
     && readRepositoryIdentityRecord(proposed)?.id === sourceRepositoryId) {
-    const previousAgentbase = mapping(previous.frontmatter.agentbase) ?? {};
-    const proposedAgentbase = mapping(proposed.frontmatter.agentbase) ?? {};
     const previousRepository = mapping(previousAgentbase.repository) ?? {};
     const proposedRepository = mapping(proposedAgentbase.repository) ?? {};
     if (proposedRepository.observed_source !== undefined) frontmatter = {
@@ -120,7 +139,7 @@ function preserveSharedConcept(
     };
   }
   writeBytes(bundleRoot, previous.path, Buffer.from(renderConceptDocument({
-    ...previous, frontmatter, body: previous.body,
+    ...previous, frontmatter, body: replaceObservedSection(previous.body, proposed.body),
   })));
   return true;
 }
@@ -153,14 +172,15 @@ function protectBase(
       && previousSources.length > 0
       && (sharedNormalized || previousSources.every((resource) => resource.startsWith(currentPrefix)))
       && conceptReferencesRepository(proposedConcept, options.sourceRepositoryId)
-      && preservesLiveClaimIdentities(concept, proposedConcept)
+      && preservesObservedValueIdentities(concept, proposedConcept)
     );
     const additiveIndex = Boolean(index && proposed && preservesLines(bytes(options.hubBundleRoot, relative), proposed));
+    const governedQuestion = (options.questionPaths ?? []).includes(relative);
     const explicitOwnedDeletion = Boolean(mutable && !proposed && intent?.action === "remove-concept"
       && previousSources.length && previousSources.every((resource) => resource.startsWith(currentPrefix)));
     const explicitContributionRemoval = Boolean(sharedNormalized && intent?.action === "remove-contribution"
       && proposedConcept && !conceptReferencesRepository(proposedConcept, options.sourceRepositoryId));
-    if (!changed || explicitOwnedDeletion || explicitContributionRemoval || (mutable && currentSourceContribution)
+    if (!changed || governedQuestion || explicitOwnedDeletion || explicitContributionRemoval || (mutable && currentSourceContribution)
       || (index && additiveIndex)) continue;
     writeBytes(bundleRoot, relative, bytes(options.hubBundleRoot, relative));
     if (changed) conflicts.push({
@@ -249,9 +269,11 @@ function validateChangedSchemas(options: AnyRefreshOptions, bundleRoot: string):
   const selected = new Set(options.selectedSchemas
     ?? selectOkfConceptSchemas(options.signals).map((item) => item.type));
   const changedIdentities = new Set<string>();
-  const failures = [...validateBundleLiveClaims(proposed.concepts.values()), ...[...proposed.concepts.values()].flatMap((concept) => {
+  const failures = [...validateBundleObservedValues(proposed.concepts.values()), ...[...proposed.concepts.values()].flatMap((concept) => {
     const previous = base.concepts.get(concept.conceptId);
     if (previous && bytes(options.hubBundleRoot, previous.path).equals(bytes(bundleRoot, concept.path))) return [];
+    if (concept.type === "Question") return (options.questionPaths ?? []).includes(concept.path)
+      ? [] : [`${concept.path}: Question change was not produced by the dedicated renderer`];
     changedIdentities.add(concept.conceptId);
     const removesContribution = options.lifecycleIntents?.some((intent) =>
       intent.action === "remove-contribution" && intent.conceptId === concept.conceptId);

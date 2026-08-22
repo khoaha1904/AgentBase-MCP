@@ -1,16 +1,20 @@
-# 08 — Live references
+# 08 — Observed snapshots and source references
 
-> Trạng thái: Chờ review cách phân rã.
+> Trạng thái: Repository observed-value slice đã implement; freshness automation và provider observations còn deferred.
 
 High-level decision:
-[Live reference cho dữ liệu dễ thay đổi](../../present/08-live-references-for-change-prone-values.md)
+[Observed snapshots và source references](../../present/08-live-references-for-change-prone-values.md)
 
 ## Phân rã dự kiến
 
-- `01-reference-format.md` — repository, path, symbol và source revision.
-- `02-resolution-and-snapshots.md` — resolve live value và snapshot fallback.
-- `03-stale-and-broken-references.md` — stale detection và Question outcome.
-- `04-access-and-degraded-results.md` — có quyền, thiếu quyền và cách trả kết quả.
-- `05-sensitive-value-filtering.md` — ngăn secret vào Local Draft và Hub.
-- `06-provider-resolution-boundary.md` — provider values chỉ được resolve trong
+- [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — implemented
+  clean-cut baseline và phần broad capability còn deferred.
+- [`01-reference-format.md`](01-reference-format.md) — shared file reference,
+  observed-value contract, source revision và line hint.
+- [`02-observed-snapshots.md`](02-observed-snapshots.md) — useful bounded values và provenance.
+- [`03-freshness-and-broken-sources.md`](03-freshness-and-broken-sources.md) — age/revision warning và Question outcome.
+- [`04-access-and-current-source-reads.md`](04-access-and-current-source-reads.md) — snapshot response, normal MCP source
+  read và permission degradation.
+- [`05-sensitive-value-filtering.md`](05-sensitive-value-filtering.md) — ngăn secret vào Local Draft và Hub.
+- [`06-provider-observations.md`](06-provider-observations.md) — provider values chỉ được observed trong
   Domain Enrichment, không trong Ingest.

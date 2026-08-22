@@ -6,8 +6,11 @@ import { createHubProposal, type AdmittedLocalHubState, type AnyHubProposal } fr
 import {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
   diffBundleProposal,
+  observedValueSafetyFailure,
   prepareBundleProposal,
   renderConceptDocument,
+  renderQuestionDocument,
+  resolveQuestion,
   validateBundleProposal,
   type ConceptDocument,
   type OkfFrontmatter,
@@ -44,9 +47,10 @@ function copyHub(source: string, target: string): void {
 
 export async function prepareQuestionGuidanceProposal(
   options: PrepareQuestionGuidanceOptions,
-): Promise<Readonly<{ proposal: AnyHubProposal; inspection: HubProposalInspection }>> {
+): Promise<Readonly<{ question: GovernedQuestion; proposal: AnyHubProposal; inspection: HubProposalInspection }>> {
   const answer = options.answer.trim(), git = options.git ?? runGit;
   if (!answer || answer.length > 4096) throw new Error("question answer is invalid");
+  if (observedValueSafetyFailure("maintainer-guidance", answer)) throw new Error("question answer contains obvious sensitive material");
   if (!/^human:[A-Za-z0-9][A-Za-z0-9._@-]{0,127}$/.test(options.by)) throw new Error("maintainer must use an explicit human: identity");
   if (Number.isNaN(Date.parse(options.at))) throw new Error("question answer time is invalid");
   if (!options.question.sourceRepositoryId) throw new Error("question source repository is unavailable");
@@ -81,20 +85,26 @@ export async function prepareQuestionGuidanceProposal(
       status: "stable",
       generated: { by: options.by, at: options.at },
       sources: [{ id: "maintainer-answer", resource: `agentbase://maintainer-answer/${options.question.id}/${revision}` }],
-      agentbase: { question: { id: options.question.id, revision, claim_ids: options.question.claimIds } },
+      agentbase: { question: { id: options.question.id, revision,
+        scope: { kind: "subject-property", target: `${options.question.subject}#${options.question.property}` },
+        observation_ids: options.question.observationIds } },
     };
     const concept: ConceptDocument = { conceptId, path: conceptPath, type: "Maintainer Guidance", status: "stable",
       frontmatter, verified: [], body: `# Guidance\n\n${answer}\n\n# Scope\n\n${options.question.subject} · ${options.question.property}.\n` };
     const target = path.join(staging, "bundle", ...conceptPath.split("/"));
     privateDirectory(path.dirname(target));
     fs.writeFileSync(target, renderConceptDocument(concept), { mode: 0o600 });
+    const resolved = resolveQuestion(options.question, conceptId);
+    const questionTarget = path.join(staging, "bundle", "questions", `${options.question.id}.md`);
+    fs.writeFileSync(questionTarget, renderQuestionDocument(resolved), { mode: 0o600 });
     const validated = validateBundleProposal(baseRoot, staging, {
       maintainerGuidance: { conceptId, by: options.by, at: options.at },
     });
     if (!validated.producerValidation?.passed) throw new Error(`guidance proposal failed validation: ${validated.producerValidation?.failures.join("; ")}`);
     const diff = diffBundleProposal(baseRoot, staging);
     const invalid = diff.entries.find((entry) => entry.change !== "preserved"
-      && !(entry.change === "created" && entry.path === conceptPath));
+      && !(entry.change === "created" && entry.path === conceptPath)
+      && !(entry.change === "modified" && entry.path === `questions/${options.question.id}.md`));
     if (!diff.applicable || invalid) throw new Error(`guidance proposal contains an out-of-scope change${invalid ? `: ${invalid.path}` : ""}`);
     const inspection = inspectHubProposal(diff.entries, { baseRoot, proposedRoot: path.join(staging, "bundle") });
     const diffDigest = `sha256:${createHash("sha256").update(JSON.stringify(inspection.entries)).digest("hex")}`;
@@ -112,7 +122,7 @@ export async function prepareQuestionGuidanceProposal(
     const proposalRoot = path.join(path.resolve(options.stateRoot), "proposals", proposal.id);
     if (fs.existsSync(proposalRoot)) throw new Error("matching guidance proposal already exists");
     fs.renameSync(staging, proposalRoot);
-    return { proposal, inspection };
+    return { question: { ...options.question, ...resolved, status: resolved.state }, proposal, inspection };
   } finally {
     fs.rmSync(workRoot, { recursive: true, force: true });
     if (fs.existsSync(staging)) fs.rmSync(staging, { recursive: true, force: true });

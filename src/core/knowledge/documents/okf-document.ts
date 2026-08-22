@@ -177,17 +177,33 @@ export function conceptReferencesRepository(concept: ConceptDocument, repository
   return repositorySourceResources(concept).some((resource) => resource.startsWith(prefix));
 }
 
-function validRepositoryResource(value: string): boolean {
-  const match = value.match(/^repository:\/\/(repository-[a-z0-9-]+-[a-f0-9]{12})\/(.+)#L(\d+)-L(\d+)$/);
-  if (!match?.[2] || !match[3] || !match[4]) return false;
+export type RepositorySourceResource = Readonly<{
+  repositoryId: string;
+  relativePath: string;
+  startLine?: number;
+  endLine?: number;
+}>;
+
+export function parseRepositorySourceResource(value: string): RepositorySourceResource | undefined {
+  const match = value.match(/^repository:\/\/(repository-[a-z0-9-]+-[a-f0-9]{12})\/([^#]+?)(?:#L(\d+)-L(\d+))?$/);
+  if (!match?.[1] || !match[2] || ((match[3] === undefined) !== (match[4] === undefined))) return undefined;
   try {
     const decoded = match[2].split("/").map((part) => decodeURIComponent(part));
-    const start = Number(match[3]);
-    const end = Number(match[4]);
-    return decoded.every((part) => Boolean(part) && part !== "." && part !== ".." && !part.includes("/") && !part.includes("\\"))
-      && Number.isSafeInteger(start) && Number.isSafeInteger(end) && start >= 1 && end >= start;
+    if (!decoded.every((part) => Boolean(part) && part !== "." && part !== ".." && !part.includes("/") && !part.includes("\\"))) return undefined;
+    const relativePath = decoded.join("/");
+    const startLine = match[3] === undefined ? undefined : Number(match[3]);
+    const endLine = match[4] === undefined ? undefined : Number(match[4]);
+    if (startLine !== undefined && (!Number.isSafeInteger(startLine) || !Number.isSafeInteger(endLine)
+      || startLine < 1 || endLine! < startLine)) return undefined;
+    const canonicalPath = decoded.map((part) => encodeURIComponent(part)).join("/");
+    const canonical = `repository://${match[1]}/${canonicalPath}${startLine === undefined ? "" : `#L${startLine}-L${endLine}`}`;
+    return canonical === value ? {
+      repositoryId: match[1],
+      relativePath,
+      ...(startLine === undefined ? {} : { startLine, endLine: endLine! }),
+    } : undefined;
   } catch {
-    return false;
+    return undefined;
   }
 }
 
@@ -212,7 +228,7 @@ export function validateAgentBaseDraft(concept: ConceptDocument): readonly strin
       for (const source of sources) {
         const entry = mapping(source);
         if (!entry || typeof entry.resource !== "string" || !entry.resource.trim()) failures.push(`${concept.path}: every source requires resource`);
-        else if (entry.resource.startsWith("repository://") && !validRepositoryResource(entry.resource)) {
+        else if (entry.resource.startsWith("repository://") && !parseRepositorySourceResource(entry.resource)) {
           failures.push(`${concept.path}: repository source resource is not normalized`);
         }
         if (entry?.id !== undefined) {
@@ -240,18 +256,20 @@ export function validatePublishableAgentBaseDraft(concept: ConceptDocument): rea
   ];
 }
 
-export function createRepositorySourceResource(repositoryId: string, relativePath: string, startLine: number, endLine: number): string {
+export function createRepositorySourceResource(repositoryId: string, relativePath: string, startLine?: number, endLine?: number): string {
   if (!/^repository-[a-z0-9-]+-[a-f0-9]{12}$/.test(repositoryId)) throw new OkfValidationError("REPOSITORY_ID_INVALID", "repositoryId is invalid");
   const normalized = path.posix.normalize(relativePath);
   if (relativePath.startsWith("/") || normalized !== relativePath
     || relativePath.split("/").some((part) => !part || part === "." || part === "..")) {
     throw new OkfValidationError("SOURCE_PATH_INVALID", "source path must be normalized and repository-relative");
   }
-  if (!Number.isSafeInteger(startLine) || !Number.isSafeInteger(endLine) || startLine < 1 || endLine < startLine) {
+  if ((startLine === undefined) !== (endLine === undefined)
+    || (startLine !== undefined && (!Number.isSafeInteger(startLine) || !Number.isSafeInteger(endLine)
+      || startLine < 1 || endLine! < startLine))) {
     throw new OkfValidationError("SOURCE_SPAN_INVALID", "source line span is invalid");
   }
   const encodedPath = relativePath.split("/").map((part) => encodeURIComponent(part)).join("/");
-  return `repository://${repositoryId}/${encodedPath}#L${startLine}-L${endLine}`;
+  return `repository://${repositoryId}/${encodedPath}${startLine === undefined ? "" : `#L${startLine}-L${endLine}`}`;
 }
 
 export function parseReservedFrontmatter(documentPath: string, source: string): Readonly<{ frontmatter?: OkfFrontmatter; body: string }> {

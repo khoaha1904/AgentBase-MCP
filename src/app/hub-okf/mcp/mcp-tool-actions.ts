@@ -2,7 +2,6 @@ import type {
   ConfirmedDomain, HubSearchOptions, HubTraversalOptions, OkfAuthoringGuidanceRequest,
 } from "../../../core/knowledge/index.ts";
 import type { BootstrapMode } from "../workspace/bootstrap.ts";
-import type { LiveSourceBinding } from "../query/query.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
 import type { HubLifecycleIntent } from "../../../core/knowledge/index.ts";
 
@@ -27,8 +26,8 @@ export type HubToolActions = Readonly<{
   search(query: string, options?: HubSearchOptions): Promise<unknown>;
   traverse(start: string, options?: HubTraversalOptions): Promise<unknown>;
   read(relativePath: string): Promise<unknown>;
-  readLiveEvidence(relativePath: string, source?: LiveSourceBinding): Promise<unknown>;
-  listQuestions(options: Readonly<{ status?: "pending" | "resolved"; limit?: number }>): Promise<unknown>;
+  readObservedValues(relativePath: string): Promise<unknown>;
+  listQuestions(options: Readonly<{ status?: "open" | "resolved" | "needs-review"; limit?: number }>): Promise<unknown>;
   answerQuestion(input: Readonly<{
     questionId: string; revision: number; answer: string; maintainer: string;
   }>): Promise<unknown>;
@@ -37,5 +36,3 @@ export type HubToolActions = Readonly<{
   synchronize(): Promise<unknown>;
   recover(proposalId: string): Promise<unknown>;
 }>;
-
-export type HubToolContext = Readonly<{ liveSource?: LiveSourceBinding }>;

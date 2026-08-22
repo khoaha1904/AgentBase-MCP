@@ -1,6 +1,6 @@
 # 12 — Giới hạn và phạm vi của phiên bản đầu
 
-> Trạng thái: Đã đồng bộ với MVP catalog 7 và qualification 2026-08-22.
+> Trạng thái: MVP boundary đã chốt; shared Question documents là core gap còn lại.
 
 ## Câu trả lời ngắn
 
@@ -20,8 +20,10 @@ một số giới hạn để tránh đồng bộ, phân quyền và automation 
 - Không có fine-grained ACL trong Hub; có quyền Hub thì đọc được toàn bộ
   Published knowledge.
 - Structured IaC MVP hỗ trợ Terraform/Terragrunt; SAM/CloudFormation chưa hỗ trợ.
-- Publication hiện chỉ target configured `main`; chưa có stacked Init/Refresh PR.
-- PR body chưa thay thế được owner review bằng một summary template đầy đủ.
+- Hub query mặc định đọc active local knowledge; Published/Local Draft overlay
+  chi tiết chưa implement.
+- Question runtime hiện còn private/local; phải chuyển thành shared Hub documents
+  trước MVP release để Question thật sự là knowledge dùng chung.
 
 ## Quyết định high-level
 
@@ -34,4 +36,8 @@ mới; mirror/copy mơ hồ phải được người dùng xác nhận.
 - Provider Verification/Domain Enrichment skill.
 - Batch checkpoint, query overlay và freshness report.
 - Azure/GCP profile và semantic profile migration.
-- Rich PR template và stacked proposal publication.
+- Static HTML/graph review và remote repository reader.
+
+Rich deterministic PR summary, independent Init PR, same-Repository
+Init/Refresh stack và existing-PR reconciliation đã implement; chúng không còn
+là deferred scope.

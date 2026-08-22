@@ -48,7 +48,7 @@ là embedded knowledge trong concept cha, không tự động thành một file 
 | AWS, EC2, Lambda, runtime | Technology metadata |
 | Service gọi API hoặc publish message | Relation |
 | File, class, helper function | Evidence/reference |
-| TTL, timeout dễ thay đổi | [Live reference](08-live-references-for-change-prone-values.md) |
+| TTL, timeout dễ thay đổi | [Observed snapshot](08-live-references-for-change-prone-values.md) khi có query value |
 
 ## Đối chiếu và xử lý phần chưa rõ
 

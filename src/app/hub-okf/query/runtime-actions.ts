@@ -24,7 +24,7 @@ import {
   buildActiveHubContinuity,
   inspectInitialIngestHubContext,
   readActiveHubConcept,
-  readActiveHubLiveEvidence,
+  readActiveHubObservedValues,
   searchActiveHub,
   traverseActiveHub,
 } from "./query.ts";
@@ -164,14 +164,14 @@ export function createHubRuntimeActions(
         throw new Error("repository is absent from Hub; use Initial Ingest");
       }
       const sourceRepositoryId = repository.repository.repository.id;
-      const knownGaps = listHubQuestions(stateRoot, localHub, { status: "pending", limit: 100 })
+      const knownGaps = listHubQuestions(localHub, { status: "open", limit: 100 })
         .filter((question) => question.sourceRepositoryId === sourceRepositoryId)
         .slice(0, 64)
         .map((question) => ({
           kind: "question" as const,
           subject: question.subject,
           detail: `${question.property}: ${question.missingEvidence.join("; ") || "conflicting evidence"}`,
-          updatedAt: question.updatedAt,
+          updatedAt: question.createdAt,
         }));
       let continuity = await buildActiveHubContinuity(localHub, sourceRepositoryId, input.subjectDirectory, { knownGaps });
       const documentGaps = continuityDocumentGaps(localHub, continuity, resolveRepositorySourceRoot(input.sourceRepository));
@@ -276,9 +276,9 @@ export function createHubRuntimeActions(
       const localHub = await admit();
       return readActiveHubConcept(localHub, relativePath);
     },
-    async readLiveEvidence(relativePath, source) {
+    async readObservedValues(relativePath) {
       const localHub = await admit();
-      return readActiveHubLiveEvidence(localHub, relativePath, source);
+      return readActiveHubObservedValues(localHub, relativePath);
     },
     async listPending() {
       const localHub = await admit();

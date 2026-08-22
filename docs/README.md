@@ -54,6 +54,14 @@ small gaps must be backfilled before benchmark, PR or capability completion.
 - Independent Repository Init PRs, exact same-Repository Init/Refresh stacks and
   existing-PR reconciliation are implemented. First bootstrap retains one batch
   PR. Batch ingest, Domain Enrichment and freshness presentation remain deferred.
+- Repository observed values are snapshot-first: Finalize owns stable identity,
+  exact source state and readable tables; query performs no repository probe.
+  Provider observations and automated freshness reporting remain deferred.
+- Questions are shared Hub Markdown with exact state/revision and no private
+  ledger authority. Exact-revision answers propose Guidance plus Question update
+  atomically; Accept remains the state-change boundary. Batch Ingest, Domain
+  Enrichment, broad Guidance, automatic conflict inference, query overlay,
+  freshness CI, visual review and profile migration are post-MVP capabilities.
 
 Update current truth once in the narrowest high- or low-level document. Do not
 add handoff, roadmap, ADR or evidence-diary files that repeat it.

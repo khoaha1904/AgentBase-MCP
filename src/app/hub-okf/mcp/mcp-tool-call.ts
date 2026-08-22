@@ -1,7 +1,7 @@
 import type { CallToolResult } from "@modelcontextprotocol/server";
 
 import { normalizeConfirmedDomain, type OkfAuthoringGuidanceRequest } from "../../../core/knowledge/index.ts";
-import type { HubToolActions, HubToolContext } from "./mcp-tool-actions.ts";
+import type { HubToolActions } from "./mcp-tool-actions.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
 import type { HubLifecycleIntent } from "../../../core/knowledge/index.ts";
 
@@ -85,13 +85,24 @@ function questionDeclarations(value: unknown): readonly QuestionDeclaration[] {
   return value.map((item) => {
     if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error("each question must be an object");
     const entry = item as Record<string, unknown>;
+    const refs = entry.observation_refs;
     if (typeof entry.subject !== "string" || typeof entry.property !== "string"
-      || !Array.isArray(entry.claim_ids) || !entry.claim_ids.every((id) => typeof id === "string")
+      || !Array.isArray(refs) || !refs.length || !refs.every((ref) => {
+        if (!ref || typeof ref !== "object" || Array.isArray(ref)) return false;
+        const current = ref as Record<string, unknown>;
+        return Object.keys(current).sort().join("\0") === "role\0source_id"
+          && ["documentation", "implementation", "configuration"].includes(String(current.role))
+          && typeof current.source_id === "string" && current.source_id.length > 0;
+      })
       || (entry.missing_evidence !== undefined && (!Array.isArray(entry.missing_evidence)
         || !entry.missing_evidence.every((item) => typeof item === "string")))) {
       throw new Error("question declaration is invalid");
     }
-    return { subject: entry.subject, property: entry.property, claimIds: entry.claim_ids as string[],
+    return { subject: entry.subject, property: entry.property,
+      observationRefs: (refs as Array<Record<string, unknown>>).map((ref) => ({
+        role: ref.role as "documentation" | "implementation" | "configuration",
+        sourceId: ref.source_id as string,
+      })),
       missingEvidence: (entry.missing_evidence ?? []) as string[] };
   });
 }
@@ -119,7 +130,6 @@ export async function callHubOkfTool(
   name: string,
   args: Readonly<Record<string, unknown>>,
   actions?: HubToolActions,
-  context: HubToolContext = {},
 ): Promise<CallToolResult> {
   try {
     if (!actions) throw new Error("AgentBase Hub runtime is not configured");
@@ -217,13 +227,13 @@ export async function callHubOkfTool(
       }));
     }
     if (name === "read_hub_okf_concept") return result(await actions.read(required(args, "path")));
-    if (name === "read_hub_live_evidence") {
-      return result(await actions.readLiveEvidence(required(args, "path"), context.liveSource));
+    if (name === "read_hub_observed_values") {
+      return result(await actions.readObservedValues(required(args, "path")));
     }
     if (name === "list_hub_questions") {
       const status = args.status, limit = args.limit;
-      if (status !== undefined && status !== "pending" && status !== "resolved") {
-        throw new Error("status must be pending or resolved");
+      if (status !== undefined && status !== "open" && status !== "resolved" && status !== "needs-review") {
+        throw new Error("status must be open, resolved or needs-review");
       }
       if (limit !== undefined && (!Number.isInteger(limit) || Number(limit) < 1 || Number(limit) > 100)) {
         throw new Error("limit must be an integer from 1 to 100");

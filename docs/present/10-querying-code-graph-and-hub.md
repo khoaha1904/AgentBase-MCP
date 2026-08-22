@@ -7,6 +7,9 @@
 Agent tự chọn Hub, source/Code Graph hoặc kết hợp cả hai. Người dùng không cần
 chọn chế độ query.
 
+Query dùng **snapshot-default**: nếu Hub/snapshot đã đủ trả lời câu hỏi thì dừng
+ở đó. Source không phải bước xác minh mặc định, kể cả khi source đang có sẵn.
+
 | Câu hỏi | Nguồn ưu tiên |
 |---|---|
 | Có gì, vì sao, liên kết thế nào, tìm ở đâu? | Hub |
@@ -14,6 +17,11 @@ chọn chế độ query.
 | Liên hệ overview với implementation | Kết hợp cả hai |
 
 ## Khi nào dùng source?
+
+Chỉ đọc source khi người dùng yêu cầu giá trị/code hiện tại, công việc
+implementation/debug/impact thật sự cần code chính xác, hoặc Hub không đủ để
+hoàn thành yêu cầu một cách an toàn. Snapshot cũ, đang có Question/conflict,
+hoặc source đang available không tự kích hoạt source read.
 
 Code Graph chỉ dùng cho repository đã có local hoặc trong workspace. Với remote
 repository, Agent chỉ đọc file theo reference khi credential do MCP quản lý có
@@ -35,11 +43,17 @@ Local merge không được trình bày như Hub remote đã đổi. Published c
 ## Khi nguồn mâu thuẫn
 
 Agent trình bày các claim liên quan, provenance, Question và Maintainer Guidance
-đúng scope; guidance ở `Needs Review` phải kèm cảnh báo. Live reference resolve
-được bổ sung như evidence hiện tại, không xóa claim lịch sử.
+đúng scope; guidance ở `Needs Review` phải kèm cảnh báo. Observed snapshot được
+trình bày cùng tuổi dữ liệu và source reference, không xóa claim lịch sử. Khi
+người dùng hỏi giá trị hiện tại và có quyền source, Agent đọc source bằng luồng
+MCP thông thường thay vì dựa vào một live-reference resolver riêng.
+
+Conflict đã lưu trong Hub vẫn phải được trình bày. Quy tắc snapshot-default chỉ
+tránh tạo thêm một vị trí tạm thời từ source khi câu trả lời hiện có đã đủ; nó
+không che hoặc tự giải quyết conflict đã tồn tại.
 
 Quy tắc conflict canonical nằm ở
-[phần 07](07-conflicts-questions-and-maintainer-guidance.md); live value nằm ở
+[phần 07](07-conflicts-questions-and-maintainer-guidance.md); observed value nằm ở
 [phần 08](08-live-references-for-change-prone-values.md).
 
 ## Quyền đọc

@@ -75,7 +75,7 @@ provider -X-> app
 | Freshness receipt | machine/repository/provider | no | yes |
 | Observation/evidence bundle | source revision | no in current product | yes |
 | Unaccepted proposal workspace | local transaction | no | yes from reviewed input |
-| Governed-question ledger | local Hub authority | no | yes from accepted proposal attachments |
+| Derived Question index/cache | exact local Hub commit | no | yes from shared Question documents |
 | Accepted Hub `main` and pending commits | user/team knowledge | yes through Git | governed |
 
 Private state lives outside source checkouts where required, uses bounded exact
@@ -99,14 +99,15 @@ and returns visible recovery rather than hidden retry.
 - The public stdio gateway exposes safe Codebase Memory analysis, one controlled
   `index_repository`, AgentBase schema/validation and local Hub lifecycle/query
   tools. It omits provider mutation tools and binds one connection to one
-  repository. Live references compose accepted Hub metadata with existing graph
-  search/snippets; they add no parser, cache or graph owner.
+  repository. Explicit current-value questions use ordinary graph/search/snippet
+  reads from an observed value's source file; there is no live-reference parser,
+  resolver, cache or graph owner.
 - YAML parsing stays behind `core/knowledge`, rejects unsafe/oversized input and
   never reserializes protected documents merely for normalization.
-- `core/knowledge` owns the portable `agentbase.live_claims` contract.
-  `app/hub-okf` owns proposal-coupled question recovery, the private atomic
-  ledger and answer-to-guidance proposals; the MCP gateway supplies only the
-  authorized current-repository binding.
+- `core/knowledge` owns the portable `agentbase.observed_values` and shared
+  Question document contracts. `app/hub-okf` owns MCP-rendered Question transitions,
+  optional rebuildable indexes and atomic answer-to-guidance proposals; the MCP
+  gateway supplies only the authorized current-repository binding.
 - `agentbase-ingest` owns the five-stage host-agent workflow: Preflight,
   Discover, Investigate, Author and Validate. MCP remains deterministic and
   bounded: it resolves Repository/Domain context, classifies exact technology

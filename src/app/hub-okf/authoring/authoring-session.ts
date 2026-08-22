@@ -4,7 +4,8 @@ import path from "node:path";
 
 import type { AnyHubProposal, HubIdentity } from "../../../core/hub/index.ts";
 import {
-  loadOkfBundle, normalizeConfirmedDomain, readLiveClaims, readRepositoryIdentityRecord,
+  loadOkfBundle, normalizeConfirmedDomain, normalizeRepositoryObservedValues,
+  parseRepositorySourceResource, readObservedValues, readRepositoryIdentityRecord,
   renderConceptDocument, repositorySourceResources,
   type ConfirmedDomain, type HubLifecycleIntent, type OkfAuthoringGuidance,
   type OkfValue,
@@ -14,8 +15,12 @@ import {
 } from "../review/inspect.ts";
 import { prepareNewHubProposal } from "./prepare.ts";
 import { prepareRefreshHubProposal } from "./refresh.ts";
-import { bindQuestionDeclarations } from "./question-recovery.ts";
-import { validateQuestionDeclarations, type QuestionDeclaration } from "./questions.ts";
+import {
+  assertQuestionAuthoringUntouched,
+  materializeQuestionDeclarations,
+  validateQuestionDeclarations,
+  type QuestionDeclaration,
+} from "./questions.ts";
 
 export type HubAuthoringSession = Readonly<{
   formatVersion: 1;
@@ -171,8 +176,8 @@ function sourceLineCount(file: string): number {
   return content.endsWith("\n") ? lines - 1 : lines;
 }
 
-function validateCurrentRepositorySources(session: HubAuthoringSession): void {
-  const authored = loadOkfBundle(session.bundleRoot, { requireAgentBaseRootIndex: true });
+function validateCurrentRepositorySources(session: HubAuthoringSession, bundleRoot: string): void {
+  const authored = loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true });
   const base = loadOkfBundle(session.baseRoot);
   const repositoryRoot = fs.realpathSync(session.sourceRepositoryRoot);
   const repositoryPrefix = `repository://${session.sourceRepositoryId}/`;
@@ -183,11 +188,14 @@ function validateCurrentRepositorySources(session: HubAuthoringSession): void {
       fs.readFileSync(path.join(session.bundleRoot, concept.path)))) continue;
     for (const resource of repositorySourceResources(concept)) {
       if (!resource.startsWith(repositoryPrefix)) continue;
-      const match = resource.slice(repositoryPrefix.length).match(/^(.+)#L(\d+)-L(\d+)$/);
-      if (!match) continue;
+      const parsed = parseRepositorySourceResource(resource);
+      if (!parsed || parsed.repositoryId !== session.sourceRepositoryId) {
+        failures.push(`${concept.path}: repository source is not normalized`);
+        continue;
+      }
       let relativePath: string;
       try {
-        relativePath = match[1]!.split("/").map((part) => decodeURIComponent(part)).join(path.sep);
+        relativePath = parsed.relativePath.split("/").join(path.sep);
       } catch {
         failures.push(`${concept.path}: repository source path is not decodable`);
         continue;
@@ -204,7 +212,7 @@ function validateCurrentRepositorySources(session: HubAuthoringSession): void {
           continue;
         }
         const lineCount = sourceLineCount(realTarget);
-        if (Number(match[3]) > lineCount) {
+        if (parsed.endLine !== undefined && parsed.endLine > lineCount) {
           failures.push(`${concept.path}: source span exceeds ${relativePath} (${lineCount} lines)`);
         }
       } catch {
@@ -213,6 +221,33 @@ function validateCurrentRepositorySources(session: HubAuthoringSession): void {
     }
   }
   if (failures.length) throw new Error(`authored repository sources failed validation: ${failures.join("; ")}`);
+}
+
+function normalizeAuthoredObservations(
+  session: HubAuthoringSession,
+  targetRoot: string,
+  lifecycleIntents: readonly HubLifecycleIntent[],
+): void {
+  copyCheckout(session.bundleRoot, targetRoot);
+  const authored = loadOkfBundle(targetRoot, { requireAgentBaseRootIndex: true });
+  const base = loadOkfBundle(session.baseRoot);
+  const intents = new Map(lifecycleIntents.map((intent) => [intent.conceptId, intent]));
+  for (const concept of authored.concepts.values()) {
+    const previous = base.concepts.get(concept.conceptId);
+    const hasAuthoredValues = Array.isArray(mapping(concept.frontmatter.agentbase).observed_values);
+    const hasPreviousValues = previous
+      ? Array.isArray(mapping(previous.frontmatter.agentbase).observed_values) : false;
+    const removesContribution = intents.get(concept.conceptId)?.action === "remove-contribution";
+    if (!hasAuthoredValues && !hasPreviousValues && !removesContribution) continue;
+    const normalized = normalizeRepositoryObservedValues(concept, {
+      repositoryId: session.sourceRepositoryId,
+      sourceState: session.sourceState,
+      observedAt: session.createdAt,
+      ...(previous ? { previous } : {}),
+      removeRepositoryContribution: removesContribution,
+    });
+    fs.writeFileSync(path.join(targetRoot, normalized.path), renderConceptDocument(normalized), { mode: 0o600 });
+  }
 }
 
 function mapping(value: OkfValue | undefined): Readonly<Record<string, OkfValue>> {
@@ -268,21 +303,10 @@ export function finalizeHubAuthoringSession(
     throw new Error("source repository changed after Prepare");
   }
   const staging = path.join(path.resolve(stateRoot), "proposals", `.staging-${session.id}`);
+  const normalizedRoot = path.join(path.resolve(stateRoot), "proposals", `.normalized-${session.id}`);
   privateDirectory(path.dirname(staging));
   if (fs.existsSync(staging)) fs.rmSync(staging, { recursive: true, force: true });
-  const common = {
-    baseCommit: session.baseCommit,
-    sourceRepositoryId: session.sourceRepositoryId,
-    hubBundleRoot: session.baseRoot,
-    authoredBundleRoot: session.bundleRoot,
-    proposalRoot: staging,
-    subjectDirectory: session.subjectDirectory,
-    evidenceDigest: session.evidenceDigest,
-    signals: session.signals,
-    selectedSchemas: session.selectedSchemas,
-    ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),
-    createdAt: session.createdAt,
-  };
+  if (fs.existsSync(normalizedRoot)) fs.rmSync(normalizedRoot, { recursive: true, force: true });
   let finalized: Readonly<{
     proposal: AnyHubProposal;
     bundleRoot: string;
@@ -290,12 +314,36 @@ export function finalizeHubAuthoringSession(
     diff?: Readonly<{ entries: readonly HubLifecycleEntry[] }>;
   }>;
   try {
+    assertQuestionAuthoringUntouched(session.baseRoot, session.bundleRoot);
     if (session.mode === "refresh"
       && (loadOkfBundle(session.baseRoot).treeDigest !== loadOkfBundle(session.bundleRoot).treeDigest
         || questions.length > 0 || lifecycleIntents.length > 0)) {
       recordSuccessfulObservation(session);
     }
-    validateCurrentRepositorySources(session);
+    normalizeAuthoredObservations(session, normalizedRoot, lifecycleIntents);
+    validateCurrentRepositorySources(session, normalizedRoot);
+    const observations = [...loadOkfBundle(normalizedRoot).concepts.values()]
+      .flatMap((concept) => readObservedValues(concept));
+    const declarations = validateQuestionDeclarations(questions, observations, session.sourceRepositoryId);
+    const materializedQuestions = materializeQuestionDeclarations(
+      session.baseRoot, normalizedRoot, declarations, observations, session.createdAt,
+    );
+    const questionPaths = declarations.length ? ["questions/index.md",
+      ...materializedQuestions.map((question) => `questions/${question.id}.md`)] : [];
+    const common = {
+      baseCommit: session.baseCommit,
+      sourceRepositoryId: session.sourceRepositoryId,
+      hubBundleRoot: session.baseRoot,
+      authoredBundleRoot: normalizedRoot,
+      proposalRoot: staging,
+      subjectDirectory: session.subjectDirectory,
+      evidenceDigest: session.evidenceDigest,
+      signals: session.signals,
+      selectedSchemas: session.selectedSchemas,
+      questionPaths,
+      ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),
+      createdAt: session.createdAt,
+    };
     if (session.hub) {
       finalized = session.mode === "new"
         ? prepareNewHubProposal({ ...common, hub: session.hub })
@@ -308,8 +356,10 @@ export function finalizeHubAuthoringSession(
     }
   } catch (error) {
     fs.rmSync(staging, { recursive: true, force: true });
+    fs.rmSync(normalizedRoot, { recursive: true, force: true });
     throw error;
   }
+  fs.rmSync(normalizedRoot, { recursive: true, force: true });
   const inspection = finalized.inspection
     ?? inspectHubProposal(finalized.diff!.entries, { baseRoot: session.baseRoot, proposedRoot: finalized.bundleRoot });
   if (session.mode === "refresh" && !questions.length
@@ -319,11 +369,8 @@ export function finalizeHubAuthoringSession(
     return { result: "no_change", inspection: attachHubInspectionContext(inspection, [], session.coverage),
       observedSource: { ...session.sourceState, observedAt: session.createdAt } };
   }
-  const claims = [...loadOkfBundle(finalized.bundleRoot).concepts.values()].flatMap((concept) => readLiveClaims(concept));
-  const declarations = validateQuestionDeclarations(questions, claims, session.sourceRepositoryId);
-  const bound = bindQuestionDeclarations(staging, finalized.proposal, inspection, declarations, session.createdAt, claims);
-  const reviewed = { proposal: bound.proposal,
-    inspection: attachHubInspectionContext(bound.inspection, bound.inspection.questions, session.coverage) };
+  const reviewed = { proposal: finalized.proposal,
+    inspection: attachHubInspectionContext(inspection, questions, session.coverage) };
   fs.cpSync(session.baseRoot, path.join(staging, "base"), { recursive: true, errorOnExist: true, force: false });
   fs.writeFileSync(path.join(staging, "inspection.json"), `${JSON.stringify(reviewed.inspection, null, 2)}\n`, { mode: 0o600 });
   fs.writeFileSync(path.join(staging, "runtime.json"), `${JSON.stringify({ checkoutRoot: session.checkoutRoot })}\n`, { mode: 0o600 });

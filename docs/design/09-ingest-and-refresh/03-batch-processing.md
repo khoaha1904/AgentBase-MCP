@@ -59,7 +59,10 @@ one proposal → one Accept → one PR
 
 Repository failure làm batch Incomplete; completed repository staging được giữ.
 User retry repository lỗi hoặc xác nhận loại nó và finalize một batch membership
-mới. Hệ thống không âm thầm bỏ repo và không publish partial membership.
+mới. Khi loại một repo khỏi draft đã có, AI bỏ attributable contributions, sửa
+hard dangling dependencies hoặc hỏi user nếu meaning mơ hồ, rồi MCP Finalize
+deterministic trên toàn membership còn lại. Hệ thống không âm thầm bỏ repo và
+không publish partial membership.
 
 Batch không split sau Accept, không reorder item thành nhiều PR và không
 auto-Accept. Thiết kế này giữ proposal/change set làm publication unit như phần

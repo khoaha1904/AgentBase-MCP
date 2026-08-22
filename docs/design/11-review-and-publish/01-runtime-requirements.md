@@ -100,19 +100,32 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-INGEST-010** — A confirmed primary Domain is materialized on the
   current-source Repository concept with deterministic owner-guidance evidence;
   it is not stored in a side registry or inferred from a System name.
-- **AB-QUESTION-001, AB-QUESTION-005** — Finalization may attach bounded
-  governed-question declarations to the reviewed proposal digest. Acceptance
-  deterministically creates or merges private subject/property records with
-  linked claim references, missing evidence and append-only history; accepted
-  attachments recover an interrupted post-commit ledger write idempotently.
-- **AB-QUESTION-002, AB-QUESTION-003** — Questions can be listed by pending or
-  resolved status with claim roles/sources and history. Only an exact-revision,
-  non-empty answer attributed as `human:<id>` resolves one; an incompatible
-  later answer is appended and reopens it instead of overwriting evidence.
-- **AB-QUESTION-004** — An answer prepares exactly one stable, human-authored
-  `guidance/<question-id>-r<revision>.md` Maintainer Guidance proposal. Accepted
-  Hub bytes do not change until that proposal passes the ordinary inspect and
-  accept lifecycle.
+- **AB-QUESTION-001** — Question is an MCP-rendered shared Hub governance
+  document at `questions/<stable-id>.md`, with navigation in
+  `questions/index.md`. It is part of the ordinary proposal tree/digest and
+  becomes visible to another machine through normal Git synchronization; no
+  private ledger or attachment is knowledge authority.
+- **AB-QUESTION-002** — Stable Question identity is created once from immutable
+  origin kind/subject/property/scope without a machine-local Hub identifier.
+  Rename/redirect updates references but never regenerates ID/path. Typed
+  references namespace owning concept, item kind/key, source and optional
+  observed revision so multi-repository evidence resolves at one exact Hub
+  commit.
+- **AB-QUESTION-003** — Dedicated MCP rendering/validation owns exact Question
+  fields, bounds, references, index uniqueness and
+  `agentbase.question.state` transitions among `open`, `resolved` and
+  `needs-review`. Top-level OKF `status` remains a separate document lifecycle.
+  Each accepted Question-document edit increments revision exactly once;
+  generic Ingest/Refresh cannot edit Question bytes or broaden mutable-draft
+  policy. `Resolved` only means no maintainer action remains; competing current
+  positions stay visible until explicitly superseded/retracted.
+- **AB-QUESTION-004** — An exact-revision answer attributed as `human:<id>`
+  atomically proposes one stable Maintainer Guidance revision and the linked
+  Question update. Published state does not change before ordinary validation,
+  inspection and Accept; a stale answer never updates state.
+- **AB-QUESTION-005** — Private Question indexes/caches are optional and fully
+  rebuildable from one exact Hub commit. Clean cutover rejects orphan accepted
+  Guidance instead of silently discarding prior Question context.
 - **AB-QUERY-001** — Code questions primarily use Code Graph; business/system/
   cross-repository questions primarily use local Hub; combined answers retain
   both source kinds and limitations.
@@ -130,12 +143,32 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-QUERY-005** — Root navigation links bounded Domain and fallback System/
   Repository entrypoints. Domain concepts navigate Systems and critical flows;
   System concepts navigate useful entities without copying their knowledge.
-- **AB-QUERY-006..008** — `read_hub_live_evidence` reads validated references at
-  one exact accepted Hub commit and binds them only to the repository authorized
-  on the current MCP connection. The host resolves ready targets through graph
-  search/exact snippets, labels documentation/implementation/configuration and
-  Maintainer Guidance separately, and never emits an automatic winner. Missing,
-  ambiguous, moved or mismatched evidence is reported without a stale scalar.
+- **AB-QUERY-006** — Hub query reads bounded `agentbase.observed_values` at one
+  exact accepted commit and returns value, role, source resource,
+  source-kind-specific observed state/time, exact age and access state. Ordinary
+  snapshot query uses `not-checked` and performs no credential/access probe.
+  Repository current-source reading may return `available`, `unavailable` or
+  `unauthorized`; provider observations require a new Domain Enrichment and are
+  never live-read by query. It labels every value observed and never emits an
+  automatic winner.
+- **AB-QUERY-007** — An explicit current-value question may use ordinary
+  authorized MCP graph/search/snippet reads from the referenced source file.
+  There is no dedicated live resolver, semantic target registry or automatic
+  write-back; unclear current source returns ambiguity/unavailable.
+- **AB-QUERY-008** — Without source access, query returns the observed snapshot
+  with provenance and degradation. Historical-integrity failure preserves the
+  value and may create a shared Question through a reviewed proposal;
+  current-path-unavailable, age, source advance, permission loss or temporary
+  unavailability alone never changes knowledge state.
+- **AB-QUERY-009** — `read_hub_observed_values` replaces the legacy
+  `read_hub_live_evidence` action. It reads one exact Hub view and returns
+  bounded snapshot metadata with `source_access: not-checked`; it performs no
+  repository/provider access, credential probe, indexing or write-back. Every
+  entry preserves Published commit or Local Draft proposal/layer attribution.
+- **AB-QUERY-010** — Authoring, publication validation, Hub query and explicit
+  current-source response share the obvious-sensitive value guard. Query
+  redacts only the unsafe value and continues returning safe knowledge;
+  known secret-bearing paths are not used for current-value lookup.
 
 ## Single-repository Refresh
 

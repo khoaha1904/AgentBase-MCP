@@ -9,15 +9,20 @@ High-level decision:
 
 - [`01-runtime-requirements.md`](01-runtime-requirements.md) — current Local Hub,
   query, setup, publication và synchronization `AB-*` requirements.
-- `02-review-preview.md` — nhóm, chọn và bỏ knowledge item.
-- `03-dependency-validation.md` — selection hợp lệ trước PR.
-- `04-git-and-pr-workflow.md` — pull, reconcile, branch, commit và PR.
-- `05-publication-state-machine.md` — Local Draft, In Review và Published.
-- `06-verification-and-cleanup.md` — verify item và dọn local an toàn.
-- `07-failure-recovery-and-permissions.md` — retry, partial outcome và Git authority.
-- `08-domain-enrichment-changes.md` — một dependency-safe Draft/PR chứa updates
+- [`02-review-preview.md`](02-review-preview.md) — chỉnh item trước Finalize,
+  atomic review/Accept và optional static HTML sau MVP.
+- [`03-dependency-validation.md`](03-dependency-validation.md) — hard structure
+  gates, allowed incompleteness và AI/MCP responsibilities.
+- [`04-git-and-pr-workflow.md`](04-git-and-pr-workflow.md) — exact replay,
+  independent Init PR, same-Repository stack và reconciliation.
+- [`05-publication-state-machine.md`](05-publication-state-machine.md) — trạng
+  thái suy ra từ Git/matching PR, không có state store thứ hai.
+- [`06-verification-and-cleanup.md`](06-verification-and-cleanup.md) — reuse ba
+  validation gate và chỉ dọn temporary state an toàn trong MVP.
+- [`07-failure-recovery-and-permissions.md`](07-failure-recovery-and-permissions.md) — retry, partial outcome và Git authority.
+- [`08-domain-enrichment-changes.md`](08-domain-enrichment-changes.md) — một dependency-safe Draft/PR chứa updates
   của nhiều repository trong cùng Domain.
-- `09-profile-migration-changes.md` — impact scan, Migration Draft và một Hub PR
+- [`09-profile-migration-changes.md`](09-profile-migration-changes.md) — impact scan, Migration Draft và một Hub PR
   cho semantic profile upgrade.
 
 ## Cross-section decision từ Refresh

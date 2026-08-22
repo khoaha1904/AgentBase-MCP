@@ -22,12 +22,12 @@ repository, or invoke provider CLI from this workflow.
    inspect the exact Git diff from the returned previously observed commit to
    the current commit for every returned changed path; do not replace this with
    a partial read of a large file. Use Code Graph as a private map and resolve
-   retained claims to exact authorized source.
+   retained observations to exact authorized source.
 4. Author only inside the prepared `bundle/` following `agentbase-okf`. A valid
    sparse or partial result is enough; do not search for completeness.
 5. Preserve omission. Missing graph/search evidence, elapsed time or an omitted
    file never means deletion. For a shared multi-repository concept, change only
-   structured source/claim/relation entries with exact current-Repository
+   structured source/observation/relation entries with exact current-Repository
    evidence ownership. Preserve ambiguous prose/metadata and declare a Question
    or limitation.
 6. Validate changed concepts once and perform at most one content repair.

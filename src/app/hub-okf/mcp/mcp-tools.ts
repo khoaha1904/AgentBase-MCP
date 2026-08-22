@@ -101,7 +101,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "finalize_hub_okf_proposal",
-    description: "Validate and lock an authored Hub workspace into one immutable local proposal. Omit questions that have no existing claim IDs; never send an empty claim_ids list.",
+    description: "Validate and lock an authored Hub workspace into one immutable local proposal. Questions identify normalized observations by subject, property, role and source_id.",
     inputSchema: {
       type: "object",
       properties: {
@@ -111,9 +111,14 @@ export const HUB_OKF_TOOLS = [
             type: "object", properties: {
               subject: { type: "string", minLength: 1, maxLength: 512 },
               property: { type: "string", minLength: 1, maxLength: 128 },
-              claim_ids: { type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: 64 },
+              observation_refs: { type: "array", minItems: 1, maxItems: 64, items: {
+                type: "object", properties: {
+                  role: { type: "string", enum: ["documentation", "implementation", "configuration"] },
+                  source_id: { type: "string", minLength: 1, maxLength: 128 },
+                }, required: ["role", "source_id"], additionalProperties: false,
+              } },
               missing_evidence: { type: "array", items: { type: "string", minLength: 1, maxLength: 512 }, maxItems: 64 },
-            }, required: ["subject", "property", "claim_ids"], additionalProperties: false,
+            }, required: ["subject", "property", "observation_refs"], additionalProperties: false,
           },
         },
         lifecycle_intents: {
@@ -163,8 +168,8 @@ export const HUB_OKF_TOOLS = [
     },
   },
   {
-    name: "read_hub_live_evidence",
-    description: "Read validated live source references from one accepted Hub concept and bind them to the authorized repository.",
+    name: "read_hub_observed_values",
+    description: "Read bounded observed-value snapshots from one exact accepted Hub view without probing repository or provider access.",
     inputSchema: {
       type: "object",
       properties: { path: { type: "string", minLength: 1, maxLength: 512 } },
@@ -173,20 +178,20 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "list_hub_questions",
-    description: "List bounded governed questions and their provenance-bearing history.",
+    description: "List shared governed Question documents from the exact accepted Hub view.",
     inputSchema: {
       type: "object", properties: {
-        status: { type: "string", enum: ["pending", "resolved"] },
+        status: { type: "string", enum: ["open", "resolved", "needs-review"] },
         limit: { type: "integer", minimum: 1, maximum: 100 },
       }, additionalProperties: false,
     },
   },
   {
     name: "answer_hub_question",
-    description: "Record one explicitly attributed maintainer answer and prepare a reviewable Maintainer Guidance proposal.",
+    description: "Prepare one atomic proposal containing attributed Maintainer Guidance and the exact Question transition.",
     inputSchema: {
       type: "object", properties: {
-        question_id: { type: "string", pattern: "^[a-f0-9]{24}$" },
+        question_id: { type: "string", pattern: "^question-[a-f0-9]{24}$" },
         question_revision: { type: "integer", minimum: 1 },
         answer: { type: "string", minLength: 1, maxLength: 4096 },
         maintainer: { type: "string", pattern: "^human:[A-Za-z0-9][A-Za-z0-9._@-]{0,127}$" },
@@ -228,5 +233,5 @@ export const HUB_OKF_TOOLS = [
 ] as const;
 
 export type HubOkfToolName = typeof HUB_OKF_TOOLS[number]["name"];
-export type { HubToolActions, HubToolContext } from "./mcp-tool-actions.ts";
+export type { HubToolActions } from "./mcp-tool-actions.ts";
 export { callHubOkfTool } from "./mcp-tool-call.ts";

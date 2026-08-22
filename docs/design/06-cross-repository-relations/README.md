@@ -1,17 +1,29 @@
 # 06 — Cross-repository relations
 
-> Trạng thái: Chờ review cách phân rã.
+> Trạng thái: Technical design đã hoàn tất; runtime Domain Enrichment chưa implement.
 
 High-level decision:
 [Quan hệ giữa nhiều repository và Domain](../../present/06-cross-repository-and-cross-domain-relationships.md)
 
 ## Phân rã dự kiến
 
-- `01-relation-discovery.md` — relation một phía và evidence của từng source.
-- `02-resource-identity-matching.md` — identity mạnh, alias và match candidate.
-- `03-domain-enrichment-reconciliation.md` — đối chiếu nhiều Published
-  repository theo batch mà không kéo dài Ingest.
-- `04-provider-verification.md` — xác minh bounded candidates read-only qua
-  provider CLI trong Domain Enrichment.
-- `05-concept-merge-and-history.md` — canonical ID, redirect, aliases và history.
-- `06-multi-region-resources.md` — logical resource và deployment references.
+- [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — phần có thể tái sử
+  dụng, gap và impact checkpoint trước khi thiết kế sâu.
+- [`01-relation-discovery.md`](01-relation-discovery.md) — canonical relation,
+  unresolved candidate và evidence của từng source.
+- [`02-resource-identity-matching.md`](02-resource-identity-matching.md) —
+  provider-neutral external identity, scope và strong match candidate.
+- [`03-domain-enrichment-reconciliation.md`](03-domain-enrichment-reconciliation.md)
+  — đối chiếu nhiều Published repositories thành một atomic Enrichment Draft.
+- [`04-provider-verification.md`](04-provider-verification.md) — xác minh exact
+  candidates read-only qua released provider CLI profiles.
+- [`05-concept-merge-and-history.md`](05-concept-merge-and-history.md) — explicit
+  canonical selection, retained redirect và Git history.
+- [`06-multi-region-resources.md`](06-multi-region-resources.md) — logical
+  concept, regional deployment references và split boundary.
+
+## Thứ tự review
+
+Relation candidate phải được chốt trước external identity. External identity là
+dependency của reconciliation, provider verification, merge và multi-region;
+không thiết kế các nhánh đó song song để tránh tạo nhiều contract mâu thuẫn.
