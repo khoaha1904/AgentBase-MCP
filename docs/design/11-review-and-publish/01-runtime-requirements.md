@@ -81,10 +81,13 @@ queries and ordinary coding never create Hub state, commits or publication.
   branches/PRs from the same admitted Published `main`, even when their accepted
   local commits are consecutive. First bootstrap alone retains its one-PR batch
   transaction.
-- **AB-PUBLISH-008** — MCP replays only each proposal's exact accepted patch onto
-  its publication base and admits repository, base branch/commit and head
-  branch/commit before PR creation. Conflict, drift or multiple matching PRs
-  stop without merge, deletion or target mutation.
+- **AB-PUBLISH-008** — MCP replays only each proposal's exact accepted
+  contribution onto its publication base and admits repository, base
+  branch/commit and head branch/commit before PR creation. For a governed
+  append-only shared index, exact contribution means only navigation added by
+  the selected proposal; unrelated earlier Local Draft lines are excluded.
+  Other conflict, drift or multiple matching PRs stop without merge, deletion
+  or target mutation.
 - **AB-PUBLISH-009** — Retry recovers exact existing branches and matching open
   PRs. Partial multi-PR failure leaves completed units intact and retryable.
 - **AB-PUBLISH-010** — Canonical proof uses disposable Git and fake GitHub HTTP;

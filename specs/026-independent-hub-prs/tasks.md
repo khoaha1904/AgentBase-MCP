@@ -31,3 +31,7 @@
 
 Work is sequential. US1 is the independently useful MVP; US2 reuses its replay
 unit; US3 reuses the same unit for post-merge recovery. No parallel tasks.
+
+## Phase 6: Convergence
+
+- [x] T013 Preserve only selected append-only index navigation during independent replay in `src/app/hub-okf/publication/publish.ts` and cover it in `src/app/hub-okf/publication/publish.test.ts`

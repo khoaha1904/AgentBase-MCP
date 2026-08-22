@@ -60,7 +60,10 @@ a conflict stops before remote branch mutation.
 - **AB-PUBLISH-007**: Every selected independent Init MUST publish as its own PR
   against the admitted Published `main`; bootstrap batch behavior MUST remain.
 - **AB-PUBLISH-008**: Each publication branch MUST contain the exact accepted
-  patch for its proposal and MUST NOT contain unrelated pending proposal changes.
+  contribution for its proposal and MUST NOT contain unrelated pending proposal
+  changes. For governed append-only shared indexes, that contribution is the
+  selected proposal's added navigation applied to the publication base; earlier
+  Local Draft navigation is context, not part of the selected contribution.
 - **AB-PUBLISH-009**: Retry and partial failure MUST reuse exact branches and
   matching open PRs without duplicate PR creation.
 - **AB-PUBLISH-010**: Canonical proof MUST remain offline with disposable Git and
@@ -76,6 +79,8 @@ a conflict stops before remote branch mutation.
 - A deterministic publication branch exists with a conflicting head.
 - Remote `main` changes between admission and push.
 - A proposal patch conflicts with its publication base.
+- A selected Init appends navigation to a category index that exists only because
+  an unrelated earlier Local Draft created it.
 - A predecessor Init merges while its Refresh PR remains open.
 
 ## Success Criteria

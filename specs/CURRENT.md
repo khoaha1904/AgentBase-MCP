@@ -9,8 +9,9 @@ current Published `main`; Refresh remains chained only to the preceding proposal
 for the same Repository. Publication replays exact proposal patches instead of
   leaking unrelated earlier local drafts into a PR. When Published `main`
   advances, compatible open proposal branches are merged forward sequentially
-  and keep the same PR; conflict stops before push. The complete 50-test offline
-  gate passes with disposable Git and fake GitHub.
+  and keep the same PR; conflict stops before push. Append-only shared indexes
+  publish only selected navigation and exclude earlier unrelated Local Draft
+  entries. The complete 50-test offline gate passes.
 
 Capability 025 makes MCP-created Hub PRs maintainer-readable and adds an exact
 Init/Refresh stack for a same-Repository selected prefix while preserving one

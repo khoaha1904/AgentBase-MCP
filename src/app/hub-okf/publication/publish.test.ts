@@ -73,6 +73,7 @@ test("[AB-PUBLISH-001..011] MCP creates independent, stacked and recoverable Hub
     const remoteBase = git(hubRoot, ["rev-parse", "HEAD"]), sourceRevisions = ["c".repeat(40), "d".repeat(40)];
     fs.mkdirSync(path.join(hubRoot, "repositories"));
     fs.writeFileSync(path.join(hubRoot, "repositories/acme.md"), concept(sourceRevisions[0]!, "Initial knowledge."));
+    fs.writeFileSync(path.join(hubRoot, "repositories/index.md"), "# Repositories\n\n* [Acme](acme.md) - Repository\n");
     git(hubRoot, ["add", "--all"]); git(hubRoot, ["-c", "user.name=Test", "-c", "user.email=test@localhost", "commit", "-m", commitMessage(IDS[0]!, "new", DIGESTS[0]!)]);
     const initCommit = git(hubRoot, ["rev-parse", "HEAD"]);
     retainedProposal(stateRoot, hubRoot, IDS[0]!, initCommit, DIGESTS[0]!, "created");
@@ -82,6 +83,7 @@ test("[AB-PUBLISH-001..011] MCP creates independent, stacked and recoverable Hub
     retainedProposal(stateRoot, hubRoot, IDS[1]!, refreshCommit, DIGESTS[1]!, "modified");
     fs.writeFileSync(path.join(hubRoot, "repositories/beta.md"),
       concept("e".repeat(40), "Independent knowledge.", SOURCE_ID_B, "Beta"));
+    fs.appendFileSync(path.join(hubRoot, "repositories/index.md"), "\n* [Beta](beta.md) - Repository\n");
     git(hubRoot, ["add", "--all"]); git(hubRoot, ["-c", "user.name=Test", "-c", "user.email=test@localhost",
       "commit", "-m", commitMessage(IDS[2]!, "new", DIGESTS[2]!, SOURCE_ID_B, "repositories/beta")]);
     const betaCommit = git(hubRoot, ["rev-parse", "HEAD"]);
@@ -171,7 +173,9 @@ test("[AB-PUBLISH-001..011] MCP creates independent, stacked and recoverable Hub
     assert.deepEqual(retry, stack); assert.equal(pushes.length, pushCount); assert.equal(pulls.length, pullCount);
     const independent = await publishPendingHubProposals({ ...common, selectedProposalIds: [IDS[2]!] });
     assert.equal(independent.mode, "independent"); assert.equal(independent.units[0]?.baseBranch, "main");
-    assert.equal(git(hubRoot, ["diff", "--name-only", remoteBase, independent.headCommit]), "repositories/beta.md");
+    assert.deepEqual(git(hubRoot, ["diff", "--name-only", remoteBase, independent.headCommit]).split("\n"),
+      ["repositories/beta.md", "repositories/index.md"]);
+    assert.doesNotMatch(git(hubRoot, ["show", `${independent.headCommit}:repositories/index.md`]), /Acme/);
     const forcedBatch = await publishPendingHubProposals({ ...common, selectedProposalIds: stackIds, publicationMode: "batch" });
     assert.equal(forcedBatch.mode, "batch"); assert.equal(forcedBatch.units.length, 1); assert.equal(forcedBatch.units[0]?.baseBranch, "main");
     git(remote, ["update-ref", "refs/heads/main", batch.headCommit, remoteBase]);

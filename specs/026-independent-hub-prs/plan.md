@@ -40,6 +40,9 @@ introduced. Post-design check: pass.
 3. `publicationMode: batch` remains only for first bootstrap compatibility.
 4. Replay uses an isolated worktree plus deterministic cherry-pick timestamp;
    accepted commit identity remains in the receipt, publication head may differ.
+   The only conflict specialization is an append-only shared `index.md`: verify
+   the accepted parent is an ordered subset, then apply only newly added
+   navigation to the publication base. No semantic concept merge is attempted.
 5. Retry reconstructs the same head from exact base + exact patch and reuses the
    matching branch/PR. Conflicts fail before push.
 6. Reconciliation advances an existing branch/PR rather than creating another;

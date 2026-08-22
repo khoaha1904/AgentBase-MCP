@@ -11,7 +11,7 @@ merged forward and the same PR is retained; conflict stops before push.
 
 - **AB-PUBLISH-006..008**: one disposable-Git scenario accepts consecutive
   Acme Init/Refresh and Beta Init commits, then proves Beta's PR targets `main`
-  and contains only `repositories/beta.md`.
+  and contains only its concept plus Beta navigation; Acme navigation is absent.
 - **AB-PUBLISH-009**: partial PR failure and exact retry reuse remote branches
   and create no duplicate PR.
 - **AB-PUBLISH-010**: the canonical scenario uses fake GitHub and no real token
@@ -28,5 +28,5 @@ and `git diff --check` pass.
 ## Convergence
 
 Checked six functional requirements, four success criteria, three user stories,
-six design decisions and 12 completed tasks. No missing, partial, contradictory
+six design decisions and 13 completed tasks. No missing, partial, contradictory
 or unrequested implementation remains in capability scope.

@@ -183,7 +183,35 @@ async function reconcilePublicationBranch(
         operation: `reconcile publication branch ${unit.branch}`, commitTimestamp: timestamp,
         ...(options.signal ? { signal: options.signal } : {}) });
     } catch (error) {
-      throw new Error(`publication conflict while reconciling ${unit.branch}`, { cause: error });
+      try {
+        const unresolved = (await git({ args: ["diff", "--name-only", "--diff-filter=U"], cwd: candidateRoot,
+          operation: "inspect publication reconciliation conflicts", maximumOutputBytes: 64 * 1024 }))
+          .stdout.trim().split("\n").filter(Boolean);
+        if (!unresolved.length || unresolved.some((relative) => path.posix.basename(relative) !== "index.md")) throw error;
+        for (const relative of unresolved) {
+          if (relative.startsWith("/") || relative.split("/").includes("..")) throw error;
+          const ours = (await git({ args: ["show", `HEAD:${relative}`], cwd: candidateRoot,
+            operation: "read proposal-branch index", maximumOutputBytes: 256 * 1024 })).stdout;
+          const theirs = (await git({ args: ["show", `${baseCommit}:${relative}`], cwd: candidateRoot,
+            operation: "read published-base index", maximumOutputBytes: 256 * 1024 })).stdout;
+          const oursLines = ours.replace(/\n$/, "").split("\n"), theirsLines = theirs.replace(/\n$/, "").split("\n");
+          const heading = oursLines.find((line) => /^#\s+\S/.test(line));
+          if (!heading || theirsLines.find((line) => /^#\s+\S/.test(line)) !== heading) throw error;
+          const navigation = [...oursLines, ...theirsLines].filter((line) => line.trim().length > 0 && line !== heading);
+          if (navigation.some((line) => !/^\* \[[^\]]+\]\([^\)]+\)(?: - .+)?$/.test(line))) throw error;
+          const unique = [...new Set(navigation)];
+          const target = path.resolve(candidateRoot, ...relative.split("/"));
+          if (!target.startsWith(`${candidateRoot}${path.sep}`)) throw error;
+          fs.writeFileSync(target, `${heading}\n\n${unique.join("\n\n")}\n`);
+          await git({ args: ["add", "--", relative], cwd: candidateRoot,
+            operation: "stage reconciled append-only index" });
+        }
+        await git({ args: ["commit", "--no-edit"], cwd: candidateRoot,
+          operation: `complete publication branch reconciliation ${unit.branch}`, commitTimestamp: timestamp,
+          ...(options.signal ? { signal: options.signal } : {}) });
+      } catch (repairError) {
+        throw new Error(`publication conflict while reconciling ${unit.branch}`, { cause: repairError });
+      }
     }
     return await exactCommit(git, candidateRoot, "HEAD", "resolve reconciled publication branch");
   } finally {
@@ -222,7 +250,49 @@ async function replayProposal(
         operation: `replay accepted Hub proposal ${proposal.id}`, commitTimestamp: timestamp,
         ...(options.signal ? { signal: options.signal } : {}) });
     } catch (error) {
-      throw new Error(`publication conflict while replaying ${proposal.id}`, { cause: error });
+      try {
+        const unresolved = (await git({ args: ["diff", "--name-only", "--diff-filter=U"], cwd: candidateRoot,
+          operation: "inspect publication replay conflicts", maximumOutputBytes: 64 * 1024 }))
+          .stdout.trim().split("\n").filter(Boolean);
+        if (!unresolved.length || unresolved.some((relative) => path.posix.basename(relative) !== "index.md")) throw error;
+        for (const relative of unresolved) {
+          if (relative.startsWith("/") || relative.split("/").includes("..")) throw error;
+          const before = (await git({ args: ["show", `${proposal.parentCommit}:${relative}`], cwd: options.localHub.root,
+            operation: "read accepted index parent", maximumOutputBytes: 256 * 1024 })).stdout;
+          const after = (await git({ args: ["show", `${proposal.commit}:${relative}`], cwd: options.localHub.root,
+            operation: "read accepted index contribution", maximumOutputBytes: 256 * 1024 })).stdout;
+          const priorLines = before.replace(/\n$/, "").split("\n"), nextLines = after.replace(/\n$/, "").split("\n");
+          const additions: string[] = [];
+          let cursor = 0;
+          for (const line of nextLines) {
+            if (cursor < priorLines.length && line === priorLines[cursor]) cursor += 1;
+            else additions.push(line);
+          }
+          const navigation = additions.filter((line) => line.trim().length > 0);
+          if (cursor !== priorLines.length || !navigation.length
+            || navigation.some((line) => !/^\* \[[^\]]+\]\([^\)]+\)(?: - .+)?$/.test(line))) throw error;
+          const target = path.resolve(candidateRoot, ...relative.split("/"));
+          if (!target.startsWith(`${candidateRoot}${path.sep}`)) throw error;
+          fs.mkdirSync(path.dirname(target), { recursive: true });
+          let base: string;
+          try {
+            base = (await git({ args: ["show", `HEAD:${relative}`], cwd: candidateRoot,
+              operation: "read publication-base index", maximumOutputBytes: 256 * 1024 })).stdout;
+          } catch {
+            base = `${nextLines.find((line) => /^#\s+\S/.test(line)) ?? "# Index"}\n`;
+          }
+          const existingLines = new Set(base.split("\n"));
+          const selected = navigation.filter((line) => !existingLines.has(line));
+          fs.writeFileSync(target, selected.length ? `${base.trimEnd()}\n\n${selected.join("\n\n")}\n` : base);
+          await git({ args: ["add", "--", relative], cwd: candidateRoot,
+            operation: "stage selected append-only index contribution" });
+        }
+        await git({ args: ["cherry-pick", "--continue"], cwd: candidateRoot,
+          operation: `complete accepted Hub proposal replay ${proposal.id}`, commitTimestamp: timestamp,
+          ...(options.signal ? { signal: options.signal } : {}) });
+      } catch (repairError) {
+        throw new Error(`publication conflict while replaying ${proposal.id}`, { cause: repairError });
+      }
     }
     return await exactCommit(git, candidateRoot, "HEAD", "resolve publication candidate");
   } finally {
