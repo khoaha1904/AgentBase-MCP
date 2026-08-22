@@ -98,11 +98,11 @@ conflict coordination.
 ## Hub-CI upgrade PR
 
 CI installation is a separate reviewed lifecycle, not an OKF proposal. Preview
-binds exact remote `main` and deterministic workflow digest. Explicit submit may
-create or recover only `agentbase/hub-ci-<digest>` whose sole diff is
-`.github/workflows/agentbase-hub.yml`. Any extra file, changed base, ambiguous PR
-or workflow drift stops. The same dedicated Hub token is used internally; the
-caller cannot provide a token, branch name or workflow bytes.
+binds exact remote `main` and deterministic CI-bundle digest. Explicit submit may
+create or recover only `agentbase/hub-ci-<digest>` whose sole diff is the exact
+workflow, standalone validator and version/checksum manifest. Any extra file,
+changed base, ambiguous PR or byte drift stops. The same dedicated Hub token is
+used internally; the caller cannot provide a token, branch name or bundle bytes.
 
 ## Current implementation gap
 

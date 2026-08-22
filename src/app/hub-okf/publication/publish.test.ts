@@ -12,7 +12,8 @@ import { synchronizeLocalHub } from "./synchronize.ts";
 import {
   previewHubCiUpgrade, submitHubCiUpgrade,
 } from "../ci/upgrade.ts";
-import { HUB_CI_WORKFLOW_PATH, hubCiWorkflowDigest, renderHubCiWorkflow } from "../ci/workflow.ts";
+import { renderHubCiBundle } from "../ci/artifact.ts";
+import { HUB_CI_WORKFLOW_PATH } from "../ci/workflow.ts";
 
 const SOURCE_ID = "repository-acme-aaaaaaaaaaaa";
 const SOURCE_ID_B = "repository-beta-bbbbbbbbbbbb";
@@ -255,16 +256,17 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010] MCP creates independent, stacked
     const ciPreview = await previewHubCiUpgrade(ciOptions);
     assert.equal(ciPreview.state, "missing"); assert.equal(ciPreview.base_commit, remoteBase);
     const ciUpgrade = await submitHubCiUpgrade(ciOptions, {
-      baseCommit: ciPreview.base_commit, workflowDigest: ciPreview.workflow_digest,
+      baseCommit: ciPreview.base_commit, ciDigest: ciPreview.ci_digest,
     });
     assert.equal(ciUpgrade.result, "created"); assert.ok(ciUpgrade.head_commit); assert.ok(ciUpgrade.pull_request);
     assert.equal(ref("main"), remoteBase);
-    assert.deepEqual(git(hubRoot, ["diff", "--name-only", remoteBase, ciUpgrade.head_commit!]), HUB_CI_WORKFLOW_PATH);
-    assert.equal(git(hubRoot, ["show", `${ciUpgrade.head_commit}:${HUB_CI_WORKFLOW_PATH}`]), renderHubCiWorkflow().trimEnd());
+    assert.deepEqual(git(hubRoot, ["diff", "--name-only", remoteBase, ciUpgrade.head_commit!]).split("\n"), ciPreview.ci_paths);
+    assert.equal(git(hubRoot, ["show", `${ciUpgrade.head_commit}:${HUB_CI_WORKFLOW_PATH}`]),
+      renderHubCiBundle().files[HUB_CI_WORKFLOW_PATH]!.toString().trimEnd());
     assert.doesNotMatch(pullCalls.find((call) => call.title === "Install AgentBase-Hub CI")?.body ?? "",
       /github_pat_secret_canary|agentbase-publish-test-/);
     const ciRetry = await submitHubCiUpgrade(ciOptions, {
-      baseCommit: ciPreview.base_commit, workflowDigest: hubCiWorkflowDigest(),
+      baseCommit: ciPreview.base_commit, ciDigest: renderHubCiBundle().digest,
     });
     assert.equal(ciRetry.result, "recovered"); assert.deepEqual(ciRetry.pull_request, ciUpgrade.pull_request);
     mainOverride = ciUpgrade.head_commit;
@@ -283,8 +285,8 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010] MCP creates independent, stacked
     git(badCiRoot, ["push", "--force", remote, `${badCiHead}:refs/heads/${ciPreview.head_branch}`]);
     git(hubRoot, ["worktree", "remove", "--force", badCiRoot]);
     await assert.rejects(submitHubCiUpgrade(ciOptions, {
-      baseCommit: ciPreview.base_commit, workflowDigest: ciPreview.workflow_digest,
-    }), /outside the workflow/);
+      baseCommit: ciPreview.base_commit, ciDigest: ciPreview.ci_digest,
+    }), /outside the reviewed CI bundle/);
     assert.equal(ref("main"), remoteBase);
 
     git(remote, ["update-ref", "refs/heads/main", batch.headCommit, remoteBase]);

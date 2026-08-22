@@ -107,3 +107,9 @@ metadata tùy chọn bị thiếu được ghi là unavailable. MCP không dùng
 merge, approve, close hoặc xóa branch. Khi Published `main` đổi, proposal còn mở
 được reconcile tuần tự và cập nhật trên chính branch/PR hiện có; conflict phải
 được giải quyết trước khi branch đó được cập nhật.
+
+Hub CI là một PR hỗ trợ riêng, không trộn với knowledge proposal. PR này đưa vào
+đúng ba file: workflow read-only, standalone validator và manifest
+version/checksum. Hub tự kiểm tra và chạy validator đã review mà không tải npm
+package, checkout MCP hay cần MCP token. Nâng cấp CI thay đúng ba file qua một PR
+mới; maintainer vẫn là người quyết định merge.

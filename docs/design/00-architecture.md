@@ -45,7 +45,7 @@ src/app/
     enrichment/                   Published Domain reconciliation/checkpoints
     review/                       inspection and acceptance
     publication/                  submit, publish and synchronize
-    ci/                           offline Hub validation and workflow-only upgrade
+    ci/                           offline validation and self-contained CI-bundle upgrade
     query/                        accepted-Hub reads, freshness and runtime actions
     mcp/                          MCP adapters
 scripts/

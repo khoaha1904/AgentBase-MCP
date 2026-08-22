@@ -329,16 +329,16 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "preview_hub_ci_upgrade",
-    description: "Preview the exact workflow-only CI change for the attached Hub without mutating local or remote state.",
+    description: "Preview the exact self-contained CI bundle for the attached Hub without mutating local or remote state.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
     name: "submit_hub_ci_upgrade",
-    description: "Create or recover one reviewed workflow-only Hub CI pull request; never write remote main or merge it.",
+    description: "Create or recover one reviewed CI-bundle-only Hub pull request; never write remote main or merge it.",
     inputSchema: { type: "object", properties: {
       expected_base: { type: "string", pattern: "^[a-f0-9]{40}$" },
-      expected_workflow_digest: { type: "string", pattern: "^sha256:[a-f0-9]{64}$" },
-    }, required: ["expected_base", "expected_workflow_digest"], additionalProperties: false },
+      expected_ci_digest: { type: "string", pattern: "^sha256:[a-f0-9]{64}$" },
+    }, required: ["expected_base", "expected_ci_digest"], additionalProperties: false },
   },
   {
     name: "list_hub_questions",

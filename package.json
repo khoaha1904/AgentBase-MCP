@@ -9,6 +9,8 @@
   },
   "scripts": {
     "spec:check": "node scripts/checks/check-specs.mjs",
+    "build:hub-validator": "node scripts/build-hub-validator.mjs",
+    "check:hub-validator": "node scripts/build-hub-validator.mjs --check",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "depcruise": "depcruise src --config .dependency-cruiser.cjs",
     "knip": "knip",
@@ -21,13 +23,14 @@
     "integration:codebase-memory": "node src/cli.ts codebase-memory:integration",
     "benchmark:codebase-memory": "node src/cli.ts codebase-memory:benchmark",
     "benchmark:okf": "node scripts/benchmark/benchmark-okf.mjs",
-    "check": "npm run spec:check && npm run typecheck && npm run depcruise && npm run knip && npm run gitleaks && npm test",
+    "check": "npm run spec:check && npm run check:hub-validator && npm run typecheck && npm run depcruise && npm run knip && npm run gitleaks && npm test",
     "verify": "npm run check && git diff --check"
   },
   "devDependencies": {
     "@swc/core": "1.16.0",
     "@types/node": "24.13.3",
     "dependency-cruiser": "18.2.0",
+    "esbuild": "0.28.2",
     "knip": "6.32.2",
     "typescript": "5.9.3"
   },

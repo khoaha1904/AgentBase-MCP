@@ -442,7 +442,7 @@ export function createHubRuntimeActions(
       if (configuration.kind !== "remote" || !configuration.hub) throw new Error("Hub CI upgrade requires an attached remote Hub");
       const token = requireHubToken(configuration.token), localHub = await admitPersistentLocalHub(configuration);
       try { return await submitHubCiUpgrade({ stateRoot, localHub, token, github: new GitHubHubApi(configuration.hub, token) }, {
-        baseCommit: input.expectedBase, workflowDigest: input.expectedWorkflowDigest,
+        baseCommit: input.expectedBase, ciDigest: input.expectedCiDigest,
       }); } catch (error) { throw remoteFailure(error, token); }
     },
     async listPending() {

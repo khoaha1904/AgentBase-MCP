@@ -378,7 +378,7 @@ export async function callHubOkfTool(
     if (name === "preview_hub_ci_upgrade") return result(await actions.previewCiUpgrade());
     if (name === "submit_hub_ci_upgrade") return result(await actions.submitCiUpgrade({
       expectedBase: required(args, "expected_base"),
-      expectedWorkflowDigest: required(args, "expected_workflow_digest"),
+      expectedCiDigest: required(args, "expected_ci_digest"),
     }));
     if (name === "list_hub_questions") {
       const status = args.status, limit = args.limit;

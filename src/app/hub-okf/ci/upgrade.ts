@@ -14,7 +14,8 @@ import {
   type GitHubRepository,
 } from "../../../providers/github-hub/index.ts";
 import { acquireHubMutationLock, releaseHubMutationLock } from "../review/proposal-state.ts";
-import { HUB_CI_FORMAT_VERSION, HUB_CI_WORKFLOW_PATH, hubCiWorkflowDigest, renderHubCiWorkflow } from "./workflow.ts";
+import { renderHubCiBundle, type HubCiBundle } from "./artifact.ts";
+import { HUB_CI_FORMAT_VERSION } from "./workflow.ts";
 
 export type HubCiUpgradeGitHub = Readonly<{
   getRepository(): Promise<GitHubRepository>;
@@ -29,9 +30,9 @@ export type HubCiUpgradeIntent = Readonly<{
   target_branch: "main";
   base_commit: string;
   state: "missing" | "current" | "outdated";
-  workflow_path: typeof HUB_CI_WORKFLOW_PATH;
-  workflow_format: typeof HUB_CI_FORMAT_VERSION;
-  workflow_digest: string;
+  ci_paths: readonly string[];
+  ci_format: typeof HUB_CI_FORMAT_VERSION;
+  ci_digest: string;
   head_branch: string;
 }>;
 
@@ -51,22 +52,25 @@ export type HubCiUpgradeOptions = Readonly<{
   createdAt?: string;
 }>;
 
-function branch(): string { return `agentbase/hub-ci-${hubCiWorkflowDigest().slice(7, 19)}`; }
+function branch(bundle: HubCiBundle): string { return `agentbase/hub-ci-${bundle.digest.slice(7, 19)}`; }
 
-function workflowBlob(): string {
-  const bytes = Buffer.from(renderHubCiWorkflow());
+function gitBlob(bytes: Buffer): string {
   return createHash("sha1").update(`blob ${bytes.length}\0`).update(bytes).digest("hex");
 }
 
-async function workflowAt(localHub: LocalHubState, commit: string,
-  git: (request: GitRequest) => Promise<GitOutput>): Promise<string | undefined> {
-  const paths = await git({ args: ["ls-tree", "-r", "--name-only", "-z", commit, "--", HUB_CI_WORKFLOW_PATH],
-    cwd: localHub.root, operation: "inspect Hub CI workflow path", maximumOutputBytes: 4096 });
-  if (!paths.stdout.split("\0").includes(HUB_CI_WORKFLOW_PATH)) return undefined;
-  const blob = (await git({ args: ["rev-parse", `${commit}:${HUB_CI_WORKFLOW_PATH}`], cwd: localHub.root,
-    operation: "resolve Hub CI workflow blob", maximumOutputBytes: 256 })).stdout.trim();
-  if (!/^[a-f0-9]{40}$/.test(blob)) throw new Error("Hub CI workflow blob is invalid");
-  return blob;
+async function bundleStateAt(localHub: LocalHubState, commit: string, bundle: HubCiBundle,
+  git: (request: GitRequest) => Promise<GitOutput>): Promise<"missing" | "current" | "outdated"> {
+  const expected = Object.keys(bundle.files).sort();
+  const paths = (await git({ args: ["ls-tree", "-r", "--name-only", "-z", commit, "--", ...expected],
+    cwd: localHub.root, operation: "inspect Hub CI paths", maximumOutputBytes: 4096 })).stdout.split("\0").filter(Boolean).sort();
+  if (!paths.length) return "missing";
+  if (paths.length !== expected.length || paths.some((value, index) => value !== expected[index])) return "outdated";
+  for (const relative of expected) {
+    const blob = (await git({ args: ["rev-parse", `${commit}:${relative}`], cwd: localHub.root,
+      operation: "resolve Hub CI blob", maximumOutputBytes: 256 })).stdout.trim();
+    if (blob !== gitBlob(bundle.files[relative]!)) return "outdated";
+  }
+  return "current";
 }
 
 export async function previewHubCiUpgrade(options: HubCiUpgradeOptions): Promise<HubCiUpgradeIntent> {
@@ -79,21 +83,22 @@ export async function previewHubCiUpgrade(options: HubCiUpgradeOptions): Promise
   if (main.commit !== options.localHub.remoteBase) {
     throw new Error("Published Hub main changed; synchronize before previewing CI upgrade");
   }
-  const current = await workflowAt(options.localHub, main.commit, options.git ?? runGit);
+  const bundle = renderHubCiBundle();
   return {
     repository: repository.fullName,
     target_branch: "main",
     base_commit: main.commit,
-    state: current === undefined ? "missing" : current === workflowBlob() ? "current" : "outdated",
-    workflow_path: HUB_CI_WORKFLOW_PATH,
-    workflow_format: HUB_CI_FORMAT_VERSION,
-    workflow_digest: hubCiWorkflowDigest(),
-    head_branch: branch(),
+    state: await bundleStateAt(options.localHub, main.commit, bundle, options.git ?? runGit),
+    ci_paths: Object.keys(bundle.files).sort(),
+    ci_format: HUB_CI_FORMAT_VERSION,
+    ci_digest: bundle.digest,
+    head_branch: branch(bundle),
   };
 }
 
 async function validateRemoteHead(options: HubCiUpgradeOptions, intent: HubCiUpgradeIntent, head: string): Promise<void> {
-  const git = options.git ?? runGit, ref = `refs/agentbase/ci/${intent.workflow_digest.slice(7, 19)}`;
+  const git = options.git ?? runGit, ref = `refs/agentbase/ci/${intent.ci_digest.slice(7, 19)}`;
+  const bundle = renderHubCiBundle();
   await git({ args: ["fetch", "--no-tags", "origin", `+refs/heads/${intent.head_branch}:${ref}`], cwd: options.localHub.root,
     operation: "fetch existing Hub CI branch", token: options.token });
   const fetched = (await git({ args: ["rev-parse", ref], cwd: options.localHub.root,
@@ -103,32 +108,38 @@ async function validateRemoteHead(options: HubCiUpgradeOptions, intent: HubCiUpg
     operation: "validate Hub CI branch ancestry", maximumOutputBytes: 512 })).stdout.trim().split(/\s+/);
   if (ancestry.length !== 2 || ancestry[1] !== intent.base_commit) throw new Error("existing Hub CI branch is not based on reviewed main");
   const changed = (await git({ args: ["diff-tree", "--no-commit-id", "--name-only", "-r", "-z", head], cwd: options.localHub.root,
-    operation: "validate Hub CI branch scope", maximumOutputBytes: 4096 })).stdout.split("\0").filter(Boolean);
-  if (changed.length !== 1 || changed[0] !== HUB_CI_WORKFLOW_PATH) throw new Error("existing Hub CI branch changes files outside the workflow");
-  const blob = (await git({ args: ["rev-parse", `${head}:${HUB_CI_WORKFLOW_PATH}`], cwd: options.localHub.root,
-    operation: "validate Hub CI branch bytes", maximumOutputBytes: 256 })).stdout.trim();
-  if (blob !== workflowBlob()) throw new Error("existing Hub CI branch has unexpected workflow bytes");
+    operation: "validate Hub CI branch scope", maximumOutputBytes: 4096 })).stdout.split("\0").filter(Boolean).sort();
+  const expected = Object.keys(bundle.files).sort();
+  if (changed.length !== expected.length || changed.some((value, index) => value !== expected[index])) {
+    throw new Error("existing Hub CI branch changes files outside the reviewed CI bundle");
+  }
+  for (const relative of expected) {
+    const blob = (await git({ args: ["rev-parse", `${head}:${relative}`], cwd: options.localHub.root,
+      operation: "validate Hub CI branch bytes", maximumOutputBytes: 256 })).stdout.trim();
+    if (blob !== gitBlob(bundle.files[relative]!)) throw new Error("existing Hub CI branch has unexpected bundle bytes");
+  }
 }
 
 function reviewBody(intent: HubCiUpgradeIntent): string {
   return ["## Purpose", "", "Install or update AgentBase-Hub CI without changing knowledge.", "",
-    "## Scope", "", `- Base: \`${intent.base_commit}\``, `- Workflow: \`${intent.workflow_path}\``,
-    `- Template: v${intent.workflow_format} · \`${intent.workflow_digest}\``, "",
+    "## Scope", "", `- Base: \`${intent.base_commit}\``, ...intent.ci_paths.map((value) => `- CI file: \`${value}\``),
+    `- Bundle: v${intent.ci_format} · \`${intent.ci_digest}\``, "",
     "## Behavior", "", "- Blocks invalid OKF and obvious sensitive content.",
-    "- Reports Repository freshness as warning-only context.", "- Uses read-only GitHub Actions permissions and no MCP token.", "",
-    "## Reviewer action", "", "Review the workflow and checks. Merge only after the pinned AgentBase release tag exists.", ""].join("\n");
+    "- Reports Repository freshness as warning-only context.",
+    "- Runs the checksum-verified bundled validator without a registry, sibling checkout or MCP token.", "",
+    "## Reviewer action", "", "Review the three CI support files and checks before merge.", ""].join("\n");
 }
 
 export async function submitHubCiUpgrade(
   options: HubCiUpgradeOptions,
-  expected: Readonly<{ baseCommit: string; workflowDigest: string }>,
+  expected: Readonly<{ baseCommit: string; ciDigest: string }>,
 ): Promise<HubCiUpgradeResult> {
   const intent = await previewHubCiUpgrade(options);
-  if (expected.baseCommit !== intent.base_commit || expected.workflowDigest !== intent.workflow_digest) {
+  if (expected.baseCommit !== intent.base_commit || expected.ciDigest !== intent.ci_digest) {
     throw new Error("Hub CI upgrade preview changed");
   }
   if (intent.state === "current") return { intent, result: "current" };
-  const lock = acquireHubMutationLock(options.stateRoot, `hub-ci:${intent.workflow_digest.slice(7, 19)}`);
+  const lock = acquireHubMutationLock(options.stateRoot, `hub-ci:${intent.ci_digest.slice(7, 19)}`);
   try {
     const existing = await options.github.findBranchRef(intent.head_branch);
     if (existing) {
@@ -153,13 +164,16 @@ export async function submitHubCiUpgrade(
     const candidate = path.join(parent, "hub");
     try {
       await createCandidateWorktree(options.localHub.root, candidate, intent.base_commit);
-      const workflow = path.join(candidate, ...HUB_CI_WORKFLOW_PATH.split("/"));
-      fs.mkdirSync(path.dirname(workflow), { recursive: true });
-      fs.writeFileSync(workflow, renderHubCiWorkflow());
-      await git({ args: ["add", HUB_CI_WORKFLOW_PATH], cwd: candidate, operation: "stage Hub CI workflow" });
+      const bundle = renderHubCiBundle();
+      for (const [relative, bytes] of Object.entries(bundle.files)) {
+        const target = path.join(candidate, ...relative.split("/"));
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, bytes, { mode: relative.endsWith(".mjs") ? 0o755 : 0o644 });
+      }
+      await git({ args: ["add", ...Object.keys(bundle.files)], cwd: candidate, operation: "stage Hub CI bundle" });
       await git({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit", "--no-gpg-sign", "--no-verify",
         "-m", `Install AgentBase-Hub CI v${HUB_CI_FORMAT_VERSION}`], cwd: candidate,
-      operation: "commit Hub CI workflow", commitTimestamp: options.createdAt ?? new Date().toISOString() });
+      operation: "commit Hub CI bundle", commitTimestamp: options.createdAt ?? new Date().toISOString() });
       const head = (await git({ args: ["rev-parse", "HEAD"], cwd: candidate,
         operation: "resolve Hub CI commit", maximumOutputBytes: 256 })).stdout.trim();
       if (!/^[a-f0-9]{40}$/.test(head)) throw new Error("Hub CI commit is invalid");

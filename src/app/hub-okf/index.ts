@@ -2,9 +2,10 @@ export const HUB_OKF_CAPABILITY = "agentbase-hub-okf" as const;
 export { executeHubCiCli } from "./ci/cli.ts";
 export { validateHubCi, type HubCiResult } from "./ci/validation.ts";
 export {
-  HUB_CI_AGENTBASE_RELEASE, HUB_CI_FORMAT_VERSION, HUB_CI_WORKFLOW_PATH,
-  hubCiWorkflowDigest, renderHubCiWorkflow,
+  HUB_CI_FORMAT_VERSION, HUB_CI_MANIFEST_PATH, HUB_CI_VALIDATOR_PATH, HUB_CI_WORKFLOW_PATH,
+  hubCiBytesDigest, renderHubCiManifest, renderHubCiWorkflow,
 } from "./ci/workflow.ts";
+export { renderHubCiBundle, type HubCiBundle } from "./ci/artifact.ts";
 export {
   previewHubCiUpgrade, submitHubCiUpgrade,
   type HubCiUpgradeGitHub, type HubCiUpgradeIntent, type HubCiUpgradeOptions, type HubCiUpgradeResult,

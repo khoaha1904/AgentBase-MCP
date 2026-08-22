@@ -1,13 +1,18 @@
 # Current capability
 
 Active capability: None.
-Most recent completed: [`033-hub-ci`](033-hub-ci/spec.md).
+Most recent completed: [`034-registryless-hub-ci`](034-registryless-hub-ci/spec.md).
+
+Capability 034 replaces the invalid public-release assumption with a
+self-contained Hub CI bundle. The workflow, standalone validator and checksum
+manifest enter a new Hub base together or an existing Hub through one reviewed
+CI-only PR; Hub execution requires no registry, sibling checkout or install.
 
 Capability 033 composes blocking Hub integrity/obvious-sensitive validation and
 warning-only Repository freshness into one offline command. New Hubs receive a
 pinned read-only GitHub Actions workflow; existing Hubs receive it only through
-an explicit MCP-created workflow-only PR. Offline qualification passes 50/50;
-real GitHub qualification waits for the pinned `v0.1.0-rc.1` release tag.
+an explicit MCP-created CI PR. Its public-release checkout assumption failed in
+real GitHub and is superseded by capability 034.
 
 Capability 032 adds the first warning-only OKF freshness report before any Hub
 CI workflow: one bounded offline Repository projection through CLI and MCP,

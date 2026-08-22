@@ -17,13 +17,21 @@ import {
   type OkfValue,
 } from "../../../core/knowledge/index.ts";
 import { validateSharedQuestionBundle } from "../authoring/questions.ts";
-import { HUB_CI_WORKFLOW_PATH, renderHubCiWorkflow } from "./workflow.ts";
+import {
+  HUB_CI_FORMAT_VERSION,
+  HUB_CI_MANIFEST_PATH,
+  HUB_CI_VALIDATOR_PATH,
+  HUB_CI_WORKFLOW_PATH,
+  hubCiBytesDigest,
+  renderHubCiWorkflow,
+} from "./workflow.ts";
 
 const MAX_FILES = 4096;
 const MAX_FILE_BYTES = 256 * 1024;
 const SECRET = /(?:-----BEGIN [A-Z ]*PRIVATE KEY-----|\b(?:AKIA|ASIA)[A-Z0-9]{16}\b|\bgh[pousr]_[A-Za-z0-9_]{20,}\b|\bgithub_pat_[A-Za-z0-9_]{20,}\b|[?&](?:X-Amz-Signature|token|secret)=[^\s&#]{16,})/i;
 const SECRET_ASSIGNMENT = /(?:^|[\s"'])(?:password|passwd|secret|token|credential|private[_-]?key|api[_-]?key|access[_-]?key)\s*[:=]\s*["']?[A-Za-z0-9/+_.=-]{16,}/im;
 const FORBIDDEN_PATH = /(?:^|\/)(?:\.env(?:\..*)?|credentials?|id_(?:rsa|dsa|ecdsa|ed25519)|[^/]+\.(?:pem|p12|pfx|key)|(?:graph|codegraph)\.(?:db|sqlite))$/i;
+const CI_SUPPORT_FILES: ReadonlySet<string> = new Set([HUB_CI_WORKFLOW_PATH, HUB_CI_VALIDATOR_PATH, HUB_CI_MANIFEST_PATH]);
 
 export type HubCiResult = Readonly<{
   passed: boolean;
@@ -88,17 +96,47 @@ function safety(root: string, relativeFiles: readonly string[]): Readonly<{ erro
   const errors: string[] = [], warnings: string[] = [];
   for (const relative of relativeFiles) {
     const absolute = path.join(root, ...relative.split("/")), stat = fs.statSync(absolute);
+    if (CI_SUPPORT_FILES.has(relative)) continue;
     if (FORBIDDEN_PATH.test(relative)) errors.push(`${relative}: secret/raw-state path is forbidden`);
     if (stat.size > MAX_FILE_BYTES) { errors.push(`${relative}: file exceeds ${MAX_FILE_BYTES} bytes`); continue; }
     let source: string;
     try { source = new TextDecoder("utf-8", { fatal: true }).decode(fs.readFileSync(absolute)); }
     catch { errors.push(`${relative}: Hub files must be valid UTF-8 text`); continue; }
     if (SECRET.test(source) || SECRET_ASSIGNMENT.test(source)) errors.push(`${relative}: obvious sensitive content detected`);
-    if (!relative.endsWith(".md") && relative !== "README.md" && relative !== ".github/workflows/agentbase-hub.yml") {
+    if (!relative.endsWith(".md") && relative !== "README.md") {
       warnings.push(`${relative}: unrecognized Hub support file`);
     }
   }
   return { errors, warnings };
+}
+
+function validateCiSupport(root: string, relativeFiles: readonly string[]): readonly string[] {
+  const errors: string[] = [];
+  for (const required of CI_SUPPORT_FILES) if (!relativeFiles.includes(required)) errors.push(`${required}: required Hub CI file is missing`);
+  if (!relativeFiles.includes(HUB_CI_WORKFLOW_PATH) || !relativeFiles.includes(HUB_CI_VALIDATOR_PATH)
+    || !relativeFiles.includes(HUB_CI_MANIFEST_PATH)) return errors;
+  try {
+    const manifest = JSON.parse(fs.readFileSync(path.join(root, ...HUB_CI_MANIFEST_PATH.split("/")), "utf8")) as unknown;
+    if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) throw new Error("manifest must be an object");
+    const record = manifest as Record<string, unknown>, validator = record.validator;
+    if (record.format !== HUB_CI_FORMAT_VERSION || !validator || typeof validator !== "object" || Array.isArray(validator)) {
+      throw new Error("manifest format is invalid");
+    }
+    const value = validator as Record<string, unknown>;
+    if (value.path !== HUB_CI_VALIDATOR_PATH || typeof value.version !== "string" || !/^\d+\.\d+\.\d+$/.test(value.version)
+      || typeof value.sha256 !== "string" || !/^sha256:[a-f0-9]{64}$/.test(value.sha256)) {
+      throw new Error("manifest validator identity is invalid");
+    }
+    const bytes = fs.readFileSync(path.join(root, ...HUB_CI_VALIDATOR_PATH.split("/")));
+    const actual = hubCiBytesDigest(bytes);
+    if (actual !== value.sha256) throw new Error("validator checksum mismatch");
+    if (fs.readFileSync(path.join(root, ...HUB_CI_WORKFLOW_PATH.split("/")), "utf8") !== renderHubCiWorkflow(actual)) {
+      throw new Error("workflow differs from the checksum-pinned released template");
+    }
+  } catch (error) {
+    errors.push(`${HUB_CI_MANIFEST_PATH}: ${error instanceof Error ? error.message : "manifest validation failed"}`);
+  }
+  return errors;
 }
 
 function markdown(result: Omit<HubCiResult, "summary_markdown">): string {
@@ -122,10 +160,7 @@ export async function validateHubCi(
   if (!fs.statSync(root).isDirectory()) throw new Error("Hub CI root must be a directory");
   const relativeFiles = files(root), errors: string[] = [], warnings: string[] = [];
   const safe = safety(root, relativeFiles); errors.push(...safe.errors); warnings.push(...safe.warnings);
-  if (!relativeFiles.includes(HUB_CI_WORKFLOW_PATH)) errors.push(`${HUB_CI_WORKFLOW_PATH}: required Hub CI workflow is missing`);
-  else if (fs.readFileSync(path.join(root, ...HUB_CI_WORKFLOW_PATH.split("/")), "utf8") !== renderHubCiWorkflow()) {
-    errors.push(`${HUB_CI_WORKFLOW_PATH}: Hub CI workflow differs from the released template`);
-  }
+  errors.push(...validateCiSupport(root, relativeFiles));
   let bundle: ReturnType<typeof loadOkfBundle>;
   try { bundle = loadOkfBundle(root, { requireAgentBaseRootIndex: true }); }
   catch (error) {

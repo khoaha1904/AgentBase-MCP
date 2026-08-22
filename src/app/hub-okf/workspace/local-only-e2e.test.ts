@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -16,7 +17,8 @@ import {
   finalizeDomainEnrichment, prepareDomainEnrichment, runDomainEnrichment,
 } from "../enrichment/index.ts";
 import {
-  HUB_CI_WORKFLOW_PATH, createHubRuntimeActions, renderHubCiWorkflow, validateHubCi,
+  HUB_CI_MANIFEST_PATH, HUB_CI_VALIDATOR_PATH, HUB_CI_WORKFLOW_PATH, createHubRuntimeActions,
+  renderHubCiBundle, validateHubCi,
 } from "../index.ts";
 import { attachExistingHub } from "./setup.ts";
 
@@ -132,18 +134,35 @@ test("[AB-HUB-SETUP-006..008][AB-BATCH-006][AB-HUB-CI-001..007][SC-003] local-on
   try {
     const repository = await sourceRepository(root);
     const configured = await actions.configure({ mode: "new" }) as { localRoot: string; localHubId: string };
-    assert.equal(fs.readFileSync(path.join(configured.localRoot, ...HUB_CI_WORKFLOW_PATH.split("/")), "utf8"), renderHubCiWorkflow());
+    const workflow = renderHubCiBundle().files[HUB_CI_WORKFLOW_PATH]!.toString();
+    assert.equal(fs.readFileSync(path.join(configured.localRoot, ...HUB_CI_WORKFLOW_PATH.split("/")), "utf8"), workflow);
+    assert.equal(fs.existsSync(path.join(configured.localRoot, ...HUB_CI_VALIDATOR_PATH.split("/"))), true);
+    assert.equal(fs.existsSync(path.join(configured.localRoot, ...HUB_CI_MANIFEST_PATH.split("/"))), true);
     const emptyCi = await validateHubCi(configured.localRoot, () => new Date("2026-08-22T00:00:00Z"));
     assert.equal(emptyCi.passed, true);
+    const standalone = JSON.parse(execFileSync(process.execPath,
+      [path.join(configured.localRoot, ...HUB_CI_VALIDATOR_PATH.split("/")), "--root", configured.localRoot, "--format", "json"],
+      { encoding: "utf8" })) as { passed: boolean };
+    assert.equal(standalone.passed, true);
+    const installedValidator = path.join(configured.localRoot, ...HUB_CI_VALIDATOR_PATH.split("/"));
+    const validatorBytes = fs.readFileSync(installedValidator);
+    fs.appendFileSync(installedValidator, "\n// tampered\n");
+    assert.match((await validateHubCi(configured.localRoot)).errors.join("\n"), /checksum mismatch/);
+    fs.writeFileSync(installedValidator, validatorBytes);
     assert.deepEqual(emptyCi.freshness.summary, { total: 0, observed: 0, unknown: 0 });
-    assert.match(renderHubCiWorkflow(), /permissions:\n  contents: read/);
-    assert.doesNotMatch(renderHubCiWorkflow(), /pull_request_target|secrets\.|write/);
+    assert.match(workflow, /permissions:\n  contents: read/);
+    assert.doesNotMatch(workflow, /pull_request_target|secrets\.|write/);
+    assert.doesNotMatch(workflow, /npm (?:ci|install)|Checkout AgentBase-MCP|repository:/);
 
     const ciFixture = path.join(root, "ci-fixture");
     fs.mkdirSync(path.join(ciFixture, ".github", "workflows"), { recursive: true });
     fs.writeFileSync(path.join(ciFixture, "index.md"), "---\nokf_version: '0.2'\n---\n\n# Hub\n\n* [Notes](notes.md) - custom notes\n");
     fs.writeFileSync(path.join(ciFixture, "notes.md"), "---\ntype: Team Note\ntitle: Notes\ndescription: Custom knowledge.\n---\n\n# Notes\n");
-    fs.writeFileSync(path.join(ciFixture, ...HUB_CI_WORKFLOW_PATH.split("/")), renderHubCiWorkflow());
+    for (const [relative, bytes] of Object.entries(renderHubCiBundle().files)) {
+      const target = path.join(ciFixture, ...relative.split("/"));
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, bytes);
+    }
     const customCi = await validateHubCi(ciFixture, () => new Date("2026-08-22T00:00:00Z"));
     assert.equal(customCi.passed, true);
     assert.match(customCi.warnings.join("\n"), /custom OKF type Team Note/);

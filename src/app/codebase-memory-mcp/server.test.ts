@@ -36,7 +36,7 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
     },
     async readFreshness() { freshnessReads += 1; return freshnessReport; },
     async previewCiUpgrade() { ciPreviews += 1; return { state: "missing", base_commit: "a".repeat(40) }; },
-    async submitCiUpgrade(input: Readonly<{ expectedBase: string; expectedWorkflowDigest: string }>) {
+    async submitCiUpgrade(input: Readonly<{ expectedBase: string; expectedCiDigest: string }>) {
       ciSubmits += 1; return input;
     },
   };
@@ -139,12 +139,12 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
     assert.equal(freshnessReads, 2);
     const ciPreview = await client.callTool({ name: "preview_hub_ci_upgrade", arguments: {} });
     assert.match(ciPreview.content[0]?.type === "text" ? ciPreview.content[0].text : "", /"state":"missing"/);
-    const workflowDigest = `sha256:${"b".repeat(64)}`;
+    const ciDigest = `sha256:${"b".repeat(64)}`;
     const ciSubmit = await client.callTool({ name: "submit_hub_ci_upgrade", arguments: {
-      expected_base: "a".repeat(40), expected_workflow_digest: workflowDigest,
+      expected_base: "a".repeat(40), expected_ci_digest: ciDigest,
     } });
     assert.deepEqual(JSON.parse(ciSubmit.content[0]?.type === "text" ? ciSubmit.content[0].text : "{}"), {
-      expectedBase: "a".repeat(40), expectedWorkflowDigest: workflowDigest,
+      expectedBase: "a".repeat(40), expectedCiDigest: ciDigest,
     });
     assert.equal(ciPreviews, 1); assert.equal(ciSubmits, 1);
     const queried = await client.callTool({ name: "get_architecture", arguments: { project: "fixture" } });

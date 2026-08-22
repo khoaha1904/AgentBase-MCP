@@ -189,21 +189,24 @@ queries and ordinary coding never create Hub state, commits or publication.
   visible warning; unknown type alone does not fail CI.
 - **AB-HUB-CI-004** — Freshness is always warning-only context. CI has no stale
   threshold and never creates a Question, triggers Refresh or changes knowledge.
-- **AB-HUB-CI-005** — Every MCP-created Hub base includes one exact workflow for
-  pull requests, pushes to `main`, weekly schedule and manual dispatch.
+- **AB-HUB-CI-005** — Every MCP-created Hub base includes one exact CI bundle:
+  workflow, standalone validator and version/checksum manifest. It runs for pull
+  requests, pushes to `main`, weekly schedule and manual dispatch.
 - **AB-HUB-CI-006** — The workflow grants only `contents: read`, uses pinned
-  third-party actions and one pinned public AgentBase-MCP release, and contains
-  no MCP credential, `pull_request_target` or write permission.
+  third-party actions, verifies the bundled validator before execution and
+  contains no package install, sibling-repository checkout, MCP credential,
+  `pull_request_target` or write permission.
 - **AB-HUB-CI-007** — CI emits only the GitHub Actions Summary. It stores no Hub
   report/artifact and adds no daemon, model/provider call or production dependency.
 - **AB-HUB-CI-008** — An existing Hub is changed only after an explicit preview
-  and submit through one dedicated workflow-only PR based on exact remote `main`.
+  and submit through one dedicated CI-bundle-only PR based on exact remote `main`.
 - **AB-HUB-CI-009** — Retry recovers only the exact deterministic branch and open
   PR. Changed base, extra files, drift or ambiguity fail before a remote write.
 - **AB-HUB-CI-010** — CI upgrade uses the dedicated Hub token internally and
   never writes remote `main`, merges, approves, closes, deletes or changes settings.
 - **AB-HUB-CI-011** — Canonical proof uses fixtures, disposable Git and fake
-  GitHub. Real workflow qualification requires the pinned release tag to exist.
+  GitHub. The generated artifact is derived from canonical validator source and
+  Hub execution requires no public or internal package registry.
 
 ## Single-repository Refresh
 

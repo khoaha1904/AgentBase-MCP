@@ -1,13 +1,16 @@
 import { createHash } from "node:crypto";
 
 export const HUB_CI_WORKFLOW_PATH = ".github/workflows/agentbase-hub.yml" as const;
-export const HUB_CI_FORMAT_VERSION = 1 as const;
-export const HUB_CI_AGENTBASE_RELEASE = "v0.1.0-rc.1" as const;
+export const HUB_CI_VALIDATOR_PATH = ".agentbase/ci/hub-validator.mjs" as const;
+export const HUB_CI_MANIFEST_PATH = ".agentbase/ci/manifest.json" as const;
+export const HUB_CI_FORMAT_VERSION = 2 as const;
+export const HUB_CI_VALIDATOR_VERSION = "0.1.0" as const;
 
 const CHECKOUT_COMMIT = "11d5960a326750d5838078e36cf38b85af677262";
 const SETUP_NODE_COMMIT = "49933ea5288caeca8642d1e84afbd3f7d6820020";
 
-export function renderHubCiWorkflow(): string {
+export function renderHubCiWorkflow(validatorSha256: string): string {
+  if (!/^sha256:[a-f0-9]{64}$/.test(validatorSha256)) throw new Error("Hub CI validator digest is invalid");
   return `name: AgentBase Hub CI
 
 on:
@@ -30,27 +33,33 @@ jobs:
         with:
           path: hub
           persist-credentials: false
-      - name: Checkout AgentBase-MCP
-        uses: actions/checkout@${CHECKOUT_COMMIT}
-        with:
-          repository: khoaha1904/AgentBase-MCP
-          ref: ${HUB_CI_AGENTBASE_RELEASE}
-          path: agentbase-mcp
-          persist-credentials: false
       - name: Use Node.js 24
         uses: actions/setup-node@${SETUP_NODE_COMMIT}
         with:
           node-version: "24.12.0"
-          cache: npm
-          cache-dependency-path: agentbase-mcp/package-lock.json
-      - name: Install pinned validator dependencies
-        run: npm ci --ignore-scripts --prefix agentbase-mcp
+      - name: Verify bundled validator
+        run: |
+          cd hub
+          node --input-type=module <<'NODE'
+          import { createHash } from "node:crypto";
+          import fs from "node:fs";
+          const manifest = JSON.parse(fs.readFileSync("${HUB_CI_MANIFEST_PATH}", "utf8"));
+          const actual = "sha256:" + createHash("sha256").update(fs.readFileSync(manifest.validator.path)).digest("hex");
+          const expected = "${validatorSha256}";
+          if (manifest.format !== ${HUB_CI_FORMAT_VERSION} || manifest.validator.path !== "${HUB_CI_VALIDATOR_PATH}"
+            || manifest.validator.sha256 !== expected || actual !== expected) throw new Error("bundled Hub validator checksum mismatch");
+          NODE
       - name: Validate Hub and report freshness
-        run: node agentbase-mcp/src/cli.ts okf hub-ci --root hub --format github >> "$GITHUB_STEP_SUMMARY"
+        run: node hub/${HUB_CI_VALIDATOR_PATH} --root hub --format github >> "$GITHUB_STEP_SUMMARY"
 `;
 }
 
-export function hubCiWorkflowDigest(): string {
-  return `sha256:${createHash("sha256").update(renderHubCiWorkflow()).digest("hex")}`;
+export function hubCiBytesDigest(bytes: string | Buffer): string {
+  return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
 }
 
+export function renderHubCiManifest(validator: Readonly<{ version: string; sha256: string }>): string {
+  return `${JSON.stringify({ format: HUB_CI_FORMAT_VERSION, validator: {
+    path: HUB_CI_VALIDATOR_PATH, version: validator.version, sha256: validator.sha256,
+  } }, null, 2)}\n`;
+}
