@@ -6,4 +6,4 @@
 - [x] T004 Replace public CI-upgrade tools with preview/initialize Hub tools.
 - [x] T005 Extend existing tests for README-only, CI repair, no-op and remote-main independence.
 - [x] T006 Synchronize high/low-level docs and pass the 50-test verification gate.
-- [ ] T007 Commit/push MCP and create the real README-only Hub Initialization PR.
+- [x] T007 Commit/push MCP and create the real README-only Hub Initialization PR.

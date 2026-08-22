@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-23
 
-**Status**: Active
+**Status**: Complete
 
 **Input**: Initialize the support baseline of an existing Hub through one reviewed PR.
 

@@ -1,13 +1,14 @@
 # Current capability
 
-Active capability: [`035-hub-initialization`](035-hub-initialization/spec.md).
-Most recent completed: [`034-registryless-hub-ci`](034-registryless-hub-ci/spec.md).
+Active capability: None.
+Most recent completed: [`035-hub-initialization`](035-hub-initialization/spec.md).
 
 Capability 035 generalizes the CI-only upgrade into exact remote-main Hub
 Initialization: add the standard README only when missing, install/repair CI
 only when non-current, preserve existing support files and never replay Local
 Draft knowledge. The current production target already has CI and lacks README,
-so its expected real PR is README-only.
+so its real [Hub PR #14](https://github.com/khoaha1904/AgentBase-Hub/pull/14)
+is README-only and passes the existing Hub CI.
 
 Capability 034 replaces the invalid public-release assumption with a
 self-contained Hub CI bundle. The workflow, standalone validator and checksum
