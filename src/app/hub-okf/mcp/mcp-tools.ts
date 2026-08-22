@@ -328,17 +328,17 @@ export const HUB_OKF_TOOLS = [
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
-    name: "preview_hub_ci_upgrade",
-    description: "Preview the exact self-contained CI bundle for the attached Hub without mutating local or remote state.",
+    name: "preview_hub_initialization",
+    description: "Preview missing README and CI support files against exact remote Hub main without replaying knowledge drafts.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
-    name: "submit_hub_ci_upgrade",
-    description: "Create or recover one reviewed CI-bundle-only Hub pull request; never write remote main or merge it.",
+    name: "initialize_hub",
+    description: "Create or recover one reviewed Hub support-baseline pull request; preserve existing README and current CI.",
     inputSchema: { type: "object", properties: {
       expected_base: { type: "string", pattern: "^[a-f0-9]{40}$" },
-      expected_ci_digest: { type: "string", pattern: "^sha256:[a-f0-9]{64}$" },
-    }, required: ["expected_base", "expected_ci_digest"], additionalProperties: false },
+      expected_initialization_digest: { type: "string", pattern: "^sha256:[a-f0-9]{64}$" },
+    }, required: ["expected_base", "expected_initialization_digest"], additionalProperties: false },
   },
   {
     name: "list_hub_questions",

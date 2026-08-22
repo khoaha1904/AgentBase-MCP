@@ -4,20 +4,15 @@ import { createHash } from "node:crypto";
 
 import type { LocalHubState } from "../../../core/hub/index.ts";
 import {
-  createCandidateWorktree,
-  removeCandidateWorktree,
-  runGit,
-  type GitOutput,
-  type GitRequest,
-  type GitHubPullRequest,
-  type GitHubRef,
-  type GitHubRepository,
+  createCandidateWorktree, removeCandidateWorktree, runGit,
+  type GitOutput, type GitRequest, type GitHubPullRequest, type GitHubRef, type GitHubRepository,
 } from "../../../providers/github-hub/index.ts";
 import { acquireHubMutationLock, releaseHubMutationLock } from "../review/proposal-state.ts";
+import { HUB_README_PATH, renderHubReadme } from "../workspace/readme.ts";
 import { renderHubCiBundle, type HubCiBundle } from "./artifact.ts";
 import { HUB_CI_FORMAT_VERSION } from "./workflow.ts";
 
-export type HubCiUpgradeGitHub = Readonly<{
+export type HubInitializationGitHub = Readonly<{
   getRepository(): Promise<GitHubRepository>;
   getBranchRef(branch: string): Promise<GitHubRef>;
   findBranchRef(branch: string): Promise<GitHubRef | undefined>;
@@ -25,44 +20,66 @@ export type HubCiUpgradeGitHub = Readonly<{
   createPullRequest(headBranch: string, headCommit: string, title: string, body: string, baseBranch: string): Promise<GitHubPullRequest>;
 }>;
 
-export type HubCiUpgradeIntent = Readonly<{
+export type HubInitializationIntent = Readonly<{
   repository: string;
   target_branch: "main";
   base_commit: string;
-  state: "missing" | "current" | "outdated";
-  ci_paths: readonly string[];
+  state: "current" | "changes-required";
+  readme_state: "missing" | "present";
+  ci_state: "missing" | "current" | "outdated";
+  change_paths: readonly string[];
   ci_format: typeof HUB_CI_FORMAT_VERSION;
-  ci_digest: string;
+  initialization_digest: string;
   head_branch: string;
 }>;
 
-export type HubCiUpgradeResult = Readonly<{
-  intent: HubCiUpgradeIntent;
+export type HubInitializationResult = Readonly<{
+  intent: HubInitializationIntent;
   result: "current" | "created" | "recovered";
   head_commit?: string;
   pull_request?: Readonly<{ number: number; url: string }>;
 }>;
 
-export type HubCiUpgradeOptions = Readonly<{
+export type HubInitializationOptions = Readonly<{
   stateRoot: string;
   localHub: LocalHubState;
   token: string;
-  github: HubCiUpgradeGitHub;
+  github: HubInitializationGitHub;
   git?: (request: GitRequest) => Promise<GitOutput>;
   createdAt?: string;
 }>;
-
-function branch(bundle: HubCiBundle): string { return `agentbase/hub-ci-${bundle.digest.slice(7, 19)}`; }
 
 function gitBlob(bytes: Buffer): string {
   return createHash("sha1").update(`blob ${bytes.length}\0`).update(bytes).digest("hex");
 }
 
-async function bundleStateAt(localHub: LocalHubState, commit: string, bundle: HubCiBundle,
+function filesDigest(files: Readonly<Record<string, Buffer>>): string {
+  const hash = createHash("sha256");
+  for (const [relative, bytes] of Object.entries(files).sort(([left], [right]) => left.localeCompare(right))) {
+    hash.update(`${relative}\0${bytes.length}\0`); hash.update(bytes); hash.update("\0");
+  }
+  return `sha256:${hash.digest("hex")}`;
+}
+
+async function fetchRemoteMain(options: HubInitializationOptions, expected: string): Promise<void> {
+  const git = options.git ?? runGit, ref = "refs/agentbase/hub-initialization/base";
+  await git({ args: ["fetch", "--no-tags", "origin", `+refs/heads/main:${ref}`], cwd: options.localHub.root,
+    operation: "fetch Hub initialization base", token: options.token });
+  const fetched = (await git({ args: ["rev-parse", `${ref}^{commit}`], cwd: options.localHub.root,
+    operation: "resolve Hub initialization base", maximumOutputBytes: 256 })).stdout.trim();
+  if (fetched !== expected) throw new Error("Published Hub main changed during initialization preview");
+}
+
+async function presentPaths(localHub: LocalHubState, commit: string, expected: readonly string[],
+  git: (request: GitRequest) => Promise<GitOutput>): Promise<readonly string[]> {
+  return (await git({ args: ["ls-tree", "-r", "--name-only", "-z", commit, "--", ...expected],
+    cwd: localHub.root, operation: "inspect Hub initialization paths", maximumOutputBytes: 4096 }))
+    .stdout.split("\0").filter(Boolean).sort();
+}
+
+async function ciStateAt(localHub: LocalHubState, commit: string, bundle: HubCiBundle,
   git: (request: GitRequest) => Promise<GitOutput>): Promise<"missing" | "current" | "outdated"> {
-  const expected = Object.keys(bundle.files).sort();
-  const paths = (await git({ args: ["ls-tree", "-r", "--name-only", "-z", commit, "--", ...expected],
-    cwd: localHub.root, operation: "inspect Hub CI paths", maximumOutputBytes: 4096 })).stdout.split("\0").filter(Boolean).sort();
+  const expected = Object.keys(bundle.files).sort(), paths = await presentPaths(localHub, commit, expected, git);
   if (!paths.length) return "missing";
   if (paths.length !== expected.length || paths.some((value, index) => value !== expected[index])) return "outdated";
   for (const relative of expected) {
@@ -73,73 +90,81 @@ async function bundleStateAt(localHub: LocalHubState, commit: string, bundle: Hu
   return "current";
 }
 
-export async function previewHubCiUpgrade(options: HubCiUpgradeOptions): Promise<HubCiUpgradeIntent> {
-  if (!options.token) throw new Error("Hub CI upgrade requires the dedicated Hub token");
-  const repository = await options.github.getRepository();
-  if (repository.fullName !== options.localHub.hub.repository || repository.defaultBranch !== "main") {
-    throw new Error("Hub CI upgrade repository identity or target branch changed");
-  }
-  const main = await options.github.getBranchRef("main");
-  if (main.commit !== options.localHub.remoteBase) {
-    throw new Error("Published Hub main changed; synchronize before previewing CI upgrade");
-  }
-  const bundle = renderHubCiBundle();
+function intendedFiles(readme: HubInitializationIntent["readme_state"], ci: HubInitializationIntent["ci_state"]): Readonly<Record<string, Buffer>> {
   return {
-    repository: repository.fullName,
-    target_branch: "main",
-    base_commit: main.commit,
-    state: await bundleStateAt(options.localHub, main.commit, bundle, options.git ?? runGit),
-    ci_paths: Object.keys(bundle.files).sort(),
-    ci_format: HUB_CI_FORMAT_VERSION,
-    ci_digest: bundle.digest,
-    head_branch: branch(bundle),
+    ...(readme === "missing" ? { [HUB_README_PATH]: Buffer.from(renderHubReadme()) } : {}),
+    ...(ci === "current" ? {} : renderHubCiBundle().files),
   };
 }
 
-async function validateRemoteHead(options: HubCiUpgradeOptions, intent: HubCiUpgradeIntent, head: string): Promise<void> {
-  const git = options.git ?? runGit, ref = `refs/agentbase/ci/${intent.ci_digest.slice(7, 19)}`;
-  const bundle = renderHubCiBundle();
+function branch(digest: string): string { return `agentbase/hub-init-${digest.slice(7, 19)}`; }
+
+export async function previewHubInitialization(options: HubInitializationOptions): Promise<HubInitializationIntent> {
+  if (!options.token) throw new Error("Hub initialization requires the dedicated Hub token");
+  const repository = await options.github.getRepository();
+  if (repository.fullName !== options.localHub.hub.repository || repository.defaultBranch !== "main") {
+    throw new Error("Hub initialization repository identity or target branch changed");
+  }
+  const main = await options.github.getBranchRef("main");
+  await fetchRemoteMain(options, main.commit);
+  const git = options.git ?? runGit, bundle = renderHubCiBundle();
+  const readmeState = (await presentPaths(options.localHub, main.commit, [HUB_README_PATH], git)).length ? "present" : "missing";
+  const ciState = await ciStateAt(options.localHub, main.commit, bundle, git);
+  const files = intendedFiles(readmeState, ciState), digest = filesDigest(files), paths = Object.keys(files).sort();
+  return {
+    repository: repository.fullName, target_branch: "main", base_commit: main.commit,
+    state: paths.length ? "changes-required" : "current", readme_state: readmeState, ci_state: ciState,
+    change_paths: paths, ci_format: HUB_CI_FORMAT_VERSION, initialization_digest: digest,
+    head_branch: branch(digest),
+  };
+}
+
+async function validateRemoteHead(options: HubInitializationOptions, intent: HubInitializationIntent, head: string): Promise<void> {
+  const git = options.git ?? runGit, ref = `refs/agentbase/hub-initialization/${intent.initialization_digest.slice(7, 19)}`;
   await git({ args: ["fetch", "--no-tags", "origin", `+refs/heads/${intent.head_branch}:${ref}`], cwd: options.localHub.root,
-    operation: "fetch existing Hub CI branch", token: options.token });
+    operation: "fetch existing Hub initialization branch", token: options.token });
   const fetched = (await git({ args: ["rev-parse", ref], cwd: options.localHub.root,
-    operation: "resolve existing Hub CI branch", maximumOutputBytes: 256 })).stdout.trim();
-  if (fetched !== head) throw new Error("Hub CI branch changed during recovery");
+    operation: "resolve existing Hub initialization branch", maximumOutputBytes: 256 })).stdout.trim();
+  if (fetched !== head) throw new Error("Hub initialization branch changed during recovery");
   const ancestry = (await git({ args: ["rev-list", "--parents", "-n", "1", head], cwd: options.localHub.root,
-    operation: "validate Hub CI branch ancestry", maximumOutputBytes: 512 })).stdout.trim().split(/\s+/);
-  if (ancestry.length !== 2 || ancestry[1] !== intent.base_commit) throw new Error("existing Hub CI branch is not based on reviewed main");
+    operation: "validate Hub initialization ancestry", maximumOutputBytes: 512 })).stdout.trim().split(/\s+/);
+  if (ancestry.length !== 2 || ancestry[1] !== intent.base_commit) throw new Error("existing Hub initialization branch is not based on reviewed main");
   const changed = (await git({ args: ["diff-tree", "--no-commit-id", "--name-only", "-r", "-z", head], cwd: options.localHub.root,
-    operation: "validate Hub CI branch scope", maximumOutputBytes: 4096 })).stdout.split("\0").filter(Boolean).sort();
-  const expected = Object.keys(bundle.files).sort();
-  if (changed.length !== expected.length || changed.some((value, index) => value !== expected[index])) {
-    throw new Error("existing Hub CI branch changes files outside the reviewed CI bundle");
+    operation: "validate Hub initialization scope", maximumOutputBytes: 4096 })).stdout.split("\0").filter(Boolean).sort();
+  if (changed.length !== intent.change_paths.length || changed.some((value, index) => value !== intent.change_paths[index])) {
+    throw new Error("existing Hub initialization branch changes files outside the reviewed baseline");
   }
-  for (const relative of expected) {
+  const files = intendedFiles(intent.readme_state, intent.ci_state);
+  for (const relative of intent.change_paths) {
     const blob = (await git({ args: ["rev-parse", `${head}:${relative}`], cwd: options.localHub.root,
-      operation: "validate Hub CI branch bytes", maximumOutputBytes: 256 })).stdout.trim();
-    if (blob !== gitBlob(bundle.files[relative]!)) throw new Error("existing Hub CI branch has unexpected bundle bytes");
+      operation: "validate Hub initialization bytes", maximumOutputBytes: 256 })).stdout.trim();
+    if (blob !== gitBlob(files[relative]!)) throw new Error("existing Hub initialization branch has unexpected bytes");
   }
 }
 
-function reviewBody(intent: HubCiUpgradeIntent): string {
-  return ["## Purpose", "", "Install or update AgentBase-Hub CI without changing knowledge.", "",
-    "## Scope", "", `- Base: \`${intent.base_commit}\``, ...intent.ci_paths.map((value) => `- CI file: \`${value}\``),
-    `- Bundle: v${intent.ci_format} · \`${intent.ci_digest}\``, "",
-    "## Behavior", "", "- Blocks invalid OKF and obvious sensitive content.",
-    "- Reports Repository freshness as warning-only context.",
-    "- Runs the checksum-verified bundled validator without a registry, sibling checkout or MCP token.", "",
-    "## Reviewer action", "", "Review the three CI support files and checks before merge.", ""].join("\n");
+function reviewBody(intent: HubInitializationIntent): string {
+  const changes = [
+    ...(intent.readme_state === "missing" ? ["- Add the standard human-readable Hub README."] : ["- Preserve the existing README unchanged."]),
+    ...(intent.ci_state === "current" ? ["- Keep the current self-contained Hub CI bundle unchanged."]
+      : [`- Install the released self-contained Hub CI bundle (previous state: ${intent.ci_state}).`]),
+  ];
+  return ["## Purpose", "", "Initialize the AgentBase-Hub support baseline without changing knowledge.", "",
+    "## Scope", "", `- Base: \`${intent.base_commit}\``, ...intent.change_paths.map((value) => `- Change: \`${value}\``),
+    `- Initialization: \`${intent.initialization_digest}\``, "", "## Behavior", "", ...changes, "",
+    "## Safety", "", "- Contains no OKF knowledge change.", "- Uses no registry or MCP token at Hub CI runtime.",
+    "- MCP never merges this pull request.", "", "## Reviewer action", "", "Review the support-file diff and checks before merge.", ""].join("\n");
 }
 
-export async function submitHubCiUpgrade(
-  options: HubCiUpgradeOptions,
-  expected: Readonly<{ baseCommit: string; ciDigest: string }>,
-): Promise<HubCiUpgradeResult> {
-  const intent = await previewHubCiUpgrade(options);
-  if (expected.baseCommit !== intent.base_commit || expected.ciDigest !== intent.ci_digest) {
-    throw new Error("Hub CI upgrade preview changed");
+export async function initializeHub(
+  options: HubInitializationOptions,
+  expected: Readonly<{ baseCommit: string; initializationDigest: string }>,
+): Promise<HubInitializationResult> {
+  const intent = await previewHubInitialization(options);
+  if (expected.baseCommit !== intent.base_commit || expected.initializationDigest !== intent.initialization_digest) {
+    throw new Error("Hub initialization preview changed");
   }
   if (intent.state === "current") return { intent, result: "current" };
-  const lock = acquireHubMutationLock(options.stateRoot, `hub-ci:${intent.ci_digest.slice(7, 19)}`);
+  const lock = acquireHubMutationLock(options.stateRoot, `hub-init:${intent.initialization_digest.slice(7, 19)}`);
   try {
     const existing = await options.github.findBranchRef(intent.head_branch);
     if (existing) {
@@ -148,39 +173,38 @@ export async function submitHubCiUpgrade(
       const allPulls = await options.github.listPullRequestsForHead(intent.head_branch, "all");
       if (openPulls.length > 1 || allPulls.length > 1
         || allPulls.some((pull) => pull.headCommit !== existing.commit || pull.baseBranch !== "main")) {
-        throw new Error("Hub CI branch has ambiguous pull request state");
+        throw new Error("Hub initialization branch has ambiguous pull request state");
       }
       if (openPulls.length === 1) return { intent, result: "recovered", head_commit: existing.commit,
         pull_request: { number: openPulls[0]!.number, url: openPulls[0]!.url } };
-      if (allPulls.length) throw new Error("Hub CI branch belongs to a closed pull request");
+      if (allPulls.length) throw new Error("Hub initialization branch belongs to a closed pull request");
       const pull = await options.github.createPullRequest(intent.head_branch, existing.commit,
-        "Install AgentBase-Hub CI", reviewBody(intent), "main");
+        "Initialize AgentBase-Hub", reviewBody(intent), "main");
       return { intent, result: "recovered", head_commit: existing.commit,
         pull_request: { number: pull.number, url: pull.url } };
     }
-    const git = options.git ?? runGit;
+    const git = options.git ?? runGit, files = intendedFiles(intent.readme_state, intent.ci_state);
+    if (filesDigest(files) !== intent.initialization_digest) throw new Error("Hub initialization file set changed");
     fs.mkdirSync(path.resolve(options.stateRoot), { recursive: true, mode: 0o700 });
-    const parent = fs.mkdtempSync(path.join(path.resolve(options.stateRoot), "hub-ci-"));
-    const candidate = path.join(parent, "hub");
+    const parent = fs.mkdtempSync(path.join(path.resolve(options.stateRoot), "hub-init-")), candidate = path.join(parent, "hub");
     try {
       await createCandidateWorktree(options.localHub.root, candidate, intent.base_commit);
-      const bundle = renderHubCiBundle();
-      for (const [relative, bytes] of Object.entries(bundle.files)) {
+      for (const [relative, bytes] of Object.entries(files)) {
         const target = path.join(candidate, ...relative.split("/"));
         fs.mkdirSync(path.dirname(target), { recursive: true });
         fs.writeFileSync(target, bytes, { mode: relative.endsWith(".mjs") ? 0o755 : 0o644 });
       }
-      await git({ args: ["add", ...Object.keys(bundle.files)], cwd: candidate, operation: "stage Hub CI bundle" });
+      await git({ args: ["add", ...intent.change_paths], cwd: candidate, operation: "stage Hub initialization" });
       await git({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit", "--no-gpg-sign", "--no-verify",
-        "-m", `Install AgentBase-Hub CI v${HUB_CI_FORMAT_VERSION}`], cwd: candidate,
-      operation: "commit Hub CI bundle", commitTimestamp: options.createdAt ?? new Date().toISOString() });
+        "-m", "Initialize AgentBase-Hub"], cwd: candidate, operation: "commit Hub initialization",
+      commitTimestamp: options.createdAt ?? new Date().toISOString() });
       const head = (await git({ args: ["rev-parse", "HEAD"], cwd: candidate,
-        operation: "resolve Hub CI commit", maximumOutputBytes: 256 })).stdout.trim();
-      if (!/^[a-f0-9]{40}$/.test(head)) throw new Error("Hub CI commit is invalid");
+        operation: "resolve Hub initialization commit", maximumOutputBytes: 256 })).stdout.trim();
+      if (!/^[a-f0-9]{40}$/.test(head)) throw new Error("Hub initialization commit is invalid");
       await git({ args: ["push", "origin", `${head}:refs/heads/${intent.head_branch}`], cwd: candidate,
-        operation: "push Hub CI branch", token: options.token });
+        operation: "push Hub initialization branch", token: options.token });
       const pull = await options.github.createPullRequest(intent.head_branch, head,
-        "Install AgentBase-Hub CI", reviewBody(intent), "main");
+        "Initialize AgentBase-Hub", reviewBody(intent), "main");
       return { intent, result: "created", head_commit: head,
         pull_request: { number: pull.number, url: pull.url } };
     } finally {

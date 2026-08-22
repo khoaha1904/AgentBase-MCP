@@ -12,6 +12,7 @@ import {
   type PersistedHubConfiguration,
 } from "../configuration/configuration-file.ts";
 import { renderHubCiBundle } from "../ci/artifact.ts";
+import { HUB_README_PATH, renderHubReadme } from "./readme.ts";
 
 export type SetupGit = (request: GitRequest) => Promise<GitOutput>;
 
@@ -151,11 +152,7 @@ export async function createLocalHub(
   fs.mkdirSync(staging, { mode: 0o700 });
   try {
     await git({ args: ["init", "--initial-branch=main"], cwd: staging, operation: "initialize local AgentBase-Hub" });
-    const readme = "# AgentBase-Hub\n\n"
-      + "This is an OKF knowledge repository created and managed locally by AgentBase-MCP.\n\n"
-      + "Accepted knowledge is stored once per entity as a linked canonical OKF graph. "
-      + "The root `index.md` is the progressive-disclosure entrypoint.\n";
-    fs.writeFileSync(path.join(staging, "README.md"), readme);
+    fs.writeFileSync(path.join(staging, HUB_README_PATH), renderHubReadme());
     fs.writeFileSync(path.join(staging, "index.md"), "---\nokf_version: \"0.2\"\n---\n\n# AgentBase-Hub\n");
     const ci = renderHubCiBundle();
     for (const [relative, bytes] of Object.entries(ci.files)) {
@@ -163,7 +160,7 @@ export async function createLocalHub(
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.writeFileSync(target, bytes, { mode: relative.endsWith(".mjs") ? 0o755 : 0o644 });
     }
-    await git({ args: ["add", "README.md", "index.md", ...Object.keys(ci.files)], cwd: staging, operation: "stage AgentBase-Hub base" });
+    await git({ args: ["add", HUB_README_PATH, "index.md", ...Object.keys(ci.files)], cwd: staging, operation: "stage AgentBase-Hub base" });
     const message = [
       "Initialize AgentBase-Hub base", "", `${HUB_BASE_TRAILERS.kind}: base`,
       `${HUB_BASE_TRAILERS.id}: ${localHubId}`, `${HUB_BASE_TRAILERS.format}: 1`,

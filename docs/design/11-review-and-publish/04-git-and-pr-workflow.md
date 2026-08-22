@@ -1,6 +1,6 @@
 # 11.04 — Git and PR workflow
 
-> Trạng thái: Implemented for knowledge publication and dedicated Hub-CI upgrade PRs.
+> Trạng thái: Implemented for knowledge publication and dedicated Hub Initialization PRs.
 
 ## Outcome
 
@@ -95,14 +95,16 @@ conflict coordination.
 - Existing remote branch/PR drift không bị overwrite.
 - MCP never mutates remote `main`; maintainer merge remains the publication gate.
 
-## Hub-CI upgrade PR
+## Hub Initialization PR
 
-CI installation is a separate reviewed lifecycle, not an OKF proposal. Preview
-binds exact remote `main` and deterministic CI-bundle digest. Explicit submit may
-create or recover only `agentbase/hub-ci-<digest>` whose sole diff is the exact
-workflow, standalone validator and version/checksum manifest. Any extra file,
+Hub support initialization is a separate reviewed lifecycle, not an OKF
+proposal. Preview fetches exact remote `main` without replaying Local Drafts,
+preserves an existing README and skips exact current CI. It derives only the
+missing README and/or full released CI bundle, then binds their deterministic
+digest. Explicit initialize may create or recover only
+`agentbase/hub-init-<digest>` with that exact support-file diff. Any extra file,
 changed base, ambiguous PR or byte drift stops. The same dedicated Hub token is
-used internally; the caller cannot provide a token, branch name or bundle bytes.
+used internally; the caller cannot provide a token, branch name or file bytes.
 
 ## Current implementation gap
 

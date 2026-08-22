@@ -44,7 +44,7 @@ import {
   readBatchManifest, recordBatchMember, retryBatchMember, reviseBatchMembership,
   type BatchMember,
 } from "../batch-ingest/index.ts";
-import { previewHubCiUpgrade, submitHubCiUpgrade } from "../ci/upgrade.ts";
+import { initializeHub as executeHubInitialization, previewHubInitialization } from "../ci/upgrade.ts";
 
 function defaultStateRoot(): string {
   const owner = typeof process.getuid === "function" ? String(process.getuid()) : "portable";
@@ -430,19 +430,19 @@ export function createHubRuntimeActions(
       const localHub = await admit();
       return readActiveHubFreshness(localHub);
     },
-    async previewCiUpgrade() {
+    async previewHubInitialization() {
       const configuration = configured();
-      if (configuration.kind !== "remote" || !configuration.hub) throw new Error("Hub CI upgrade requires an attached remote Hub");
+      if (configuration.kind !== "remote" || !configuration.hub) throw new Error("Hub initialization requires an attached remote Hub");
       const token = requireHubToken(configuration.token), localHub = await admitPersistentLocalHub(configuration);
-      try { return await previewHubCiUpgrade({ stateRoot, localHub, token, github: new GitHubHubApi(configuration.hub, token) }); }
+      try { return await previewHubInitialization({ stateRoot, localHub, token, github: new GitHubHubApi(configuration.hub, token) }); }
       catch (error) { throw remoteFailure(error, token); }
     },
-    async submitCiUpgrade(input) {
+    async initializeHub(input) {
       const configuration = configured();
-      if (configuration.kind !== "remote" || !configuration.hub) throw new Error("Hub CI upgrade requires an attached remote Hub");
+      if (configuration.kind !== "remote" || !configuration.hub) throw new Error("Hub initialization requires an attached remote Hub");
       const token = requireHubToken(configuration.token), localHub = await admitPersistentLocalHub(configuration);
-      try { return await submitHubCiUpgrade({ stateRoot, localHub, token, github: new GitHubHubApi(configuration.hub, token) }, {
-        baseCommit: input.expectedBase, ciDigest: input.expectedCiDigest,
+      try { return await executeHubInitialization({ stateRoot, localHub, token, github: new GitHubHubApi(configuration.hub, token) }, {
+        baseCommit: input.expectedBase, initializationDigest: input.expectedInitializationDigest,
       }); } catch (error) { throw remoteFailure(error, token); }
     },
     async listPending() {

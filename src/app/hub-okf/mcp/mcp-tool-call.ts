@@ -375,10 +375,10 @@ export async function callHubOkfTool(
       return result(await actions.readObservedValues(required(args, "path")));
     }
     if (name === "read_hub_freshness") return result(await actions.readFreshness());
-    if (name === "preview_hub_ci_upgrade") return result(await actions.previewCiUpgrade());
-    if (name === "submit_hub_ci_upgrade") return result(await actions.submitCiUpgrade({
+    if (name === "preview_hub_initialization") return result(await actions.previewHubInitialization());
+    if (name === "initialize_hub") return result(await actions.initializeHub({
       expectedBase: required(args, "expected_base"),
-      expectedCiDigest: required(args, "expected_ci_digest"),
+      expectedInitializationDigest: required(args, "expected_initialization_digest"),
     }));
     if (name === "list_hub_questions") {
       const status = args.status, limit = args.limit;

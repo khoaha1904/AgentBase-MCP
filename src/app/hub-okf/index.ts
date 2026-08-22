@@ -7,8 +7,8 @@ export {
 } from "./ci/workflow.ts";
 export { renderHubCiBundle, type HubCiBundle } from "./ci/artifact.ts";
 export {
-  previewHubCiUpgrade, submitHubCiUpgrade,
-  type HubCiUpgradeGitHub, type HubCiUpgradeIntent, type HubCiUpgradeOptions, type HubCiUpgradeResult,
+  initializeHub, previewHubInitialization,
+  type HubInitializationGitHub, type HubInitializationIntent, type HubInitializationOptions, type HubInitializationResult,
 } from "./ci/upgrade.ts";
 export { loadHubConfiguration, resolveHubConfiguration, type HubConfiguration, type OptionalHubConfiguration } from "./configuration/configuration.ts";
 export {
@@ -21,6 +21,7 @@ export {
   type PersistedRemoteHubConfiguration,
 } from "./configuration/configuration-file.ts";
 export { attachExistingHub, createLocalHub, normalizeGitHubHubUrl, type HubSetupResult } from "./workspace/setup.ts";
+export { HUB_README_PATH, renderHubReadme } from "./workspace/readme.ts";
 export {
   executeHubBootstrap,
   previewHubBootstrap,

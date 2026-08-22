@@ -26,7 +26,7 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
   const bindings: string[] = [];
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const runtimeActions = createHubRuntimeActions({ HOME: state, XDG_CONFIG_HOME: path.join(state, "config") }, path.join(state, "hub-runtime"));
-  let observedReads = 0, freshnessReads = 0, ciPreviews = 0, ciSubmits = 0;
+  let observedReads = 0, freshnessReads = 0, initializationPreviews = 0, initializations = 0;
   const freshnessReport = { commit: "f".repeat(40), generated_at: "2026-08-22T00:00:00.000Z",
     publication_layer: "published", summary: { total: 0, observed: 0, unknown: 0 }, repositories: [] };
   const hubActions = { ...runtimeActions,
@@ -35,9 +35,9 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
       return { path: relativePath, values: [], source_access: "not-checked" };
     },
     async readFreshness() { freshnessReads += 1; return freshnessReport; },
-    async previewCiUpgrade() { ciPreviews += 1; return { state: "missing", base_commit: "a".repeat(40) }; },
-    async submitCiUpgrade(input: Readonly<{ expectedBase: string; expectedCiDigest: string }>) {
-      ciSubmits += 1; return input;
+    async previewHubInitialization() { initializationPreviews += 1; return { state: "changes-required", base_commit: "a".repeat(40) }; },
+    async initializeHub(input: Readonly<{ expectedBase: string; expectedInitializationDigest: string }>) {
+      initializations += 1; return input;
     },
   };
   const current = createAgentBaseMcpServer({
@@ -137,16 +137,16 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
       (value) => { cliError += value; }), 1);
     assert.match(cliError, /accepts no arguments/);
     assert.equal(freshnessReads, 2);
-    const ciPreview = await client.callTool({ name: "preview_hub_ci_upgrade", arguments: {} });
-    assert.match(ciPreview.content[0]?.type === "text" ? ciPreview.content[0].text : "", /"state":"missing"/);
-    const ciDigest = `sha256:${"b".repeat(64)}`;
-    const ciSubmit = await client.callTool({ name: "submit_hub_ci_upgrade", arguments: {
-      expected_base: "a".repeat(40), expected_ci_digest: ciDigest,
+    const initializationPreview = await client.callTool({ name: "preview_hub_initialization", arguments: {} });
+    assert.match(initializationPreview.content[0]?.type === "text" ? initializationPreview.content[0].text : "", /"state":"changes-required"/);
+    const initializationDigest = `sha256:${"b".repeat(64)}`;
+    const initialization = await client.callTool({ name: "initialize_hub", arguments: {
+      expected_base: "a".repeat(40), expected_initialization_digest: initializationDigest,
     } });
-    assert.deepEqual(JSON.parse(ciSubmit.content[0]?.type === "text" ? ciSubmit.content[0].text : "{}"), {
-      expectedBase: "a".repeat(40), expectedCiDigest: ciDigest,
+    assert.deepEqual(JSON.parse(initialization.content[0]?.type === "text" ? initialization.content[0].text : "{}"), {
+      expectedBase: "a".repeat(40), expectedInitializationDigest: initializationDigest,
     });
-    assert.equal(ciPreviews, 1); assert.equal(ciSubmits, 1);
+    assert.equal(initializationPreviews, 1); assert.equal(initializations, 1);
     const queried = await client.callTool({ name: "get_architecture", arguments: { project: "fixture" } });
     assert.match(queried.content[0]?.type === "text" ? queried.content[0].text : "", /forwarded:get_architecture:agentbase-server-repo-/);
     const switched = await client.callTool({ name: "index_repository", arguments: { repo_path: secondRepo } });

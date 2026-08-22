@@ -108,8 +108,8 @@ merge, approve, close hoặc xóa branch. Khi Published `main` đổi, proposal 
 được reconcile tuần tự và cập nhật trên chính branch/PR hiện có; conflict phải
 được giải quyết trước khi branch đó được cập nhật.
 
-Hub CI là một PR hỗ trợ riêng, không trộn với knowledge proposal. PR này đưa vào
-đúng ba file: workflow read-only, standalone validator và manifest
-version/checksum. Hub tự kiểm tra và chạy validator đã review mà không tải npm
-package, checkout MCP hay cần MCP token. Nâng cấp CI thay đúng ba file qua một PR
-mới; maintainer vẫn là người quyết định merge.
+Hub Initialization là một PR hỗ trợ riêng, không trộn với knowledge proposal.
+Nó thêm README chuẩn khi thiếu và thêm/sửa đúng ba file CI khi CI chưa current;
+README đã tồn tại và CI current luôn được giữ nguyên. Hub tự chạy validator đã
+review mà không tải npm package, checkout MCP hay cần MCP token. Nếu baseline đã
+đủ thì không tạo PR; maintainer vẫn là người quyết định merge.

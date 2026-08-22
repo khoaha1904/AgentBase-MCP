@@ -10,10 +10,11 @@ import { GitHubHubApi, type GitRequest, type GitHubPullRequest } from "../../../
 import { publishPendingHubProposals, type PublishGitHub } from "./publish.ts";
 import { synchronizeLocalHub } from "./synchronize.ts";
 import {
-  previewHubCiUpgrade, submitHubCiUpgrade,
+  initializeHub, previewHubInitialization,
 } from "../ci/upgrade.ts";
 import { renderHubCiBundle } from "../ci/artifact.ts";
 import { HUB_CI_WORKFLOW_PATH } from "../ci/workflow.ts";
+import { HUB_README_PATH, renderHubReadme } from "../workspace/readme.ts";
 
 const SOURCE_ID = "repository-acme-aaaaaaaaaaaa";
 const SOURCE_ID_B = "repository-beta-bbbbbbbbbbbb";
@@ -87,13 +88,17 @@ function retainedProposal(stateRoot: string, root: string, id: string, commit: s
   } })}\n`);
 }
 
-test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010] MCP creates independent, stacked and recoverable Hub PRs", async () => {
+test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..020] MCP creates independent, stacked and recoverable Hub PRs", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-publish-test-"));
   const remote = path.join(root, "hub.git"), hubRoot = path.join(root, "hub"), stateRoot = path.join(root, "state");
   try {
     fs.mkdirSync(hubRoot); git(root, ["init", "--bare", "--initial-branch=main", remote]); git(hubRoot, ["init", "-b", "main"]);
     fs.writeFileSync(path.join(hubRoot, "index.md"), "---\nokf_version: '0.2'\n---\n\n# Hub\n");
-    git(hubRoot, ["add", "index.md"]); git(hubRoot, ["-c", "user.name=Test", "-c", "user.email=test@localhost", "commit", "-m", "base"]);
+    for (const [relative, bytes] of Object.entries(renderHubCiBundle().files)) {
+      const target = path.join(hubRoot, ...relative.split("/")); fs.mkdirSync(path.dirname(target), { recursive: true }); fs.writeFileSync(target, bytes);
+    }
+    git(hubRoot, ["add", "index.md", ...Object.keys(renderHubCiBundle().files)]);
+    git(hubRoot, ["-c", "user.name=Test", "-c", "user.email=test@localhost", "commit", "-m", "base"]);
     git(hubRoot, ["remote", "add", "origin", remote]); git(hubRoot, ["push", "origin", "main"]);
     const remoteBase = git(hubRoot, ["rev-parse", "HEAD"]), sourceRevisions = ["c".repeat(40), "d".repeat(40)];
     fs.mkdirSync(path.join(hubRoot, "repositories"));
@@ -153,7 +158,7 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010] MCP creates independent, stacked
       remoteBase, activeHead: batchCommit, catalogVersion: "7.0.0" });
     const pushes: string[] = [], pullCalls: { title: string; body: string; base: string }[] = [];
     const pulls: (GitHubPullRequest & { state: "open" | "closed" })[] = [];
-    let failBase: string | undefined, mainOverride: string | undefined;
+    let failBase: string | undefined;
     const ref = (branch: string) => {
       const result = execFileSync("/usr/bin/git", ["show-ref", "--verify", "--hash", `refs/heads/${branch}`], {
         cwd: remote, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
@@ -165,7 +170,7 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010] MCP creates independent, stacked
     };
     const github: PublishGitHub = {
       async getRepository() { return { fullName: "agentbase/hub", defaultBranch: "main" }; },
-      async getBranchRef(branch) { const commit = branch === "main" && mainOverride ? mainOverride : optionalRef(branch); if (!commit) throw new Error("missing ref"); return { branch, commit }; },
+      async getBranchRef(branch) { const commit = optionalRef(branch); if (!commit) throw new Error("missing ref"); return { branch, commit }; },
       async findBranchRef(branch) { const commit = optionalRef(branch); return commit ? { branch, commit } : undefined; },
       async listPullRequests(head, base, state) {
         return pulls.filter((pull) => pull.headBranch === head && pull.baseBranch === base && (state === "all" || pull.state === state));
@@ -251,43 +256,55 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010] MCP creates independent, stacked
     const forcedBatch = await publishPendingHubProposals({ ...common, selectedProposalIds: stackIds, publicationMode: "batch" });
     assert.equal(forcedBatch.mode, "batch"); assert.equal(forcedBatch.units.length, 1); assert.equal(forcedBatch.units[0]?.baseBranch, "main");
 
-    const ciOptions = { stateRoot, localHub, token: "github_pat_secret_canary", github, git: gitRunner,
+    const initializationOptions = { stateRoot, localHub, token: "github_pat_secret_canary", github, git: gitRunner,
       createdAt: "2026-08-22T00:00:00Z" };
-    const ciPreview = await previewHubCiUpgrade(ciOptions);
-    assert.equal(ciPreview.state, "missing"); assert.equal(ciPreview.base_commit, remoteBase);
-    const ciUpgrade = await submitHubCiUpgrade(ciOptions, {
-      baseCommit: ciPreview.base_commit, ciDigest: ciPreview.ci_digest,
+    const initializationPreview = await previewHubInitialization(initializationOptions);
+    assert.equal(initializationPreview.state, "changes-required");
+    assert.equal(initializationPreview.base_commit, remoteBase);
+    assert.equal(initializationPreview.readme_state, "missing"); assert.equal(initializationPreview.ci_state, "current");
+    assert.deepEqual(initializationPreview.change_paths, [HUB_README_PATH]);
+    const initialization = await initializeHub(initializationOptions, {
+      baseCommit: initializationPreview.base_commit, initializationDigest: initializationPreview.initialization_digest,
     });
-    assert.equal(ciUpgrade.result, "created"); assert.ok(ciUpgrade.head_commit); assert.ok(ciUpgrade.pull_request);
+    assert.equal(initialization.result, "created"); assert.ok(initialization.head_commit); assert.ok(initialization.pull_request);
     assert.equal(ref("main"), remoteBase);
-    assert.deepEqual(git(hubRoot, ["diff", "--name-only", remoteBase, ciUpgrade.head_commit!]).split("\n"), ciPreview.ci_paths);
-    assert.equal(git(hubRoot, ["show", `${ciUpgrade.head_commit}:${HUB_CI_WORKFLOW_PATH}`]),
-      renderHubCiBundle().files[HUB_CI_WORKFLOW_PATH]!.toString().trimEnd());
-    assert.doesNotMatch(pullCalls.find((call) => call.title === "Install AgentBase-Hub CI")?.body ?? "",
+    assert.deepEqual(git(hubRoot, ["diff", "--name-only", remoteBase, initialization.head_commit!]), HUB_README_PATH);
+    assert.equal(git(hubRoot, ["show", `${initialization.head_commit}:${HUB_README_PATH}`]), renderHubReadme().trimEnd());
+    assert.doesNotMatch(pullCalls.find((call) => call.title === "Initialize AgentBase-Hub")?.body ?? "",
       /github_pat_secret_canary|agentbase-publish-test-/);
-    const ciRetry = await submitHubCiUpgrade(ciOptions, {
-      baseCommit: ciPreview.base_commit, ciDigest: renderHubCiBundle().digest,
+    const initializationRetry = await initializeHub(initializationOptions, {
+      baseCommit: initializationPreview.base_commit, initializationDigest: initializationPreview.initialization_digest,
     });
-    assert.equal(ciRetry.result, "recovered"); assert.deepEqual(ciRetry.pull_request, ciUpgrade.pull_request);
-    mainOverride = ciUpgrade.head_commit;
-    const currentCi = await previewHubCiUpgrade({ ...ciOptions,
-      localHub: createLocalHubState({ ...localHub, remoteBase: ciUpgrade.head_commit! }) });
-    assert.equal(currentCi.state, "current");
-    mainOverride = undefined;
-    const badCiRoot = path.join(root, "bad-ci");
-    git(hubRoot, ["worktree", "add", "--detach", badCiRoot, remoteBase]);
-    fs.mkdirSync(path.join(badCiRoot, ".github", "workflows"), { recursive: true });
-    fs.writeFileSync(path.join(badCiRoot, ...HUB_CI_WORKFLOW_PATH.split("/")), "name: drifted\n");
-    fs.writeFileSync(path.join(badCiRoot, "extra.txt"), "unexpected\n");
-    git(badCiRoot, ["add", "--all"]); git(badCiRoot, ["-c", "user.name=Test", "-c", "user.email=test@localhost",
-      "commit", "-m", "conflicting CI branch"]);
-    const badCiHead = git(badCiRoot, ["rev-parse", "HEAD"]);
-    git(badCiRoot, ["push", "--force", remote, `${badCiHead}:refs/heads/${ciPreview.head_branch}`]);
-    git(hubRoot, ["worktree", "remove", "--force", badCiRoot]);
-    await assert.rejects(submitHubCiUpgrade(ciOptions, {
-      baseCommit: ciPreview.base_commit, ciDigest: ciPreview.ci_digest,
-    }), /outside the reviewed CI bundle/);
+    assert.equal(initializationRetry.result, "recovered"); assert.deepEqual(initializationRetry.pull_request, initialization.pull_request);
+    const badInitializationRoot = path.join(root, "bad-initialization");
+    git(hubRoot, ["worktree", "add", "--detach", badInitializationRoot, remoteBase]);
+    fs.writeFileSync(path.join(badInitializationRoot, HUB_README_PATH), renderHubReadme());
+    fs.writeFileSync(path.join(badInitializationRoot, "extra.txt"), "unexpected\n");
+    git(badInitializationRoot, ["add", "--all"]); git(badInitializationRoot, ["-c", "user.name=Test", "-c", "user.email=test@localhost",
+      "commit", "-m", "conflicting initialization branch"]);
+    const badInitializationHead = git(badInitializationRoot, ["rev-parse", "HEAD"]);
+    git(badInitializationRoot, ["push", "--force", remote, `${badInitializationHead}:refs/heads/${initializationPreview.head_branch}`]);
+    git(hubRoot, ["worktree", "remove", "--force", badInitializationRoot]);
+    await assert.rejects(initializeHub(initializationOptions, {
+      baseCommit: initializationPreview.base_commit, initializationDigest: initializationPreview.initialization_digest,
+    }), /outside the reviewed baseline/);
     assert.equal(ref("main"), remoteBase);
+
+    git(remote, ["update-ref", "refs/heads/main", initialization.head_commit!, remoteBase]);
+    const currentInitialization = await previewHubInitialization(initializationOptions);
+    assert.equal(currentInitialization.state, "current"); assert.deepEqual(currentInitialization.change_paths, []);
+    const driftRoot = path.join(root, "drifted-ci");
+    git(hubRoot, ["worktree", "add", "--detach", driftRoot, initialization.head_commit!]);
+    fs.writeFileSync(path.join(driftRoot, ...HUB_CI_WORKFLOW_PATH.split("/")), "name: drifted\n");
+    git(driftRoot, ["add", HUB_CI_WORKFLOW_PATH]); git(driftRoot, ["-c", "user.name=Test", "-c", "user.email=test@localhost",
+      "commit", "-m", "drift CI"]);
+    const driftHead = git(driftRoot, ["rev-parse", "HEAD"]);
+    git(driftRoot, ["push", remote, `${driftHead}:refs/heads/main`]);
+    git(hubRoot, ["worktree", "remove", "--force", driftRoot]);
+    const driftedInitialization = await previewHubInitialization(initializationOptions);
+    assert.equal(driftedInitialization.readme_state, "present"); assert.equal(driftedInitialization.ci_state, "outdated");
+    assert.deepEqual(driftedInitialization.change_paths, Object.keys(renderHubCiBundle().files).sort());
+    git(remote, ["update-ref", "refs/heads/main", remoteBase, driftHead]);
 
     git(remote, ["update-ref", "refs/heads/main", batch.headCommit, remoteBase]);
     const synchronization = await synchronizeLocalHub({ stateRoot, localHub, token: "github_pat_secret_canary", git: gitRunner });

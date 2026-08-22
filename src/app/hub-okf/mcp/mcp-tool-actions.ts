@@ -54,8 +54,8 @@ export type HubToolActions = Readonly<{
   read(relativePath: string): Promise<unknown>;
   readObservedValues(relativePath: string): Promise<unknown>;
   readFreshness(): Promise<unknown>;
-  previewCiUpgrade(): Promise<unknown>;
-  submitCiUpgrade(input: Readonly<{ expectedBase: string; expectedCiDigest: string }>): Promise<unknown>;
+  previewHubInitialization(): Promise<unknown>;
+  initializeHub(input: Readonly<{ expectedBase: string; expectedInitializationDigest: string }>): Promise<unknown>;
   listQuestions(options: Readonly<{ status?: "open" | "resolved" | "needs-review"; limit?: number }>): Promise<unknown>;
   answerQuestion(input: Readonly<{
     questionId: string; revision: number; answer: string; maintainer: string;

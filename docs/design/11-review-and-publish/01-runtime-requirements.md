@@ -23,7 +23,7 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-LOCAL-HUB-006** — Submit publishes one non-empty dependency-safe selection
   as deterministic per-Repository publication units and opens/recovers their PRs.
 - **AB-LOCAL-HUB-007** — Only explicit attach, bootstrap, submit, synchronize and
-  Hub-CI upgrade actions may use the global token. Normal operation never writes remote `main`, merges,
+  Hub Initialization actions may use the global token. Normal operation never writes remote `main`, merges,
   approves, force-pushes, deletes branches, changes settings or overrides target.
 - **AB-LOCAL-HUB-008** — Synchronization fetches exact remote `main`, recognizes
   published identity, rebases remaining commits in an isolated candidate and
@@ -198,15 +198,27 @@ queries and ordinary coding never create Hub state, commits or publication.
   `pull_request_target` or write permission.
 - **AB-HUB-CI-007** — CI emits only the GitHub Actions Summary. It stores no Hub
   report/artifact and adds no daemon, model/provider call or production dependency.
-- **AB-HUB-CI-008** — An existing Hub is changed only after an explicit preview
-  and submit through one dedicated CI-bundle-only PR based on exact remote `main`.
+- **AB-HUB-CI-008** — An existing Hub receives missing or outdated CI only through
+  the explicit support-only Hub Initialization PR based on exact remote `main`.
 - **AB-HUB-CI-009** — Retry recovers only the exact deterministic branch and open
   PR. Changed base, extra files, drift or ambiguity fail before a remote write.
-- **AB-HUB-CI-010** — CI upgrade uses the dedicated Hub token internally and
+- **AB-HUB-CI-010** — Hub Initialization uses the dedicated Hub token internally and
   never writes remote `main`, merges, approves, closes, deletes or changes settings.
 - **AB-HUB-CI-011** — Canonical proof uses fixtures, disposable Git and fake
   GitHub. The generated artifact is derived from canonical validator source and
   Hub execution requires no public or internal package registry.
+
+## Hub Initialization
+
+- **AB-HUB-SETUP-018** — Existing-Hub initialization previews exact remote
+  `main`, README state, CI state, intended support paths and one deterministic
+  digest without synchronizing or replaying Local Draft knowledge.
+- **AB-HUB-SETUP-019** — Initialization adds the standard README only when it is
+  absent, never overwrites an existing README, skips exact current CI and installs
+  all three released CI files only when CI is missing, partial or outdated.
+- **AB-HUB-SETUP-020** — Explicit initialize creates or recovers one exact
+  support-only PR. Complete baseline is a no-op; changed base, extra paths, byte
+  drift or ambiguous PR state stops before remote write.
 
 ## Single-repository Refresh
 

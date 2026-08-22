@@ -61,7 +61,8 @@ small gaps must be backfilled before benchmark, PR or capability completion.
   exact source state and readable tables; query performs no repository probe.
   AWS/SQS provider observations are implemented through explicit Domain
   Enrichment. A local warning-only Repository freshness report and read-only
-  scheduled Hub CI are implemented.
+  scheduled Hub CI are implemented. Existing-Hub Initialization adds only a
+  missing standard README and/or non-current CI through one support-only PR.
 - Questions are shared Hub Markdown with exact state/revision and no private
   ledger authority. Exact-revision answers propose Guidance plus Question update
   atomically; Accept remains the state-change boundary. Broad Guidance,
