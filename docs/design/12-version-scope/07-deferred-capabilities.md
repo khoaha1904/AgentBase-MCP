@@ -2,7 +2,7 @@
 
 ## Post-MVP product capabilities
 
-- Batch Ingest and recoverable batch checkpoints.
+- Batch Refresh and mixed Init/Refresh batches.
 - Additional Domain Enrichment profiles beyond exact AWS SQS, plus provider
   account discovery/scan and background enrichment.
 - Question-governance enrichment beyond the implemented AWS/SQS three-tier

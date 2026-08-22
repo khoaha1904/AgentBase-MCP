@@ -1,6 +1,6 @@
 # 07 — Conflicts, Questions và Guidance
 
-> Trạng thái: Shared Question/exact Guidance MVP đã implement; batch enrichment deferred.
+> Trạng thái: Shared Question/exact Guidance và AWS/SQS three-tier enrichment đã implement; broader conflict composition deferred.
 
 High-level decision:
 [Dữ liệu xung đột, Questions và Maintainer Guidance](../../present/07-conflicts-questions-and-maintainer-guidance.md)

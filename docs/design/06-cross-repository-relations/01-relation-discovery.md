@@ -1,6 +1,6 @@
 # 06.01 — Relation discovery
 
-> Trạng thái: Owner đã chốt canonical relation versus candidate boundary; chưa implement Domain Enrichment.
+> Trạng thái: Canonical relation/candidate boundary và bounded AWS/SQS Domain Enrichment đã implement; broader inference deferred.
 
 ## Quyết định ngắn
 
@@ -120,4 +120,3 @@ account/region và verification không tự Accept hoặc Publish.
 | Cùng Queue ARN nhưng không có evidence Function sử dụng queue | Chỉ identity match; không có relation. |
 | `EVENT_QUEUE_URL` và `crawler_queue` có vẻ liên quan nhưng chưa resolve | Candidate + Question. |
 | Chỉ giống từ khóa `queue` trong hai repository | Không lưu relation. |
-

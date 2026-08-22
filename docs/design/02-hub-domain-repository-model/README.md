@@ -1,6 +1,6 @@
 # 02 — Hub, Domain và Repository model
 
-> Trạng thái: Owner-approved design; single-repository foundation implemented, batch/monorepo runtime deferred.
+> Trạng thái: Domain/Repository và Batch Initial Ingest implemented; monorepo runtime deferred.
 
 High-level decision:
 [Hub, Domain và Repository được tổ chức thế nào?](../../present/02-hub-domains-and-repositories.md)

@@ -64,8 +64,8 @@ small gaps must be backfilled before benchmark, PR or capability completion.
   Enrichment; automated freshness reporting remains deferred.
 - Questions are shared Hub Markdown with exact state/revision and no private
   ledger authority. Exact-revision answers propose Guidance plus Question update
-  atomically; Accept remains the state-change boundary. Batch Ingest, broad
-  Guidance, automatic conflict inference, query overlay,
+  atomically; Accept remains the state-change boundary. Broad Guidance,
+  automatic conflict inference, query overlay,
   freshness CI, visual review and profile migration are post-MVP capabilities.
 
 Update current truth once in the narrowest high- or low-level document. Do not

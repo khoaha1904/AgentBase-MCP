@@ -28,11 +28,11 @@ owner và một registry nữa sẽ thành dead-spec duplicate.
 ## Current MVP boundary
 
 - Catalog 7 with sparse provider-neutral concepts and embedded resources.
-- Local single-repository Initial Ingest/Refresh; no provider CLI or auto-publish.
+- Local single-repository Initial Ingest/Refresh plus Batch Initial Ingest.
+- Bounded read-only AWS/SQS Domain Enrichment; no provider-wide scan or auto-publish.
 - Terraform/Terragrunt structured evidence; no SAM/CloudFormation support.
 - Sol Init and Terra Refresh are benchmark policy only.
 - Rich PR summary, independent Init PR, same-Repository stack and synchronization
   exist; MCP never merges.
-- Shared Question documents and exact-scope Guidance are implemented. Full
-  canonical verification closes capability 028; deferred enrichment is not a
-  release blocker.
+- Shared Question documents, exact-scope Guidance and AWS/SQS three-tier
+  enrichment are implemented. Broader inference and provider profiles remain deferred.

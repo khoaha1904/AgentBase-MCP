@@ -1,6 +1,6 @@
 # 08 — Observed snapshots and source references
 
-> Trạng thái: Repository observed-value slice đã implement; freshness automation và provider observations còn deferred.
+> Trạng thái: Repository snapshots và bounded AWS/SQS provider observations đã implement; freshness automation deferred.
 
 High-level decision:
 [Observed snapshots và source references](../../present/08-live-references-for-change-prone-values.md)

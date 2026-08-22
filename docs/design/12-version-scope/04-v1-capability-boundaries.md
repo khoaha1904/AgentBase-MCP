@@ -8,6 +8,8 @@
 - one explicit local repository Code Graph and bounded source reads;
 - Catalog 7 provider-neutral concepts with Terraform/Terragrunt evidence;
 - single-repository Initial Ingest and Refresh producing reviewable proposals;
+- Batch Initial Ingest with recoverable sequential checkpoints and one atomic proposal;
+- bounded AWS/SQS Domain Enrichment with read-only provider evidence;
 - local-only/attached Hub, structured inspection, atomic Accept and query;
 - observed snapshots with provenance, age and no implicit source probe;
 - shared Hub Question documents and atomic exact-scope Maintainer Guidance;
@@ -19,7 +21,8 @@
 
 No known product capability gap remains inside the accepted MVP boundary.
 Canonical offline verification and separately authorized model qualification are
-evidence gates; Batch, provider CLI, query overlay and HTML review remain deferred.
+evidence gates; Batch Refresh, additional provider profiles, query overlay and
+HTML review remain deferred.
 
 ## Qualification boundary
 

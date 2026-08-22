@@ -47,7 +47,7 @@ Không có Published concept theo contract cũ nên không cần migration layer
 
 1. Freshness CI/report và stale warning orchestration.
 2. Remote repository file read qua MCP-managed token.
-3. Provider observations qua Domain Enrichment.
+3. Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
 
 ## Impact checkpoint
 

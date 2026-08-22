@@ -1,6 +1,6 @@
 # 12 — Giới hạn và phạm vi của phiên bản đầu
 
-> Trạng thái: MVP boundary đã chốt; shared Question documents là core gap còn lại.
+> Trạng thái: MVP boundary đã chốt và implemented; phần mở rộng nằm trong deferred scope.
 
 ## Câu trả lời ngắn
 
@@ -22,8 +22,8 @@ một số giới hạn để tránh đồng bộ, phân quyền và automation 
 - Structured IaC MVP hỗ trợ Terraform/Terragrunt; SAM/CloudFormation chưa hỗ trợ.
 - Hub query mặc định đọc active local knowledge; Published/Local Draft overlay
   chi tiết chưa implement.
-- Question runtime hiện còn private/local; phải chuyển thành shared Hub documents
-  trước MVP release để Question thật sự là knowledge dùng chung.
+- Question runtime dùng shared Hub documents; private state chỉ là cache có thể
+  rebuild, không phải authority.
 
 ## Quyết định high-level
 
@@ -33,8 +33,8 @@ mới; mirror/copy mơ hồ phải được người dùng xác nhận.
 
 ## Phần còn deferred
 
-- Provider Verification/Domain Enrichment skill.
-- Batch checkpoint, query overlay và freshness report.
+- Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
+- Batch Refresh, query overlay và freshness report.
 - Azure/GCP profile và semantic profile migration.
 - Static HTML/graph review và remote repository reader.
 

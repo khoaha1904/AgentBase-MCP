@@ -1,6 +1,6 @@
 # 02.02 — Domain confirmation preflight
 
-> Trạng thái: Single-repository confirmation implemented; batch confirmation deferred.
+> Trạng thái: Single-repository và Batch Initial Ingest confirmation implemented.
 
 ## Workflow
 
