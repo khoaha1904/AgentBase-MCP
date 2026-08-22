@@ -107,17 +107,17 @@ checkpoint tự nhiên là trước benchmark mới, trước PR và trước ca
 | Phần | Trạng thái low-level |
 |---|---|
 | 01 | Graph/source reading implemented cho local single-repository |
-| 02 | Domain/Repository foundation implemented; batch/monorepo edge cases còn draft |
+| 02 | Domain/Repository + single-repository confirmation implemented; batch/monorepo runtime deferred |
 | 03 | Evidence-bearing candidate/guidance implemented; candidate UI còn deferred |
 | 04 | Catalog 7 implemented; catalog 6 design đã superseded |
 | 05 | Proposal/template/Local Hub foundation implemented; overlay UX còn draft |
 | 06 | Cross-repository relation/identity/enrichment design hoàn tất; runtime chưa implement |
-| 07 | Shared Question/conflict/guidance design hoàn tất; runtime vẫn private-ledger foundation |
+| 07 | Shared Question documents + exact-scope Guidance implemented; batch/conflict composition deferred |
 | 08 | Repository snapshot-first runtime implemented; provider/freshness còn deferred |
 | 09 | Single-repository Init + Refresh implemented; batch/enrichment/freshness deferred |
-| 10 | Query foundation implemented; overlay/freshness presentation chưa hoàn chỉnh |
+| 10 | Snapshot-default query foundation implemented; overlay/conflict/freshness composition deferred |
 | 11 | Reviewable batch publication và exact same-Repository Init/Refresh stack implemented |
-| 12 | Terraform/Terragrunt MVP; SAM/CloudFormation và provider expansion deferred |
+| 12 | Terraform/Terragrunt MVP boundary implemented and verified; provider expansion deferred |
 
 Current runtime authority nằm ở `docs/design`, code và active spec. Design trong
 thư mục này giải thích shape/trade-off và phải được cập nhật

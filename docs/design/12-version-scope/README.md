@@ -1,6 +1,6 @@
 # 12 — Version scope
 
-> Trạng thái: MVP capability boundary implemented; capability 028 verification is active.
+> Trạng thái: MVP capability boundary implemented and verified.
 
 High-level decision:
 [Giới hạn và phạm vi phiên bản đầu](../../present/12-current-limits-and-open-decisions.md)

@@ -1,6 +1,6 @@
 # 10.00 — Baseline and impact
 
-> Trạng thái: Baseline đã đối chiếu; chưa thay đổi runtime.
+> Trạng thái: Baseline synchronized; snapshot/shared-Question primitives implemented.
 
 ## Outcome
 

@@ -1,6 +1,6 @@
 # 10 — Query routing
 
-> Trạng thái: Baseline đã đối chiếu; technical design đang review tuần tự.
+> Trạng thái: Technical design chốt; snapshot foundation implemented, composed layers deferred.
 
 High-level decision:
 [Query từ Code Graph và Hub](../../present/10-querying-code-graph-and-hub.md)

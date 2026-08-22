@@ -1,6 +1,6 @@
 # 02.01 — Core entities and ownership
 
-> Trạng thái: Technical design draft.
+> Trạng thái: Core Hub/Domain/Repository ownership implemented.
 
 ## Entity model
 

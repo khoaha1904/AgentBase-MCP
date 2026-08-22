@@ -1,6 +1,6 @@
 # 02.02 — Domain confirmation preflight
 
-> Trạng thái: Technical design draft.
+> Trạng thái: Single-repository confirmation implemented; batch confirmation deferred.
 
 ## Workflow
 

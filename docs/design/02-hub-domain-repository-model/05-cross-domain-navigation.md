@@ -1,6 +1,6 @@
 # 02.05 — Cross-Domain navigation
 
-> Trạng thái: Technical design draft.
+> Trạng thái: Owner-approved boundary; enrichment of missing relations deferred.
 
 ## Membership versus relation
 

@@ -1,6 +1,6 @@
 # 02.04 — Monorepo and source scopes
 
-> Trạng thái: Technical design draft.
+> Trạng thái: Owner-approved boundary; subproject-scope runtime deferred.
 
 ## Identity
 

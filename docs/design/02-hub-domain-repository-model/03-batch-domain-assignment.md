@@ -1,6 +1,6 @@
 # 02.03 — Batch Domain assignment
 
-> Trạng thái: Technical design draft.
+> Trạng thái: Owner-approved design; Batch Ingest runtime deferred after MVP.
 
 ## Scope
 
