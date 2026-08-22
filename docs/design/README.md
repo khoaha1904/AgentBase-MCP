@@ -113,9 +113,9 @@ checkpoint tự nhiên là trước benchmark mới, trước PR và trước ca
 | 05 | Proposal/template/Local Hub foundation implemented; overlay UX còn draft |
 | 06 | Bounded AWS/SQS relation identity và Domain Enrichment runtime đã implement; merge/profile khác deferred |
 | 07 | Shared Question documents + exact-scope Guidance implemented; batch/conflict composition deferred |
-| 08 | Repository snapshot-first và AWS/SQS provider observations đã implement; freshness còn deferred |
-| 09 | Single Init/Refresh, Batch Initial Ingest và bounded Domain Enrichment đã implement; Batch Refresh/freshness deferred |
-| 10 | Snapshot-default query foundation implemented; overlay/conflict/freshness composition deferred |
+| 08 | Repository snapshot-first, AWS/SQS observations, local freshness report và Hub CI đã implement |
+| 09 | Single Init/Refresh, Batch Initial Ingest, Domain Enrichment, freshness và CI đã implement; Batch Refresh deferred |
+| 10 | Snapshot-default query foundation implemented; overlay/conflict/ordinary freshness marks deferred |
 | 11 | Reviewable batch publication và exact same-Repository Init/Refresh stack implemented |
 | 12 | Terraform/Terragrunt MVP boundary implemented and verified; provider expansion deferred |
 

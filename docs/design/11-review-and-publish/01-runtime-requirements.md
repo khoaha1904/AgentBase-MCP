@@ -22,8 +22,8 @@ queries and ordinary coding never create Hub state, commits or publication.
   ancestry after the admitted base; sidecars cannot invent pending commits.
 - **AB-LOCAL-HUB-006** — Submit publishes one non-empty dependency-safe selection
   as deterministic per-Repository publication units and opens/recovers their PRs.
-- **AB-LOCAL-HUB-007** — Only explicit attach, bootstrap, submit and synchronize
-  may use the global token. Normal operation never writes remote `main`, merges,
+- **AB-LOCAL-HUB-007** — Only explicit attach, bootstrap, submit, synchronize and
+  Hub-CI upgrade actions may use the global token. Normal operation never writes remote `main`, merges,
   approves, force-pushes, deletes branches, changes settings or overrides target.
 - **AB-LOCAL-HUB-008** — Synchronization fetches exact remote `main`, recognizes
   published identity, rebases remaining commits in an isolated candidate and
@@ -169,6 +169,41 @@ queries and ordinary coding never create Hub state, commits or publication.
   current-source response share the obvious-sensitive value guard. Query
   redacts only the unsafe value and continues returning safe knowledge;
   known secret-bearing paths are not used for current-value lookup.
+- **AB-QUERY-011** — `read_hub_freshness` and local CLI `okf hub freshness`
+  reuse one bounded read-only projection over at most 512 Repository concepts
+  from one exact admitted Hub commit. Each row shows canonical identity when
+  available, title/path, exact observed time, non-negative age and clean commit
+  or dirty digest; missing metadata remains `unknown`. Unknown sorts first and
+  observed rows sort oldest-first. Output labels Published or Local Draft and
+  performs no source/provider/network probe, threshold, Question, Refresh or write.
+
+## Hub CI
+
+- **AB-HUB-CI-001** — `okf hub-ci --root <checkout>` performs one bounded offline
+  validation pass and returns deterministic blocking errors, warnings and the
+  AB-QUERY-011 freshness projection. It performs no source/provider/network write.
+- **AB-HUB-CI-002** — Blocking validation covers OKF/root/index syntax, known
+  AgentBase schemas, canonical relationship targets, Questions/index, observed
+  values, external identities and obvious sensitive content or paths.
+- **AB-HUB-CI-003** — Unknown custom OKF types receive base validation and a
+  visible warning; unknown type alone does not fail CI.
+- **AB-HUB-CI-004** — Freshness is always warning-only context. CI has no stale
+  threshold and never creates a Question, triggers Refresh or changes knowledge.
+- **AB-HUB-CI-005** — Every MCP-created Hub base includes one exact workflow for
+  pull requests, pushes to `main`, weekly schedule and manual dispatch.
+- **AB-HUB-CI-006** — The workflow grants only `contents: read`, uses pinned
+  third-party actions and one pinned public AgentBase-MCP release, and contains
+  no MCP credential, `pull_request_target` or write permission.
+- **AB-HUB-CI-007** — CI emits only the GitHub Actions Summary. It stores no Hub
+  report/artifact and adds no daemon, model/provider call or production dependency.
+- **AB-HUB-CI-008** — An existing Hub is changed only after an explicit preview
+  and submit through one dedicated workflow-only PR based on exact remote `main`.
+- **AB-HUB-CI-009** — Retry recovers only the exact deterministic branch and open
+  PR. Changed base, extra files, drift or ambiguity fail before a remote write.
+- **AB-HUB-CI-010** — CI upgrade uses the dedicated Hub token internally and
+  never writes remote `main`, merges, approves, closes, deletes or changes settings.
+- **AB-HUB-CI-011** — Canonical proof uses fixtures, disposable Git and fake
+  GitHub. Real workflow qualification requires the pinned release tag to exist.
 
 ## Single-repository Refresh
 
@@ -206,7 +241,8 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-HUB-SETUP-005** — Failed/interrupted setup preserves the prior admitted
   state and never leaves a partial active checkout.
 - **AB-HUB-SETUP-006** — New setup performs no network call and creates a private
-  local Git `main` containing only explanatory README and OKF v0.2 root index.
+  local Git `main` containing explanatory README, OKF v0.2 root index and the
+  exact released read-only AgentBase-Hub CI workflow.
 - **AB-HUB-SETUP-007** — Base and knowledge commits have distinct explicit
   identities; pending ancestry rejects unclassified commits above the base.
 - **AB-HUB-SETUP-008** — Prepare, finalize, inspect, accept, query and pending

@@ -1,6 +1,6 @@
 # 09.08 — OKF Freshness
 
-> Trạng thái: Observation metadata implemented; query/CI warning deferred.
+> Trạng thái: Observation metadata, value age, Repository report and warning-only CI implemented.
 
 ## Boundary
 
@@ -38,9 +38,16 @@ có thể bổ sung:
 
 Không có action tự động, không ẩn result và không hạ publication state.
 
-## Scheduled CI report
+## Scheduled CI summary
 
-CI có thể parse Hub theo lịch và tạo một derived report tổng hợp, ví dụ:
+The current local `read_hub_freshness` / `okf hub freshness` boundary already
+produces the structured Repository-level projection in memory. It reads the
+admitted Hub view, labels its exact layer and writes no report file.
+
+GitHub Actions reuses that projection weekly and on Hub PR/main checks. It writes
+only the ephemeral Actions Summary; freshness never changes the exit status.
+
+A future capability may persist a derived output, for example:
 
 ```text
 reports/okf-freshness.md
@@ -54,9 +61,8 @@ Report không phải source of truth và có thể rebuild. GitHub Actions summa
 artifact là output đơn giản nhất. Nếu persist file vào Hub Git thì CI tạo PR;
 không push thẳng `main` và không kích hoạt Refresh.
 
-## Baseline gap
+## Remaining gap
 
-Legacy live-evidence query chỉ có `ready`, `unavailable` và
-`repository-mismatch`; snapshot-first runtime chưa replace contract đó hoặc
-render age. Proposal/source state đã có phần lớn revision/time inputs, nhưng
-multi-source contribution freshness và derived report chưa implemented.
+Persisted Markdown, ordinary-query freshness marks and multi-source contribution
+aggregation are not implemented. Per-value snapshot query already exposes exact
+age; the first Hub-wide report intentionally stays at the Repository Refresh checkpoint.

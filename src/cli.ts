@@ -4,7 +4,7 @@ import { pathToFileURL } from "node:url";
 
 import { executeFoundationCli } from "./app/foundation-demo/index.ts";
 import { serveCodebaseMemoryMcp } from "./app/codebase-memory-mcp/index.ts";
-import { executeHubCli, tryCreateHubRuntimeActions, type HubToolActions } from "./app/hub-okf/index.ts";
+import { executeHubCiCli, executeHubCli, tryCreateHubRuntimeActions, type HubToolActions } from "./app/hub-okf/index.ts";
 import { executeGraphBenchmarkCli, executeObservationCli, executeOkfCli, executeRealEvidenceCli } from "./app/repository-okf/index.ts";
 
 export async function executeCli(args = process.argv.slice(2), hubActions?: HubToolActions): Promise<number> {
@@ -17,6 +17,7 @@ export async function executeCli(args = process.argv.slice(2), hubActions?: HubT
   if (command === "codebase-memory:benchmark") return executeGraphBenchmarkCli(rest);
   if (command === "observe") return executeObservationCli(rest);
   if (command === "okf" && rest[0] === "hub") return executeHubCli(rest.slice(1), hubActions ?? tryCreateHubRuntimeActions());
+  if (command === "okf" && rest[0] === "hub-ci") return executeHubCiCli(rest.slice(1));
   if (command === "okf") return executeOkfCli(rest);
   if (command === undefined || command === "foundation-demo") return executeFoundationCli();
   process.stderr.write(`Unknown command: ${command}\n`);

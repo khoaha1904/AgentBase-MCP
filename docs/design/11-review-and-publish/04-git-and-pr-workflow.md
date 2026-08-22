@@ -1,6 +1,6 @@
 # 11.04 — Git and PR workflow
 
-> Trạng thái: Implemented for independent Init, same-Repository stacks and reconciliation.
+> Trạng thái: Implemented for knowledge publication and dedicated Hub-CI upgrade PRs.
 
 ## Outcome
 
@@ -94,6 +94,15 @@ conflict coordination.
 - Network/permission failure giữ Local Draft và yêu cầu retry/credential repair.
 - Existing remote branch/PR drift không bị overwrite.
 - MCP never mutates remote `main`; maintainer merge remains the publication gate.
+
+## Hub-CI upgrade PR
+
+CI installation is a separate reviewed lifecycle, not an OKF proposal. Preview
+binds exact remote `main` and deterministic workflow digest. Explicit submit may
+create or recover only `agentbase/hub-ci-<digest>` whose sole diff is
+`.github/workflows/agentbase-hub.yml`. Any extra file, changed base, ambiguous PR
+or workflow drift stops. The same dedicated Hub token is used internally; the
+caller cannot provide a token, branch name or workflow bytes.
 
 ## Current implementation gap
 

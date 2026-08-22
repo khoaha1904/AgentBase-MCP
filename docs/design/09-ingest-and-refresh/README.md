@@ -1,7 +1,7 @@
 # 09 — Ingest và Refresh
 
 > Trạng thái: Single-repository Init/Refresh, Batch Initial Ingest và bounded
-> Domain Enrichment implemented; Batch Refresh/freshness deferred.
+> Domain Enrichment, local Repository freshness report and Hub CI implemented; Batch Refresh deferred.
 
 High-level decision:
 [Ingest và Refresh](../../present/09-ingest-and-refresh.md)

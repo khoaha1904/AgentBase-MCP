@@ -15,7 +15,9 @@ import { runGit, type GitRequest } from "../../../providers/github-hub/index.ts"
 import {
   finalizeDomainEnrichment, prepareDomainEnrichment, runDomainEnrichment,
 } from "../enrichment/index.ts";
-import { createHubRuntimeActions } from "../query/runtime-actions.ts";
+import {
+  HUB_CI_WORKFLOW_PATH, createHubRuntimeActions, renderHubCiWorkflow, validateHubCi,
+} from "../index.ts";
 import { attachExistingHub } from "./setup.ts";
 
 const repositoryGuidance = {
@@ -123,13 +125,34 @@ async function addPublishedEnrichmentFixture(root: string): Promise<Readonly<{
   return { repositoryIds, questions, commit };
 }
 
-test("[AB-HUB-SETUP-006..008][AB-BATCH-006][SC-003] local-only Hub accepts, queries and inventories two knowledge commits without a remote", async () => {
+test("[AB-HUB-SETUP-006..008][AB-BATCH-006][AB-HUB-CI-001..007][SC-003] local-only Hub accepts, queries and inventories two knowledge commits without a remote", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "local-only-hub-e2e-"));
   const environment = { HOME: root, XDG_CONFIG_HOME: path.join(root, "config"), XDG_DATA_HOME: path.join(root, "data") };
   const actions = createHubRuntimeActions(environment, path.join(root, "state"));
   try {
     const repository = await sourceRepository(root);
     const configured = await actions.configure({ mode: "new" }) as { localRoot: string; localHubId: string };
+    assert.equal(fs.readFileSync(path.join(configured.localRoot, ...HUB_CI_WORKFLOW_PATH.split("/")), "utf8"), renderHubCiWorkflow());
+    const emptyCi = await validateHubCi(configured.localRoot, () => new Date("2026-08-22T00:00:00Z"));
+    assert.equal(emptyCi.passed, true);
+    assert.deepEqual(emptyCi.freshness.summary, { total: 0, observed: 0, unknown: 0 });
+    assert.match(renderHubCiWorkflow(), /permissions:\n  contents: read/);
+    assert.doesNotMatch(renderHubCiWorkflow(), /pull_request_target|secrets\.|write/);
+
+    const ciFixture = path.join(root, "ci-fixture");
+    fs.mkdirSync(path.join(ciFixture, ".github", "workflows"), { recursive: true });
+    fs.writeFileSync(path.join(ciFixture, "index.md"), "---\nokf_version: '0.2'\n---\n\n# Hub\n\n* [Notes](notes.md) - custom notes\n");
+    fs.writeFileSync(path.join(ciFixture, "notes.md"), "---\ntype: Team Note\ntitle: Notes\ndescription: Custom knowledge.\n---\n\n# Notes\n");
+    fs.writeFileSync(path.join(ciFixture, ...HUB_CI_WORKFLOW_PATH.split("/")), renderHubCiWorkflow());
+    const customCi = await validateHubCi(ciFixture, () => new Date("2026-08-22T00:00:00Z"));
+    assert.equal(customCi.passed, true);
+    assert.match(customCi.warnings.join("\n"), /custom OKF type Team Note/);
+    fs.writeFileSync(path.join(ciFixture, "index.md"), "---\nokf_version: '0.2'\n---\n\n# Hub\n\n* [Missing](missing.md) - broken\n");
+    assert.equal((await validateHubCi(ciFixture)).passed, false);
+    fs.writeFileSync(path.join(ciFixture, ".env"), "github_pat_abcdefghijklmnopqrstuvwxyz012345\n");
+    const unsafeCi = await validateHubCi(ciFixture);
+    assert.equal(unsafeCi.passed, false);
+    assert.match(unsafeCi.errors.join("\n"), /sensitive|forbidden/);
     for (const sequence of [1, 2]) {
       const prepared = await actions.prepare({ mode: "new", sourceRepository: repository,
         subjectDirectory: `repositories/repo-${sequence}`,
@@ -198,6 +221,23 @@ test("[AB-HUB-SETUP-006..008][AB-BATCH-006][SC-003] local-only Hub accepts, quer
         assert.deepEqual(observed.values.map((value) => value.role).sort(), ["documentation", "implementation"]);
       }
     }
+    const headBeforeFreshness = (await runGit({ args: ["rev-parse", "HEAD"], cwd: configured.localRoot,
+      operation: "capture Hub head before freshness" })).stdout.trim();
+    const freshness = await actions.readFreshness() as {
+      commit: string; publication_layer: string;
+      summary: { total: number; observed: number; unknown: number };
+      repositories: readonly { path: string; state: string; age_milliseconds?: number }[];
+    };
+    assert.equal(freshness.commit, headBeforeFreshness);
+    assert.equal(freshness.publication_layer, "local-draft");
+    assert.deepEqual(freshness.summary, { total: 2, observed: 0, unknown: 2 });
+    assert.equal(freshness.repositories.every((entry) => entry.state === "unknown"
+      && entry.age_milliseconds === undefined), true);
+    assert.equal((await runGit({ args: ["rev-parse", "HEAD"], cwd: configured.localRoot,
+      operation: "capture Hub head after freshness" })).stdout.trim(), headBeforeFreshness);
+    assert.equal((await runGit({ args: ["status", "--porcelain=v1"], cwd: configured.localRoot,
+      operation: "verify freshness is read-only" })).stdout, "");
+
     const pending = await actions.listPending() as readonly unknown[];
     assert.equal(pending.length, 3);
     const restartedActions = createHubRuntimeActions(environment, path.join(root, "state"));

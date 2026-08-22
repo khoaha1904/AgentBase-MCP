@@ -11,6 +11,7 @@ import {
   writePersistedHubConfiguration,
   type PersistedHubConfiguration,
 } from "../configuration/configuration-file.ts";
+import { HUB_CI_WORKFLOW_PATH, renderHubCiWorkflow } from "../ci/workflow.ts";
 
 export type SetupGit = (request: GitRequest) => Promise<GitOutput>;
 
@@ -156,7 +157,10 @@ export async function createLocalHub(
       + "The root `index.md` is the progressive-disclosure entrypoint.\n";
     fs.writeFileSync(path.join(staging, "README.md"), readme);
     fs.writeFileSync(path.join(staging, "index.md"), "---\nokf_version: \"0.2\"\n---\n\n# AgentBase-Hub\n");
-    await git({ args: ["add", "README.md", "index.md"], cwd: staging, operation: "stage AgentBase-Hub base" });
+    const workflowPath = path.join(staging, ...HUB_CI_WORKFLOW_PATH.split("/"));
+    fs.mkdirSync(path.dirname(workflowPath), { recursive: true });
+    fs.writeFileSync(workflowPath, renderHubCiWorkflow());
+    await git({ args: ["add", "README.md", "index.md", HUB_CI_WORKFLOW_PATH], cwd: staging, operation: "stage AgentBase-Hub base" });
     const message = [
       "Initialize AgentBase-Hub base", "", `${HUB_BASE_TRAILERS.kind}: base`,
       `${HUB_BASE_TRAILERS.id}: ${localHubId}`, `${HUB_BASE_TRAILERS.format}: 1`,

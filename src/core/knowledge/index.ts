@@ -120,6 +120,11 @@ export {
   type RepositoryIdentityResolution,
 } from "./governance/repository-identity.ts";
 export {
+  readHubFreshness,
+  type HubFreshnessProjection,
+  type RepositoryFreshness,
+} from "./query/hub-freshness.ts";
+export {
   createObservedValueId,
   normalizeRepositoryObservedValues,
   normalizeProviderObservedValues,

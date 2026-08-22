@@ -1,4 +1,14 @@
 export const HUB_OKF_CAPABILITY = "agentbase-hub-okf" as const;
+export { executeHubCiCli } from "./ci/cli.ts";
+export { validateHubCi, type HubCiResult } from "./ci/validation.ts";
+export {
+  HUB_CI_AGENTBASE_RELEASE, HUB_CI_FORMAT_VERSION, HUB_CI_WORKFLOW_PATH,
+  hubCiWorkflowDigest, renderHubCiWorkflow,
+} from "./ci/workflow.ts";
+export {
+  previewHubCiUpgrade, submitHubCiUpgrade,
+  type HubCiUpgradeGitHub, type HubCiUpgradeIntent, type HubCiUpgradeOptions, type HubCiUpgradeResult,
+} from "./ci/upgrade.ts";
 export { loadHubConfiguration, resolveHubConfiguration, type HubConfiguration, type OptionalHubConfiguration } from "./configuration/configuration.ts";
 export {
   globalHubConfigurationPath,
@@ -50,10 +60,12 @@ export { admitPersistentLocalHub, type LocalHubGit } from "./workspace/local-hub
 export { acceptHubProposal, type AcceptHubOptions } from "./review/accept.ts";
 export {
   readActiveHubConcept,
+  readActiveHubFreshness,
   readActiveHubObservedValues,
   searchActiveHub,
   type HubObservedValue,
   type HubObservedValues,
+  type HubFreshnessReport,
   type HubQueryGit,
 } from "./query/query.ts";
 export { listPendingHubProposals, selectPendingPrefix, type PendingHubProposal } from "./review/pending.ts";

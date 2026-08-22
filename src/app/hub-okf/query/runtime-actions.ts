@@ -25,6 +25,7 @@ import {
   buildActiveHubContinuity,
   inspectInitialIngestHubContext,
   readActiveHubConcept,
+  readActiveHubFreshness,
   readActiveHubObservedValues,
   searchActiveHub,
   traverseActiveHub,
@@ -43,6 +44,7 @@ import {
   readBatchManifest, recordBatchMember, retryBatchMember, reviseBatchMembership,
   type BatchMember,
 } from "../batch-ingest/index.ts";
+import { previewHubCiUpgrade, submitHubCiUpgrade } from "../ci/upgrade.ts";
 
 function defaultStateRoot(): string {
   const owner = typeof process.getuid === "function" ? String(process.getuid()) : "portable";
@@ -423,6 +425,25 @@ export function createHubRuntimeActions(
     async readObservedValues(relativePath) {
       const localHub = await admit();
       return readActiveHubObservedValues(localHub, relativePath);
+    },
+    async readFreshness() {
+      const localHub = await admit();
+      return readActiveHubFreshness(localHub);
+    },
+    async previewCiUpgrade() {
+      const configuration = configured();
+      if (configuration.kind !== "remote" || !configuration.hub) throw new Error("Hub CI upgrade requires an attached remote Hub");
+      const token = requireHubToken(configuration.token), localHub = await admitPersistentLocalHub(configuration);
+      try { return await previewHubCiUpgrade({ stateRoot, localHub, token, github: new GitHubHubApi(configuration.hub, token) }); }
+      catch (error) { throw remoteFailure(error, token); }
+    },
+    async submitCiUpgrade(input) {
+      const configuration = configured();
+      if (configuration.kind !== "remote" || !configuration.hub) throw new Error("Hub CI upgrade requires an attached remote Hub");
+      const token = requireHubToken(configuration.token), localHub = await admitPersistentLocalHub(configuration);
+      try { return await submitHubCiUpgrade({ stateRoot, localHub, token, github: new GitHubHubApi(configuration.hub, token) }, {
+        baseCommit: input.expectedBase, workflowDigest: input.expectedWorkflowDigest,
+      }); } catch (error) { throw remoteFailure(error, token); }
     },
     async listPending() {
       const localHub = await admit();

@@ -1,6 +1,6 @@
 # 08.03 — Freshness and broken sources
 
-> Trạng thái: Technical design draft; warning-only behavior chưa implement.
+> Trạng thái: Repository warning report implemented; CI automation deferred.
 
 ## Freshness
 
@@ -27,9 +27,19 @@ prove neither condition.
 Both outcomes preserve the snapshot. No ordinary read creates/resolves Question
 state or rewrites provenance.
 
+## Repository freshness report
+
+The read-only Hub freshness action scans at most 512 Repository concepts from
+one exact admitted commit. It returns canonical identity when available, title,
+path, exact observed time, non-negative age and clean commit or dirty digest.
+Missing or malformed observation metadata remains visible as `unknown`.
+
+Unknown rows sort first, followed by observed rows from oldest to newest. The
+report labels Published versus Local Draft and never probes source, writes Hub,
+creates a Question or triggers Refresh.
+
 ## CI report
 
-A future periodic Hub check may generate one rebuildable warning report from
-published observation times and already-known source states. The report is not
-knowledge authority, changes no concept and triggers no Refresh. Its exact CI
-workflow remains part 09/11 work, not Part 08 runtime scope.
+A future periodic Hub check may adapt this same projection to a Published Hub
+checkout. The report is not knowledge authority, changes no concept and triggers
+no Refresh. Its exact CI workflow remains separate 09/11 work.

@@ -374,6 +374,12 @@ export async function callHubOkfTool(
     if (name === "read_hub_observed_values") {
       return result(await actions.readObservedValues(required(args, "path")));
     }
+    if (name === "read_hub_freshness") return result(await actions.readFreshness());
+    if (name === "preview_hub_ci_upgrade") return result(await actions.previewCiUpgrade());
+    if (name === "submit_hub_ci_upgrade") return result(await actions.submitCiUpgrade({
+      expectedBase: required(args, "expected_base"),
+      expectedWorkflowDigest: required(args, "expected_workflow_digest"),
+    }));
     if (name === "list_hub_questions") {
       const status = args.status, limit = args.limit;
       if (status !== undefined && status !== "open" && status !== "resolved" && status !== "needs-review") {

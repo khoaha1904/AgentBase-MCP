@@ -86,7 +86,7 @@ phán quyết knowledge sai và không liên quan tới graph-cache freshness.
 - MCP query có thể hiển thị source revision, thời điểm observed và age.
 - Khi current local source đã advance, MCP cảnh báo knowledge được quan sát ở
   revision cũ.
-- Scheduled CI có thể tạo một derived freshness report tổng hợp từ Hub.
+- Local MCP/CLI và scheduled Hub CI dùng cùng derived Repository freshness report.
 - Warning không tự Refresh, không ẩn/xóa knowledge và không chặn Publish.
 - Report không phải source of truth; nếu lưu vào Hub Git thì đi qua PR, không
   push thẳng `main`.
@@ -116,5 +116,5 @@ URL không phải identity chính; chúng được giữ làm aliases/evidence.
 
 - Batch Refresh hoặc batch trộn Init/Refresh.
 - Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
-- OKF age warning trong query và scheduled freshness report.
+- Persisted freshness report và ordinary-query freshness marks; local report và CI đã có.
 - Full repository-identity recovery cho mọi rename/fork/mirror edge case.

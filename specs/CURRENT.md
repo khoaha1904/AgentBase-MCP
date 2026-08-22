@@ -1,7 +1,19 @@
 # Current capability
 
 Active capability: None.
-Most recent completed: [`031-batch-ingest-qualification`](031-batch-ingest-qualification/spec.md).
+Most recent completed: [`033-hub-ci`](033-hub-ci/spec.md).
+
+Capability 033 composes blocking Hub integrity/obvious-sensitive validation and
+warning-only Repository freshness into one offline command. New Hubs receive a
+pinned read-only GitHub Actions workflow; existing Hubs receive it only through
+an explicit MCP-created workflow-only PR. Offline qualification passes 50/50;
+real GitHub qualification waits for the pinned `v0.1.0-rc.1` release tag.
+
+Capability 032 adds the first warning-only OKF freshness report before any Hub
+CI workflow: one bounded offline Repository projection through CLI and MCP,
+with exact age/revision and explicit Published or Local Draft attribution. It
+defines no stale threshold, source probe, Refresh action, persisted report or
+CI. The canonical offline gate passes 50/50 tests.
 
 Capability 030 implements the first Batch Initial Ingest slice: 2..32 explicit local
 repositories, one confirmed Domain, sequential isolated single-repository

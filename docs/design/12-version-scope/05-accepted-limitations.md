@@ -9,7 +9,8 @@
 - Refresh reads one repository and never silently deletes missing knowledge.
 - Hub has one read trust boundary, no Domain/field ACL.
 - Structured IaC is Terraform/Terragrunt only; SAM/CloudFormation is rejected.
-- Query overlay, freshness warnings/CI and remote source reading are absent.
+- Query overlay, freshness marks in ordinary search/read, persisted freshness
+  reports and remote source reading are absent; local reporting and scheduled CI exist.
 - Review is structured text/diff; no generated HTML graph UI.
 - Accepted private proposal artifacts are retained; no cleanup scheduler.
 

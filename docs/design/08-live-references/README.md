@@ -1,6 +1,6 @@
 # 08 — Observed snapshots and source references
 
-> Trạng thái: Repository snapshots và bounded AWS/SQS provider observations đã implement; freshness automation deferred.
+> Trạng thái: Repository snapshots, bounded AWS/SQS observations, local freshness report và read-only Hub CI đã implement.
 
 High-level decision:
 [Observed snapshots và source references](../../present/08-live-references-for-change-prone-values.md)

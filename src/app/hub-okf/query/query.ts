@@ -1,5 +1,6 @@
 import {
   buildHubContinuity,
+  readHubFreshness,
   normalizeHubConceptPath,
   listHubConcepts,
   parseConceptDocument,
@@ -12,6 +13,7 @@ import {
   type HubQueryMatch,
   type HubConceptSummary,
   type HubQueryReader,
+  type HubFreshnessProjection,
   type HubContinuityManifest,
   type HubContinuityOptions,
   type HubSearchOptions,
@@ -41,6 +43,10 @@ export type HubObservedValues = Readonly<{
   publication_layer: "published" | "local-draft";
   proposal_id?: string;
   values: readonly HubObservedValue[];
+}>;
+
+export type HubFreshnessReport = HubFreshnessProjection & Readonly<{
+  publication_layer: "published" | "local-draft";
 }>;
 
 export type InitialIngestHubContext = Readonly<{
@@ -167,5 +173,17 @@ export async function readActiveHubObservedValues(
     publication_layer: "local-draft",
     proposal_id: proposal.id,
     values,
+  };
+}
+
+export async function readActiveHubFreshness(
+  localHub: AdmittedLocalHubState,
+  git: HubQueryGit = runGit,
+  now: () => Date = () => new Date(),
+): Promise<HubFreshnessReport> {
+  const report = await readHubFreshness(reader(localHub, git), now);
+  return {
+    ...report,
+    publication_layer: localHub.activeHead === localHub.remoteBase ? "published" : "local-draft",
   };
 }

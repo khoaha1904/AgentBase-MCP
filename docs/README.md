@@ -56,12 +56,12 @@ small gaps must be backfilled before benchmark, PR or capability completion.
   ECS full-stack Terraform fixture without Accept, Publish or provider CLI.
 - Independent Repository Init PRs, exact same-Repository Init/Refresh stacks and
   existing-PR reconciliation are implemented. First bootstrap retains one batch
-  PR. Batch Refresh, additional provider profiles and freshness presentation
-  remain deferred.
+  PR. Batch Refresh and additional provider profiles remain deferred.
 - Repository observed values are snapshot-first: Finalize owns stable identity,
   exact source state and readable tables; query performs no repository probe.
   AWS/SQS provider observations are implemented through explicit Domain
-  Enrichment; automated freshness reporting remains deferred.
+  Enrichment. A local warning-only Repository freshness report and read-only
+  scheduled Hub CI are implemented.
 - Questions are shared Hub Markdown with exact state/revision and no private
   ledger authority. Exact-revision answers propose Guidance plus Question update
   atomically; Accept remains the state-change boundary. Broad Guidance,

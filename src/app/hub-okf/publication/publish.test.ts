@@ -9,6 +9,10 @@ import { createHubIdentity, createLocalHubState, HUB_PROPOSAL_TRAILERS } from ".
 import { GitHubHubApi, type GitRequest, type GitHubPullRequest } from "../../../providers/github-hub/index.ts";
 import { publishPendingHubProposals, type PublishGitHub } from "./publish.ts";
 import { synchronizeLocalHub } from "./synchronize.ts";
+import {
+  previewHubCiUpgrade, submitHubCiUpgrade,
+} from "../ci/upgrade.ts";
+import { HUB_CI_WORKFLOW_PATH, hubCiWorkflowDigest, renderHubCiWorkflow } from "../ci/workflow.ts";
 
 const SOURCE_ID = "repository-acme-aaaaaaaaaaaa";
 const SOURCE_ID_B = "repository-beta-bbbbbbbbbbbb";
@@ -82,7 +86,7 @@ function retainedProposal(stateRoot: string, root: string, id: string, commit: s
   } })}\n`);
 }
 
-test("[AB-PUBLISH-001..011] MCP creates independent, stacked and recoverable Hub PRs", async () => {
+test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010] MCP creates independent, stacked and recoverable Hub PRs", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-publish-test-"));
   const remote = path.join(root, "hub.git"), hubRoot = path.join(root, "hub"), stateRoot = path.join(root, "state");
   try {
@@ -148,7 +152,7 @@ test("[AB-PUBLISH-001..011] MCP creates independent, stacked and recoverable Hub
       remoteBase, activeHead: batchCommit, catalogVersion: "7.0.0" });
     const pushes: string[] = [], pullCalls: { title: string; body: string; base: string }[] = [];
     const pulls: (GitHubPullRequest & { state: "open" | "closed" })[] = [];
-    let failBase: string | undefined;
+    let failBase: string | undefined, mainOverride: string | undefined;
     const ref = (branch: string) => {
       const result = execFileSync("/usr/bin/git", ["show-ref", "--verify", "--hash", `refs/heads/${branch}`], {
         cwd: remote, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
@@ -160,7 +164,7 @@ test("[AB-PUBLISH-001..011] MCP creates independent, stacked and recoverable Hub
     };
     const github: PublishGitHub = {
       async getRepository() { return { fullName: "agentbase/hub", defaultBranch: "main" }; },
-      async getBranchRef(branch) { const commit = optionalRef(branch); if (!commit) throw new Error("missing ref"); return { branch, commit }; },
+      async getBranchRef(branch) { const commit = branch === "main" && mainOverride ? mainOverride : optionalRef(branch); if (!commit) throw new Error("missing ref"); return { branch, commit }; },
       async findBranchRef(branch) { const commit = optionalRef(branch); return commit ? { branch, commit } : undefined; },
       async listPullRequests(head, base, state) {
         return pulls.filter((pull) => pull.headBranch === head && pull.baseBranch === base && (state === "all" || pull.state === state));
@@ -245,6 +249,44 @@ test("[AB-PUBLISH-001..011] MCP creates independent, stacked and recoverable Hub
     assert.match(batchReview.body, /Batch Attribution.*repositories\/acme\.md.*Shared Navigation.*domains\/batch\.md/s);
     const forcedBatch = await publishPendingHubProposals({ ...common, selectedProposalIds: stackIds, publicationMode: "batch" });
     assert.equal(forcedBatch.mode, "batch"); assert.equal(forcedBatch.units.length, 1); assert.equal(forcedBatch.units[0]?.baseBranch, "main");
+
+    const ciOptions = { stateRoot, localHub, token: "github_pat_secret_canary", github, git: gitRunner,
+      createdAt: "2026-08-22T00:00:00Z" };
+    const ciPreview = await previewHubCiUpgrade(ciOptions);
+    assert.equal(ciPreview.state, "missing"); assert.equal(ciPreview.base_commit, remoteBase);
+    const ciUpgrade = await submitHubCiUpgrade(ciOptions, {
+      baseCommit: ciPreview.base_commit, workflowDigest: ciPreview.workflow_digest,
+    });
+    assert.equal(ciUpgrade.result, "created"); assert.ok(ciUpgrade.head_commit); assert.ok(ciUpgrade.pull_request);
+    assert.equal(ref("main"), remoteBase);
+    assert.deepEqual(git(hubRoot, ["diff", "--name-only", remoteBase, ciUpgrade.head_commit!]), HUB_CI_WORKFLOW_PATH);
+    assert.equal(git(hubRoot, ["show", `${ciUpgrade.head_commit}:${HUB_CI_WORKFLOW_PATH}`]), renderHubCiWorkflow().trimEnd());
+    assert.doesNotMatch(pullCalls.find((call) => call.title === "Install AgentBase-Hub CI")?.body ?? "",
+      /github_pat_secret_canary|agentbase-publish-test-/);
+    const ciRetry = await submitHubCiUpgrade(ciOptions, {
+      baseCommit: ciPreview.base_commit, workflowDigest: hubCiWorkflowDigest(),
+    });
+    assert.equal(ciRetry.result, "recovered"); assert.deepEqual(ciRetry.pull_request, ciUpgrade.pull_request);
+    mainOverride = ciUpgrade.head_commit;
+    const currentCi = await previewHubCiUpgrade({ ...ciOptions,
+      localHub: createLocalHubState({ ...localHub, remoteBase: ciUpgrade.head_commit! }) });
+    assert.equal(currentCi.state, "current");
+    mainOverride = undefined;
+    const badCiRoot = path.join(root, "bad-ci");
+    git(hubRoot, ["worktree", "add", "--detach", badCiRoot, remoteBase]);
+    fs.mkdirSync(path.join(badCiRoot, ".github", "workflows"), { recursive: true });
+    fs.writeFileSync(path.join(badCiRoot, ...HUB_CI_WORKFLOW_PATH.split("/")), "name: drifted\n");
+    fs.writeFileSync(path.join(badCiRoot, "extra.txt"), "unexpected\n");
+    git(badCiRoot, ["add", "--all"]); git(badCiRoot, ["-c", "user.name=Test", "-c", "user.email=test@localhost",
+      "commit", "-m", "conflicting CI branch"]);
+    const badCiHead = git(badCiRoot, ["rev-parse", "HEAD"]);
+    git(badCiRoot, ["push", "--force", remote, `${badCiHead}:refs/heads/${ciPreview.head_branch}`]);
+    git(hubRoot, ["worktree", "remove", "--force", badCiRoot]);
+    await assert.rejects(submitHubCiUpgrade(ciOptions, {
+      baseCommit: ciPreview.base_commit, workflowDigest: ciPreview.workflow_digest,
+    }), /outside the workflow/);
+    assert.equal(ref("main"), remoteBase);
+
     git(remote, ["update-ref", "refs/heads/main", batch.headCommit, remoteBase]);
     const synchronization = await synchronizeLocalHub({ stateRoot, localHub, token: "github_pat_secret_canary", git: gitRunner });
     const synchronizedHub = createLocalHubState({ root: hubRoot, hub: createHubIdentity("agentbase/hub", "main"),

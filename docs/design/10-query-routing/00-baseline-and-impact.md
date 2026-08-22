@@ -28,8 +28,8 @@ surface đọc nhỏ và deterministic; không thêm một reasoning router ho�
    thời giữa Published và selected Local Draft, cũng chưa có per-layer switch.
 3. Không có response composition contract thống nhất cho conflict, Question và
    Maintainer Guidance.
-4. Snapshot age đã có, nhưng freshness mark trong ordinary search/read response
-   và CI freshness report còn deferred.
+4. Snapshot age và local Repository freshness report đã có, nhưng freshness mark
+   trong ordinary search/read response còn deferred; scheduled CI đã dùng report này.
 5. Explicit current-source read reuse graph/file tools, nhưng chưa có bounded
    remote-reference reader.
 
@@ -53,7 +53,7 @@ surface đọc nhỏ và deterministic; không thêm một reasoning router ho�
 | Conflict/Question composition | Contained after Part 07 | Shared Question runtime chưa tồn tại. |
 | Observed/current values | Reuse | Part 08 snapshot query + normal graph/file reads. |
 | Remote repository reference read | Broad change | Thêm credentialed GitHub read boundary; deferred. |
-| Freshness report/presentation | Separate contained capability | Part 09 freshness contract chưa implement. |
+| Freshness presentation/CI | Contained follow-up | Reuse implemented Repository report; ordinary response marks and scheduling remain. |
 
 Không có near rewrite. Phần lớn query core hiện tại được giữ; gap lớn nhất có
 thể implement độc lập sau này là Published/Local Draft overlay.
@@ -61,6 +61,6 @@ thể implement độc lập sau này là Published/Local Draft overlay.
 ## Deferred dependencies
 
 - Shared conflict/Question documents: Part 07.
-- Freshness scheduling/report: Part 09.08.
+- Freshness scheduling and ordinary response marks: Part 09.08.
 - Remote repository reading and provider access: Parts 01, 06 and 11.
 - Query không tự clone, index hoặc gọi provider CLI.

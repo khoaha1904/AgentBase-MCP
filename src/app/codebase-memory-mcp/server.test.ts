@@ -8,7 +8,7 @@ import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 
 import type { ScopedSession } from "../../providers/codebase-memory/index.ts";
 import {
-  createHubRuntimeActions, HUB_OKF_TOOLS, readActiveHubObservedValues,
+  createHubRuntimeActions, executeHubCli, HUB_OKF_TOOLS, readActiveHubObservedValues,
 } from "../hub-okf/index.ts";
 import {
   normalizeRepositoryObservedValues, parseConceptDocument, renderConceptDocument,
@@ -26,14 +26,24 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
   const bindings: string[] = [];
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const runtimeActions = createHubRuntimeActions({ HOME: state, XDG_CONFIG_HOME: path.join(state, "config") }, path.join(state, "hub-runtime"));
-  let observedReads = 0;
+  let observedReads = 0, freshnessReads = 0, ciPreviews = 0, ciSubmits = 0;
+  const freshnessReport = { commit: "f".repeat(40), generated_at: "2026-08-22T00:00:00.000Z",
+    publication_layer: "published", summary: { total: 0, observed: 0, unknown: 0 }, repositories: [] };
+  const hubActions = { ...runtimeActions,
+    async readObservedValues(relativePath: string) {
+      observedReads += 1;
+      return { path: relativePath, values: [], source_access: "not-checked" };
+    },
+    async readFreshness() { freshnessReads += 1; return freshnessReport; },
+    async previewCiUpgrade() { ciPreviews += 1; return { state: "missing", base_commit: "a".repeat(40) }; },
+    async submitCiUpgrade(input: Readonly<{ expectedBase: string; expectedWorkflowDigest: string }>) {
+      ciSubmits += 1; return input;
+    },
+  };
   const current = createAgentBaseMcpServer({
     projectRoot: "/agentbase",
     stateRoot: state,
-    hubActions: { ...runtimeActions, async readObservedValues(relativePath) {
-      observedReads += 1;
-      return { path: relativePath, values: [], source_access: "not-checked" };
-    } },
+    hubActions,
     providerFactory: async ({ repositoryRoot }) => {
       bindings.push(repositoryRoot);
       return {
@@ -116,6 +126,27 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
     assert.equal(observed.isError, undefined);
     assert.match(observed.content[0]?.type === "text" ? observed.content[0].text : "", /"source_access":"not-checked"/);
     assert.equal(observedReads, 1);
+    const freshness = await client.callTool({ name: "read_hub_freshness", arguments: {} });
+    const freshnessText = freshness.content[0]?.type === "text" ? freshness.content[0].text : "";
+    assert.deepEqual(JSON.parse(freshnessText), freshnessReport);
+    let cliOutput = "";
+    assert.equal(await executeHubCli(["freshness"], hubActions, (value) => { cliOutput += value; }), 0);
+    assert.deepEqual(JSON.parse(cliOutput), freshnessReport);
+    let cliError = "";
+    assert.equal(await executeHubCli(["freshness", "--threshold", "7"], hubActions, () => {},
+      (value) => { cliError += value; }), 1);
+    assert.match(cliError, /accepts no arguments/);
+    assert.equal(freshnessReads, 2);
+    const ciPreview = await client.callTool({ name: "preview_hub_ci_upgrade", arguments: {} });
+    assert.match(ciPreview.content[0]?.type === "text" ? ciPreview.content[0].text : "", /"state":"missing"/);
+    const workflowDigest = `sha256:${"b".repeat(64)}`;
+    const ciSubmit = await client.callTool({ name: "submit_hub_ci_upgrade", arguments: {
+      expected_base: "a".repeat(40), expected_workflow_digest: workflowDigest,
+    } });
+    assert.deepEqual(JSON.parse(ciSubmit.content[0]?.type === "text" ? ciSubmit.content[0].text : "{}"), {
+      expectedBase: "a".repeat(40), expectedWorkflowDigest: workflowDigest,
+    });
+    assert.equal(ciPreviews, 1); assert.equal(ciSubmits, 1);
     const queried = await client.callTool({ name: "get_architecture", arguments: { project: "fixture" } });
     assert.match(queried.content[0]?.type === "text" ? queried.content[0].text : "", /forwarded:get_architecture:agentbase-server-repo-/);
     const switched = await client.callTool({ name: "index_repository", arguments: { repo_path: secondRepo } });

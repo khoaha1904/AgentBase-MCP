@@ -1,6 +1,6 @@
 # 08 — Observed snapshots và source references
 
-> Trạng thái: Snapshot-first và AWS/SQS provider observation đã implement; freshness automation còn deferred.
+> Trạng thái: Snapshot-first, AWS/SQS observation, local freshness report và read-only Hub CI đã implement.
 
 ## Câu trả lời ngắn
 
@@ -23,6 +23,8 @@ snapshot toàn bộ config, source hoặc provider response.
 ## Khi query
 
 - Query bình thường trả snapshot cùng revision/time và freshness warning.
+- Hub freshness trả danh sách Repository warning-only, ưu tiên unknown rồi cũ nhất;
+  không gọi source và không tự Refresh.
 - Nếu user hỏi **giá trị hiện tại** và source có local/workspace, Agent dùng MCP
   đọc file/code graph bình thường; không gọi một symbol resolver riêng.
 - Source repository khác chỉ được đọc qua bounded MCP repository access bằng

@@ -323,6 +323,24 @@ export const HUB_OKF_TOOLS = [
     },
   },
   {
+    name: "read_hub_freshness",
+    description: "Read one bounded warning-only Repository freshness report from the exact accepted Hub view without probing any source.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+  },
+  {
+    name: "preview_hub_ci_upgrade",
+    description: "Preview the exact workflow-only CI change for the attached Hub without mutating local or remote state.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+  },
+  {
+    name: "submit_hub_ci_upgrade",
+    description: "Create or recover one reviewed workflow-only Hub CI pull request; never write remote main or merge it.",
+    inputSchema: { type: "object", properties: {
+      expected_base: { type: "string", pattern: "^[a-f0-9]{40}$" },
+      expected_workflow_digest: { type: "string", pattern: "^sha256:[a-f0-9]{64}$" },
+    }, required: ["expected_base", "expected_workflow_digest"], additionalProperties: false },
+  },
+  {
     name: "list_hub_questions",
     description: "List shared governed Question documents from the exact accepted Hub view.",
     inputSchema: {

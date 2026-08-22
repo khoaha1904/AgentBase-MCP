@@ -1,6 +1,6 @@
 # 11.07 — Failure, recovery and permissions
 
-> Trạng thái: Core publication authority and recovery implemented.
+> Trạng thái: Publication and Hub-CI upgrade authority/recovery implemented.
 
 ## Outcome
 
@@ -10,7 +10,8 @@ dùng dedicated Hub token; không có quyền hay retry system thứ hai.
 ## Permission boundary
 
 - Hub query, authoring, Finalize, Inspect và Accept chạy local, không cần token.
-- Attach/bootstrap/submit/synchronize là các action duy nhất được dùng Hub token.
+- Attach/bootstrap/submit/synchronize và explicit Hub-CI preview/submit là các
+  action duy nhất được dùng Hub token.
 - Token nằm trong owner-private MCP configuration, không vào tool arguments,
   Git URL, Hub, receipt, error hoặc model context.
 - MCP publication authority chỉ gồm bounded branch push, PR create/adopt/update
@@ -30,6 +31,7 @@ dùng dedicated Hub token; không có quyền hay retry system thứ hai.
 | Git/content conflict | Preserve current state and exact conflict paths. |
 | Partial multi-PR submit | Keep completed PRs and retry remaining units. |
 | Interrupted validated sync | Explicit recovery advances candidate or restores original. |
+| Existing CI branch has extra/drifted bytes | Stop; never overwrite or adopt it. |
 
 ## Retry and recovery
 

@@ -86,6 +86,10 @@ export async function executeHubCli(
         ...(values["--limit"] ? { limit: Number(values["--limit"]) } : {}),
       });
     } else if (command === "read") output = await actions.read(required(values, "--path"));
+    else if (command === "freshness") {
+      if (Object.keys(values).length) throw new Error("freshness accepts no arguments");
+      output = await actions.readFreshness();
+    }
     else if (command === "pending") output = await actions.listPending();
     else if (command === "submit") {
       output = await actions.submitMany(required(values, "--proposals").split(",").filter(Boolean));
@@ -93,7 +97,7 @@ export async function executeHubCli(
     else if (command === "recover") output = await actions.recover(required(values, "--transaction"));
     else throw new Error(
       "Hub command must be status, configure, bootstrap-preview, bootstrap, prepare, finalize, inspect, "
-      + "accept, search, traverse, read, pending, submit, synchronize or recover",
+      + "accept, search, traverse, read, freshness, pending, submit, synchronize or recover",
     );
     writeOutput(`${JSON.stringify(output, null, 2)}\n`);
     return 0;
