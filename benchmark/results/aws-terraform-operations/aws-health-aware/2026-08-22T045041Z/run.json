@@ -1,0 +1,104 @@
+{
+  "suite": "aws-terraform-operations",
+  "repository": "aws-health-aware",
+  "arm": "mcp",
+  "kind": "terraform-serverless-operations",
+  "fixturePath": "../fixtures/source-repos/aws-health-polyrepo/aws-health-aware",
+  "fixtureCommit": "928494c70a904a65b877d426516882397541eafd",
+  "sourceRepositoryId": "repository-aws-health-aware-779eb7e1bc7a",
+  "provenanceRepositoryId": "repository-aws-health-aware-ef3e83846625",
+  "catalogVersion": "7.0.0",
+  "promptVersion": "okf-author-v15",
+  "promptDigest": "sha256:268a6ec7b74699091859bb76efe310bc87414d0354af1bafe8d30bfbadf6d5a6",
+  "agent": {
+    "provider": "codex-cli",
+    "executable": "codex",
+    "version": "codex-cli 0.149.0",
+    "model": "gpt-5.6-sol",
+    "reasoningEffort": "medium",
+    "timeoutMs": 900000,
+    "actualVersion": "codex-cli 0.149.0"
+  },
+  "startedAt": "2026-08-22T04:50:41.645Z",
+  "completedAt": "2026-08-22T04:55:25.492Z",
+  "outcome": "succeeded",
+  "elapsedMs": 283847,
+  "process": {
+    "exitCode": 0,
+    "signal": null,
+    "error": null
+  },
+  "usage": {
+    "inputTokens": 1454151,
+    "cachedInputTokens": 1363456,
+    "cacheWriteInputTokens": 0,
+    "uncachedInputTokens": 90695,
+    "outputTokens": 11715,
+    "reasoningOutputTokens": 2319
+  },
+  "activity": {
+    "mcpToolCalls": 12,
+    "commandExecutions": 19,
+    "authoringToolCalls": 3,
+    "authoringArgumentBytes": 36360,
+    "authoringResultBytes": 11110,
+    "authoringTools": {
+      "get_okf_authoring_schemas": {
+        "calls": 1,
+        "argumentBytes": 11407,
+        "resultBytes": 7951
+      },
+      "validate_okf_changes": {
+        "calls": 2,
+        "argumentBytes": 24953,
+        "resultBytes": 3159
+      }
+    },
+    "mcpTools": {
+      "configure_hub": 1,
+      "finalize_hub_okf_proposal": 1,
+      "get_architecture": 1,
+      "get_hub_status": 1,
+      "get_okf_authoring_schemas": 1,
+      "index_repository": 1,
+      "inspect_hub_okf_proposal": 1,
+      "preflight_hub_ingest": 1,
+      "prepare_hub_okf": 1,
+      "search_hub_okf": 1,
+      "validate_okf_changes": 2
+    },
+    "guidance": {
+      "attempts": [
+        {
+          "status": "completed",
+          "code": null,
+          "retryable": false,
+          "error": null
+        }
+      ],
+      "inputCorrectionsUsed": 0,
+      "firstAttemptSucceeded": true
+    },
+    "observedSourceReadBytes": null,
+    "limitation": "event trace does not prove complete source-read volume",
+    "finalValidationIdentities": [
+      "components/aha-alert-processor",
+      "domains/health-operations",
+      "repositories/aws-health-aware",
+      "systems/aws-health-aware"
+    ]
+  },
+  "requiredToolUsage": {
+    "get_hub_status": true,
+    "configure_hub": true,
+    "preflight_hub_ingest": true,
+    "index_repository": true,
+    "get_architecture": true,
+    "get_okf_authoring_schemas": true,
+    "prepare_hub_okf": true,
+    "validate_okf_changes": true,
+    "finalize_hub_okf_proposal": true,
+    "inspect_hub_okf_proposal": true
+  },
+  "failures": []
+}

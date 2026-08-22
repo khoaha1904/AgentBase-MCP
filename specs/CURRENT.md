@@ -10,6 +10,21 @@ gate with deterministic partial-retry recovery and explicit GitHub base/head
 identity. MCP still never merges, force-pushes, deletes or independently
 rebases unrelated Init proposals.
 
+Production publication proof now exists through MCP's dedicated Hub credential:
+ECS Init [Hub PR #8](https://github.com/khoaha1904/AgentBase-Hub/pull/8)
+targets `main`, and Refresh
+[Hub PR #9](https://github.com/khoaha1904/AgentBase-Hub/pull/9) targets the exact
+Init branch. Neither PR is merged. A valid legacy Hub root without README is
+now attachable while new MCP-created Hubs still include README; the production
+reproduction and full 50-test gate pass.
+
+The separately versioned Sol Initial-Ingest operations probe
+`2026-08-22T044534Z` and replica `2026-08-22T045041Z` are both `review_ready`
+with 100% applicable reference coverage and clean owner review. Their 5/4
+concept difference is optional EventBridge Interface promotion versus embedded
+knowledge, matching accepted granularity variance rather than hallucination.
+No third run or unrelated-Init batch PR was created.
+
 Capability 024 qualifies a structurally different AWS/Terraform full-stack ECS
 repository. Initial Ingest uses `gpt-5.6-sol` to establish the reviewed baseline;
 Refresh uses `gpt-5.6-terra` to reconcile one exact application/ALB health-check

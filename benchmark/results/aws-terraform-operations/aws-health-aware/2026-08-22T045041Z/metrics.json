@@ -1,0 +1,103 @@
+{
+  "suite": "aws-terraform-operations",
+  "repository": "aws-health-aware",
+  "runId": "2026-08-22T045041Z",
+  "arm": "mcp",
+  "expectedConcepts": 4,
+  "actualConcepts": 4,
+  "matchedConcepts": 4,
+  "referenceConceptCoveragePercent": 100,
+  "recognizedSchemaAgreementPercent": 100,
+  "metadataCompletenessPercent": null,
+  "provenanceCoveragePercent": 100,
+  "referenceRelationshipCoveragePercent": 100,
+  "conflictVisibilityPercent": null,
+  "liveEvidenceReferenceCoveragePercent": null,
+  "embeddedKnowledgeCoveragePercent": 100,
+  "ratios": {
+    "referenceConceptCoverage": {
+      "matched": 4,
+      "total": 4,
+      "percent": 100
+    },
+    "recognizedSchemaAgreement": {
+      "matched": 4,
+      "total": 4,
+      "percent": 100
+    },
+    "metadataCompleteness": {
+      "matched": 0,
+      "total": 0,
+      "percent": null
+    },
+    "provenanceCoverage": {
+      "matched": 4,
+      "total": 4,
+      "percent": 100
+    },
+    "referenceRelationshipCoverage": {
+      "matched": 3,
+      "total": 3,
+      "percent": 100
+    },
+    "conflictVisibility": {
+      "matched": 0,
+      "total": 0,
+      "percent": null
+    },
+    "liveEvidenceReferenceCoverage": {
+      "matched": 0,
+      "total": 0,
+      "percent": null
+    },
+    "embeddedKnowledgeCoverage": {
+      "matched": 4,
+      "total": 4,
+      "percent": 100
+    }
+  },
+  "classifications": {
+    "concepts": {
+      "confirmed": [
+        "domains/health-operations",
+        "repositories/aws-health-aware",
+        "systems/aws-health-aware",
+        "components/aha-alert-processor"
+      ],
+      "contradicted": [],
+      "unjudged": [],
+      "missingReference": []
+    },
+    "relationships": {
+      "confirmed": [
+        "aws-health-aware-repository|part-of|health-operations-domain",
+        "aws-health-aware-system|part-of|health-operations-domain",
+        "aha-lambda-function-primary-region|part-of|aws-health-aware-system"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "components/aha-alert-processor|implemented-in|repositories/aws-health-aware",
+        "systems/aws-health-aware|implemented-in|repositories/aws-health-aware"
+      ],
+      "missingReference": []
+    }
+  },
+  "validation": {
+    "passed": true,
+    "failures": []
+  },
+  "ownerReview": {
+    "status": "useful_for_owner_review",
+    "findings": []
+  },
+  "authoringAssessment": {
+    "status": "reviewable",
+    "hardFailures": [],
+    "limitations": [
+      "Deterministic source-path checks do not prove that authored claims are semantically supported; human review is required.",
+      "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept."
+    ]
+  },
+  "initialIngestAcceptance": "review_ready",
+  "okfTreeDigest": "sha256:34be74daf44ed0ae1ca6eb935dcd441fca52d1e8b589b4a4c15d8e24d75a9ab5"
+}

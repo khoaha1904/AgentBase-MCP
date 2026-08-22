@@ -39,6 +39,18 @@ Run one explicit model-backed benchmark:
 npm run benchmark:okf -- run aws-serverless aws-health-aware
 ```
 
+The separately versioned `aws-terraform-operations` suite runs the same pinned
+Terraform operations fixture with the Initial Ingest production model policy
+(`gpt-5.6-sol`) without rewriting the historical V15 manifest.
+
+Its first sequential probe/replica, `2026-08-22T044534Z` and
+`2026-08-22T045041Z`, both completed as `review_ready` with 100% on every
+applicable reference ratio and clean owner review. They authored five and four
+concepts respectively: the probe promoted the independently documented
+EventBridge event contract to Interface, while the replica kept that knowledge
+embedded. This is bounded granularity variance, not a hard failure or new
+scorer defect. Runtime was 254,592 ms and 283,847 ms. No third run was made.
+
 The command prints the UTC run ID. Finalization is deterministic and model-free:
 
 ```bash

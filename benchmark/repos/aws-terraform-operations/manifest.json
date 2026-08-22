@@ -1,0 +1,29 @@
+{
+  "suite": "aws-terraform-operations",
+  "version": 1,
+  "catalogVersion": "7.0.0",
+  "promptVersion": "okf-author-v15",
+  "directPromptVersion": "okf-author-direct-v15",
+  "agent": {
+    "provider": "codex-cli",
+    "executable": "codex",
+    "version": "codex-cli 0.149.0",
+    "model": "gpt-5.6-sol",
+    "reasoningEffort": "medium",
+    "timeoutMs": 900000
+  },
+  "repositories": [
+    {
+      "id": "aws-health-aware",
+      "kind": "terraform-serverless-operations",
+      "path": "../fixtures/source-repos/aws-health-polyrepo/aws-health-aware",
+      "commit": "928494c70a904a65b877d426516882397541eafd",
+      "confirmedDomain": {
+        "identity": "domains/health-operations",
+        "title": "Health Operations",
+        "evidenceResource": "agentbase://owner-guidance/domains/health-operations"
+      },
+      "expectation": "../aws-serverless/expected/aws-health-aware-v15.json"
+    }
+  ]
+}
