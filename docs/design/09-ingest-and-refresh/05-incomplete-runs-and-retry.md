@@ -1,6 +1,7 @@
 # 09.05 — Incomplete runs and retry
 
-> Trạng thái: Single-run partial/Incomplete implemented; batch checkpoints deferred.
+> Trạng thái: Single-run và Batch Initial Ingest checkpoints/retry implemented;
+> Batch Refresh deferred.
 
 ## Partial và Incomplete
 

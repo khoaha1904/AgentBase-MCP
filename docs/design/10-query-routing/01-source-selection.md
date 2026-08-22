@@ -61,8 +61,9 @@ snapshot.
 1. Chọn đúng một explicit local repository root; không scan workspace cha.
 2. Reuse `use-codebase-memory`: index/reuse freshness, tìm structure/symbol/path,
    rồi đọc exact snippet.
-3. Một MCP connection chỉ bind một repository. Muốn đọc repository local khác
-   thì reconnect/select repository đó; không ghép graph của nhiều repo.
+3. Một MCP connection chỉ bind một repository tại một thời điểm. Muốn đọc local
+   repository khác thì gọi controlled `index_repository` với exact root; gateway
+   đóng sạch session cũ rồi bind session mới. Không ghép graph của nhiều repo.
 4. Không tự clone remote repository. Hub relation/reference không tự cấp quyền
    source và không tự kích hoạt indexing.
 

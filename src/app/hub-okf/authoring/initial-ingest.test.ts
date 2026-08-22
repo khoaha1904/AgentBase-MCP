@@ -10,7 +10,7 @@ import {
 import { runGit } from "../../../providers/github-hub/index.ts";
 import { createHubRuntimeActions } from "../query/runtime-actions.ts";
 
-test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..014] preparation renders one generic inspectable skeleton bundle and stops", async () => {
+test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] preparation renders one generic inspectable skeleton bundle and stops", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-initial-ingest-"));
   const source = path.join(root, "vehicle-events");
   const environment = { HOME: root, XDG_CONFIG_HOME: path.join(root, "config"), XDG_DATA_HOME: path.join(root, "data") };
@@ -74,7 +74,8 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..014] pre
       },
       coverage: { partial: true, limitations: ["runtime consumers were not present in this repository"] },
     }) as { sessionId: string; bundleRoot: string; sourceRepositoryId: string; selectedSchemas: string[];
-      skeletons: readonly { identity: string; path: string; type: string }[] };
+      skeletons: readonly { identity: string; path: string; type: string }[]; authoringConstraints: readonly string[] };
+    assert.match(prepared.authoringConstraints.join("\n"), /Preserve generated sources, relationships, repository identity metadata and navigation/);
     assert.deepEqual(prepared.selectedSchemas.sort(), ["Domain", "Flow", "Function", "Repository", "System"]);
     assert.deepEqual(prepared.skeletons.map((item) => item.type).sort(), ["Domain", "Flow", "Function", "Repository", "System"]);
     const skeletonBundle = loadOkfBundle(prepared.bundleRoot, { requireAgentBaseRootIndex: true });

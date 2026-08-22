@@ -1,6 +1,6 @@
 # 11.08 — Domain Enrichment publication changes
 
-> Trạng thái: Designed and deferred after MVP.
+> Trạng thái: Explicit Enrichment proposal/Accept/pending/independent-main PR đã implement offline.
 
 ## Outcome
 
@@ -23,12 +23,12 @@ PR Scope phải ghi Domain, repository set, provider/account/region scope,
 candidate/Question revisions và profile versions. Evidence chỉ gồm normalized
 safe observations, không raw provider output hay credential context.
 
-## Deferred implementation impact
+## Implemented boundary
 
-Current proposal metadata bind một source Repository. Enrichment cần explicit
-multi-Repository scope, provider checkpoints và `enrichment` mode. Đây là broad
-post-MVP capability; không overload fake Repository ID và không thêm partial
-support vào current publisher.
+Proposal metadata dùng explicit `enrichment` mode, Domain, bounded Repository
+set và manifest digest; không overload fake Repository ID. Sau Accept nó luôn
+là một independent publication unit target `main`. Real GitHub publication vẫn
+đi qua existing MCP-managed Hub token và không auto-merge.
 
 Canonical execution/reconciliation nằm ở Parts 06.03 và 09.07. Part 11 chỉ sở
 hữu review/Accept/PR boundary.

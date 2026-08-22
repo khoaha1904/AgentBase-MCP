@@ -7,7 +7,8 @@ import {
   getOkfAuthoringGuidance, getOkfConceptSchema, parseConceptDocument, repositorySourceResources, selectOkfConceptSchemas,
   type HubContinuityGap, type HubContinuityManifest,
 } from "../../../core/knowledge/index.ts";
-import { GitHubHubApi } from "../../../providers/github-hub/index.ts";
+import { createCandidateWorktree, GitHubHubApi, removeCandidateWorktree } from "../../../providers/github-hub/index.ts";
+import { AWS_SQS_PROFILE, AWS_STS_PROFILE } from "../../../providers/aws-cli/index.ts";
 import type { AdmittedLocalHubState } from "../../../core/hub/index.ts";
 import {
   discoverRepositorySourceChanges, discoverRepositorySourceState, resolveRepositorySourceRoot,
@@ -34,6 +35,14 @@ import { synchronizeLocalHub } from "../publication/synchronize.ts";
 import { attachExistingHub, createLocalHub } from "../workspace/setup.ts";
 import { executeHubBootstrap, previewHubBootstrap } from "../workspace/bootstrap.ts";
 import { createReviewActions } from "../review/review-actions.ts";
+import {
+  finalizeDomainEnrichment, prepareDomainEnrichment, readEnrichmentManifest, runDomainEnrichment,
+} from "../enrichment/index.ts";
+import {
+  batchMemberId, confirmBatchIngest, finalizeBatchIngest, prepareBatchIngest,
+  readBatchManifest, recordBatchMember, retryBatchMember, reviseBatchMembership,
+  type BatchMember,
+} from "../batch-ingest/index.ts";
 
 function defaultStateRoot(): string {
   const owner = typeof process.getuid === "function" ? String(process.getuid()) : "portable";
@@ -45,9 +54,50 @@ function proposalRoot(stateRoot: string, proposalId: string): string {
   return path.join(stateRoot, "proposals", proposalId);
 }
 
+function batchDocumentPaths(repositoryRoot: string): readonly string[] {
+  const candidates = ["README.md", "README.MD", "readme.md"];
+  const docs = path.join(repositoryRoot, "docs");
+  if (fs.existsSync(docs) && fs.statSync(docs).isDirectory()) {
+    for (const entry of fs.readdirSync(docs, { recursive: true, withFileTypes: true })) {
+      if (entry.isFile() && /\.md$/i.test(entry.name)) {
+        const parent = entry.parentPath ?? docs;
+        candidates.push(path.relative(repositoryRoot, path.join(parent, entry.name)).split(path.sep).join("/"));
+      }
+      if (candidates.length >= 16) break;
+    }
+  }
+  return [...new Set(candidates.filter((relative) => {
+    const target = path.resolve(repositoryRoot, ...relative.split("/"));
+    return target.startsWith(`${repositoryRoot}${path.sep}`) && fs.existsSync(target) && fs.statSync(target).isFile();
+  }))].slice(0, 16);
+}
+
+async function withPublishedHub<T>(localHub: AdmittedLocalHubState, stateRoot: string,
+  operation: (publishedRoot: string) => Promise<T> | T): Promise<T> {
+  if (localHub.kind === "local-only") throw new Error("Domain Enrichment requires a Published remote Hub base");
+  fs.mkdirSync(path.resolve(stateRoot), { recursive: true, mode: 0o700 });
+  const parent = fs.mkdtempSync(path.join(path.resolve(stateRoot), "published-"));
+  const publishedRoot = path.join(parent, "hub");
+  try {
+    await createCandidateWorktree(localHub.root, publishedRoot, localHub.remoteBase);
+    return await operation(publishedRoot);
+  } finally {
+    if (fs.existsSync(publishedRoot)) await removeCandidateWorktree(localHub.root, publishedRoot);
+    fs.rmSync(parent, { recursive: true, force: true });
+  }
+}
+
 function requireHubToken(token: string | undefined): string {
   if (!token) throw new Error("remote Hub publication requires the dedicated GitHub token");
   return token;
+}
+
+function enrichmentCallPlan(manifest: ReturnType<typeof readEnrichmentManifest>): readonly unknown[] {
+  return [{ profileFamily: AWS_STS_PROFILE.family, profileVersion: AWS_STS_PROFILE.version,
+    operation: "get-caller-identity", accountId: manifest.providerScope.accountId },
+  ...manifest.candidates.map((candidate) => ({ candidateId: candidate.id,
+    profileFamily: AWS_SQS_PROFILE.family, profileVersion: AWS_SQS_PROFILE.version,
+    operations: ["get-queue-url", "get-queue-attributes"], queue: candidate.queue }))];
 }
 
 function authoringEvidenceDigest(sourceRepositoryId: string, source: ReturnType<typeof discoverRepositorySourceState>, evidence: unknown): string {
@@ -243,6 +293,9 @@ export function createHubRuntimeActions(
         continuity,
         ...(sourceChanges ? { sourceChanges } : {}),
         skeletons,
+        ...(input.mode === "new" ? { authoringConstraints: [
+          "Preserve generated sources, relationships, repository identity metadata and navigation; enrich the skeleton instead of rebuilding its frontmatter.",
+        ] } : {}),
       };
     },
     async finalize(sessionId, questions, lifecycleIntents) {
@@ -253,6 +306,97 @@ export function createHubRuntimeActions(
       return finalizeHubAuthoringSession(stateRoot, sessionId, configuration.localRoot, questions ?? [], lifecycleIntents ?? [], {
         commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest,
       }, localHub.activeHead);
+    },
+    async prepareBatch(input) {
+      const localHub = await admit();
+      const members: BatchMember[] = [];
+      for (const [order, sourceRepository] of input.sourceRepositories.entries()) {
+        if (!path.isAbsolute(sourceRepository) || !fs.existsSync(sourceRepository)
+          || fs.lstatSync(sourceRepository).isSymbolicLink() || !fs.statSync(sourceRepository).isDirectory()) {
+          throw new Error("batch source repositories must be explicit existing absolute directories");
+        }
+        const root = resolveRepositorySourceRoot(sourceRepository), source = discoverRepositorySourceState(root);
+        const context = await inspectInitialIngestHubContext(localHub, { displayName: source.displayName, ...source.identityHints });
+        const resolution = context.repository;
+        const repository = resolution.kind === "ambiguous" ? resolution.candidates[0] : resolution.repository;
+        if (!repository) throw new Error(`batch repository identity is unresolved: ${sourceRepository}`);
+        members.push({ id: batchMemberId(repository.id, root), order, root, repositoryId: repository.id,
+          displayName: repository.displayName, source: { commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest },
+          identityStatus: resolution.kind, documentPaths: batchDocumentPaths(root),
+          warnings: resolution.kind === "new" ? [] : [resolution.kind === "existing"
+            ? "Repository already exists in Hub and requires Refresh" : resolution.reason] });
+      }
+      const manifest = prepareBatchIngest({ stateRoot, baseCommit: localHub.activeHead,
+        domain: input.proposedDomain, members, createdAt: new Date().toISOString() });
+      return { manifest, matrix: manifest.members.map((member) => ({ memberId: member.id,
+        repositoryId: member.repositoryId, displayName: member.displayName, identityStatus: member.identityStatus,
+        proposedDomain: manifest.domain, documentPaths: member.documentPaths, warnings: member.warnings })) };
+    },
+    async confirmBatch(input) {
+      const localHub = await admit(), prior = readBatchManifest(stateRoot, input.manifestId, input.manifestRevision);
+      if (prior.baseCommit !== localHub.activeHead) throw new Error("Hub base changed after batch preflight");
+      return confirmBatchIngest({ stateRoot, ...input });
+    },
+    async recordBatchMember(input) {
+      const localHub = await admit(), manifest = readBatchManifest(stateRoot, input.manifestId, input.manifestRevision);
+      const member = manifest.members.find((value) => value.id === input.memberId);
+      if (!member) throw new Error("batch member is absent from current manifest");
+      const source = discoverRepositorySourceState(member.root);
+      return recordBatchMember({ stateRoot, localHub, ...input,
+        currentSource: { commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest } });
+    },
+    async retryBatchMember(input) { return retryBatchMember({ stateRoot, ...input }); },
+    async reviseBatch(input) {
+      const localHub = await admit(), manifest = readBatchManifest(stateRoot, input.manifestId, input.manifestRevision);
+      if (manifest.baseCommit !== localHub.activeHead) throw new Error("Hub base changed after batch preflight");
+      return reviseBatchMembership({ stateRoot, ...input });
+    },
+    async finalizeBatch(input) {
+      const localHub = await admit(), manifest = readBatchManifest(stateRoot, input.manifestId, input.manifestRevision);
+      const currentSources = new Map(manifest.members.map((member) => {
+        const source = discoverRepositorySourceState(member.root);
+        return [member.id, { commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest }] as const;
+      }));
+      return finalizeBatchIngest({ stateRoot, localHub, ...input, currentSources });
+    },
+    async prepareEnrichment(input) {
+      const localHub = await admit();
+      return withPublishedHub(localHub, stateRoot, (publishedRoot) => {
+        const manifest = prepareDomainEnrichment({ stateRoot, publishedRoot, baseCommit: localHub.remoteBase,
+          ...input, createdAt: new Date().toISOString() });
+        return { manifest, plannedCalls: enrichmentCallPlan(manifest) };
+      });
+    },
+    async reviseEnrichment(input) {
+      const localHub = await admit();
+      const prior = readEnrichmentManifest(stateRoot, input.manifestId, input.manifestRevision);
+      if (prior.baseCommit !== localHub.remoteBase) throw new Error("Published Hub base changed after enrichment Prepare");
+      return withPublishedHub(localHub, stateRoot, (publishedRoot) => {
+        const manifest = prepareDomainEnrichment({ stateRoot, publishedRoot, baseCommit: prior.baseCommit,
+          domainId: prior.domainId, repositoryIds: input.repositoryIds, candidates: input.candidates,
+          accountId: prior.providerScope.accountId, regions: prior.providerScope.regions,
+          createdAt: prior.createdAt, prior });
+        const previous = new Map(prior.candidates.map((candidate) => [candidate.id, candidate.evidenceDigest]));
+        const current = new Map(manifest.candidates.map((candidate) => [candidate.id, candidate.evidenceDigest]));
+        return { manifest, plannedCalls: enrichmentCallPlan(manifest),
+          reusedCandidateIds: manifest.candidates.filter((candidate) => previous.get(candidate.id) === candidate.evidenceDigest).map((candidate) => candidate.id),
+          providerCallCandidateIds: manifest.candidates.filter((candidate) => previous.get(candidate.id) !== candidate.evidenceDigest).map((candidate) => candidate.id),
+          invalidatedCandidateIds: prior.candidates.filter((candidate) => current.get(candidate.id) !== candidate.evidenceDigest).map((candidate) => candidate.id) };
+      });
+    },
+    async runEnrichment(input) {
+      const localHub = await admit();
+      const manifest = readEnrichmentManifest(stateRoot, input.manifestId, input.manifestRevision);
+      if (manifest.baseCommit !== localHub.remoteBase) throw new Error("Published Hub base changed after enrichment Prepare");
+      return withPublishedHub(localHub, stateRoot, (publishedRoot) => runDomainEnrichment({
+        stateRoot, publishedRoot, ...input,
+      }));
+    },
+    async finalizeEnrichment(input) {
+      const localHub = await admit();
+      return withPublishedHub(localHub, stateRoot, (publishedRoot) => finalizeDomainEnrichment({
+        stateRoot, publishedRoot, localHub, ...input,
+      }));
     },
     ...createReviewActions(stateRoot, (proposalId) => proposalRoot(stateRoot, proposalId), admit),
     async accept(proposalId, proposalDigest) {

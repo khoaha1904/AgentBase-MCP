@@ -14,13 +14,16 @@ import {
   normalizeRepositoryObservedValues, parseConceptDocument, renderConceptDocument,
 } from "../../core/knowledge/index.ts";
 import { createAgentBaseMcpServer } from "./server.ts";
+import { GatewaySession } from "./gateway-session.ts";
 import { SAFE_TOOLS } from "./tool-manifest.ts";
 import { OKF_SCHEMA_TOOLS } from "./okf-schema-tools.ts";
 
 test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official client lists and calls the safe server surface", async () => {
   const repo = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-server-repo-"));
+  const secondRepo = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-server-repo-"));
   const state = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-server-state-"));
   let closes = 0;
+  const bindings: string[] = [];
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const runtimeActions = createHubRuntimeActions({ HOME: state, XDG_CONFIG_HOME: path.join(state, "config") }, path.join(state, "hub-runtime"));
   let observedReads = 0;
@@ -31,15 +34,18 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
       observedReads += 1;
       return { path: relativePath, values: [], source_access: "not-checked" };
     } },
-    providerFactory: async () => ({
+    providerFactory: async ({ repositoryRoot }) => {
+      bindings.push(repositoryRoot);
+      return {
       pid: 991,
       tools: SAFE_TOOLS,
-      async invoke(name) { return { content: [{ type: "text", text: `forwarded:${name}` }] }; },
+      async invoke(name) { return { content: [{ type: "text", text: `forwarded:${name}:${path.basename(repositoryRoot)}` }] }; },
       async close() {
         closes += 1;
         return { status: "clean", pid: 991, graceful: true, forced: false, stderrBytes: 0 };
       },
-    } satisfies ScopedSession),
+    } satisfies ScopedSession;
+    },
   });
   const client = new Client({ name: "agentbase-test-client", version: "0.0.0" });
   try {
@@ -56,6 +62,18 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
     assert.ok("lifecycle_intents" in ((finalizeTool?.inputSchema.properties ?? {}) as Record<string, unknown>));
     assert.match(JSON.stringify(finalizeTool?.inputSchema), /observation_refs/);
     assert.doesNotMatch(JSON.stringify(finalizeTool?.inputSchema), /claim_ids/);
+    const enrichmentTools = tools.tools.filter((tool) => tool.name.includes("domain_enrichment"));
+    assert.deepEqual(enrichmentTools.map((tool) => tool.name), ["prepare_domain_enrichment",
+      "revise_domain_enrichment_membership", "run_domain_enrichment", "finalize_domain_enrichment_proposal"]);
+    assert.doesNotMatch(JSON.stringify(enrichmentTools), /credential|access_key|secret_key|profile_path|executable|arbitrary_command/);
+    const batchTools = tools.tools.filter((tool) => tool.name.includes("batch_hub_ingest"));
+    assert.deepEqual(batchTools.map((tool) => tool.name), ["prepare_batch_hub_ingest", "confirm_batch_hub_ingest",
+      "record_batch_hub_ingest_member", "retry_batch_hub_ingest_member",
+      "revise_batch_hub_ingest_membership", "finalize_batch_hub_ingest_proposal"]);
+    assert.doesNotMatch(JSON.stringify(batchTools), /workspace_scan|parallel|credential|publish|accept/);
+    const recordBatch = batchTools.find((tool) => tool.name === "record_batch_hub_ingest_member");
+    assert.match(JSON.stringify(recordBatch), /observed_values.*exact property.*role.*source_id/);
+    assert.match(JSON.stringify(recordBatch), /\^\[A-Za-z0-9\]/);
     const hubStatus = await client.callTool({ name: "get_hub_status", arguments: {} });
     assert.equal(hubStatus.isError, undefined);
     assert.match(hubStatus.content[0]?.type === "text" ? hubStatus.content[0].text : "", /unconfigured/);
@@ -99,14 +117,43 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
     assert.match(observed.content[0]?.type === "text" ? observed.content[0].text : "", /"source_access":"not-checked"/);
     assert.equal(observedReads, 1);
     const queried = await client.callTool({ name: "get_architecture", arguments: { project: "fixture" } });
-    assert.equal(queried.content[0]?.type === "text" ? queried.content[0].text : "", "forwarded:get_architecture");
+    assert.match(queried.content[0]?.type === "text" ? queried.content[0].text : "", /forwarded:get_architecture:agentbase-server-repo-/);
+    const switched = await client.callTool({ name: "index_repository", arguments: { repo_path: secondRepo } });
+    assert.equal(switched.isError, undefined);
+    assert.equal(closes, 1);
+    assert.deepEqual(bindings, [fs.realpathSync(repo), fs.realpathSync(secondRepo)]);
+    const secondQuery = await client.callTool({ name: "get_architecture", arguments: { project: "fixture" } });
+    assert.match(secondQuery.content[0]?.type === "text" ? secondQuery.content[0].text : "",
+      new RegExp(`forwarded:get_architecture:${path.basename(secondRepo)}`));
   } finally {
     await client.close();
     await current.close();
     fs.rmSync(repo, { recursive: true, force: true });
+    fs.rmSync(secondRepo, { recursive: true, force: true });
     fs.rmSync(state, { recursive: true, force: true });
   }
-  assert.equal(closes, 1);
+  assert.equal(closes, 2);
+
+  const failedFirst = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-failed-switch-"));
+  const blockedSecond = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-blocked-switch-"));
+  let opened = 0;
+  const gateway = new GatewaySession({ projectRoot: "/agentbase", stateRoot: state,
+    providerFactory: async () => {
+      opened += 1;
+      return { pid: 993, tools: SAFE_TOOLS,
+        async invoke() { return { content: [{ type: "text", text: "indexed" }] }; },
+        async close() { return { status: "failed", pid: 993, graceful: false, forced: true, stderrBytes: 0 }; } };
+    } });
+  try {
+    await gateway.call("index_repository", { repo_path: failedFirst });
+    await assert.rejects(gateway.call("index_repository", { repo_path: blockedSecond }), /could not be cleaned up/);
+    assert.equal(opened, 1);
+    assert.equal(gateway.repositoryRoot, fs.realpathSync(failedFirst));
+  } finally {
+    await gateway.close();
+    fs.rmSync(failedFirst, { recursive: true, force: true });
+    fs.rmSync(blockedSecond, { recursive: true, force: true });
+  }
 });
 
 test("[AB-QUERY-006..009][SC-001/003] observed-value query never binds or probes repository source", async () => {

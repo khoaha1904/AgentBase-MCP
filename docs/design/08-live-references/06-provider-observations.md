@@ -1,6 +1,6 @@
 # 08.06 — Provider observations
 
-> Trạng thái: Technical boundary draft; provider adapter chưa implement.
+> Trạng thái: Normalized AWS/SQS provider observations đã implement; ordinary query vẫn snapshot-only.
 
 Provider CLI values enter Hub only through confirmed Domain Enrichment and the
 bounded verification profiles in Part 06.04. Initial Ingest, Refresh and normal
@@ -31,7 +31,7 @@ sources:
     resource: provider-observation://aws/<source-scope-sha256>
     agentbase:
       provider_observation:
-        profile_family: aws.sqs.get-queue-attributes
+        profile_family: aws.sqs.queue
         profile_version: 1
         authority: "123456789012"
         location: ap-southeast-1
@@ -42,11 +42,10 @@ sources:
 
 Each associated value uses exact provider state
 `observed: { evidence_digest: <same-sha256>, at: <same-RFC3339> }`. Validator
-requires the full normalized record and exact supported profile. Evidence digest
-is SHA-256 of canonical JSON containing the persisted source metadata (excluding
-the digest) plus sorted associated observed entry IDs/properties/roles/values;
-another Hub reader can recompute it without private proposal state. Raw provider
-response is discarded after proposal preparation.
+requires the full normalized record; the released adapter validates its exact
+supported profile. Evidence digest is SHA-256 of canonical provider/profile,
+authority, location, native identity, sorted property/value snapshots and
+observation time. Raw provider response is discarded after proposal preparation.
 
 Later Enrichment matches the existing stream by owner + property + role +
 provider + profile family + authority + location + native identity, preserves

@@ -7,7 +7,8 @@ import { parseConceptDocument } from "../../src/core/knowledge/index.ts";
 import { assessOwnerReviewUsefulness, classifyInitialIngest, createAuthoringAssessment,
   createPairComparison, scoreSemanticBenchmark } from "./benchmark-okf.mjs";
 import {
-  summarizeAgentEvents, validateFinalChangeCoverage, validateRefreshKnowledge, validateRefreshLifecycle, validateV13Lifecycle,
+  summarizeAgentEvents, validateBatchLifecycle, validateFinalChangeCoverage, validateRefreshKnowledge,
+  validateRefreshLifecycle, validateV13Lifecycle,
 } from "./benchmark-agent.mjs";
 
 const repositoryId = "repository-example-aaaaaaaaaaaa";
@@ -176,6 +177,23 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
     "validate_okf_changes", "finalize_hub_okf_proposal", "inspect_hub_okf_proposal",
   ].map((tool) => [tool, 1]));
   assert.deepEqual(validateRefreshLifecycle(refreshTools), []);
+  const batchRoot = path.resolve(import.meta.dirname, "..", "..", "benchmark", "repos", "aws-cloud-operations-batch");
+  const batch = JSON.parse(fs.readFileSync(path.join(batchRoot, "manifest.json"), "utf8"));
+  assert.equal(batch.workflow, "batch-initial-ingest");
+  assert.equal(batch.agent.model, "gpt-5.6-sol");
+  assert.equal(batch.confirmedDomain.identity, "domains/cloud-operations");
+  assert.equal(batch.repositories.length, 2);
+  const batchTools = Object.fromEntries([
+    "get_hub_status", "configure_hub", "prepare_batch_hub_ingest", "confirm_batch_hub_ingest",
+    "finalize_batch_hub_ingest_proposal", "inspect_hub_okf_proposal",
+  ].map((tool) => [tool, 1]));
+  for (const tool of ["index_repository", "get_architecture", "get_okf_authoring_schemas",
+    "prepare_hub_okf", "validate_okf_changes", "record_batch_hub_ingest_member"]) batchTools[tool] = 2;
+  assert.deepEqual(validateBatchLifecycle(batchTools, 2), []);
+  batchTools.get_okf_authoring_schemas = 3;
+  assert.deepEqual(validateBatchLifecycle(batchTools, 2), []);
+  batchTools.accept_hub_okf_proposal = 1;
+  assert.match(validateBatchLifecycle(batchTools, 2).at(-1), /forbidden Batch Init/);
 });
 
 test("[AB-BENCH-013..017] pair comparison reports quality and efficiency without a winner", () => {

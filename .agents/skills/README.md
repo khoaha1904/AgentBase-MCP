@@ -12,12 +12,13 @@ its UI metadata inside its own directory.
 - [`agentbase-refresh`](agentbase-refresh/SKILL.md) — compare one canonical
   repository with accepted knowledge, inspect exact source diffs and stop at a
   reviewable update proposal.
+- [`agentbase-domain-enrichment`](agentbase-domain-enrichment/SKILL.md) — verify
+  selected cross-repository SQS knowledge for one Published Domain and stop at
+  one reviewable enrichment proposal.
+- [`agentbase-batch-ingest`](agentbase-batch-ingest/SKILL.md) — preflight and
+  ingest explicit local repositories sequentially into one atomic proposal.
 - [`agentbase-okf`](agentbase-okf/SKILL.md) — current proposal-authoring workflow
   after AgentBase has prepared a bounded workspace.
-
-Domain Enrichment will be a separate future skill because it operates across
-Published repositories and may use a user-authenticated provider CLI. Empty
-future skill directories are not kept.
 
 ## Development skills
 

@@ -1,6 +1,6 @@
 # 09.03 — Batch processing
 
-> Trạng thái: Designed, chưa implement.
+> Trạng thái: Batch Initial Ingest implemented offline; Batch Refresh deferred.
 
 ## Input và confirmation
 

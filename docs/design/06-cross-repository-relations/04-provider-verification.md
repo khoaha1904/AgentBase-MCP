@@ -1,6 +1,6 @@
 # 06.04 — Provider verification
 
-> Trạng thái: Technical design đã chốt boundary; AWS adapter/skill chưa implement.
+> Trạng thái: AWS CLI v2 + STS/SQS profiles và host skill đã implement offline.
 
 ## Quyết định ngắn
 
@@ -74,13 +74,13 @@ và yêu cầu update profile/product; Agent không tự thử command gần gi�
 
 ## Bounded AWS examples
 
-Các ví dụ minh họa policy, không phải danh sách operation đã release:
+Operations đã release trong MVP:
 
 - `sts get-caller-identity` — xác nhận account/session authority;
-- đọc attributes của một exact Queue ARN/URL đã biết;
-- đọc configuration của một exact Lambda/function identity đã biết;
-- đọc attributes của một exact Topic ARN đã biết;
-- describe một exact compute/resource ID trong confirmed region.
+- resolve URL rồi đọc allowlisted attributes của một exact SQS queue name +
+  account + region.
+
+Lambda, SNS, compute và mọi provider khác chưa release.
 
 Không dùng “list all queues/functions/topics”, Resource Explorer, tag scan hoặc
 thử tuần tự nhiều accounts/regions để tìm match.
@@ -127,8 +127,6 @@ reason; successful checkpoints của candidates khác vẫn được giữ theo 
 
 ## Baseline impact
 
-Đây là **Broad change** và khi implement phải đi Full Feature route vì thêm
-provider adapter, credential/session boundary và external process lifecycle.
-MVP nên release một tập AWS operations nhỏ theo fixtures thực tế; không dựng
-generic arbitrary-cloud command runner.
-
+Slice hiện tại đi Full Feature route và giữ đúng boundary: fixed argv, bounded
+output/timeout, không shell, không credential input và không generic cloud runner.
+Real AWS smoke cần owner duyệt riêng sau offline gate.

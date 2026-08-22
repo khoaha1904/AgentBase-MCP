@@ -1,0 +1,22 @@
+{
+  "outcome": "invalid",
+  "findings": {
+    "okf": [],
+    "mcpRuntime": [
+      "Batch Init must finalize exactly one proposal; observed 0",
+      "finalize_batch_hub_ingest_proposal must run exactly once; observed 0",
+      "inspect_hub_okf_proposal must run exactly once; observed 0",
+      "index_repository must run once per member; observed 1/2",
+      "get_architecture must run once per member; observed 1/2",
+      "prepare_hub_okf must run once per member; observed 1/2",
+      "record_batch_hub_ingest_member must run once per member; observed 1/2",
+      "get_okf_authoring_schemas must succeed directly or after one correction per member; observed 1"
+    ],
+    "benchmark": [
+      "combined OKF artifact is unavailable"
+    ]
+  },
+  "conceptCount": 0,
+  "conceptsByType": {},
+  "members": []
+}

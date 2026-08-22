@@ -1,6 +1,7 @@
 # 09 — Ingest và Refresh
 
-> Trạng thái: Single-repository Initial Ingest và Refresh đã implement/qualify.
+> Trạng thái: Initial Ingest/Refresh đã qualify; Batch Initial Ingest và AWS/SQS
+> Domain Enrichment đã implement offline.
 
 ## Câu trả lời ngắn
 
@@ -113,7 +114,7 @@ URL không phải identity chính; chúng được giữ làm aliases/evidence.
 
 ## Chưa implement
 
-- Batch Ingest/Refresh và checkpoint nhiều repository.
-- Domain Enrichment/provider CLI verification.
+- Batch Refresh hoặc batch trộn Init/Refresh.
+- Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
 - OKF age warning trong query và scheduled freshness report.
 - Full repository-identity recovery cho mọi rename/fork/mirror edge case.

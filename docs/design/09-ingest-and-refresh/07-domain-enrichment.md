@@ -1,6 +1,6 @@
 # 09.07 — Domain Enrichment
 
-> Trạng thái: Designed, chưa implement.
+> Trạng thái: AWS/SQS MVP đã implement offline; chưa chạy real AWS qualification.
 
 ## Entry và authority
 
@@ -43,7 +43,7 @@ value chỉ được bổ sung với provider provenance và observed time.
 
 - xác nhận hoặc từ chối resource identity match;
 - add cross-repository/cross-Domain relation evidence;
-- merge/alias proposal cho duplicate concept qua review rules;
+- giữ duplicate identity thành candidate/Question; merge/alias concept deferred;
 - resolve hoặc update governed Questions;
 - giữ limitation khi permission/resource evidence chưa đủ.
 

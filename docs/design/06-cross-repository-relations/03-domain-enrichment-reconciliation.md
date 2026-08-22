@@ -1,6 +1,6 @@
 # 06.03 — Domain Enrichment reconciliation
 
-> Trạng thái: Owner đã chốt Published-only input và một atomic Enrichment Draft; chưa implement.
+> Trạng thái: Published-only AWS/SQS slice đã implement offline; merge/redirect deferred.
 
 ## Quyết định ngắn
 
@@ -19,6 +19,11 @@ one Enrichment proposal → review → Accept → one PR to main
 Local Draft hoặc repository còn nằm trong một Init/Refresh PR chưa merge không
 được dùng làm Enrichment member. Git không có một clean base chung cho nhiều PR
 độc lập; chờ chúng merge giữ dependency và review dễ hiểu.
+
+Local `main` vẫn có thể chứa accepted Local Draft không liên quan. Finalize áp
+enrichment patch lên local head để Accept không làm mất chúng, nhưng dừng nếu
+một pending draft đã đổi đúng concept hoặc Question thuộc manifest. Evidence và
+membership vẫn chỉ được đọc từ exact Published base.
 
 ## Run manifest
 
@@ -81,7 +86,8 @@ Một proposal có thể:
 - thêm external identity đã xác minh;
 - thêm canonical cross-repository/cross-Domain relation;
 - đóng, reopen hoặc bổ sung evidence cho Question theo phần 07;
-- propose concept merge/redirect theo phần 06.05;
+- giữ duplicate identity dưới dạng candidate/Question; concept merge/redirect
+  theo phần 06.05 chưa nằm trong slice hiện tại;
 - ghi explicit rejected/unresolved outcome khi nó có review value.
 
 Mọi thay đổi vẫn giữ source repository, source revision, evidence IDs, provider
@@ -112,8 +118,6 @@ không overload một fake Repository ID hoặc tạo một PR cho mỗi reposit
 
 ## Baseline impact
 
-Đây là **Broad change**: reuse proposal/validation/Git lifecycle nhưng mở rộng
-single-source proposal metadata, private checkpoints và publication unit. Không
-cần service, database, queue hoặc parallel worker mới; sequential execution là
-MVP boundary.
-
+Implementation reuse proposal/validation/Git lifecycle, thêm private atomic
+checkpoints và explicit Domain/multi-Repository scope. Không có service,
+database, background worker hoặc parallel execution mới.

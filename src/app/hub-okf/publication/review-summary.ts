@@ -26,9 +26,13 @@ type InspectionSummary = Readonly<{
   superseded: readonly string[];
   questions: readonly string[];
   limitations: readonly string[];
+  batchMembers: readonly string[];
+  sharedPaths: readonly string[];
 }>;
 
 type RepositoryScope = Readonly<{ domains: readonly string[]; revision?: string }>;
+type EnrichmentScope = Readonly<{ account: string; regions: readonly string[]; profiles: readonly string[];
+  candidates: number; questions: number }>;
 
 function record(value: unknown): Record<string, unknown> | undefined {
   return value !== null && typeof value === "object" && !Array.isArray(value)
@@ -67,7 +71,10 @@ function readInspection(stateRoot: string, proposal: PendingHubProposal): Inspec
   try {
     const root = path.join(path.resolve(stateRoot), "proposals", proposal.id);
     const accepted = record(JSON.parse(fs.readFileSync(path.join(root, "accepted.json"), "utf8")));
-    if (accepted?.id !== proposal.id || accepted.sourceRepositoryId !== proposal.sourceRepositoryId
+    if (accepted?.id !== proposal.id || accepted.mode !== proposal.mode
+      || (proposal.mode === "enrichment" || proposal.mode === "batch-new"
+        ? accepted.domainId !== proposal.domainId || JSON.stringify(accepted.sourceRepositoryIds) !== JSON.stringify(proposal.sourceRepositoryIds)
+        : accepted.sourceRepositoryId !== proposal.sourceRepositoryId)
       || accepted.diffDigest !== proposal.diffDigest || accepted.acceptedCommit !== proposal.commit) return undefined;
     const inspection = record(JSON.parse(fs.readFileSync(path.join(root, "inspection.json"), "utf8")));
     const groups = record(inspection?.groups), uncertainty = record(groups?.questionsAndLimitations);
@@ -77,6 +84,12 @@ function readInspection(stateRoot: string, proposal: PendingHubProposal): Inspec
     }) : [];
     const limitations = Array.isArray(uncertainty?.limitations)
       ? uncertainty.limitations.map((item) => safeText(item)).filter(Boolean) : [];
+    const batch = record(inspection?.batch);
+    const batchMembers = Array.isArray(batch?.members) ? batch.members.flatMap((item) => {
+      const member = record(item), repositoryId = safeText(member?.repositoryId, ""), paths = groupPaths(
+        Array.isArray(member?.paths) ? member.paths.map((pathValue) => ({ path: pathValue })) : []);
+      return repositoryId ? [`${repositoryId}: ${paths.length ? paths.join(", ") : "shared navigation only"}`] : [];
+    }) : [];
     return {
       added: groupPaths(groups?.added),
       updated: groupPaths(groups?.updated),
@@ -84,6 +97,9 @@ function readInspection(stateRoot: string, proposal: PendingHubProposal): Inspec
       superseded: groupPaths(groups?.supersededOrRetracted),
       questions: bounded(questions),
       limitations: bounded(limitations),
+      batchMembers: bounded(batchMembers),
+      sharedPaths: groupPaths(Array.isArray(batch?.sharedPaths)
+        ? batch.sharedPaths.map((pathValue) => ({ path: pathValue })) : []),
     };
   } catch {
     return undefined;
@@ -96,6 +112,7 @@ function mapping(value: OkfValue | undefined): Readonly<Record<string, OkfValue>
 }
 
 function readRepositoryScope(stateRoot: string, proposal: PendingHubProposal): RepositoryScope {
+  if (proposal.mode === "enrichment" || proposal.mode === "batch-new") return { domains: proposal.domainId ? [proposal.domainId] : [] };
   try {
     const bundle = loadOkfBundle(path.join(path.resolve(stateRoot), "proposals", proposal.id, "bundle"));
     const repository = [...bundle.concepts.values()].find((concept) =>
@@ -115,6 +132,21 @@ function readRepositoryScope(stateRoot: string, proposal: PendingHubProposal): R
   }
 }
 
+function readEnrichmentScope(stateRoot: string, proposal: PendingHubProposal): EnrichmentScope | undefined {
+  if (proposal.mode !== "enrichment") return undefined;
+  try {
+    const value = record(JSON.parse(fs.readFileSync(path.join(path.resolve(stateRoot), "proposals", proposal.id,
+      "enrichment-summary.json"), "utf8")));
+    const provider = record(value?.providerScope), profiles = record(value?.profileVersions), candidates = value?.candidates;
+    if (value?.manifestDigest !== proposal.manifestDigest || typeof provider?.accountId !== "string"
+      || !Array.isArray(provider.regions) || !provider.regions.every((region) => typeof region === "string")
+      || !profiles || !Array.isArray(candidates)) return undefined;
+    return { account: provider.accountId, regions: provider.regions as string[],
+      profiles: Object.entries(profiles).map(([family, version]) => `${safeText(family)}@${safeText(String(version))}`).sort(),
+      candidates: candidates.length, questions: candidates.filter((candidate) => record(candidate)?.question !== undefined).length };
+  } catch { return undefined; }
+}
+
 function bullets(values: readonly string[], empty = "None recorded."): string {
   return values.length ? values.map((value) => `- ${safeText(value)}`).join("\n") : `- ${empty}`;
 }
@@ -125,19 +157,28 @@ export function renderPublicationReview(options: PublicationReviewOptions): Publ
     proposal,
     inspection: readInspection(options.stateRoot, proposal),
     scope: readRepositoryScope(options.stateRoot, proposal),
+    enrichment: readEnrichmentScope(options.stateRoot, proposal),
   }));
   const role = options.publicationMode !== "batch" && options.proposals.length === 1
-    ? options.proposals[0]!.mode === "new" ? "Init" : "Refresh"
+    ? options.proposals[0]!.mode === "new" ? "Init" : options.proposals[0]!.mode === "refresh" ? "Refresh"
+      : options.proposals[0]!.mode === "batch-new" ? "Batch Init" : "Enrichment"
     : "Publication";
-  const title = `AgentBase Hub ${role}: ${safeText(options.proposals[0]!.sourceRepositoryId)}`.slice(0, 120);
-  const scope = details.slice(0, ITEM_LIMIT).flatMap(({ proposal, scope: repository }) => [
-    `Proposal \`${proposal.id}\` — mode: ${proposal.mode ?? "unknown"}; source: \`${safeText(proposal.sourceRepositoryId)}\`; subject: \`${safeText(proposal.subject)}\``,
+  const title = `AgentBase Hub ${role}: ${safeText(options.proposals[0]!.mode === "enrichment" || options.proposals[0]!.mode === "batch-new"
+    ? options.proposals[0]!.domainId : options.proposals[0]!.sourceRepositoryId)}`.slice(0, 120);
+  const scope = details.slice(0, ITEM_LIMIT).flatMap(({ proposal, scope: repository, enrichment }) => [
+    `Proposal \`${proposal.id}\` — mode: ${proposal.mode ?? "unknown"}; ${proposal.mode === "enrichment" || proposal.mode === "batch-new"
+      ? `Domain: \`${safeText(proposal.domainId)}\`; repositories: ${(proposal.sourceRepositoryIds ?? []).map((id) => `\`${safeText(id)}\``).join(", ")}`
+      : `source: \`${safeText(proposal.sourceRepositoryId)}\``}; subject: \`${safeText(proposal.subject)}\``,
     `Domain: ${repository.domains.length ? repository.domains.map((item) => `\`${safeText(item)}\``).join(", ") : "unavailable"}; source revision: ${repository.revision ? `\`${repository.revision}\`` : "unavailable"}`,
+    ...(enrichment ? [`Provider scope: AWS account \`${safeText(enrichment.account)}\`; regions: ${enrichment.regions.map((region) => `\`${safeText(region)}\``).join(", ")}; profiles: ${enrichment.profiles.map((profile) => `\`${profile}\``).join(", ")}; candidates: ${enrichment.candidates}; Questions: ${enrichment.questions}`] : []),
   ]);
   if (details.length > ITEM_LIMIT) scope.push(`… ${details.length - ITEM_LIMIT} more proposal(s)`);
   const inspections = details.flatMap((item) => item.inspection ? [item.inspection] : []);
   const unavailable = inspections.length !== details.length;
   const changes = [
+    ...(inspections.some((item) => item.batchMembers.length || item.sharedPaths.length)
+      ? ["### Batch Attribution", bullets(bounded(inspections.flatMap((item) => item.batchMembers))),
+        "### Shared Navigation", bullets(bounded(inspections.flatMap((item) => item.sharedPaths)))] : []),
     "### Added", bullets(bounded(inspections.flatMap((item) => item.added))),
     "### Updated", bullets(bounded(inspections.flatMap((item) => item.updated))),
     "### Removed", bullets(bounded(inspections.flatMap((item) => item.removed))),

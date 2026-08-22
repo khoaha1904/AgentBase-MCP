@@ -1,6 +1,7 @@
 # 11 — Review và Publish
 
-> Trạng thái: Reviewable batch PR và same-Repository Init/Refresh stack đã implement.
+> Trạng thái: Init/Refresh stack, atomic Batch Initial Ingest và independent
+> Domain Enrichment PR đã implement offline.
 
 ## Câu trả lời ngắn
 
@@ -28,6 +29,8 @@ Proposal ──preview + Accept──→ Local Draft ──PR──→ In Review
   publish.
 - Một Domain Enrichment có thể gom updates của nhiều repository, Question và
   cross-repository relation thành một Local Draft/PR dependency-safe.
+- Một Batch Initial Ingest đã Finalize là một proposal/Accept/PR unit; không thể
+  chọn bỏ riêng member hoặc item sau Finalize.
 - Một profile upgrade có semantic mapping change gom mọi Published concept bị
   ảnh hưởng thành một Hub Migration Draft và một migration PR. Upgrade không tự
   publish; item thiếu evidence giữ trạng thái hiện tại và đi kèm Question.

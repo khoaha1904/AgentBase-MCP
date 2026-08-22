@@ -83,3 +83,16 @@ export {
   type HubToolActions,
 } from "./mcp/mcp-tools.ts";
 export { createHubRuntimeActions, tryCreateHubRuntimeActions } from "./query/runtime-actions.ts";
+export {
+  finalizeDomainEnrichment, prepareDomainEnrichment, runDomainEnrichment,
+  type EnrichmentAnswer, type EnrichmentRunState,
+} from "./enrichment/workflow.ts";
+export {
+  buildEnrichmentManifest, readEnrichmentManifest,
+  type EnrichmentCandidate, type EnrichmentCandidateInput, type EnrichmentManifest,
+} from "./enrichment/manifest.ts";
+export {
+  batchMemberId, confirmBatchIngest, finalizeBatchIngest, prepareBatchIngest,
+  readBatchManifest, recordBatchMember, retryBatchMember, reviseBatchMembership,
+  type BatchIngestManifest, type BatchMember, type BatchMemberCheckpoint, type BatchSourceState,
+} from "./batch-ingest/index.ts";

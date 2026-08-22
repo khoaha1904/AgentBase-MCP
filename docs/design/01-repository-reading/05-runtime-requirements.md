@@ -95,7 +95,10 @@ fixture cost, so no incremental-speed or scale claim is accepted.
   safe analysis tools plus controlled `index_repository`, forwarding raw result
   blocks without OKF normalization.
 - **AB-MCP-004** — First indexing binds the connection to one absolute existing
-  repository; selecting another repository requires reconnecting.
+  repository. A later sequential `index_repository` for another explicit root
+  closes the prior provider session cleanly before binding the new root. Cleanup
+  failure stops the switch; one connection never owns two provider children or
+  combines their graph state.
 - **AB-MCP-005** — Indexing forces `persistence:false` and rejects source
   persistence, cross-repository mode and target-project arguments.
 - **AB-MCP-006** — `delete_project`, `manage_adr` and `ingest_traces` are absent.

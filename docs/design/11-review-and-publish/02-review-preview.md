@@ -1,6 +1,7 @@
 # 11.02 — Review preview
 
-> Trạng thái: Structured inspection implemented; optional visual review deferred.
+> Trạng thái: Structured inspection including atomic Batch Initial Ingest
+> implemented; optional visual review deferred.
 
 ## Outcome
 

@@ -70,8 +70,8 @@ function defaultProviderFactory(projectRoot: string): RawProviderFactory {
 export class GatewaySession {
   readonly #stateRoot: string;
   readonly #providerFactory: RawProviderFactory;
-  #repositoryRoot?: string;
-  #provider?: ScopedSession;
+  #repositoryRoot: string | undefined;
+  #provider: ScopedSession | undefined;
   #binding: Promise<ScopedSession> | null = null;
   #closePromise?: Promise<ProviderCleanup>;
 
@@ -81,6 +81,16 @@ export class GatewaySession {
   }
 
   get repositoryRoot(): string | undefined { return this.#repositoryRoot; }
+
+  async #select(repositoryRoot: string): Promise<ScopedSession> {
+    if (this.#provider && this.#repositoryRoot !== repositoryRoot) {
+      const cleanup = await this.#provider.close();
+      if (cleanup.status !== "clean") throw new Error("prior repository graph session could not be cleaned up");
+      this.#provider = undefined;
+      this.#repositoryRoot = undefined;
+    }
+    return this.#bind(repositoryRoot);
+  }
 
   async #bind(repositoryRoot: string): Promise<ScopedSession> {
     if (this.#provider) return this.#provider;
@@ -103,8 +113,8 @@ export class GatewaySession {
     let provider = this.#provider;
     let providerArguments = argumentsValue;
     if (tool === "index_repository") {
-      const controlled = controlledIndex(argumentsValue, this.#repositoryRoot);
-      provider = await this.#bind(controlled.repositoryRoot);
+      const controlled = controlledIndex(argumentsValue);
+      provider = await this.#select(controlled.repositoryRoot);
       providerArguments = controlled.arguments;
     } else if (!provider) {
       throw new Error("index_repository must select one repository before graph reads on this MCP connection");

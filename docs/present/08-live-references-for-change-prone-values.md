@@ -1,6 +1,6 @@
 # 08 — Observed snapshots và source references
 
-> Trạng thái: Snapshot-first repository runtime đã implement; provider observation và freshness automation còn deferred.
+> Trạng thái: Snapshot-first và AWS/SQS provider observation đã implement; freshness automation còn deferred.
 
 ## Câu trả lời ngắn
 

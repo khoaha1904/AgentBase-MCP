@@ -3,9 +3,12 @@
 ## Post-MVP product capabilities
 
 - Batch Ingest and recoverable batch checkpoints.
-- Domain Enrichment with bounded provider CLI verification.
-- Question-governance enrichment: batch resolution, automatic conflict-to-
-  `needs-review` inference and Repository/Domain/Hub-wide Guidance scope.
+- Additional Domain Enrichment profiles beyond exact AWS SQS, plus provider
+  account discovery/scan and background enrichment.
+- Question-governance enrichment beyond the implemented AWS/SQS three-tier
+  packet: automatic conflict-to-`needs-review` inference and Repository/Domain/
+  Hub-wide Guidance scope.
+- Strong-identity concept merge/redirect and history migration.
 - Full conflict-aware query composition across competing claims, Questions and
   applicable Guidance; MVP only preserves and exposes the governed documents.
 - Published/Local Draft query overlay and freshness presentation/CI report.

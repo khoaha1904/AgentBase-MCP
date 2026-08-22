@@ -1,6 +1,7 @@
 # 11 — Review và Publish
 
-> Trạng thái: Independent Init PR, same-Repository Init/Refresh stack và existing-PR reconciliation implemented.
+> Trạng thái: Independent Init PR, same-Repository Init/Refresh stack, atomic
+> Batch Initial Ingest PR và existing-PR reconciliation implemented.
 
 High-level decision:
 [Review và Publish](../../present/11-review-accept-and-publish.md)
@@ -38,7 +39,7 @@ khi phần 11 được review.
 MCP—not the calling agent or `gh`—owns branch push and PR creation with the
 dedicated MCP Hub token. A created PR must summarize:
 
-1. **Purpose** — why this proposal exists and its Init/Refresh/Enrichment mode.
+1. **Purpose** — why this proposal exists and its Init/Refresh/Batch Init/Enrichment mode.
 2. **Scope** — Domain, repositories, source revisions and proposal IDs.
 3. **Knowledge changes** — Added, Updated, Removed, Superseded/Retracted.
 4. **Uncertainty** — Questions, Limitations, conflicts and unresolved evidence.

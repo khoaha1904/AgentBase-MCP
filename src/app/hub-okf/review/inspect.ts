@@ -29,6 +29,10 @@ export type HubProposalInspection = Readonly<{
   questions?: readonly QuestionDeclaration[];
   coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
   groups: HubInspectionGroups;
+  batch?: Readonly<{
+    members: readonly Readonly<{ repositoryId: string; paths: readonly string[] }>[];
+    sharedPaths: readonly string[];
+  }>;
 }>;
 
 export type HubInspectionGroups = Readonly<{

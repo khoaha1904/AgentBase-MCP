@@ -38,6 +38,17 @@ const refreshEnabledTools = [
   ...refreshRequiredTools, "list_okf_schemas", "get_okf_schema", "search_graph", "trace_path",
   "get_code_snippet", "search_code", "search_hub_okf", "read_hub_okf_concept",
 ];
+const batchPromptVersions = new Set(["okf-batch-ingest-v1", "okf-batch-ingest-v2", "okf-batch-ingest-v3", "okf-batch-ingest-v4"]);
+const batchRequiredTools = [
+  "get_hub_status", "configure_hub", "prepare_batch_hub_ingest", "confirm_batch_hub_ingest",
+  "index_repository", "get_architecture", "get_okf_authoring_schemas", "prepare_hub_okf",
+  "validate_okf_changes", "record_batch_hub_ingest_member",
+  "finalize_batch_hub_ingest_proposal", "inspect_hub_okf_proposal",
+];
+const batchEnabledTools = [
+  ...batchRequiredTools, "search_graph", "trace_path", "get_code_snippet", "search_code",
+  "search_hub_okf", "read_hub_okf_concept",
+];
 
 export function validateV13Lifecycle(mcpTools, guidanceAttempts = []) {
   const guidanceCount = mcpTools.get_okf_authoring_schemas ?? 0;
@@ -73,6 +84,27 @@ export function validateRefreshLifecycle(mcpTools) {
       ? [] : [`validate_okf_changes must run once, or twice after one repair; observed ${mcpTools.validate_okf_changes ?? 0}`]),
     ...forbidden.filter((tool) => mcpTools[tool])
       .map((tool) => `forbidden Refresh lifecycle tool observed: ${tool}`),
+  ];
+}
+
+export function validateBatchLifecycle(mcpTools, memberCount) {
+  const once = ["get_hub_status", "configure_hub", "prepare_batch_hub_ingest",
+    "confirm_batch_hub_ingest", "finalize_batch_hub_ingest_proposal", "inspect_hub_okf_proposal"];
+  const perMember = ["index_repository", "get_architecture", "prepare_hub_okf", "record_batch_hub_ingest_member"];
+  const forbidden = ["preflight_hub_ingest", "finalize_hub_okf_proposal", "accept_hub_okf_proposal",
+    "submit_hub_okf_proposals", "synchronize_hub_okf", "bootstrap_hub", "preview_hub_bootstrap",
+    "prepare_domain_enrichment", "run_domain_enrichment"];
+  return [
+    ...once.filter((tool) => mcpTools[tool] !== 1)
+      .map((tool) => `${tool} must run exactly once; observed ${mcpTools[tool] ?? 0}`),
+    ...perMember.filter((tool) => mcpTools[tool] !== memberCount)
+      .map((tool) => `${tool} must run once per member; observed ${mcpTools[tool] ?? 0}/${memberCount}`),
+    ...(mcpTools.get_okf_authoring_schemas >= memberCount && mcpTools.get_okf_authoring_schemas <= memberCount * 2
+      ? [] : [`get_okf_authoring_schemas must succeed directly or after one correction per member; observed ${mcpTools.get_okf_authoring_schemas ?? 0}`]),
+    ...(mcpTools.validate_okf_changes >= memberCount && mcpTools.validate_okf_changes <= memberCount * 2
+      ? [] : [`validate_okf_changes must run one or two times per member; observed ${mcpTools.validate_okf_changes ?? 0}`]),
+    ...forbidden.filter((tool) => mcpTools[tool])
+      .map((tool) => `forbidden Batch Init lifecycle tool observed: ${tool}`),
   ];
 }
 const authoringTools = new Set([
@@ -187,7 +219,7 @@ function toml(value) {
 }
 
 export function renderAgentPrompt(template, values) {
-  return template.replace(/\{\{([A-Z_]+)\}\}/g, (_match, key) => {
+  return template.replace(/\{\{([A-Z0-9_]+)\}\}/g, (_match, key) => {
     if (values[key] === undefined) throw new Error(`prompt value is missing: ${key}`);
     return values[key];
   });
@@ -353,7 +385,8 @@ export function validateFinalChangeCoverage(validatedIdentities, finalizedIdenti
 function toolUsage(completedTools, arm, promptVersion) {
   if (arm === "direct") return {};
   const completed = new Set(completedTools);
-  const required = refreshPromptVersions.has(promptVersion) ? refreshRequiredTools
+  const required = batchPromptVersions.has(promptVersion) ? batchRequiredTools
+    : refreshPromptVersions.has(promptVersion) ? refreshRequiredTools
     : ["okf-author-v8", "okf-author-v9", "okf-author-v10", "okf-author-v11", "okf-author-v12"].includes(promptVersion)
     ? v8RequiredTools
     : initialIngestPromptVersions.has(promptVersion) ? v13RequiredTools
@@ -516,5 +549,113 @@ export function runAgentRepository({
   fs.rmSync(workspace, { recursive: true, force: true });
   fs.rmSync(runtimeRoot, { recursive: true, force: true });
   if (isRefresh) fs.rmSync(sourceRepository, { recursive: true, force: true });
+  return completed;
+}
+
+function batchProposalRoot(runtimeRoot) {
+  const owner = typeof process.getuid === "function" ? String(process.getuid()) : "portable";
+  const proposals = path.join(runtimeRoot, "tmp", `agentbase-${owner}`, "hub-runtime", "proposals");
+  const entries = fs.existsSync(proposals)
+    ? fs.readdirSync(proposals).filter((entry) => /^[a-f0-9]{24}$/.test(entry)) : [];
+  if (entries.length !== 1) throw new Error(`Batch Init must finalize exactly one proposal; observed ${entries.length}`);
+  return path.join(proposals, entries[0]);
+}
+
+export function runAgentBatch({ manifest, repositories, root, executable = manifest.agent.executable }) {
+  if (manifest.workflow !== "batch-initial-ingest" || repositories.length !== manifest.repositories.length
+    || repositories.length < 2) throw new Error("batch benchmark manifest or fixtures are invalid");
+  const version = spawnSync(executable, ["--version"], { encoding: "utf8", timeout: 10_000 });
+  const actualVersion = version.status === 0 ? version.stdout.trim() : "";
+  if (actualVersion !== manifest.agent.version) {
+    throw new Error(`expected ${manifest.agent.version}, found ${actualVersion || "unavailable"}`);
+  }
+  fs.mkdirSync(root, { recursive: true });
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-okf-batch-benchmark-"));
+  const runtimeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-okf-batch-runtime-"));
+  const runtimeTmp = path.join(runtimeRoot, "tmp");
+  fs.mkdirSync(path.join(runtimeRoot, "home"));
+  fs.mkdirSync(runtimeTmp, { mode: 0o700 });
+  const startedAt = new Date().toISOString(), startedMs = Date.now();
+  const sources = repositories.map((repository, index) => {
+    const source = discoverRepositorySourceState(repository, startedAt);
+    return { entry: manifest.repositories[index], repository, source,
+      repositoryId: benchmarkProvenanceRepositoryId(source, "okf-author-v15") };
+  });
+  const template = fs.readFileSync(path.join(projectRoot, "benchmark", "prompts", `${manifest.promptVersion}.md`), "utf8");
+  const domain = `${manifest.confirmedDomain.title} (${manifest.confirmedDomain.identity}); evidence ${manifest.confirmedDomain.evidenceResource}`;
+  const values = { OUTPUT_ROOT: workspace, CATALOG_VERSION: manifest.catalogVersion, CONFIRMED_DOMAIN: domain };
+  const portableValues = { ...values, OUTPUT_ROOT: "<OUTPUT_ROOT>" };
+  sources.forEach((item, index) => {
+    values[`SOURCE_${index + 1}_ROOT`] = item.repository;
+    values[`REPOSITORY_${index + 1}_ID`] = item.repositoryId;
+    portableValues[`SOURCE_${index + 1}_ROOT`] = `<SOURCE_${index + 1}_ROOT>`;
+    portableValues[`REPOSITORY_${index + 1}_ID`] = item.repositoryId;
+  });
+  const prompt = renderAgentPrompt(template, values), portablePrompt = renderAgentPrompt(template, portableValues);
+  const eventsFile = path.join(root, "agent-events.jsonl"), finalMessage = path.join(root, "agent-final.md");
+  fs.writeFileSync(path.join(root, "prompt.md"), portablePrompt);
+  const run = {
+    suite: manifest.suite, workflow: manifest.workflow, promptVersion: manifest.promptVersion,
+    promptDigest: `sha256:${createHash("sha256").update(portablePrompt).digest("hex")}`,
+    catalogVersion: manifest.catalogVersion, confirmedDomain: manifest.confirmedDomain,
+    fixtures: sources.map((item) => ({ id: item.entry.id, path: item.entry.path, commit: item.source.commit,
+      sourceRepositoryId: item.source.repositoryId, provenanceRepositoryId: item.repositoryId })),
+    agent: { ...manifest.agent, executable, actualVersion }, startedAt, completedAt: null, outcome: "running",
+  };
+  writeJson(path.join(root, "run.json"), run);
+  const result = spawnSync(executable, buildCodexArgs({ workspace, finalMessage,
+    model: manifest.agent.model, reasoningEffort: manifest.agent.reasoningEffort,
+    runtimeRoot, enabledTools: batchEnabledTools }), {
+    cwd: projectRoot, input: prompt, encoding: "utf8", timeout: manifest.agent.timeoutMs,
+    maxBuffer: 50 * 1024 * 1024,
+    env: { ...process.env, TMPDIR: runtimeTmp, XDG_CONFIG_HOME: path.join(runtimeRoot, "config"),
+      XDG_DATA_HOME: path.join(runtimeRoot, "data") },
+  });
+  const portable = (value) => sources.reduce((text, item, index) => text.split(item.repository)
+    .join(`<SOURCE_${index + 1}_ROOT>`), portableAgentText(value, { repository: "\0", workspace, runtimeRoot }));
+  fs.writeFileSync(eventsFile, portable(result.stdout || ""));
+  if (fs.existsSync(finalMessage)) fs.writeFileSync(finalMessage, portable(fs.readFileSync(finalMessage, "utf8")));
+  if (result.stderr) fs.writeFileSync(path.join(root, "agent-stderr.txt"), portable(result.stderr.slice(0, 1024 * 1024)));
+  const summary = summarizeAgentEvents(result.stdout || "");
+  let failure, proposal = null, inspection = null;
+  try {
+    for (const item of sources) {
+      const after = discoverRepositorySourceState(item.repository);
+      if (after.commit !== item.source.commit || after.dirty !== item.source.dirty
+        || after.dirtyDigest !== item.source.dirtyDigest) throw new Error(`${item.entry.id}: source changed during agent run`);
+    }
+    if (result.status !== 0) throw new Error(`agent exited ${result.status ?? `by ${result.signal ?? "timeout"}`}`);
+    const proposalRoot = batchProposalRoot(runtimeRoot);
+    proposal = JSON.parse(fs.readFileSync(path.join(proposalRoot, "hub-proposal.json"), "utf8"));
+    inspection = JSON.parse(fs.readFileSync(path.join(proposalRoot, "inspection.json"), "utf8"));
+    const expectedIds = sources.map((item) => item.repositoryId);
+    if (proposal.mode !== "batch-new" || proposal.domainId !== manifest.confirmedDomain.identity
+      || JSON.stringify(proposal.sourceRepositoryIds) !== JSON.stringify(expectedIds)) {
+      throw new Error("final proposal scope does not match exact batch inputs");
+    }
+    if (!inspection.applicable || inspection.batch?.members?.length !== sources.length) {
+      throw new Error("final proposal inspection lacks applicable member attribution");
+    }
+    fs.cpSync(path.join(proposalRoot, "bundle"), path.join(root, "okf"), { recursive: true });
+    loadOkfBundle(path.join(root, "okf"), { requireAgentBaseRootIndex: true });
+    writeJson(path.join(root, "proposal.json"), proposal);
+    writeJson(path.join(root, "inspection.json"), inspection);
+  } catch (error) {
+    failure = error instanceof Error ? error.message : "unknown batch agent failure";
+  }
+  const lifecycleFailures = validateBatchLifecycle(summary.activity.mcpTools, sources.length);
+  const completed = { ...run, completedAt: new Date().toISOString(), elapsedMs: Date.now() - startedMs,
+    outcome: failure || lifecycleFailures.length ? "failed" : "succeeded",
+    process: { exitCode: result.status, signal: result.signal, error: result.error?.message ?? null },
+    usage: summary.usage, activity: summary.activity,
+    proposal: proposal ? { id: proposal.id, mode: proposal.mode, domainId: proposal.domainId,
+      sourceRepositoryIds: proposal.sourceRepositoryIds } : null,
+    attribution: inspection?.batch ?? null,
+    coverage: inspection?.coverage ?? null,
+    failures: [...(failure ? [failure] : []), ...lifecycleFailures],
+  };
+  writeJson(path.join(root, "run.json"), completed);
+  fs.rmSync(workspace, { recursive: true, force: true });
+  fs.rmSync(runtimeRoot, { recursive: true, force: true });
   return completed;
 }

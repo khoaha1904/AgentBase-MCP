@@ -7,7 +7,7 @@ import {
   type OkfValue,
 } from "../documents/okf-document.ts";
 
-export type ObservedValueRole = "documentation" | "implementation" | "configuration";
+export type ObservedValueRole = "documentation" | "implementation" | "configuration" | "provider";
 export type ObservedValueScalar = string | number | boolean;
 export type RepositoryObservedValueState = Readonly<{
   commit: string | null;
@@ -23,12 +23,24 @@ export type ObservedValue = Readonly<{
   sourceId: string;
   source: Readonly<{
     resource: string;
-    repositoryId: string;
-    relativePath: string;
+    repositoryId?: string;
+    relativePath?: string;
     startLine?: number;
     endLine?: number;
+    provider?: string;
+    profileFamily?: string;
+    profileVersion?: number;
+    authority?: string;
+    location?: string;
+    nativeIdentity?: string;
   }>;
-  observed: RepositoryObservedValueState & Readonly<{ at: string }>;
+  observed: Readonly<{
+    commit?: string | null;
+    dirty?: boolean;
+    dirtyDigest?: string | null;
+    evidenceDigest?: string;
+    at: string;
+  }>;
 }>;
 export type QueryObservedValue = Omit<ObservedValue, "value"> & Readonly<{
   value: ObservedValueScalar;
@@ -48,15 +60,29 @@ export type NormalizeRepositoryObservedValuesOptions = Readonly<{
   previous?: ConceptDocument;
   removeRepositoryContribution?: boolean;
 }>;
+export type NormalizeProviderObservedValuesOptions = Readonly<{
+  sourceId: string;
+  sourceResource: string;
+  provider: "aws";
+  profileFamily: string;
+  profileVersion: number;
+  authority: string;
+  location: string;
+  nativeIdentity: string;
+  evidenceDigest: string;
+  observedAt: string;
+  values: Readonly<Record<string, ObservedValueScalar>>;
+}>;
 
 const VALUE_ID = /^AB-OBS-[a-f0-9]{24}$/;
 const SUBJECT_ROOT = "(?:domains|systems|components|interfaces|flows|resources|infrastructure|deployments|repositories|relationships|capabilities|guidance)";
 const SUBJECT = new RegExp(`^${SUBJECT_ROOT}/[a-z0-9][a-z0-9./-]*$`);
 const PROPERTY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+const SOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 const COMMIT = /^[a-f0-9]{40}$/;
 const DIGEST = /^sha256:[a-f0-9]{64}$/;
 const RFC3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
-const ROLES = new Set<ObservedValueRole>(["documentation", "implementation", "configuration"]);
+const ROLES = new Set<ObservedValueRole>(["documentation", "implementation", "configuration", "provider"]);
 const SECRET_FIELD = /(?:^|[._-])(password|passwd|secret|token|credential|private[-_]?key|api[-_]?key|access[-_]?key|signing[-_]?key|connection[-_]?string|signed[-_]?url)(?:$|[._-])/i;
 const SECRET_VALUE = /(?:-----BEGIN [A-Z ]*PRIVATE KEY-----|\bAKIA[A-Z0-9]{16}\b|\bgh[pousr]_[A-Za-z0-9_]{20,}\b|\bxox[baprs]-[A-Za-z0-9-]{10,}\b|\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b|[a-z][a-z0-9+.-]*:\/\/[^\s/:]+:[^\s/@]+@|[?&](?:X-Amz-Signature|signature|sig|token)=[^&\s]+)/i;
 const SECTION_START = "<!-- agentbase:observed-values:start -->";
@@ -79,12 +105,12 @@ function validObservedAt(value: unknown): value is string {
   return typeof value === "string" && RFC3339.test(value) && Number.isFinite(Date.parse(value));
 }
 
-function sourceMap(concept: ConceptDocument): ReadonlyMap<string, string> {
-  const result = new Map<string, string>();
+function sourceMap(concept: ConceptDocument): ReadonlyMap<string, Readonly<Record<string, OkfValue>>> {
+  const result = new Map<string, Readonly<Record<string, OkfValue>>>();
   if (!Array.isArray(concept.frontmatter.sources)) return result;
   for (const value of concept.frontmatter.sources) {
     const source = mapping(value);
-    if (typeof source?.id === "string" && typeof source.resource === "string") result.set(source.id, source.resource);
+    if (typeof source?.id === "string" && typeof source.resource === "string") result.set(source.id, source);
   }
   return result;
 }
@@ -106,8 +132,9 @@ export function observedValueSafetyFailure(property: unknown, value: unknown): s
 
 function sourceScope(resource: string): string {
   const parsed = parseRepositorySourceResource(resource);
-  if (!parsed) throw new Error("observed value source must be a normalized repository resource");
-  return `${parsed.repositoryId}/${parsed.relativePath}`;
+  if (parsed) return `${parsed.repositoryId}/${parsed.relativePath}`;
+  if (/^provider-observation:\/\/[a-z][a-z0-9.-]*\/[a-f0-9]{64}$/.test(resource)) return resource;
+  throw new Error("observed value source must be a normalized repository or provider-observation resource");
 }
 
 export function createObservedValueId(input: ObservedValueIdInput): string {
@@ -139,6 +166,28 @@ function stateFailures(observed: Readonly<Record<string, OkfValue>> | undefined,
   return failures;
 }
 
+function providerStateFailures(observed: Readonly<Record<string, OkfValue>> | undefined, prefix: string): readonly string[] {
+  if (!observed || !exactKeys(observed, ["at", "evidence_digest"])) return [`${prefix} provider observed state is incomplete`];
+  const failures: string[] = [];
+  if (typeof observed.evidence_digest !== "string" || !DIGEST.test(observed.evidence_digest)) failures.push(`${prefix} provider evidence_digest is invalid`);
+  if (!validObservedAt(observed.at)) failures.push(`${prefix} observed at must be RFC3339`);
+  return failures;
+}
+
+function providerSource(source: Readonly<Record<string, OkfValue>>, resource: string): ObservedValue["source"] | undefined {
+  if (!/^provider-observation:\/\/aws\/[a-f0-9]{64}$/.test(resource)) return undefined;
+  const metadata = mapping(mapping(source.agentbase)?.provider_observation);
+  if (!metadata || !exactKeys(metadata, ["authority", "evidence_digest", "location", "native_identity", "observed_at", "profile_family", "profile_version"])
+    || typeof metadata.profile_family !== "string" || typeof metadata.profile_version !== "number"
+    || !Number.isSafeInteger(metadata.profile_version) || metadata.profile_version < 1
+    || typeof metadata.authority !== "string" || typeof metadata.location !== "string"
+    || typeof metadata.native_identity !== "string" || typeof metadata.evidence_digest !== "string"
+    || !DIGEST.test(metadata.evidence_digest) || !validObservedAt(metadata.observed_at)) return undefined;
+  return { resource, provider: "aws", profileFamily: metadata.profile_family,
+    profileVersion: metadata.profile_version, authority: metadata.authority, location: metadata.location,
+    nativeIdentity: metadata.native_identity };
+}
+
 function parseValues(
   concept: ConceptDocument,
   options: Readonly<{ allowUnsafeValue?: boolean }> = {},
@@ -166,8 +215,10 @@ function parseValues(
       continue;
     }
     const { id, subject, property, role, value, source_id: sourceId } = entry;
-    const resource = typeof sourceId === "string" ? sources.get(sourceId) : undefined;
-    const source = typeof resource === "string" ? parseRepositorySourceResource(resource) : undefined;
+    const sourceEntry = typeof sourceId === "string" ? sources.get(sourceId) : undefined;
+    const resource = typeof sourceEntry?.resource === "string" ? sourceEntry.resource : undefined;
+    const repositorySource = typeof resource === "string" ? parseRepositorySourceResource(resource) : undefined;
+    const runtimeSource = sourceEntry && typeof resource === "string" ? providerSource(sourceEntry, resource) : undefined;
     if (typeof id !== "string" || !VALUE_ID.test(id)) failures.push(`${prefix} id is invalid`);
     if (typeof subject !== "string" || subject.length > 512 || !SUBJECT.test(subject) || subject.includes("..")) {
       failures.push(`${prefix} subject is invalid`);
@@ -175,12 +226,13 @@ function parseValues(
     if (typeof property !== "string" || property.length > 128 || !PROPERTY.test(property)) failures.push(`${prefix} property is invalid`);
     if (typeof role !== "string" || !ROLES.has(role as ObservedValueRole)) failures.push(`${prefix} role is invalid`);
     if (typeof sourceId !== "string" || !resource) failures.push(`${prefix} source_id does not resolve to sources[].id`);
-    else if (!source) failures.push(`${prefix} source must be a normalized repository resource`);
+    else if (role === "provider" && !runtimeSource) failures.push(`${prefix} provider role requires a normalized provider-observation source`);
+    else if (role !== "provider" && !repositorySource) failures.push(`${prefix} non-provider role requires a normalized repository source`);
     const safetyFailure = observedValueSafetyFailure(property, value);
     if (safetyFailure && !options.allowUnsafeValue) failures.push(`${prefix} ${safetyFailure}`);
     const observed = mapping(entry.observed);
-    failures.push(...stateFailures(observed, prefix));
-    if (!failures.some((failure) => failure.startsWith(prefix)) && source && typeof resource === "string") {
+    failures.push(...(role === "provider" ? providerStateFailures(observed, prefix) : stateFailures(observed, prefix)));
+    if (!failures.some((failure) => failure.startsWith(prefix)) && typeof resource === "string" && (repositorySource || runtimeSource)) {
       values.push({
         id: id as string,
         subject: subject as string,
@@ -188,8 +240,11 @@ function parseValues(
         role: role as ObservedValueRole,
         value: value as ObservedValueScalar,
         sourceId: sourceId as string,
-        source: { resource, ...source },
-        observed: {
+        source: runtimeSource ?? { resource, ...repositorySource! },
+        observed: role === "provider" ? {
+          evidenceDigest: observed!.evidence_digest as string,
+          at: observed!.at as string,
+        } : {
           commit: observed!.commit as string | null,
           dirty: observed!.dirty as boolean,
           dirtyDigest: observed!.dirty_digest as string | null,
@@ -212,11 +267,13 @@ function markdownCell(value: string): string {
 }
 
 function displayedSource(value: ObservedValue): string {
+  if (value.source.provider) return `${value.source.provider}:${value.source.profileFamily}@${value.source.profileVersion} ${value.source.authority}/${value.source.location}`;
   const span = value.source.startLine === undefined ? "" : `#L${value.source.startLine}-L${value.source.endLine}`;
-  return `${value.source.relativePath}${span}`;
+  return `${value.source.relativePath ?? value.source.resource}${span}`;
 }
 
 function displayedObservation(value: ObservedValue): string {
+  if (value.observed.evidenceDigest) return `${value.observed.evidenceDigest}, ${value.observed.at}`;
   const revision = value.observed.commit ?? "unborn";
   const dirty = value.observed.dirty ? `, dirty ${value.observed.dirtyDigest}` : "";
   return `${revision}${dirty}, ${value.observed.at}`;
@@ -322,10 +379,13 @@ export function normalizeRepositoryObservedValues(
     role: value.role,
     value: value.value,
     source_id: value.sourceId,
-    observed: {
-      commit: value.observed.commit,
-      dirty: value.observed.dirty,
-      dirty_digest: value.observed.dirtyDigest,
+    observed: value.role === "provider" ? {
+      evidence_digest: value.observed.evidenceDigest!,
+      at: value.observed.at,
+    } : {
+      commit: value.observed.commit ?? null,
+      dirty: value.observed.dirty!,
+      dirty_digest: value.observed.dirtyDigest ?? null,
       at: value.observed.at,
     },
   });
@@ -339,12 +399,21 @@ export function normalizeRepositoryObservedValues(
       throw new Error(`${prefix} contains unknown or missing authoring fields`);
     }
     const sourceId = entry.source_id;
-    const resource = typeof sourceId === "string" ? sources.get(sourceId) : undefined;
+    const sourceEntry = typeof sourceId === "string" ? sources.get(sourceId) : undefined;
+    const resource = typeof sourceEntry?.resource === "string" ? sourceEntry.resource : undefined;
     const source = typeof resource === "string" ? parseRepositorySourceResource(resource) : undefined;
-    if (typeof sourceId !== "string" || typeof resource !== "string" || !source) {
+    const provider = sourceEntry && typeof resource === "string" ? providerSource(sourceEntry, resource) : undefined;
+    if (typeof sourceId !== "string" || typeof resource !== "string" || (!source && !provider)) {
       throw new Error(`${prefix} must use a normalized repository source`);
     }
-    if (source.repositoryId !== options.repositoryId) {
+    if (provider) {
+      const prior = typeof entry.id === "string" ? previousById.get(entry.id) : undefined;
+      if (!prior || !isDeepStrictEqual(entry, serialized(prior)) || prior.source.resource !== resource) {
+        throw new Error(`${prefix} provider observation must remain unchanged during repository authoring`);
+      }
+      normalizedRaw.push(serialized(prior)); retainedIds.add(prior.id); continue;
+    }
+    if (source!.repositoryId !== options.repositoryId) {
       const prior = typeof entry.id === "string" ? previousById.get(entry.id) : undefined;
       if (!prior || !isDeepStrictEqual(entry, serialized(prior)) || prior.source.resource !== resource) {
         throw new Error(`${prefix} foreign repository observation must remain unchanged`);
@@ -380,9 +449,9 @@ export function normalizeRepositoryObservedValues(
     });
     const unchanged = previous !== undefined && previous.value === scalar && previous.source.resource === resource;
     const observed = unchanged ? {
-      commit: previous.observed.commit,
-      dirty: previous.observed.dirty,
-      dirty_digest: previous.observed.dirtyDigest,
+      commit: previous.observed.commit ?? null,
+      dirty: previous.observed.dirty!,
+      dirty_digest: previous.observed.dirtyDigest ?? null,
       at: previous.observed.at,
     } : stampedState();
     normalizedRaw.push({
@@ -399,7 +468,7 @@ export function normalizeRepositoryObservedValues(
   for (const previous of previousValues) {
     if (retainedIds.has(previous.id)) continue;
     if (previous.source.repositoryId === options.repositoryId && options.removeRepositoryContribution) continue;
-    if (!sources.has(previous.sourceId) || sources.get(previous.sourceId) !== previous.source.resource) {
+    if (!sources.has(previous.sourceId) || sources.get(previous.sourceId)?.resource !== previous.source.resource) {
       throw new Error(`${concept.path}: preserved observed value ${previous.id} requires its unchanged source`);
     }
     normalizedRaw.push(serialized(previous));
@@ -422,4 +491,72 @@ export function normalizeRepositoryObservedValues(
   });
   const body = normalizedBody(concept.body, renderObservedValuesSection(values));
   return { ...staged, body };
+}
+
+export function normalizeProviderObservedValues(
+  concept: ConceptDocument,
+  options: NormalizeProviderObservedValuesOptions,
+): ConceptDocument {
+  if (!SOURCE_ID.test(options.sourceId) || !/^provider-observation:\/\/aws\/[a-f0-9]{64}$/.test(options.sourceResource)
+    || !DIGEST.test(options.evidenceDigest) || !validObservedAt(options.observedAt)
+    || !Number.isSafeInteger(options.profileVersion) || options.profileVersion < 1) {
+    throw new Error("provider observed-value scope is invalid");
+  }
+  const entries = Object.entries(options.values).sort(([left], [right]) => left.localeCompare(right));
+  if (!entries.length || entries.length > 16) throw new Error("provider observed values require 1-16 values");
+  for (const [property, value] of entries) {
+    if (!PROPERTY.test(property)) throw new Error(`provider observed property is invalid: ${property}`);
+    const failure = observedValueSafetyFailure(property, value);
+    if (failure) throw new Error(`provider observed property ${property} ${failure}`);
+  }
+  const sources = Array.isArray(concept.frontmatter.sources) ? [...concept.frontmatter.sources] : [];
+  const sourceRecord: OkfValue = {
+    id: options.sourceId,
+    resource: options.sourceResource,
+    agentbase: { provider_observation: {
+      profile_family: options.profileFamily,
+      profile_version: options.profileVersion,
+      authority: options.authority,
+      location: options.location,
+      native_identity: options.nativeIdentity,
+      evidence_digest: options.evidenceDigest,
+      observed_at: options.observedAt,
+    } },
+  };
+  const sourceIndex = sources.findIndex((value) => mapping(value)?.id === options.sourceId);
+  if (sourceIndex >= 0) sources[sourceIndex] = sourceRecord;
+  else sources.push(sourceRecord);
+  const previous = readObservedValues(concept);
+  const priorByProperty = new Map(previous.filter((value) => value.role === "provider"
+    && value.source.resource === options.sourceResource).map((value) => [value.property, value]));
+  const retained = previous.filter((value) => !(value.role === "provider" && value.source.resource === options.sourceResource));
+  const serialized = (value: ObservedValue): OkfValue => ({
+    id: value.id, subject: value.subject, property: value.property, role: value.role,
+    value: value.value, source_id: value.sourceId,
+    observed: value.role === "provider"
+      ? { evidence_digest: value.observed.evidenceDigest!, at: value.observed.at }
+      : { commit: value.observed.commit ?? null, dirty: value.observed.dirty!,
+        dirty_digest: value.observed.dirtyDigest ?? null, at: value.observed.at },
+  });
+  const raw: OkfValue[] = retained.map(serialized);
+  for (const [property, value] of entries) {
+    const prior = priorByProperty.get(property);
+    raw.push({
+      id: prior?.id ?? createObservedValueId({ conceptId: concept.conceptId, subject: concept.conceptId,
+        property, role: "provider", sourceResource: options.sourceResource }),
+      subject: concept.conceptId,
+      property,
+      role: "provider",
+      value,
+      source_id: options.sourceId,
+      observed: { evidence_digest: options.evidenceDigest, at: options.observedAt },
+    });
+  }
+  if (raw.length > 64) throw new Error(`${concept.path}: provider observations exceed the 64-value bound`);
+  const agentbase = { ...(mapping(concept.frontmatter.agentbase) ?? {}), observed_values: raw };
+  const staged = { ...concept, frontmatter: { ...concept.frontmatter, sources, agentbase }, body: "" };
+  const values = parseValues(staged).values;
+  const failures = parseValues(staged).failures.filter((failure) => !failure.includes("rendered Observed values section"));
+  if (failures.length || values.length !== raw.length) throw new Error(failures.join("; ") || "provider observed values failed normalization");
+  return { ...staged, body: normalizedBody(concept.body, renderObservedValuesSection(values)) };
 }

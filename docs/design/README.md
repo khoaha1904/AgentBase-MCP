@@ -107,14 +107,14 @@ checkpoint tự nhiên là trước benchmark mới, trước PR và trước ca
 | Phần | Trạng thái low-level |
 |---|---|
 | 01 | Graph/source reading implemented cho local single-repository |
-| 02 | Domain/Repository + single-repository confirmation implemented; batch/monorepo runtime deferred |
+| 02 | Domain/Repository + single/batch Initial Ingest confirmation implemented; monorepo runtime deferred |
 | 03 | Evidence-bearing candidate/guidance implemented; candidate UI còn deferred |
 | 04 | Catalog 7 implemented; catalog 6 design đã superseded |
 | 05 | Proposal/template/Local Hub foundation implemented; overlay UX còn draft |
-| 06 | Cross-repository relation/identity/enrichment design hoàn tất; runtime chưa implement |
+| 06 | Bounded AWS/SQS relation identity và Domain Enrichment runtime đã implement; merge/profile khác deferred |
 | 07 | Shared Question documents + exact-scope Guidance implemented; batch/conflict composition deferred |
-| 08 | Repository snapshot-first runtime implemented; provider/freshness còn deferred |
-| 09 | Single-repository Init + Refresh implemented; batch/enrichment/freshness deferred |
+| 08 | Repository snapshot-first và AWS/SQS provider observations đã implement; freshness còn deferred |
+| 09 | Single Init/Refresh, Batch Initial Ingest và bounded Domain Enrichment đã implement; Batch Refresh/freshness deferred |
 | 10 | Snapshot-default query foundation implemented; overlay/conflict/freshness composition deferred |
 | 11 | Reviewable batch publication và exact same-Repository Init/Refresh stack implemented |
 | 12 | Terraform/Terragrunt MVP boundary implemented and verified; provider expansion deferred |

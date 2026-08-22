@@ -12,8 +12,8 @@ import { synchronizeLocalHub } from "./synchronize.ts";
 
 const SOURCE_ID = "repository-acme-aaaaaaaaaaaa";
 const SOURCE_ID_B = "repository-beta-bbbbbbbbbbbb";
-const IDS = ["1".repeat(24), "2".repeat(24), "3".repeat(24)];
-const DIGESTS = ["a".repeat(64), "b".repeat(64), "c".repeat(64)];
+const IDS = ["1".repeat(24), "2".repeat(24), "3".repeat(24), "4".repeat(24), "5".repeat(24)];
+const DIGESTS = ["a".repeat(64), "b".repeat(64), "c".repeat(64), "d".repeat(64), "e".repeat(64)];
 
 function git(cwd: string, args: readonly string[], environment?: NodeJS.ProcessEnv): string {
   return execFileSync("/usr/bin/git", [...args], { cwd, encoding: "utf8", ...(environment ? { env: environment } : {}) }).trim();
@@ -42,6 +42,26 @@ function commitMessage(id: string, mode: "new" | "refresh", digest: string,
     `${HUB_PROPOSAL_TRAILERS.catalog}: 7.0.0`,
     `${HUB_PROPOSAL_TRAILERS.mode}: ${mode}`,
   ].join("\n");
+}
+
+function enrichmentCommitMessage(id: string, digest: string): string {
+  return [
+    `AgentBase OKF proposal ${id}`, "", `${HUB_PROPOSAL_TRAILERS.id}: ${id}`,
+    `${HUB_PROPOSAL_TRAILERS.subject}: domains/crawler`,
+    `${HUB_PROPOSAL_TRAILERS.domainId}: domains/crawler`,
+    `${HUB_PROPOSAL_TRAILERS.sourceIds}: ${SOURCE_ID},${SOURCE_ID_B}`,
+    `${HUB_PROPOSAL_TRAILERS.manifestDigest}: sha256:${digest}`,
+    `${HUB_PROPOSAL_TRAILERS.evidenceDigest}: sha256:${digest}`,
+    `${HUB_PROPOSAL_TRAILERS.diffDigest}: sha256:${digest}`,
+    `${HUB_PROPOSAL_TRAILERS.catalog}: 7.0.0`,
+    `${HUB_PROPOSAL_TRAILERS.mode}: enrichment`,
+  ].join("\n");
+}
+
+function batchCommitMessage(id: string, digest: string): string {
+  return enrichmentCommitMessage(id, digest)
+    .replaceAll("domains/crawler", "domains/batch")
+    .replace("AgentBase-Proposal-Mode: enrichment", "AgentBase-Proposal-Mode: batch-new");
 }
 
 function retainedProposal(stateRoot: string, root: string, id: string, commit: string, digest: string,
@@ -88,8 +108,44 @@ test("[AB-PUBLISH-001..011] MCP creates independent, stacked and recoverable Hub
       "commit", "-m", commitMessage(IDS[2]!, "new", DIGESTS[2]!, SOURCE_ID_B, "repositories/beta")]);
     const betaCommit = git(hubRoot, ["rev-parse", "HEAD"]);
     retainedProposal(stateRoot, hubRoot, IDS[2]!, betaCommit, DIGESTS[2]!, "created", SOURCE_ID_B, "repositories/beta.md");
+    fs.mkdirSync(path.join(hubRoot, "domains"));
+    fs.writeFileSync(path.join(hubRoot, "domains/crawler.md"), "---\ntype: Domain\ntitle: Crawler\ndescription: Crawler Domain\nstatus: draft\ngenerated: { by: 'agentbase/0.0.0', at: '2026-08-22T00:00:00Z' }\n---\n\n# Purpose\n\nCrawler.\n");
+    fs.writeFileSync(path.join(hubRoot, "domains/index.md"), "# Domains\n\n* [Crawler](crawler.md) - Domain\n");
+    fs.appendFileSync(path.join(hubRoot, "index.md"), "\n* [Domains](domains/index.md) - business domains\n");
+    git(hubRoot, ["add", "--all"]); git(hubRoot, ["-c", "user.name=Test", "-c", "user.email=test@localhost",
+      "commit", "-m", enrichmentCommitMessage(IDS[3]!, DIGESTS[3]!) ]);
+    const enrichmentCommit = git(hubRoot, ["rev-parse", "HEAD"]), enrichmentRoot = path.join(stateRoot, "proposals", IDS[3]!);
+    fs.mkdirSync(path.join(enrichmentRoot, "bundle", "domains"), { recursive: true });
+    fs.copyFileSync(path.join(hubRoot, "index.md"), path.join(enrichmentRoot, "bundle", "index.md"));
+    fs.copyFileSync(path.join(hubRoot, "domains/crawler.md"), path.join(enrichmentRoot, "bundle", "domains/crawler.md"));
+    fs.writeFileSync(path.join(enrichmentRoot, "accepted.json"), `${JSON.stringify({ id: IDS[3], mode: "enrichment",
+      domainId: "domains/crawler", sourceRepositoryIds: [SOURCE_ID, SOURCE_ID_B], diffDigest: `sha256:${DIGESTS[3]}`,
+      acceptedCommit: enrichmentCommit })}\n`);
+    fs.writeFileSync(path.join(enrichmentRoot, "inspection.json"), `${JSON.stringify({ groups: { added: [{ path: "domains/crawler.md" }],
+      updated: [], removed: [], supersededOrRetracted: [], questionsAndLimitations: { questions: [], limitations: [] } } })}\n`);
+    fs.writeFileSync(path.join(enrichmentRoot, "enrichment-summary.json"), `${JSON.stringify({
+      manifestDigest: `sha256:${DIGESTS[3]}`, providerScope: { accountId: "123456789012", regions: ["ap-southeast-1"] },
+      profileVersions: { "aws.sts.caller-identity": 1, "aws.sqs.queue": 1 },
+      candidates: [{ id: "candidate-111111111111111111111111", question: { id: "question-111111111111111111111111", revision: 1 } }],
+    })}\n`);
+    fs.writeFileSync(path.join(hubRoot, "domains/batch.md"), "---\ntype: Domain\ntitle: Batch\ndescription: Batch Domain\nstatus: draft\ngenerated: { by: 'agentbase/0.0.0', at: '2026-08-22T00:00:00Z' }\n---\n\n# Purpose\n\nBatch.\n");
+    git(hubRoot, ["add", "domains/batch.md"]); git(hubRoot, ["-c", "user.name=Test", "-c", "user.email=test@localhost",
+      "commit", "-m", batchCommitMessage(IDS[4]!, DIGESTS[4]!) ]);
+    const batchCommit = git(hubRoot, ["rev-parse", "HEAD"]), batchRoot = path.join(stateRoot, "proposals", IDS[4]!);
+    fs.mkdirSync(path.join(batchRoot, "bundle", "domains"), { recursive: true });
+    fs.copyFileSync(path.join(hubRoot, "index.md"), path.join(batchRoot, "bundle", "index.md"));
+    fs.copyFileSync(path.join(hubRoot, "domains/batch.md"), path.join(batchRoot, "bundle", "domains/batch.md"));
+    fs.writeFileSync(path.join(batchRoot, "accepted.json"), `${JSON.stringify({ id: IDS[4], mode: "batch-new",
+      domainId: "domains/batch", sourceRepositoryIds: [SOURCE_ID, SOURCE_ID_B], diffDigest: `sha256:${DIGESTS[4]}`,
+      acceptedCommit: batchCommit })}\n`);
+    fs.writeFileSync(path.join(batchRoot, "inspection.json"), `${JSON.stringify({ groups: { added: [],
+      updated: [{ path: "domains/batch.md" }], removed: [], supersededOrRetracted: [],
+      questionsAndLimitations: { questions: [], limitations: [] } }, batch: {
+        members: [{ repositoryId: SOURCE_ID, paths: ["repositories/acme.md"] },
+          { repositoryId: SOURCE_ID_B, paths: ["repositories/beta.md"] }], sharedPaths: ["domains/batch.md"],
+      } })}\n`);
     const localHub = createLocalHubState({ root: hubRoot, hub: createHubIdentity("agentbase/hub", "main"),
-      remoteBase, activeHead: betaCommit, catalogVersion: "7.0.0" });
+      remoteBase, activeHead: batchCommit, catalogVersion: "7.0.0" });
     const pushes: string[] = [], pullCalls: { title: string; body: string; base: string }[] = [];
     const pulls: (GitHubPullRequest & { state: "open" | "closed" })[] = [];
     let failBase: string | undefined;
@@ -176,6 +232,17 @@ test("[AB-PUBLISH-001..011] MCP creates independent, stacked and recoverable Hub
     assert.deepEqual(git(hubRoot, ["diff", "--name-only", remoteBase, independent.headCommit]).split("\n"),
       ["repositories/beta.md", "repositories/index.md"]);
     assert.doesNotMatch(git(hubRoot, ["show", `${independent.headCommit}:repositories/index.md`]), /Acme/);
+    const enrichment = await publishPendingHubProposals({ ...common, selectedProposalIds: [IDS[3]!] });
+    assert.equal(enrichment.mode, "independent"); assert.equal(enrichment.units[0]?.baseBranch, "main");
+    const enrichmentReview = pullCalls.find((call) => call.title.includes("Enrichment"));
+    assert.ok(enrichmentReview); assert.match(enrichmentReview.body, /domains\/crawler/);
+    assert.match(enrichmentReview.body, new RegExp(`${SOURCE_ID}.*${SOURCE_ID_B}`));
+    assert.match(enrichmentReview.body, /123456789012.*ap-southeast-1.*aws\.sqs\.queue@1.*candidates: 1; Questions: 1/);
+    const batchInit = await publishPendingHubProposals({ ...common, selectedProposalIds: [IDS[4]!] });
+    assert.equal(batchInit.mode, "independent"); assert.equal(batchInit.units[0]?.baseBranch, "main");
+    const batchReview = pullCalls.find((call) => call.title.includes("Batch Init"));
+    assert.ok(batchReview); assert.match(batchReview.body, new RegExp(`${SOURCE_ID}.*${SOURCE_ID_B}`));
+    assert.match(batchReview.body, /Batch Attribution.*repositories\/acme\.md.*Shared Navigation.*domains\/batch\.md/s);
     const forcedBatch = await publishPendingHubProposals({ ...common, selectedProposalIds: stackIds, publicationMode: "batch" });
     assert.equal(forcedBatch.mode, "batch"); assert.equal(forcedBatch.units.length, 1); assert.equal(forcedBatch.units[0]?.baseBranch, "main");
     git(remote, ["update-ref", "refs/heads/main", batch.headCommit, remoteBase]);

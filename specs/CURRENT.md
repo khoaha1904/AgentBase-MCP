@@ -1,7 +1,34 @@
 # Current capability
 
 Active capability: None.
-Most recent completed: [`028-shared-question-documents`](028-shared-question-documents/spec.md).
+Most recent completed: [`031-batch-ingest-qualification`](031-batch-ingest-qualification/spec.md).
+
+Capability 030 implements the first Batch Initial Ingest slice: 2..32 explicit local
+repositories, one confirmed Domain, sequential isolated single-repository
+authoring and one atomic proposal/Accept/PR unit. It adds exact retry and
+membership-revision recovery, but excludes Batch Refresh, parallel execution,
+workspace scanning, Domain Enrichment during Ingest, model qualification and
+real publication. The complete deterministic offline gate passes 50/50 without
+production dependency or test-count growth.
+
+Capability 031 is complete. V5 run `2026-08-22T143631Z` exposed one
+AB-BATCH-006 Domain-navigation composition defect after completing both members.
+The coordinator now derives member navigation from parsed concepts and exact
+repository provenance rather than authored Markdown suffixes. The post-fix run
+`2026-08-22T150414Z` completes the same seven-role shape with both Repository and
+System rows, no repair, runtime failure or benchmark finding, and no forbidden
+operation. No third probe ran.
+
+Capability 029 designs the first post-MVP Domain Enrichment slice: one bounded,
+sequential AWS verification run over explicitly selected Published repositories,
+candidates and Questions in one confirmed Domain. It creates one atomic review
+proposal without reading credentials, scanning provider scope, merging concepts,
+Accepting, Publishing or mutating cloud resources. Application implementation
+now covers exact AWS CLI v2 STS/SQS profiles, immutable manifests/checkpoints,
+three-tier Question resolution, explicit retry/revision, safe provider snapshots,
+external identities and independent main-based Enrichment PR publication. The
+deterministic offline gate passes 50/50 without dependency or test-count growth; real AWS and model qualification
+remain separately authorized checkpoints.
 
 Capability 028 replaces the unpublished private Question ledger/sidecar with
 bounded shared Question Markdown in the ordinary Hub proposal tree. Exact-

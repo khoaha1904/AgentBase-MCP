@@ -1,0 +1,164 @@
+{
+  "suite": "aws-cloud-operations-batch",
+  "workflow": "batch-initial-ingest",
+  "promptVersion": "okf-batch-ingest-v5",
+  "promptDigest": "sha256:8c95853ebc4bbc8a8481d2403f28eab7f9b796a822e964fbe4d1a45e277f9930",
+  "catalogVersion": "7.0.0",
+  "confirmedDomain": {
+    "identity": "domains/cloud-operations",
+    "title": "Cloud Operations",
+    "evidenceResource": "agentbase://owner-guidance/domains/cloud-operations"
+  },
+  "fixtures": [
+    {
+      "id": "aws-health-aware",
+      "path": "../fixtures/source-repos/aws-health-polyrepo/aws-health-aware",
+      "commit": "928494c70a904a65b877d426516882397541eafd",
+      "sourceRepositoryId": "repository-aws-health-aware-779eb7e1bc7a",
+      "provenanceRepositoryId": "repository-aws-health-aware-ef3e83846625"
+    },
+    {
+      "id": "sample-aws-devops-agent-terraform",
+      "path": "../fixtures/source-repos/sample-aws-devops-agent-terraform",
+      "commit": "5ba5f4a2561e37d392ffdffc81fd999961956472",
+      "sourceRepositoryId": "repository-sample-aws-devops-agent-terraform-6b1023ab6b40",
+      "provenanceRepositoryId": "repository-sample-aws-devops-agent-terraform-602f2c2bcf7c"
+    }
+  ],
+  "agent": {
+    "provider": "codex-cli",
+    "executable": "codex",
+    "version": "codex-cli 0.149.0",
+    "model": "gpt-5.6-sol",
+    "reasoningEffort": "medium",
+    "timeoutMs": 900000,
+    "actualVersion": "codex-cli 0.149.0"
+  },
+  "startedAt": "2026-08-22T14:36:31.746Z",
+  "completedAt": "2026-08-22T14:43:38.709Z",
+  "outcome": "succeeded",
+  "elapsedMs": 426963,
+  "process": {
+    "exitCode": 0,
+    "signal": null,
+    "error": null
+  },
+  "usage": {
+    "inputTokens": 1678744,
+    "cachedInputTokens": 1563136,
+    "cacheWriteInputTokens": 0,
+    "uncachedInputTokens": 115608,
+    "outputTokens": 17137,
+    "reasoningOutputTokens": 2125
+  },
+  "activity": {
+    "mcpToolCalls": 22,
+    "commandExecutions": 18,
+    "authoringToolCalls": 5,
+    "authoringArgumentBytes": 45864,
+    "authoringResultBytes": 18319,
+    "authoringTools": {
+      "get_okf_authoring_schemas": {
+        "calls": 2,
+        "argumentBytes": 12114,
+        "resultBytes": 13043
+      },
+      "validate_okf_changes": {
+        "calls": 3,
+        "argumentBytes": 33750,
+        "resultBytes": 5276
+      }
+    },
+    "mcpTools": {
+      "configure_hub": 1,
+      "confirm_batch_hub_ingest": 1,
+      "finalize_batch_hub_ingest_proposal": 1,
+      "get_architecture": 2,
+      "get_hub_status": 1,
+      "get_okf_authoring_schemas": 2,
+      "index_repository": 2,
+      "inspect_hub_okf_proposal": 1,
+      "prepare_batch_hub_ingest": 1,
+      "prepare_hub_okf": 2,
+      "record_batch_hub_ingest_member": 2,
+      "search_graph": 3,
+      "validate_okf_changes": 3
+    },
+    "guidance": {
+      "attempts": [
+        {
+          "status": "completed",
+          "code": null,
+          "retryable": false,
+          "error": null
+        },
+        {
+          "status": "completed",
+          "code": null,
+          "retryable": false,
+          "error": null
+        }
+      ],
+      "inputCorrectionsUsed": 1,
+      "firstAttemptSucceeded": true
+    },
+    "observedSourceReadBytes": null,
+    "limitation": "event trace does not prove complete source-read volume",
+    "finalValidationIdentities": [
+      "domains/cloud-operations",
+      "repositories/sample-aws-devops-agent-terraform",
+      "resources/resources-aws-devops-agent-space",
+      "systems/systems-aws-devops-agent-monitoring"
+    ]
+  },
+  "proposal": {
+    "id": "2422668c07e8418b3a2a43c8",
+    "mode": "batch-new",
+    "domainId": "domains/cloud-operations",
+    "sourceRepositoryIds": [
+      "repository-aws-health-aware-ef3e83846625",
+      "repository-sample-aws-devops-agent-terraform-602f2c2bcf7c"
+    ]
+  },
+  "attribution": {
+    "members": [
+      {
+        "repositoryId": "repository-aws-health-aware-ef3e83846625",
+        "paths": [
+          "components/components-aws-health-aware-event-processor.md",
+          "repositories/aws-health-aware.md",
+          "systems/systems-aws-health-aware.md"
+        ]
+      },
+      {
+        "repositoryId": "repository-sample-aws-devops-agent-terraform-602f2c2bcf7c",
+        "paths": [
+          "repositories/sample-aws-devops-agent-terraform.md",
+          "resources/resources-aws-devops-agent-space.md",
+          "systems/systems-aws-devops-agent-monitoring.md"
+        ]
+      }
+    ],
+    "sharedPaths": [
+      "components/index.md",
+      "domains/cloud-operations.md",
+      "domains/index.md",
+      "index.md",
+      "repositories/index.md",
+      "resources/index.md",
+      "systems/index.md"
+    ]
+  },
+  "coverage": {
+    "partial": true,
+    "limitations": [
+      "repository-aws-health-aware-ef3e83846625: Initial ingest is bounded to the repository README, the central Python event-processing paths identified by the graph, and selected Terraform resources.",
+      "repository-aws-health-aware-ef3e83846625: CloudFormation parity, every message formatter, every deployment variant, and live AWS runtime state were not exhaustively verified.",
+      "repository-aws-health-aware-ef3e83846625: Terraform describes desired infrastructure only; no deployed account, region, ARN, endpoint, or current event state is asserted.",
+      "repository-sample-aws-devops-agent-terraform-602f2c2bcf7c: Initial ingest is bounded to the README, the graph-identified central Terraform agent-space and association declarations, and selected integration and cross-account declarations.",
+      "repository-sample-aws-devops-agent-terraform-602f2c2bcf7c: All optional integration blocks, helper shell scripts, outputs, IAM policy details, and provider behavior were not exhaustively reviewed.",
+      "repository-sample-aws-devops-agent-terraform-602f2c2bcf7c: Terraform represents desired state only; no deployed account, region, ARN, integration status, credential value, or live monitoring state is asserted."
+    ]
+  },
+  "failures": []
+}

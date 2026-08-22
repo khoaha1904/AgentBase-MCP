@@ -1,6 +1,6 @@
 # 07 — Dữ liệu xung đột, Questions và Maintainer Guidance
 
-> Trạng thái: Governance foundation đã có; batch Question resolution còn deferred.
+> Trạng thái: Governance foundation và AWS/SQS batch Question resolution đã implement.
 
 ## Câu trả lời ngắn
 

@@ -243,3 +243,10 @@ export function resolveQuestion(previous: SharedQuestion, guidanceId: string): S
   return { ...previous, revision: previous.revision + 1, state: "resolved",
     guidance: uniqueSorted([...previous.guidance, guidanceId]) };
 }
+
+export function resolveQuestionFromEvidence(previous: SharedQuestion, reference: QuestionReference): SharedQuestion {
+  if (previous.state !== "open" && previous.state !== "needs-review") throw new Error("Question is not awaiting resolution");
+  const references = [...new Map([...previous.references, reference].map((item) => [referenceKey(item), item])).values()]
+    .sort((left, right) => referenceKey(left).localeCompare(referenceKey(right)));
+  return { ...previous, revision: previous.revision + 1, state: "resolved", references };
+}

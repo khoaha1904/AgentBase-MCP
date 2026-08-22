@@ -5,6 +5,8 @@ import { isDeepStrictEqual } from "node:util";
 import { computeOkfTreeDigest, loadOkfBundle } from "../documents/okf-bundle.ts";
 import { validateAgentBaseDraft, type ConceptDocument, type OkfValue } from "../documents/okf-document.ts";
 import { parseQuestionDocument, validateQuestionTransition } from "../governance/questions.ts";
+import { validateBundleExternalIdentities } from "../governance/external-identities.ts";
+import { validateBundleObservedValues } from "../governance/observed-values.ts";
 import { validateConceptAgainstSchema } from "../schemas/catalog.ts";
 
 export type ProposalState = "prepared" | "generated";
@@ -44,7 +46,8 @@ export type PrepareProposalOptions = Readonly<{
   createdAt: string;
 }>;
 export type ValidateProposalOptions = Readonly<{
-  maintainerGuidance?: Readonly<{ conceptId: string; by: string; at: string }>;
+  maintainerGuidance?: Readonly<{ conceptId: string; by: string; at: string }>
+    | readonly Readonly<{ conceptId: string; by: string; at: string }>[];
 }>;
 
 const metadataPath = (proposalRoot: string) => path.join(proposalRoot, "proposal.json");
@@ -62,6 +65,7 @@ function copyTree(source: string, target: string): void {
   fs.mkdirSync(target, { recursive: true, mode: 0o700 });
   if (!fs.existsSync(source)) return;
   for (const entry of fs.readdirSync(source, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
+    if (entry.name === ".git") continue;
     if (entry.isSymbolicLink()) throw new Error(`bundle symlink cannot be copied: ${entry.name}`);
     const from = path.join(source, entry.name);
     const to = path.join(target, entry.name);
@@ -165,7 +169,7 @@ function protectedModificationFailures(currentRoot: string, proposedRoot: string
 const STANDARD_OKF_KEYS = new Set([
   "type", "title", "description", "resource", "tags", "sources", "usage_window",
   "generated", "verified", "status", "stale_after", "runtime", "parameters",
-  "computation", "executor", "attester",
+  "computation", "executor", "attester", "relationships",
 ]);
 
 function unknownValueFailures(base: ConceptDocument, proposed: ConceptDocument): readonly string[] {
@@ -174,6 +178,7 @@ function unknownValueFailures(base: ConceptDocument, proposed: ConceptDocument):
     if (key === "agentbase") {
       const previous = { ...(mapping(value) ?? {}) }, next = { ...(mapping(proposed.frontmatter[key]) ?? {}) };
       delete previous.observed_values; delete next.observed_values;
+      delete previous.external_identities; delete next.external_identities;
       if (base.type === "Repository" && proposed.type === "Repository") {
         const previousRepository = { ...(mapping(previous.repository) ?? {}) };
         const nextRepository = { ...(mapping(next.repository) ?? {}) };
@@ -194,7 +199,7 @@ function unknownValueFailures(base: ConceptDocument, proposed: ConceptDocument):
 
 function maintainerGuidanceFailures(
   concept: ConceptDocument,
-  expected: NonNullable<ValidateProposalOptions["maintainerGuidance"]>,
+  expected: Readonly<{ conceptId: string; by: string; at: string }>,
 ): readonly string[] {
   const generated = mapping(concept.frontmatter.generated);
   const failures = concept.conceptId !== expected.conceptId || concept.type !== "Maintainer Guidance"
@@ -216,6 +221,9 @@ export function validateBundleProposal(
   const proposed = loadOkfBundle(proposedRoot, { requireAgentBaseRootIndex: true });
   const baseDraftPaths = new Set([...current.concepts.values()].filter(isMutableAgentBaseDraft).map((concept) => concept.path));
   const failures = [...protectedModificationFailures(currentBundleRoot, proposedRoot)];
+  const guidance = options.maintainerGuidance === undefined ? []
+    : Array.isArray(options.maintainerGuidance) ? options.maintainerGuidance : [options.maintainerGuidance];
+  const guidanceById = new Map(guidance.map((item) => [item.conceptId, item]));
   for (const concept of proposed.concepts.values()) {
     const base = current.concepts.get(concept.conceptId);
     const changed = !base || !bytes(currentBundleRoot, base.path).equals(bytes(proposedRoot, concept.path));
@@ -229,8 +237,9 @@ export function validateBundleProposal(
         failures.push(error instanceof Error ? error.message : `${concept.path}: Question validation failed`);
       }
     } else if (changed && (!base || isMutableAgentBaseDraft(base))) {
-      failures.push(...(!base && options.maintainerGuidance?.conceptId === concept.conceptId
-        ? maintainerGuidanceFailures(concept, options.maintainerGuidance)
+      const expectedGuidance = guidanceById.get(concept.conceptId);
+      failures.push(...(!base && expectedGuidance
+        ? maintainerGuidanceFailures(concept, expectedGuidance)
         : validateAgentBaseDraft(concept)));
     }
     if (changed && base && isMutableAgentBaseDraft(base) && concept.type !== "Question") {
@@ -238,6 +247,8 @@ export function validateBundleProposal(
     }
     failures.push(...continuitySourceFailures(concept, baseDraftPaths));
   }
+  failures.push(...validateBundleExternalIdentities(proposed.concepts.values()));
+  failures.push(...validateBundleObservedValues(proposed.concepts.values()));
   const producerValidation = { passed: failures.length === 0, failures: failures.sort(), warnings: proposed.warnings };
   const next: ProposalMetadata = {
     ...metadata,

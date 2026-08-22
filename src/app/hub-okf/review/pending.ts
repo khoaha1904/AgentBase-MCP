@@ -5,11 +5,14 @@ import { runGit, type GitOutput, type GitRequest } from "../../../providers/gith
 export type PendingHubProposal = Readonly<{
   id: string;
   subject: string;
-  sourceRepositoryId: string;
+  sourceRepositoryId?: string;
+  domainId?: string;
+  sourceRepositoryIds?: readonly string[];
+  manifestDigest?: string;
   evidenceDigest: string;
   diffDigest: string;
   schemaVersion: string;
-  mode?: "new" | "refresh";
+  mode?: "new" | "refresh" | "enrichment" | "batch-new";
   parentCommit: string;
   commit: string;
   diffSummary: string;
@@ -33,11 +36,11 @@ function required(values: ReadonlyMap<string, string>, key: string, commit: stri
   return value;
 }
 
-function optionalMode(values: ReadonlyMap<string, string>, commit: string): "new" | "refresh" | undefined {
+function optionalMode(values: ReadonlyMap<string, string>, commit: string): "new" | "refresh" | "enrichment" | "batch-new" | undefined {
   const value = values.get(HUB_PROPOSAL_TRAILERS.mode);
   if (value === undefined) return undefined;
-  if (value !== "new" && value !== "refresh") throw new Error(`pending commit ${commit} has an invalid proposal mode`);
-  return value;
+  if (!new Set(["new", "refresh", "enrichment", "batch-new"]).has(value)) throw new Error(`pending commit ${commit} has an invalid proposal mode`);
+  return value as "new" | "refresh" | "enrichment" | "batch-new";
 }
 
 export async function listPendingHubProposals(
@@ -77,10 +80,20 @@ export async function listPendingHubProposals(
       operation: "summarize pending proposal",
       maximumOutputBytes: 64 * 1024,
     });
+    const multiRepository = mode === "enrichment" || mode === "batch-new";
+    const scope = multiRepository ? {
+      domainId: required(message, HUB_PROPOSAL_TRAILERS.domainId, commit),
+      sourceRepositoryIds: required(message, HUB_PROPOSAL_TRAILERS.sourceIds, commit).split(",").filter(Boolean),
+      manifestDigest: required(message, HUB_PROPOSAL_TRAILERS.manifestDigest, commit),
+    } : { sourceRepositoryId: required(message, HUB_PROPOSAL_TRAILERS.sourceId, commit) };
+    if (multiRepository && (!scope.sourceRepositoryIds?.length
+      || new Set(scope.sourceRepositoryIds).size !== scope.sourceRepositoryIds.length)) {
+      throw new Error(`pending commit ${commit} has an invalid multi-Repository scope`);
+    }
     pending.push({
       id: required(message, HUB_PROPOSAL_TRAILERS.id, commit),
       subject: required(message, HUB_PROPOSAL_TRAILERS.subject, commit),
-      sourceRepositoryId: required(message, HUB_PROPOSAL_TRAILERS.sourceId, commit),
+      ...scope,
       evidenceDigest: required(message, HUB_PROPOSAL_TRAILERS.evidenceDigest, commit),
       diffDigest: required(message, HUB_PROPOSAL_TRAILERS.diffDigest, commit),
       schemaVersion: required(message, HUB_PROPOSAL_TRAILERS.catalog, commit),

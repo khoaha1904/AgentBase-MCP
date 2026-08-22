@@ -1,6 +1,6 @@
 # 06.02 — External resource identity and matching
 
-> Trạng thái: Technical design draft; provider adapters và runtime validation chưa implement.
+> Trạng thái: Provider-neutral envelope và AWS/SQS validation đã implement; provider khác deferred.
 
 ## Quyết định ngắn
 
@@ -124,8 +124,6 @@ Quy tắc quyết định khi nào nhiều deployments vẫn là một concept t
 
 ## Baseline impact
 
-Đây là **Broad change** khi implement vì cần một portable metadata validator,
-provider-profile normalization, Hub-wide duplicate detection và query summary.
-Không cần database, new Concept Schema hoặc migration bắt buộc: field là optional
-và concepts chưa được enrichment tiếp tục valid.
-
+AWS/SQS slice đã implement portable metadata validation, provider normalization
+và Hub-wide duplicate rejection mà không thêm database, Concept Schema hoặc
+migration bắt buộc. Duplicate concept merge/redirect vẫn là capability riêng.

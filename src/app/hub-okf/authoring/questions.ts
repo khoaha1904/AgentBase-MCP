@@ -26,7 +26,7 @@ const SUBJECT = new RegExp(`^${SUBJECT_ROOT}/[a-z0-9][a-z0-9./-]*$`);
 const PROPERTY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const SOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const QUESTION_ID = /^question-[a-f0-9]{24}$/;
-const ROLES = new Set<ObservedValueRole>(["documentation", "implementation", "configuration"]);
+const ROLES = new Set<ObservedValueRole>(["documentation", "implementation", "configuration", "provider"]);
 
 function mapping(value: OkfValue | undefined): Readonly<Record<string, OkfValue>> | undefined {
   return value !== null && typeof value === "object" && !Array.isArray(value)
@@ -80,7 +80,7 @@ function questionDocuments(root: string): readonly SharedQuestion[] {
     .map(parseQuestionDocument).sort((left, right) => left.id.localeCompare(right.id));
 }
 function observedRevision(value: ObservedValue): string | undefined {
-  return value.observed.dirtyDigest ?? value.observed.commit ?? undefined;
+  return value.observed.evidenceDigest ?? value.observed.dirtyDigest ?? value.observed.commit ?? undefined;
 }
 function incomingQuestion(declaration: ResolvedQuestionDeclaration, observations: readonly ObservedValue[], createdAt: string): SharedQuestion {
   const linked = declaration.observationIds.map((id) => observations.find((value) => value.id === id)

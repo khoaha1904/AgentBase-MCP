@@ -1,0 +1,360 @@
+{
+  "entries": [
+    {
+      "path": "components/components-aws-health-aware-event-processor.md",
+      "change": "created",
+      "allowed": true,
+      "after": {
+        "digest": "sha256:24dd6d055bcc42d30cad882893f1ec0aad942224732ff84941372b9efd73af30",
+        "content": "---\ntype: Component\ntitle: AWS Health Aware event processor\ndescription: Scheduled workload that polls AWS Health, tracks event state, and dispatches notifications\nstatus: draft\ngenerated:\n  by: agentbase/0.0.0\n  at: 2026-08-22T14:38:56.084Z\nsources:\n  - id: aha-runtime-doc\n    resource: repository://repository-aws-health-aware-ef3e83846625/README.md#L61-L69\n  - id: aha-main\n    resource: repository://repository-aws-health-aware-ef3e83846625/handler.py#L1042-L1060\n  - id: aha-query\n    resource: repository://repository-aws-health-aware-ef3e83846625/handler.py#L750-L784\n  - id: aha-dispatch\n    resource: repository://repository-aws-health-aware-ef3e83846625/handler.py#L94-L127\n  - id: aha-state-doc\n    resource: repository://repository-aws-health-aware-ef3e83846625/README.md#L61-L68\n  - id: aha-ddb-single\n    resource: repository://repository-aws-health-aware-ef3e83846625/terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf#L246-L273\n  - id: aha-ddb-global\n    resource: repository://repository-aws-health-aware-ef3e83846625/terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf#L276-L306\n  - id: aha-schedule-doc\n    resource: repository://repository-aws-health-aware-ef3e83846625/README.md#L67-L69\n  - id: aha-schedule-primary\n    resource: repository://repository-aws-health-aware-ef3e83846625/terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf#L756-L765\n  - id: aha-schedule-secondary\n    resource: repository://repository-aws-health-aware-ef3e83846625/terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf#L766-L777\n  - id: aha-endpoints-doc\n    resource: repository://repository-aws-health-aware-ef3e83846625/README.md#L64-L74\nrelationships:\n  - kind: part-of\n    target: systems/systems-aws-health-aware\n    evidence:\n      - aha-runtime-doc\n  - kind: implemented-in\n    target: repositories/aws-health-aware\n    evidence:\n      - aha-main\n---\n\n# Responsibility\n\nThis component is the [AWS Health Aware](../systems/systems-aws-health-aware.md) system's scheduled runtime boundary and is implemented in the [aws-health-aware repository](../repositories/aws-health-aware.md). Its entry point chooses account-level or organization-level event processing, polls AWS Health with configured time, category, and region filters, and dispatches formatted notifications.\n\n# Runtime\n\nThe source defines one Lambda entry point. In non-organization mode it processes account health events; in organization mode it processes organization events. Terraform defines primary-region and conditional secondary-region scheduling resources, but those declarations describe desired state only.\n\n# Interfaces\n\nThe processor consumes the AWS Health API and can deliver to configured Chime, Slack, Teams, email, or EventBridge destinations. These integrations remain embedded because the reviewed evidence does not establish separate repository-owned interface contracts.\n\n# Dependencies\n\nEvent state is retained in a DynamoDB table selected by the deployment mode. Webhook and EventBridge destination values are obtained from configuration backed by Secrets Manager resources. IAM roles, permissions, schedules, tables, secrets, and hosts are implementation infrastructure and are not independently promoted.\n\n# Operations\n\nThe README documents an EventBridge rule that invokes the Lambda every minute. Runtime filters bound the lookback period, health-event categories, and regions. Event state includes event ARNs, updates, and TTL metadata.\n\n# Limitations\n\nNo live AWS state was queried. The source does not prove a deployed account, current region, ARN, endpoint URL, enabled channel, active schedule, or current health event. CloudFormation parity and every formatter path were not exhaustively reviewed.\n\n# Embedded Knowledge\n\n| Name | Role | Kind | Technology | Exact sources |\n|---|---|---|---|---|\n| AWS Health event state store | DynamoDB event state | database-table | aws / dynamodb; terraform:aws_dynamodb_table | aha-state-doc: `repository://repository-aws-health-aware-ef3e83846625/README.md#L61-L68`<br>aha-ddb-single: `repository://repository-aws-health-aware-ef3e83846625/terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf#L246-L273`<br>aha-ddb-global: `repository://repository-aws-health-aware-ef3e83846625/terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf#L276-L306` |\n| AWS Health polling schedule | Invokes the processor on a documented one-minute cadence | infrastructure | aws / eventbridge; terraform:aws_cloudwatch_event_rule | aha-schedule-doc: `repository://repository-aws-health-aware-ef3e83846625/README.md#L67-L69`<br>aha-schedule-primary: `repository://repository-aws-health-aware-ef3e83846625/terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf#L756-L765`<br>aha-schedule-secondary: `repository://repository-aws-health-aware-ef3e83846625/terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf#L766-L777` |\n| Notification delivery configuration | Selects enabled webhook, email, and EventBridge destinations | configuration | source-defined | aha-endpoints-doc: `repository://repository-aws-health-aware-ef3e83846625/README.md#L64-L74` |\n",
+        "truncated": false
+      }
+    },
+    {
+      "path": "components/index.md",
+      "change": "created",
+      "allowed": true,
+      "after": {
+        "digest": "sha256:c3266d3b6d4c6313efc317bb4214f8051032b777538b5ee77fe6aed384dcb636",
+        "content": "# Components\n\n* [AWS Health Aware event processor](components-aws-health-aware-event-processor.md) - Scheduled event-processing workload\n",
+        "truncated": false
+      }
+    },
+    {
+      "path": "domains/cloud-operations.md",
+      "change": "created",
+      "allowed": true,
+      "after": {
+        "digest": "sha256:ccfd9c7178a8788bfb4aab513ba08d70e23b8994318fc13c854dcc7cfd2ff85a",
+        "content": "---\ntype: Domain\ntitle: Cloud Operations\ndescription: Owner-confirmed domain for systems that monitor cloud health and support operational response\nstatus: draft\ngenerated:\n  by: agentbase/0.0.0\n  at: 2026-08-22T14:38:56.084Z\nsources:\n  - id: owner-domain\n    resource: agentbase://owner-guidance/domains/cloud-operations\n  - id: aha-overview\n    resource: repository://repository-aws-health-aware-ef3e83846625/README.md#L44-L45\n---\n\n# Purpose\n\nCloud Operations is the owner-confirmed business boundary for knowledge in this ingest. The source evidence places AWS Health Aware here because it implements operational health-event monitoring and notification, not merely because it uses AWS infrastructure.\n\n# Systems\n\n* [AWS Health Aware](../systems/systems-aws-health-aware.md) - Collects AWS Health events and delivers operator-facing alerts.\n\n# Batch Navigation\n\n* [sample-aws-devops-agent-terraform](../repositories/sample-aws-devops-agent-terraform.md) - Repository\n* [aws-health-aware](../repositories/aws-health-aware.md) - Repository\n",
+        "truncated": false
+      }
+    },
+    {
+      "path": "domains/index.md",
+      "change": "created",
+      "allowed": true,
+      "after": {
+        "digest": "sha256:b1cd1d95580378d75a43eff879f35de2e8f66b94d14fad4ed3dd19377dc4a221",
+        "content": "# Domains\n\n* [Cloud Operations](cloud-operations.md) - Domain\n",
+        "truncated": false
+      }
+    },
+    {
+      "path": "index.md",
+      "change": "modified",
+      "allowed": true,
+      "before": {
+        "digest": "sha256:10b5fdce81d148af65c12f30be481633108f0b0364c26054e80bffdeb58a0a45",
+        "content": "---\nokf_version: \"0.2\"\n---\n\n# AgentBase-Hub\n",
+        "truncated": false
+      },
+      "after": {
+        "digest": "sha256:de05b51d3bcc1450fc944101cc9b6a09e75e0c12c39ea8891e7090824183bc83",
+        "content": "---\nokf_version: \"0.2\"\n---\n\n# AgentBase-Hub\n\n* [Repositories](repositories/index.md) - source repositories\n\n* [Domains](domains/index.md) - business domains\n\n* [Systems](systems/index.md) - systems\n\n* [Resources](resources/index.md) - operated infrastructure and data resources\n",
+        "truncated": false
+      }
+    },
+    {
+      "path": "README.md",
+      "change": "preserved",
+      "allowed": true,
+      "before": {
+        "digest": "sha256:6ae5cccb7e43279b633c881167d2812b91d4a2fd35904b83fa6d5b86e371feec",
+        "content": "# AgentBase-Hub\n\nThis is an OKF knowledge repository created and managed locally by AgentBase-MCP.\n\nAccepted knowledge is stored once per entity as a linked canonical OKF graph. The root `index.md` is the progressive-disclosure entrypoint.\n",
+        "truncated": false
+      },
+      "after": {
+        "digest": "sha256:6ae5cccb7e43279b633c881167d2812b91d4a2fd35904b83fa6d5b86e371feec",
+        "content": "# AgentBase-Hub\n\nThis is an OKF knowledge repository created and managed locally by AgentBase-MCP.\n\nAccepted knowledge is stored once per entity as a linked canonical OKF graph. The root `index.md` is the progressive-disclosure entrypoint.\n",
+        "truncated": false
+      }
+    },
+    {
+      "path": "repositories/aws-health-aware.md",
+      "change": "created",
+      "allowed": true,
+      "after": {
+        "digest": "sha256:69a0fe2b4f7eb8f976eb4b9dc04f2f80ecee1bfc4ec112976b5a99d66ea156a5",
+        "content": "---\ntype: Repository\ntitle: aws-health-aware\ndescription: Source repository for the AWS Health Aware operational notification system\nstatus: draft\ngenerated:\n  by: agentbase/0.0.0\n  at: 2026-08-22T14:38:56.084Z\nsources:\n  - id: aha-overview\n    resource: repository://repository-aws-health-aware-ef3e83846625/README.md#L44-L45\n  - id: owner-domain\n    resource: agentbase://owner-guidance/domains/cloud-operations\nrelationships:\n  - kind: part-of\n    target: domains/cloud-operations\n    evidence:\n      - owner-domain\nagentbase:\n  repository:\n    id: repository-aws-health-aware-ef3e83846625\n    display_name: aws-health-aware\n    aliases:\n      remotes:\n        - https://github.com/aws-samples/aws-health-aware\n      root_commits:\n        - 928494c70a904a65b877d426516882397541eafd\n    observed_source:\n      commit: 928494c70a904a65b877d426516882397541eafd\n      dirty: false\n      dirty_digest: null\n      observed_at: 2026-08-22T14:38:56.084Z\n---\n\n# Purpose\n\nThis repository contains the AWS Health Aware implementation and its infrastructure definitions. It owns the Python event-processing runtime, message formatting, and CloudFormation and Terraform deployment material for the operational notification system.\n\nPrimary Domain: [Cloud Operations](../domains/cloud-operations.md).\n\n# Source Structure\n\n`handler.py` contains the Lambda entry point, AWS Health polling, retained-state updates, and destination dispatch. `messagegenerator.py` formats destination-specific messages. The repository also contains CloudFormation templates and Terraform configurations for the primary and optional secondary-region deployment variants.\n\n# Build and Test\n\nThe README documents packaging and deployment through CloudFormation or Terraform. This bounded ingest did not identify or verify an automated test suite, so no test command is asserted.\n\n# Canonical Knowledge\n\n* [AWS Health Aware](../systems/systems-aws-health-aware.md) - Operational health-event notification system.\n* [AWS Health Aware event processor](../components/components-aws-health-aware-event-processor.md) - Scheduled event-processing workload.\n\n# Limitations\n\nThe repository record describes committed source at the captured commit. It does not assert that any Terraform or CloudFormation resource is deployed.\n",
+        "truncated": false
+      }
+    },
+    {
+      "path": "repositories/index.md",
+      "change": "created",
+      "allowed": true,
+      "after": {
+        "digest": "sha256:c67f260a48abbb9afd4ad6aeca54f8ba6660a0cdae224d0d36a82d0f6d9e969b",
+        "content": "# Repositories\n\n* [aws-health-aware](aws-health-aware.md) - Repository\n\n* [sample-aws-devops-agent-terraform](sample-aws-devops-agent-terraform.md) - Repository\n",
+        "truncated": false
+      }
+    },
+    {
+      "path": "repositories/sample-aws-devops-agent-terraform.md",
+      "change": "created",
+      "allowed": true,
+      "after": {
+        "digest": "sha256:c3f4885aff3ca4faa48708eec9f4ebd06bdd9325cadeddfdc0b1242f7b269b6d",
+        "content": "---\ntype: Repository\ntitle: sample-aws-devops-agent-terraform\ndescription: Terraform source repository for an AWS DevOps Agent monitoring setup\nstatus: draft\ngenerated:\n  by: agentbase/0.0.0\n  at: 2026-08-22T14:41:56.965Z\nsources:\n  - id: devops-repo-doc\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L1-L7\n  - id: owner-domain\n    resource: agentbase://owner-guidance/domains/cloud-operations\nrelationships:\n  - kind: part-of\n    target: domains/cloud-operations\n    evidence:\n      - owner-domain\nagentbase:\n  repository:\n    id: repository-sample-aws-devops-agent-terraform-602f2c2bcf7c\n    display_name: sample-aws-devops-agent-terraform\n    aliases:\n      remotes:\n        - https://github.com/aws-samples/sample-aws-devops-agent-terraform\n      root_commits:\n        - 5e3914988783616a11aa9c622b5d9e173c7e33df\n    observed_source:\n      commit: 5ba5f4a2561e37d392ffdffc81fd999961956472\n      dirty: false\n      dirty_digest: null\n      observed_at: 2026-08-22T14:41:56.965Z\n---\n\n# Purpose\n\nThis repository contains Terraform configuration for deploying an AWS DevOps Agent monitoring setup, including its central Agent Space, operator app, account associations, optional third-party integrations, and optional cross-account sample resources.\n\nPrimary Domain: [Cloud Operations](../domains/cloud-operations.md).\n\n# Source Structure\n\n`devops-agent.tf` defines the Agent Space and AWS account associations. `iam.tf` and `service-account.tf` define access and optional cross-account resources. `integrations.tf` and `secrets-manager.tf` define opt-in third-party registrations and associations. Variables, outputs, provider constraints, and lifecycle scripts support configuration and deployment.\n\n# Build and Test\n\nThe README requires Terraform 1.0 or newer and documents `terraform init`, `terraform plan`, and `terraform apply`, with helper scripts for deployment, post-deployment checks, and cleanup. This ingest did not execute Terraform or provider commands and does not claim that the configuration currently plans or applies successfully.\n\n# Canonical Knowledge\n\n* [AWS DevOps Agent monitoring](../systems/systems-aws-devops-agent-monitoring.md) - Operational monitoring system.\n* [AWS DevOps Agent Space](../resources/resources-aws-devops-agent-space.md) - Central operated resource.\n\n# Limitations\n\nThe record reflects committed desired-state configuration at the captured commit. Helper scripts, every IAM statement, and every optional integration block were not exhaustively assessed.\n",
+        "truncated": false
+      }
+    },
+    {
+      "path": "resources/index.md",
+      "change": "created",
+      "allowed": true,
+      "after": {
+        "digest": "sha256:ec49a64502477cd4c842a8d6388287b5f3fb0a6b321460850a34fa9c2dabbda1",
+        "content": "# Resources\n\n* [AWS DevOps Agent Space](resources-aws-devops-agent-space.md) - Central operated monitoring resource\n",
+        "truncated": false
+      }
+    },
+    {
+      "path": "resources/resources-aws-devops-agent-space.md",
+      "change": "created",
+      "allowed": true,
+      "after": {
+        "digest": "sha256:1ff857756169412ede00813b6139136dfcf4bf2109401641031d45a0be54c95a",
+        "content": "---\ntype: Resource\ntitle: AWS DevOps Agent Space\ndescription: Central operated resource for AWS DevOps Agent monitoring and service associations\nstatus: draft\ngenerated:\n  by: agentbase/0.0.0\n  at: 2026-08-22T14:41:56.965Z\nsources:\n  - id: agent-space-doc\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L20-L34\n  - id: agent-space-resource\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/devops-agent.tf#L19-L30\n  - id: accounts-doc\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L26-L34\n  - id: primary-association\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/devops-agent.tf#L33-L47\n  - id: secondary-association\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/devops-agent.tf#L50-L64\n  - id: integrations-doc\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L43-L56\n  - id: integrations-config\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/integrations.tf#L1-L18\n  - id: cross-account-doc\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L36-L41\n  - id: secondary-role\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/service-account.tf#L6-L15\n  - id: echo-lambda\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/service-account.tf#L81-L98\nrelationships:\n  - kind: part-of\n    target: systems/systems-aws-devops-agent-monitoring\n    evidence:\n      - agent-space-doc\n  - kind: implemented-in\n    target: repositories/sample-aws-devops-agent-terraform\n    evidence:\n      - agent-space-resource\nagentbase:\n  technology:\n    provider: awscc\n    sourceTool: terraform\n    resourceType: awscc_devopsagent_agent_space\n---\n\n# Purpose\n\nThe Agent Space is the central lifecycle resource for the [AWS DevOps Agent monitoring](../systems/systems-aws-devops-agent-monitoring.md) system and is managed by the [sample-aws-devops-agent-terraform repository](../repositories/sample-aws-devops-agent-terraform.md). It contains operator-app configuration and is the target of AWS-account and optional third-party service associations.\n\n# Kind and Technology\n\nTerraform declares the resource as `awscc_devopsagent_agent_space.main` using the AWS Cloud Control provider resource type `awscc_devopsagent_agent_space`. Its name and description are input variables, so this snapshot does not assert concrete deployed values.\n\n# Users\n\nThe operator app uses the configured operator role. A primary AWS association links the monitoring account; an optional secondary association links a source account. Optional service associations connect selected observability, incident-management, or development services.\n\n# Operations\n\nCreation waits for newly created IAM roles to propagate. Association ordering makes the primary monitoring account the base attachment before the optional source account. The README identifies IAM propagation and invalid third-party credentials as operational failure modes.\n\n# Evidence\n\nThe Terraform declaration proves desired resource shape and dependencies. README evidence describes its intended monitoring role and optional extensions. Neither proves deployed state.\n\n# Limitations\n\nNo provider or AWS command was run. Current existence, name, ID, ARN, account, region, operator access, associations, integration status, and monitoring health are unknown. Optional resources are documented possibilities, not asserted deployments.\n\n# Embedded Knowledge\n\n| Name | Role | Kind | Technology | Exact sources |\n|---|---|---|---|---|\n| cross-account monitoring support | secondary account role echo Lambda | runtime-function | aws / lambda; terraform:aws_lambda_function | cross-account-doc: `repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L36-L41`<br>secondary-role: `repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/service-account.tf#L6-L15`<br>echo-lambda: `repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/service-account.tf#L81-L98` |\n| AWS account monitoring associations | Defines the primary monitoring account and optional secondary source account | infrastructure | awscc; terraform:awscc_devopsagent_association | accounts-doc: `repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L26-L34`<br>primary-association: `repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/devops-agent.tf#L33-L47`<br>secondary-association: `repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/devops-agent.tf#L50-L64` |\n| Optional third-party integrations | Registers enabled services and associates them with the Agent Space | configuration | awscc / source-defined | integrations-doc: `repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L43-L56`<br>integrations-config: `repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/integrations.tf#L1-L18` |\n",
+        "truncated": false
+      }
+    },
+    {
+      "path": "systems/index.md",
+      "change": "created",
+      "allowed": true,
+      "after": {
+        "digest": "sha256:ab869a0aa9ea36ec84c0c27bd5b3255ca04ef181b424a0e171e5d214625ca99a",
+        "content": "# Systems\n\n* [AWS Health Aware](systems-aws-health-aware.md) - Operational health-event notification system\n\n* [AWS DevOps Agent monitoring](systems-aws-devops-agent-monitoring.md) - Operational infrastructure monitoring system\n",
+        "truncated": false
+      }
+    },
+    {
+      "path": "systems/systems-aws-devops-agent-monitoring.md",
+      "change": "created",
+      "allowed": true,
+      "after": {
+        "digest": "sha256:d9d6a52eb67116d4784804e11fff305fc1cb17a721b23072a19b15ba902f4af5",
+        "content": "---\ntype: System\ntitle: AWS DevOps Agent monitoring\ndescription: Operational monitoring system centered on an AWS DevOps Agent Space and its account and service associations\nstatus: draft\ngenerated:\n  by: agentbase/0.0.0\n  at: 2026-08-22T14:41:56.965Z\nsources:\n  - id: devops-capability\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L5-L7\n  - id: devops-parts\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L16-L22\n  - id: owner-domain\n    resource: agentbase://owner-guidance/domains/cloud-operations\nrelationships:\n  - kind: part-of\n    target: domains/cloud-operations\n    evidence:\n      - owner-domain\n  - kind: implemented-in\n    target: repositories/sample-aws-devops-agent-terraform\n    evidence:\n      - devops-capability\n---\n\n# Purpose\n\nThis system provides an AWS DevOps Agent monitoring setup for monitoring and managing AWS infrastructure with AI-powered insights. Its base scope is a monitoring account; the configuration can optionally add a source account and third-party operational services.\n\nPrimary Domain: [Cloud Operations](../domains/cloud-operations.md).\n\n# Architecture\n\nThe central operated resource is an [AWS DevOps Agent Space](../resources/resources-aws-devops-agent-space.md) with an operator app. AWS account associations establish monitoring scope. Optional service registrations and associations connect Dynatrace, ServiceNow, Splunk, New Relic, GitLab, or PagerDuty. The system is implemented by the [sample-aws-devops-agent-terraform repository](../repositories/sample-aws-devops-agent-terraform.md).\n\n# Interfaces\n\nThe reviewed Terraform defines provider resources and configuration objects rather than a repository-owned runtime API. Third-party integrations are optional configuration boundaries and remain embedded because their external contracts and ownership were not established by this bounded ingest.\n\n# Critical Flows\n\nTerraform creates or reuses IAM roles, creates the Agent Space and operator app, and then associates the primary monitoring account. When configured, it adds a secondary source-account association and third-party service associations.\n\n# Limitations\n\nThis source snapshot does not establish that Terraform was applied or that monitoring is active. It does not assert account IDs, current regions, ARNs, enabled integrations, credentials, association health, or observed incidents.\n",
+        "truncated": false
+      }
+    },
+    {
+      "path": "systems/systems-aws-health-aware.md",
+      "change": "created",
+      "allowed": true,
+      "after": {
+        "digest": "sha256:e25907b99074ce66d26231385b56630412adcca4c387d4f1f4626e84a9a1243b",
+        "content": "---\ntype: System\ntitle: AWS Health Aware\ndescription: Operational notification system for collecting AWS Health events and delivering formatted alerts\nstatus: draft\ngenerated:\n  by: agentbase/0.0.0\n  at: 2026-08-22T14:38:56.084Z\nsources:\n  - id: aha-overview\n    resource: repository://repository-aws-health-aware-ef3e83846625/README.md#L44-L45\n  - id: aha-resources\n    resource: repository://repository-aws-health-aware-ef3e83846625/README.md#L59-L71\n  - id: owner-domain\n    resource: agentbase://owner-guidance/domains/cloud-operations\nrelationships:\n  - kind: part-of\n    target: domains/cloud-operations\n    evidence:\n      - owner-domain\n  - kind: implemented-in\n    target: repositories/aws-health-aware\n    evidence:\n      - aha-overview\n---\n\n# Purpose\n\nAWS Health Aware is an operational notification system that obtains AWS Health events and delivers formatted alerts to configured operator destinations. The documented capability supports Chime, Slack, Microsoft Teams, email, and EventBridge-compatible endpoints.\n\nPrimary Domain: [Cloud Operations](../domains/cloud-operations.md).\n\n# Architecture\n\nThe [AWS Health Aware event processor](../components/components-aws-health-aware-event-processor.md) is the central workload. It polls AWS Health, records event state, formats notifications, and dispatches them through configured delivery paths. The system is implemented in the [aws-health-aware repository](../repositories/aws-health-aware.md).\n\n# Interfaces\n\nDelivery destinations are configuration-dependent. They are documented as webhook, email, or EventBridge integrations, but are not promoted here as stable standalone interfaces because this bounded ingest did not establish independently owned contracts for them.\n\n# Critical Flows\n\nOn its configured schedule, the processor queries recent AWS Health events, applies event-category and region filters, compares or updates retained state, and delivers notifications to the enabled endpoints.\n\n# Limitations\n\nThis is a source snapshot, not a deployment inventory. The ingest does not establish which destinations are enabled, whether organization mode is active, or whether a primary or multi-region deployment currently exists.\n",
+        "truncated": false
+      }
+    }
+  ],
+  "counts": {
+    "created": 12,
+    "modified": 1,
+    "preserved": 1,
+    "deleted-agentbase-draft": 0,
+    "prohibited-deletion": 0,
+    "conflict": 0,
+    "supersession": 0,
+    "retraction": 0,
+    "removed-contribution": 0
+  },
+  "applicable": true,
+  "groups": {
+    "added": [
+      {
+        "path": "components/components-aws-health-aware-event-processor.md",
+        "change": "created",
+        "allowed": true,
+        "after": {
+          "digest": "sha256:24dd6d055bcc42d30cad882893f1ec0aad942224732ff84941372b9efd73af30",
+          "content": "---\ntype: Component\ntitle: AWS Health Aware event processor\ndescription: Scheduled workload that polls AWS Health, tracks event state, and dispatches notifications\nstatus: draft\ngenerated:\n  by: agentbase/0.0.0\n  at: 2026-08-22T14:38:56.084Z\nsources:\n  - id: aha-runtime-doc\n    resource: repository://repository-aws-health-aware-ef3e83846625/README.md#L61-L69\n  - id: aha-main\n    resource: repository://repository-aws-health-aware-ef3e83846625/handler.py#L1042-L1060\n  - id: aha-query\n    resource: repository://repository-aws-health-aware-ef3e83846625/handler.py#L750-L784\n  - id: aha-dispatch\n    resource: repository://repository-aws-health-aware-ef3e83846625/handler.py#L94-L127\n  - id: aha-state-doc\n    resource: repository://repository-aws-health-aware-ef3e83846625/README.md#L61-L68\n  - id: aha-ddb-single\n    resource: repository://repository-aws-health-aware-ef3e83846625/terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf#L246-L273\n  - id: aha-ddb-global\n    resource: repository://repository-aws-health-aware-ef3e83846625/terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf#L276-L306\n  - id: aha-schedule-doc\n    resource: repository://repository-aws-health-aware-ef3e83846625/README.md#L67-L69\n  - id: aha-schedule-primary\n    resource: repository://repository-aws-health-aware-ef3e83846625/terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf#L756-L765\n  - id: aha-schedule-secondary\n    resource: repository://repository-aws-health-aware-ef3e83846625/terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf#L766-L777\n  - id: aha-endpoints-doc\n    resource: repository://repository-aws-health-aware-ef3e83846625/README.md#L64-L74\nrelationships:\n  - kind: part-of\n    target: systems/systems-aws-health-aware\n    evidence:\n      - aha-runtime-doc\n  - kind: implemented-in\n    target: repositories/aws-health-aware\n    evidence:\n      - aha-main\n---\n\n# Responsibility\n\nThis component is the [AWS Health Aware](../systems/systems-aws-health-aware.md) system's scheduled runtime boundary and is implemented in the [aws-health-aware repository](../repositories/aws-health-aware.md). Its entry point chooses account-level or organization-level event processing, polls AWS Health with configured time, category, and region filters, and dispatches formatted notifications.\n\n# Runtime\n\nThe source defines one Lambda entry point. In non-organization mode it processes account health events; in organization mode it processes organization events. Terraform defines primary-region and conditional secondary-region scheduling resources, but those declarations describe desired state only.\n\n# Interfaces\n\nThe processor consumes the AWS Health API and can deliver to configured Chime, Slack, Teams, email, or EventBridge destinations. These integrations remain embedded because the reviewed evidence does not establish separate repository-owned interface contracts.\n\n# Dependencies\n\nEvent state is retained in a DynamoDB table selected by the deployment mode. Webhook and EventBridge destination values are obtained from configuration backed by Secrets Manager resources. IAM roles, permissions, schedules, tables, secrets, and hosts are implementation infrastructure and are not independently promoted.\n\n# Operations\n\nThe README documents an EventBridge rule that invokes the Lambda every minute. Runtime filters bound the lookback period, health-event categories, and regions. Event state includes event ARNs, updates, and TTL metadata.\n\n# Limitations\n\nNo live AWS state was queried. The source does not prove a deployed account, current region, ARN, endpoint URL, enabled channel, active schedule, or current health event. CloudFormation parity and every formatter path were not exhaustively reviewed.\n\n# Embedded Knowledge\n\n| Name | Role | Kind | Technology | Exact sources |\n|---|---|---|---|---|\n| AWS Health event state store | DynamoDB event state | database-table | aws / dynamodb; terraform:aws_dynamodb_table | aha-state-doc: `repository://repository-aws-health-aware-ef3e83846625/README.md#L61-L68`<br>aha-ddb-single: `repository://repository-aws-health-aware-ef3e83846625/terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf#L246-L273`<br>aha-ddb-global: `repository://repository-aws-health-aware-ef3e83846625/terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf#L276-L306` |\n| AWS Health polling schedule | Invokes the processor on a documented one-minute cadence | infrastructure | aws / eventbridge; terraform:aws_cloudwatch_event_rule | aha-schedule-doc: `repository://repository-aws-health-aware-ef3e83846625/README.md#L67-L69`<br>aha-schedule-primary: `repository://repository-aws-health-aware-ef3e83846625/terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf#L756-L765`<br>aha-schedule-secondary: `repository://repository-aws-health-aware-ef3e83846625/terraform/Terraform_DEPLOY_AHA/Terraform_DEPLOY_AHA.tf#L766-L777` |\n| Notification delivery configuration | Selects enabled webhook, email, and EventBridge destinations | configuration | source-defined | aha-endpoints-doc: `repository://repository-aws-health-aware-ef3e83846625/README.md#L64-L74` |\n",
+          "truncated": false
+        }
+      },
+      {
+        "path": "components/index.md",
+        "change": "created",
+        "allowed": true,
+        "after": {
+          "digest": "sha256:c3266d3b6d4c6313efc317bb4214f8051032b777538b5ee77fe6aed384dcb636",
+          "content": "# Components\n\n* [AWS Health Aware event processor](components-aws-health-aware-event-processor.md) - Scheduled event-processing workload\n",
+          "truncated": false
+        }
+      },
+      {
+        "path": "domains/cloud-operations.md",
+        "change": "created",
+        "allowed": true,
+        "after": {
+          "digest": "sha256:ccfd9c7178a8788bfb4aab513ba08d70e23b8994318fc13c854dcc7cfd2ff85a",
+          "content": "---\ntype: Domain\ntitle: Cloud Operations\ndescription: Owner-confirmed domain for systems that monitor cloud health and support operational response\nstatus: draft\ngenerated:\n  by: agentbase/0.0.0\n  at: 2026-08-22T14:38:56.084Z\nsources:\n  - id: owner-domain\n    resource: agentbase://owner-guidance/domains/cloud-operations\n  - id: aha-overview\n    resource: repository://repository-aws-health-aware-ef3e83846625/README.md#L44-L45\n---\n\n# Purpose\n\nCloud Operations is the owner-confirmed business boundary for knowledge in this ingest. The source evidence places AWS Health Aware here because it implements operational health-event monitoring and notification, not merely because it uses AWS infrastructure.\n\n# Systems\n\n* [AWS Health Aware](../systems/systems-aws-health-aware.md) - Collects AWS Health events and delivers operator-facing alerts.\n\n# Batch Navigation\n\n* [sample-aws-devops-agent-terraform](../repositories/sample-aws-devops-agent-terraform.md) - Repository\n* [aws-health-aware](../repositories/aws-health-aware.md) - Repository\n",
+          "truncated": false
+        }
+      },
+      {
+        "path": "domains/index.md",
+        "change": "created",
+        "allowed": true,
+        "after": {
+          "digest": "sha256:b1cd1d95580378d75a43eff879f35de2e8f66b94d14fad4ed3dd19377dc4a221",
+          "content": "# Domains\n\n* [Cloud Operations](cloud-operations.md) - Domain\n",
+          "truncated": false
+        }
+      },
+      {
+        "path": "repositories/aws-health-aware.md",
+        "change": "created",
+        "allowed": true,
+        "after": {
+          "digest": "sha256:69a0fe2b4f7eb8f976eb4b9dc04f2f80ecee1bfc4ec112976b5a99d66ea156a5",
+          "content": "---\ntype: Repository\ntitle: aws-health-aware\ndescription: Source repository for the AWS Health Aware operational notification system\nstatus: draft\ngenerated:\n  by: agentbase/0.0.0\n  at: 2026-08-22T14:38:56.084Z\nsources:\n  - id: aha-overview\n    resource: repository://repository-aws-health-aware-ef3e83846625/README.md#L44-L45\n  - id: owner-domain\n    resource: agentbase://owner-guidance/domains/cloud-operations\nrelationships:\n  - kind: part-of\n    target: domains/cloud-operations\n    evidence:\n      - owner-domain\nagentbase:\n  repository:\n    id: repository-aws-health-aware-ef3e83846625\n    display_name: aws-health-aware\n    aliases:\n      remotes:\n        - https://github.com/aws-samples/aws-health-aware\n      root_commits:\n        - 928494c70a904a65b877d426516882397541eafd\n    observed_source:\n      commit: 928494c70a904a65b877d426516882397541eafd\n      dirty: false\n      dirty_digest: null\n      observed_at: 2026-08-22T14:38:56.084Z\n---\n\n# Purpose\n\nThis repository contains the AWS Health Aware implementation and its infrastructure definitions. It owns the Python event-processing runtime, message formatting, and CloudFormation and Terraform deployment material for the operational notification system.\n\nPrimary Domain: [Cloud Operations](../domains/cloud-operations.md).\n\n# Source Structure\n\n`handler.py` contains the Lambda entry point, AWS Health polling, retained-state updates, and destination dispatch. `messagegenerator.py` formats destination-specific messages. The repository also contains CloudFormation templates and Terraform configurations for the primary and optional secondary-region deployment variants.\n\n# Build and Test\n\nThe README documents packaging and deployment through CloudFormation or Terraform. This bounded ingest did not identify or verify an automated test suite, so no test command is asserted.\n\n# Canonical Knowledge\n\n* [AWS Health Aware](../systems/systems-aws-health-aware.md) - Operational health-event notification system.\n* [AWS Health Aware event processor](../components/components-aws-health-aware-event-processor.md) - Scheduled event-processing workload.\n\n# Limitations\n\nThe repository record describes committed source at the captured commit. It does not assert that any Terraform or CloudFormation resource is deployed.\n",
+          "truncated": false
+        }
+      },
+      {
+        "path": "repositories/index.md",
+        "change": "created",
+        "allowed": true,
+        "after": {
+          "digest": "sha256:c67f260a48abbb9afd4ad6aeca54f8ba6660a0cdae224d0d36a82d0f6d9e969b",
+          "content": "# Repositories\n\n* [aws-health-aware](aws-health-aware.md) - Repository\n\n* [sample-aws-devops-agent-terraform](sample-aws-devops-agent-terraform.md) - Repository\n",
+          "truncated": false
+        }
+      },
+      {
+        "path": "repositories/sample-aws-devops-agent-terraform.md",
+        "change": "created",
+        "allowed": true,
+        "after": {
+          "digest": "sha256:c3f4885aff3ca4faa48708eec9f4ebd06bdd9325cadeddfdc0b1242f7b269b6d",
+          "content": "---\ntype: Repository\ntitle: sample-aws-devops-agent-terraform\ndescription: Terraform source repository for an AWS DevOps Agent monitoring setup\nstatus: draft\ngenerated:\n  by: agentbase/0.0.0\n  at: 2026-08-22T14:41:56.965Z\nsources:\n  - id: devops-repo-doc\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L1-L7\n  - id: owner-domain\n    resource: agentbase://owner-guidance/domains/cloud-operations\nrelationships:\n  - kind: part-of\n    target: domains/cloud-operations\n    evidence:\n      - owner-domain\nagentbase:\n  repository:\n    id: repository-sample-aws-devops-agent-terraform-602f2c2bcf7c\n    display_name: sample-aws-devops-agent-terraform\n    aliases:\n      remotes:\n        - https://github.com/aws-samples/sample-aws-devops-agent-terraform\n      root_commits:\n        - 5e3914988783616a11aa9c622b5d9e173c7e33df\n    observed_source:\n      commit: 5ba5f4a2561e37d392ffdffc81fd999961956472\n      dirty: false\n      dirty_digest: null\n      observed_at: 2026-08-22T14:41:56.965Z\n---\n\n# Purpose\n\nThis repository contains Terraform configuration for deploying an AWS DevOps Agent monitoring setup, including its central Agent Space, operator app, account associations, optional third-party integrations, and optional cross-account sample resources.\n\nPrimary Domain: [Cloud Operations](../domains/cloud-operations.md).\n\n# Source Structure\n\n`devops-agent.tf` defines the Agent Space and AWS account associations. `iam.tf` and `service-account.tf` define access and optional cross-account resources. `integrations.tf` and `secrets-manager.tf` define opt-in third-party registrations and associations. Variables, outputs, provider constraints, and lifecycle scripts support configuration and deployment.\n\n# Build and Test\n\nThe README requires Terraform 1.0 or newer and documents `terraform init`, `terraform plan`, and `terraform apply`, with helper scripts for deployment, post-deployment checks, and cleanup. This ingest did not execute Terraform or provider commands and does not claim that the configuration currently plans or applies successfully.\n\n# Canonical Knowledge\n\n* [AWS DevOps Agent monitoring](../systems/systems-aws-devops-agent-monitoring.md) - Operational monitoring system.\n* [AWS DevOps Agent Space](../resources/resources-aws-devops-agent-space.md) - Central operated resource.\n\n# Limitations\n\nThe record reflects committed desired-state configuration at the captured commit. Helper scripts, every IAM statement, and every optional integration block were not exhaustively assessed.\n",
+          "truncated": false
+        }
+      },
+      {
+        "path": "resources/index.md",
+        "change": "created",
+        "allowed": true,
+        "after": {
+          "digest": "sha256:ec49a64502477cd4c842a8d6388287b5f3fb0a6b321460850a34fa9c2dabbda1",
+          "content": "# Resources\n\n* [AWS DevOps Agent Space](resources-aws-devops-agent-space.md) - Central operated monitoring resource\n",
+          "truncated": false
+        }
+      },
+      {
+        "path": "resources/resources-aws-devops-agent-space.md",
+        "change": "created",
+        "allowed": true,
+        "after": {
+          "digest": "sha256:1ff857756169412ede00813b6139136dfcf4bf2109401641031d45a0be54c95a",
+          "content": "---\ntype: Resource\ntitle: AWS DevOps Agent Space\ndescription: Central operated resource for AWS DevOps Agent monitoring and service associations\nstatus: draft\ngenerated:\n  by: agentbase/0.0.0\n  at: 2026-08-22T14:41:56.965Z\nsources:\n  - id: agent-space-doc\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L20-L34\n  - id: agent-space-resource\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/devops-agent.tf#L19-L30\n  - id: accounts-doc\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L26-L34\n  - id: primary-association\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/devops-agent.tf#L33-L47\n  - id: secondary-association\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/devops-agent.tf#L50-L64\n  - id: integrations-doc\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L43-L56\n  - id: integrations-config\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/integrations.tf#L1-L18\n  - id: cross-account-doc\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L36-L41\n  - id: secondary-role\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/service-account.tf#L6-L15\n  - id: echo-lambda\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/service-account.tf#L81-L98\nrelationships:\n  - kind: part-of\n    target: systems/systems-aws-devops-agent-monitoring\n    evidence:\n      - agent-space-doc\n  - kind: implemented-in\n    target: repositories/sample-aws-devops-agent-terraform\n    evidence:\n      - agent-space-resource\nagentbase:\n  technology:\n    provider: awscc\n    sourceTool: terraform\n    resourceType: awscc_devopsagent_agent_space\n---\n\n# Purpose\n\nThe Agent Space is the central lifecycle resource for the [AWS DevOps Agent monitoring](../systems/systems-aws-devops-agent-monitoring.md) system and is managed by the [sample-aws-devops-agent-terraform repository](../repositories/sample-aws-devops-agent-terraform.md). It contains operator-app configuration and is the target of AWS-account and optional third-party service associations.\n\n# Kind and Technology\n\nTerraform declares the resource as `awscc_devopsagent_agent_space.main` using the AWS Cloud Control provider resource type `awscc_devopsagent_agent_space`. Its name and description are input variables, so this snapshot does not assert concrete deployed values.\n\n# Users\n\nThe operator app uses the configured operator role. A primary AWS association links the monitoring account; an optional secondary association links a source account. Optional service associations connect selected observability, incident-management, or development services.\n\n# Operations\n\nCreation waits for newly created IAM roles to propagate. Association ordering makes the primary monitoring account the base attachment before the optional source account. The README identifies IAM propagation and invalid third-party credentials as operational failure modes.\n\n# Evidence\n\nThe Terraform declaration proves desired resource shape and dependencies. README evidence describes its intended monitoring role and optional extensions. Neither proves deployed state.\n\n# Limitations\n\nNo provider or AWS command was run. Current existence, name, ID, ARN, account, region, operator access, associations, integration status, and monitoring health are unknown. Optional resources are documented possibilities, not asserted deployments.\n\n# Embedded Knowledge\n\n| Name | Role | Kind | Technology | Exact sources |\n|---|---|---|---|---|\n| cross-account monitoring support | secondary account role echo Lambda | runtime-function | aws / lambda; terraform:aws_lambda_function | cross-account-doc: `repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L36-L41`<br>secondary-role: `repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/service-account.tf#L6-L15`<br>echo-lambda: `repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/service-account.tf#L81-L98` |\n| AWS account monitoring associations | Defines the primary monitoring account and optional secondary source account | infrastructure | awscc; terraform:awscc_devopsagent_association | accounts-doc: `repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L26-L34`<br>primary-association: `repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/devops-agent.tf#L33-L47`<br>secondary-association: `repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/devops-agent.tf#L50-L64` |\n| Optional third-party integrations | Registers enabled services and associates them with the Agent Space | configuration | awscc / source-defined | integrations-doc: `repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L43-L56`<br>integrations-config: `repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/integrations.tf#L1-L18` |\n",
+          "truncated": false
+        }
+      },
+      {
+        "path": "systems/index.md",
+        "change": "created",
+        "allowed": true,
+        "after": {
+          "digest": "sha256:ab869a0aa9ea36ec84c0c27bd5b3255ca04ef181b424a0e171e5d214625ca99a",
+          "content": "# Systems\n\n* [AWS Health Aware](systems-aws-health-aware.md) - Operational health-event notification system\n\n* [AWS DevOps Agent monitoring](systems-aws-devops-agent-monitoring.md) - Operational infrastructure monitoring system\n",
+          "truncated": false
+        }
+      },
+      {
+        "path": "systems/systems-aws-devops-agent-monitoring.md",
+        "change": "created",
+        "allowed": true,
+        "after": {
+          "digest": "sha256:d9d6a52eb67116d4784804e11fff305fc1cb17a721b23072a19b15ba902f4af5",
+          "content": "---\ntype: System\ntitle: AWS DevOps Agent monitoring\ndescription: Operational monitoring system centered on an AWS DevOps Agent Space and its account and service associations\nstatus: draft\ngenerated:\n  by: agentbase/0.0.0\n  at: 2026-08-22T14:41:56.965Z\nsources:\n  - id: devops-capability\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L5-L7\n  - id: devops-parts\n    resource: repository://repository-sample-aws-devops-agent-terraform-602f2c2bcf7c/README.md#L16-L22\n  - id: owner-domain\n    resource: agentbase://owner-guidance/domains/cloud-operations\nrelationships:\n  - kind: part-of\n    target: domains/cloud-operations\n    evidence:\n      - owner-domain\n  - kind: implemented-in\n    target: repositories/sample-aws-devops-agent-terraform\n    evidence:\n      - devops-capability\n---\n\n# Purpose\n\nThis system provides an AWS DevOps Agent monitoring setup for monitoring and managing AWS infrastructure with AI-powered insights. Its base scope is a monitoring account; the configuration can optionally add a source account and third-party operational services.\n\nPrimary Domain: [Cloud Operations](../domains/cloud-operations.md).\n\n# Architecture\n\nThe central operated resource is an [AWS DevOps Agent Space](../resources/resources-aws-devops-agent-space.md) with an operator app. AWS account associations establish monitoring scope. Optional service registrations and associations connect Dynatrace, ServiceNow, Splunk, New Relic, GitLab, or PagerDuty. The system is implemented by the [sample-aws-devops-agent-terraform repository](../repositories/sample-aws-devops-agent-terraform.md).\n\n# Interfaces\n\nThe reviewed Terraform defines provider resources and configuration objects rather than a repository-owned runtime API. Third-party integrations are optional configuration boundaries and remain embedded because their external contracts and ownership were not established by this bounded ingest.\n\n# Critical Flows\n\nTerraform creates or reuses IAM roles, creates the Agent Space and operator app, and then associates the primary monitoring account. When configured, it adds a secondary source-account association and third-party service associations.\n\n# Limitations\n\nThis source snapshot does not establish that Terraform was applied or that monitoring is active. It does not assert account IDs, current regions, ARNs, enabled integrations, credentials, association health, or observed incidents.\n",
+          "truncated": false
+        }
+      },
+      {
+        "path": "systems/systems-aws-health-aware.md",
+        "change": "created",
+        "allowed": true,
+        "after": {
+          "digest": "sha256:e25907b99074ce66d26231385b56630412adcca4c387d4f1f4626e84a9a1243b",
+          "content": "---\ntype: System\ntitle: AWS Health Aware\ndescription: Operational notification system for collecting AWS Health events and delivering formatted alerts\nstatus: draft\ngenerated:\n  by: agentbase/0.0.0\n  at: 2026-08-22T14:38:56.084Z\nsources:\n  - id: aha-overview\n    resource: repository://repository-aws-health-aware-ef3e83846625/README.md#L44-L45\n  - id: aha-resources\n    resource: repository://repository-aws-health-aware-ef3e83846625/README.md#L59-L71\n  - id: owner-domain\n    resource: agentbase://owner-guidance/domains/cloud-operations\nrelationships:\n  - kind: part-of\n    target: domains/cloud-operations\n    evidence:\n      - owner-domain\n  - kind: implemented-in\n    target: repositories/aws-health-aware\n    evidence:\n      - aha-overview\n---\n\n# Purpose\n\nAWS Health Aware is an operational notification system that obtains AWS Health events and delivers formatted alerts to configured operator destinations. The documented capability supports Chime, Slack, Microsoft Teams, email, and EventBridge-compatible endpoints.\n\nPrimary Domain: [Cloud Operations](../domains/cloud-operations.md).\n\n# Architecture\n\nThe [AWS Health Aware event processor](../components/components-aws-health-aware-event-processor.md) is the central workload. It polls AWS Health, records event state, formats notifications, and dispatches them through configured delivery paths. The system is implemented in the [aws-health-aware repository](../repositories/aws-health-aware.md).\n\n# Interfaces\n\nDelivery destinations are configuration-dependent. They are documented as webhook, email, or EventBridge integrations, but are not promoted here as stable standalone interfaces because this bounded ingest did not establish independently owned contracts for them.\n\n# Critical Flows\n\nOn its configured schedule, the processor queries recent AWS Health events, applies event-category and region filters, compares or updates retained state, and delivers notifications to the enabled endpoints.\n\n# Limitations\n\nThis is a source snapshot, not a deployment inventory. The ingest does not establish which destinations are enabled, whether organization mode is active, or whether a primary or multi-region deployment currently exists.\n",
+          "truncated": false
+        }
+      }
+    ],
+    "updated": [
+      {
+        "path": "index.md",
+        "change": "modified",
+        "allowed": true,
+        "before": {
+          "digest": "sha256:10b5fdce81d148af65c12f30be481633108f0b0364c26054e80bffdeb58a0a45",
+          "content": "---\nokf_version: \"0.2\"\n---\n\n# AgentBase-Hub\n",
+          "truncated": false
+        },
+        "after": {
+          "digest": "sha256:de05b51d3bcc1450fc944101cc9b6a09e75e0c12c39ea8891e7090824183bc83",
+          "content": "---\nokf_version: \"0.2\"\n---\n\n# AgentBase-Hub\n\n* [Repositories](repositories/index.md) - source repositories\n\n* [Domains](domains/index.md) - business domains\n\n* [Systems](systems/index.md) - systems\n\n* [Resources](resources/index.md) - operated infrastructure and data resources\n",
+          "truncated": false
+        }
+      }
+    ],
+    "removed": [],
+    "supersededOrRetracted": [],
+    "questionsAndLimitations": {
+      "questions": [],
+      "limitations": [
+        "repository-aws-health-aware-ef3e83846625: Initial ingest is bounded to the repository README, the central Python event-processing paths identified by the graph, and selected Terraform resources.",
+        "repository-aws-health-aware-ef3e83846625: CloudFormation parity, every message formatter, every deployment variant, and live AWS runtime state were not exhaustively verified.",
+        "repository-aws-health-aware-ef3e83846625: Terraform describes desired infrastructure only; no deployed account, region, ARN, endpoint, or current event state is asserted.",
+        "repository-sample-aws-devops-agent-terraform-602f2c2bcf7c: Initial ingest is bounded to the README, the graph-identified central Terraform agent-space and association declarations, and selected integration and cross-account declarations.",
+        "repository-sample-aws-devops-agent-terraform-602f2c2bcf7c: All optional integration blocks, helper shell scripts, outputs, IAM policy details, and provider behavior were not exhaustively reviewed.",
+        "repository-sample-aws-devops-agent-terraform-602f2c2bcf7c: Terraform represents desired state only; no deployed account, region, ARN, integration status, credential value, or live monitoring state is asserted."
+      ]
+    }
+  },
+  "coverage": {
+    "partial": true,
+    "limitations": [
+      "repository-aws-health-aware-ef3e83846625: Initial ingest is bounded to the repository README, the central Python event-processing paths identified by the graph, and selected Terraform resources.",
+      "repository-aws-health-aware-ef3e83846625: CloudFormation parity, every message formatter, every deployment variant, and live AWS runtime state were not exhaustively verified.",
+      "repository-aws-health-aware-ef3e83846625: Terraform describes desired infrastructure only; no deployed account, region, ARN, endpoint, or current event state is asserted.",
+      "repository-sample-aws-devops-agent-terraform-602f2c2bcf7c: Initial ingest is bounded to the README, the graph-identified central Terraform agent-space and association declarations, and selected integration and cross-account declarations.",
+      "repository-sample-aws-devops-agent-terraform-602f2c2bcf7c: All optional integration blocks, helper shell scripts, outputs, IAM policy details, and provider behavior were not exhaustively reviewed.",
+      "repository-sample-aws-devops-agent-terraform-602f2c2bcf7c: Terraform represents desired state only; no deployed account, region, ARN, integration status, credential value, or live monitoring state is asserted."
+    ]
+  },
+  "batch": {
+    "members": [
+      {
+        "repositoryId": "repository-aws-health-aware-ef3e83846625",
+        "paths": [
+          "components/components-aws-health-aware-event-processor.md",
+          "repositories/aws-health-aware.md",
+          "systems/systems-aws-health-aware.md"
+        ]
+      },
+      {
+        "repositoryId": "repository-sample-aws-devops-agent-terraform-602f2c2bcf7c",
+        "paths": [
+          "repositories/sample-aws-devops-agent-terraform.md",
+          "resources/resources-aws-devops-agent-space.md",
+          "systems/systems-aws-devops-agent-monitoring.md"
+        ]
+      }
+    ],
+    "sharedPaths": [
+      "components/index.md",
+      "domains/cloud-operations.md",
+      "domains/index.md",
+      "index.md",
+      "repositories/index.md",
+      "resources/index.md",
+      "systems/index.md"
+    ]
+  }
+}

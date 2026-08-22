@@ -1,6 +1,6 @@
 # 06 — Cross-repository relations
 
-> Trạng thái: Technical design đã hoàn tất; runtime Domain Enrichment chưa implement.
+> Trạng thái: AWS/SQS runtime slice đã implement offline; chờ real-provider qualification riêng.
 
 High-level decision:
 [Quan hệ giữa nhiều repository và Domain](../../present/06-cross-repository-and-cross-domain-relationships.md)
@@ -21,6 +21,8 @@ High-level decision:
   canonical selection, retained redirect và Git history.
 - [`06-multi-region-resources.md`](06-multi-region-resources.md) — logical
   concept, regional deployment references và split boundary.
+- [`07-runtime-requirements.md`](07-runtime-requirements.md) — stable
+  `AB-ENRICH-*` requirements cho bounded Domain Enrichment runtime.
 
 ## Thứ tự review
 

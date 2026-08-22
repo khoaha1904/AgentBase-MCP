@@ -1,0 +1,34 @@
+{
+  "suite": "aws-cloud-operations-batch",
+  "version": 5,
+  "workflow": "batch-initial-ingest",
+  "catalogVersion": "7.0.0",
+  "promptVersion": "okf-batch-ingest-v5",
+  "confirmedDomain": {
+    "identity": "domains/cloud-operations",
+    "title": "Cloud Operations",
+    "evidenceResource": "agentbase://owner-guidance/domains/cloud-operations"
+  },
+  "agent": {
+    "provider": "codex-cli",
+    "executable": "codex",
+    "version": "codex-cli 0.149.0",
+    "model": "gpt-5.6-sol",
+    "reasoningEffort": "medium",
+    "timeoutMs": 900000
+  },
+  "repositories": [
+    {
+      "id": "aws-health-aware",
+      "kind": "terraform-cloud-operations",
+      "path": "../fixtures/source-repos/aws-health-polyrepo/aws-health-aware",
+      "commit": "928494c70a904a65b877d426516882397541eafd"
+    },
+    {
+      "id": "sample-aws-devops-agent-terraform",
+      "kind": "terraform-cloud-operations",
+      "path": "../fixtures/source-repos/sample-aws-devops-agent-terraform",
+      "commit": "5ba5f4a2561e37d392ffdffc81fd999961956472"
+    }
+  ]
+}

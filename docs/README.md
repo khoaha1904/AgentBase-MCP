@@ -27,6 +27,8 @@ Current requirement routes:
 - Foundation: `docs/design/12-version-scope/01-foundation-requirements.md`
 - Code Graph: `docs/design/01-repository-reading/05-runtime-requirements.md`
 - OKF: `docs/design/05-knowledge-entry/06-runtime-requirements.md`
+- Domain Enrichment: `docs/design/06-cross-repository-relations/07-runtime-requirements.md`
+- Batch Initial Ingest: `docs/design/09-ingest-and-refresh/09-runtime-requirements.md`
 - Local Hub and publication: `docs/design/11-review-and-publish/01-runtime-requirements.md`
 - Installation: `docs/design/12-version-scope/02-installation-requirements.md`
 - Benchmark: `docs/design/12-version-scope/03-benchmark-requirements.md`
@@ -48,19 +50,22 @@ small gaps must be backfilled before benchmark, PR or capability completion.
 
 ## Current checkpoint
 
-- Catalog 7 Initial Ingest and single-repository Refresh are implemented.
+- Catalog 7 Initial Ingest, single-repository Refresh, Batch Initial Ingest and
+  bounded AWS/SQS Domain Enrichment are implemented.
 - Sol Initial Ingest plus two sequential Terra Refresh runs qualify the pinned
   ECS full-stack Terraform fixture without Accept, Publish or provider CLI.
 - Independent Repository Init PRs, exact same-Repository Init/Refresh stacks and
   existing-PR reconciliation are implemented. First bootstrap retains one batch
-  PR. Batch ingest, Domain Enrichment and freshness presentation remain deferred.
+  PR. Batch Refresh, additional provider profiles and freshness presentation
+  remain deferred.
 - Repository observed values are snapshot-first: Finalize owns stable identity,
   exact source state and readable tables; query performs no repository probe.
-  Provider observations and automated freshness reporting remain deferred.
+  AWS/SQS provider observations are implemented through explicit Domain
+  Enrichment; automated freshness reporting remains deferred.
 - Questions are shared Hub Markdown with exact state/revision and no private
   ledger authority. Exact-revision answers propose Guidance plus Question update
-  atomically; Accept remains the state-change boundary. Batch Ingest, Domain
-  Enrichment, broad Guidance, automatic conflict inference, query overlay,
+  atomically; Accept remains the state-change boundary. Batch Ingest, broad
+  Guidance, automatic conflict inference, query overlay,
   freshness CI, visual review and profile migration are post-MVP capabilities.
 
 Update current truth once in the narrowest high- or low-level document. Do not

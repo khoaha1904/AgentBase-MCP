@@ -1,0 +1,117 @@
+{
+  "suite": "aws-cloud-operations-batch",
+  "workflow": "batch-initial-ingest",
+  "promptVersion": "okf-batch-ingest-v4",
+  "promptDigest": "sha256:7d3e2a2897a8335c45d4cdad54a66ddff61341a46661da4b4677791025121947",
+  "catalogVersion": "7.0.0",
+  "confirmedDomain": {
+    "identity": "domains/cloud-operations",
+    "title": "Cloud Operations",
+    "evidenceResource": "agentbase://owner-guidance/domains/cloud-operations"
+  },
+  "fixtures": [
+    {
+      "id": "aws-health-aware",
+      "path": "../fixtures/source-repos/aws-health-polyrepo/aws-health-aware",
+      "commit": "928494c70a904a65b877d426516882397541eafd",
+      "sourceRepositoryId": "repository-aws-health-aware-779eb7e1bc7a",
+      "provenanceRepositoryId": "repository-aws-health-aware-ef3e83846625"
+    },
+    {
+      "id": "sample-aws-devops-agent-terraform",
+      "path": "../fixtures/source-repos/sample-aws-devops-agent-terraform",
+      "commit": "5ba5f4a2561e37d392ffdffc81fd999961956472",
+      "sourceRepositoryId": "repository-sample-aws-devops-agent-terraform-6b1023ab6b40",
+      "provenanceRepositoryId": "repository-sample-aws-devops-agent-terraform-602f2c2bcf7c"
+    }
+  ],
+  "agent": {
+    "provider": "codex-cli",
+    "executable": "codex",
+    "version": "codex-cli 0.149.0",
+    "model": "gpt-5.6-sol",
+    "reasoningEffort": "medium",
+    "timeoutMs": 900000,
+    "actualVersion": "codex-cli 0.149.0"
+  },
+  "startedAt": "2026-08-22T14:26:11.594Z",
+  "completedAt": "2026-08-22T14:29:28.918Z",
+  "outcome": "failed",
+  "elapsedMs": 197324,
+  "process": {
+    "exitCode": 0,
+    "signal": null,
+    "error": null
+  },
+  "usage": {
+    "inputTokens": 728222,
+    "cachedInputTokens": 670464,
+    "cacheWriteInputTokens": 0,
+    "uncachedInputTokens": 57758,
+    "outputTokens": 6882,
+    "reasoningOutputTokens": 1216
+  },
+  "activity": {
+    "mcpToolCalls": 11,
+    "commandExecutions": 12,
+    "authoringToolCalls": 3,
+    "authoringArgumentBytes": 16292,
+    "authoringResultBytes": 6537,
+    "authoringTools": {
+      "get_okf_authoring_schemas": {
+        "calls": 1,
+        "argumentBytes": 3406,
+        "resultBytes": 4221
+      },
+      "validate_okf_changes": {
+        "calls": 2,
+        "argumentBytes": 12886,
+        "resultBytes": 2316
+      }
+    },
+    "mcpTools": {
+      "configure_hub": 1,
+      "confirm_batch_hub_ingest": 1,
+      "get_architecture": 1,
+      "get_hub_status": 1,
+      "get_okf_authoring_schemas": 1,
+      "index_repository": 1,
+      "prepare_batch_hub_ingest": 1,
+      "prepare_hub_okf": 1,
+      "record_batch_hub_ingest_member": 1,
+      "validate_okf_changes": 2
+    },
+    "guidance": {
+      "attempts": [
+        {
+          "status": "completed",
+          "code": null,
+          "retryable": false,
+          "error": null
+        }
+      ],
+      "inputCorrectionsUsed": 0,
+      "firstAttemptSucceeded": true
+    },
+    "observedSourceReadBytes": null,
+    "limitation": "event trace does not prove complete source-read volume",
+    "finalValidationIdentities": [
+      "domains/cloud-operations",
+      "repositories/aws-health-aware",
+      "systems/systems-aws-health-aware"
+    ]
+  },
+  "proposal": null,
+  "attribution": null,
+  "coverage": null,
+  "failures": [
+    "Batch Init must finalize exactly one proposal; observed 0",
+    "finalize_batch_hub_ingest_proposal must run exactly once; observed 0",
+    "inspect_hub_okf_proposal must run exactly once; observed 0",
+    "index_repository must run once per member; observed 1/2",
+    "get_architecture must run once per member; observed 1/2",
+    "prepare_hub_okf must run once per member; observed 1/2",
+    "record_batch_hub_ingest_member must run once per member; observed 1/2",
+    "get_okf_authoring_schemas must succeed directly or after one correction per member; observed 1"
+  ]
+}

@@ -118,13 +118,17 @@ function publicationUnits(
     };
   }
   const positions = new Map(pending.map((proposal, index) => [proposal.id, index]));
-  const repositories = new Set(selected.map((proposal) => proposal.sourceRepositoryId));
+  const repositories = new Set(selected.flatMap((proposal) => proposal.mode === "enrichment" || proposal.mode === "batch-new" ? [] : [proposal.sourceRepositoryId]));
   return {
-    mode: repositories.size === 1 && selected.length > 1 ? "stack" : "independent",
+    mode: selected.every((proposal) => proposal.mode !== "enrichment" && proposal.mode !== "batch-new") && repositories.size === 1 && selected.length > 1 ? "stack" : "independent",
     units: selected.map((proposal) => {
       if (!proposal.mode) throw new Error("legacy pending proposals require explicit batch publication");
+      if (proposal.mode === "enrichment" || proposal.mode === "batch-new") return {
+        proposals: [proposal], branch: `agentbase/okf-${proposal.id}`, baseBranch: localHub.hub.targetBranch,
+      };
       const position = positions.get(proposal.id)!;
-      const prior = pending.slice(0, position).filter((item) => item.sourceRepositoryId === proposal.sourceRepositoryId).at(-1);
+      const prior = pending.slice(0, position).filter((item) => item.mode !== "enrichment" && item.mode !== "batch-new"
+        && item.sourceRepositoryId === proposal.sourceRepositoryId).at(-1);
       if (proposal.mode === "new" && prior) throw new Error("a Repository cannot contain a second pending Init proposal");
       return {
         proposals: [proposal],

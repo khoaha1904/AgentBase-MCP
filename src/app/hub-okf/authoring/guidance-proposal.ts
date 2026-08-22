@@ -20,6 +20,43 @@ import { inspectHubProposal, type HubProposalInspection } from "../review/inspec
 import { writeHubProposalState } from "../review/proposal-state.ts";
 import type { GovernedQuestion } from "./questions.ts";
 
+export function materializeQuestionGuidance(options: Readonly<{
+  targetRoot: string;
+  question: GovernedQuestion;
+  answer: string;
+  by: string;
+  at: string;
+}>): Readonly<{ concept: ConceptDocument; resolved: GovernedQuestion }> {
+  const answer = options.answer.trim();
+  if (!answer || answer.length > 4096) throw new Error("question answer is invalid");
+  if (observedValueSafetyFailure("maintainer-guidance", answer)) throw new Error("question answer contains obvious sensitive material");
+  if (!/^human:[A-Za-z0-9][A-Za-z0-9._@-]{0,127}$/.test(options.by)) throw new Error("maintainer must use an explicit human: identity");
+  if (Number.isNaN(Date.parse(options.at))) throw new Error("question answer time is invalid");
+  const revision = options.question.revision, key = `${options.question.id}-r${revision}`;
+  const conceptId = `guidance/${key}`, conceptPath = `${conceptId}.md`;
+  const frontmatter: OkfFrontmatter = {
+    type: "Maintainer Guidance",
+    title: `Guidance for ${options.question.subject} ${options.question.property}`,
+    description: `Maintainer answer for governed question ${options.question.id}`,
+    status: "stable",
+    generated: { by: options.by, at: options.at },
+    sources: [{ id: "maintainer-answer", resource: `agentbase://maintainer-answer/${options.question.id}/${revision}` }],
+    agentbase: { question: { id: options.question.id, revision,
+      scope: { kind: "subject-property", target: `${options.question.subject}#${options.question.property}` },
+      observation_ids: options.question.observationIds } },
+  };
+  const concept: ConceptDocument = { conceptId, path: conceptPath, type: "Maintainer Guidance", status: "stable",
+    frontmatter, verified: [], body: `# Guidance\n\n${answer}\n\n# Scope\n\n${options.question.subject} · ${options.question.property}.\n` };
+  const target = path.join(options.targetRoot, ...conceptPath.split("/"));
+  privateDirectory(path.dirname(target));
+  fs.writeFileSync(target, renderConceptDocument(concept), { mode: 0o600 });
+  const resolvedQuestion = resolveQuestion(options.question, conceptId);
+  const resolved: GovernedQuestion = { ...options.question, ...resolvedQuestion, status: resolvedQuestion.state };
+  fs.writeFileSync(path.join(options.targetRoot, "questions", `${options.question.id}.md`),
+    renderQuestionDocument(resolvedQuestion), { mode: 0o600 });
+  return { concept, resolved };
+}
+
 export type PrepareQuestionGuidanceOptions = Readonly<{
   stateRoot: string;
   localHub: AdmittedLocalHubState;
@@ -49,10 +86,6 @@ export async function prepareQuestionGuidanceProposal(
   options: PrepareQuestionGuidanceOptions,
 ): Promise<Readonly<{ question: GovernedQuestion; proposal: AnyHubProposal; inspection: HubProposalInspection }>> {
   const answer = options.answer.trim(), git = options.git ?? runGit;
-  if (!answer || answer.length > 4096) throw new Error("question answer is invalid");
-  if (observedValueSafetyFailure("maintainer-guidance", answer)) throw new Error("question answer contains obvious sensitive material");
-  if (!/^human:[A-Za-z0-9][A-Za-z0-9._@-]{0,127}$/.test(options.by)) throw new Error("maintainer must use an explicit human: identity");
-  if (Number.isNaN(Date.parse(options.at))) throw new Error("question answer time is invalid");
   if (!options.question.sourceRepositoryId) throw new Error("question source repository is unavailable");
   const status = await git({
     args: ["status", "--porcelain=v1", "--untracked-files=all"],
@@ -77,26 +110,9 @@ export async function prepareQuestionGuidanceProposal(
     })).digest("hex")}`;
     prepareBundleProposal({ currentBundleRoot: baseRoot, proposalRoot: staging,
       proposalId: `proposal-guidance-${key}`, evidenceDigest, createdAt: options.at });
-    const conceptId = `guidance/${key}`, conceptPath = `${conceptId}.md`;
-    const frontmatter: OkfFrontmatter = {
-      type: "Maintainer Guidance",
-      title: `Guidance for ${options.question.subject} ${options.question.property}`,
-      description: `Maintainer answer for governed question ${options.question.id}`,
-      status: "stable",
-      generated: { by: options.by, at: options.at },
-      sources: [{ id: "maintainer-answer", resource: `agentbase://maintainer-answer/${options.question.id}/${revision}` }],
-      agentbase: { question: { id: options.question.id, revision,
-        scope: { kind: "subject-property", target: `${options.question.subject}#${options.question.property}` },
-        observation_ids: options.question.observationIds } },
-    };
-    const concept: ConceptDocument = { conceptId, path: conceptPath, type: "Maintainer Guidance", status: "stable",
-      frontmatter, verified: [], body: `# Guidance\n\n${answer}\n\n# Scope\n\n${options.question.subject} · ${options.question.property}.\n` };
-    const target = path.join(staging, "bundle", ...conceptPath.split("/"));
-    privateDirectory(path.dirname(target));
-    fs.writeFileSync(target, renderConceptDocument(concept), { mode: 0o600 });
-    const resolved = resolveQuestion(options.question, conceptId);
-    const questionTarget = path.join(staging, "bundle", "questions", `${options.question.id}.md`);
-    fs.writeFileSync(questionTarget, renderQuestionDocument(resolved), { mode: 0o600 });
+    const { concept, resolved } = materializeQuestionGuidance({ targetRoot: path.join(staging, "bundle"),
+      question: options.question, answer, by: options.by, at: options.at });
+    const conceptId = concept.conceptId, conceptPath = concept.path;
     const validated = validateBundleProposal(baseRoot, staging, {
       maintainerGuidance: { conceptId, by: options.by, at: options.at },
     });
@@ -122,7 +138,7 @@ export async function prepareQuestionGuidanceProposal(
     const proposalRoot = path.join(path.resolve(options.stateRoot), "proposals", proposal.id);
     if (fs.existsSync(proposalRoot)) throw new Error("matching guidance proposal already exists");
     fs.renameSync(staging, proposalRoot);
-    return { question: { ...options.question, ...resolved, status: resolved.state }, proposal, inspection };
+    return { question: resolved, proposal, inspection };
   } finally {
     fs.rmSync(workRoot, { recursive: true, force: true });
     if (fs.existsSync(staging)) fs.rmSync(staging, { recursive: true, force: true });

@@ -120,6 +120,12 @@ Normative OKF source is pinned to commit
   Source scope remains stable across observations; evidence digest/time update
   and are recomputable from persisted normalized source metadata plus associated
   observed entries.
+- **AB-VALUE-009** — An Ingest/Refresh Question declaration may reference only
+  an existing `agentbase.observed_values` entry on the same subject using its
+  exact token-shaped property, role and source ID. MCP tool schemas expose this
+  grammar and binding requirement. When no matching observed value exists, the
+  agent omits the declaration and keeps the uncertainty as concept prose or a
+  limitation; it does not invent an observed value merely to create a Question.
 - Observed-value IDs are bundle-unique and Refresh omission cannot remove an
   accepted ID. A reviewed Refresh may update exact attributable value/source
   state; protected knowledge and human Guidance keep normal lifecycle rules.
@@ -371,6 +377,10 @@ Normative OKF source is pinned to commit
   repairable. Foreign-repository citations are not dereferenced without a
   separately authorized checkout, and local checkout paths never enter Hub
   knowledge or proposal metadata.
+- **AB-INGEST-015** — New Initial Ingest Prepare explicitly returns the editing
+  constraint for its generated skeletons. Agent authoring may enrich prose and
+  add evidence, but preserves generated sources, relationships, Repository
+  identity metadata and navigation. Final validation remains the trust gate.
 - **AB-SCHEMA-043** — Exact supported Terraform/Terragrunt observations are
   high-priority when readily available. Their omission is a coverage diagnostic,
   not an invalidity condition for an otherwise truthful partial proposal.

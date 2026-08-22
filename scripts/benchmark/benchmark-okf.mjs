@@ -793,6 +793,68 @@ export function scoringRepositoryId(runData) {
     ? runData.provenanceRepositoryId : runData.sourceRepositoryId;
 }
 
+export function assessBatchRun(runData, root) {
+  const findings = { okf: [], mcpRuntime: [], benchmark: [] };
+  if (runData.outcome !== "succeeded") findings.mcpRuntime.push(...(runData.failures ?? ["batch run failed"]));
+  const okfRoot = path.join(root, "okf");
+  if (!fs.existsSync(okfRoot)) {
+    findings.benchmark.push("combined OKF artifact is unavailable");
+    return { outcome: "invalid", findings, conceptCount: 0, conceptsByType: {}, members: [] };
+  }
+  const bundle = loadScorableBundle(okfRoot);
+  if (bundle.warnings.length) findings.okf.push(...bundle.warnings);
+  const conceptsByPath = new Map([...bundle.concepts.values()].map((concept) => [concept.path, concept]));
+  const attribution = runData.attribution?.members ?? [];
+  const members = (runData.fixtures ?? []).map((fixture) => {
+    const attributed = attribution.find((item) => item.repositoryId === fixture.provenanceRepositoryId);
+    const conceptPaths = (attributed?.paths ?? []).filter((item) => conceptsByPath.has(item));
+    if (!attributed || !conceptPaths.length) findings.okf.push(`${fixture.id}: no attributable concept path`);
+    for (const conceptPath of conceptPaths) {
+      const concept = conceptsByPath.get(conceptPath);
+      const sources = Array.isArray(concept.frontmatter.sources) ? concept.frontmatter.sources : [];
+      for (const source of sources) if (typeof source?.resource === "string"
+        && source.resource.startsWith("repository://")
+        && !source.resource.startsWith(`repository://${fixture.provenanceRepositoryId}/`)) {
+        findings.okf.push(`${conceptPath}: cross-member repository evidence ${source.resource}`);
+      }
+    }
+    return { id: fixture.id, repositoryId: fixture.provenanceRepositoryId, conceptPaths };
+  });
+  const conceptsByType = {};
+  for (const concept of bundle.concepts.values()) conceptsByType[concept.type] = (conceptsByType[concept.type] ?? 0) + 1;
+  const ownerReview = assessOwnerReviewUsefulness(bundle.concepts);
+  if (ownerReview.status !== "useful_for_owner_review") findings.okf.push(...ownerReview.findings);
+  if (runData.coverage?.limitations?.length) findings.okf.push(...runData.coverage.limitations);
+  const hardFailure = runData.outcome !== "succeeded" || bundle.warnings.length
+    || findings.okf.some((item) => item.includes("cross-member repository evidence") || item.includes("no attributable concept path"));
+  return {
+    outcome: hardFailure ? "invalid"
+      : ownerReview.status === "useful_for_owner_review" && !runData.coverage?.partial ? "review_ready" : "valid_partial",
+    findings, conceptCount: bundle.concepts.size, conceptsByType,
+    sharedPaths: runData.attribution?.sharedPaths ?? [], members,
+    ownerReview: ownerReview.status,
+  };
+}
+
+function batchReportFor(runData, assessment) {
+  const section = (title, items) => `## ${title}\n\n${items.length ? items.map((item) => `- ${item}`).join("\n") : "- None"}\n\n`;
+  const memberLines = assessment.members.map((member) =>
+    `- ${member.id} (${member.repositoryId}): ${member.conceptPaths.length} attributable concepts — ${member.conceptPaths.join(", ") || "none"}`);
+  return `# ${runData.suite} — Batch Initial Ingest\n\n`
+    + `- Outcome: ${assessment.outcome}\n`
+    + `- Proposal: ${runData.proposal?.id ?? "unavailable"}\n`
+    + `- Domain: ${runData.confirmedDomain?.identity ?? "unavailable"}\n`
+    + `- Concepts: ${assessment.conceptCount} ${JSON.stringify(assessment.conceptsByType)}\n`
+    + `- Elapsed: ${runData.elapsedMs ?? "n/a"} ms\n`
+    + `- Tokens: ${runData.usage ? JSON.stringify(runData.usage) : "unavailable"}\n\n`
+    + `## Member attribution\n\n${memberLines.join("\n") || "- Unavailable"}\n`
+    + `- Shared paths: ${(assessment.sharedPaths ?? []).join(", ") || "none"}\n\n`
+    + section("OKF findings", assessment.findings.okf)
+    + section("MCP/runtime findings", assessment.findings.mcpRuntime)
+    + section("Benchmark findings", assessment.findings.benchmark)
+    + "Deterministic structure and paths cannot prove every authored claim; human review remains required.\n";
+}
+
 function pairReportFor(comparison) {
   const measured = (metrics, field, ratio) => {
     const value = metrics[field];
@@ -898,6 +960,24 @@ async function run(suite, repository, requestedRunId) {
   if (summaries.some((item) => item.outcome !== "succeeded")) process.exitCode = 1;
 }
 
+async function batch(suite, requestedRunId) {
+  const manifest = manifestFor(suite);
+  if (manifest.workflow !== "batch-initial-ingest" || manifest.repositories.length !== 2) {
+    throw new Error("batch command requires one two-member Batch Initial Ingest manifest");
+  }
+  const runId = requestedRunId || utcRunId(), root = resultRoot(suite, "batch", runId);
+  if (fs.existsSync(root)) throw new Error(`batch result already exists for ${runId}`);
+  const repositories = manifest.repositories.map(fixtureFor);
+  const { runAgentBatch } = await import("./benchmark-agent.mjs");
+  const runData = runAgentBatch({ manifest, repositories, root });
+  const assessment = assessBatchRun(runData, root);
+  writeJson(path.join(root, "assessment.json"), assessment);
+  fs.writeFileSync(path.join(root, "report.md"), batchReportFor(runData, assessment));
+  process.stdout.write(`${JSON.stringify({ suite, runId, outcome: assessment.outcome,
+    proposal: runData.proposal, failures: runData.failures }, null, 2)}\n`);
+  if (assessment.outcome === "invalid") process.exitCode = 1;
+}
+
 async function pair(suite, repository, requestedPairId) {
   if (!repository) throw new Error("paired benchmark requires one repository");
   const manifest = manifestFor(suite);
@@ -949,7 +1029,8 @@ function usage() {
   process.stderr.write("Usage: npm run benchmark:okf -- run <suite> [repository] [UTC-run-id]\n"
     + "       npm run benchmark:okf -- finalize <suite> <UTC-run-id> [repository]\n"
     + "       npm run benchmark:okf -- pair <suite> <repository> [UTC-pair-id]\n"
-    + "       npm run benchmark:okf -- compare <suite> <UTC-pair-id> <repository>\n");
+    + "       npm run benchmark:okf -- compare <suite> <UTC-pair-id> <repository>\n"
+    + "       npm run benchmark:okf -- batch <suite> [UTC-run-id]\n");
   process.exitCode = 2;
 }
 
@@ -959,6 +1040,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
     if (extra.length || !suite) usage();
     else if (command === "run") await run(suite, first, second);
     else if (command === "finalize" && first) finalize(suite, first, second);
+    else if (command === "batch") await batch(suite, first);
     else if (command === "pair" && first) await pair(suite, first, second);
     else if (command === "compare" && first && second) compare(suite, first, second);
     else usage();

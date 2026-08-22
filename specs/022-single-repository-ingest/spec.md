@@ -237,6 +237,10 @@ accepted.
   exceed the current file. A failed check MUST reject the proposal while leaving
   the private session repairable. Sources belonging to other repositories MUST
   NOT be dereferenced without a separately authorized checkout.
+- **AB-INGEST-015**: New Initial Ingest Prepare MUST return an explicit editing
+  constraint requiring generated sources, relationships, Repository identity
+  metadata and navigation to be preserved while the agent enriches skeletons.
+  Final validation MUST continue to reject lost required provenance.
 - **AB-SCHEMA-030**: Catalog `7.0.0` MUST expose eight provider-neutral Initial
   Ingest roles: `Repository`, `Domain`, `System`, `Component`, `Function`,
   `Interface`, `Flow` and `Resource`. `Entity` and `Metric` remain

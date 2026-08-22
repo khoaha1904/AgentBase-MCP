@@ -1,0 +1,26 @@
+{
+  "mode": "batch-new",
+  "subject": "domains/cloud-operations",
+  "baseCommit": "c02af830d744059b0e9bb84a1d19165bd50de0f3",
+  "domainId": "domains/cloud-operations",
+  "sourceRepositoryIds": [
+    "repository-aws-health-aware-ef3e83846625",
+    "repository-sample-aws-devops-agent-terraform-602f2c2bcf7c"
+  ],
+  "manifestDigest": "sha256:1810c14ee6ebe307ff22d15a21b4bc04584a67129256b38b67ccb787d0f2e604",
+  "evidenceDigest": "sha256:947af7b73cd1ed880158ac63355639d59f79a2636968ab82ba614b0c3aa2fab8",
+  "schemaVersion": "7.0.0",
+  "selectedSchemas": [
+    "Component",
+    "Domain",
+    "Repository",
+    "Resource",
+    "System"
+  ],
+  "treeDigest": "sha256:61965dfbb6c0ee8dbfe5933ee773680116bf8b7eaa4ca1709b1c9e753e2bb2ab",
+  "diffDigest": "sha256:50630e41f5f9145c9dbb86cd2446e78c0e352ddf24736869aa6504d5cf4ca00c",
+  "localHubId": "ea4403bb0215073612cfa15d",
+  "id": "c7175b9206bff9723fa63da8",
+  "branch": "agentbase/okf-c7175b9206bff9723fa63da8",
+  "phase": "prepared"
+}

@@ -218,6 +218,40 @@ benchmarks.
 - **AB-BENCH-059** — Reports separate OKF/MCP defects, benchmark defects and
   truthful partial coverage. Equivalent evidence that misses an overly exact
   scorer probe remains a benchmark finding, not an automatic OKF defect.
+- **AB-BENCH-060** — Batch Initial Ingest qualification pins two distinct clean
+  Terraform repositories, one owner-confirmed semantic Domain, catalog `7.0.0`,
+  Codex version, `gpt-5.6-sol` and reasoning effort. Provider similarity alone
+  is not a valid Domain assignment.
+- **AB-BENCH-061** — One isolated host-agent process executes batch Prepare and
+  confirmation, then indexes, investigates, authors and records each member
+  sequentially before one batch Finalize and Inspect. Member evidence remains
+  rooted in its own repository and no provider CLI is available.
+- **AB-BENCH-062** — A batch run succeeds only with exactly one structurally
+  valid `batch-new` proposal covering every pinned Repository ID and the
+  confirmed Domain. Missing/extra lifecycle calls, source drift, failed members,
+  missing attribution or any Accept/Publish/provider call fail visibly.
+- **AB-BENCH-063** — Batch artifacts retain one portable prompt, exact manifest
+  and fixture states, JSONL trace, final message, combined OKF tree, proposal
+  attribution and a report separating OKF quality, MCP/runtime defects and
+  benchmark defects. Truthful partial knowledge is not failed for incompleteness.
+- **AB-BENCH-064** — Qualification runs one probe first. Only a valid proposal
+  without a clear quality blocker authorizes one identical sequential replica;
+  routine debugging never runs a third attempt.
+- **AB-BENCH-065** — A failed batch member caused by an agent-visible tool schema
+  omitting an enforced input grammar is an MCP contract defect, not an OKF
+  quality failure. The correction receives a new immutable prompt identity and
+  preserves the failed run before another single probe.
+- **AB-BENCH-066** — Sequential graph rebinding receives immutable Batch prompt
+  V3. V1 retains the Question-contract failure and V2 retains the one-repository
+  connection-binding failure; neither historical run or prompt is rewritten.
+- **AB-BENCH-067** — Batch schema guidance matches the qualified Initial Ingest
+  recovery contract: each member calls once, or corrects exactly one retryable
+  `INVALID_ARGUMENT` request defect and succeeds on one retry. Batch V3 retains
+  the contradictory no-retry failure; V4 carries the corrected contract.
+- **AB-BENCH-068** — Batch V4 retains the member-one record failure caused by
+  removing generated Domain repository provenance after changed-set validation.
+  V5 preserves generated skeleton provenance explicitly and does not weaken the
+  final trust gate. A failed run never authorizes a replica.
 
 ## Context A/B interpretation
 

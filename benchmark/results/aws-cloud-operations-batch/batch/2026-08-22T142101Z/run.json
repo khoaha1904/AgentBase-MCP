@@ -1,0 +1,106 @@
+{
+  "suite": "aws-cloud-operations-batch",
+  "workflow": "batch-initial-ingest",
+  "promptVersion": "okf-batch-ingest-v3",
+  "promptDigest": "sha256:dba75ee233707ac29aea52f6c97691de77b13d9743f7e6e1a8c001b07290da3f",
+  "catalogVersion": "7.0.0",
+  "confirmedDomain": {
+    "identity": "domains/cloud-operations",
+    "title": "Cloud Operations",
+    "evidenceResource": "agentbase://owner-guidance/domains/cloud-operations"
+  },
+  "fixtures": [
+    {
+      "id": "aws-health-aware",
+      "path": "../fixtures/source-repos/aws-health-polyrepo/aws-health-aware",
+      "commit": "928494c70a904a65b877d426516882397541eafd",
+      "sourceRepositoryId": "repository-aws-health-aware-779eb7e1bc7a",
+      "provenanceRepositoryId": "repository-aws-health-aware-ef3e83846625"
+    },
+    {
+      "id": "sample-aws-devops-agent-terraform",
+      "path": "../fixtures/source-repos/sample-aws-devops-agent-terraform",
+      "commit": "5ba5f4a2561e37d392ffdffc81fd999961956472",
+      "sourceRepositoryId": "repository-sample-aws-devops-agent-terraform-6b1023ab6b40",
+      "provenanceRepositoryId": "repository-sample-aws-devops-agent-terraform-602f2c2bcf7c"
+    }
+  ],
+  "agent": {
+    "provider": "codex-cli",
+    "executable": "codex",
+    "version": "codex-cli 0.149.0",
+    "model": "gpt-5.6-sol",
+    "reasoningEffort": "medium",
+    "timeoutMs": 900000,
+    "actualVersion": "codex-cli 0.149.0"
+  },
+  "startedAt": "2026-08-22T14:21:01.692Z",
+  "completedAt": "2026-08-22T14:22:45.498Z",
+  "outcome": "failed",
+  "elapsedMs": 103806,
+  "process": {
+    "exitCode": 0,
+    "signal": null,
+    "error": null
+  },
+  "usage": {
+    "inputTokens": 327141,
+    "cachedInputTokens": 288512,
+    "cacheWriteInputTokens": 0,
+    "uncachedInputTokens": 38629,
+    "outputTokens": 3000,
+    "reasoningOutputTokens": 723
+  },
+  "activity": {
+    "mcpToolCalls": 7,
+    "commandExecutions": 4,
+    "authoringToolCalls": 1,
+    "authoringArgumentBytes": 3911,
+    "authoringResultBytes": 247,
+    "authoringTools": {
+      "get_okf_authoring_schemas": {
+        "calls": 1,
+        "argumentBytes": 3911,
+        "resultBytes": 247
+      }
+    },
+    "mcpTools": {
+      "configure_hub": 1,
+      "confirm_batch_hub_ingest": 1,
+      "get_architecture": 1,
+      "get_hub_status": 1,
+      "get_okf_authoring_schemas": 1,
+      "index_repository": 1,
+      "prepare_batch_hub_ingest": 1
+    },
+    "guidance": {
+      "attempts": [
+        {
+          "status": "failed",
+          "code": "INVALID_ARGUMENT",
+          "retryable": true,
+          "error": "candidate aha-handler-pipeline cites evidence owned by another candidate"
+        }
+      ],
+      "inputCorrectionsUsed": 0,
+      "firstAttemptSucceeded": false
+    },
+    "observedSourceReadBytes": null,
+    "limitation": "event trace does not prove complete source-read volume",
+    "finalValidationIdentities": null
+  },
+  "proposal": null,
+  "attribution": null,
+  "coverage": null,
+  "failures": [
+    "Batch Init must finalize exactly one proposal; observed 0",
+    "finalize_batch_hub_ingest_proposal must run exactly once; observed 0",
+    "inspect_hub_okf_proposal must run exactly once; observed 0",
+    "index_repository must run once per member; observed 1/2",
+    "get_architecture must run once per member; observed 1/2",
+    "get_okf_authoring_schemas must run once per member; observed 1/2",
+    "prepare_hub_okf must run once per member; observed 0/2",
+    "record_batch_hub_ingest_member must run once per member; observed 0/2",
+    "validate_okf_changes must run one or two times per member; observed 0"
+  ]
+}

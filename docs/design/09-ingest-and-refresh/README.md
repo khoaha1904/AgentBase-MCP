@@ -1,6 +1,7 @@
 # 09 — Ingest và Refresh
 
-> Trạng thái: Single-repository Init/Refresh implemented; batch/enrichment/freshness deferred.
+> Trạng thái: Single-repository Init/Refresh, Batch Initial Ingest và bounded
+> Domain Enrichment implemented; Batch Refresh/freshness deferred.
 
 High-level decision:
 [Ingest và Refresh](../../present/09-ingest-and-refresh.md)
@@ -25,6 +26,8 @@ High-level decision:
   publish cho provider evidence, Questions và cross-repository relations.
 - [`08-okf-freshness.md`](08-okf-freshness.md) — warning age/revision trong MCP
   query và derived CI report.
+- [`09-runtime-requirements.md`](09-runtime-requirements.md) — current
+  `AB-BATCH-*` contract cho Batch Initial Ingest.
 
 ## Implementation trace
 
@@ -33,8 +36,10 @@ High-level decision:
   check; one repair; Repository observed-source metadata.
 - Implemented: Refresh exact commit diff, known gaps + bounded discovery,
   foreign/protected evidence preservation và typed destructive intent.
-- Deferred: multi-repository batch/checkpoints, Domain Enrichment/provider CLI,
-  query age presentation và scheduled freshness report.
+- Implemented offline: explicit 2..32-repository Batch Initial Ingest,
+  sequential checkpoints, retry/membership revision và one atomic proposal.
+- Deferred: Batch Refresh, additional Domain Enrichment profiles, query age
+  presentation và scheduled freshness report.
 
 Qualification policy hiện dùng Sol cho Initial Ingest và Terra cho Refresh.
 Đây là benchmark configuration, không phải runtime model router của MCP.

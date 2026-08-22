@@ -1,9 +1,12 @@
 import type { CallToolResult } from "@modelcontextprotocol/server";
 
-import { normalizeConfirmedDomain, type OkfAuthoringGuidanceRequest } from "../../../core/knowledge/index.ts";
+import {
+  normalizeConfirmedDomain, type CanonicalRelationshipKind, type OkfAuthoringGuidanceRequest,
+} from "../../../core/knowledge/index.ts";
 import type { HubToolActions } from "./mcp-tool-actions.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
 import type { HubLifecycleIntent } from "../../../core/knowledge/index.ts";
+import type { EnrichmentAnswer, EnrichmentCandidateInput } from "../enrichment/index.ts";
 
 function result(value: unknown, isError = false): CallToolResult {
   return { content: [{ type: "text", text: JSON.stringify(value) }], ...(isError ? { isError: true } : {}) };
@@ -22,6 +25,75 @@ function optionalStringList(args: Readonly<Record<string, unknown>>, key: string
     throw new Error(`${key} must be a non-empty string list`);
   }
   return value as string[];
+}
+
+function exactRecord(value: unknown, name: string, requiredKeys: readonly string[], optionalKeys: readonly string[] = []): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${name} must be an object`);
+  const record = value as Record<string, unknown>, keys = Object.keys(record);
+  if (requiredKeys.some((key) => !(key in record)) || keys.some((key) => !requiredKeys.includes(key) && !optionalKeys.includes(key))) {
+    throw new Error(`${name} contains unknown or missing fields`);
+  }
+  return record;
+}
+
+function stringList(value: unknown, name: string, allowEmpty: boolean): readonly string[] {
+  if (!Array.isArray(value) || (!allowEmpty && !value.length) || !value.every((item) => typeof item === "string" && item.length > 0)) {
+    throw new Error(`${name} must be ${allowEmpty ? "a" : "a non-empty"} string list`);
+  }
+  return value as string[];
+}
+
+function enrichmentCandidates(value: unknown): readonly EnrichmentCandidateInput[] {
+  if (!Array.isArray(value) || !value.length || value.length > 64) throw new Error("candidates must contain 1-64 entries");
+  return value.map((item, index) => {
+    const entry = exactRecord(item, `candidate ${index + 1}`,
+      ["id", "kind", "source_concept_id", "queue", "identity_evidence_ids", "interaction_evidence_ids"],
+      ["target_concept_id", "predicate", "expected_arn", "question"]);
+    const queue = exactRecord(entry.queue, `candidate ${index + 1} queue`, ["name", "account_id", "region"]);
+    const question = entry.question === undefined ? undefined
+      : exactRecord(entry.question, `candidate ${index + 1} question`, ["id", "revision"]);
+    if (typeof entry.id !== "string" || !["identity", "relation", "question"].includes(String(entry.kind))
+      || typeof entry.source_concept_id !== "string" || typeof queue.name !== "string"
+      || typeof queue.account_id !== "string" || typeof queue.region !== "string"
+      || (entry.target_concept_id !== undefined && typeof entry.target_concept_id !== "string")
+      || (entry.predicate !== undefined && typeof entry.predicate !== "string")
+      || (entry.expected_arn !== undefined && typeof entry.expected_arn !== "string")
+      || (question && (typeof question.id !== "string" || !Number.isInteger(question.revision)))) {
+      throw new Error(`candidate ${index + 1} is invalid`);
+    }
+    return {
+      id: entry.id, kind: entry.kind as EnrichmentCandidateInput["kind"], sourceConceptId: entry.source_concept_id,
+      ...(typeof entry.target_concept_id === "string" ? { targetConceptId: entry.target_concept_id } : {}),
+      ...(typeof entry.predicate === "string" ? { predicate: entry.predicate as CanonicalRelationshipKind } : {}),
+      ...(typeof entry.expected_arn === "string" ? { expectedArn: entry.expected_arn } : {}),
+      queue: { name: queue.name, accountId: queue.account_id, region: queue.region },
+      identityEvidenceIds: stringList(entry.identity_evidence_ids, "identity_evidence_ids", false),
+      interactionEvidenceIds: stringList(entry.interaction_evidence_ids, "interaction_evidence_ids", true),
+      ...(question ? { question: { id: question.id as string, revision: question.revision as number } } : {}),
+    };
+  });
+}
+
+function enrichmentRevision(args: Readonly<Record<string, unknown>>): number {
+  if (!Number.isInteger(args.manifest_revision) || Number(args.manifest_revision) < 1) {
+    throw new Error("manifest_revision must be a positive integer");
+  }
+  return args.manifest_revision as number;
+}
+
+function enrichmentAnswers(value: unknown): readonly EnrichmentAnswer[] {
+  if (!Array.isArray(value) || value.length > 64) throw new Error("answers must be a list of at most 64 entries");
+  return value.map((item, index) => {
+    const entry = exactRecord(item, `answer ${index + 1}`, ["candidate_id", "question_id", "question_revision", "action"], ["answer", "maintainer"]);
+    if (typeof entry.candidate_id !== "string" || !["answer", "defer"].includes(String(entry.action))
+      || typeof entry.question_id !== "string" || !Number.isInteger(entry.question_revision) || Number(entry.question_revision) < 1
+      || (entry.answer !== undefined && typeof entry.answer !== "string")
+      || (entry.maintainer !== undefined && typeof entry.maintainer !== "string")) throw new Error(`answer ${index + 1} is invalid`);
+    return { candidateId: entry.candidate_id, questionId: entry.question_id,
+      questionRevision: entry.question_revision as number, action: entry.action as EnrichmentAnswer["action"],
+      ...(typeof entry.answer === "string" ? { answer: entry.answer } : {}),
+      ...(typeof entry.maintainer === "string" ? { maintainer: entry.maintainer } : {}) };
+  });
 }
 
 function guidanceRequest(value: unknown): OkfAuthoringGuidanceRequest {
@@ -91,7 +163,7 @@ function questionDeclarations(value: unknown): readonly QuestionDeclaration[] {
         if (!ref || typeof ref !== "object" || Array.isArray(ref)) return false;
         const current = ref as Record<string, unknown>;
         return Object.keys(current).sort().join("\0") === "role\0source_id"
-          && ["documentation", "implementation", "configuration"].includes(String(current.role))
+          && ["documentation", "implementation", "configuration", "provider"].includes(String(current.role))
           && typeof current.source_id === "string" && current.source_id.length > 0;
       })
       || (entry.missing_evidence !== undefined && (!Array.isArray(entry.missing_evidence)
@@ -100,7 +172,7 @@ function questionDeclarations(value: unknown): readonly QuestionDeclaration[] {
     }
     return { subject: entry.subject, property: entry.property,
       observationRefs: (refs as Array<Record<string, unknown>>).map((ref) => ({
-        role: ref.role as "documentation" | "implementation" | "configuration",
+        role: ref.role as "documentation" | "implementation" | "configuration" | "provider",
         sourceId: ref.source_id as string,
       })),
       missingEvidence: (entry.missing_evidence ?? []) as string[] };
@@ -191,6 +263,78 @@ export async function callHubOkfTool(
     if (name === "finalize_hub_okf_proposal") {
       return result(await actions.finalize(required(args, "session_id"), questionDeclarations(args.questions),
         lifecycleIntents(args.lifecycle_intents)));
+    }
+    if (name === "prepare_batch_hub_ingest") {
+      return result(await actions.prepareBatch({
+        sourceRepositories: stringList(args.source_repositories, "source_repositories", false),
+        proposedDomain: normalizeConfirmedDomain(args.proposed_domain),
+      }));
+    }
+    if (name === "confirm_batch_hub_ingest") {
+      if (!Array.isArray(args.assessments) || !args.assessments.length) throw new Error("assessments must be a non-empty list");
+      const assessments = args.assessments.map((value) => {
+        if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("batch assessment must be an object");
+        const item = value as Record<string, unknown>, decision = item.decision;
+        if (decision !== "match" && decision !== "override") throw new Error("batch assessment decision must be match or override");
+        return { memberId: required(item, "member_id"), decision: decision as "match" | "override",
+          evidencePath: required(item, "evidence_path") };
+      });
+      const revision = args.manifest_revision;
+      if (!Number.isInteger(revision) || Number(revision) < 1) throw new Error("manifest_revision must be positive");
+      return result(await actions.confirmBatch({ manifestId: required(args, "manifest_id"),
+        manifestRevision: revision as number, assessments }));
+    }
+    if (name === "record_batch_hub_ingest_member") {
+      const revision = args.manifest_revision;
+      if (!Number.isInteger(revision) || Number(revision) < 1) throw new Error("manifest_revision must be positive");
+      return result(await actions.recordBatchMember({ manifestId: required(args, "manifest_id"),
+        manifestRevision: revision as number, memberId: required(args, "member_id"),
+        sessionId: required(args, "session_id"), questions: questionDeclarations(args.questions) }));
+    }
+    if (name === "retry_batch_hub_ingest_member" || name === "finalize_batch_hub_ingest_proposal") {
+      const revision = args.manifest_revision;
+      if (!Number.isInteger(revision) || Number(revision) < 1) throw new Error("manifest_revision must be positive");
+      const input = { manifestId: required(args, "manifest_id"), manifestRevision: revision as number };
+      return result(await (name === "retry_batch_hub_ingest_member"
+        ? actions.retryBatchMember({ ...input, memberId: required(args, "member_id") })
+        : actions.finalizeBatch(input)));
+    }
+    if (name === "revise_batch_hub_ingest_membership") {
+      const revision = args.manifest_revision;
+      if (!Number.isInteger(revision) || Number(revision) < 1) throw new Error("manifest_revision must be positive");
+      return result(await actions.reviseBatch({ manifestId: required(args, "manifest_id"),
+        manifestRevision: revision as number, memberIds: stringList(args.member_ids, "member_ids", false) }));
+    }
+    if (name === "prepare_domain_enrichment") {
+      return result(await actions.prepareEnrichment({
+        domainId: required(args, "domain_id"),
+        repositoryIds: stringList(args.repository_ids, "repository_ids", false),
+        candidates: enrichmentCandidates(args.candidates), accountId: required(args, "account_id"),
+        regions: stringList(args.regions, "regions", false),
+      }));
+    }
+    if (name === "revise_domain_enrichment_membership") {
+      return result(await actions.reviseEnrichment({
+        manifestId: required(args, "manifest_id"), manifestRevision: enrichmentRevision(args),
+        repositoryIds: stringList(args.repository_ids, "repository_ids", false),
+        candidates: enrichmentCandidates(args.candidates),
+      }));
+    }
+    if (name === "run_domain_enrichment") {
+      if (args.provider_session_confirmed !== true) throw new Error("provider_session_confirmed must be true");
+      return result(await actions.runEnrichment({
+        manifestId: required(args, "manifest_id"), manifestRevision: enrichmentRevision(args),
+        providerSessionConfirmed: true,
+        ...(args.retry_candidate_ids === undefined ? {} : {
+          retryCandidateIds: stringList(args.retry_candidate_ids, "retry_candidate_ids", false),
+        }),
+      }));
+    }
+    if (name === "finalize_domain_enrichment_proposal") {
+      return result(await actions.finalizeEnrichment({
+        manifestId: required(args, "manifest_id"), manifestRevision: enrichmentRevision(args),
+        answers: enrichmentAnswers(args.answers),
+      }));
     }
     if (name === "search_hub_okf") {
       const limit = args.limit;

@@ -1,5 +1,8 @@
 # 02 — Hub, Domain và Repository được tổ chức thế nào?
 
+> Trạng thái runtime: single-repository và explicit Batch Initial Ingest đã
+> implement offline; monorepo scope automation còn deferred.
+
 > Trạng thái: Hướng sản phẩm đã chốt; single-repository Domain/Repository foundation đã implement.
 
 ## Câu trả lời ngắn

@@ -4,6 +4,7 @@ export {
   assertDependencySafePrefix,
   createHubProposal,
   createLocalProposal,
+  proposalRepositoryIds,
   HUB_PROPOSAL_SUBJECT_PATTERN,
   HUB_PROPOSAL_TRAILERS,
   isHubProposalSubject,

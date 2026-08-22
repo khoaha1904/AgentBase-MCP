@@ -122,12 +122,14 @@ export {
 export {
   createObservedValueId,
   normalizeRepositoryObservedValues,
+  normalizeProviderObservedValues,
   observedValueSafetyFailure,
   readObservedValues,
   readObservedValuesForQuery,
   renderObservedValuesSection,
   validateBundleObservedValues,
   type NormalizeRepositoryObservedValuesOptions,
+  type NormalizeProviderObservedValuesOptions,
   type ObservedValue,
   type ObservedValueIdInput,
   type ObservedValueRole,
@@ -143,6 +145,7 @@ export {
   renderQuestionDocument,
   renderQuestionIndex,
   resolveQuestion,
+  resolveQuestionFromEvidence,
   validateQuestionTransition,
   type CandidateEvidenceQuestionReference,
   type OwnedItemQuestionReference,
@@ -151,6 +154,20 @@ export {
   type QuestionState,
   type SharedQuestion,
 } from "./governance/questions.ts";
+export {
+  externalIdentityKey,
+  readExternalIdentities,
+  validateBundleExternalIdentities,
+  withExternalIdentity,
+  type ExternalIdentity,
+} from "./governance/external-identities.ts";
+export {
+  createProviderObservation,
+  providerObservationSourceResource,
+  validateProviderObservation,
+  type ProviderObservation,
+  type ProviderObservationInput,
+} from "./governance/provider-observations.ts";
 export {
   applyBundleProposal,
   recoverBundleSwitch,

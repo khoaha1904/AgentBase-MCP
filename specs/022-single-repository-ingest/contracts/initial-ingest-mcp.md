@@ -145,6 +145,9 @@ frontmatter. Suggested skeletons contain a visible role-review limitation;
 System skeletons carry the owner-evidenced confirmed-Domain relation;
 new Domain skeletons list the newly prepared Systems that belong to them;
 preparation does not Accept or publish.
+The Prepare response also states the editing constraint: preserve generated
+sources, relationships, Repository identity metadata and navigation while
+enriching the skeletons. Required provenance is not agent-removable content.
 Embedded recommendations are rendered as a bounded searchable table in their
 parent skeleton with role, kind, technology and exact source references. They
 do not receive a path, identity or relationship.

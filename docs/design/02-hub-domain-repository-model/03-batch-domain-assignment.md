@@ -1,6 +1,6 @@
 # 02.03 — Batch Domain assignment
 
-> Trạng thái: Owner-approved design; Batch Ingest runtime deferred after MVP.
+> Trạng thái: Batch Initial Ingest assignment implemented offline; Batch Refresh deferred.
 
 ## Scope
 

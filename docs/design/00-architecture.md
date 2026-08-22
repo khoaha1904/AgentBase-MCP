@@ -28,6 +28,7 @@ src/providers/
   fake-code-intelligence/         deterministic conformance provider
   codebase-memory/                exact managed graph adapter/lifecycle
   github-hub/                     bounded Git/worktree/GitHub transport
+  aws-cli/                        released read-only AWS observation profiles
 src/app/
   foundation-demo/                offline product demonstration
   codebase-memory-mcp/            filtered stdio MCP composition
@@ -40,6 +41,8 @@ src/app/
     configuration/                settings and credentials
     workspace/                    checkout, setup and bootstrap
     authoring/                    proposals, refresh and Questions
+    batch-ingest/                 sequential multi-repository Init/checkpoints
+    enrichment/                   Published Domain reconciliation/checkpoints
     review/                       inspection and acceptance
     publication/                  submit, publish and synchronize
     query/                        accepted-Hub reads and runtime actions
@@ -99,7 +102,8 @@ and returns visible recovery rather than hidden retry.
 - The public stdio gateway exposes safe Codebase Memory analysis, one controlled
   `index_repository`, AgentBase schema/validation and local Hub lifecycle/query
   tools. It omits provider mutation tools and binds one connection to one
-  repository. Explicit current-value questions use ordinary graph/search/snippet
+  repository at a time; a sequential repository change cleanly replaces the
+  provider child and retains repository-private caches. Explicit current-value questions use ordinary graph/search/snippet
   reads from an observed value's source file; there is no live-reference parser,
   resolver, cache or graph owner.
 - YAML parsing stays behind `core/knowledge`, rejects unsafe/oversized input and
@@ -108,6 +112,14 @@ and returns visible recovery rather than hidden retry.
   Question document contracts. `app/hub-okf` owns MCP-rendered Question transitions,
   optional rebuildable indexes and atomic answer-to-guidance proposals; the MCP
   gateway supplies only the authorized current-repository binding.
+- `providers/aws-cli` owns fixed no-shell argv, CLI v2 admission and normalized
+  provider observations. `app/hub-okf/enrichment` owns Published-only manifests,
+  sequential reconciliation and proposal assembly. The MVP releases STS caller
+  identity plus exact SQS queue reads only; it has no arbitrary command surface.
+- `app/hub-okf/batch-ingest` owns explicit Batch Initial Ingest manifests,
+  member checkpoints and deterministic diff composition. It reuses ordinary
+  repository authoring sessions, runs no model/provider process and may compose
+  only append-only indexes plus navigation of the one confirmed Domain.
 - `agentbase-ingest` owns the five-stage host-agent workflow: Preflight,
   Discover, Investigate, Author and Validate. MCP remains deterministic and
   bounded: it resolves Repository/Domain context, classifies exact technology

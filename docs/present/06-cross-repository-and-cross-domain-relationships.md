@@ -1,6 +1,6 @@
 # 06 — Quan hệ giữa nhiều repository và nhiều Domain
 
-> Trạng thái: High-level đã chốt; automated cross-repository enrichment chưa implement.
+> Trạng thái: High-level đã chốt; exact AWS/SQS Domain Enrichment đã implement offline.
 
 ## Câu trả lời ngắn
 

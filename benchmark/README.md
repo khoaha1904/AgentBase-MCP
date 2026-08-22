@@ -39,6 +39,17 @@ Run one explicit model-backed benchmark:
 npm run benchmark:okf -- run aws-serverless aws-health-aware
 ```
 
+Run the two-repository Batch Initial Ingest probe:
+
+```bash
+npm run benchmark:okf -- batch aws-cloud-operations-batch
+```
+
+The batch suite pins two Terraform Cloud Operations repositories, uses one Sol
+process and retains one combined `batch-new` proposal. It stops before Accept,
+Publish and provider access. Run one probe first; only a valid result without a
+clear owner-review blocker permits one identical sequential replica.
+
 The separately versioned `aws-terraform-operations` suite runs the same pinned
 Terraform operations fixture with the Initial Ingest production model policy
 (`gpt-5.6-sol`) without rewriting the historical V15 manifest.

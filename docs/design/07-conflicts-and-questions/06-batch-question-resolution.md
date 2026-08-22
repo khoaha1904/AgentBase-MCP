@@ -1,6 +1,6 @@
 # 07.06 — Batch Question resolution
 
-> Trạng thái: Owner đã chốt automatic/recommended/manual resolution tiers; chưa implement.
+> Trạng thái: Ba tier đã implement cho Domain Enrichment AWS/SQS; inference rộng hơn deferred.
 
 ## Quyết định ngắn
 

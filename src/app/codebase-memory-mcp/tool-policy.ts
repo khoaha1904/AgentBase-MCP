@@ -13,7 +13,7 @@ export class McpPolicyError extends Error {
   }
 }
 
-export function controlledIndex(argumentsValue: Readonly<Record<string, unknown>>, boundRoot?: string): ControlledIndex {
+export function controlledIndex(argumentsValue: Readonly<Record<string, unknown>>): ControlledIndex {
   const candidate = argumentsValue.repo_path;
   if (typeof candidate !== "string" || !path.isAbsolute(candidate)) {
     throw new McpPolicyError("repo_path must be an absolute repository directory");
@@ -24,9 +24,6 @@ export function controlledIndex(argumentsValue: Readonly<Record<string, unknown>
     if (!fs.statSync(repositoryRoot).isDirectory()) throw new Error("not a directory");
   } catch {
     throw new McpPolicyError("repo_path must resolve to an existing repository directory");
-  }
-  if (boundRoot !== undefined && repositoryRoot !== boundRoot) {
-    throw new McpPolicyError("this MCP connection is bound to another repository; reconnect to select a different repository");
   }
   if (argumentsValue.persistence === true) throw new McpPolicyError("source-local persistence is disabled; use persistence:false");
   if (argumentsValue.mode === "cross-repo-intelligence" || argumentsValue.target_projects !== undefined) {

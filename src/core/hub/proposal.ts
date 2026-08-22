@@ -11,6 +11,9 @@ export const HUB_PROPOSAL_TRAILERS = {
   diffDigest: "AgentBase-Diff-Digest",
   catalog: "AgentBase-Schema-Catalog",
   mode: "AgentBase-Proposal-Mode",
+  domainId: "AgentBase-Domain-ID",
+  sourceIds: "AgentBase-Source-IDs",
+  manifestDigest: "AgentBase-Manifest-Digest",
 } as const;
 
 const HUB_SUBJECT_ROOTS = [
@@ -27,9 +30,12 @@ export function isHubProposalSubject(value: string): boolean {
 
 export type LocalProposal = Readonly<{
   id: string;
-  mode: "new" | "refresh";
+  mode: "new" | "refresh" | "enrichment" | "batch-new";
   subject: string;
-  sourceRepositoryId: string;
+  sourceRepositoryId?: string;
+  domainId?: string;
+  sourceRepositoryIds?: readonly string[];
+  manifestDigest?: string;
   evidenceDigest: string;
   schemaVersion: string;
   selectedSchemas: readonly string[];
@@ -43,10 +49,13 @@ export type LocalProposal = Readonly<{
 }>;
 type HubProposalFields = Readonly<{
   id: string;
-  mode: "new" | "refresh";
+  mode: "new" | "refresh" | "enrichment" | "batch-new";
   subject: string;
   baseCommit: string;
-  sourceRepositoryId: string;
+  sourceRepositoryId?: string;
+  domainId?: string;
+  sourceRepositoryIds?: readonly string[];
+  manifestDigest?: string;
   evidenceDigest: string;
   schemaVersion: string;
   selectedSchemas: readonly string[];
@@ -76,8 +85,17 @@ export function createHubProposal(input: RemoteProposalInput): HubProposal;
 export function createHubProposal(input: LocalProposalInput): LocalOnlyHubProposal;
 export function createHubProposal(input: RemoteProposalInput | LocalProposalInput): AnyHubProposal {
   hex(input.baseCommit, "baseCommit");
-  if (!/^repository-[a-z0-9-]+-[a-f0-9]{12}$/.test(input.sourceRepositoryId)) {
-    throw new HubValidationError("HUB_SOURCE_INVALID", "sourceRepositoryId must be a normalized AgentBase repository identity");
+  if (input.mode === "enrichment" || input.mode === "batch-new") {
+    if (input.sourceRepositoryId !== undefined || !/^domains\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(input.domainId ?? "")
+      || !input.sourceRepositoryIds?.length || input.sourceRepositoryIds.length > 32
+      || new Set(input.sourceRepositoryIds).size !== input.sourceRepositoryIds.length
+      || input.sourceRepositoryIds.some((value) => !/^repository-[a-z0-9-]+-[a-f0-9]{12}$/.test(value))) {
+      throw new HubValidationError("HUB_SOURCE_INVALID", `${input.mode} requires one Domain and normalized unique Repository identities`);
+    }
+    digest(input.manifestDigest ?? "", "manifestDigest");
+  } else if (!/^repository-[a-z0-9-]+-[a-f0-9]{12}$/.test(input.sourceRepositoryId ?? "")
+    || input.domainId !== undefined || input.sourceRepositoryIds !== undefined || input.manifestDigest !== undefined) {
+    throw new HubValidationError("HUB_SOURCE_INVALID", "Repository proposal source scope is invalid");
   }
   digest(input.evidenceDigest, "evidenceDigest");
   digest(input.treeDigest, "treeDigest");
@@ -113,6 +131,17 @@ export function createLocalProposal(input: Omit<LocalProposal, "publicationState
   digest(input.evidenceDigest, "evidenceDigest");
   digest(input.treeDigest, "treeDigest");
   digest(input.diffDigest, "diffDigest");
+  if (input.mode === "enrichment" || input.mode === "batch-new") {
+    if (input.sourceRepositoryId !== undefined || !/^domains\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(input.domainId ?? "")
+      || !input.sourceRepositoryIds?.length || input.sourceRepositoryIds.length > 32
+      || new Set(input.sourceRepositoryIds).size !== input.sourceRepositoryIds.length
+      || input.sourceRepositoryIds.some((value) => !/^repository-[a-z0-9-]+-[a-f0-9]{12}$/.test(value))) {
+      throw new HubValidationError("HUB_SOURCE_INVALID", `accepted ${input.mode} scope is invalid`);
+    }
+    digest(input.manifestDigest ?? "", "manifestDigest");
+  } else if (!/^repository-[a-z0-9-]+-[a-f0-9]{12}$/.test(input.sourceRepositoryId ?? "")) {
+    throw new HubValidationError("HUB_SOURCE_INVALID", "accepted Repository proposal source is invalid");
+  }
   if (!Number.isFinite(Date.parse(input.createdAt)) || !Number.isFinite(Date.parse(input.acceptedAt))) {
     throw new HubValidationError("HUB_PROPOSAL_TIME_INVALID", "proposal timestamps must be ISO-compatible");
   }
@@ -123,12 +152,21 @@ export function renderLocalProposalTrailers(proposal: LocalProposal): string {
   return [
     `${HUB_PROPOSAL_TRAILERS.id}: ${proposal.id}`,
     `${HUB_PROPOSAL_TRAILERS.subject}: ${proposal.subject}`,
-    `${HUB_PROPOSAL_TRAILERS.sourceId}: ${proposal.sourceRepositoryId}`,
+    ...(["enrichment", "batch-new"].includes(proposal.mode) ? [
+      `${HUB_PROPOSAL_TRAILERS.domainId}: ${proposal.domainId}`,
+      `${HUB_PROPOSAL_TRAILERS.sourceIds}: ${proposal.sourceRepositoryIds?.join(",")}`,
+      `${HUB_PROPOSAL_TRAILERS.manifestDigest}: ${proposal.manifestDigest}`,
+    ] : [`${HUB_PROPOSAL_TRAILERS.sourceId}: ${proposal.sourceRepositoryId}`]),
     `${HUB_PROPOSAL_TRAILERS.evidenceDigest}: ${proposal.evidenceDigest}`,
     `${HUB_PROPOSAL_TRAILERS.diffDigest}: ${proposal.diffDigest}`,
     `${HUB_PROPOSAL_TRAILERS.catalog}: ${proposal.schemaVersion}`,
     `${HUB_PROPOSAL_TRAILERS.mode}: ${proposal.mode}`,
   ].join("\n");
+}
+
+export function proposalRepositoryIds(proposal: Pick<LocalProposal, "mode" | "sourceRepositoryId" | "sourceRepositoryIds">): readonly string[] {
+  return proposal.mode === "enrichment" || proposal.mode === "batch-new"
+    ? [...(proposal.sourceRepositoryIds ?? [])] : proposal.sourceRepositoryId ? [proposal.sourceRepositoryId] : [];
 }
 
 export function assertDependencySafePrefix(
