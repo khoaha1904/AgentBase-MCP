@@ -157,8 +157,9 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-HUB-SETUP-003** — Only an unconfigured Hub-dependent action offers attach
   existing versus create local-only, before proposal/Git mutation.
 - **AB-HUB-SETUP-004** — Existing attach accepts one credential-free GitHub HTTPS
-  URL, clones `main` into staging, validates exact clean conformant content and
-  atomically admits it.
+  URL, clones `main` into staging, validates exact clean conformant OKF content
+  and atomically admits it. A legacy existing Hub may omit the explanatory
+  README; MCP-created new Hubs still include it.
 - **AB-HUB-SETUP-005** — Failed/interrupted setup preserves the prior admitted
   state and never leaves a partial active checkout.
 - **AB-HUB-SETUP-006** — New setup performs no network call and creates a private

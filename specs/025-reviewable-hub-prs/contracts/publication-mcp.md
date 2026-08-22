@@ -7,6 +7,10 @@
 ```
 
 IDs must be one non-empty dependency-safe pending prefix in local Git order.
+The caller supplies no token or alternate GitHub credential. Branch push and PR
+creation are performed exclusively by MCP with its internally loaded dedicated
+Hub credential; `gh` and ambient/personal Git credentials are outside this
+contract.
 
 ## Output
 

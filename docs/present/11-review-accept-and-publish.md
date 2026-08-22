@@ -73,6 +73,11 @@ Refresh tiếp theo của cùng Repository tạo stack `main ← Init ← Refres
 chỉ hiện delta so với base ngay trước nó. Những selection khác vẫn tạo một batch
 PR dependency-safe vào `main`.
 
+Tạo branch và PR Hub là **quyền hạn độc quyền của MCP** trong workflow này.
+Agent chỉ yêu cầu MCP submit proposal IDs; agent không được dùng `gh`, GitHub
+token cá nhân, ambient Git credential hay một publisher khác để làm thay. Quyền
+này không bao gồm merge, approve, đóng PR hoặc thay đổi repository settings.
+
 PR body được tạo deterministic từ accepted proposal, inspection và Git metadata;
 metadata tùy chọn bị thiếu được ghi là unavailable. MCP không dùng `gh`, không
 merge, force-push, retarget hoặc tách các Init độc lập bằng rebase. Independent

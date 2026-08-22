@@ -120,8 +120,12 @@ and returns visible recovery rather than hidden retry.
   source-native Terraform/Terragrunt observations and AWS Profile v2 maps
   supported products to generic roles;
   provider/product/source-tool remain metadata and evidence.
-- GitHub access is confined to explicit attach, bootstrap, publication and
-  synchronization workflows. Local knowledge work requires no network.
+- GitHub access is owned by explicit MCP workflows and MCP-managed credentials;
+  a calling agent never substitutes `gh`, personal tokens or ambient Git
+  credentials. The current implementation confines access to attach, bootstrap,
+  publication and synchronization. A future bounded remote-reference reader
+  must use the same authority boundary rather than giving the agent direct
+  repository access. Local knowledge work requires no network.
 - Benchmark model execution is an opt-in external Codex process in an isolated
   result workspace; AgentBase contains no model SDK or credential storage.
 

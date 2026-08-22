@@ -35,6 +35,11 @@ Provider CLI resolution không chạy trong Ingest. Nó thuộc Domain Enrichmen
 sau khi người dùng đã login, và chỉ resolve resource/value liên quan tới các
 concept, Questions hoặc relation candidates đang được review.
 
+Nếu source nằm ở GitHub repository khác, việc resolve remote sau này phải đi
+qua MCP và credential do MCP quản lý; agent không tự dùng `gh` hay credential
+riêng. Provider CLI là boundary khác: người dùng login CLI trước, rồi cho phép
+MCP dùng session đó trong luồng enrichment đã xác nhận.
+
 ## Quyền và dữ liệu nhạy cảm
 
 Hub là một trust boundary chung. Ai có quyền Hub có thể đọc toàn bộ Published

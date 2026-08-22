@@ -121,7 +121,6 @@ export async function attachExistingHub(
     const status = await git({ args: ["status", "--porcelain=v1", "--untracked-files=all"], cwd: staging, operation: "validate attached Hub tree" });
     if (status.stdout.length) throw new Error("attached AgentBase-Hub tree is not clean");
     loadOkfBundle(staging, { requireAgentBaseRootIndex: true });
-    if (!fs.existsSync(path.join(staging, "README.md"))) throw new Error("existing AgentBase-Hub is missing README.md");
     const baseCommit = await rootCommit(staging, git);
     const head = await git({ args: ["rev-parse", "--verify", "HEAD^{commit}"], cwd: staging, operation: "resolve attached Hub head" });
     const activeHead = exactCommit(head.stdout, "Hub head");

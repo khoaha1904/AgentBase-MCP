@@ -15,7 +15,10 @@ as a stack where Refresh targets the Init branch.
 ## Owner Decisions
 
 - MCP owns branch push and PR creation with the dedicated Hub token. The calling
-  agent does not invoke `gh`, merge, approve, force-push or delete branches.
+  agent only requests publication through MCP and does not invoke `gh`, use a
+  personal or ambient Git credential, or substitute another publisher. This
+  authority does not include merge, approve, close, force-push, branch deletion
+  or repository-settings mutation.
 - The existing dependency-safe pending-prefix selection remains the public
   publication entrypoint.
 - One ordinary selection remains one PR against configured `main`.
@@ -95,7 +98,10 @@ identity for all three fake GitHub PRs.
 ### Functional Requirements
 
 - **AB-PUBLISH-001**: The existing MCP publication action MUST remain the only
-  public path that pushes accepted Hub knowledge and creates GitHub PRs.
+  public path that pushes accepted Hub knowledge and creates GitHub PRs. A
+  calling agent MUST NOT substitute `gh`, a personal/ambient Git credential or
+  another publisher; it supplies proposal IDs and MCP loads its dedicated Hub
+  credential internally.
 - **AB-PUBLISH-002**: Every newly created publication PR MUST contain bounded
   Purpose, Scope, Knowledge Changes, Uncertainty, Evidence and Validation, and
   Reviewer Action sections derived from exact accepted metadata.

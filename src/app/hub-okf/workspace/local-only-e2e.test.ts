@@ -4,8 +4,9 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { runGit } from "../../../providers/github-hub/index.ts";
+import { runGit, type GitRequest } from "../../../providers/github-hub/index.ts";
 import { createHubRuntimeActions } from "../query/runtime-actions.ts";
+import { attachExistingHub } from "./setup.ts";
 
 const repositoryGuidance = {
   candidates: [{ id: "repository", identityHint: "source", identityBasis: "checkout root",
@@ -92,5 +93,21 @@ test("[AB-HUB-SETUP-006..008][SC-003] local-only Hub accepts, queries and invent
     assert.equal(searched.matches.some((match) => match.path === "repositories/repo-2.md"), true);
     assert.equal((await runGit({ args: ["remote"], cwd: configured.localRoot, operation: "verify no local Hub remote" })).stdout, "");
     await assert.rejects(actions.submitMany(["x"]), /first bootstrap/);
+
+    await runGit({ args: ["rm", "README.md"], cwd: configured.localRoot, operation: "remove legacy Hub README fixture" });
+    await runGit({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit", "-m", "legacy Hub without README"],
+      cwd: configured.localRoot, operation: "commit legacy Hub fixture", commitTimestamp: "2026-08-13T00:00:01Z" });
+    const attachEnvironment = { HOME: path.join(root, "attach-home"), XDG_CONFIG_HOME: path.join(root, "attach-config"),
+      XDG_DATA_HOME: path.join(root, "attach-data"), AGENTBASE_HUB_GITHUB_TOKEN: "token-canary" };
+    const attached = await attachExistingHub("https://github.com/acme/AgentBase-Hub", attachEnvironment, async (request: GitRequest) => {
+      if (request.args[0] !== "clone") return runGit(request);
+      const destination = String(request.args.at(-1));
+      fs.cpSync(configured.localRoot, destination, { recursive: true });
+      await runGit({ args: ["remote", "add", "origin", "https://github.com/acme/AgentBase-Hub.git"],
+        cwd: destination, operation: "add legacy Hub fixture origin" });
+      return { stdout: "", stderr: "" };
+    });
+    assert.equal(attached.repository, "acme/AgentBase-Hub");
+    assert.equal(fs.existsSync(path.join(attached.localRoot, "README.md")), false);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });

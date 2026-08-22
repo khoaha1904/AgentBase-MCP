@@ -16,8 +16,9 @@ chọn chế độ query.
 ## Khi nào dùng source?
 
 Code Graph chỉ dùng cho repository đã có local hoặc trong workspace. Với remote
-repository, Agent chỉ đọc file theo reference khi token hiện tại có quyền; MCP
-không tự clone repository.
+repository, Agent chỉ đọc file theo reference khi credential do MCP quản lý có
+quyền; MCP không tự clone repository. Agent không được tự gọi `gh`, dùng token
+cá nhân/ambient credential hoặc một remote reader khác để vượt qua MCP.
 
 Nếu thiếu quyền source, Agent trả phần Hub biết, kèm snapshot nếu có, và nói rõ
 không thể xác minh implementation hoặc giá trị hiện tại. Agent không đoán.
@@ -46,3 +47,7 @@ Quy tắc conflict canonical nằm ở
 Hub là một trust boundary chung: có quyền Hub thì đọc được toàn bộ Published
 knowledge, không có ACL riêng theo Domain, concept hoặc field. Quyền đọc source
 vẫn phụ thuộc repository/provider tương ứng.
+
+Đây là authority contract cho remote-repository query; remote file reader vẫn
+chưa được implement trong MVP hiện tại. Cho tới khi có capability đó, khác repo
+chỉ dùng được khi source đã có local/workspace hoặc Hub có knowledge/snapshot.
