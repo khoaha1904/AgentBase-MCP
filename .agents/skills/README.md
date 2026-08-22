@@ -9,6 +9,9 @@ its UI metadata inside its own directory.
   read exact source from one local repository.
 - [`agentbase-ingest`](agentbase-ingest/SKILL.md) — confirm one repository and
   Domain, investigate bounded evidence and stop at a sparse proposal preview.
+- [`agentbase-refresh`](agentbase-refresh/SKILL.md) — compare one canonical
+  repository with accepted knowledge, inspect exact source diffs and stop at a
+  reviewable update proposal.
 - [`agentbase-okf`](agentbase-okf/SKILL.md) — current proposal-authoring workflow
   after AgentBase has prepared a bounded workspace.
 

@@ -29,7 +29,7 @@ const v13EnabledTools = [
   "search_hub_okf", "read_hub_okf_concept",
 ];
 const initialIngestPromptVersions = new Set(["okf-author-v13", "okf-author-v14", "okf-author-v15"]);
-const refreshPromptVersions = new Set(["okf-refresh-v1", "okf-refresh-v2"]);
+const refreshPromptVersions = new Set(["okf-refresh-v1", "okf-refresh-v2", "okf-refresh-v3"]);
 const refreshRequiredTools = [
   "get_hub_status", "preflight_hub_ingest", "index_repository", "get_architecture",
   "prepare_hub_okf", "validate_okf_changes", "finalize_hub_okf_proposal", "inspect_hub_okf_proposal",
@@ -107,13 +107,20 @@ function gitSync(root, args, commitTimestamp) {
 function createRefreshSource(repository, entry) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-refresh-source-"));
   fs.cpSync(repository, root, { recursive: true });
-  const mutation = entry.mutation;
-  const target = path.join(root, ...mutation.path.split("/"));
-  const before = fs.readFileSync(target, "utf8");
-  const count = before.split(mutation.from).length - 1;
-  if (count !== mutation.count) throw new Error(`refresh mutation expected ${mutation.count} matches, found ${count}`);
-  fs.writeFileSync(target, before.split(mutation.from).join(mutation.to));
-  gitSync(root, ["add", "--", mutation.path]);
+  const mutations = entry.mutations ?? [entry.mutation];
+  if (!mutations.length || mutations.length > 8 || mutations.some((mutation) => !mutation)) {
+    throw new Error("refresh requires between one and eight source mutations");
+  }
+  for (const mutation of mutations) {
+    const target = path.join(root, ...mutation.path.split("/"));
+    const before = fs.readFileSync(target, "utf8");
+    const count = before.split(mutation.from).length - 1;
+    if (count !== mutation.count) {
+      throw new Error(`${mutation.path}: refresh mutation expected ${mutation.count} matches, found ${count}`);
+    }
+    fs.writeFileSync(target, before.split(mutation.from).join(mutation.to));
+  }
+  gitSync(root, ["add", "--", ...mutations.map((mutation) => mutation.path)]);
   gitSync(root, ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost",
     "commit", "--no-gpg-sign", "--no-verify", "-m", "Benchmark refresh source change"], new Date().toISOString());
   return root;
@@ -403,6 +410,7 @@ export function runAgentRepository({
     CONFIRMED_DOMAIN: entry.confirmedDomain
       ? `${entry.confirmedDomain.title} (${entry.confirmedDomain.identity}); evidence ${entry.confirmedDomain.evidenceResource}`
       : "None; do not infer a Domain from repository or product names",
+    SUBJECT_DIRECTORY: entry.subjectDirectory ?? "",
   });
   const portablePrompt = renderAgentPrompt(template, {
     SOURCE_ROOT: "<SOURCE_ROOT>",
@@ -412,6 +420,7 @@ export function runAgentRepository({
     CONFIRMED_DOMAIN: entry.confirmedDomain
       ? `${entry.confirmedDomain.title} (${entry.confirmedDomain.identity}); evidence ${entry.confirmedDomain.evidenceResource}`
       : "None; do not infer a Domain from repository or product names",
+    SUBJECT_DIRECTORY: entry.subjectDirectory ?? "",
   });
   const promptFile = path.join(root, "prompt.md");
   const eventsFile = path.join(root, "agent-events.jsonl");

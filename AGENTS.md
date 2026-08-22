@@ -32,6 +32,13 @@ source identifiers in English unless the user asks otherwise.
   roadmap, ADR or evidence files that repeat it.
 - Never port a large legacy implementation. Extract one verified behavior at a
   time behind a current contract.
+- Prevent dead specs while implementing. If code exposes a broad product,
+  architecture, authority, migration or workflow gap, stop implementation and
+  return to the affected AgentBase high-level and low-level design for owner
+  review before continuing. Small related implementation corrections may be
+  batched, but the affected design levels and living contract must be backfilled
+  before the slice is considered complete. Never close a capability while code,
+  high-level design, low-level design and current contracts disagree.
 
 ## Architecture rules
 

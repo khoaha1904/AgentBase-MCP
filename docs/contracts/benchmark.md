@@ -160,11 +160,11 @@ benchmarks.
   successful pre-state correction. The trace retains both attempts. Finalize
   runs exactly once without retry, and only released type names plus canonical
   relationship directions are valid.
-- **AB-BENCH-046** — The current MVP qualification suite contains only pinned
-  Terraform repositories. SAM/CloudFormation and mixed frontend/backend
-  fixtures are outside the current qualification scope. Their immutable prompts,
-  expectations and retained results remain historical evidence but are not
-  selectable from the current manifest.
+- **AB-BENCH-046** — The current MVP qualification suites contain only pinned
+  Terraform/Terragrunt repositories. Application frontend/backend source may be
+  qualified when Terraform is the structured infrastructure evidence.
+  SAM/CloudFormation remains outside scope and cannot be relabeled as Terraform.
+  Historical prompts, expectations and results remain immutable.
 - **AB-BENCH-047** — Every scored ratio reports numerator and denominator; a
   zero denominator is unavailable rather than 100%. Reports name unjudged
   concepts/relationships and the final successful `validate_okf_changes` call
@@ -193,6 +193,29 @@ benchmarks.
   product rule. A deterministic offline contract breach may be fixed directly;
   a semantic miss justifies a new cross-repository rule only after the same
   failure appears in at least two structurally distinct repositories.
+- **AB-BENCH-052** — ECS full-stack qualification pins the public fixture by
+  exact commit and rejects source drift or a dirty fixture.
+- **AB-BENCH-053** — Initial Ingest qualification uses `gpt-5.6-sol`; Refresh
+  qualification uses `gpt-5.6-terra`. This is explicit benchmark configuration,
+  not a model credential/router inside AgentBase-MCP.
+- **AB-BENCH-054** — Full-stack Initial Ingest reuses catalog 7 and evaluates
+  useful workload/contract boundaries without requiring a complete inventory or
+  provider-specific schema.
+- **AB-BENCH-055** — A Refresh baseline must be structurally valid, reviewable
+  and contain exact source-backed health-contract knowledge. A high aggregate
+  score alone cannot admit it.
+- **AB-BENCH-056** — The ECS Refresh mutation changes `/status` to `/health` in
+  the backend route/Swagger text and both Terraform server target groups in one
+  synthetic commit.
+- **AB-BENCH-057** — ECS Refresh additionally requires `GET /health` plus exact
+  Terraform evidence in the API concept and rejects retained `GET /status`.
+- **AB-BENCH-058** — Runs remain sequential: one Sol Init probe, one Terra
+  Refresh probe and at most one Terra replica after an unblocked probe. These
+  qualification runs never deploy, call provider CLI, Accept, Publish or open a
+  Hub PR.
+- **AB-BENCH-059** — Reports separate OKF/MCP defects, benchmark defects and
+  truthful partial coverage. Equivalent evidence that misses an overly exact
+  scorer probe remains a benchmark finding, not an automatic OKF defect.
 
 ## Context A/B interpretation
 

@@ -1,7 +1,12 @@
 # Current capability
 
 Active capability: None. Most recent completed:
-[`023-single-repository-refresh`](023-single-repository-refresh/spec.md).
+[`024-ecs-fullstack-qualification`](024-ecs-fullstack-qualification/spec.md).
+
+Capability 024 qualifies a structurally different AWS/Terraform full-stack ECS
+repository. Initial Ingest uses `gpt-5.6-sol` to establish the reviewed baseline;
+Refresh uses `gpt-5.6-terra` to reconcile one exact application/ALB health-check
+contract change. Runs remain sequential and stop on the first clear blocker.
 
 Capability 023 is implemented and passes the complete offline and model-backed
 gates. It adds one normal Refresh for one canonical Repository, reconciling

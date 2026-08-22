@@ -128,6 +128,28 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
   ].map((tool) => [tool, 1]));
   lifecycleTools.get_okf_authoring_schemas = 2;
   assert.deepEqual(validateV13Lifecycle(lifecycleTools, corrected.attempts), []);
+  const ecsRoot = path.resolve(import.meta.dirname, "..", "..", "benchmark", "repos", "aws-ecs-fullstack");
+  const ecs = JSON.parse(fs.readFileSync(path.join(ecsRoot, "manifest.json"), "utf8"));
+  assert.equal(ecs.agent.model, "gpt-5.6-sol");
+  assert.equal(ecs.repositories[0].kind, "terraform-ecs-fullstack");
+  assert.equal(ecs.repositories[0].commit, "98ee8e693a5ebc4b14f3dfe731bdc786637c1eb4");
+  const ecsExpected = JSON.parse(fs.readFileSync(path.join(ecsRoot, ecs.repositories[0].expectation), "utf8"));
+  assert.ok(ecsExpected.requiredConcepts.some((item) => item.key === "vue-client-component"));
+  assert.ok(ecsExpected.requiredConcepts.some((item) => item.key === "node-server-component"));
+  assert.ok(ecsExpected.embeddedKnowledge.some((item) => item.key === "server-health-contract"));
+  const ecsRefreshRoot = path.resolve(import.meta.dirname, "..", "..", "benchmark", "repos", "aws-ecs-fullstack-refresh");
+  const ecsRefresh = JSON.parse(fs.readFileSync(path.join(ecsRefreshRoot, "manifest.json"), "utf8"));
+  assert.equal(ecsRefresh.agent.model, "gpt-5.6-terra");
+  assert.equal(ecsRefresh.promptVersion, "okf-refresh-v3");
+  assert.deepEqual(ecsRefresh.repositories[0].mutations.map((mutation) => [mutation.path, mutation.count]), [
+    ["Code/server/src/app.js", 2],
+    ["Infrastructure/main.tf", 2],
+  ]);
+  assert.deepEqual(ecsRefresh.repositories[0].expectedOkf, {
+    path: "interfaces/backend-http-api.md",
+    includes: ["GET /health", "Infrastructure/main.tf"],
+    excludes: ["GET /status"],
+  });
   const refreshRoot = path.resolve(import.meta.dirname, "..", "..", "benchmark", "repos", "aws-serverless-refresh");
   const refresh = JSON.parse(fs.readFileSync(path.join(refreshRoot, "manifest.json"), "utf8"));
   assert.equal(refresh.version, 2);

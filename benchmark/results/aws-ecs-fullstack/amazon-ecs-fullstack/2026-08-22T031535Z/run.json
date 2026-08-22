@@ -1,0 +1,107 @@
+{
+  "suite": "aws-ecs-fullstack",
+  "repository": "amazon-ecs-fullstack",
+  "arm": "mcp",
+  "kind": "terraform-ecs-fullstack",
+  "fixturePath": "../fixtures/source-repos/amazon-ecs-fullstack-app-terraform",
+  "fixtureCommit": "98ee8e693a5ebc4b14f3dfe731bdc786637c1eb4",
+  "sourceRepositoryId": "repository-amazon-ecs-fullstack-app-terraform-5d25c0c8d152",
+  "provenanceRepositoryId": "repository-amazon-ecs-fullstack-app-terraform-69902021744a",
+  "catalogVersion": "7.0.0",
+  "promptVersion": "okf-author-v15",
+  "promptDigest": "sha256:52be0d92c20f3231f45e265fa69a7f5d1c7b09ee5afc875c25f29d764025a662",
+  "agent": {
+    "provider": "codex-cli",
+    "executable": "codex",
+    "version": "codex-cli 0.149.0",
+    "model": "gpt-5.6-sol",
+    "reasoningEffort": "medium",
+    "timeoutMs": 900000,
+    "actualVersion": "codex-cli 0.149.0"
+  },
+  "startedAt": "2026-08-22T03:15:35.351Z",
+  "completedAt": "2026-08-22T03:21:24.736Z",
+  "outcome": "succeeded",
+  "elapsedMs": 349385,
+  "process": {
+    "exitCode": 0,
+    "signal": null,
+    "error": null
+  },
+  "usage": {
+    "inputTokens": 1309276,
+    "cachedInputTokens": 1170688,
+    "cacheWriteInputTokens": 0,
+    "uncachedInputTokens": 138588,
+    "outputTokens": 15253,
+    "reasoningOutputTokens": 3658
+  },
+  "activity": {
+    "mcpToolCalls": 13,
+    "commandExecutions": 24,
+    "authoringToolCalls": 3,
+    "authoringArgumentBytes": 52871,
+    "authoringResultBytes": 20476,
+    "authoringTools": {
+      "get_okf_authoring_schemas": {
+        "calls": 1,
+        "argumentBytes": 9411,
+        "resultBytes": 12534
+      },
+      "validate_okf_changes": {
+        "calls": 2,
+        "argumentBytes": 43460,
+        "resultBytes": 7942
+      }
+    },
+    "mcpTools": {
+      "configure_hub": 1,
+      "finalize_hub_okf_proposal": 1,
+      "get_architecture": 1,
+      "get_hub_status": 1,
+      "get_okf_authoring_schemas": 1,
+      "index_repository": 1,
+      "inspect_hub_okf_proposal": 1,
+      "preflight_hub_ingest": 1,
+      "prepare_hub_okf": 1,
+      "search_hub_okf": 2,
+      "validate_okf_changes": 2
+    },
+    "guidance": {
+      "attempts": [
+        {
+          "status": "completed",
+          "code": null,
+          "retryable": false,
+          "error": null
+        }
+      ],
+      "inputCorrectionsUsed": 0,
+      "firstAttemptSucceeded": true
+    },
+    "observedSourceReadBytes": null,
+    "limitation": "event trace does not prove complete source-read volume",
+    "finalValidationIdentities": [
+      "components/demo-backend",
+      "components/demo-frontend",
+      "domains/digital-experience",
+      "flows/application-delivery-pipeline",
+      "interfaces/backend-http-api",
+      "repositories/amazon-ecs-fullstack-app-terraform",
+      "systems/ecs-fullstack-demo"
+    ]
+  },
+  "requiredToolUsage": {
+    "get_hub_status": true,
+    "configure_hub": true,
+    "preflight_hub_ingest": true,
+    "index_repository": true,
+    "get_architecture": true,
+    "get_okf_authoring_schemas": true,
+    "prepare_hub_okf": true,
+    "validate_okf_changes": true,
+    "finalize_hub_okf_proposal": true,
+    "inspect_hub_okf_proposal": true
+  },
+  "failures": []
+}

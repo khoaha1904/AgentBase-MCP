@@ -132,7 +132,7 @@ Normative OKF source is pinned to commit
 - **AB-SCHEMA-009** — Concrete concepts preserve provenance and important
   uncertainty. Cross-repository relationships need evidence for both endpoints
   and the relationship.
-- **AB-SCHEMA-010** — Current catalog `6.0.0` provides bounded investigation,
+- **AB-SCHEMA-010** — Current catalog `7.0.0` provides bounded investigation,
   semantic metadata, relationship and optional-enrichment guidance without
   provider or source-tool schema types.
 - **AB-SCHEMA-011** — Guidance distinguishes evidence-required metadata from

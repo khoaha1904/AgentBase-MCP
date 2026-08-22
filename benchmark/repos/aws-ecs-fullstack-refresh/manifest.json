@@ -1,0 +1,51 @@
+{
+  "suite": "aws-ecs-fullstack-refresh",
+  "version": 1,
+  "catalogVersion": "7.0.0",
+  "promptVersion": "okf-refresh-v3",
+  "agent": {
+    "provider": "codex-cli",
+    "executable": "codex",
+    "version": "codex-cli 0.149.0",
+    "model": "gpt-5.6-terra",
+    "reasoningEffort": "medium",
+    "timeoutMs": 900000
+  },
+  "repositories": [
+    {
+      "id": "amazon-ecs-fullstack",
+      "kind": "terraform-ecs-fullstack-refresh",
+      "workflow": "refresh",
+      "path": "../fixtures/source-repos/amazon-ecs-fullstack-app-terraform",
+      "commit": "98ee8e693a5ebc4b14f3dfe731bdc786637c1eb4",
+      "repositoryId": "repository-amazon-ecs-fullstack-app-terraform-69902021744a",
+      "subjectDirectory": "repositories/amazon-ecs-fullstack-app-terraform",
+      "baseline": "benchmark/results/aws-ecs-fullstack/amazon-ecs-fullstack/2026-08-22T031535Z/okf",
+      "mutations": [
+        {
+          "path": "Code/server/src/app.js",
+          "from": "/status",
+          "to": "/health",
+          "count": 2
+        },
+        {
+          "path": "Infrastructure/main.tf",
+          "from": "health_check_path   = \"/status\"",
+          "to": "health_check_path   = \"/health\"",
+          "count": 2
+        }
+      ],
+      "expectedOkf": {
+        "path": "interfaces/backend-http-api.md",
+        "includes": ["GET /health", "Infrastructure/main.tf"],
+        "excludes": ["GET /status"]
+      },
+      "confirmedDomain": {
+        "identity": "domains/digital-experience",
+        "title": "Digital Experience",
+        "evidenceResource": "agentbase://owner-guidance/domains/digital-experience"
+      },
+      "expectation": "../aws-ecs-fullstack/expected/amazon-ecs-fullstack-v16.json"
+    }
+  ]
+}

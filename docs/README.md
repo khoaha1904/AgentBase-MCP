@@ -45,6 +45,12 @@ is the portable archive.
 
 ## Current checkpoint
 
+- Capability 024 qualifies a pinned ECS full-stack Terraform repository with
+  Sol Initial Ingest and Terra Refresh. Init produced a useful seven-concept
+  baseline; two sequential Refresh runs consistently changed the backend health
+  contract from `/status` to `/health` across application and Terraform evidence
+  while retaining the stale README statement as a limitation. No Accept,
+  Publish, provider CLI, deployment or Hub PR occurred.
 - Completed capability 023 implements normal single-Repository Refresh and
   passes its complete offline and model-backed V2 probe/replica gates. It builds
   on capability 022's catalog-7 Initial Ingest MVP and keeps Batch, full Refresh

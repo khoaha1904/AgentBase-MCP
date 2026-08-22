@@ -1,0 +1,29 @@
+{
+  "suite": "aws-ecs-fullstack",
+  "version": 16,
+  "catalogVersion": "7.0.0",
+  "promptVersion": "okf-author-v15",
+  "directPromptVersion": "okf-author-direct-v15",
+  "agent": {
+    "provider": "codex-cli",
+    "executable": "codex",
+    "version": "codex-cli 0.149.0",
+    "model": "gpt-5.6-sol",
+    "reasoningEffort": "medium",
+    "timeoutMs": 900000
+  },
+  "repositories": [
+    {
+      "id": "amazon-ecs-fullstack",
+      "kind": "terraform-ecs-fullstack",
+      "path": "../fixtures/source-repos/amazon-ecs-fullstack-app-terraform",
+      "commit": "98ee8e693a5ebc4b14f3dfe731bdc786637c1eb4",
+      "confirmedDomain": {
+        "identity": "domains/digital-experience",
+        "title": "Digital Experience",
+        "evidenceResource": "agentbase://owner-guidance/domains/digital-experience"
+      },
+      "expectation": "expected/amazon-ecs-fullstack-v16.json"
+    }
+  ]
+}

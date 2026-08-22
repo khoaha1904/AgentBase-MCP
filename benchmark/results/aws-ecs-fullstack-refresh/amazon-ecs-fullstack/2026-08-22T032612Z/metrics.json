@@ -1,0 +1,116 @@
+{
+  "suite": "aws-ecs-fullstack-refresh",
+  "repository": "amazon-ecs-fullstack",
+  "runId": "2026-08-22T032612Z",
+  "arm": "mcp",
+  "expectedConcepts": 5,
+  "actualConcepts": 7,
+  "matchedConcepts": 5,
+  "referenceConceptCoveragePercent": 100,
+  "recognizedSchemaAgreementPercent": 100,
+  "metadataCompletenessPercent": null,
+  "provenanceCoveragePercent": 100,
+  "referenceRelationshipCoveragePercent": 100,
+  "conflictVisibilityPercent": null,
+  "liveEvidenceReferenceCoveragePercent": null,
+  "embeddedKnowledgeCoveragePercent": 75,
+  "ratios": {
+    "referenceConceptCoverage": {
+      "matched": 5,
+      "total": 5,
+      "percent": 100
+    },
+    "recognizedSchemaAgreement": {
+      "matched": 5,
+      "total": 5,
+      "percent": 100
+    },
+    "metadataCompleteness": {
+      "matched": 0,
+      "total": 0,
+      "percent": null
+    },
+    "provenanceCoverage": {
+      "matched": 4,
+      "total": 4,
+      "percent": 100
+    },
+    "referenceRelationshipCoverage": {
+      "matched": 4,
+      "total": 4,
+      "percent": 100
+    },
+    "conflictVisibility": {
+      "matched": 0,
+      "total": 0,
+      "percent": null
+    },
+    "liveEvidenceReferenceCoverage": {
+      "matched": 0,
+      "total": 0,
+      "percent": null
+    },
+    "embeddedKnowledgeCoverage": {
+      "matched": 3,
+      "total": 4,
+      "percent": 75
+    }
+  },
+  "classifications": {
+    "concepts": {
+      "confirmed": [
+        "domains/digital-experience",
+        "repositories/amazon-ecs-fullstack-app-terraform",
+        "systems/ecs-fullstack-demo",
+        "components/demo-frontend",
+        "components/demo-backend"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "flows/application-delivery-pipeline",
+        "interfaces/backend-http-api"
+      ],
+      "missingReference": []
+    },
+    "relationships": {
+      "confirmed": [
+        "amazon-ecs-fullstack-repository|part-of|digital-experience-domain",
+        "amazon-ecs-fullstack-system|part-of|digital-experience-domain",
+        "vue-client-component|part-of|amazon-ecs-fullstack-system",
+        "node-server-component|part-of|amazon-ecs-fullstack-system"
+      ],
+      "contradicted": [],
+      "unjudged": [
+        "components/demo-backend|provides|interfaces/backend-http-api",
+        "components/demo-backend|implemented-in|repositories/amazon-ecs-fullstack-app-terraform",
+        "components/demo-frontend|consumes|interfaces/backend-http-api",
+        "components/demo-frontend|implemented-in|repositories/amazon-ecs-fullstack-app-terraform",
+        "flows/application-delivery-pipeline|part-of|systems/ecs-fullstack-demo",
+        "interfaces/backend-http-api|part-of|systems/ecs-fullstack-demo",
+        "interfaces/backend-http-api|implemented-in|repositories/amazon-ecs-fullstack-app-terraform",
+        "systems/ecs-fullstack-demo|implemented-in|repositories/amazon-ecs-fullstack-app-terraform"
+      ],
+      "missingReference": []
+    }
+  },
+  "validation": {
+    "passed": true,
+    "failures": []
+  },
+  "ownerReview": {
+    "status": "needs_revision",
+    "findings": [
+      "delivery-pipeline: embedded knowledge is missing from an allowed parent with exact evidence"
+    ]
+  },
+  "authoringAssessment": {
+    "status": "reviewable",
+    "hardFailures": [],
+    "limitations": [
+      "Deterministic source-path checks do not prove that authored claims are semantically supported; human review is required.",
+      "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept."
+    ]
+  },
+  "initialIngestAcceptance": "valid_partial",
+  "okfTreeDigest": "sha256:da4d4adfb6d47d693c6adec19712f052cb4d06034eb372ee62c7dee02dde91b5"
+}
