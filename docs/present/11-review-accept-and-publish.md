@@ -1,6 +1,6 @@
 # 11 — Review và Publish
 
-> Trạng thái: Main-branch publication đã có; rich/stacked PR còn thiếu.
+> Trạng thái: Reviewable batch PR và same-Repository Init/Refresh stack đã implement.
 
 ## Câu trả lời ngắn
 
@@ -65,9 +65,16 @@ quyết định ai được tạo PR; maintainer review/merge là authority cu�
 trở thành Published. Quyền đọc Hub không mặc nhiên cho phép sửa Hub, và
 AgentBase phiên bản đầu không xây thêm ACL ghi riêng.
 
-## Gap publication đã xác nhận
+## Publication boundary hiện tại
 
 Tool `submit_hub_okf_proposals` hiện dùng token riêng của MCP và tạo PR vào
-configured target `main`. Nó chưa hỗ trợ stacked workflow `Refresh PR → Init
-branch` khi Init chưa merge, và PR body hiện chưa có template review giàu ngữ
-nghĩa ở trên. Không dùng `gh` hoặc token ngoài MCP để lách hai gap này.
+configured target `main`. Một selected prefix bắt đầu bằng Init và chỉ chứa các
+Refresh tiếp theo của cùng Repository tạo stack `main ← Init ← Refresh`; mỗi PR
+chỉ hiện delta so với base ngay trước nó. Những selection khác vẫn tạo một batch
+PR dependency-safe vào `main`.
+
+PR body được tạo deterministic từ accepted proposal, inspection và Git metadata;
+metadata tùy chọn bị thiếu được ghi là unavailable. MCP không dùng `gh`, không
+merge, force-push, retarget hoặc tách các Init độc lập bằng rebase. Independent
+Init rebasing và quản lý merge/close/cleanup vẫn là capability riêng nếu sau này
+thực sự cần.

@@ -192,7 +192,7 @@ export async function executeHubBootstrap(
     const github = options.github ?? new GitHubHubApi(createHubIdentity(intent.repository, "main"), token);
     try {
       const publication = await publishPendingHubProposals({ stateRoot: root(environment), localHub,
-        selectedProposalIds: intent.proposalIds, token, github, git });
+        selectedProposalIds: intent.proposalIds, token, github, git, publicationMode: "batch" });
       receipt = { ...receipt, phase: "completed", publication };
       writeReceipt(environment, receipt);
     } catch (error) { throw permissionFailure(error, token); }

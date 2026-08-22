@@ -10,6 +10,7 @@ export const HUB_PROPOSAL_TRAILERS = {
   evidenceDigest: "AgentBase-Evidence-Digest",
   diffDigest: "AgentBase-Diff-Digest",
   catalog: "AgentBase-Schema-Catalog",
+  mode: "AgentBase-Proposal-Mode",
 } as const;
 
 const HUB_SUBJECT_ROOTS = [
@@ -126,6 +127,7 @@ export function renderLocalProposalTrailers(proposal: LocalProposal): string {
     `${HUB_PROPOSAL_TRAILERS.evidenceDigest}: ${proposal.evidenceDigest}`,
     `${HUB_PROPOSAL_TRAILERS.diffDigest}: ${proposal.diffDigest}`,
     `${HUB_PROPOSAL_TRAILERS.catalog}: ${proposal.schemaVersion}`,
+    `${HUB_PROPOSAL_TRAILERS.mode}: ${proposal.mode}`,
   ].join("\n");
 }
 

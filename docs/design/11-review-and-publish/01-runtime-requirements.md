@@ -59,6 +59,34 @@ queries and ordinary coding never create Hub state, commits or publication.
   display name and current remote are hints, not regenerated identity. One
   strong match survives rename/organization transfer; shared fork/mirror
   lineage is ambiguous and requires owner choice.
+
+## Reviewable PR publication
+
+- **AB-PUBLISH-001** — `submit_hub_okf_proposals` is the only public action that
+  pushes accepted Hub knowledge and creates PRs. It uses the dedicated Hub token;
+  the caller never receives the token or substitutes `gh`.
+- **AB-PUBLISH-002, AB-PUBLISH-003, AB-PUBLISH-004** — Every new PR deterministically presents Purpose,
+  Scope, Knowledge Changes, Uncertainty, Evidence and Validation, and Reviewer
+  Action. Scope identifies exact proposals, source Repositories, available
+  Domains/revisions and accepted commits. Changes distinguish Added, Updated,
+  Removed and Superseded/Retracted; Questions, limitations and unavailable
+  optional detail remain visible.
+- **AB-PUBLISH-005** — PR prose/receipts contain no token, credential, local
+  absolute path or unbounded model narrative.
+- **AB-PUBLISH-006** — A selected contiguous chain beginning with Init and
+  followed only by same-Repository Refresh proposals publishes one exact branch
+  per proposal. Init targets configured `main`; each Refresh targets the
+  immediately preceding proposal branch.
+- **AB-PUBLISH-007** — Other dependency-safe selections preserve one batch
+  branch/PR against `main`; first bootstrap explicitly retains that one-PR
+  batch contract. Publication does not independently rebase unrelated Init proposals.
+- **AB-PUBLISH-008** — Repository, base branch/commit and head branch/commit are
+  admitted before PR creation. Conflict, drift or multiple matching PRs stop
+  without merge, force-push, deletion or retargeting.
+- **AB-PUBLISH-009** — Retry recovers exact existing branches and matching open
+  PRs. Partial stack failure leaves completed units intact and retryable.
+- **AB-PUBLISH-010** — Canonical proof uses disposable Git and fake GitHub HTTP;
+  real credentials and publication remain opt-in.
 - **AB-INGEST-010** — A confirmed primary Domain is materialized on the
   current-source Repository concept with deterministic owner-guidance evidence;
   it is not stored in a side registry or inferred from a System name.

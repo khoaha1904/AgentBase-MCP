@@ -200,7 +200,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "submit_hub_okf_proposals",
-    description: "Publish one dependency-safe pending proposal prefix through one branch and pull request.",
+    description: "Publish one dependency-safe pending proposal prefix through a reviewable batch PR or same-repository Init/Refresh PR stack.",
     inputSchema: {
       type: "object",
       properties: {

@@ -55,6 +55,7 @@ function proposalMessage(proposal: ReturnType<typeof readHubProposalState>): str
     `${HUB_PROPOSAL_TRAILERS.evidenceDigest}: ${proposal.evidenceDigest}`,
     `${HUB_PROPOSAL_TRAILERS.diffDigest}: ${proposal.diffDigest}`,
     `${HUB_PROPOSAL_TRAILERS.catalog}: ${proposal.schemaVersion}`,
+    `${HUB_PROPOSAL_TRAILERS.mode}: ${proposal.mode}`,
   ].join("\n");
 }
 

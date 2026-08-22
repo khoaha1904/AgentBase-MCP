@@ -1,6 +1,6 @@
 # 11 — Review và Publish
 
-> Trạng thái: Main-target publication implemented; rich/stacked publication gap recorded.
+> Trạng thái: Reviewable batch publication và exact same-Repository Init/Refresh stack implemented.
 
 High-level decision:
 [Review và Publish](../../present/11-review-accept-and-publish.md)
@@ -47,8 +47,8 @@ invent a model narrative or include credentials/local paths.
 
 ## Stacked Init/Refresh requirement
 
-Current `submit_hub_okf_proposals` opens one dependency-safe proposal prefix
-against configured `main`. Required future behavior additionally supports:
+`submit_hub_okf_proposals` mở một dependency-safe proposal prefix. Eligible
+same-Repository chains support:
 
 ```text
 Init branch ──PR──→ main
@@ -57,6 +57,7 @@ Refresh branch ──PR──→ Init branch
 
 The Refresh PR then shows only the delta from the Init knowledge. Both branches
 and PRs remain MCP-owned, non-force-pushed and unmerged until maintainer action.
-If Init closes/changes, Refresh publication must stop with recoverable guidance;
-it must not silently retarget or flatten the stack. This is not implemented yet
-and must not be bypassed with `gh` or a different token.
+If Init closes/changes, Refresh publication stops with recoverable guidance; it
+does not silently retarget or flatten the stack. Other selections retain one
+batch PR into `main`; unrelated Init proposals are not independently rebased.
+All paths remain MCP-owned and must not be bypassed with `gh` or another token.

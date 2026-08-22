@@ -114,7 +114,7 @@ checkpoint tự nhiên là trước benchmark mới, trước PR và trước ca
 | 06–08 | Contracts/foundation từng phần; Domain Enrichment/provider resolution chưa implement |
 | 09 | Single-repository Init + Refresh implemented; batch/enrichment/freshness deferred |
 | 10 | Query foundation implemented; overlay/freshness presentation chưa hoàn chỉnh |
-| 11 | Main-target publication implemented; rich PR template và stacked PR chưa implement |
+| 11 | Reviewable batch publication và exact same-Repository Init/Refresh stack implemented |
 | 12 | Terraform/Terragrunt MVP; SAM/CloudFormation và provider expansion deferred |
 
 Current runtime authority nằm ở `docs/design`, code và active spec. Design trong

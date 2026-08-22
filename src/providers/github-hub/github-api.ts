@@ -113,26 +113,43 @@ export class GitHubHubApi {
     }
   }
 
-  async listOpenPullRequests(headBranch: string): Promise<readonly GitHubPullRequest[]> {
+  async listOpenPullRequests(
+    headBranch: string,
+    baseBranch = this.#hub.targetBranch,
+  ): Promise<readonly GitHubPullRequest[]> {
+    return this.listPullRequests(headBranch, baseBranch, "open");
+  }
+
+  async listPullRequests(
+    headBranch: string,
+    baseBranch = this.#hub.targetBranch,
+    state: "open" | "all" = "open",
+  ): Promise<readonly GitHubPullRequest[]> {
     const owner = this.#hub.repository.split("/")[0] ?? "";
-    const query = new URLSearchParams({ state: "open", head: `${owner}:${headBranch}`, base: this.#hub.targetBranch });
+    const query = new URLSearchParams({ state, head: `${owner}:${headBranch}`, base: baseBranch });
     const values = await this.#request("GET", `/pulls?${query.toString()}`);
     if (!Array.isArray(values)) throw new GitHubApiError("RESPONSE", "GitHub pulls response is invalid");
-    return values.map((value) => this.#pullRequest(value, headBranch));
+    return values.map((value) => this.#pullRequest(value, headBranch, undefined, baseBranch));
   }
 
-  async createPullRequest(headBranch: string, headCommit: string, title: string, body: string): Promise<GitHubPullRequest> {
-    const value = await this.#request("POST", "/pulls", { title, body, head: headBranch, base: this.#hub.targetBranch });
-    return this.#pullRequest(value, headBranch, headCommit);
+  async createPullRequest(
+    headBranch: string,
+    headCommit: string,
+    title: string,
+    body: string,
+    baseBranch = this.#hub.targetBranch,
+  ): Promise<GitHubPullRequest> {
+    const value = await this.#request("POST", "/pulls", { title, body, head: headBranch, base: baseBranch });
+    return this.#pullRequest(value, headBranch, headCommit, baseBranch);
   }
 
-  #pullRequest(value: unknown, expectedHead: string, expectedCommit?: string): GitHubPullRequest {
+  #pullRequest(value: unknown, expectedHead: string, expectedCommit?: string, expectedBase = this.#hub.targetBranch): GitHubPullRequest {
     const pull = object(value), head = object(pull.head), base = object(pull.base);
     const headBranch = text(head.ref, "head.ref"), headCommit = text(head.sha, "head.sha");
     const headRepository = text(object(head.repo).full_name, "head.repo.full_name");
     const baseBranch = text(base.ref, "base.ref");
     if (headRepository !== this.#hub.repository || headBranch !== expectedHead
-      || (expectedCommit && headCommit !== expectedCommit) || baseBranch !== this.#hub.targetBranch) {
+      || (expectedCommit && headCommit !== expectedCommit) || baseBranch !== expectedBase) {
       throw new GitHubApiError("RESPONSE", "GitHub pull request identity mismatch");
     }
     const number = integer(pull.number, "number");

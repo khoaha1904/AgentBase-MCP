@@ -51,8 +51,8 @@ small gaps must be backfilled before benchmark, PR or capability completion.
 - Catalog 7 Initial Ingest and single-repository Refresh are implemented.
 - Sol Initial Ingest plus two sequential Terra Refresh runs qualify the pinned
   ECS full-stack Terraform fixture without Accept, Publish or provider CLI.
-- Batch workflows, Domain Enrichment, freshness presentation, rich PR templates
-  and stacked Init/Refresh publication remain explicitly deferred.
+- Reviewable batch PR and exact same-Repository Init/Refresh publication are
+  implemented. Batch ingest, Domain Enrichment and freshness presentation remain deferred.
 
 Update current truth once in the narrowest high- or low-level document. Do not
 add handoff, roadmap, ADR or evidence-diary files that repeat it.

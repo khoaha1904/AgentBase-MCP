@@ -1,7 +1,14 @@
 # Current capability
 
 Active capability: None. Most recent completed:
-[`024-ecs-fullstack-qualification`](024-ecs-fullstack-qualification/spec.md).
+[`025-reviewable-hub-prs`](025-reviewable-hub-prs/spec.md).
+
+Capability 025 makes MCP-created Hub PRs maintainer-readable and adds an exact
+Init/Refresh stack for a same-Repository selected prefix while preserving one
+batch PR for other dependency-safe selections. It passes the complete offline
+gate with deterministic partial-retry recovery and explicit GitHub base/head
+identity. MCP still never merges, force-pushes, deletes or independently
+rebases unrelated Init proposals.
 
 Capability 024 qualifies a structurally different AWS/Terraform full-stack ECS
 repository. Initial Ingest uses `gpt-5.6-sol` to establish the reviewed baseline;

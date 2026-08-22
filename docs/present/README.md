@@ -64,7 +64,7 @@ Cả 12 phần high-level đã được review như một tổng thể.
 | 06–08 | Có provenance, protected evidence, Questions/live-reference foundation; cross-repository enrichment còn deferred |
 | 09 | Single-repository Initial Ingest và Refresh đã implement/qualify; batch, Domain Enrichment và freshness report chưa implement |
 | 10 | Query Hub và exact local-source routing có foundation; overlay/freshness presentation chưa hoàn chỉnh |
-| 11 | Review, Accept, pending Local Draft và PR vào configured `main` đã có; rich PR template và stacked Init/Refresh PR chưa có |
+| 11 | Review, Accept, rich batch PR và exact same-Repository Init/Refresh PR stack đã có; MCP không merge hoặc rebase các Init độc lập |
 | 12 | MVP hiện hỗ trợ Terraform/Terragrunt; SAM/CloudFormation chưa hỗ trợ |
 
 Model policy hiện chỉ là policy qualification: benchmark Initial Ingest dùng

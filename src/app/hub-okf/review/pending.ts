@@ -9,6 +9,7 @@ export type PendingHubProposal = Readonly<{
   evidenceDigest: string;
   diffDigest: string;
   schemaVersion: string;
+  mode?: "new" | "refresh";
   parentCommit: string;
   commit: string;
   diffSummary: string;
@@ -29,6 +30,13 @@ function trailers(message: string): ReadonlyMap<string, string> {
 function required(values: ReadonlyMap<string, string>, key: string, commit: string): string {
   const value = values.get(key);
   if (!value) throw new Error(`pending commit ${commit} is missing ${key}`);
+  return value;
+}
+
+function optionalMode(values: ReadonlyMap<string, string>, commit: string): "new" | "refresh" | undefined {
+  const value = values.get(HUB_PROPOSAL_TRAILERS.mode);
+  if (value === undefined) return undefined;
+  if (value !== "new" && value !== "refresh") throw new Error(`pending commit ${commit} has an invalid proposal mode`);
   return value;
 }
 
@@ -62,6 +70,7 @@ export async function listPendingHubProposals(
     });
     const parentCommit = parent.stdout.trim();
     if (parentCommit !== expectedParent) throw new Error("pending proposal ancestry is not a contiguous first-parent chain");
+    const mode = optionalMode(message, commit);
     const summary = await git({
       args: ["diff-tree", "--no-commit-id", "--stat", "--format=", commit],
       cwd: localHub.root,
@@ -75,6 +84,7 @@ export async function listPendingHubProposals(
       evidenceDigest: required(message, HUB_PROPOSAL_TRAILERS.evidenceDigest, commit),
       diffDigest: required(message, HUB_PROPOSAL_TRAILERS.diffDigest, commit),
       schemaVersion: required(message, HUB_PROPOSAL_TRAILERS.catalog, commit),
+      ...(mode ? { mode } : {}),
       parentCommit,
       commit,
       diffSummary: summary.stdout.trim(),
