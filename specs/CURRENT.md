@@ -1,7 +1,16 @@
 # Current capability
 
 Active capability: None. Most recent completed:
-[`025-reviewable-hub-prs`](025-reviewable-hub-prs/spec.md).
+[`026-independent-hub-prs`](026-independent-hub-prs/spec.md).
+
+Capability 026 separates local draft storage order from publication dependency.
+Independent Repository Init proposals may be reviewed in parallel against the
+current Published `main`; Refresh remains chained only to the preceding proposal
+for the same Repository. Publication replays exact proposal patches instead of
+  leaking unrelated earlier local drafts into a PR. When Published `main`
+  advances, compatible open proposal branches are merged forward sequentially
+  and keep the same PR; conflict stops before push. The complete 50-test offline
+  gate passes with disposable Git and fake GitHub.
 
 Capability 025 makes MCP-created Hub PRs maintainer-readable and adds an exact
 Init/Refresh stack for a same-Repository selected prefix while preserving one

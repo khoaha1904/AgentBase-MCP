@@ -106,3 +106,15 @@ export function selectPendingPrefix(
   }
   return selected;
 }
+
+export function selectPendingProposals(
+  pending: readonly PendingHubProposal[],
+  selectedIds: readonly string[],
+): readonly PendingHubProposal[] {
+  if (!selectedIds.length) throw new Error("pending publication selection cannot be empty");
+  if (new Set(selectedIds).size !== selectedIds.length) throw new Error("pending publication selection contains duplicate IDs");
+  const wanted = new Set(selectedIds);
+  const selected = pending.filter((proposal) => wanted.has(proposal.id));
+  if (selected.length !== selectedIds.length) throw new Error("pending publication selection contains an unknown proposal ID");
+  return selected;
+}

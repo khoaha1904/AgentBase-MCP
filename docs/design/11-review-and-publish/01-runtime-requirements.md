@@ -20,8 +20,8 @@ queries and ordinary coding never create Hub state, commits or publication.
   accepted commits, exclude unaccepted workspaces and report commit/path.
 - **AB-LOCAL-HUB-005** — Pending proposals derive from ordered first-parent Git
   ancestry after the admitted base; sidecars cannot invent pending commits.
-- **AB-LOCAL-HUB-006** — Submit publishes one non-empty contiguous pending prefix
-  on one deterministic non-target branch and opens/recovers one PR.
+- **AB-LOCAL-HUB-006** — Submit publishes one non-empty dependency-safe selection
+  as deterministic per-Repository publication units and opens/recovers their PRs.
 - **AB-LOCAL-HUB-007** — Only explicit attach, bootstrap, submit and synchronize
   may use the global token. Normal operation never writes remote `main`, merges,
   approves, force-pushes, deletes branches, changes settings or overrides target.
@@ -73,20 +73,27 @@ queries and ordinary coding never create Hub state, commits or publication.
   optional detail remain visible.
 - **AB-PUBLISH-005** — PR prose/receipts contain no token, credential, local
   absolute path or unbounded model narrative.
-- **AB-PUBLISH-006** — A selected contiguous chain beginning with Init and
-  followed only by same-Repository Refresh proposals publishes one exact branch
-  per proposal. Init targets configured `main`; each Refresh targets the
-  immediately preceding proposal branch.
-- **AB-PUBLISH-007** — Other dependency-safe selections preserve one batch
-  branch/PR against `main`; first bootstrap explicitly retains that one-PR
-  batch contract. Publication does not independently rebase unrelated Init proposals.
-- **AB-PUBLISH-008** — Repository, base branch/commit and head branch/commit are
-  admitted before PR creation. Conflict, drift or multiple matching PRs stop
-  without merge, force-push, deletion or retargeting.
+- **AB-PUBLISH-006** — Publication dependency is derived per source Repository,
+  not from global Local Draft ancestry. Each Init targets configured `main`; each
+  Refresh targets the immediately preceding unpublished proposal branch for that
+  same Repository.
+- **AB-PUBLISH-007** — Independent Repository Init proposals publish as separate
+  branches/PRs from the same admitted Published `main`, even when their accepted
+  local commits are consecutive. First bootstrap alone retains its one-PR batch
+  transaction.
+- **AB-PUBLISH-008** — MCP replays only each proposal's exact accepted patch onto
+  its publication base and admits repository, base branch/commit and head
+  branch/commit before PR creation. Conflict, drift or multiple matching PRs
+  stop without merge, deletion or target mutation.
 - **AB-PUBLISH-009** — Retry recovers exact existing branches and matching open
-  PRs. Partial stack failure leaves completed units intact and retryable.
+  PRs. Partial multi-PR failure leaves completed units intact and retryable.
 - **AB-PUBLISH-010** — Canonical proof uses disposable Git and fake GitHub HTTP;
   real credentials and publication remain opt-in.
+- **AB-PUBLISH-011** — When Published `main` advances, remaining open proposal
+  branches are reconciled sequentially. A compatible branch is advanced on the
+  same remote branch so the PR number/URL survives; conflict stops before push.
+  A Refresh whose predecessor became Published is retargeted to `main` before it
+  can continue. MCP never approves, closes or merges the PR.
 - **AB-INGEST-010** — A confirmed primary Domain is materialized on the
   current-source Repository concept with deterministic owner-guidance evidence;
   it is not stored in a side registry or inferred from a System name.

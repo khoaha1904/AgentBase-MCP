@@ -15,7 +15,7 @@ export type PublicationReviewSummary = Readonly<{ title: string; body: string }>
 export type PublicationReviewOptions = Readonly<{
   stateRoot: string;
   proposals: readonly PendingHubProposal[];
-  publicationMode: "batch" | "stack";
+  publicationMode: "batch" | "stack" | "independent";
   baseBranch: string;
 }>;
 
@@ -126,7 +126,7 @@ export function renderPublicationReview(options: PublicationReviewOptions): Publ
     inspection: readInspection(options.stateRoot, proposal),
     scope: readRepositoryScope(options.stateRoot, proposal),
   }));
-  const role = options.publicationMode === "stack" && options.proposals.length === 1
+  const role = options.publicationMode !== "batch" && options.proposals.length === 1
     ? options.proposals[0]!.mode === "new" ? "Init" : "Refresh"
     : "Publication";
   const title = `AgentBase Hub ${role}: ${safeText(options.proposals[0]!.sourceRepositoryId)}`.slice(0, 120);

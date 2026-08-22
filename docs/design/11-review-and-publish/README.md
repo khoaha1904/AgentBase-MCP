@@ -1,6 +1,6 @@
 # 11 — Review và Publish
 
-> Trạng thái: Reviewable batch publication và exact same-Repository Init/Refresh stack implemented.
+> Trạng thái: Independent Init PR, same-Repository Init/Refresh stack và existing-PR reconciliation implemented.
 
 High-level decision:
 [Review và Publish](../../present/11-review-accept-and-publish.md)
@@ -47,17 +47,17 @@ invent a model narrative or include credentials/local paths.
 
 ## Stacked Init/Refresh requirement
 
-`submit_hub_okf_proposals` mở một dependency-safe proposal prefix. Eligible
-same-Repository chains support:
+`submit_hub_okf_proposals` mở các publication unit dependency-safe theo từng
+Repository. Eligible same-Repository chains support:
 
 ```text
 Init branch ──PR──→ main
 Refresh branch ──PR──→ Init branch
 ```
 
-The Refresh PR then shows only the delta from the Init knowledge. Both branches
-and PRs remain MCP-owned, non-force-pushed and unmerged until maintainer action.
-If Init closes/changes, Refresh publication stops with recoverable guidance; it
-does not silently retarget or flatten the stack. Other selections retain one
-batch PR into `main`; unrelated Init proposals are not independently rebased.
-All paths remain MCP-owned and must not be bypassed with `gh` or another token.
+The Refresh PR shows only its Repository delta. An unrelated Init always gets
+its own branch/PR from Published `main`; local accepted ancestry is storage
+order only. After `main` advances, MCP merges the admitted new base into each
+remaining branch sequentially and updates the same PR/base when needed. A
+conflict stops before push. First bootstrap alone retains one batch PR. All
+paths remain MCP-owned and must not be bypassed with `gh` or another token.

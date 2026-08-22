@@ -58,7 +58,7 @@ export class GitHubHubApi {
     this.#maximumResponseBytes = maximumResponseBytes;
   }
 
-  async #request(method: "GET" | "POST", route: string, body?: unknown): Promise<unknown> {
+  async #request(method: "GET" | "POST" | "PATCH", route: string, body?: unknown): Promise<unknown> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.#timeoutMs);
     try {
@@ -132,6 +132,17 @@ export class GitHubHubApi {
     return values.map((value) => this.#pullRequest(value, headBranch, undefined, baseBranch));
   }
 
+  async listPullRequestsForHead(
+    headBranch: string,
+    state: "open" | "all" = "open",
+  ): Promise<readonly GitHubPullRequest[]> {
+    const owner = this.#hub.repository.split("/")[0] ?? "";
+    const query = new URLSearchParams({ state, head: `${owner}:${headBranch}` });
+    const values = await this.#request("GET", `/pulls?${query.toString()}`);
+    if (!Array.isArray(values)) throw new GitHubApiError("RESPONSE", "GitHub pulls response is invalid");
+    return values.map((value) => this.#pullRequest(value, headBranch));
+  }
+
   async createPullRequest(
     headBranch: string,
     headCommit: string,
@@ -143,13 +154,24 @@ export class GitHubHubApi {
     return this.#pullRequest(value, headBranch, headCommit, baseBranch);
   }
 
-  #pullRequest(value: unknown, expectedHead: string, expectedCommit?: string, expectedBase = this.#hub.targetBranch): GitHubPullRequest {
+  async updatePullRequestBase(
+    number: number,
+    headBranch: string,
+    headCommit: string,
+    baseBranch: string,
+  ): Promise<GitHubPullRequest> {
+    if (!Number.isSafeInteger(number) || number < 1) throw new GitHubApiError("RESPONSE", "pull request number is invalid");
+    const value = await this.#request("PATCH", `/pulls/${number}`, { base: baseBranch });
+    return this.#pullRequest(value, headBranch, headCommit, baseBranch);
+  }
+
+  #pullRequest(value: unknown, expectedHead: string, expectedCommit?: string, expectedBase?: string): GitHubPullRequest {
     const pull = object(value), head = object(pull.head), base = object(pull.base);
     const headBranch = text(head.ref, "head.ref"), headCommit = text(head.sha, "head.sha");
     const headRepository = text(object(head.repo).full_name, "head.repo.full_name");
     const baseBranch = text(base.ref, "base.ref");
     if (headRepository !== this.#hub.repository || headBranch !== expectedHead
-      || (expectedCommit && headCommit !== expectedCommit) || baseBranch !== expectedBase) {
+      || (expectedCommit && headCommit !== expectedCommit) || (expectedBase && baseBranch !== expectedBase)) {
       throw new GitHubApiError("RESPONSE", "GitHub pull request identity mismatch");
     }
     const number = integer(pull.number, "number");

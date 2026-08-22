@@ -38,9 +38,10 @@ PR phải tự giải thích đủ để reviewer hiểu trước khi đọc fil
 Git diff vẫn là evidence cuối, nhưng không được bắt reviewer tự suy ra toàn bộ
 ý nghĩa từ một danh sách Markdown thay đổi.
 
-Trước PR, MCP pull Hub mới nhất, reconcile Local Draft và yêu cầu giải quyết Git
-conflict. Người dùng chọn một nhóm proposal commit liên tiếp; không tạo PR nếu
-nhóm không dependency-safe hoặc reconciliation chưa hoàn tất.
+Trước PR, MCP xác nhận Hub Published mới nhất và yêu cầu giải quyết Git conflict.
+Thứ tự commit của Local Draft chỉ là thứ tự lưu local, không mặc nhiên là
+dependency publication. Mỗi Repository Init có thể mở PR riêng cùng lúc từ
+Published `main`; Refresh chỉ phụ thuộc proposal trước của chính Repository đó.
 
 ## Khi PR kết thúc
 
@@ -55,10 +56,11 @@ commit, change ID và cơ chế retry cụ thể thuộc low-level.
 
 ## Dependency và quyền publish
 
-Trước Accept, MCP kiểm tra các item đã chọn có đủ dependency hay không. Ví dụ,
+Trước Accept, MCP kiểm tra các item đã chọn có đủ dependency nội dung hay không. Ví dụ,
 relation phải trỏ tới concept đã Published hoặc được chọn cùng proposal. Trước
-PR, MCP kiểm tra nhóm proposal là một pending prefix dependency-safe. MCP không
-tự thêm item âm thầm và không tạo proposal/PR chưa hợp lệ.
+PR, MCP kiểm tra dependency theo từng Repository publication chain thay vì bắt
+mọi proposal thành một global pending prefix. MCP không tự thêm item âm thầm và
+không tạo proposal/PR chưa hợp lệ.
 
 Người có quyền source/workspace có thể tạo và review Local Draft. Quyền Git
 quyết định ai được tạo PR; maintainer review/merge là authority cuối để knowledge
@@ -67,11 +69,10 @@ AgentBase phiên bản đầu không xây thêm ACL ghi riêng.
 
 ## Publication boundary hiện tại
 
-Tool `submit_hub_okf_proposals` hiện dùng token riêng của MCP và tạo PR vào
-configured target `main`. Một selected prefix bắt đầu bằng Init và chỉ chứa các
-Refresh tiếp theo của cùng Repository tạo stack `main ← Init ← Refresh`; mỗi PR
-chỉ hiện delta so với base ngay trước nó. Những selection khác vẫn tạo một batch
-PR dependency-safe vào `main`.
+Tool `submit_hub_okf_proposals` dùng token riêng của MCP. Mỗi Init tạo một branch
+và PR độc lập từ Published `main`; chuỗi cùng Repository tạo stack
+`main ← Init ← Refresh`, trong đó mỗi PR chỉ hiện delta của proposal đó. First
+bootstrap vẫn có thể dùng một batch PR vì đó là một transaction tạo Hub ban đầu.
 
 Tạo branch và PR Hub là **quyền hạn độc quyền của MCP** trong workflow này.
 Agent chỉ yêu cầu MCP submit proposal IDs; agent không được dùng `gh`, GitHub
@@ -80,6 +81,6 @@ này không bao gồm merge, approve, đóng PR hoặc thay đổi repository se
 
 PR body được tạo deterministic từ accepted proposal, inspection và Git metadata;
 metadata tùy chọn bị thiếu được ghi là unavailable. MCP không dùng `gh`, không
-merge, force-push, retarget hoặc tách các Init độc lập bằng rebase. Independent
-Init rebasing và quản lý merge/close/cleanup vẫn là capability riêng nếu sau này
-thực sự cần.
+merge, approve, close hoặc xóa branch. Khi Published `main` đổi, proposal còn mở
+được reconcile tuần tự và cập nhật trên chính branch/PR hiện có; conflict phải
+được giải quyết trước khi branch đó được cập nhật.

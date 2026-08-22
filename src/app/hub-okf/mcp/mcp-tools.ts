@@ -200,7 +200,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "submit_hub_okf_proposals",
-    description: "Publish one dependency-safe pending proposal prefix through a reviewable batch PR or same-repository Init/Refresh PR stack.",
+    description: "Publish selected accepted proposals as independent Repository Init PRs or same-Repository Init/Refresh PR chains, using MCP's dedicated Hub credential.",
     inputSchema: {
       type: "object",
       properties: {

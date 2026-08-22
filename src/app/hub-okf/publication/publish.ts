@@ -1,7 +1,9 @@
 import { createHash } from "node:crypto";
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
-import type { LocalHubState } from "../../../core/hub/index.ts";
+import { HUB_PROPOSAL_TRAILERS, type LocalHubState } from "../../../core/hub/index.ts";
 import type {
   GitHubPullRequest,
   GitHubRef,
@@ -10,7 +12,12 @@ import type {
   GitRequest,
 } from "../../../providers/github-hub/index.ts";
 import { runGit } from "../../../providers/github-hub/index.ts";
-import { listPendingHubProposals, selectPendingPrefix, type PendingHubProposal } from "../review/pending.ts";
+import {
+  listPendingHubProposals,
+  selectPendingPrefix,
+  selectPendingProposals,
+  type PendingHubProposal,
+} from "../review/pending.ts";
 import { acquireHubMutationLock, releaseHubMutationLock, writeAtomicJson } from "../review/proposal-state.ts";
 import { renderPublicationReview } from "./review-summary.ts";
 
@@ -23,11 +30,21 @@ export type PublishGitHub = Readonly<{
     baseBranch: string,
     state: "open" | "all",
   ): Promise<readonly GitHubPullRequest[]>;
+  listPullRequestsForHead(
+    headBranch: string,
+    state: "open" | "all",
+  ): Promise<readonly GitHubPullRequest[]>;
   createPullRequest(
     headBranch: string,
     headCommit: string,
     title: string,
     body: string,
+    baseBranch: string,
+  ): Promise<GitHubPullRequest>;
+  updatePullRequestBase(
+    number: number,
+    headBranch: string,
+    headCommit: string,
     baseBranch: string,
   ): Promise<GitHubPullRequest>;
 }>;
@@ -53,7 +70,7 @@ export type HubPublicationUnitReceipt = Readonly<{
 
 export type HubBatchPublicationReceipt = Readonly<{
   id: string;
-  mode: "batch" | "stack";
+  mode: "batch" | "stack" | "independent";
   repository: string;
   remoteBase: string;
   proposalIds: readonly string[];
@@ -67,9 +84,8 @@ export type HubBatchPublicationReceipt = Readonly<{
 type PublicationUnit = Readonly<{
   proposals: readonly PendingHubProposal[];
   branch: string;
-  headCommit: string;
   baseBranch: string;
-  baseCommit: string;
+  batchHeadCommit?: string;
 }>;
 
 function checkpoint(signal?: AbortSignal): void {
@@ -83,56 +99,155 @@ function publicationIdentity(localHub: LocalHubState, selected: readonly Pending
     .slice(0, 24);
 }
 
-function isStack(selected: readonly PendingHubProposal[]): boolean {
-  const first = selected[0];
-  return selected.length > 1 && first?.mode === "new"
-    && selected.every((proposal, index) => index === 0 || proposal.mode === "refresh")
-    && selected.every((proposal) => proposal.sourceRepositoryId === first.sourceRepositoryId);
-}
-
 function publicationUnits(
   localHub: LocalHubState,
+  pending: readonly PendingHubProposal[],
   selected: readonly PendingHubProposal[],
   id: string,
-  allowStack: boolean,
-): Readonly<{ mode: "batch" | "stack"; units: readonly PublicationUnit[] }> {
-  if (!allowStack || !isStack(selected)) {
+  batch: boolean,
+): Readonly<{ mode: "batch" | "stack" | "independent"; units: readonly PublicationUnit[] }> {
+  if (batch) {
     return {
       mode: "batch",
       units: [{
         proposals: selected,
         branch: `agentbase/publish-${id}`,
-        headCommit: selected.at(-1)!.commit,
         baseBranch: localHub.hub.targetBranch,
-        baseCommit: localHub.remoteBase,
+        batchHeadCommit: selected.at(-1)!.commit,
       }],
     };
   }
+  const positions = new Map(pending.map((proposal, index) => [proposal.id, index]));
+  const repositories = new Set(selected.map((proposal) => proposal.sourceRepositoryId));
   return {
-    mode: "stack",
-    units: selected.map((proposal, index) => ({
-      proposals: [proposal],
-      branch: `agentbase/okf-${proposal.id}`,
-      headCommit: proposal.commit,
-      baseBranch: index === 0 ? localHub.hub.targetBranch : `agentbase/okf-${selected[index - 1]!.id}`,
-      baseCommit: index === 0 ? localHub.remoteBase : selected[index - 1]!.commit,
-    })),
+    mode: repositories.size === 1 && selected.length > 1 ? "stack" : "independent",
+    units: selected.map((proposal) => {
+      if (!proposal.mode) throw new Error("legacy pending proposals require explicit batch publication");
+      const position = positions.get(proposal.id)!;
+      const prior = pending.slice(0, position).filter((item) => item.sourceRepositoryId === proposal.sourceRepositoryId).at(-1);
+      if (proposal.mode === "new" && prior) throw new Error("a Repository cannot contain a second pending Init proposal");
+      return {
+        proposals: [proposal],
+        branch: `agentbase/okf-${proposal.id}`,
+        baseBranch: prior ? `agentbase/okf-${prior.id}` : localHub.hub.targetBranch,
+      };
+    }),
   };
+}
+
+async function branchContainsProposal(
+  git: (request: GitRequest) => Promise<GitOutput>, root: string, head: string, proposalId: string,
+): Promise<boolean> {
+  const messages = await git({ args: ["log", "--format=%B%x00", "--max-count=1",
+    `--grep=^${HUB_PROPOSAL_TRAILERS.id}: ${proposalId}$`, head], cwd: root,
+    operation: "admit publication branch proposal identity", maximumOutputBytes: 64 * 1024 });
+  return messages.stdout.includes(`${HUB_PROPOSAL_TRAILERS.id}: ${proposalId}`);
+}
+
+async function includesCommit(
+  git: (request: GitRequest) => Promise<GitOutput>, root: string, ancestor: string, descendant: string,
+): Promise<boolean> {
+  try {
+    await git({ args: ["merge-base", "--is-ancestor", ancestor, descendant], cwd: root,
+      operation: "check publication base ancestry", maximumOutputBytes: 256 });
+    return true;
+  } catch { return false; }
+}
+
+async function reconcilePublicationBranch(
+  options: PublishHubOptions,
+  git: (request: GitRequest) => Promise<GitOutput>,
+  unit: PublicationUnit,
+  existingCommit: string,
+  baseCommit: string,
+): Promise<string> {
+  await git({ args: ["fetch", "--no-tags", "origin", unit.branch], cwd: options.localHub.root,
+    operation: "fetch existing publication branch", token: options.token,
+    ...(options.signal ? { signal: options.signal } : {}) });
+  const fetched = await exactCommit(git, options.localHub.root, `refs/remotes/origin/${unit.branch}`,
+    "resolve existing publication branch");
+  if (fetched !== existingCommit) throw new Error("publication branch changed during reconciliation");
+  if (!await branchContainsProposal(git, options.localHub.root, fetched, unit.proposals[0]!.id)) {
+    throw new Error("publication branch does not contain the selected proposal identity");
+  }
+  if (await includesCommit(git, options.localHub.root, baseCommit, fetched)) return fetched;
+  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-reconcile-"));
+  const candidateRoot = path.join(temporaryRoot, "candidate");
+  try {
+    await git({ args: ["worktree", "add", "--detach", candidateRoot, fetched], cwd: options.localHub.root,
+      operation: "create publication reconciliation candidate" });
+    const timestamp = (await git({ args: ["show", "-s", "--format=%cI", baseCommit], cwd: options.localHub.root,
+      operation: "read reconciliation timestamp", maximumOutputBytes: 256 })).stdout.trim();
+    try {
+      await git({ args: ["merge", "--no-edit", baseCommit], cwd: candidateRoot,
+        operation: `reconcile publication branch ${unit.branch}`, commitTimestamp: timestamp,
+        ...(options.signal ? { signal: options.signal } : {}) });
+    } catch (error) {
+      throw new Error(`publication conflict while reconciling ${unit.branch}`, { cause: error });
+    }
+    return await exactCommit(git, candidateRoot, "HEAD", "resolve reconciled publication branch");
+  } finally {
+    if (fs.existsSync(candidateRoot)) {
+      try { await git({ args: ["worktree", "remove", "--force", candidateRoot], cwd: options.localHub.root,
+        operation: "remove publication reconciliation candidate" }); } catch { /* original error remains authoritative */ }
+    }
+    fs.rmSync(temporaryRoot, { recursive: true, force: true });
+  }
+}
+
+async function exactCommit(
+  git: (request: GitRequest) => Promise<GitOutput>, root: string, revision: string, operation: string,
+): Promise<string> {
+  const commit = (await git({ args: ["rev-parse", "--verify", `${revision}^{commit}`], cwd: root, operation,
+    maximumOutputBytes: 256 })).stdout.trim();
+  if (!/^[a-f0-9]{40}$/.test(commit)) throw new Error(`${operation} did not resolve to an exact commit`);
+  return commit;
+}
+
+async function replayProposal(
+  options: PublishHubOptions,
+  git: (request: GitRequest) => Promise<GitOutput>,
+  proposal: PendingHubProposal,
+  baseCommit: string,
+): Promise<string> {
+  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-publication-"));
+  const candidateRoot = path.join(temporaryRoot, "candidate");
+  try {
+    await git({ args: ["worktree", "add", "--detach", candidateRoot, baseCommit], cwd: options.localHub.root,
+      operation: "create isolated publication candidate" });
+    const timestamp = (await git({ args: ["show", "-s", "--format=%cI", proposal.commit], cwd: options.localHub.root,
+      operation: "read accepted proposal timestamp", maximumOutputBytes: 256 })).stdout.trim();
+    try {
+      await git({ args: ["cherry-pick", proposal.commit], cwd: candidateRoot,
+        operation: `replay accepted Hub proposal ${proposal.id}`, commitTimestamp: timestamp,
+        ...(options.signal ? { signal: options.signal } : {}) });
+    } catch (error) {
+      throw new Error(`publication conflict while replaying ${proposal.id}`, { cause: error });
+    }
+    return await exactCommit(git, candidateRoot, "HEAD", "resolve publication candidate");
+  } finally {
+    if (fs.existsSync(candidateRoot)) {
+      try { await git({ args: ["worktree", "remove", "--force", candidateRoot], cwd: options.localHub.root,
+        operation: "remove publication candidate" }); } catch { /* original error remains authoritative */ }
+    }
+    fs.rmSync(temporaryRoot, { recursive: true, force: true });
+  }
 }
 
 function admitPull(
   pull: GitHubPullRequest,
   repository: string,
   unit: PublicationUnit,
+  headCommit: string,
 ): HubPublicationUnitReceipt {
   if (pull.headRepository !== repository || pull.headBranch !== unit.branch
-    || pull.headCommit !== unit.headCommit || pull.baseBranch !== unit.baseBranch) {
+    || pull.headCommit !== headCommit || pull.baseBranch !== unit.baseBranch) {
     throw new Error("publication pull request identity mismatch");
   }
   return {
     proposalIds: unit.proposals.map((proposal) => proposal.id),
     branch: unit.branch,
-    headCommit: unit.headCommit,
+    headCommit,
     baseBranch: unit.baseBranch,
     pullRequest: { number: pull.number, url: pull.url },
   };
@@ -141,33 +256,61 @@ function admitPull(
 async function publishUnit(
   options: PublishHubOptions,
   git: (request: GitRequest) => Promise<GitOutput>,
-  mode: "batch" | "stack",
+  mode: "batch" | "stack" | "independent",
   unit: PublicationUnit,
 ): Promise<HubPublicationUnitReceipt> {
   const base = await options.github.getBranchRef(unit.baseBranch);
-  if (base.commit !== unit.baseCommit) throw new Error(`publication base branch drifted: ${unit.baseBranch}`);
   const existing = await options.github.findBranchRef(unit.branch);
-  if (existing && existing.commit !== unit.headCommit) throw new Error("publication branch exists at a conflicting commit");
+  let headCommit: string;
+  let pull: GitHubPullRequest | undefined;
+  if (existing) {
+    const allByHead = await options.github.listPullRequestsForHead(unit.branch, "all");
+    const openByHead = await options.github.listPullRequestsForHead(unit.branch, "open");
+    if (allByHead.length > 1 || openByHead.length > 1) throw new Error("multiple pull requests exist for the publication branch");
+    if (allByHead.length === 1 && openByHead.length === 0) {
+      throw new Error("publication pull request is closed; review the proposal before retrying");
+    }
+    pull = openByHead[0];
+    if (!pull) {
+      headCommit = unit.batchHeadCommit ?? await replayProposal(options, git, unit.proposals[0]!, base.commit);
+      if (existing.commit !== headCommit) throw new Error("publication branch exists without a recoverable pull request");
+    } else {
+      headCommit = await reconcilePublicationBranch(options, git, unit, existing.commit, base.commit);
+      if (headCommit !== existing.commit) {
+        checkpoint(options.signal);
+        await git({ args: ["push", "origin", `${headCommit}:refs/heads/${unit.branch}`], cwd: options.localHub.root,
+          operation: "advance reconciled Hub publication branch", token: options.token,
+          ...(options.signal ? { signal: options.signal } : {}) });
+      }
+      const remoteBranch = await options.github.getBranchRef(unit.branch);
+      if (remoteBranch.commit !== headCommit) throw new Error("reconciled publication branch head mismatch");
+      pull = pull.baseBranch === unit.baseBranch && pull.headCommit === headCommit
+        ? pull
+        : await options.github.updatePullRequestBase(pull.number, unit.branch, headCommit, unit.baseBranch);
+    }
+  } else {
+    headCommit = unit.batchHeadCommit ?? await replayProposal(options, git, unit.proposals[0]!, base.commit);
+  }
   if (!existing) {
     checkpoint(options.signal);
     await git({
-      args: ["push", "origin", `${unit.headCommit}:refs/heads/${unit.branch}`],
+      args: ["push", "origin", `${headCommit}:refs/heads/${unit.branch}`],
       cwd: options.localHub.root,
       operation: "push accepted Hub publication unit",
       token: options.token,
       ...(options.signal ? { signal: options.signal } : {}),
     });
   }
-  const remoteBranch = existing ?? await options.github.getBranchRef(unit.branch);
-  if (remoteBranch.commit !== unit.headCommit) throw new Error("publication branch head mismatch");
-  const allPulls = await options.github.listPullRequests(unit.branch, unit.baseBranch, "all");
-  const openPulls = await options.github.listPullRequests(unit.branch, unit.baseBranch, "open");
-  if (allPulls.length > 1 || openPulls.length > 1) throw new Error("multiple pull requests exist for the publication branch and base");
-  if (allPulls.length === 1 && openPulls.length === 0) {
+  const remoteBranch = await options.github.getBranchRef(unit.branch);
+  if (remoteBranch.commit !== headCommit) throw new Error("publication branch head mismatch");
+  const allPulls = pull ? [] : await options.github.listPullRequests(unit.branch, unit.baseBranch, "all");
+  const openPulls = pull ? [] : await options.github.listPullRequests(unit.branch, unit.baseBranch, "open");
+  if (!pull && (allPulls.length > 1 || openPulls.length > 1)) throw new Error("multiple pull requests exist for the publication branch and base");
+  if (!pull && allPulls.length === 1 && openPulls.length === 0) {
     throw new Error("publication pull request is closed; review the stack before retrying");
   }
-  let pull = openPulls[0];
-  if (pull && pull.headCommit !== unit.headCommit) throw new Error("existing pull request has a conflicting head commit");
+  pull ??= openPulls[0];
+  if (pull && pull.headCommit !== headCommit) throw new Error("existing pull request has a conflicting head commit");
   checkpoint(options.signal);
   if (!pull) {
     const review = renderPublicationReview({
@@ -178,13 +321,13 @@ async function publishUnit(
     });
     pull = await options.github.createPullRequest(
       unit.branch,
-      unit.headCommit,
+      headCommit,
       review.title,
       review.body,
       unit.baseBranch,
     );
   }
-  return admitPull(pull, options.localHub.hub.repository, unit);
+  return admitPull(pull, options.localHub.hub.repository, unit, headCommit);
 }
 
 export async function publishPendingHubProposals(
@@ -196,7 +339,10 @@ export async function publishPendingHubProposals(
   const lock = acquireHubMutationLock(options.stateRoot, `publish:${Date.now().toString(36)}`);
   try {
     const pending = await listPendingHubProposals(options.localHub, git);
-    const selected = selectPendingPrefix(pending, options.selectedProposalIds);
+    const batch = options.publicationMode === "batch";
+    const selected = batch
+      ? selectPendingPrefix(pending, options.selectedProposalIds)
+      : selectPendingProposals(pending, options.selectedProposalIds);
     const repository = await options.github.getRepository();
     if (repository.fullName !== options.localHub.hub.repository) throw new Error("GitHub Hub identity mismatch");
     const target = await options.github.getBranchRef(options.localHub.hub.targetBranch);
@@ -204,7 +350,7 @@ export async function publishPendingHubProposals(
       throw new Error("remote Hub main drifted; synchronize before publication");
     }
     const id = publicationIdentity(options.localHub, selected);
-    const planned = publicationUnits(options.localHub, selected, id, options.publicationMode !== "batch");
+    const planned = publicationUnits(options.localHub, pending, selected, id, batch);
     const units: HubPublicationUnitReceipt[] = [];
     try {
       for (const unit of planned.units) units.push(await publishUnit(options, git, planned.mode, unit));
