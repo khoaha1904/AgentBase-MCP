@@ -88,7 +88,7 @@ function retainedProposal(stateRoot: string, root: string, id: string, commit: s
   } })}\n`);
 }
 
-test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..020] MCP creates independent, stacked and recoverable Hub PRs", async () => {
+test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021] MCP creates independent, stacked and recoverable Hub PRs", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-publish-test-"));
   const remote = path.join(root, "hub.git"), hubRoot = path.join(root, "hub"), stateRoot = path.join(root, "state");
   try {
@@ -270,6 +270,9 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..020] MCP creat
     assert.equal(ref("main"), remoteBase);
     assert.deepEqual(git(hubRoot, ["diff", "--name-only", remoteBase, initialization.head_commit!]), HUB_README_PATH);
     assert.equal(git(hubRoot, ["show", `${initialization.head_commit}:${HUB_README_PATH}`]), renderHubReadme().trimEnd());
+    assert.match(renderHubReadme(), /\[AgentBase-MCP\]\(https:\/\/github\.com\/khoaha1904\/AgentBase-MCP\)/);
+    assert.match(renderHubReadme(), /\[`index\.md`\]\(index\.md\)/);
+    assert.match(renderHubReadme(), /does not duplicate repository source code or the private local Code Graph/);
     assert.doesNotMatch(pullCalls.find((call) => call.title === "Initialize AgentBase-Hub")?.body ?? "",
       /github_pat_secret_canary|agentbase-publish-test-/);
     const initializationRetry = await initializeHub(initializationOptions, {

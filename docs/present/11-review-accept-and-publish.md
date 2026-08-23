@@ -113,3 +113,8 @@ Nó thêm README chuẩn khi thiếu và thêm/sửa đúng ba file CI khi CI ch
 README đã tồn tại và CI current luôn được giữ nguyên. Hub tự chạy validator đã
 review mà không tải npm package, checkout MCP hay cần MCP token. Nếu baseline đã
 đủ thì không tạo PR; maintainer vẫn là người quyết định merge.
+
+README chuẩn là trang onboarding ngắn cho người đọc GitHub: giới thiệu Hub và
+AgentBase-MCP, trỏ vào `index.md`, giải thích Hub lưu knowledge/evidence chứ
+không sao chép source/Code Graph, tóm tắt layout, PR lifecycle và CI. Nó không
+liệt kê toàn bộ concept hay thay thế `index.md` làm knowledge navigation.

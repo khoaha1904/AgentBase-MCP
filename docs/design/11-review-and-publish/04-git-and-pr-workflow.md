@@ -105,6 +105,8 @@ digest. Explicit initialize may create or recover only
 `agentbase/hub-init-<digest>` with that exact support-file diff. Any extra file,
 changed base, ambiguous PR or byte drift stops. The same dedicated Hub token is
 used internally; the caller cannot provide a token, branch name or file bytes.
+The standard README is human onboarding only; canonical knowledge navigation
+remains in `index.md`.
 
 ## Current implementation gap
 

@@ -219,6 +219,11 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-HUB-SETUP-020** — Explicit initialize creates or recovers one exact
   support-only PR. Complete baseline is a no-op; changed base, extra paths, byte
   drift or ambiguous PR state stops before remote write.
+- **AB-HUB-SETUP-021** — The standard README on a newly created or initialized
+  Hub gives human readers one concise onboarding path: link AgentBase-MCP and
+  the Hub, direct readers to canonical `index.md`, explain the OKF/not-source-
+  copy boundary, describe representative layout, review publication and CI.
+  It never duplicates the concept catalog or becomes a second knowledge index.
 
 ## Single-repository Refresh
 

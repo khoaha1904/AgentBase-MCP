@@ -1,7 +1,12 @@
 # Current capability
 
-Active capability: None.
+Active capability: [`036-readable-hub-readme`](036-readable-hub-readme/spec.md).
 Most recent completed: [`035-hub-initialization`](035-hub-initialization/spec.md).
+
+Capability 036 enriches the standard Hub README for human onboarding without
+turning it into a second knowledge index. New Hubs explain AgentBase-MCP, the
+OKF boundary, current layout, review lifecycle and CI; the already-initialized
+production Hub receives the same bytes through one reviewed README-only PR.
 
 Capability 035 generalizes the CI-only upgrade into exact remote-main Hub
 Initialization: add the standard README only when missing, install/repair CI
