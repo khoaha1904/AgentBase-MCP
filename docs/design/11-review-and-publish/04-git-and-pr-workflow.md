@@ -54,6 +54,10 @@ MCP không push local `main` nguyên khối. Nó replay exact accepted proposal 
 trên publication base của unit, vì local tree có thể chứa draft của repository
 khác.
 
+Local accepted ancestry always uses internal `main`; remote publication targets
+the exact branch stored by the active Hub profile. No workflow substitutes the
+literal branch `main` for that configured target.
+
 Append-only shared `index.md` chỉ mang navigation lines do proposal chọn thêm.
 Khi Published `main` đã thêm navigation tương thích, MCP có thể union các exact
 unique append-only lines với cùng heading. Conflict khác, heading drift hoặc
@@ -85,6 +89,11 @@ non-navigation bytes phải dừng trước push; MCP không đoán merge result
 
 Không chạy song song vì tuần tự đơn giản hơn, giữ base rõ và tránh tự tạo
 conflict coordination.
+
+The phrase Published base means the dedicated last-successfully-admitted ref,
+not `origin/<target>`. Fetch updates a private candidate ref. Only a validated
+successful synchronization advances the Published ref; conflict leaves the
+Published ref and every Local Draft unchanged.
 
 ## Failure and retry
 

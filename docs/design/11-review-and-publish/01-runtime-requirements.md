@@ -59,6 +59,16 @@ queries and ordinary coding never create Hub state, commits or publication.
   display name and current remote are hints, not regenerated identity. One
   strong match survives rename/organization transfer; shared fork/mirror
   lineage is ambiguous and requires owner choice.
+- **AB-LOCAL-HUB-017** — The active local view stores one explicit last-admitted
+  Published ref independently from mutable remote-tracking/candidate refs.
+  Status and pending ancestry derive from that Published ref; fetch or conflict
+  cannot advance it. Successful synchronization atomically advances Published,
+  active local state and recovery evidence while preserving remaining drafts.
+- **AB-LOCAL-HUB-018** — Status returns available local identity/heads/draft
+  health even when pending parsing, credentials, network or remote inspection
+  fails. Remote status best-effort reports exact target, current versus updates
+  available, bounded open-PR count and synchronization/recovery state without
+  mutating refs or knowledge.
 
 ## Reviewable PR publication
 
@@ -291,3 +301,24 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-HUB-SETUP-017** — Offline verification covers no-Hub graph use, both setup
   paths, local-only lifecycle, both bootstrap modes, races, permissions and
   checkpoint recovery with disposable Git/fake GitHub.
+- **AB-HUB-SETUP-022** — Installation creates no Hub. The first Hub-dependent
+  authoring mutation lazily creates a local-only Hub; status, Code Graph and
+  ordinary non-Hub work never create Hub state or perform network access.
+- **AB-HUB-SETUP-023** — A remote profile is identified by normalized HTTPS
+  GitHub host, repository and exact target branch. Each identity owns isolated
+  local checkout, configuration and credential state; exactly one profile is
+  active. Activation never merges, replays or copies knowledge from another
+  profile, and an inactive profile remains reusable.
+- **AB-HUB-SETUP-024** — Remote connection accepts credential-free repository
+  URL plus target branch. Token entry occurs only through an owner-private
+  terminal flow and is never a model/tool argument. GitHub.com uses its public
+  API; another admitted HTTPS GitHub host uses the standard Enterprise API on
+  that host. Clone, API, PR URL and permission checks bind the same host.
+- **AB-HUB-SETUP-025** — Internal accepted ancestry may stay on local `main`
+  while every remote read/write, pull request, initialization and CI target uses
+  the configured branch. A profile change is staged and validated before one
+  atomic active-pointer update; failure preserves the prior active profile.
+- **AB-HUB-SETUP-026** — The packaged Hub control skill presents compact status,
+  guides secure profile/credential setup and calls synchronization only after
+  explicit user intent. The MVP has no daemon, periodic task, hidden first-call
+  pull, simultaneous multi-Hub query or cross-Hub merge.

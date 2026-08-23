@@ -1,7 +1,14 @@
 # Current capability
 
-Active capability: None.
+Active capability: [`037-local-first-hub-control`](037-local-first-hub-control/spec.md).
 Most recent completed: [`036-readable-hub-readme`](036-readable-hub-readme/spec.md).
+
+Capability 037 makes Hub operation explicitly local-first and remote-optional.
+Each GitHub.com or GitHub Enterprise repository/branch identity owns isolated
+local and credential state, one profile is active, compact status degrades
+safely, and synchronization distinguishes last admitted Published state from a
+new remote candidate. It also qualifies every currently released MVP journey
+sequentially before release.
 
 Capability 036 enriches the standard Hub README for human onboarding without
 turning it into a second knowledge index. New Hubs explain AgentBase-MCP, the

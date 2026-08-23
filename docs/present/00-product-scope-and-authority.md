@@ -16,6 +16,13 @@ evidence into a reviewed OKF proposal, accept it into local Hub knowledge, query
 it immediately and later publish selected pending commits through a pull
 request.
 
+Installation selects no Hub and Code Graph never requires one. The first OKF
+authoring mutation lazily creates a private local-only Hub. A remote Hub is an
+optional later connection identified by exact GitHub host, repository and
+target branch; its token remains owner-private. Each identity keeps independent
+local state, while one profile is active for query and authoring. Changing the
+active Hub never merges or copies knowledge between profiles.
+
 ## Current flow
 
 ```text
@@ -30,6 +37,10 @@ source repository
   -> optionally publish a safe pending prefix in one PR
   -> after merge, synchronize and rebase remaining pending commits safely
 ```
+
+Remote status is a read-only comparison. AgentBase never performs a hidden
+daily pull: it reports available updates and synchronizes only after an explicit
+user request.
 
 Code structure, symbols, callers and exact implementation primarily come from
 the current repository graph. Business, system, infrastructure and

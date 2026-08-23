@@ -118,3 +118,15 @@ README chuẩn là trang onboarding ngắn cho người đọc GitHub: giới th
 AgentBase-MCP, trỏ vào `index.md`, giải thích Hub lưu knowledge/evidence chứ
 không sao chép source/Code Graph, tóm tắt layout, PR lifecycle và CI. Nó không
 liệt kê toàn bộ concept hay thay thế `index.md` làm knowledge navigation.
+
+Remote Hub identity gồm exact GitHub host, repository và target branch. Mỗi
+identity có local checkout/credential riêng; chỉ một identity active tại một
+thời điểm. GitHub.com dùng public API, GitHub Enterprise dùng API chuẩn trên
+chính enterprise host. Đổi active Hub không replay hay merge Local Draft giữa
+hai Hub.
+
+Status luôn ưu tiên báo được local state, sau đó mới best-effort kiểm tra remote
+head và số PR mở nhắm vào target branch. Mất mạng, thiếu quyền, pending lỗi hoặc
+sync conflict chỉ làm phần liên quan thành unavailable/blocked. Pull vẫn là
+hành động explicit. Last Published commit đã synchronize và remote commit mới
+fetch phải là hai state khác nhau; conflict không được làm local draft mất base.
