@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-23
 
-**Status**: Active
+**Status**: Complete
 
 **Input**: Make the standard Hub README useful to a new human reader and update
 the already-initialized production Hub through a new PR.
