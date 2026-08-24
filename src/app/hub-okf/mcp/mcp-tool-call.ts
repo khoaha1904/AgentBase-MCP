@@ -207,21 +207,8 @@ export async function callHubOkfTool(
     if (!actions) throw new Error("AgentBase Hub runtime is not configured");
     if (name === "get_hub_status") return result(await actions.status());
     if (name === "configure_hub") {
-      const mode = required(args, "mode");
-      if (mode !== "existing" && mode !== "new") throw new Error("mode must be existing or new");
-      const repositoryUrl = args.repository_url;
-      const targetBranch = args.target_branch;
-      if (mode === "existing" && (typeof repositoryUrl !== "string" || !repositoryUrl)) {
-        throw new Error("repository_url is required when attaching an existing Hub");
-      }
-      if (mode === "existing" && (typeof targetBranch !== "string" || !targetBranch)) {
-        throw new Error("target_branch is required when attaching an existing Hub");
-      }
-      if (mode === "new" && (repositoryUrl !== undefined || targetBranch !== undefined)) {
-        throw new Error("repository_url and target_branch are not accepted for a new local-only Hub");
-      }
-      return result(await actions.configure({ mode, ...(typeof repositoryUrl === "string" ? { repositoryUrl } : {}),
-        ...(typeof targetBranch === "string" ? { targetBranch } : {}) }));
+      return result(await actions.configure({ repositoryUrl: required(args, "repository_url"),
+        targetBranch: required(args, "target_branch") }));
     }
     if (name === "preview_hub_bootstrap" || name === "bootstrap_hub") {
       const repositoryUrl = required(args, "repository_url");

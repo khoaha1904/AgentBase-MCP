@@ -4,11 +4,14 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { createHubIdentity, hubProfileId } from "../../../core/hub/index.ts";
 import {
   getOkfAuthoringGuidance, loadOkfBundle, parseConceptDocument, readRepositoryObservedSource, validateOkfRelationships,
 } from "../../../core/knowledge/index.ts";
 import { runGit } from "../../../providers/github-hub/index.ts";
 import { createHubRuntimeActions } from "../query/runtime-actions.ts";
+import { readPersistedHubConfiguration, replacePersistedHubConfiguration } from "../configuration/configuration-file.ts";
+import { createLocalHub } from "../workspace/setup.ts";
 import { writeInitialIngestSkeletons } from "./initial-ingest-skeleton.ts";
 
 test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] preparation renders one generic inspectable skeleton bundle and stops", async () => {
@@ -28,7 +31,13 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] pre
       cwd: source, operation: "commit ingest fixture", commitTimestamp: "2026-08-21T00:00:00Z" });
 
     const actions = createHubRuntimeActions(environment, path.join(root, "state"));
-    await actions.configure({ mode: "new" });
+    const local = await createLocalHub(environment), current = readPersistedHubConfiguration(environment);
+    assert.ok(current?.kind === "local-only");
+    const hub = createHubIdentity("acme/vehicle-events-hub", "main"), localHubId = hubProfileId(hub);
+    await runGit({ args: ["remote", "add", "origin", hub.canonicalHttpsUrl], cwd: local.localRoot,
+      operation: "attach ingest test Hub remote" });
+    replacePersistedHubConfiguration(current, { ...current, kind: "remote", localHubId,
+      host: hub.host, repository: hub.repository, targetBranch: hub.targetBranch }, environment, { retireExpected: true });
     const preflight = await actions.preflight(source) as {
       repository: { kind: string; repository: { id: string; displayName: string; remotes: string[]; rootCommits: string[] } };
     };

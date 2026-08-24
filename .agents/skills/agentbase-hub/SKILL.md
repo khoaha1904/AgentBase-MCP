@@ -1,6 +1,6 @@
 ---
 name: agentbase-hub
-description: Inspect and operate AgentBase Hub lifecycle and review governed Questions. Use for Hub status, local-only use, remote connection or switching, Question answering, proposal acceptance, synchronization, recovery, initialization, or publication readiness.
+description: Inspect and operate AgentBase Hub lifecycle and review governed Questions. Use for Hub status, remote connection or switching, Question answering, proposal acceptance, synchronization, recovery, initialization, or publication readiness.
 ---
 
 # AgentBase Hub control
@@ -15,8 +15,8 @@ Lifecycle tools are `get_hub_status`, `configure_hub`, `preview_hub_bootstrap`,
 `submit_hub_okf_proposals`, `synchronize_hub_okf` and `recover_hub_okf`. Invoke
 only the action explicitly requested after status establishes its preconditions.
 
-- An unconfigured installation is valid. Code Graph stays available, and the
-  first Ingest authoring workflow creates the local-only Hub automatically.
+- An unconfigured installation is valid and Code Graph stays available. Hub
+  query, Ingest, Refresh and OKF Draft work wait until a remote Hub is active.
 - Connect an existing remote only after the user supplies its credential-free
   HTTPS repository URL and exact target branch. Have the user run the following
   masked terminal command with the exact identity; never request or pass the

@@ -35,7 +35,8 @@ không thể xác minh implementation hoặc giá trị hiện tại. Agent khô
 
 Hub search/read chỉ dùng exact Published commit đã synchronize về local. Local
 Draft chỉ xuất hiện trong inspect/review/PR, không tham gia câu trả lời thông
-thường. Hub local-only chưa có Published authority nên query báo unavailable.
+thường. Khi chưa cấu hình remote Hub, Hub query và OKF authoring đều unavailable;
+Code Graph vẫn dùng được độc lập.
 
 Search tìm concept; read trả toàn bộ Markdown gồm knowledge, relationship links,
 snapshot, provenance và Question. MVP không cần tool traversal, observed-value

@@ -29,20 +29,19 @@ const ENRICHMENT_CANDIDATE_SCHEMA = {
 export const HUB_OKF_TOOLS = [
   {
     name: "get_hub_status",
-    description: "Report whether AgentBase-MCP has no Hub, a local-only Hub, or an attached remote Hub.",
+    description: "Report whether AgentBase-MCP has no Hub or one active remote Hub profile.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
     name: "configure_hub",
-    description: "Attach an existing AgentBase-Hub or create a new local-only Hub when OKF is first requested.",
+    description: "Attach an existing non-empty AgentBase-Hub using its credential-free repository URL and exact target branch.",
     inputSchema: {
       type: "object",
       properties: {
-        mode: { type: "string", enum: ["existing", "new"] },
         repository_url: { type: "string", minLength: 1 },
         target_branch: { type: "string", minLength: 1 },
       },
-      required: ["mode"], additionalProperties: false,
+      required: ["repository_url", "target_branch"], additionalProperties: false,
     },
   },
   {

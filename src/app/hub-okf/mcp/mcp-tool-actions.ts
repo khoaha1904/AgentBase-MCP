@@ -6,7 +6,7 @@ import type { ConfirmedDomain as BatchDomain } from "../../../core/knowledge/ind
 
 export type HubToolActions = Readonly<{
   status(): Promise<unknown>;
-  configure(input: Readonly<{ mode: "existing" | "new"; repositoryUrl?: string; targetBranch?: string }>): Promise<unknown>;
+  configure(input: Readonly<{ repositoryUrl: string; targetBranch: string }>): Promise<unknown>;
   previewBootstrap(repositoryUrl: string, targetBranch: string): Promise<unknown>;
   bootstrap(repositoryUrl: string, targetBranch: string): Promise<unknown>;
   preflight(sourceRepository: string): Promise<unknown>;

@@ -83,6 +83,8 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
     assert.equal(bootstrapTools.length, 2);
     assert.equal(bootstrapTools.every((tool) => !("mode" in (tool.inputSchema.properties ?? {}))), true);
     assert.match(bootstrapTools.find((tool) => tool.name === "bootstrap_hub")?.description ?? "", /knowledge remains pending/);
+    const configureTool = tools.tools.find((tool) => tool.name === "configure_hub");
+    assert.deepEqual(Object.keys(configureTool?.inputSchema.properties ?? {}).sort(), ["repository_url", "target_branch"]);
     const prepareTool = tools.tools.find((tool) => tool.name === "prepare_hub_okf");
     const finalizeTool = tools.tools.find((tool) => tool.name === "finalize_hub_okf_proposal");
     assert.match(prepareTool?.description ?? "", /changed paths, observed source state and known gaps/);
@@ -125,9 +127,10 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
         resource_observations: [],
       },
     } });
-    assert.equal(unconfiguredHub.isError, undefined);
-    const localStatus = await client.callTool({ name: "get_hub_status", arguments: {} });
-    assert.match(localStatus.content[0]?.type === "text" ? localStatus.content[0].text : "", /local-only/);
+    assert.equal(unconfiguredHub.isError, true);
+    assert.match(unconfiguredHub.content[0]?.type === "text" ? unconfiguredHub.content[0].text : "", /connect an existing Hub or bootstrap an empty remote Hub/);
+    const unchangedStatus = await client.callTool({ name: "get_hub_status", arguments: {} });
+    assert.match(unchangedStatus.content[0]?.type === "text" ? unchangedStatus.content[0].text : "", /unconfigured/);
     const schemas = await client.callTool({ name: "list_okf_schemas", arguments: {} });
     assert.equal(schemas.isError, undefined);
     const invalidGuidance = await client.callTool({ name: "get_okf_authoring_schemas", arguments: {

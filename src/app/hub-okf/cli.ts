@@ -36,13 +36,7 @@ export async function executeHubCli(
     let output: unknown;
     if (command === "status") output = await actions.status();
     else if (command === "configure") {
-      const mode = required(values, "--mode");
-      if (mode !== "existing" && mode !== "new") throw new Error("--mode must be existing or new");
-      const repositoryUrl = values["--url"];
-      const targetBranch = values["--branch"];
-      if (mode === "existing" && (!repositoryUrl || !targetBranch)) throw new Error("--url and --branch are required for an existing Hub");
-      if (mode === "new" && (repositoryUrl || targetBranch)) throw new Error("--url and --branch are not accepted for a new local-only Hub");
-      output = await actions.configure({ mode, ...(repositoryUrl ? { repositoryUrl } : {}), ...(targetBranch ? { targetBranch } : {}) });
+      output = await actions.configure({ repositoryUrl: required(values, "--url"), targetBranch: required(values, "--branch") });
     } else if (command === "bootstrap-preview" || command === "bootstrap") {
       const repositoryUrl = required(values, "--url");
       const targetBranch = required(values, "--branch");

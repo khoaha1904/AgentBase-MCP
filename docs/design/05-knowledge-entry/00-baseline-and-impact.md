@@ -46,7 +46,8 @@ Nguồn baseline:
 
 - Git state tiếp tục giữ Published anchor và Local Draft ancestry tách biệt;
   không cần database hoặc một Hub tạm thứ hai.
-- `remoteBase` và pending ancestry đã phân biệt remote-accepted với local-only.
+- `remoteBase` và pending ancestry đã phân biệt Published với unaccepted local
+  proposal commits trong từng remote profile.
 - Proposal commit là đơn vị atomic, có identity/provenance và recovery tốt.
 - Một PR đã có thể gom nhiều proposal từ nhiều repository.
 

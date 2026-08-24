@@ -196,8 +196,9 @@ export function activatePersistedHubConfiguration(
   configuration: PersistedHubConfiguration,
   environment: NodeJS.ProcessEnv = process.env,
   expectedActiveHubId?: string | null,
+  options: Readonly<{ activationLock?: HubActivationLock }> = {},
 ): void {
-  withActivationLock(environment, () => {
+  const activate = () => {
     const admitted = parse(configuration);
     const active = readPersistedHubConfiguration(environment);
     if (expectedActiveHubId !== undefined && (active?.localHubId ?? null) !== expectedActiveHubId) {
@@ -206,7 +207,13 @@ export function activatePersistedHubConfiguration(
     if (active) writeAtomic(profilePath(active.localHubId, environment), active);
     writeAtomic(profilePath(admitted.localHubId, environment), admitted);
     writePointer(globalHubConfigurationPath(environment), admitted.localHubId);
-  });
+  };
+  if (options.activationLock) {
+    if (options.activationLock.file !== path.join(directory(environment), ".hub-activation.lock")) {
+      throw new Error("Hub activation lock does not belong to this configuration root");
+    }
+    activate();
+  } else withActivationLock(environment, activate);
 }
 
 export function readPersistedHubConfiguration(environment: NodeJS.ProcessEnv = process.env): PersistedHubConfiguration | undefined {

@@ -32,7 +32,7 @@ import {
 import { listPendingHubProposals } from "../review/pending.ts";
 import { publishPendingHubProposals } from "../publication/publish.ts";
 import { synchronizeLocalHub } from "../publication/synchronize.ts";
-import { attachExistingHub, createLocalHub } from "../workspace/setup.ts";
+import { attachExistingHub } from "../workspace/setup.ts";
 import { executeHubBootstrap, previewHubBootstrap } from "../workspace/bootstrap.ts";
 import { createReviewActions } from "../review/review-actions.ts";
 import { writeAtomicJson } from "../review/proposal-state.ts";
@@ -190,15 +190,16 @@ export function createHubRuntimeActions(
     if (mutating) migrateActive();
     const configuration = current();
     if (configuration.kind === "unconfigured") {
-      throw new Error("AgentBase Hub is not configured; choose attach-existing or create-local before building OKF");
+      throw new Error("AgentBase Hub is not configured; connect an existing Hub or bootstrap an empty remote Hub first");
+    }
+    if (configuration.kind === "local-only") {
+      throw new Error("legacy local-only Hub authority is no longer supported; connect or bootstrap a remote Hub profile");
     }
     return configuration;
   };
   const admit = async (createForAuthoring = false, mutating = createForAuthoring) => {
-    if (createForAuthoring && current().kind === "unconfigured") await createLocalHub(environment);
     const configuration = configured(mutating);
-    return configuration.kind === "remote"
-      ? admitPersistentLocalHub(configuration) : admitPersistentLocalHub(configuration);
+    return admitPersistentLocalHub(configuration);
   };
   return {
     async status() {
@@ -207,13 +208,16 @@ export function createHubRuntimeActions(
         kind: "unconfigured", local: { state: "not-created" }, credential: "not-required",
         sync: { state: "not-applicable" },
       };
+      if (configuration.kind === "local-only") return {
+        kind: "unsupported-local-profile",
+        local: { state: "blocked", detail: "legacy local-only Hub authority is no longer supported" },
+        credential: "not-applicable", sync: { state: "not-applicable" },
+      };
       let localHub: Awaited<ReturnType<typeof admit>> | undefined;
       let local: Record<string, unknown>;
       let localReady = false;
       try {
-        localHub = configuration.kind === "remote"
-          ? await admitPersistentLocalHub(configuration, undefined, { readOnly: true })
-          : await admitPersistentLocalHub(configuration, undefined, { readOnly: true });
+        localHub = await admitPersistentLocalHub(configuration, undefined, { readOnly: true });
         try {
           const pending = await listPendingHubProposals(localHub);
           local = { state: "ready", published_head: localHub.remoteBase, active_head: localHub.activeHead,
@@ -244,12 +248,6 @@ export function createHubRuntimeActions(
             }).slice(0, 16).map((entry) => entry.name)
           : [];
       } catch { recoveryInventoryError = true; }
-      if (configuration.kind === "local-only") return {
-        kind: "local-only", local, credential: "not-required",
-        sync: recovery.length ? { state: "recovery-required", transaction_ids: recovery }
-          : recoveryInventoryError ? { state: "blocked", detail: "recovery inventory is unavailable" }
-            : { state: "not-applicable" },
-      };
       let remote: Record<string, unknown> = { state: "unavailable", detail: "Hub profile credential is missing" };
       let openPrCount: Readonly<{ count: number; truncated: boolean }> | "unavailable" = "unavailable";
       let credential: "ready" | "missing" | "invalid" = configuration.token ? "ready" : "missing";
@@ -279,9 +277,7 @@ export function createHubRuntimeActions(
     },
     async configure(input) {
       if (current().kind !== "unconfigured") migrateActive();
-      return input.mode === "existing"
-        ? attachExistingHub(input.repositoryUrl!, input.targetBranch!, environment)
-        : createLocalHub(environment);
+      return attachExistingHub(input.repositoryUrl, input.targetBranch, environment);
     },
     async previewBootstrap(repositoryUrl, targetBranch) { return previewHubBootstrap(repositoryUrl, targetBranch, environment); },
     async bootstrap(repositoryUrl, targetBranch) { return executeHubBootstrap(repositoryUrl, targetBranch, environment); },
@@ -353,7 +349,7 @@ export function createHubRuntimeActions(
       const session = beginHubAuthoringSession({
         stateRoot,
         mode: input.mode,
-        ...(localHub.kind === "local-only" ? { localHubId: localHub.localHubId } : { hub: localHub.hub }),
+        hub: localHub.hub,
         baseCommit: localHub.activeHead,
         checkoutRoot: localHub.root,
         sourceRepositoryRoot: resolveRepositorySourceRoot(input.sourceRepository),
