@@ -4,8 +4,8 @@ Active capability: [`043-converge-product-contracts`](043-converge-product-contr
 Most recent completed: [`042-correct-tool-guidance`](042-correct-tool-guidance/spec.md).
 
 Capability 043 reviews the twelve current product areas sequentially with the
-owner, aligns high-level and low-level authority, and defers runtime changes
-until one post-review implementation-gap audit. Part 01 now defines lazy
+owner, aligns high-level and low-level authority, and completed the approved
+post-review implementation-gap reconciliation. Part 01 defines lazy
 per-Git-repository graphs and treats a multi-repository workspace directory as
 routing scope rather than one combined graph. Its first audited runtime slice
 adds the bounded Published-only `agentbase-scan` workflow without building

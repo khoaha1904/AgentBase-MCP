@@ -5,10 +5,10 @@
 ## Quyết định ngắn
 
 Question là một governance document trong Hub. Proposal chứa Question để review;
-Accept đưa nó vào Local Hub; merge PR chia sẻ nó cho mọi máy.
+Accept đưa nó vào remote-profile Local Draft; merge PR chia sẻ nó cho mọi máy.
 
 ```text
-proposal staging → accepted Local Hub → PR → Published Hub main
+proposal staging → accepted Local Draft → PR → Published Hub main
 ```
 
 Runtime hiện không cần private ledger/cache. Một exact Hub tree dựng được toàn bộ

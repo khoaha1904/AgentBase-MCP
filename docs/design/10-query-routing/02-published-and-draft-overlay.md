@@ -13,7 +13,7 @@ not query state.
 - Attached remote Hub: read exact `remoteBase`.
 - Local Draft: `remoteBase..activeHead`, available only through proposal
   inspection, review and publication workflows.
-- Local-only Hub: no Published authority, so ordinary search/read returns a
+- No remote Hub profile: no Published authority, so ordinary search/read returns a
   clear unavailable error.
 
 Query never fetches remote, reads working-tree bytes or falls back to
@@ -40,7 +40,7 @@ does not justify a separate ordinary-query tool.
 
 ## Failure behavior
 
-- Local-only profile: explicit Published-unavailable error.
+- No remote profile: explicit Hub-configuration error.
 - Missing path at `remoteBase`: ordinary not-found error even if Draft added it.
 - Invalid Published document: fail that read/search; never substitute Draft.
 - Remote advanced but not synchronized: continue reading the admitted

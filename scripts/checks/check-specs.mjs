@@ -25,7 +25,7 @@ const REQUIREMENT_GROUPS = [
   ["foundation", "docs/design/12-version-scope/01-foundation-requirements.md", ids("AB-FND", 19), "SPEC-LIVING-MISSING", "SPEC-ID-MISSING"],
   ["managed graph", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-MVP", 7), "SPEC-MVP-LIVING-MISSING", "SPEC-MVP-ID-MISSING"],
   ["graph lifecycle", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-GRAPH", 14), "SPEC-GRAPH-LIVING-MISSING", "SPEC-GRAPH-ID-MISSING"],
-  ["graph freshness", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-REFRESH", 12), "SPEC-GRAPH-LIVING-MISSING", "SPEC-REFRESH-ID-MISSING"],
+  ["graph freshness", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-GRAPH-REFRESH", 12), "SPEC-GRAPH-LIVING-MISSING", "SPEC-GRAPH-REFRESH-ID-MISSING"],
   ["MCP surface", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-MCP", 14), "SPEC-GRAPH-LIVING-MISSING", "SPEC-MCP-ID-MISSING"],
   ["OKF proposal", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-MVP", 16, 8), "SPEC-OKF-LIVING-MISSING", "SPEC-MVP-ID-MISSING"],
   ["observations", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-OBS", 7), "SPEC-OKF-LIVING-MISSING", "SPEC-OBS-ID-MISSING"],

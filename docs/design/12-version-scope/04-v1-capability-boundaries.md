@@ -1,6 +1,6 @@
 # 12.04 — MVP capability boundary
 
-> Trạng thái: Boundary owner-approved; implementation audit pending.
+> Trạng thái: MVP boundary implemented and audited offline.
 
 ## Required and implemented
 
@@ -21,8 +21,8 @@
 
 ## Release gate
 
-Implementation must still be audited against this converged boundary before a
-release claim. Canonical offline verification and separately authorized model
+Implementation is audited against this converged boundary. Canonical offline
+verification and separately authorized model
 qualification are evidence gates; Batch Refresh, additional provider profiles,
 remote file reading and HTML review remain deferred. Ordinary Hub query is
 intentionally Published-only.

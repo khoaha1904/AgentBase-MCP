@@ -72,7 +72,7 @@ nó báo maintainer thực hiện explicit reviewed correction và không tạo 
 
 Quyết định hiện tại không yêu cầu runtime model mới. Primary Domain, validation
 và batch đã có. Chỉ subproject-scope automation còn là contained host-skill
-change nếu implementation audit chứng minh cần bổ sung. Cho subproject có
+change nếu usage evidence chứng minh cần bổ sung. Cho subproject có
 Domain/Repository identity riêng vẫn là broad change và ngoài scope.
 
 ## Quyết định đã chốt

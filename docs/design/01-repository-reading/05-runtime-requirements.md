@@ -60,27 +60,27 @@ evidence, not a large-repository promise.
 
 ## Exact freshness reuse
 
-- **AB-REFRESH-001, AB-REFRESH-002** — One disposable atomic receipt per
+- **AB-GRAPH-REFRESH-001, AB-GRAPH-REFRESH-002** — One disposable atomic receipt per
   repository/provider/graph namespace binds source, exact engine, opaque
   namespace and accepted evidence digest without absolute paths.
-- **AB-REFRESH-003** — Only an exact source/engine/namespace match is reusable;
+- **AB-GRAPH-REFRESH-003** — Only an exact source/engine/namespace match is reusable;
   missing, malformed, unsupported or mismatched state selects refresh.
-- **AB-REFRESH-004** — Reuse invokes zero index operations but still performs
+- **AB-GRAPH-REFRESH-004** — Reuse invokes zero index operations but still performs
   every bounded query, source-integrity check and clean shutdown.
-- **AB-REFRESH-005** — Missing/mismatched state, source change or `--refresh`
+- **AB-GRAPH-REFRESH-005** — Missing/mismatched state, source change or `--refresh`
   invokes exactly one provider-owned index before queries.
-- **AB-REFRESH-006** — Codebase Memory owns parsing, graph construction and
+- **AB-GRAPH-REFRESH-006** — Codebase Memory owns parsing, graph construction and
   internal full/incremental behavior; AgentBase computes no graph delta.
-- **AB-REFRESH-007, AB-REFRESH-008** — A receipt commits atomically only after
+- **AB-GRAPH-REFRESH-007, AB-GRAPH-REFRESH-008** — A receipt commits atomically only after
   complete evidence, unchanged source and confirmed cleanup; failure returns no
   partial success and leaves the previous receipt unchanged.
-- **AB-REFRESH-009** — Reuse-selected cache failure stops with explicit
+- **AB-GRAPH-REFRESH-009** — Reuse-selected cache failure stops with explicit
   `--refresh` guidance and never triggers a hidden index retry.
-- **AB-REFRESH-010** — Diagnostics expose `reused`/`refreshed` plus a bounded
+- **AB-GRAPH-REFRESH-010** — Diagnostics expose `reused`/`refreshed` plus a bounded
   reason; private paths and timings remain non-canonical.
-- **AB-REFRESH-011** — Freshness adds no watcher, daemon, UI, provider config,
+- **AB-GRAPH-REFRESH-011** — Freshness adds no watcher, daemon, UI, provider config,
   network, credentials or model call.
-- **AB-REFRESH-012** — Offline tests use fakes; opt-in exact-provider evidence
+- **AB-GRAPH-REFRESH-012** — Offline tests use fakes; opt-in exact-provider evidence
   covers initial, reuse, add, modify, delete and forced refresh.
 
 Accepted fixture evidence: exact reuse performed no index and completed in

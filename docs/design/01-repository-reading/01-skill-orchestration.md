@@ -1,7 +1,6 @@
 # 01.01 — Skill orchestration
 
-> Trạng thái: Single-repository orchestration implemented; workspace routing
-> contract accepted and pending implementation audit.
+> Trạng thái: Single-repository orchestration và workspace routing implemented.
 
 ## Quyết định
 

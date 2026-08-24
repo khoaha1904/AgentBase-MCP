@@ -60,7 +60,7 @@ Cả 12 phần high-level đã được review như một tổng thể.
 
 | Phần | Implementation hiện tại |
 |---|---|
-| 01–05 | Có foundation chạy được: local Code Graph, catalog 7, OKF template, proposal và Local Hub |
+| 01–05 | Local Code Graph, catalog 7, OKF template, remote-profile Local Draft và Published-only query đã implement |
 | 06–08 | Relation/Question, snapshots, AWS/SQS Enrichment, freshness và Hub CI đã implement; profile khác deferred |
 | 09 | Single Initial Ingest/Refresh, Batch Initial Ingest, Domain Enrichment, freshness và CI đã implement; Batch Refresh deferred |
 | 10 | Hub search/read Published-only đã implement; ordinary freshness marks và remote source reader chưa có |

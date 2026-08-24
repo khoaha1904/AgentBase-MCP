@@ -1,8 +1,7 @@
 # 05 — Knowledge entry
 
-> Trạng thái: Proposal/template và Published query boundary đã implement;
-> remote-required OKF authority cùng exact profile isolation chờ implementation
-> audit sau review 12 phần.
+> Trạng thái: Proposal/template, Published-only query, remote-required OKF
+> authority và exact profile isolation đã implement.
 
 High-level decision:
 [Kiến thức từ repository vào Hub thế nào?](../../present/05-how-repository-knowledge-enters-the-hub.md)
@@ -28,6 +27,6 @@ High-level decision:
 
 Git-backed proposal, exact Markdown skeleton/template, Local Draft commit,
 inspection và publication receipt đã có; không thêm database hoặc raw graph
-store. Ordinary query is Published-only. Product contract mới yêu cầu không có
-remote config thì chỉ Code Graph hoạt động, và mỗi remote URL + branch giữ
-Published/Draft state riêng; implementation status sẽ được audit sau Part 12.
+store. Ordinary query is Published-only. Không có remote config thì chỉ Code
+Graph hoạt động; mỗi normalized remote URL + branch giữ Published/Draft state
+riêng.

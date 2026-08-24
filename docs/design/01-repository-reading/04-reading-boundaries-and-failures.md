@@ -1,7 +1,6 @@
 # 01.04 — Reading boundaries and failures
 
-> Trạng thái: Single-repository boundary implemented; workspace selection
-> contract pending implementation audit.
+> Trạng thái: Single-repository boundary và explicit workspace selection implemented.
 
 ## Reading authority
 
@@ -58,8 +57,7 @@ failure report riêng và có thể retry; phần 09 quyết định checkpoint/
 
 ## Baseline impact
 
-Boundary, mutation detection và cleanup hiện tại được giữ nguyên. Gap là graph
-round hiện thường fail toàn bộ khi provider path không hoàn chỉnh; implementation
-sau này phải phân biệt recoverable coverage limitation với integrity/runtime
-failure. Đây là contained change trong evidence outcome và skill routing, không
-phải provider rewrite.
+Boundary, mutation detection và cleanup hiện tại được giữ nguyên. Graph round
+trả partial cùng limitations khi evidence provider hỗ trợ một phần; integrity,
+source mutation và runtime/cleanup failure vẫn dừng run. Không cần provider
+rewrite hoặc một recovery framework riêng.

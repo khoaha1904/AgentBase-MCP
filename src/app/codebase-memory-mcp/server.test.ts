@@ -109,6 +109,9 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
     assert.equal(hubStatus.isError, undefined);
     assert.match(hubStatus.content[0]?.type === "text" ? hubStatus.content[0].text : "", /unconfigured/);
     assert.equal(fs.existsSync(path.join(state, "config")), false, "status must not create Hub configuration state");
+    const scanned = await client.callTool({ name: "scan_workspace_repositories", arguments: { workspace_root: repo } });
+    assert.equal(scanned.isError, undefined);
+    assert.match(scanned.content[0]?.type === "text" ? scanned.content[0].text : "", /"hub":"unavailable"/);
     const before = await client.callTool({ name: "search_graph", arguments: { project: "fixture" } });
     assert.equal(before.isError, true);
     const indexed = await client.callTool({ name: "index_repository", arguments: { repo_path: repo } });

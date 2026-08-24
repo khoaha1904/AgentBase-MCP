@@ -1,7 +1,7 @@
 # 09 — Baseline and impact checkpoint
 
 > Trạng thái: Single-repository, Batch Initial Ingest, AWS/SQS Enrichment and
-> freshness CI implemented; workspace Scan design pending implementation audit.
+> freshness CI và bounded workspace Scan implemented.
 
 ## Baseline hiện tại
 
@@ -28,9 +28,9 @@ source state thay vì opaque caller input.
 
 ## Gap còn lại
 
-Public `agentbase-scan` đã được implemented theo bounded Published-only contract. Batch Refresh và mixed
-Init/Refresh được giữ ngoài MVP; Batch Initial Ingest checkpoint/retry và Hub CI
-freshness projection đã implement.
+Public `agentbase-scan` đã implement theo bounded Published-only contract. Batch
+Refresh và mixed Init/Refresh được giữ ngoài MVP; Batch Initial Ingest
+checkpoint/retry và Hub CI freshness projection đã implement.
 
 ## Kết quả
 

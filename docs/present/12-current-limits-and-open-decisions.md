@@ -1,7 +1,7 @@
 # 12 — Giới hạn và phạm vi của phiên bản đầu
 
-> Trạng thái: MVP boundary đã chốt; implementation audit đang chờ sau khi đồng
-> bộ đủ 12 phần.
+> Trạng thái: MVP boundary đã chốt, implement và audit offline sau khi đồng bộ
+> đủ 12 phần.
 
 ## Câu trả lời ngắn
 

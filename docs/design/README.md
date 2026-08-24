@@ -102,20 +102,20 @@ checkpoint tự nhiên là trước benchmark mới, trước PR và trước ca
 11. [Review và Publish](11-review-and-publish/README.md)
 12. [Version scope](12-version-scope/README.md)
 
-## Implementation trace — 2026-08-22
+## Implementation trace — 2026-08-24
 
 | Phần | Trạng thái low-level |
 |---|---|
-| 01 | Graph/source reading implemented cho local single-repository |
+| 01 | Lazy graph/source reading và explicit workspace routing implemented; remote clone deferred |
 | 02 | Domain/Repository + single/batch Initial Ingest confirmation implemented; monorepo runtime deferred |
 | 03 | Evidence-bearing candidate/guidance implemented; candidate UI còn deferred |
 | 04 | Catalog 7 implemented; catalog 6 design đã superseded |
-| 05 | Proposal/template/Local Hub foundation implemented; overlay UX còn draft |
+| 05 | Remote-profile Draft, Published-only query, proposal/template và isolation implemented |
 | 06 | Bounded AWS/SQS relation identity và Domain Enrichment runtime đã implement; merge/profile khác deferred |
-| 07 | Shared Question documents + exact-scope Guidance implemented; batch/conflict composition deferred |
+| 07 | Shared Questions, exact Guidance và ordinary correction/removal proposal implemented |
 | 08 | Repository snapshot-first, AWS/SQS observations, local freshness report và Hub CI đã implement |
 | 09 | Single Init/Refresh, Batch Initial Ingest, Domain Enrichment, freshness và CI đã implement; Batch Refresh deferred |
-| 10 | Snapshot-default query foundation implemented; overlay/conflict/ordinary freshness marks deferred |
+| 10 | Published-only snapshot-first query và optional local source composition implemented; remote read deferred |
 | 11 | Reviewable batch publication và exact same-Repository Init/Refresh stack implemented |
 | 12 | Terraform/Terragrunt MVP boundary implemented and verified; provider expansion deferred |
 

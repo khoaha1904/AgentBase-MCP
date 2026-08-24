@@ -1,8 +1,7 @@
 # 01 — Repository reading
 
-> Trạng thái: Core local reading flow đã implement. Lazy multi-repository
-> workspace routing đã được duyệt ở design và chờ implementation audit sau khi
-> hoàn tất review 12 phần; remote clone vẫn ngoài scope.
+> Trạng thái: Core local reading và lazy multi-repository workspace routing đã
+> implement; remote clone vẫn ngoài scope.
 
 High-level decision:
 [MCP đọc một dự án như thế nào?](../../present/01-how-mcp-reads-a-repository.md)
@@ -27,6 +26,7 @@ High-level decision:
 `agentbase-query`, `use-codebase-memory`, Initial Ingest và Refresh đã nối
 Published Hub, managed Codebase Memory, exact source reads và evidence
 validation. Graph vẫn private/rebuildable và chỉ dùng cho repo local/workspace.
-Batch Ingest đã xử lý danh sách repository explicit tuần tự ở phần 09. Phần còn
-chờ audit là cách host chọn đúng repository khi người dùng đứng ở thư mục cha
-chứa nhiều repo; design không yêu cầu combined graph hoặc workspace registry.
+Batch Ingest xử lý danh sách repository explicit tuần tự ở phần 09. Public Scan
+inventory bounded Git roots; query skill chọn một root rõ ràng hoặc hỏi lại và
+gateway thay repository session tuần tự. Không có combined graph hoặc workspace
+registry.

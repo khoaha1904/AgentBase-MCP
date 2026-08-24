@@ -1,6 +1,6 @@
 # 12 — Version scope
 
-> Trạng thái: MVP capability boundary owner-approved; implementation audit in progress.
+> Trạng thái: MVP capability boundary implemented and audited offline.
 
 High-level decision:
 [Giới hạn và phạm vi phiên bản đầu](../../present/12-current-limits-and-open-decisions.md)

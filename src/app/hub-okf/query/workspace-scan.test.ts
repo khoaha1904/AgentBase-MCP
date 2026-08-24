@@ -23,6 +23,7 @@ test("[AB-SCAN-001..007] bounded scan inventories Git roots and compares only Pu
   fs.writeFileSync(path.join(repository, "README.md"), "# Service A\n");
   git(repository, "add", "README.md");
   git(repository, "commit", "-m", "init");
+  fs.symlinkSync(repository, path.join(workspace, "linked-service"), "dir");
 
   const local = scanWorkspaceRepositories({ workspaceRoot: workspace, capturedAt: "2026-08-24T00:00:00.000Z" });
   assert.equal(local.hub, "unavailable");

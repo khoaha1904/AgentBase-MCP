@@ -68,7 +68,9 @@ function discoverGitRoots(workspaceRoot: string): Readonly<{
       directoryLimitReached = true;
       break;
     }
-    if (fs.existsSync(path.join(directory, ".git"))) {
+    const gitMarker = path.join(directory, ".git");
+    const marker = fs.existsSync(gitMarker) ? fs.lstatSync(gitMarker) : undefined;
+    if (marker && !marker.isSymbolicLink() && (marker.isDirectory() || marker.isFile())) {
       roots.push(directory);
       if (roots.length === MAX_REPOSITORIES) {
         truncated = queue.length > 0;

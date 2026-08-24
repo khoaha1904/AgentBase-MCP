@@ -98,8 +98,8 @@ Proposal/change set là publication unit. Item-level selection diễn ra trướ
 local Accept. Sau Accept, proposal commit bất biến và đi qua Local Draft, In
 Review rồi Published như một đơn vị. High-level phần 05 và 11 đã được cập nhật.
 
-Ordinary query chỉ đọc Published state của active remote profile. Local-only
-không tạo một authority cạnh tranh; không có remote config thì chỉ Code Graph
-được dùng.
+Ordinary query chỉ đọc Published state của active remote profile. Không có
+remote config thì không tồn tại Hub authority cạnh tranh và chỉ Code Graph được
+dùng.
 
 Impact sau quyết định: **Contained change**, không còn broad Hub redesign.

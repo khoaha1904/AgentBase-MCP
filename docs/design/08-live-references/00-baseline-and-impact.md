@@ -43,9 +43,9 @@ current source. Runtime đã bỏ contract và action đó, không dual-read/dua
 
 Không có Published concept theo contract cũ nên không cần migration layer.
 
-## Capability còn deferred hoặc chờ audit
+## Capability còn deferred
 
-1. Remote repository file read qua MCP-managed token chờ implementation audit.
+1. Remote repository file read qua MCP-managed token là post-MVP priority.
 2. Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
 3. Ordinary answer wording/mark cho snapshot age thuộc Part 10; Hub CI freshness
    projection đã implement warning-only.

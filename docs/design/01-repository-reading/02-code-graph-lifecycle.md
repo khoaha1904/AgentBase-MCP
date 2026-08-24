@@ -1,7 +1,6 @@
 # 01.02 — Code Graph lifecycle
 
-> Trạng thái: Local managed graph lifecycle implemented; lazy host routing
-> contract pending implementation audit.
+> Trạng thái: Local managed graph lifecycle và lazy host routing implemented.
 
 ## Quyết định
 
