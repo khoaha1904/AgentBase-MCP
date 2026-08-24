@@ -25,4 +25,4 @@ its UI metadata inside its own directory.
 ## Development skills
 
 The `speckit-*` directories drive repository development; they are not AgentBase
-product workflows.
+product workflows and are never copied by `./install.sh`.

@@ -1,7 +1,13 @@
 # Current capability
 
 Active capability: None.
-Most recent completed: [`038-published-only-hub-query`](038-published-only-hub-query/spec.md).
+Most recent completed: [`039-install-product-skills`](039-install-product-skills/spec.md).
+
+Capability 039 installs the seven released AgentBase product skills into the
+user scope of each interactively selected client. A fixed allowlist excludes
+repository-development Spec Kit skills; exact copies are no-op, conflicts fail
+before mutation and a later MCP-registration failure removes only skills
+created by that installer run.
 
 Capability 038 simplifies ordinary Hub query to the exact synchronized
 Published commit. Search plus exact Markdown read replace separate traversal,

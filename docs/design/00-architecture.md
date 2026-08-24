@@ -54,9 +54,11 @@ scripts/
   benchmark/                      opt-in measurement and qualification
 ```
 
-Repository-local product skills live under `.agents/skills/<goal>/`; its
-`README.md` separates product workflows from development-only Spec Kit skills.
-Do not create empty skill scaffolds before the workflow exists.
+Product skill sources live under `.agents/skills/<goal>/`; its `README.md`
+separates the seven released workflows from development-only Spec Kit skills.
+Interactive installation copies only the explicit product allowlist into each
+selected client's user scope. Do not create empty skill scaffolds before the
+workflow exists.
 
 Do not create generic `common`, `utils` or `helpers` areas for possible reuse.
 Split a file only when the results have distinct responsibilities and reasons

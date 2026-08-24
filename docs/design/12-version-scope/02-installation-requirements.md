@@ -1,8 +1,9 @@
 # Installation requirements
 
-`./install.sh` prepares exact dependencies, optionally stores one Hub token and
-transactionally registers the current checkout as user-global stdio MCP in
-selected clients. Installation never selects or creates a Hub.
+`./install.sh` prepares exact dependencies, optionally stores one Hub token,
+installs released product skills and transactionally registers the current
+checkout as user-global stdio MCP in selected clients. Installation never
+selects or creates a Hub.
 
 ## Credential and non-interactive behavior
 
@@ -71,3 +72,22 @@ selected clients. Installation never selects or creates a Hub.
 - **AB-INSTALL-024** — Deterministic tests cover chunked key sequences,
   multi-select, validation, color/narrow/dumb fallbacks, token/results and
   non-interactive output without real configuration mutation.
+
+## Product skills
+
+- **AB-INSTALL-025** — Every interactively selected client receives exactly the
+  seven released product skills named by `.agents/skills/README.md`.
+- **AB-INSTALL-026** — A fixed allowlist is release authority; `speckit-*` and
+  every other repository-development skill are never installed.
+- **AB-INSTALL-027** — Codex uses `$CODEX_HOME/skills` with
+  `~/.codex/skills` fallback; Claude Code uses `~/.claude/skills`.
+- **AB-INSTALL-028** — An exact installed copy is a no-op. A different,
+  non-directory or symbolic-link same-name target fails before mutation and is
+  never replaced.
+- **AB-INSTALL-029** — All selected client/skill destinations pass preflight
+  before the first missing skill is copied; unselected clients remain unchanged.
+- **AB-INSTALL-030** — If MCP registration later fails, rollback removes only
+  unchanged skill directories created by that run and preserves every
+  pre-existing destination.
+- **AB-INSTALL-031** — Non-interactive setup remains dependency-only and never
+  installs product skills.

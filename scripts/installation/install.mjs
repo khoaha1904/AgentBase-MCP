@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 
 import { globalHubCredentialPath, loadGlobalHubToken, writeGlobalHubToken } from "../../src/app/hub-okf/configuration/credential-file.ts";
 import { registerClients } from "./client-registration.mjs";
+import { installProductSkills, rollbackProductSkills } from "./product-skills.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -181,6 +182,20 @@ function installDependencies() {
   });
 }
 
+export async function connectSelectedClients(options) {
+  const runProductSkillInstallation = options.runProductSkillInstallation ?? installProductSkills;
+  const runProductSkillRollback = options.runProductSkillRollback ?? rollbackProductSkills;
+  const runClientRegistration = options.runClientRegistration ?? registerClients;
+  const skills = await runProductSkillInstallation(options);
+  try {
+    const registration = await runClientRegistration(options);
+    return { registration, skills };
+  } catch (error) {
+    await runProductSkillRollback(skills);
+    throw error;
+  }
+}
+
 export async function runInstaller(options = {}) {
   const args = options.args ?? process.argv.slice(2);
   const input = options.input ?? process.stdin;
@@ -188,6 +203,8 @@ export async function runInstaller(options = {}) {
   const environment = options.environment ?? process.env;
   const runDependencyInstall = options.runDependencyInstall ?? installDependencies;
   const runClientRegistration = options.runClientRegistration ?? registerClients;
+  const runProductSkillInstallation = options.runProductSkillInstallation ?? installProductSkills;
+  const runProductSkillRollback = options.runProductSkillRollback ?? rollbackProductSkills;
   const parsed = parseArgs(args);
   const interactive = Boolean(input.isTTY && output.isTTY && typeof input.setRawMode === "function");
   if (!interactive) {
@@ -226,24 +243,29 @@ export async function runInstaller(options = {}) {
       output.write(`${glyph.accent(glyph.success)} Existing GitHub token preserved\n`);
     }
     output.write("\n");
-    step(output, capabilities, 3, "Connect clients", "Register AgentBase-MCP in the selected coding clients.");
-    output.write(`${glyph.pending} Registering AgentBase-MCP...\n`);
-    const registration = await runClientRegistration({
+    step(output, capabilities, 3, "Connect clients", "Install product skills and register AgentBase-MCP.");
+    output.write(`${glyph.pending} Installing AgentBase skills and MCP...\n`);
+    const { registration, skills } = await connectSelectedClients({
       clients,
       repositoryRoot,
       nodeExecutable: process.execPath,
       environment,
+      runClientRegistration,
+      runProductSkillInstallation,
+      runProductSkillRollback,
     });
     output.write(`\n${glyph.accent(glyph.success)} ${glyph.bold("AgentBase-MCP is ready")}\n\n`);
     for (const client of clients) {
       const label = client === "codex" ? "Codex" : "Claude Code";
       const result = registration.clients[client] === "already-registered" ? "Already connected" : "Connected";
       output.write(`  ${label.padEnd(13)} ${result}\n`);
+      const skillResult = skills.clients[client] === "already-installed" ? "Already installed" : "Installed";
+      output.write(`  ${`${label} skills`.padEnd(13)} ${skillResult} (7)\n`);
     }
     const tokenResult = credential === "created" ? "Saved securely" : credential === "preserved" ? "Preserved" : "Skipped";
     output.write(`  ${"GitHub token".padEnd(13)} ${tokenResult}\n\n`);
     output.write(`${glyph.bold("Next")}\n  Open a new ${clients.map((client) => client === "codex" ? "Codex" : "Claude Code").join(" or ")} session to load AgentBase-MCP.\n`);
-    return { clients, credential, registration };
+    return { clients, credential, registration, skills: skills.clients };
   } finally {
     input.setRawMode(false);
   }

@@ -21,10 +21,12 @@ npm run verify
 ```
 
 Interactive installation can register the current checkout as user-global
-`agentbase` stdio MCP in Codex, Claude Code or both. An exact rerun is a no-op;
-a conflicting same-name entry fails before mutation. Multi-client registration
-is transactional. Optional token input is masked and stored outside Git with
-private permissions; non-interactive installation only prepares dependencies.
+`agentbase` stdio MCP in Codex, Claude Code or both and installs the seven
+AgentBase product skills for every selected client. Repository-development
+`speckit-*` skills are never installed. An exact rerun is a no-op; a conflicting
+same-name MCP entry or skill fails before replacement. Optional token input is
+masked and stored outside Git with private permissions; non-interactive
+installation only prepares dependencies.
 
 ## Main entrypoints
 
