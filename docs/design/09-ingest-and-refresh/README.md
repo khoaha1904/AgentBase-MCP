@@ -42,7 +42,7 @@ High-level decision:
   sequential checkpoints, retry/membership revision và one atomic proposal.
 - Deferred: Batch Refresh, mixed Init/Refresh, additional Domain Enrichment
   profiles, ordinary query age presentation và persisted freshness report.
-- Design accepted, pending implementation audit: public `agentbase-scan`.
+- Implemented MVP: public bounded `agentbase-scan`.
 
 Qualification policy hiện dùng Sol cho Initial Ingest và Terra cho Refresh.
 Đây là benchmark configuration, không phải runtime model router của MCP.

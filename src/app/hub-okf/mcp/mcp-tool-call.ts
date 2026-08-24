@@ -220,6 +220,9 @@ export async function callHubOkfTool(
     if (name === "preflight_hub_ingest") {
       return result(await actions.preflight(required(args, "source_repository")));
     }
+    if (name === "scan_workspace_repositories") {
+      return result(await actions.scan(required(args, "workspace_root")));
+    }
     if (name === "prepare_hub_okf") {
       const mode = required(args, "mode");
       if (mode !== "new" && mode !== "refresh") throw new Error("mode must be new or refresh");

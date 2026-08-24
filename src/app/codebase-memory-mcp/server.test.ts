@@ -58,7 +58,7 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
       [...HUB_OKF_TOOLS, ...OKF_SCHEMA_TOOLS, ...SAFE_TOOLS].map((tool) => tool.name),
     );
     const toolNames = tools.tools.map((tool) => tool.name);
-    assert.equal(toolNames.length, 42);
+    assert.equal(toolNames.length, 43);
     const retiredToolNames = ["query_graph", "get_graph_schema", "list_projects", "select_okf_schemas",
       "validate_okf_concept", "validate_okf_relationships", "validate_okf_bundle"];
     assert.equal(toolNames.some((name) => retiredToolNames.includes(name)), false);
@@ -79,6 +79,7 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
       ["search_hub_okf", "read_hub_okf_concept"]);
     assert.equal(toolNames.some((name) => ["traverse_hub_okf", "read_hub_observed_values", "read_hub_freshness"].includes(name)), false);
     assert.equal(toolNames.includes("list_hub_questions") && toolNames.includes("answer_hub_question"), true);
+    assert.equal(toolNames.filter((name) => name === "scan_workspace_repositories").length, 1);
     const bootstrapTools = tools.tools.filter((tool) => tool.name === "preview_hub_bootstrap" || tool.name === "bootstrap_hub");
     assert.equal(bootstrapTools.length, 2);
     assert.equal(bootstrapTools.every((tool) => !("mode" in (tool.inputSchema.properties ?? {}))), true);

@@ -78,6 +78,15 @@ export const HUB_OKF_TOOLS = [
     },
   },
   {
+    name: "scan_workspace_repositories",
+    description: "Inventory up to 32 Git roots under one explicit workspace and compare lightweight Git metadata with the synchronized Published Hub without reading source or creating proposals.",
+    inputSchema: {
+      type: "object",
+      properties: { workspace_root: { type: "string", minLength: 1 } },
+      required: ["workspace_root"], additionalProperties: false,
+    },
+  },
+  {
     name: "prepare_hub_okf",
     description: "Prepare a local new or refresh AgentBase Hub OKF proposal without publishing. Refresh returns bounded changed paths, observed source state and known gaps. New Initial Ingest returns editable skeletons only for promoted concepts and embeds non-promoted resource knowledge in its parent. Preserve generated sources, relationships, repository identity metadata and navigation while enriching those skeletons. selectedSchemas is the hard allowlist; Initial Ingest always includes Repository.",
     inputSchema: {

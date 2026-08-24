@@ -1,6 +1,6 @@
 # 09.10 — Workspace scan and workflow routing
 
-> Trạng thái: Owner-approved design; implementation audit pending.
+> Trạng thái: Implemented MVP contract.
 
 ## Mục đích
 
@@ -44,3 +44,19 @@ Ingest; nhiều repo mới có thể route tới Batch Initial Ingest. Published
 MVP không thêm Batch Refresh hoặc một atomic mixed Init/Refresh manifest. Scan
 đơn giản hóa lựa chọn nhưng không thay authority, confirmation, Proposal,
 Accept hoặc Publish của workflow đích.
+
+## Runtime requirements
+
+- **AB-SCAN-001** — Scan requires one explicit absolute workspace root.
+- **AB-SCAN-002** — Scan inventories at most 32 unique Git roots and stops
+  descending after finding a root.
+- **AB-SCAN-003** — Scan never follows symlinks, deeply reads source, builds a
+  Code Graph or creates a Proposal.
+- **AB-SCAN-004** — Without a remote Hub, Scan returns inventory with Hub
+  classification unavailable.
+- **AB-SCAN-005** — Hub matching uses only the exact synchronized Published
+  commit; draft metadata can only suppress duplicate workflow suggestions.
+- **AB-SCAN-006** — Classification reports current and last-observed Git state
+  when available and does not resolve ambiguous identity automatically.
+- **AB-SCAN-007** — Scan waits for user selection and never executes Ingest or
+  Refresh itself.

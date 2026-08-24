@@ -7,7 +7,9 @@ Capability 043 reviews the twelve current product areas sequentially with the
 owner, aligns high-level and low-level authority, and defers runtime changes
 until one post-review implementation-gap audit. Part 01 now defines lazy
 per-Git-repository graphs and treats a multi-repository workspace directory as
-routing scope rather than one combined graph.
+routing scope rather than one combined graph. Its first audited runtime slice
+adds the bounded Published-only `agentbase-scan` workflow without building
+graphs or starting Ingest/Refresh automatically.
 
 Capability 042 keeps the released 42-tool surface unchanged while correcting
 public Code Graph guidance and safety hints, and assigns the existing Question

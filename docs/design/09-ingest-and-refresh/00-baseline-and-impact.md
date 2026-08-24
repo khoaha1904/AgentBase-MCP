@@ -28,7 +28,7 @@ source state thay vì opaque caller input.
 
 ## Gap còn lại
 
-Public `agentbase-scan` chưa được audit/implemented. Batch Refresh và mixed
+Public `agentbase-scan` đã được implemented theo bounded Published-only contract. Batch Refresh và mixed
 Init/Refresh được giữ ngoài MVP; Batch Initial Ingest checkpoint/retry và Hub CI
 freshness projection đã implement.
 

@@ -135,7 +135,7 @@ URL không phải identity chính; chúng được giữ làm aliases/evidence.
 ## Chưa implement
 
 - Batch Refresh hoặc batch trộn Init/Refresh.
-- `agentbase-scan` public workflow (đã chốt design, chờ implementation audit).
+- `agentbase-scan` public workflow đã implemented theo bounded Published-only contract.
 - Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
 - Persisted freshness report và ordinary-query freshness marks; local report và CI đã có.
 - Full repository-identity recovery cho mọi rename/fork/mirror edge case.

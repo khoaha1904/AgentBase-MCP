@@ -1,6 +1,6 @@
 # Repository skills
 
-Released skills are grouped by product ownership. Six public skills match user
+Released skills are grouped by product ownership. Seven public skills match user
 goals; two internal skills support those workflows. Some clients may still show
 internal artifacts in a technical selector.
 
@@ -8,6 +8,8 @@ internal artifacts in a technical selector.
 
 - [`agentbase-query`](agentbase-query/SKILL.md) — answer ordinary questions from
   synchronized Published knowledge, one authorized local repository, or both.
+- [`agentbase-scan`](agentbase-scan/SKILL.md) — inventory bounded local Git roots,
+  compare them with Published knowledge and wait for the user's workflow choice.
 - [`agentbase-ingest`](agentbase-ingest/SKILL.md) — confirm one repository and
   Domain, investigate bounded evidence and stop at a sparse proposal preview.
 - [`agentbase-refresh`](agentbase-refresh/SKILL.md) — compare one canonical

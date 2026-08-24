@@ -26,9 +26,11 @@ import { recoverSynchronizationTransaction } from "../publication/recovery.ts";
 import {
   buildActiveHubContinuity,
   inspectInitialIngestHubContext,
+  readPublishedRepositoryInventory,
   readPublishedHubConcept,
   searchPublishedHub,
 } from "./query.ts";
+import { readInReviewProposalIds, scanWorkspaceRepositories } from "./workspace-scan.ts";
 import { listPendingHubProposals } from "../review/pending.ts";
 import { publishPendingHubProposals } from "../publication/publish.ts";
 import { synchronizeLocalHub } from "../publication/synchronize.ts";
@@ -281,6 +283,17 @@ export function createHubRuntimeActions(
     },
     async previewBootstrap(repositoryUrl, targetBranch) { return previewHubBootstrap(repositoryUrl, targetBranch, environment); },
     async bootstrap(repositoryUrl, targetBranch) { return executeHubBootstrap(repositoryUrl, targetBranch, environment); },
+    async scan(workspaceRoot) {
+      const configuration = current();
+      if (configuration.kind !== "remote") return scanWorkspaceRepositories({ workspaceRoot });
+      const localHub = await admitPersistentLocalHub(configuration, undefined, { readOnly: true });
+      const [published, pending] = await Promise.all([
+        readPublishedRepositoryInventory(localHub),
+        listPendingHubProposals(localHub),
+      ]);
+      return scanWorkspaceRepositories({ workspaceRoot, published, pending,
+        inReviewProposalIds: readInReviewProposalIds(stateRoot) });
+    },
     async preflight(sourceRepository) {
       if (!path.isAbsolute(sourceRepository) || !fs.statSync(sourceRepository).isDirectory()) {
         throw new Error("source repository must be an existing absolute directory");
@@ -302,12 +315,15 @@ export function createHubRuntimeActions(
       const repository = await inspectInitialIngestHubContext(localHub, {
         displayName: source.displayName,
         ...source.identityHints,
-      });
+      }, { boundary: input.mode === "refresh" ? "active" : "published" });
       if (repository.repository.kind === "ambiguous") {
         throw new Error(`repository identity is ambiguous: ${repository.repository.reason}`);
       }
       if (input.mode === "refresh" && repository.repository.kind === "new") {
         throw new Error("repository is absent from Hub; use Initial Ingest");
+      }
+      if (input.mode === "new" && repository.repository.kind === "existing") {
+        throw new Error("repository already exists in Published Hub; use Refresh");
       }
       const sourceRepositoryId = repository.repository.repository.id;
       const knownGaps = listHubQuestions(localHub, { status: "open", limit: 100 })

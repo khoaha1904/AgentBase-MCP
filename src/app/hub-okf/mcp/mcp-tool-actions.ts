@@ -9,6 +9,7 @@ export type HubToolActions = Readonly<{
   configure(input: Readonly<{ repositoryUrl: string; targetBranch: string }>): Promise<unknown>;
   previewBootstrap(repositoryUrl: string, targetBranch: string): Promise<unknown>;
   bootstrap(repositoryUrl: string, targetBranch: string): Promise<unknown>;
+  scan(workspaceRoot: string): Promise<unknown>;
   preflight(sourceRepository: string): Promise<unknown>;
   prepare(input: Readonly<{
     mode: "new" | "refresh";

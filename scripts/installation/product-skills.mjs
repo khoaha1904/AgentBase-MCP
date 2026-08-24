@@ -4,6 +4,7 @@ import path from "node:path";
 
 export const PUBLIC_PRODUCT_SKILL_NAMES = Object.freeze([
   "agentbase-query",
+  "agentbase-scan",
   "agentbase-ingest",
   "agentbase-refresh",
   "agentbase-batch-ingest",

@@ -21,14 +21,15 @@ npm run verify
 ```
 
 Interactive installation can register the current checkout as user-global
-`agentbase` stdio MCP in Codex, Claude Code or both and installs the eight
+`agentbase` stdio MCP in Codex, Claude Code or both and installs the nine
 AgentBase product skills for every selected client. Repository-development
 `speckit-*` skills are never installed. An exact rerun is a no-op; a conflicting
-same-name MCP entry or skill fails before replacement. Optional token input is
-masked and stored outside Git with private permissions; non-interactive
-installation only prepares dependencies.
+same-name MCP entry or skill fails before replacement. Hub token input is not
+part of installation; a Hub profile stores its token later through the
+masked terminal helper outside Git. Non-interactive installation only prepares
+dependencies.
 
-The released catalog has six public workflows—Ask, Ingest, Refresh, Batch
+The released catalog has seven public workflows—Ask, Scan, Ingest, Refresh, Batch
 Ingest, Domain Enrichment and Hub lifecycle—plus two internal supporting
 skills. Ask naturally, select the skill in the client, invoke
 `$agentbase-query` in Codex, or invoke `/agentbase-query` in Claude Code. These

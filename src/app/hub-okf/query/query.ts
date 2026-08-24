@@ -3,6 +3,7 @@ import {
   listHubConcepts,
   parseConceptDocument,
   readRepositoryIdentityRecord,
+  readRepositoryObservedSource,
   resolveRepositoryIdentity,
   readHubConcept,
   searchHubConcepts,
@@ -14,7 +15,9 @@ import {
   type HubSearchOptions,
   type HubSearchResult,
   type RepositoryIdentityHints,
+  type RepositoryIdentityRecord,
   type RepositoryIdentityResolution,
+  type RepositoryObservedSource,
 } from "../../../core/knowledge/index.ts";
 import { runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
 import type { AdmittedLocalHubState } from "../../../core/hub/index.ts";
@@ -25,6 +28,12 @@ export type InitialIngestHubContext = Readonly<{
   commit: string;
   repository: RepositoryIdentityResolution;
   domains: readonly HubConceptSummary[];
+}>;
+
+export type PublishedRepositoryInventoryItem = Readonly<{
+  summary: HubConceptSummary;
+  identity: RepositoryIdentityRecord;
+  observedSource?: RepositoryObservedSource;
 }>;
 
 function reader(localHub: AdmittedLocalHubState, commit: string, git: HubQueryGit): HubQueryReader {
@@ -74,9 +83,12 @@ export function searchPublishedHub(
 export async function inspectInitialIngestHubContext(
   localHub: AdmittedLocalHubState,
   hints: RepositoryIdentityHints,
+  options: Readonly<{ boundary?: "published" | "active" }> = {},
   git: HubQueryGit = runGit,
 ): Promise<InitialIngestHubContext> {
-  const currentReader = activeReader(localHub, git);
+  const boundary = options.boundary ?? "published";
+  const commit = boundary === "active" ? localHub.activeHead : localHub.remoteBase;
+  const currentReader = boundary === "active" ? activeReader(localHub, git) : publishedReader(localHub, git);
   const summaries = await listHubConcepts(currentReader, { types: ["Repository", "Domain"], limit: 512 });
   const repositoryDocuments = await Promise.all(summaries.filter((item) => item.type === "Repository").map(async (item) => (
     parseConceptDocument(item.path, await currentReader.readMarkdown(item.path))
@@ -86,10 +98,26 @@ export async function inspectInitialIngestHubContext(
     return record ? [record] : [];
   });
   return {
-    commit: localHub.activeHead,
+    commit,
     repository: resolveRepositoryIdentity(hints, records),
     domains: summaries.filter((item) => item.type === "Domain"),
   };
+}
+
+export async function readPublishedRepositoryInventory(
+  localHub: AdmittedLocalHubState,
+  git: HubQueryGit = runGit,
+): Promise<readonly PublishedRepositoryInventoryItem[]> {
+  const currentReader = publishedReader(localHub, git);
+  const summaries = await listHubConcepts(currentReader, { types: ["Repository"], limit: 512 });
+  const items = await Promise.all(summaries.map(async (summary) => {
+    const concept = parseConceptDocument(summary.path, await currentReader.readMarkdown(summary.path));
+    const identity = readRepositoryIdentityRecord(concept);
+    if (!identity) return undefined;
+    const observedSource = readRepositoryObservedSource(concept);
+    return { summary, identity, ...(observedSource ? { observedSource } : {}) };
+  }));
+  return items.filter((item): item is PublishedRepositoryInventoryItem => item !== undefined);
 }
 
 export function buildActiveHubContinuity(
