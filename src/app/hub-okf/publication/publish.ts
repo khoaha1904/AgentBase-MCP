@@ -41,11 +41,13 @@ export type PublishGitHub = Readonly<{
     body: string,
     baseBranch: string,
   ): Promise<GitHubPullRequest>;
-  updatePullRequestBase(
+  updatePullRequest(
     number: number,
     headBranch: string,
     headCommit: string,
     baseBranch: string,
+    title: string,
+    body: string,
   ): Promise<GitHubPullRequest>;
 }>;
 
@@ -362,9 +364,6 @@ async function publishUnit(
       }
       const remoteBranch = await options.github.getBranchRef(unit.branch);
       if (remoteBranch.commit !== headCommit) throw new Error("reconciled publication branch head mismatch");
-      pull = pull.baseBranch === unit.baseBranch && pull.headCommit === headCommit
-        ? pull
-        : await options.github.updatePullRequestBase(pull.number, unit.branch, headCommit, unit.baseBranch);
     }
   } else {
     headCommit = unit.batchHeadCommit ?? await replayProposal(options, git, unit.proposals[0]!, base.commit);
@@ -388,21 +387,29 @@ async function publishUnit(
     throw new Error("publication pull request is closed; review the stack before retrying");
   }
   pull ??= openPulls[0];
-  if (pull && pull.headCommit !== headCommit) throw new Error("existing pull request has a conflicting head commit");
   checkpoint(options.signal);
+  const review = renderPublicationReview({
+    stateRoot: options.stateRoot,
+    proposals: unit.proposals,
+    publicationMode: mode,
+    baseBranch: unit.baseBranch,
+  });
   if (!pull) {
-    const review = renderPublicationReview({
-      stateRoot: options.stateRoot,
-      proposals: unit.proposals,
-      publicationMode: mode,
-      baseBranch: unit.baseBranch,
-    });
     pull = await options.github.createPullRequest(
       unit.branch,
       headCommit,
       review.title,
       review.body,
       unit.baseBranch,
+    );
+  } else {
+    pull = await options.github.updatePullRequest(
+      pull.number,
+      unit.branch,
+      headCommit,
+      unit.baseBranch,
+      review.title,
+      review.body,
     );
   }
   return admitPull(pull, options.localHub.hub.repository, unit, headCommit);

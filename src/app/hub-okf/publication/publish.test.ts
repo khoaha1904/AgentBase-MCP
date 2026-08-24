@@ -188,9 +188,10 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021] MCP creat
           headBranch, headCommit, headRepository: "agentbase/hub", baseBranch, state: "open" as const };
         pulls.push(pull); return pull;
       },
-      async updatePullRequestBase(number, headBranch, headCommit, baseBranch) {
+      async updatePullRequest(number, headBranch, headCommit, baseBranch, title, body) {
         const index = pulls.findIndex((pull) => pull.number === number);
         if (index < 0) throw new Error("missing pull request");
+        pullCalls.push({ title, body, base: baseBranch });
         const pull = { ...pulls[index]!, headBranch, headCommit, baseBranch };
         pulls[index] = pull;
         return pull;
@@ -249,12 +250,14 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021] MCP creat
     assert.equal(enrichment.mode, "independent"); assert.equal(enrichment.units[0]?.baseBranch, "main");
     const enrichmentReview = pullCalls.find((call) => call.title.includes("Enrichment"));
     assert.ok(enrichmentReview); assert.match(enrichmentReview.body, /domains\/crawler/);
-    assert.match(enrichmentReview.body, new RegExp(`${SOURCE_ID}.*${SOURCE_ID_B}`));
+    assert.match(enrichmentReview.body, new RegExp(`${SOURCE_ID}[\\s\\S]*${SOURCE_ID_B}`));
     assert.match(enrichmentReview.body, /123456789012.*ap-southeast-1.*aws\.sqs\.queue@1.*candidates: 1; Questions: 1/);
     const batchInit = await publishPendingHubProposals({ ...common, selectedProposalIds: [IDS[4]!] });
     assert.equal(batchInit.mode, "independent"); assert.equal(batchInit.units[0]?.baseBranch, "main");
     const batchReview = pullCalls.find((call) => call.title.includes("Batch Init"));
-    assert.ok(batchReview); assert.match(batchReview.body, new RegExp(`${SOURCE_ID}.*${SOURCE_ID_B}`));
+    assert.ok(batchReview); assert.match(batchReview.body, new RegExp(`${SOURCE_ID}[\\s\\S]*${SOURCE_ID_B}`));
+    assert.match(batchReview.body, /subject: domains\/batch/);
+    assert.match(batchReview.body, /Repositories: 2\./);
     assert.match(batchReview.body, /Batch Attribution.*repositories\/acme\.md.*Shared Navigation.*domains\/batch\.md/s);
     const forcedBatch = await publishPendingHubProposals({ ...common, selectedProposalIds: stackIds, publicationMode: "batch" });
     assert.equal(forcedBatch.mode, "batch"); assert.equal(forcedBatch.units.length, 1); assert.equal(forcedBatch.units[0]?.baseBranch, "main");
@@ -398,12 +401,13 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021] MCP creat
     await api.listPullRequests(`agentbase/okf-${IDS[1]}`, explicitBase, "all");
     await api.createPullRequest(`agentbase/okf-${IDS[1]}`, refreshCommit, "title", "body", explicitBase);
     await api.listPullRequestsForHead(`agentbase/okf-${IDS[1]}`, "open");
-    await api.updatePullRequestBase(99, `agentbase/okf-${IDS[1]}`, refreshCommit, "main");
+    await api.updatePullRequest(99, `agentbase/okf-${IDS[1]}`, refreshCommit, "main", "updated title", "updated body");
     assert.equal(new URL(requests[0]!.url).searchParams.get("base"), explicitBase);
     assert.equal(new URL(requests[0]!.url).searchParams.get("state"), "all");
     assert.equal((JSON.parse(requests[1]!.body!) as { base: string }).base, explicitBase);
     assert.equal(new URL(requests[2]!.url).searchParams.has("base"), false);
     assert.equal(requests[3]!.method, "PATCH");
+    assert.deepEqual(JSON.parse(requests[3]!.body!), { base: "main", title: "updated title", body: "updated body" });
     const enterpriseRequests: string[] = [];
     const enterprise = new GitHubHubApi(createHubIdentity("agentbase/hub", "release/knowledge", "github.corp.example"), "canary",
       async (input) => {

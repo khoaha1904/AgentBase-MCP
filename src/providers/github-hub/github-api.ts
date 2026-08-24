@@ -171,14 +171,16 @@ export class GitHubHubApi {
     return this.#pullRequest(value, headBranch, headCommit, baseBranch);
   }
 
-  async updatePullRequestBase(
+  async updatePullRequest(
     number: number,
     headBranch: string,
     headCommit: string,
     baseBranch: string,
+    title: string,
+    body: string,
   ): Promise<GitHubPullRequest> {
     if (!Number.isSafeInteger(number) || number < 1) throw new GitHubApiError("RESPONSE", "pull request number is invalid");
-    const value = await this.#request("PATCH", `/pulls/${number}`, { base: baseBranch });
+    const value = await this.#request("PATCH", `/pulls/${number}`, { base: baseBranch, title, body });
     return this.#pullRequest(value, headBranch, headCommit, baseBranch);
   }
 

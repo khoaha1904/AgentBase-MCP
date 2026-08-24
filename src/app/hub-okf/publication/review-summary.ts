@@ -165,13 +165,18 @@ export function renderPublicationReview(options: PublicationReviewOptions): Publ
     : "Publication";
   const title = `AgentBase Hub ${role}: ${safeText(options.proposals[0]!.mode === "enrichment" || options.proposals[0]!.mode === "batch-new"
     ? options.proposals[0]!.domainId : options.proposals[0]!.sourceRepositoryId)}`.slice(0, 120);
-  const scope = details.slice(0, ITEM_LIMIT).flatMap(({ proposal, scope: repository, enrichment }) => [
-    `Proposal \`${proposal.id}\` — mode: ${proposal.mode ?? "unknown"}; ${proposal.mode === "enrichment" || proposal.mode === "batch-new"
-      ? `Domain: \`${safeText(proposal.domainId)}\`; repositories: ${(proposal.sourceRepositoryIds ?? []).map((id) => `\`${safeText(id)}\``).join(", ")}`
-      : `source: \`${safeText(proposal.sourceRepositoryId)}\``}; subject: \`${safeText(proposal.subject)}\``,
-    `Domain: ${repository.domains.length ? repository.domains.map((item) => `\`${safeText(item)}\``).join(", ") : "unavailable"}; source revision: ${repository.revision ? `\`${repository.revision}\`` : "unavailable"}`,
-    ...(enrichment ? [`Provider scope: AWS account \`${safeText(enrichment.account)}\`; regions: ${enrichment.regions.map((region) => `\`${safeText(region)}\``).join(", ")}; profiles: ${enrichment.profiles.map((profile) => `\`${profile}\``).join(", ")}; candidates: ${enrichment.candidates}; Questions: ${enrichment.questions}`] : []),
-  ]);
+  const scope = details.slice(0, ITEM_LIMIT).flatMap(({ proposal, scope: repository, enrichment }) => {
+    const multiRepository = proposal.mode === "enrichment" || proposal.mode === "batch-new";
+    return [
+      `Proposal \`${proposal.id}\` — mode: ${proposal.mode ?? "unknown"}; subject: \`${safeText(proposal.subject)}\``,
+      ...(multiRepository
+        ? [`Repositories: ${proposal.sourceRepositoryIds?.length ?? 0}.`,
+          ...(proposal.sourceRepositoryIds ?? []).map((id) => `Repository: \`${safeText(id)}\``)]
+        : [`Source: \`${safeText(proposal.sourceRepositoryId)}\``]),
+      `Domain: ${repository.domains.length ? repository.domains.map((item) => `\`${safeText(item)}\``).join(", ") : "unavailable"}; source revision: ${repository.revision ? `\`${repository.revision}\`` : "unavailable"}`,
+      ...(enrichment ? [`Provider scope: AWS account \`${safeText(enrichment.account)}\`; regions: ${enrichment.regions.map((region) => `\`${safeText(region)}\``).join(", ")}; profiles: ${enrichment.profiles.map((profile) => `\`${profile}\``).join(", ")}; candidates: ${enrichment.candidates}; Questions: ${enrichment.questions}`] : []),
+    ];
+  });
   if (details.length > ITEM_LIMIT) scope.push(`… ${details.length - ITEM_LIMIT} more proposal(s)`);
   const inspections = details.flatMap((item) => item.inspection ? [item.inspection] : []);
   const unavailable = inspections.length !== details.length;
@@ -192,7 +197,7 @@ export function renderPublicationReview(options: PublicationReviewOptions): Publ
   if (options.proposals.length > ITEM_LIMIT) evidence.push(`… ${options.proposals.length - ITEM_LIMIT} more proposal(s)`);
   const body = [
     "## Purpose",
-    `Publish ${options.proposals.length} locally accepted OKF proposal(s) as a ${options.publicationMode} review unit. This PR is based on \`${safeText(options.baseBranch)}\` and does not merge or verify remote runtime behavior.`,
+    `Publish ${options.proposals.length} locally accepted OKF proposal(s) as ${options.publicationMode === "independent" ? "an" : "a"} ${options.publicationMode} review unit. This PR is based on \`${safeText(options.baseBranch)}\` and does not merge or verify remote runtime behavior.`,
     "",
     "## Scope",
     bullets(scope),

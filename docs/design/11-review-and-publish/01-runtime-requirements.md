@@ -87,7 +87,9 @@ queries and ordinary coding never create Hub state, commits or publication.
   Action. Scope identifies exact proposals, source Repositories, available
   Domains/revisions and accepted commits. Changes distinguish Added, Updated,
   Removed; Questions, limitations and unavailable
-  optional detail remain visible.
+  optional detail remain visible. Bounded rendering must preserve complete
+  proposal, subject and Domain identities rather than truncating a combined
+  scope line.
 - **AB-PUBLISH-005** — PR prose/receipts contain no token, credential, local
   absolute path or unbounded model narrative.
 - **AB-PUBLISH-006** — Publication dependency is derived per source Repository,
@@ -106,7 +108,9 @@ queries and ordinary coding never create Hub state, commits or publication.
   Other conflict, drift or multiple matching PRs stop without merge, deletion
   or target mutation.
 - **AB-PUBLISH-009** — Retry recovers exact existing branches and matching open
-  PRs. Partial multi-PR failure leaves completed units intact and retryable.
+  PRs, and refreshes their deterministic title/body from retained accepted
+  proposal evidence. Partial multi-PR failure leaves completed units intact and
+  retryable.
 - **AB-PUBLISH-010** — Canonical proof uses disposable Git and fake GitHub HTTP;
   real credentials and publication remain opt-in.
 - **AB-PUBLISH-011** — When Published `main` advances, remaining open proposal

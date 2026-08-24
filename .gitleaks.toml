@@ -2,3 +2,6 @@ title = "AgentBase-MCP gitleaks config"
 
 [extend]
 useDefault = true
+
+[allowlist]
+regexes = ['''AB-OBS-[a-f0-9]{24}''']
