@@ -34,7 +34,7 @@ export {
   inspectHubProposal,
   type HubInspectedContent,
   type HubInspectionOptions,
-  type HubLifecycleEntry,
+  type HubChangeEntry,
   type HubProposalInspection,
 } from "./review/inspect.ts";
 export {

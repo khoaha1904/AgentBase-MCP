@@ -1,8 +1,8 @@
 export const OKF_VERSION = "0.2" as const;
 export const OKF_SHARED_DIRECTORY = "okf" as const;
 export {
-  normalizeHubLifecycleIntents,
-  type HubLifecycleIntent,
+  normalizeHubRemovalDeclarations,
+  type HubRemovalDeclaration,
 } from "./proposals/refresh.ts";
 export {
   assertConfirmedDomainAssignment,

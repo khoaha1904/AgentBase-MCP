@@ -410,14 +410,14 @@ export function createHubRuntimeActions(
         ] } : {}),
       };
     },
-    async finalize(sessionId, questions, lifecycleIntents) {
+    async finalize(sessionId, questions, removals) {
       const configuration = configured(true);
       const session = readHubAuthoringSession(stateRoot, sessionId, configuration.localRoot);
       const source = discoverRepositorySourceState(session.sourceRepositoryRoot);
       const localHub = configuration.kind === "remote"
         ? await admitPersistentLocalHub(configuration)
         : await admitPersistentLocalHub(configuration);
-      return finalizeHubAuthoringSession(stateRoot, sessionId, configuration.localRoot, questions ?? [], lifecycleIntents ?? [], {
+      return finalizeHubAuthoringSession(stateRoot, sessionId, configuration.localRoot, questions ?? [], removals ?? [], {
         commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest,
       }, localHub.activeHead);
     },

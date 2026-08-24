@@ -7,11 +7,11 @@ import {
   loadOkfBundle, normalizeConfirmedDomain, normalizeRepositoryObservedValues,
   parseRepositorySourceResource, readObservedValues, readRepositoryIdentityRecord,
   renderConceptDocument, repositorySourceResources,
-  type ConfirmedDomain, type HubLifecycleIntent, type OkfAuthoringGuidance,
+  type ConfirmedDomain, type HubRemovalDeclaration, type OkfAuthoringGuidance,
   type OkfValue,
 } from "../../../core/knowledge/index.ts";
 import {
-  attachHubInspectionContext, inspectHubProposal, type HubLifecycleEntry, type HubProposalInspection,
+  attachHubInspectionContext, inspectHubProposal, type HubChangeEntry, type HubProposalInspection,
 } from "../review/inspect.ts";
 import { prepareNewHubProposal } from "./prepare.ts";
 import { prepareRefreshHubProposal } from "./refresh.ts";
@@ -226,18 +226,18 @@ function validateCurrentRepositorySources(session: HubAuthoringSession, bundleRo
 function normalizeAuthoredObservations(
   session: HubAuthoringSession,
   targetRoot: string,
-  lifecycleIntents: readonly HubLifecycleIntent[],
+  removals: readonly HubRemovalDeclaration[],
 ): void {
   copyCheckout(session.bundleRoot, targetRoot);
   const authored = loadOkfBundle(targetRoot, { requireAgentBaseRootIndex: true });
   const base = loadOkfBundle(session.baseRoot);
-  const intents = new Map(lifecycleIntents.map((intent) => [intent.conceptId, intent]));
+  const removalByConcept = new Map(removals.map((removal) => [removal.conceptId, removal]));
   for (const concept of authored.concepts.values()) {
     const previous = base.concepts.get(concept.conceptId);
     const hasAuthoredValues = Array.isArray(mapping(concept.frontmatter.agentbase).observed_values);
     const hasPreviousValues = previous
       ? Array.isArray(mapping(previous.frontmatter.agentbase).observed_values) : false;
-    const removesContribution = intents.get(concept.conceptId)?.action === "remove-contribution";
+    const removesContribution = removalByConcept.get(concept.conceptId)?.kind === "repository-contribution";
     if (!hasAuthoredValues && !hasPreviousValues && !removesContribution) continue;
     const normalized = normalizeRepositoryObservedValues(concept, {
       repositoryId: session.sourceRepositoryId,
@@ -287,7 +287,7 @@ export function finalizeHubAuthoringSession(
   sessionId: string,
   expectedCheckoutRoot: string,
   questions: readonly QuestionDeclaration[] = [],
-  lifecycleIntents: readonly HubLifecycleIntent[] = [],
+  removals: readonly HubRemovalDeclaration[] = [],
   currentSourceState?: HubAuthoringSourceState,
   currentHubHead?: string,
 ): Readonly<{ result: "no_change"; inspection: HubProposalInspection; observedSource: HubAuthoringSourceState & Readonly<{ observedAt: string }> }
@@ -311,16 +311,16 @@ export function finalizeHubAuthoringSession(
     proposal: AnyHubProposal;
     bundleRoot: string;
     inspection?: HubProposalInspection;
-    diff?: Readonly<{ entries: readonly HubLifecycleEntry[] }>;
+    diff?: Readonly<{ entries: readonly HubChangeEntry[] }>;
   }>;
   try {
     assertQuestionAuthoringUntouched(session.baseRoot, session.bundleRoot);
     if (session.mode === "refresh"
       && (loadOkfBundle(session.baseRoot).treeDigest !== loadOkfBundle(session.bundleRoot).treeDigest
-        || questions.length > 0 || lifecycleIntents.length > 0)) {
+        || questions.length > 0 || removals.length > 0)) {
       recordSuccessfulObservation(session);
     }
-    normalizeAuthoredObservations(session, normalizedRoot, lifecycleIntents);
+    normalizeAuthoredObservations(session, normalizedRoot, removals);
     validateCurrentRepositorySources(session, normalizedRoot);
     const observations = [...loadOkfBundle(normalizedRoot).concepts.values()]
       .flatMap((concept) => readObservedValues(concept));
@@ -347,12 +347,12 @@ export function finalizeHubAuthoringSession(
     if (session.hub) {
       finalized = session.mode === "new"
         ? prepareNewHubProposal({ ...common, hub: session.hub })
-        : prepareRefreshHubProposal({ ...common, hub: session.hub, lifecycleIntents });
+        : prepareRefreshHubProposal({ ...common, hub: session.hub, removals });
     } else {
       const localHubId = session.localHubId!;
       finalized = session.mode === "new"
         ? prepareNewHubProposal({ ...common, localHubId })
-        : prepareRefreshHubProposal({ ...common, localHubId, lifecycleIntents });
+        : prepareRefreshHubProposal({ ...common, localHubId, removals });
     }
   } catch (error) {
     fs.rmSync(staging, { recursive: true, force: true });

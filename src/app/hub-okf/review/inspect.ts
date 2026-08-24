@@ -5,12 +5,12 @@ import path from "node:path";
 import type { ProposalDiffEntry } from "../../../core/knowledge/index.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
 
-export type HubLifecycleEntry = Readonly<{
+export type HubChangeEntry = Readonly<{
   path: string;
-  change: ProposalDiffEntry["change"] | "conflict" | "supersession" | "retraction" | "removed-contribution";
+  change: ProposalDiffEntry["change"] | "conflict" | "removed-contribution";
   allowed: boolean;
   reason?: string;
-  previousConceptId?: string;
+  evidenceResources?: readonly string[];
   before?: HubInspectedContent;
   after?: HubInspectedContent;
 }>;
@@ -23,8 +23,8 @@ export type HubInspectionOptions = Readonly<{
 }>;
 
 export type HubProposalInspection = Readonly<{
-  entries: readonly HubLifecycleEntry[];
-  counts: Readonly<Record<HubLifecycleEntry["change"], number>>;
+  entries: readonly HubChangeEntry[];
+  counts: Readonly<Record<HubChangeEntry["change"], number>>;
   applicable: boolean;
   questions?: readonly QuestionDeclaration[];
   coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
@@ -36,10 +36,9 @@ export type HubProposalInspection = Readonly<{
 }>;
 
 export type HubInspectionGroups = Readonly<{
-  added: readonly HubLifecycleEntry[];
-  updated: readonly HubLifecycleEntry[];
-  removed: readonly HubLifecycleEntry[];
-  supersededOrRetracted: readonly HubLifecycleEntry[];
+  added: readonly HubChangeEntry[];
+  updated: readonly HubChangeEntry[];
+  removed: readonly HubChangeEntry[];
   questionsAndLimitations: Readonly<{
     questions: readonly QuestionDeclaration[];
     limitations: readonly string[];
@@ -47,7 +46,7 @@ export type HubInspectionGroups = Readonly<{
 }>;
 
 function groups(
-  entries: readonly HubLifecycleEntry[],
+  entries: readonly HubChangeEntry[],
   questions: readonly QuestionDeclaration[] = [],
   limitations: readonly string[] = [],
 ): HubInspectionGroups {
@@ -55,7 +54,6 @@ function groups(
     added: entries.filter((entry) => entry.change === "created"),
     updated: entries.filter((entry) => ["modified", "conflict"].includes(entry.change)),
     removed: entries.filter((entry) => ["deleted-agentbase-draft", "removed-contribution"].includes(entry.change)),
-    supersededOrRetracted: entries.filter((entry) => ["supersession", "retraction"].includes(entry.change)),
     questionsAndLimitations: { questions, limitations },
   };
 }
@@ -85,7 +83,7 @@ function inspectContent(root: string, relative: string, maximum: number): HubIns
 }
 
 export function inspectHubProposal(
-  entries: readonly HubLifecycleEntry[],
+  entries: readonly HubChangeEntry[],
   options?: HubInspectionOptions,
 ): HubProposalInspection {
   const maximum = options?.maximumFileBytes ?? 64 * 1024;
@@ -105,8 +103,6 @@ export function inspectHubProposal(
     "deleted-agentbase-draft": 0,
     "prohibited-deletion": 0,
     conflict: 0,
-    supersession: 0,
-    retraction: 0,
     "removed-contribution": 0,
   };
   for (const entry of ordered) counts[entry.change] += 1;

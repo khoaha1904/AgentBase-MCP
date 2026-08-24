@@ -23,7 +23,6 @@ type InspectionSummary = Readonly<{
   added: readonly string[];
   updated: readonly string[];
   removed: readonly string[];
-  superseded: readonly string[];
   questions: readonly string[];
   limitations: readonly string[];
   batchMembers: readonly string[];
@@ -63,7 +62,9 @@ function groupPaths(value: unknown): readonly string[] {
   return bounded(Array.isArray(value) ? value.flatMap((item) => {
     const entry = record(item), relative = safePath(entry?.path);
     const reason = safeText(entry?.reason, "");
-    return relative ? [`${relative}${reason ? ` — ${reason}` : ""}`] : [];
+    const evidence = Array.isArray(entry?.evidenceResources)
+      ? entry.evidenceResources.slice(0, 3).map((item) => safeText(item, "")).filter(Boolean) : [];
+    return relative ? [`${relative}${reason ? ` — ${reason}` : ""}${evidence.length ? ` — evidence: ${evidence.join(", ")}` : ""}`] : [];
   }) : []);
 }
 
@@ -94,7 +95,6 @@ function readInspection(stateRoot: string, proposal: PendingHubProposal): Inspec
       added: groupPaths(groups?.added),
       updated: groupPaths(groups?.updated),
       removed: groupPaths(groups?.removed),
-      superseded: groupPaths(groups?.supersededOrRetracted),
       questions: bounded(questions),
       limitations: bounded(limitations),
       batchMembers: bounded(batchMembers),
@@ -182,8 +182,7 @@ export function renderPublicationReview(options: PublicationReviewOptions): Publ
     "### Added", bullets(bounded(inspections.flatMap((item) => item.added))),
     "### Updated", bullets(bounded(inspections.flatMap((item) => item.updated))),
     "### Removed", bullets(bounded(inspections.flatMap((item) => item.removed))),
-    "### Superseded/Retracted", bullets(bounded(inspections.flatMap((item) => item.superseded))),
-    ...(unavailable ? ["", "- Detailed lifecycle grouping is unavailable for at least one retained proposal; inspect the exact Git diff."] : []),
+    ...(unavailable ? ["", "- Detailed change grouping is unavailable for at least one retained proposal; inspect the exact Git diff."] : []),
   ].join("\n");
   const questions = bounded(inspections.flatMap((item) => item.questions));
   const limitations = bounded(inspections.flatMap((item) => item.limitations));

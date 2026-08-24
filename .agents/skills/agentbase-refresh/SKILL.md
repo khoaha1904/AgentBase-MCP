@@ -37,10 +37,9 @@ This workflow uses `preflight_hub_ingest`, the tools named by
    or limitation.
 6. Validate changed concepts once and perform at most one content repair.
    Call `finalize_hub_okf_proposal` once with Questions and any destructive
-   `lifecycle_intents` bound to the final bytes. Every intent needs a bounded
-   reason and exact existing current-Repository evidence resources. Use
-   `supersede` only with a real replacement concept. Do not invent evidence to
-   make an intent pass.
+   `removals` bound to the final bytes. Every removal needs a bounded reason and
+   exact existing current-Repository evidence resources. Corrections are
+   ordinary edits; do not invent evidence to make a removal pass.
 7. Call `inspect_hub_okf_proposal`, then present `no_change` or the complete
    grouped inspection. Stop before Accept.
 

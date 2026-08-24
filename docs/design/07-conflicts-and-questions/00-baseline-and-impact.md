@@ -23,7 +23,7 @@ trong Domain Enrichment.
 - `answer_hub_question` yêu cầu explicit `human:*`, tạo đúng một Maintainer
   Guidance proposal và không sửa accepted Hub bytes trực tiếp.
 - Refresh đã có explicit removal/correction intent và review grouping; current
-  runtime terms `supersede/retract` cần được audit/simplify theo current contract.
+  runtime `supersede/retract` state đã được loại bỏ theo current contract.
 - Hub query đã đọc canonical claims/relations tại exact commit nhưng chưa compose
   conflict-aware answer đầy đủ.
 

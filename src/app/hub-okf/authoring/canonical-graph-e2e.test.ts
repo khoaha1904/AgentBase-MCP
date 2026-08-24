@@ -129,13 +129,15 @@ test("[AB-BENCH-038][AB-BENCH-040] frontend, backend and infrastructure enrich o
       hub, baseCommit: "d".repeat(40), sourceRepositoryId: INFRA, hubBundleRoot: third.bundleRoot,
       authoredBundleRoot: explicit, proposalRoot: path.join(root, "proposal-removal"),
       subjectDirectory: "systems/shopping-cart", evidenceDigest: `sha256:${"9".repeat(64)}`,
-      signals: ["operated resource"], createdAt: CREATED, lifecycleIntents: [{
-        action: "remove-concept", conceptId: "infrastructure/shopping-cart",
+      signals: ["operated resource"], createdAt: CREATED, removals: [{
+        kind: "concept", conceptId: "infrastructure/shopping-cart",
         reason: "The current repository removed this exclusively owned declaration",
         evidenceResources: [`repository://${INFRA}/main.tf#L1-L2`],
       }],
     });
     assert.equal(fs.existsSync(path.join(removalProposal.bundleRoot, "infrastructure/shopping-cart.md")), false);
+    assert.deepEqual(removalProposal.inspection.groups.removed[0]?.evidenceResources,
+      [`repository://${INFRA}/main.tf#L1-L2`]);
 
     const contribution = path.join(root, "contribution");
     copyBundle(third.bundleRoot, contribution);
@@ -147,8 +149,8 @@ test("[AB-BENCH-038][AB-BENCH-040] frontend, backend and infrastructure enrich o
       hub, baseCommit: "d".repeat(40), sourceRepositoryId: INFRA, hubBundleRoot: third.bundleRoot,
       authoredBundleRoot: contribution, proposalRoot: path.join(root, "proposal-contribution"),
       subjectDirectory: "systems/shopping-cart", evidenceDigest: `sha256:${"a".repeat(64)}`,
-      signals: ["software system"], createdAt: CREATED, lifecycleIntents: [{
-        action: "remove-contribution", conceptId: "systems/shopping-cart",
+      signals: ["software system"], createdAt: CREATED, removals: [{
+        kind: "repository-contribution", conceptId: "systems/shopping-cart",
         reason: "Infrastructure no longer contributes evidence to this shared system",
         evidenceResources: [`repository://${INFRA}/main.tf#L1-L2`],
       }],
@@ -157,29 +159,6 @@ test("[AB-BENCH-038][AB-BENCH-040] frontend, backend and infrastructure enrich o
     assert.match(JSON.stringify(sharedSystem.frontmatter.sources), new RegExp(FRONTEND));
     assert.match(JSON.stringify(sharedSystem.frontmatter.sources), new RegExp(BACKEND));
     assert.doesNotMatch(JSON.stringify(sharedSystem.frontmatter.sources), new RegExp(INFRA));
-
-    const superseded = path.join(root, "superseded");
-    copyBundle(third.bundleRoot, superseded);
-    write(superseded, "infrastructure/shopping-cart-v2.md", concept(
-      "Resource", "Shopping cart infrastructure v2", [[INFRA, "main.tf"]],
-      "# Purpose\n\nReplaces the prior infrastructure description for the [shopping cart system](../systems/shopping-cart.md).",
-      "configuration_root: .\ndeclared_resources: [cart-service-v2]\nrelationships:\n"
-        + "  - { kind: part-of, target: systems/shopping-cart, evidence: [source-1] }\n",
-    ));
-    const supersessionProposal = prepareRefreshHubProposal({
-      hub, baseCommit: "d".repeat(40), sourceRepositoryId: INFRA, hubBundleRoot: third.bundleRoot,
-      authoredBundleRoot: superseded, proposalRoot: path.join(root, "proposal-supersession"),
-      subjectDirectory: "systems/shopping-cart", evidenceDigest: `sha256:${"b".repeat(64)}`,
-      signals: ["operated resource"], createdAt: CREATED, lifecycleIntents: [{
-        action: "supersede", conceptId: "infrastructure/shopping-cart",
-        replacementConceptId: "infrastructure/shopping-cart-v2",
-        reason: "The replacement carries the current infrastructure contract",
-        evidenceResources: [`repository://${INFRA}/main.tf#L1-L2`],
-      }],
-    });
-    assert.equal(supersessionProposal.inspection.groups.supersededOrRetracted.length, 1);
-    assert.equal(fs.existsSync(path.join(supersessionProposal.bundleRoot, "infrastructure/shopping-cart.md")), true,
-      "supersession preserves historical knowledge");
 
     const sourceRoot = path.join(root, "source"), stateRoot = path.join(root, "state");
     fs.mkdirSync(sourceRoot);

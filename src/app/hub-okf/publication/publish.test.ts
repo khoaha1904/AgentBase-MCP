@@ -85,7 +85,7 @@ function retainedProposal(stateRoot: string, root: string, id: string, commit: s
   fs.writeFileSync(path.join(proposalRoot, "inspection.json"), `${JSON.stringify({ groups: {
     added: change === "created" ? [{ path: conceptPath }] : [],
     updated: change === "modified" ? [{ path: conceptPath }] : [],
-    removed: [], supersededOrRetracted: [],
+    removed: [],
     questionsAndLimitations: { questions: [], limitations: change === "modified" ? ["runtime verification remains pending"] : [] },
   } })}\n`);
 }
@@ -134,7 +134,7 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021] MCP creat
       domainId: "domains/crawler", sourceRepositoryIds: [SOURCE_ID, SOURCE_ID_B], diffDigest: `sha256:${DIGESTS[3]}`,
       acceptedCommit: enrichmentCommit })}\n`);
     fs.writeFileSync(path.join(enrichmentRoot, "inspection.json"), `${JSON.stringify({ groups: { added: [{ path: "domains/crawler.md" }],
-      updated: [], removed: [], supersededOrRetracted: [], questionsAndLimitations: { questions: [], limitations: [] } } })}\n`);
+      updated: [], removed: [], questionsAndLimitations: { questions: [], limitations: [] } } })}\n`);
     fs.writeFileSync(path.join(enrichmentRoot, "enrichment-summary.json"), `${JSON.stringify({
       manifestDigest: `sha256:${DIGESTS[3]}`, providerScope: { accountId: "123456789012", regions: ["ap-southeast-1"] },
       profileVersions: { "aws.sts.caller-identity": 1, "aws.sqs.queue": 1 },
@@ -151,7 +151,7 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021] MCP creat
       domainId: "domains/batch", sourceRepositoryIds: [SOURCE_ID, SOURCE_ID_B], diffDigest: `sha256:${DIGESTS[4]}`,
       acceptedCommit: batchCommit })}\n`);
     fs.writeFileSync(path.join(batchRoot, "inspection.json"), `${JSON.stringify({ groups: { added: [],
-      updated: [{ path: "domains/batch.md" }], removed: [], supersededOrRetracted: [],
+      updated: [{ path: "domains/batch.md" }], removed: [],
       questionsAndLimitations: { questions: [], limitations: [] } }, batch: {
         members: [{ repositoryId: SOURCE_ID, paths: ["repositories/acme.md"] },
           { repositoryId: SOURCE_ID_B, paths: ["repositories/beta.md"] }], sharedPaths: ["domains/batch.md"],

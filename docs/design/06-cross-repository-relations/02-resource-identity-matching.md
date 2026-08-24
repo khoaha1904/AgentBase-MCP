@@ -107,7 +107,7 @@ concept ID hoặc schema.
 
 Một concept có thể có nhiều entries khi nó đại diện một logical capability với
 nhiều deployments, regions hoặc provider-native aliases. Mỗi entry cần evidence
-riêng. Entries cũ không còn đúng không được giữ như current alias; supersede/
+riêng. Entries cũ không còn đúng không được giữ như current alias; correction/
 history thuộc phần 06.05 và Git history.
 
 Quy tắc quyết định khi nào nhiều deployments vẫn là một concept thuộc phần

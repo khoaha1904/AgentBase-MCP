@@ -69,7 +69,7 @@ Cách này ưu tiên graph nhỏ và đúng hơn một graph chi tiết nhưng m
 - Thêm deployment mới bổ sung external identity entry với provenance.
 - Không thấy deployment trong lần đọc sau không tự xóa entry.
 - Removal cần provider/source evidence và explicit destructive intent.
-- Deployment được thay thế giữ history qua Git/supersede proposal; ID cũ không
+- Deployment được thay thế giữ history qua Git và ordinary correction/removal proposal; ID cũ không
   tiếp tục được trình bày như current alias.
 - Nếu evidence mới chứng minh deployments đã có independent query value,
   Enrichment có thể propose split; reverse merge của Published concepts được

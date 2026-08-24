@@ -12,7 +12,7 @@ import {
   diffBundleProposal,
   isMutableAgentBaseDraft,
   loadOkfBundle,
-  normalizeHubLifecycleIntents,
+  normalizeHubRemovalDeclarations,
   prepareBundleProposal,
   repositorySourceResources,
   renderConceptDocument,
@@ -27,11 +27,11 @@ import {
   validateBundleObservedValues,
   type ConceptDocument,
   type ConfirmedDomain,
-  type HubLifecycleIntent,
+  type HubRemovalDeclaration,
   type OkfFrontmatter,
   type OkfValue,
 } from "../../../core/knowledge/index.ts";
-import { inspectHubProposal, type HubLifecycleEntry, type HubProposalInspection } from "../review/inspect.ts";
+import { inspectHubProposal, type HubChangeEntry, type HubProposalInspection } from "../review/inspect.ts";
 import { writeHubProposalState } from "../review/proposal-state.ts";
 export type PrepareRefreshHubOptions = Readonly<{
   hub: HubIdentity;
@@ -46,7 +46,7 @@ export type PrepareRefreshHubOptions = Readonly<{
   signals: readonly string[];
   selectedSchemas?: readonly string[];
   questionPaths?: readonly string[];
-  lifecycleIntents?: readonly HubLifecycleIntent[];
+  removals?: readonly HubRemovalDeclaration[];
   createdAt: string;
 }>;
 export type PrepareRefreshLocalHubOptions = Omit<PrepareRefreshHubOptions, "hub"> & Readonly<{ localHubId: string }>;
@@ -146,11 +146,11 @@ function preserveSharedConcept(
 function protectBase(
   options: AnyRefreshOptions,
   bundleRoot: string,
-): HubLifecycleEntry[] {
+): HubChangeEntry[] {
   const base = loadOkfBundle(options.hubBundleRoot);
   const authored = loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true });
-  const conflicts: HubLifecycleEntry[] = [];
-  const intents = new Map((options.lifecycleIntents ?? []).map((intent) => [intent.conceptId, intent]));
+  const conflicts: HubChangeEntry[] = [];
+  const removals = new Map((options.removals ?? []).map((removal) => [removal.conceptId, removal]));
   for (const relative of base.files) {
     const inSubject = withinSubject(relative, options.subjectDirectory);
     const conceptId = relative.endsWith(".md") ? relative.slice(0, -3) : "";
@@ -160,10 +160,10 @@ function protectBase(
     const changed = !proposed || !bytes(options.hubBundleRoot, relative).equals(proposed);
     const index = path.posix.basename(relative) === "index.md";
     const proposedConcept = authored.concepts.get(conceptId);
-    const intent = intents.get(conceptId);
+    const removal = removals.get(conceptId);
     const sharedNormalized = Boolean(changed && concept && proposedConcept && mutable
       && preserveSharedConcept(concept, proposedConcept, options.sourceRepositoryId, bundleRoot,
-        intent?.action === "remove-contribution"));
+        removal?.kind === "repository-contribution"));
     if (sharedNormalized) proposed = bytes(bundleRoot, relative);
     const previousSources = concept ? repositorySourceResources(concept) : [];
     const currentPrefix = `repository://${options.sourceRepositoryId}/`;
@@ -176,9 +176,9 @@ function protectBase(
     );
     const additiveIndex = Boolean(index && proposed && preservesLines(bytes(options.hubBundleRoot, relative), proposed));
     const governedQuestion = (options.questionPaths ?? []).includes(relative);
-    const explicitOwnedDeletion = Boolean(mutable && !proposed && intent?.action === "remove-concept"
+    const explicitOwnedDeletion = Boolean(mutable && !proposed && removal?.kind === "concept"
       && previousSources.length && previousSources.every((resource) => resource.startsWith(currentPrefix)));
-    const explicitContributionRemoval = Boolean(sharedNormalized && intent?.action === "remove-contribution"
+    const explicitContributionRemoval = Boolean(sharedNormalized && removal?.kind === "repository-contribution"
       && proposedConcept && !conceptReferencesRepository(proposedConcept, options.sourceRepositoryId));
     if (!changed || governedQuestion || explicitOwnedDeletion || explicitContributionRemoval || (mutable && currentSourceContribution)
       || (index && additiveIndex)) continue;
@@ -196,7 +196,7 @@ function restoreUnknownFieldConflicts(
   options: AnyRefreshOptions,
   bundleRoot: string,
   failures: readonly string[],
-): HubLifecycleEntry[] {
+): HubChangeEntry[] {
   const paths = new Set(failures.flatMap((failure) => {
     const match = failure.match(/^(.+\.md): unknown frontmatter value /);
     return match?.[1] ? [match[1]] : [];
@@ -211,53 +211,49 @@ function restoreUnknownFieldConflicts(
     };
   });
 }
-function lifecycleEntries(
+function removalEntries(
   options: AnyRefreshOptions,
   bundleRoot: string,
-): HubLifecycleEntry[] {
+): HubChangeEntry[] {
   const base = loadOkfBundle(options.hubBundleRoot);
   const proposed = loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true });
-  return (options.lifecycleIntents ?? []).map((intent) => {
-    const previous = base.concepts.get(intent.conceptId);
-    if (!previous) throw new Error(`lifecycle concept is not in Hub base: ${intent.conceptId}`);
+  return (options.removals ?? []).map((removal) => {
+    const previous = base.concepts.get(removal.conceptId);
+    if (!previous) throw new Error(`removal concept is not in Hub base: ${removal.conceptId}`);
     if (previous.type === "Repository" && readRepositoryIdentityRecord(previous)?.id === options.sourceRepositoryId) {
       throw new Error("normal Refresh cannot remove or retire its canonical Repository identity");
     }
     const currentResources = new Set(repositorySourceResources(previous)
       .filter((resource) => resource.startsWith(`repository://${options.sourceRepositoryId}/`)));
-    if (!intent.reason.trim() || intent.reason.length > 512 || !intent.evidenceResources.length
-      || intent.evidenceResources.some((resource) => !currentResources.has(resource))) {
-      throw new Error(`lifecycle intent lacks exact current-repository evidence: ${intent.conceptId}`);
+    if (!removal.reason.trim() || removal.reason.length > 512 || !removal.evidenceResources.length
+      || removal.evidenceResources.some((resource) => !currentResources.has(resource))) {
+      throw new Error(`removal lacks exact current-repository evidence: ${removal.conceptId}`);
     }
-    if (intent.action === "supersede") {
-      const replacement = intent.replacementConceptId && proposed.concepts.get(intent.replacementConceptId);
-      if (!replacement) throw new Error(`replacement concept is not in refresh: ${intent.replacementConceptId ?? "missing"}`);
-      return { path: replacement.path, change: "supersession" as const, allowed: true,
-        previousConceptId: intent.conceptId, reason: intent.reason };
-    }
-    if (intent.action === "remove-concept") {
-      if (proposed.concepts.has(intent.conceptId) || repositorySourceResources(previous).some((resource) => !currentResources.has(resource))) {
-        throw new Error(`whole-concept removal is not exclusively owned: ${intent.conceptId}`);
+    if (removal.kind === "concept") {
+      if (proposed.concepts.has(removal.conceptId) || repositorySourceResources(previous).some((resource) => !currentResources.has(resource))) {
+        throw new Error(`whole-concept removal is not exclusively owned: ${removal.conceptId}`);
       }
-      return { path: previous.path, change: "deleted-agentbase-draft" as const, allowed: true, reason: intent.reason };
+      return { path: previous.path, change: "deleted-agentbase-draft" as const, allowed: true,
+        reason: removal.reason, evidenceResources: removal.evidenceResources };
     }
-    const next = proposed.concepts.get(intent.conceptId);
-    if (!next) throw new Error(`lifecycle concept is absent from refresh: ${intent.conceptId}`);
-    if (intent.action === "remove-contribution" && conceptReferencesRepository(next, options.sourceRepositoryId)) {
-      throw new Error(`removed contribution still cites current repository: ${intent.conceptId}`);
+    const next = proposed.concepts.get(removal.conceptId);
+    if (!next) throw new Error(`removal concept is absent from refresh: ${removal.conceptId}`);
+    if (conceptReferencesRepository(next, options.sourceRepositoryId)) {
+      throw new Error(`removed contribution still cites current repository: ${removal.conceptId}`);
     }
     return {
       path: next.path,
-      change: intent.action === "retract" ? "retraction" as const : "removed-contribution" as const,
+      change: "removed-contribution" as const,
       allowed: true,
-      reason: intent.reason,
+      reason: removal.reason,
+      evidenceResources: removal.evidenceResources,
     };
   });
 }
-function classifyLifecycle(
-  baseEntries: readonly HubLifecycleEntry[],
-  annotations: readonly HubLifecycleEntry[],
-): readonly HubLifecycleEntry[] {
+function classifyChanges(
+  baseEntries: readonly HubChangeEntry[],
+  annotations: readonly HubChangeEntry[],
+): readonly HubChangeEntry[] {
   const byPath = new Map(baseEntries.map((entry) => [entry.path, entry]));
   for (const annotation of annotations) byPath.set(annotation.path, annotation);
   return [...byPath.values()];
@@ -275,8 +271,8 @@ function validateChangedSchemas(options: AnyRefreshOptions, bundleRoot: string):
     if (concept.type === "Question") return (options.questionPaths ?? []).includes(concept.path)
       ? [] : [`${concept.path}: Question change was not produced by the dedicated renderer`];
     changedIdentities.add(concept.conceptId);
-    const removesContribution = options.lifecycleIntents?.some((intent) =>
-      intent.action === "remove-contribution" && intent.conceptId === concept.conceptId);
+    const removesContribution = options.removals?.some((removal) =>
+      removal.kind === "repository-contribution" && removal.conceptId === concept.conceptId);
     const sourceFailure = !removesContribution && !conceptReferencesRepository(concept, options.sourceRepositoryId)
       ? [`${concept.path}: changed concept must cite proposal source repository ${options.sourceRepositoryId}`]
       : [];
@@ -299,8 +295,8 @@ export function prepareRefreshHubProposal(
 ): Omit<PreparedRefreshHubProposal, "proposal"> & Readonly<{ proposal: AnyHubProposal }> {
   if (!isHubProposalSubject(options.subjectDirectory)) throw new Error("invalid Hub subject");
   if (!subjectExists(options.hubBundleRoot, options.subjectDirectory)) throw new Error("refresh subject is absent; use new");
-  const normalizedIntents = normalizeHubLifecycleIntents(options.lifecycleIntents ?? []);
-  options = { ...options, lifecycleIntents: normalizedIntents };
+  const normalizedRemovals = normalizeHubRemovalDeclarations(options.removals ?? []);
+  options = { ...options, removals: normalizedRemovals };
   const selected = [...(options.selectedSchemas
     ?? selectOkfConceptSchemas(options.signals).map((item) => item.type))];
   const seed = `${options.baseCommit}\0${options.evidenceDigest}\0${options.subjectDirectory}\0refresh`;
@@ -323,11 +319,11 @@ export function prepareRefreshHubProposal(
     loadOkfBundle(options.hubBundleRoot).concepts, options.confirmedDomain, options.sourceRepositoryId,
   );
   const diff = diffBundleProposal(options.hubBundleRoot, options.proposalRoot);
-  const lifecycle = classifyLifecycle(
+  const changes = classifyChanges(
     diff.entries,
-    [...conflicts, ...unknownConflicts, ...lifecycleEntries(options, bundleRoot)],
+    [...conflicts, ...unknownConflicts, ...removalEntries(options, bundleRoot)],
   );
-  const inspection = inspectHubProposal(lifecycle, { baseRoot: options.hubBundleRoot, proposedRoot: bundleRoot });
+  const inspection = inspectHubProposal(changes, { baseRoot: options.hubBundleRoot, proposedRoot: bundleRoot });
   const digestHex = createHash("sha256").update(JSON.stringify(inspection.entries)).digest("hex");
   const diffDigest = `sha256:${digestHex}`;
   const common = {

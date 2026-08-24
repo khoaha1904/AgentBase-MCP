@@ -1,6 +1,6 @@
 # 07.05 — Correction and removal
 
-> Trạng thái: MVP boundary accepted; implementation audit pending.
+> Trạng thái: Implemented MVP contract.
 
 ## Quyết định
 

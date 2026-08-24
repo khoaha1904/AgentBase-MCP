@@ -5,7 +5,7 @@ import {
 } from "../../../core/knowledge/index.ts";
 import type { HubToolActions } from "./mcp-tool-actions.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
-import type { HubLifecycleIntent } from "../../../core/knowledge/index.ts";
+import type { HubRemovalDeclaration } from "../../../core/knowledge/index.ts";
 import type { EnrichmentAnswer, EnrichmentCandidateInput } from "../enrichment/index.ts";
 
 function result(value: unknown, isError = false): CallToolResult {
@@ -179,22 +179,20 @@ function questionDeclarations(value: unknown): readonly QuestionDeclaration[] {
   });
 }
 
-function lifecycleIntents(value: unknown): readonly HubLifecycleIntent[] {
+function removalDeclarations(value: unknown): readonly HubRemovalDeclaration[] {
   if (value === undefined) return [];
-  if (!Array.isArray(value) || value.length > 64) throw new Error("lifecycle_intents must be a list of at most 64 entries");
+  if (!Array.isArray(value) || value.length > 64) throw new Error("removals must be a list of at most 64 entries");
   return value.map((item) => {
-    if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error("each lifecycle intent must be an object");
+    if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error("each removal must be an object");
     const entry = item as Record<string, unknown>;
-    const action = entry.action;
-    if (!["remove-concept", "remove-contribution", "supersede", "retract"].includes(String(action))
+    const kind = entry.kind;
+    if (!["concept", "repository-contribution"].includes(String(kind))
       || typeof entry.concept_id !== "string" || typeof entry.reason !== "string"
-      || !Array.isArray(entry.evidence_resources) || !entry.evidence_resources.every((resource) => typeof resource === "string")
-      || (entry.replacement_concept_id !== undefined && typeof entry.replacement_concept_id !== "string")) {
-      throw new Error("lifecycle intent is invalid");
+      || !Array.isArray(entry.evidence_resources) || !entry.evidence_resources.every((resource) => typeof resource === "string")) {
+      throw new Error("removal declaration is invalid");
     }
-    return { action: action as HubLifecycleIntent["action"], conceptId: entry.concept_id,
-      reason: entry.reason, evidenceResources: entry.evidence_resources as string[],
-      ...(typeof entry.replacement_concept_id === "string" ? { replacementConceptId: entry.replacement_concept_id } : {}) };
+    return { kind: kind as HubRemovalDeclaration["kind"], conceptId: entry.concept_id,
+      reason: entry.reason, evidenceResources: entry.evidence_resources as string[] };
   });
 }
 
@@ -256,7 +254,7 @@ export async function callHubOkfTool(
     }
     if (name === "finalize_hub_okf_proposal") {
       return result(await actions.finalize(required(args, "session_id"), questionDeclarations(args.questions),
-        lifecycleIntents(args.lifecycle_intents)));
+        removalDeclarations(args.removals)));
     }
     if (name === "prepare_batch_hub_ingest") {
       return result(await actions.prepareBatch({

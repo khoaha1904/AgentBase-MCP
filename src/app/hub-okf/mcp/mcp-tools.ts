@@ -158,15 +158,14 @@ export const HUB_OKF_TOOLS = [
             }, required: ["subject", "property", "observation_refs"], additionalProperties: false,
           },
         },
-        lifecycle_intents: {
+        removals: {
           type: "array", maxItems: 64, items: {
             type: "object", properties: {
-              action: { type: "string", enum: ["remove-concept", "remove-contribution", "supersede", "retract"] },
+              kind: { type: "string", enum: ["concept", "repository-contribution"] },
               concept_id: { type: "string", minLength: 1 },
-              replacement_concept_id: { type: "string", minLength: 1 },
               reason: { type: "string", minLength: 1, maxLength: 512 },
               evidence_resources: { type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: 64 },
-            }, required: ["action", "concept_id", "reason", "evidence_resources"], additionalProperties: false,
+            }, required: ["kind", "concept_id", "reason", "evidence_resources"], additionalProperties: false,
           },
         },
       },
