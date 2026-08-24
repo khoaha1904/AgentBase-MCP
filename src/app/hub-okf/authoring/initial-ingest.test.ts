@@ -5,10 +5,11 @@ import path from "node:path";
 import test from "node:test";
 
 import {
-  loadOkfBundle, parseConceptDocument, readRepositoryObservedSource, validateOkfRelationships,
+  getOkfAuthoringGuidance, loadOkfBundle, parseConceptDocument, readRepositoryObservedSource, validateOkfRelationships,
 } from "../../../core/knowledge/index.ts";
 import { runGit } from "../../../providers/github-hub/index.ts";
 import { createHubRuntimeActions } from "../query/runtime-actions.ts";
+import { writeInitialIngestSkeletons } from "./initial-ingest-skeleton.ts";
 
 test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] preparation renders one generic inspectable skeleton bundle and stops", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-initial-ingest-"));
@@ -65,6 +66,18 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] pre
           resourceType: "aws_sqs_queue", address: "aws_sqs_queue.events", source: { path: "main.tf", startLine: 4, endLine: 6 } },
       ],
     };
+    const dedupeBundle = path.join(root, "dedupe-bundle");
+    fs.mkdirSync(dedupeBundle);
+    fs.writeFileSync(path.join(dedupeBundle, "index.md"),
+      "---\nokf_version: '0.2'\n---\n\n# Hub\n\n* [Repository catalog](repositories/index.md) - Existing wording.\n");
+    writeInitialIngestSkeletons({
+      bundleRoot: dedupeBundle, subjectDirectory: "repositories/vehicle-events",
+      sourceRepositoryId: preflight.repository.repository.id, repository: preflight.repository.repository,
+      request: guidanceRequest, guidance: getOkfAuthoringGuidance(guidanceRequest),
+      createdAt: "2026-08-21T00:00:00Z", sourceState: { commit: null, dirty: false, dirtyDigest: null },
+    });
+    assert.equal(fs.readFileSync(path.join(dedupeBundle, "index.md"), "utf8").split("\n")
+      .filter((line) => line.includes("](repositories/index.md)")).length, 1);
     const prepared = await actions.prepare({
       mode: "new", sourceRepository: source,
       subjectDirectory: "repositories/vehicle-events", guidanceRequest,

@@ -1,6 +1,4 @@
-import type {
-  ConfirmedDomain, HubSearchOptions, HubTraversalOptions, OkfAuthoringGuidanceRequest,
-} from "../../../core/knowledge/index.ts";
+import type { ConfirmedDomain, HubSearchOptions, OkfAuthoringGuidanceRequest } from "../../../core/knowledge/index.ts";
 import type { BootstrapMode } from "../workspace/bootstrap.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
 import type { HubLifecycleIntent } from "../../../core/knowledge/index.ts";
@@ -50,10 +48,7 @@ export type HubToolActions = Readonly<{
   inspect(proposalId: string): Promise<unknown>;
   accept(proposalId: string, proposalDigest: string): Promise<unknown>;
   search(query: string, options?: HubSearchOptions): Promise<unknown>;
-  traverse(start: string, options?: HubTraversalOptions): Promise<unknown>;
   read(relativePath: string): Promise<unknown>;
-  readObservedValues(relativePath: string): Promise<unknown>;
-  readFreshness(): Promise<unknown>;
   previewHubInitialization(): Promise<unknown>;
   initializeHub(input: Readonly<{ expectedBase: string; expectedInitializationDigest: string }>): Promise<unknown>;
   listQuestions(options: Readonly<{ status?: "open" | "resolved" | "needs-review"; limit?: number }>): Promise<unknown>;

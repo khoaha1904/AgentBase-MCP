@@ -66,8 +66,9 @@ small gaps must be backfilled before benchmark, PR or capability completion.
 - Questions are shared Hub Markdown with exact state/revision and no private
   ledger authority. Exact-revision answers propose Guidance plus Question update
   atomically; Accept remains the state-change boundary. Broad Guidance,
-  automatic conflict inference, query overlay,
-  ordinary-query freshness marks and visual review are post-MVP capabilities.
+  automatic conflict inference, ordinary-query freshness marks and visual
+  review are post-MVP capabilities. Ordinary Hub query is deliberately
+  Published-only; Local Draft is reviewed through proposal workflows.
 
 Update current truth once in the narrowest high- or low-level document. Do not
 add handoff, roadmap, ADR or evidence-diary files that repeat it.

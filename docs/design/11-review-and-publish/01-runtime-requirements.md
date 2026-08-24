@@ -139,24 +139,24 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-QUERY-001** — Code questions primarily use Code Graph; business/system/
   cross-repository questions primarily use local Hub; combined answers retain
   both source kinds and limitations.
-- **AB-QUERY-002** — Accepted-Hub search supports exact Domain and type scopes,
+- **AB-QUERY-002** — Published-Hub search supports exact Domain and type scopes,
   ranks identity/path/title/type/description before body matches, and returns
   Domain clarification candidates instead of bodies when an unscoped broad term
   spans several Domains. Exact identity/path and explicit bounded global search
   remain available.
-- **AB-QUERY-003** — Accepted canonical relationships can be traversed outbound,
-  inbound or both with predicate, depth and node bounds. Inbound traversal is a
-  transient reverse view of the one stored evidenced edge.
-- **AB-QUERY-004** — Search and traversal identify one exact accepted commit and
-  return bounded typed summaries, paths and evidenced edges. Parsing creates no
-  durable index, cache, graph database or second knowledge source.
+- **AB-QUERY-003** — Canonical relationships remain evidenced links inside
+  Published concept Markdown. Agents navigate them through repeated bounded
+  search/read calls; MCP exposes no dedicated traversal action in the MVP.
+- **AB-QUERY-004** — Search and read identify exact admitted `remoteBase` and
+  return bounded summaries or one exact Markdown document. They never read
+  Local Draft, working-tree bytes or remote state and create no durable index,
+  cache, graph database or second knowledge source.
 - **AB-QUERY-005** — Root navigation links bounded Domain and fallback System/
   Repository entrypoints. Domain concepts navigate Systems and critical flows;
   System concepts navigate useful entities without copying their knowledge.
-- **AB-QUERY-006** — Hub query reads bounded `agentbase.observed_values` at one
-  exact accepted commit and returns value, role, source resource,
-  source-kind-specific observed state/time, exact age and access state. Ordinary
-  snapshot query uses `not-checked` and performs no credential/access probe.
+- **AB-QUERY-006** — Exact Published concept Markdown includes bounded
+  `agentbase.observed_values` with value, role, source resource and observed
+  source state/time. Ordinary query performs no credential/access probe.
   Repository current-source reading may return `available`, `unavailable` or
   `unauthorized`; provider observations require a new Domain Enrichment and are
   never live-read by query. It labels every value observed and never emits an
@@ -170,22 +170,26 @@ queries and ordinary coding never create Hub state, commits or publication.
   value and may create a shared Question through a reviewed proposal;
   current-path-unavailable, age, source advance, permission loss or temporary
   unavailability alone never changes knowledge state.
-- **AB-QUERY-009** — `read_hub_observed_values` replaces the legacy
-  `read_hub_live_evidence` action. It reads one exact Hub view and returns
-  bounded snapshot metadata with `source_access: not-checked`; it performs no
-  repository/provider access, credential probe, indexing or write-back. Every
-  entry preserves Published commit or Local Draft proposal/layer attribution.
-- **AB-QUERY-010** — Authoring, publication validation, Hub query and explicit
-  current-source response share the obvious-sensitive value guard. Query
-  redacts only the unsafe value and continues returning safe knowledge;
-  known secret-bearing paths are not used for current-value lookup.
-- **AB-QUERY-011** — `read_hub_freshness` and local CLI `okf hub freshness`
-  reuse one bounded read-only projection over at most 512 Repository concepts
-  from one exact admitted Hub commit. Each row shows canonical identity when
-  available, title/path, exact observed time, non-negative age and clean commit
-  or dirty digest; missing metadata remains `unknown`. Unknown sorts first and
-  observed rows sort oldest-first. Output labels Published or Local Draft and
-  performs no source/provider/network probe, threshold, Question, Refresh or write.
+- **AB-QUERY-009** — Snapshot metadata is read through
+  `read_hub_okf_concept`; the former dedicated observed/live-value actions are
+  removed. Query performs no repository/provider access, credential probe,
+  indexing or write-back.
+- **AB-QUERY-010** — Authoring, publication validation and Hub CI reject obvious
+  sensitive content before it becomes Published. Exact concept read performs no
+  field-level rewrite; known secret-bearing paths are not used for explicit
+  current-value lookup.
+- **AB-QUERY-011** — The bounded Repository freshness projection remains an
+  internal Hub CI/reporting primitive. Ordinary MCP and Hub CLI query expose no
+  dedicated freshness action and perform no source/provider/network probe,
+  threshold, Question, Refresh or write.
+- **AB-QUERY-012** — A remote profile's public Hub search/read uses only exact
+  synchronized `remoteBase`. A local-only profile fails clearly because no
+  Published authority exists; accepted Local Draft never becomes queryable
+  before publication and synchronization.
+- **AB-QUERY-013** — Public Hub query has two primitives: bounded search and
+  exact Markdown read. Relationships, snapshots, provenance and Published
+  Questions are read from those documents; Question governance actions remain
+  separate and unchanged.
 
 ## Hub CI
 

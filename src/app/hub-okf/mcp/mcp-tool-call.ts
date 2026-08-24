@@ -356,31 +356,7 @@ export async function callHubOkfTool(
         ...(limit === undefined ? {} : { limit: limit as number }),
       }));
     }
-    if (name === "traverse_hub_okf") {
-      const direction = args.direction;
-      if (direction !== undefined && direction !== "outbound" && direction !== "inbound" && direction !== "both") {
-        throw new Error("direction must be outbound, inbound or both");
-      }
-      const maxDepth = args.max_depth, limit = args.limit;
-      if (maxDepth !== undefined && (!Number.isInteger(maxDepth) || Number(maxDepth) < 1 || Number(maxDepth) > 3)) {
-        throw new Error("max_depth must be an integer from 1 to 3");
-      }
-      if (limit !== undefined && (!Number.isInteger(limit) || Number(limit) < 1 || Number(limit) > 100)) {
-        throw new Error("limit must be an integer from 1 to 100");
-      }
-      const kinds = optionalStringList(args, "kinds");
-      return result(await actions.traverse(required(args, "start"), {
-        ...(typeof direction === "string" ? { direction } : {}),
-        ...(kinds ? { kinds } : {}),
-        ...(maxDepth === undefined ? {} : { maxDepth: maxDepth as number }),
-        ...(limit === undefined ? {} : { limit: limit as number }),
-      }));
-    }
     if (name === "read_hub_okf_concept") return result(await actions.read(required(args, "path")));
-    if (name === "read_hub_observed_values") {
-      return result(await actions.readObservedValues(required(args, "path")));
-    }
-    if (name === "read_hub_freshness") return result(await actions.readFreshness());
     if (name === "preview_hub_initialization") return result(await actions.previewHubInitialization());
     if (name === "initialize_hub") return result(await actions.initializeHub({
       expectedBase: required(args, "expected_base"),

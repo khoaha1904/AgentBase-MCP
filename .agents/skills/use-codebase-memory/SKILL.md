@@ -41,8 +41,9 @@ graph query ran, and it does not authorize OKF preparation or submission.
 Use the Code Graph first for source structure, symbols, implementations,
 callers/callees, impact and exact snippets in the currently selected
 repository. Use `search_hub_okf` and `read_hub_okf_concept` first for business,
-domain, system and cross-repository questions. Local Hub queries include
-accepted proposal commits even before remote publication.
+domain, system and cross-repository questions. Local Hub queries read only the
+exact Published commit already synchronized to the active profile; accepted
+Local Draft remains visible through proposal review, not ordinary query.
 
 Some questions need both: start from the Hub concept that explains intent or a
 cross-repository relationship, then verify current implementation through the

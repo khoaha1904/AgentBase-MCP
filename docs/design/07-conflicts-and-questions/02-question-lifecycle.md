@@ -183,7 +183,8 @@ overwrite answer cũ; nó tạo reviewed revision và appropriate state transiti
 ## Synchronization và recovery
 
 - Published Question authority là exact Hub commit.
-- Local accepted Questions tham gia normal pending proposal/query overlay.
+- Local accepted Questions tham gia normal pending proposal review; ordinary
+  query thấy chúng sau publication và synchronization.
 - Pull/synchronize nhận Question như Hub Markdown bình thường.
 - Nếu sau này có cache, nó phải bind Hub commit và rebuild được; MVP không có
   Question cache.

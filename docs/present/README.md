@@ -17,11 +17,11 @@ Source local/workspace ──→ Code Graph + MCP ──→ Local Draft
 ```
 
 - **Source và Code Graph** trả lời chi tiết implementation hiện tại.
-- **MCP và các skill** điều tra, kiểm chứng, tạo draft và query kiến thức.
+- **MCP và các skill** điều tra, kiểm chứng, tạo draft và query Published knowledge.
 - **Hub** giữ overview: hệ thống có gì, vì sao, liên kết thế nào và tìm chi tiết
   ở đâu. Hub không sao chép toàn bộ repository.
 
-Luồng chính là: **Ingest lần đầu → dùng/review Local Draft → Publish qua PR →
+Luồng chính là: **Ingest lần đầu → review Local Draft → Publish qua PR →
 Refresh khi source đổi**. Mọi kết luận giữ provenance; AI không tự merge dữ
 liệu mơ hồ, không tự chọn một nguồn xung đột làm sự thật và không tự publish.
 
@@ -56,14 +56,14 @@ liệu mơ hồ, không tự chọn một nguồn xung đột làm sự thật v
 
 Cả 12 phần high-level đã được review như một tổng thể.
 
-## Trạng thái đồng bộ — 2026-08-22
+## Trạng thái đồng bộ — 2026-08-24
 
 | Phần | Implementation hiện tại |
 |---|---|
 | 01–05 | Có foundation chạy được: local Code Graph, catalog 7, OKF template, proposal và Local Hub |
 | 06–08 | Relation/Question, snapshots, AWS/SQS Enrichment, freshness và Hub CI đã implement; profile khác deferred |
 | 09 | Single Initial Ingest/Refresh, Batch Initial Ingest, Domain Enrichment, freshness và CI đã implement; Batch Refresh deferred |
-| 10 | Query Hub và exact local-source routing có foundation; overlay/ordinary freshness marks chưa hoàn chỉnh |
+| 10 | Hub search/read Published-only đã implement; ordinary freshness marks và remote source reader chưa có |
 | 11 | Review, Accept, rich batch PR và exact same-Repository Init/Refresh PR stack đã có; MCP không merge hoặc rebase các Init độc lập |
 | 12 | MVP hiện hỗ trợ Terraform/Terragrunt; SAM/CloudFormation chưa hỗ trợ |
 

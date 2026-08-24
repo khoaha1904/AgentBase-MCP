@@ -37,21 +37,21 @@ Accept; sau Accept, proposal trở thành một Local Draft commit bất biến 
 
 | Trạng thái | Ý nghĩa |
 |---|---|
-| Local Draft | Proposal commit query được trên local, chưa chia sẻ qua remote |
+| Local Draft | Proposal commit được inspect/review trên local, chưa thuộc ordinary query |
 | In Review | Proposal commit đã nằm trong một PR, vẫn được giữ local |
 | Published | Proposal commit đã merge và được Hub synchronization nhận diện |
 
 Đây không phải nhãn đúng/sai. Published vẫn là knowledge có provenance, không
-phải sự thật tuyệt đối. Một concept có thể có remote base và pending local
-changes; query phải chỉ rõ commit/proposal của từng lớp thay vì gán publication
-state riêng cho mọi field trong Markdown.
+phải sự thật tuyệt đối. Pending local changes được xem trong proposal review;
+ordinary search/read chỉ dùng exact Published commit.
 
 PR có thể nhóm nhiều proposal commit liên tiếp từ nhiều lần Ingest hoặc Refresh.
 Lifecycle review, retry và cleanup được trình bày ở
 [phần 11](11-review-accept-and-publish.md).
 
-## Còn để low-level quyết định
+## Low-level query decision
 
-- Cách query trình bày remote base và pending proposal changes.
+Search/read uses exact synchronized Published state; proposal inspection owns
+pending changes.
 - ID dùng để nhận diện proposal commit đã publish.
 - Backup/shared draft có cần cho phiên bản sau hay không.

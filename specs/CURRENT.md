@@ -1,7 +1,13 @@
 # Current capability
 
 Active capability: None.
-Most recent completed: [`037-local-first-hub-control`](037-local-first-hub-control/spec.md).
+Most recent completed: [`038-published-only-hub-query`](038-published-only-hub-query/spec.md).
+
+Capability 038 simplifies ordinary Hub query to the exact synchronized
+Published commit. Search plus exact Markdown read replace separate traversal,
+observed-value and freshness query actions; Questions remain ordinary knowledge
+with their existing governance workflow, and Hub CI retains its internal
+freshness projection.
 
 Capability 037 makes Hub operation explicitly local-first and remote-optional.
 Each GitHub.com or GitHub Enterprise repository/branch identity owns isolated

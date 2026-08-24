@@ -1,6 +1,6 @@
 # 05 — Knowledge entry
 
-> Trạng thái: Proposal/template/Local Hub foundation đã implement; layer UX còn draft.
+> Trạng thái: Proposal/template/Local Hub foundation và Published query boundary đã implement.
 
 High-level decision:
 [Kiến thức từ repository vào Hub thế nào?](../../present/05-how-repository-knowledge-enters-the-hub.md)
@@ -26,4 +26,5 @@ High-level decision:
 
 Git-backed proposal, exact Markdown skeleton/template, Local Draft commit,
 inspection và publication receipt đã có; không thêm database hoặc raw graph
-store. Query overlay, shared draft và richer publication presentation còn lại.
+store. Ordinary query is Published-only; shared draft và richer publication
+presentation không thuộc current query surface.

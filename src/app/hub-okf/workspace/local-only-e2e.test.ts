@@ -130,7 +130,7 @@ async function addPublishedEnrichmentFixture(root: string): Promise<Readonly<{
   return { repositoryIds, questions, commit };
 }
 
-test("[AB-HUB-SETUP-006..008][AB-BATCH-006][AB-HUB-CI-001..007][SC-003] local-only Hub accepts, queries and inventories two knowledge commits without a remote", async () => {
+test("[AB-HUB-SETUP-006..008][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] local-only Hub accepts and inventories Draft without publishing query", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "local-only-hub-e2e-"));
   const environment = { HOME: root, XDG_CONFIG_HOME: path.join(root, "config"), XDG_DATA_HOME: path.join(root, "data") };
   const actions = createHubRuntimeActions(environment, path.join(root, "state"));
@@ -244,37 +244,16 @@ test("[AB-HUB-SETUP-006..008][AB-BATCH-006][AB-HUB-CI-001..007][SC-003] local-on
         await actions.accept(answered.proposal.id, answered.proposal.diffDigest);
         await assert.rejects(actions.answerQuestion({ questionId: question.id, revision: question.revision,
           answer: "A stale answer.", maintainer: "human:khoa" }), /revision changed/);
-        assert.match(JSON.stringify(await actions.read(guidancePath)), /owner-confirmed/);
-        const observed = await actions.readObservedValues("repositories/repo-1.md") as {
-          values: readonly { role: string }[];
-        };
-        assert.deepEqual(observed.values.map((value) => value.role).sort(), ["documentation", "implementation"]);
+        assert.match(fs.readFileSync(path.join(configured.localRoot, ...guidancePath.split("/")), "utf8"), /owner-confirmed/);
       }
     }
-    const headBeforeFreshness = (await runGit({ args: ["rev-parse", "HEAD"], cwd: configured.localRoot,
-      operation: "capture Hub head before freshness" })).stdout.trim();
-    const freshness = await actions.readFreshness() as {
-      commit: string; publication_layer: string;
-      summary: { total: number; observed: number; unknown: number };
-      repositories: readonly { path: string; state: string; age_milliseconds?: number }[];
-    };
-    assert.equal(freshness.commit, headBeforeFreshness);
-    assert.equal(freshness.publication_layer, "local-draft");
-    assert.deepEqual(freshness.summary, { total: 2, observed: 0, unknown: 2 });
-    assert.equal(freshness.repositories.every((entry) => entry.state === "unknown"
-      && entry.age_milliseconds === undefined), true);
-    assert.equal((await runGit({ args: ["rev-parse", "HEAD"], cwd: configured.localRoot,
-      operation: "capture Hub head after freshness" })).stdout.trim(), headBeforeFreshness);
-    assert.equal((await runGit({ args: ["status", "--porcelain=v1"], cwd: configured.localRoot,
-      operation: "verify freshness is read-only" })).stdout, "");
 
     const pending = await actions.listPending() as readonly unknown[];
     assert.equal(pending.length, 3);
     const restartedActions = createHubRuntimeActions(environment, path.join(root, "state"));
     assert.equal((await restartedActions.listQuestions({ status: "resolved" }) as readonly unknown[]).length, 1);
-    const searched = await actions.search("Repo 2") as { status: string; matches: readonly { path: string }[] };
-    assert.equal(searched.status, "ok");
-    assert.equal(searched.matches.some((match) => match.path === "repositories/repo-2.md"), true);
+    await assert.rejects(actions.search("Repo 2"), /Published Hub knowledge is unavailable/);
+    await assert.rejects(actions.read("repositories/repo-2.md"), /Published Hub knowledge is unavailable/);
     assert.equal((await runGit({ args: ["remote"], cwd: configured.localRoot, operation: "verify no local Hub remote" })).stdout, "");
     await assert.rejects(actions.submitMany(["x"]), /first bootstrap/);
 

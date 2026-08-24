@@ -1,6 +1,6 @@
 # 10.05 — Observed snapshots and current values
 
-> Trạng thái: Technical design đã chốt; snapshot action implemented, current-source composition còn ở host flow.
+> Trạng thái: Snapshot-in-concept implemented; current-source composition còn ở host flow.
 
 ## Outcome
 
@@ -16,7 +16,7 @@ resolver.
 |---|---|
 | Known/observed value | Trả relevant snapshots + age/provenance; không probe source. |
 | Current value | Trả snapshot trước, sau đó thử authorized current-source read. |
-| Compare/history | Trả Published/Local Draft snapshots, current source only when explicitly requested. |
+| Compare/history | Trả Published snapshots; Local Draft comparison belongs to proposal review. |
 | Why values differ | Trả conflict positions, sources, Question và Guidance; không chọn winner. |
 
 Agent không hỏi user chọn “snapshot mode” hay “source mode”.
@@ -26,7 +26,7 @@ Agent không hỏi user chọn “snapshot mode” hay “source mode”.
 ```text
 find exact Hub concept/view
         ↓
-read_hub_observed_values
+read_hub_okf_concept
         ↓
 present snapshot value + layer + source + observed time/age
         ↓ only if current/code is explicitly or operationally required
@@ -102,10 +102,9 @@ Question; query itself changes nothing.
 
 ## Published and Local Draft values
 
-Combined view keeps each layer's snapshot separately even when stream IDs match.
-Same values may be visually grouped with both provenances. Different values are
-a conflict; Local Draft is not treated as current or more correct merely because
-its Hub/source observation is newer.
+Ordinary query returns only Published snapshots. Local Draft values remain
+visible through proposal inspection and PR review, never as ordinary Hub query
+results before publication and synchronization.
 
 Current source is a third transient position, not a publication layer. It never
 receives a proposal ID or appears as Published/Local Draft until a later reviewed
@@ -113,8 +112,8 @@ Refresh/Enrichment proposal accepts it.
 
 ## Safety and bounds
 
-- Apply the shared obvious-sensitive guard to current output.
-- Redact only unsafe positions; keep safe snapshots/knowledge.
+- Apply the shared obvious-sensitive guard to current-source output.
+- Published concept read is exact; authoring/publication/CI block unsafe bytes.
 - Do not read known secret-bearing paths for value resolution.
 - Respect existing concept/value/query bounds and return omitted counts.
 - Query performs no write-back, Question transition, Refresh, Enrichment or
@@ -122,7 +121,6 @@ Refresh/Enrichment proposal accepts it.
 
 ## Minimal implementation impact
 
-The repository snapshot action already implements the first half. Current-source
-composition belongs in a query skill over existing tools. Structured comparison
-can be added with the Part 10 overlay/shared Question slice; no parser, resolver,
-target registry, cache, dependency or new persistence is needed.
+Exact concept read already exposes the snapshot. Current-source composition
+belongs in a query skill over existing source tools; no parser, resolver, target
+registry, cache, dependency or new persistence is needed.

@@ -1,6 +1,6 @@
 # 10.00 — Baseline and impact
 
-> Trạng thái: Baseline synchronized; snapshot/shared-Question primitives implemented.
+> Trạng thái: Published-only query contract implemented by capability 038.
 
 ## Outcome
 
@@ -10,27 +10,23 @@ surface đọc nhỏ và deterministic; không thêm một reasoning router ho�
 
 ## Baseline có thể tái sử dụng
 
-- Hub search, concept read và relationship traversal đọc một exact active Hub
-  commit, có bounds và Domain/type scope.
-- `read_hub_observed_values` trả snapshot, source state, age và exact
-  Published/Local Draft attribution mà không probe repository.
+- Hub search và concept read dùng exact Published commit, có bounds và
+  Domain/type scope.
+- Concept Markdown đã chứa relationships, snapshots, provenance và Questions;
+  không cần query action riêng cho từng loại dữ liệu.
 - Gateway đã expose Code Graph/search/snippet cho một authorized local
   repository binding. Source reading không thuộc Hub query owner.
-- Hub Questions hiện có private ledger để hỗ trợ Refresh; shared Question
-  documents và conflict-aware shared query còn deferred theo Part 07.
+- Hub Questions là shared Markdown với governance riêng.
 - Remote GitHub credential đã thuộc MCP publication/setup, nhưng chưa có remote
   repository file reader.
 
 ## Gap so với high-level
 
-1. Agent routing rules chưa được breakout thành source-selection contract.
-2. Active Hub reader chỉ đọc một active commit; chưa tạo logical overlay đồng
-   thời giữa Published và selected Local Draft, cũng chưa có per-layer switch.
-3. Không có response composition contract thống nhất cho conflict, Question và
+1. Không có response composition contract thống nhất cho conflict, Question và
    Maintainer Guidance.
-4. Snapshot age và local Repository freshness report đã có, nhưng freshness mark
+2. Snapshot age và local Repository freshness report đã có, nhưng freshness mark
    trong ordinary search/read response còn deferred; scheduled CI đã dùng report này.
-5. Explicit current-source read reuse graph/file tools, nhưng chưa có bounded
+3. Explicit current-source read reuse graph/file tools, nhưng chưa có bounded
    remote-reference reader.
 
 ## Minimal direction
@@ -38,8 +34,7 @@ surface đọc nhỏ và deterministic; không thêm một reasoning router ho�
 - Giữ routing ở host skill/agent policy; MCP không reasoning thay agent.
 - Dùng snapshot-default: snapshot/Hub đủ trả lời thì dừng; source availability,
   age hoặc conflict không tự kích hoạt source read.
-- Reuse các query primitives hiện tại và chỉ thêm layer metadata/composition khi
-  một independently useful implementation slice cần nó.
+- Giữ đúng hai public query primitives: search và exact Markdown read.
 - Không bắt query Hub phải có source credential; source failure không làm mất
   Hub knowledge hoặc snapshot.
 - Không tự resolve conflict, Refresh hoặc write-back trong query path.
@@ -49,14 +44,14 @@ surface đọc nhỏ và deterministic; không thêm một reasoning router ho�
 | Boundary | Impact | Lý do |
 |---|---|---|
 | Host source selection | Reuse/documentation | Existing Hub và graph tools đã tách đúng responsibility. |
-| Published + Local Draft overlay | Contained change | Cần đọc hai exact Hub commits và giữ layer provenance. |
+| Published + Local Draft overlay | Rejected for MVP | Draft belongs to review/PR, not ordinary query. |
 | Conflict/Question composition | Contained after Part 07 | Shared Question runtime chưa tồn tại. |
 | Observed/current values | Reuse | Part 08 snapshot query + normal graph/file reads. |
 | Remote repository reference read | Broad change | Thêm credentialed GitHub read boundary; deferred. |
 | Freshness presentation/CI | Contained follow-up | Reuse implemented Repository report; ordinary response marks and scheduling remain. |
 
-Không có near rewrite. Phần lớn query core hiện tại được giữ; gap lớn nhất có
-thể implement độc lập sau này là Published/Local Draft overlay.
+Không có near rewrite. Query core hiện tại được giữ và chỉ đổi exact Git anchor
+cùng public adapters.
 
 ## Deferred dependencies
 

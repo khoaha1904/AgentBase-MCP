@@ -111,7 +111,10 @@ function appendIndex(root: string, relative: string, heading: string, line: stri
   const target = path.join(root, ...relative.split("/"));
   fs.mkdirSync(path.dirname(target), { recursive: true });
   const current = fs.existsSync(target) ? fs.readFileSync(target, "utf8") : `# ${heading}\n`;
-  if (current.split(/\r?\n/).includes(line)) return;
+  const lines = current.split(/\r?\n/);
+  if (lines.includes(line)) return;
+  const linkTarget = /\]\(([^)]+)\)/.exec(line)?.[1];
+  if (linkTarget && lines.some((existing) => existing.includes(`](${linkTarget})`))) return;
   fs.writeFileSync(target, `${current.trimEnd()}\n\n${line}\n`);
 }
 

@@ -6,7 +6,6 @@ import {
   createObservedValueId,
   normalizeRepositoryObservedValues,
   readObservedValues,
-  readObservedValuesForQuery,
   validateBundleObservedValues,
 } from "./observed-values.ts";
 
@@ -150,18 +149,4 @@ test("[AB-VALUE-002, AB-VALUE-005] rejects unsafe, oversized and manually drifte
     /heading must be renderer-owned/);
   assert.match(validateBundleObservedValues([{ ...concept, body: concept.body.replace("session.ttl", "session.changed") }]).join("\n"),
     /section is missing or stale/);
-  const agentbase = concept.frontmatter.agentbase as Readonly<Record<string, OkfValue>>;
-  const raw = agentbase.observed_values as readonly Readonly<Record<string, OkfValue>>[];
-  const historicalUnsafe = {
-    ...concept,
-    frontmatter: {
-      ...concept.frontmatter,
-      agentbase: { ...agentbase, observed_values: [{ ...raw[0]!, property: "session.token" }] },
-    },
-    body: concept.body.replace("session.ttl", "session.token"),
-  };
-  assert.throws(() => readObservedValues(historicalUnsafe), /secret-like/);
-  assert.deepEqual(readObservedValuesForQuery(historicalUnsafe)[0]?.value, "[redacted]");
-  assert.equal(readObservedValuesForQuery(historicalUnsafe)[0]?.sensitivityWarning,
-    "obvious-sensitive-value-redacted");
 });

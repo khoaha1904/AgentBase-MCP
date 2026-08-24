@@ -8602,7 +8602,7 @@ function providerSource(source, resource) {
     nativeIdentity: metadata.native_identity
   };
 }
-function parseValues(concept, options = {}) {
+function parseValues(concept) {
   const agentbase = mapping7(concept.frontmatter.agentbase);
   const raw = agentbase?.observed_values;
   if (raw === void 0) {
@@ -8640,7 +8640,7 @@ function parseValues(concept, options = {}) {
     else if (role === "provider" && !runtimeSource) failures.push(`${prefix} provider role requires a normalized provider-observation source`);
     else if (role !== "provider" && !repositorySource) failures.push(`${prefix} non-provider role requires a normalized repository source`);
     const safetyFailure = observedValueSafetyFailure(property, value);
-    if (safetyFailure && !options.allowUnsafeValue) failures.push(`${prefix} ${safetyFailure}`);
+    if (safetyFailure) failures.push(`${prefix} ${safetyFailure}`);
     const observed = mapping7(entry.observed);
     failures.push(...role === "provider" ? providerStateFailures(observed, prefix) : stateFailures(observed, prefix));
     if (!failures.some((failure) => failure.startsWith(prefix)) && typeof resource === "string" && (repositorySource || runtimeSource)) {

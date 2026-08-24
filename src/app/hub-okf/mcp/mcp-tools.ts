@@ -309,26 +309,12 @@ export const HUB_OKF_TOOLS = [
   ...HUB_OKF_QUERY_TOOLS,
   {
     name: "read_hub_okf_concept",
-    description: "Read one exact Markdown path from accepted local AgentBase-Hub knowledge.",
+    description: "Read one exact Markdown path from the synchronized Published AgentBase-Hub commit.",
     inputSchema: {
       type: "object",
       properties: { path: { type: "string", minLength: 1, maxLength: 512 } },
       required: ["path"], additionalProperties: false,
     },
-  },
-  {
-    name: "read_hub_observed_values",
-    description: "Read bounded observed-value snapshots from one exact accepted Hub view without probing repository or provider access.",
-    inputSchema: {
-      type: "object",
-      properties: { path: { type: "string", minLength: 1, maxLength: 512 } },
-      required: ["path"], additionalProperties: false,
-    },
-  },
-  {
-    name: "read_hub_freshness",
-    description: "Read one bounded warning-only Repository freshness report from the exact accepted Hub view without probing any source.",
-    inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
     name: "preview_hub_initialization",

@@ -26,11 +26,8 @@ import { recoverSynchronizationTransaction } from "../publication/recovery.ts";
 import {
   buildActiveHubContinuity,
   inspectInitialIngestHubContext,
-  readActiveHubConcept,
-  readActiveHubFreshness,
-  readActiveHubObservedValues,
-  searchActiveHub,
-  traverseActiveHub,
+  readPublishedHubConcept,
+  searchPublishedHub,
 } from "./query.ts";
 import { listPendingHubProposals } from "../review/pending.ts";
 import { publishPendingHubProposals } from "../publication/publish.ts";
@@ -515,23 +512,11 @@ export function createHubRuntimeActions(
     },
     async search(query, options) {
       const localHub = await admit();
-      return searchActiveHub(localHub, query, options);
-    },
-    async traverse(start, options) {
-      const localHub = await admit();
-      return traverseActiveHub(localHub, start, options);
+      return searchPublishedHub(localHub, query, options);
     },
     async read(relativePath) {
       const localHub = await admit();
-      return readActiveHubConcept(localHub, relativePath);
-    },
-    async readObservedValues(relativePath) {
-      const localHub = await admit();
-      return readActiveHubObservedValues(localHub, relativePath);
-    },
-    async readFreshness() {
-      const localHub = await admit();
-      return readActiveHubFreshness(localHub);
+      return readPublishedHubConcept(localHub, relativePath);
     },
     async previewHubInitialization() {
       const configuration = configured();

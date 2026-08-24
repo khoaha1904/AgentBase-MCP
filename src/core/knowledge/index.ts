@@ -16,7 +16,6 @@ export {
   listHubConcepts,
   readHubConcept,
   searchHubConcepts,
-  traverseHubConcepts,
   type HubConceptSummary,
   type HubQueryMatch,
   type HubListOptions,
@@ -24,9 +23,6 @@ export {
   type HubSearchMatch,
   type HubSearchOptions,
   type HubSearchResult,
-  type HubTraversalEdge,
-  type HubTraversalOptions,
-  type HubTraversalResult,
 } from "./query/hub-query.ts";
 export {
   buildHubContinuity,
@@ -130,7 +126,6 @@ export {
   normalizeProviderObservedValues,
   observedValueSafetyFailure,
   readObservedValues,
-  readObservedValuesForQuery,
   renderObservedValuesSection,
   validateBundleObservedValues,
   type NormalizeRepositoryObservedValuesOptions,
@@ -139,7 +134,6 @@ export {
   type ObservedValueIdInput,
   type ObservedValueRole,
   type ObservedValueScalar,
-  type QueryObservedValue,
   type RepositoryObservedValueState,
 } from "./governance/observed-values.ts";
 export {

@@ -1,6 +1,6 @@
 # 10 — Query từ Code Graph và Hub
 
-> Trạng thái: Query foundation đã có; multi-layer presentation còn cần hoàn thiện.
+> Trạng thái: Published-only Hub query đã chốt cho MVP.
 
 ## Câu trả lời ngắn
 
@@ -33,12 +33,13 @@ không thể xác minh implementation hoặc giá trị hiện tại. Agent khô
 
 ## Published và Local Draft
 
-Mặc định query local dùng cả Published Hub và Local Draft; người dùng có thể tắt
-một lớp. Nếu cùng concept xuất hiện ở cả hai, kết quả hiển thị một concept nhưng
-tách claim, publication status và provenance theo từng lớp.
+Hub search/read chỉ dùng exact Published commit đã synchronize về local. Local
+Draft chỉ xuất hiện trong inspect/review/PR, không tham gia câu trả lời thông
+thường. Hub local-only chưa có Published authority nên query báo unavailable.
 
-Local merge không được trình bày như Hub remote đã đổi. Published cũng không
-được ưu tiên như sự thật chỉ vì đã merge.
+Search tìm concept; read trả toàn bộ Markdown gồm knowledge, relationship links,
+snapshot, provenance và Question. MVP không cần tool traversal, observed-value
+hay freshness riêng. Agent có thể đọc link tiếp theo bằng search/read khi cần.
 
 ## Khi nguồn mâu thuẫn
 

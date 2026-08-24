@@ -21,8 +21,8 @@
 
 No known product capability gap remains inside the accepted MVP boundary.
 Canonical offline verification and separately authorized model qualification are
-evidence gates; Batch Refresh, additional provider profiles, query overlay and
-HTML review remain deferred.
+evidence gates; Batch Refresh, additional provider profiles and HTML review
+remain deferred. Ordinary Hub query is intentionally Published-only.
 
 ## Qualification boundary
 

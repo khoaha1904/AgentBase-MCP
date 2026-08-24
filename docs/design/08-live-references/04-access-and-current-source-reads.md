@@ -2,18 +2,13 @@
 
 > Trạng thái: Snapshot query đã implement; explicit current-source read tiếp tục dùng normal authorized tools.
 
-## Snapshot action
+## Snapshot read
 
-`read_hub_observed_values` replaces `read_hub_live_evidence`. It reads one exact
-Published/Local Draft Hub view and returns bounded entries with concept path,
-ID, subject, property, role, value, source resource, observed revision/time,
-exact age and `source_access: not-checked`. It performs no repository access,
-credential probe, graph indexing or write-back.
-
-Part 10 supplies the exact query view. Every result retains
-`publication_layer: published|local-draft` plus the exact Published commit or
-Local Draft proposal identity; overlay may group one concept but never collapses
-layer attribution or provenance.
+`read_hub_okf_concept` returns exact Published Markdown containing bounded
+observed entries with subject, property, role, value, source resource and
+observed revision/time. It performs no repository access, credential probe,
+graph indexing or write-back. Local Draft snapshots remain in proposal review,
+not ordinary query.
 
 ## Explicit current-value flow
 
@@ -37,5 +32,5 @@ query still succeeds when current-source reading is unauthorized/unavailable.
 ## Output safety
 
 Current-source output passes the same sensitive-value guard as authoring. Known
-secret-bearing paths are not read for value lookup; an unsafe candidate value
-is redacted while safe concept knowledge remains available.
+secret-bearing paths are not read for value lookup. Published concept read is
+exact; authoring/publication/CI must prevent unsafe values from entering it.

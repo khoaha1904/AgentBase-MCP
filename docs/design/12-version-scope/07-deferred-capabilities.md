@@ -11,8 +11,9 @@
 - Strong-identity concept merge/redirect and history migration.
 - Full conflict-aware query composition across competing claims, Questions and
   applicable Guidance; MVP only preserves and exposes the governed documents.
-- Published/Local Draft query overlay, freshness marks in ordinary search/read
-  and persisted freshness reports. Local reporting and scheduled CI are implemented.
+- Freshness marks in ordinary search/read and persisted freshness reports.
+  Local reporting and scheduled CI are implemented; query overlay is not an MVP
+  direction.
 - Static local HTML/graph review, only if structured review proves insufficient.
 - Remote repository file reader through MCP-managed authority.
 - Azure/GCP profiles and additional released detectors.

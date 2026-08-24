@@ -16,13 +16,13 @@ live-value state machine riêng.
   table; model/host không tự hash ID hoặc tự ghi source state.
 - Repository evidence URI đã giữ canonical Repository ID, normalized relative
   path và optional exact line evidence.
-- `read_hub_observed_values` đọc exact Hub commit, trả Published/Local Draft,
-  age và `source_access: not-checked`; không bind hoặc probe repository.
+- `read_hub_okf_concept` đọc exact Published Markdown gồm snapshot và
+  provenance; không bind hoặc probe repository.
 - Refresh reconcile theo item: omission preserves, current Repository chỉ sửa
   contribution của nó, foreign observations phải giữ nguyên và lifecycle intent
   owns explicit removal.
-- Shared obvious-secret guard chặn authoring/publication; query redacts riêng một
-  unsafe historical value thay vì làm hỏng các giá trị an toàn còn lại.
+- Shared obvious-secret guard chặn authoring/publication/Hub CI. Exact Published
+  Markdown read không tạo một field-level transformation layer riêng.
 - Normal Code Graph/search/snippet tools đã đọc authorized local source; không
   cần một resolver/cache/parser mới.
 - Repository observed-source metadata và phần 09 đã định nghĩa exact age/revision
@@ -54,7 +54,7 @@ Không có Published concept theo contract cũ nên không cần migration layer
 | Boundary | Impact | Lý do |
 |---|---|---|
 | Observed-value/file-source contract | Contained clean cutover | Xóa semantic locator fields và reuse existing snapshot/source validation. |
-| Snapshot query/freshness | Contained change | Read exact Hub bytes and derive age/revision. |
+| Snapshot query/freshness | Contained change | Read exact Published bytes; CI derives age/revision separately. |
 | Explicit local current-source read | Reuse | Existing graph/search/snippet tools; no live resolver. |
 | Historical integrity + shared Question | Contained after Part 07 | Dedicated proposal; current-path move only degrades lookup. |
 | Remote repository read | Broad change | MCP GitHub token, exact file authorization and degradation. |

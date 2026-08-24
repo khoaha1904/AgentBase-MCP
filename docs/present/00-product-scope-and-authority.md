@@ -12,9 +12,9 @@ AgentBase has two products:
   operational database.
 
 A user can investigate source through a disposable local graph, turn bounded
-evidence into a reviewed OKF proposal, accept it into local Hub knowledge, query
-it immediately and later publish selected pending commits through a pull
-request.
+evidence into a reviewed OKF proposal, accept it as Local Draft and later
+publish selected pending commits through a pull request. Ordinary Hub query
+reads only synchronized Published knowledge.
 
 Installation selects no Hub and Code Graph never requires one. The first OKF
 authoring workflow lazily creates a private local-only Hub at preflight. A remote Hub is an
@@ -32,10 +32,10 @@ source repository
   -> agent investigates graph and authorized source evidence
   -> normalize bounded provenance-bearing observations
   -> batch-select concrete OKF guidance and author a sparse proposal
-  -> batch-validate, inspect and explicitly accept into local Hub main
-  -> query accepted local knowledge
+  -> batch-validate, inspect and explicitly accept into Local Draft
   -> optionally publish a safe pending prefix in one PR
   -> after merge, synchronize and rebase remaining pending commits safely
+  -> query synchronized Published knowledge
 ```
 
 Remote status is a read-only comparison. AgentBase never performs a hidden

@@ -40,9 +40,9 @@ Không có action tự động, không ẩn result và không hạ publication s
 
 ## Scheduled CI summary
 
-The current local `read_hub_freshness` / `okf hub freshness` boundary already
-produces the structured Repository-level projection in memory. It reads the
-admitted Hub view, labels its exact layer and writes no report file.
+The internal Hub CI boundary produces the structured Repository-level
+projection in memory. Ordinary MCP/CLI query has no dedicated freshness action.
+The projection reads admitted Published bytes and writes no report file.
 
 GitHub Actions reuses that projection weekly and on Hub PR/main checks. It writes
 only the ephemeral Actions Summary; freshness never changes the exit status.

@@ -13,11 +13,11 @@ chỉ cần Hub knowledge.
 | User intent | Start with | Add the other source when |
 |---|---|---|
 | Domain, system, purpose, ownership, known behavior | Hub search/read | User cần đối chiếu implementation hiện tại. |
-| Cross-repository hoặc cross-domain relation | Hub search/traversal | Cần code detail của một repository đang local và authorized. |
+| Cross-repository hoặc cross-domain relation | Hub search/read links | Cần code detail của một repository đang local và authorized. |
 | Symbol, caller/callee, execution path, impact, exact implementation | Current repository Code Graph | Cần business intent, accepted constraint hoặc relation ngoài repo. |
 | “Vì sao” một implementation tồn tại | Hub | Cần kiểm tra code hiện tại có còn khớp knowledge hay không. |
-| “Giá trị đã biết là gì?” | Hub concept/observed snapshot | Không tự thêm source read. |
-| “Giá trị hiện tại là gì?” | Hub observed snapshot | Sau khi trình bày snapshot + tuổi/provenance, đọc exact authorized local source bằng normal graph/file tool để xác minh current value. |
+| “Giá trị đã biết là gì?” | Hub concept snapshot | Không tự thêm source read. |
+| “Giá trị hiện tại là gì?” | Hub concept snapshot | Sau khi trình bày snapshot + provenance, đọc exact authorized local source bằng normal graph/file tool để xác minh current value. |
 
 Đây là priority khởi đầu, không phải exclusivity. Agent chỉ gọi nguồn thứ hai
 khi phần còn thiếu của câu trả lời thực sự cần nó.
@@ -43,9 +43,11 @@ giữa các claim.
 
 1. Dùng `search_hub_okf` để tìm concept theo Domain/type scope.
 2. Dùng `read_hub_okf_concept` cho knowledge và provenance đầy đủ.
-3. Dùng `traverse_hub_okf` khi câu hỏi nói về dependency, producer/consumer,
-   implementation ownership hoặc cross-repository navigation.
-4. Dùng `read_hub_observed_values` chỉ khi snapshot cụ thể có ích.
+3. Khi cần relation, đọc Markdown links trong concept và tiếp tục bằng hai tool
+   trên. Snapshot và Question cũng nằm trong exact concept Markdown.
+
+Hai action này chỉ đọc exact Published commit đã synchronize về local. Local
+Draft được inspect/review riêng; local-only Hub chưa có Published để query.
 
 Search ambiguity chỉ hỏi lại Domain/repository khi lựa chọn đó làm thay đổi
 đáng kể kết quả. Không bắt user chọn “Hub mode” hay biết tên tool.
@@ -103,7 +105,7 @@ luôn là workflow review riêng.
 ## Requirement mapping
 
 - Reuses AB-QUERY-001 for Hub-versus-Code-Graph priority.
-- Reuses AB-QUERY-002..004 for bounded exact-commit Hub reads.
+- Reuses AB-QUERY-002..004 and AB-QUERY-012..013 for bounded exact-Published reads.
 - Reuses AB-MCP-015 and AB-QUERY-006..009 for snapshot/current-source separation.
 - Adds no runtime requirement until a later implementation slice changes the
   existing tool or skill surface.

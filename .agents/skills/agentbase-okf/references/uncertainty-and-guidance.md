@@ -6,10 +6,9 @@ compatibility. Submit material conflicts as governed question declarations when
 finalizing the proposal; identify each linked observation by subject, property,
 role and source ID.
 
-For a volatile-value query, call `read_hub_observed_values` on the accepted
-concept. Present the stored snapshot with its source revision, observation time,
-age and Published/Local Draft layer. Do not probe repository access or imply the
-snapshot is current. If the user explicitly needs the current value, use normal
+For a volatile-value query, call `read_hub_okf_concept` on the Published
+concept. Present the stored snapshot with its source revision and observation
+time. Do not probe repository access or imply the snapshot is current. If the user explicitly needs the current value, use normal
 graph/file tools only when that repository is already authorized and local.
 Present documentation, implementation/configuration and accepted Maintainer
 Guidance separately; if they disagree, say so and do not select a winner. A dirty

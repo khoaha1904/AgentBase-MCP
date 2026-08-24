@@ -64,8 +64,8 @@ trong Markdown:
 ## Đánh giá impact
 
 - Giữ Git/proposal commit làm publication unit: **Contained change**.
-- Thêm nhãn Published/Local Draft/In Review cho proposal và kết quả query:
-  **Contained đến Broad**, tùy độ chi tiết cần hiển thị.
+- Giữ Published/Local Draft/In Review cho proposal review; ordinary query chỉ
+  Published: **Contained change**.
 - Giữ nguyên item-level selection/status sau khi local accept: **Broad change**
   qua OKF identity, accept, pending, query, publish và synchronize.
 - Đây chưa phải near rewrite vì Git lifecycle vẫn tái sử dụng được, nhưng sẽ thay
@@ -76,9 +76,10 @@ trong Markdown:
 Điều chỉnh high-level để **reviewed proposal/change set** là publication unit:
 
 1. Người dùng chọn/bỏ từng knowledge item trong proposal trước khi local accept.
-2. Accept tạo một immutable Local Draft commit, query được ngay.
+2. Accept tạo một immutable Local Draft commit để inspect/publish; ordinary
+   query chỉ thấy nó sau merge và synchronize.
 3. Một PR gom nhiều pending proposal liên tiếp từ nhiều repository.
-4. Query ghi rõ remote base và proposal commit nào đang local/in review.
+4. Query đọc exact remote base; proposal review ghi rõ commit đang local/in review.
 5. Sau merge, synchronize nhận diện proposal đã Published và giữ proposal còn lại.
 
 Với hướng này, item vẫn có identity/provenance để query và conflict, nhưng trạng

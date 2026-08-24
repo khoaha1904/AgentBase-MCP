@@ -1,4 +1,4 @@
-# 05.03 — Local Draft storage and query overlay
+# 05.03 — Local Draft storage and Published query boundary
 
 > Trạng thái: Technical design draft.
 
@@ -9,13 +9,13 @@ Local Hub Git hiện tại là source of truth duy nhất cho publication state:
 ```text
 remoteBase ── Published baseline
      └── pending proposal commits ── Local Draft / In Review
-                                  ↑ activeHead (local query tree)
+                                  ↑ activeHead (review/authoring tree)
 ```
 
 - `remoteBase`: exact remote `main` đã synchronize.
 - `activeHead`: Published baseline cộng toàn bộ accepted local proposals.
 - `remoteBase..activeHead`: ordered pending proposal commits.
-- Authoring workspace chưa Accept không phải Local Draft queryable.
+- Authoring workspace chưa Accept không phải Local Draft.
 
 ## State mapping
 
@@ -26,22 +26,15 @@ remoteBase ── Published baseline
 | Published | synchronize nhận diện proposal trên remote history/patch |
 
 `In Review` detail và PR closure/retry thuộc phần 11. Không background poll GitHub;
-normal query dùng last-known local publication evidence.
+normal query reads the exact synchronized Published boundary.
 
-## Query projection
+## Query boundary
 
-Query vẫn đọc exact `activeHead`, nhưng response cần kèm:
-
-- `remoteBase` và `activeHead`;
-- pending proposal IDs/commits liên quan tới kết quả;
-- classification `published`, `local-draft`, hoặc
-  `published-with-local-changes` ở mức concept/file;
-- In Review metadata khi lifecycle owner cung cấp.
-
-Classification được tính từ Git tree/diff và proposal trailers, không ghi vào
-OKF Markdown và không tạo durable search index.
+Ordinary search/read uses exact `remoteBase`. `activeHead` and proposal commits
+remain available to inspect/review/PR workflows only. Local-only Hub has no
+Published authority and therefore no ordinary Hub query result.
 
 ## Failure rule
 
-Nếu ancestry, trailers hoặc layer attribution mơ hồ, query không đoán state.
-Nó trả lỗi lifecycle/limitation và yêu cầu synchronize/recovery trước.
+Nếu Published anchor không thể admit chính xác, query fail closed. Nó không
+thay bằng Local Draft hoặc remote working state.

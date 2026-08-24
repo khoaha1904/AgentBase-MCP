@@ -20,8 +20,7 @@ một số giới hạn để tránh đồng bộ, phân quyền và automation 
 - Không có fine-grained ACL trong Hub; có quyền Hub thì đọc được toàn bộ
   Published knowledge.
 - Structured IaC MVP hỗ trợ Terraform/Terragrunt; SAM/CloudFormation chưa hỗ trợ.
-- Hub query mặc định đọc active local knowledge; Published/Local Draft overlay
-  chi tiết chưa implement.
+- Hub query chỉ đọc synchronized Published knowledge; Local Draft thuộc review.
 - Question runtime dùng shared Hub documents; private state chỉ là cache có thể
   rebuild, không phải authority.
 
@@ -34,7 +33,7 @@ mới; mirror/copy mơ hồ phải được người dùng xác nhận.
 ## Phần còn deferred
 
 - Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
-- Batch Refresh, query overlay và freshness report.
+- Batch Refresh và freshness marks trong ordinary search/read.
 - Azure/GCP profile và semantic profile migration.
 - Static HTML/graph review và remote repository reader.
 

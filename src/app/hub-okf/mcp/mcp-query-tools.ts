@@ -1,9 +1,7 @@
-import { CANONICAL_RELATIONSHIP_KINDS } from "../../../core/knowledge/index.ts";
-
 export const HUB_OKF_QUERY_TOOLS = [
   {
     name: "search_hub_okf",
-    description: "Search bounded accepted knowledge at the current local AgentBase-Hub main commit.",
+    description: "Search bounded knowledge at the exact synchronized Published AgentBase-Hub commit.",
     inputSchema: {
       type: "object",
       properties: {
@@ -14,21 +12,6 @@ export const HUB_OKF_QUERY_TOOLS = [
         limit: { type: "integer", minimum: 1, maximum: 100 },
       },
       required: ["query"], additionalProperties: false,
-    },
-  },
-  {
-    name: "traverse_hub_okf",
-    description: "Traverse a bounded evidenced neighborhood from one exact accepted Hub concept.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        start: { type: "string", minLength: 1, maxLength: 512 },
-        direction: { type: "string", enum: ["outbound", "inbound", "both"] },
-        kinds: { type: "array", items: { type: "string", enum: CANONICAL_RELATIONSHIP_KINDS }, minItems: 1, maxItems: 11 },
-        max_depth: { type: "integer", minimum: 1, maximum: 3 },
-        limit: { type: "integer", minimum: 1, maximum: 100 },
-      },
-      required: ["start"], additionalProperties: false,
     },
   },
 ] as const;

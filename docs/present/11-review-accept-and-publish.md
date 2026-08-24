@@ -23,7 +23,8 @@ Proposal ──preview + Accept──→ Local Draft ──PR──→ In Review
   chỉnh sửa và Finalize lại một bundle dependency-safe; Accept luôn nhận toàn bộ
   exact proposal đã review.
 - Accept khóa đúng nội dung đã review thành một immutable Local Draft commit.
-- Local Draft commit có thể tích lũy qua nhiều repository và vẫn query được.
+- Local Draft commit có thể tích lũy qua nhiều repository và được inspect/review;
+  ordinary Hub query chỉ đọc Published.
 - Question và limitation chưa giải quyết có thể publish nếu giữ rõ provenance.
 - Resolve Question hoặc duyệt merge concept chỉ tạo Local Draft mới, không tự
   publish.

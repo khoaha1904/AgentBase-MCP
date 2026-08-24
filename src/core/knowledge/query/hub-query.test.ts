@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { readHubFreshness } from "./hub-freshness.ts";
-import { normalizeHubConceptPath, readHubConcept, searchHubConcepts, traverseHubConcepts } from "./hub-query.ts";
+import { normalizeHubConceptPath, readHubConcept, searchHubConcepts } from "./hub-query.ts";
 
 function concept(type: string, title: string, description: string, body: string, relationships = "[]"): string {
   return `---
@@ -77,29 +77,10 @@ test("[AB-QUERY-002][SC-002] ambiguous unscoped search asks for Domain while exp
   assert.equal(global.status === "ok" ? global.matches.length : 0, 1);
 });
 
-test("[AB-QUERY-003][SC-004] traversal derives inbound edges with evidence and obeys depth and node bounds", async () => {
-  const inbound = await traverseHubConcepts(reader, "resources/orders-queue.md", {
-    direction: "inbound", maxDepth: 1, limit: 10,
-  });
-  assert.deepEqual(inbound.nodes.map((node) => node.identity), [
-    "resources/orders-queue", "components/orders-api", "components/shipping-worker",
-  ]);
-  assert.deepEqual(inbound.edges.map((edge) => [edge.source, edge.kind, edge.target, edge.evidence]), [
-    ["components/orders-api", "publishes-to", "resources/orders-queue", ["queue-send"]],
-    ["components/shipping-worker", "consumes", "resources/orders-queue", ["queue-read"]],
-  ]);
-  assert.equal(inbound.commit, reader.commit);
-  const bounded = await traverseHubConcepts(reader, "components/orders-api", { maxDepth: 3, limit: 2 });
-  assert.equal(bounded.nodes.length, 2);
-  assert.equal(bounded.truncated, true);
-});
-
 test("[AB-LOCAL-HUB-009][AB-QUERY-011] query bounds and Repository freshness remain deterministic", async () => {
   assert.throws(() => normalizeHubConceptPath("../secret.md"), /Markdown file/);
   await assert.rejects(searchHubConcepts(reader, "x", { limit: 101 }), /1\.\.100/);
   await assert.rejects(searchHubConcepts(reader, "x", { domain: "domains/missing" }), /exact Domain/);
-  await assert.rejects(traverseHubConcepts(reader, "systems/orders", { maxDepth: 4 }), /1\.\.3/);
-
   const freshnessDocuments = new Map([
     ["repositories/unknown.md", concept("Repository", "Unknown", "No checkpoint.", "Unknown checkpoint.")],
     ["repositories/old.md", `---\ntype: Repository\ntitle: Old\ndescription: Old checkpoint.\nagentbase:\n  repository:\n    id: repository-old-111111111111\n    display_name: old\n    aliases: { remotes: [], root_commits: [] }\n    observed_source:\n      commit: '${"1".repeat(40)}'\n      dirty: false\n      dirty_digest: null\n      observed_at: '2026-08-01T00:00:00.000Z'\n---\n\n# Old\n`],

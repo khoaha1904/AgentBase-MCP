@@ -42,10 +42,6 @@ export type ObservedValue = Readonly<{
     at: string;
   }>;
 }>;
-export type QueryObservedValue = Omit<ObservedValue, "value"> & Readonly<{
-  value: ObservedValueScalar;
-  sensitivityWarning?: "obvious-sensitive-value-redacted";
-}>;
 export type ObservedValueIdInput = Readonly<{
   conceptId: string;
   subject: string;
@@ -188,10 +184,7 @@ function providerSource(source: Readonly<Record<string, OkfValue>>, resource: st
     nativeIdentity: metadata.native_identity };
 }
 
-function parseValues(
-  concept: ConceptDocument,
-  options: Readonly<{ allowUnsafeValue?: boolean }> = {},
-): Readonly<{ values: readonly ObservedValue[]; failures: readonly string[] }> {
+function parseValues(concept: ConceptDocument): Readonly<{ values: readonly ObservedValue[]; failures: readonly string[] }> {
   const agentbase = mapping(concept.frontmatter.agentbase);
   const raw = agentbase?.observed_values;
   if (raw === undefined) {
@@ -229,7 +222,7 @@ function parseValues(
     else if (role === "provider" && !runtimeSource) failures.push(`${prefix} provider role requires a normalized provider-observation source`);
     else if (role !== "provider" && !repositorySource) failures.push(`${prefix} non-provider role requires a normalized repository source`);
     const safetyFailure = observedValueSafetyFailure(property, value);
-    if (safetyFailure && !options.allowUnsafeValue) failures.push(`${prefix} ${safetyFailure}`);
+    if (safetyFailure) failures.push(`${prefix} ${safetyFailure}`);
     const observed = mapping(entry.observed);
     failures.push(...(role === "provider" ? providerStateFailures(observed, prefix) : stateFailures(observed, prefix)));
     if (!failures.some((failure) => failure.startsWith(prefix)) && typeof resource === "string" && (repositorySource || runtimeSource)) {
@@ -298,16 +291,6 @@ export function readObservedValues(concept: ConceptDocument): readonly ObservedV
   const parsed = parseValues(concept);
   if (parsed.failures.length) throw new Error(parsed.failures.join("; "));
   return parsed.values;
-}
-
-export function readObservedValuesForQuery(concept: ConceptDocument): readonly QueryObservedValue[] {
-  const parsed = parseValues(concept, { allowUnsafeValue: true });
-  if (parsed.failures.length) throw new Error(parsed.failures.join("; "));
-  return parsed.values.map((value) => observedValueSafetyFailure(value.property, value.value) ? {
-    ...value,
-    value: "[redacted]",
-    sensitivityWarning: "obvious-sensitive-value-redacted",
-  } : value);
 }
 
 export function validateBundleObservedValues(concepts: Iterable<ConceptDocument>): readonly string[] {
