@@ -197,6 +197,7 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
   const diverseRoot = path.resolve(import.meta.dirname, "..", "..", "benchmark", "repos", "aws-terraform-diverse");
   const diverse = JSON.parse(fs.readFileSync(path.join(diverseRoot, "manifest.json"), "utf8"));
   assert.equal(diverse.catalogVersion, "7.0.0");
+  assert.equal(diverse.promptVersion, "okf-author-v16");
   assert.equal(diverse.agent.model, "gpt-5.6-sol");
   assert.equal(diverse.repositories.length, 6);
   assert.ok(diverse.repositories.every((entry) => /terraform|terragrunt/.test(entry.kind)));

@@ -267,6 +267,12 @@ benchmarks.
   representative important probes, never a complete required inventory.
   Repositories run sequentially under AB-BENCH-048; SAM/CloudFormation remains
   excluded and historical suites/results remain immutable.
+- **AB-BENCH-071** — The first diverse-suite probe retains its V15 failure: the
+  obsolete prompt requested removed local-only Hub setup and no OKF was
+  authored. V16 instead seeds one isolated admitted remote-profile fixture in
+  the runner, forbids configuration/publication/network actions and otherwise
+  preserves the Initial Ingest lifecycle. This corrects benchmark setup only;
+  it does not restore local-only Hub authority or change MCP runtime behavior.
 
 ## Context A/B interpretation
 

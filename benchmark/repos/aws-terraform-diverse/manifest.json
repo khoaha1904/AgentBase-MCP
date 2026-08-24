@@ -2,7 +2,7 @@
   "suite": "aws-terraform-diverse",
   "version": 1,
   "catalogVersion": "7.0.0",
-  "promptVersion": "okf-author-v15",
+  "promptVersion": "okf-author-v16",
   "directPromptVersion": "okf-author-direct-v15",
   "agent": {
     "provider": "codex-cli",

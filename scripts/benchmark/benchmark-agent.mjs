@@ -7,7 +7,11 @@ import path from "node:path";
 import {
   loadOkfBundle, readRepositoryIdentityRecord, renderConceptDocument, resolveRepositoryIdentity,
 } from "../../src/core/knowledge/index.ts";
+import { createHubIdentity, hubProfileId } from "../../src/core/hub/index.ts";
 import { discoverRepositorySourceState } from "../../src/app/repository-okf/index.ts";
+import { activatePersistedHubConfiguration } from "../../src/app/hub-okf/configuration/configuration-file.ts";
+import { renderHubCiBundle } from "../../src/app/hub-okf/ci/artifact.ts";
+import { renderHubReadme } from "../../src/app/hub-okf/workspace/readme.ts";
 
 const projectRoot = path.resolve(import.meta.dirname, "../..");
 const requiredTools = ["index_repository", "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept"];
@@ -28,7 +32,10 @@ const v13EnabledTools = [
   ...v13RequiredTools, "search_graph", "trace_path", "get_code_snippet", "search_code",
   "search_hub_okf", "read_hub_okf_concept",
 ];
-const initialIngestPromptVersions = new Set(["okf-author-v13", "okf-author-v14", "okf-author-v15"]);
+const initialIngestPromptVersions = new Set(["okf-author-v13", "okf-author-v14", "okf-author-v15", "okf-author-v16"]);
+const configuredInitialIngestPromptVersions = new Set(["okf-author-v16"]);
+const configuredInitialIngestRequiredTools = v13RequiredTools.filter((tool) => tool !== "configure_hub");
+const configuredInitialIngestEnabledTools = v13EnabledTools.filter((tool) => tool !== "configure_hub");
 const refreshPromptVersions = new Set(["okf-refresh-v1", "okf-refresh-v2", "okf-refresh-v3"]);
 const refreshRequiredTools = [
   "get_hub_status", "preflight_hub_ingest", "index_repository", "get_architecture",
@@ -50,7 +57,7 @@ const batchEnabledTools = [
   "search_hub_okf", "read_hub_okf_concept",
 ];
 
-export function validateV13Lifecycle(mcpTools, guidanceAttempts = []) {
+export function validateV13Lifecycle(mcpTools, guidanceAttempts = [], requireConfigure = true) {
   const guidanceCount = mcpTools.get_okf_authoring_schemas ?? 0;
   const cleanGuidance = guidanceCount === 1
     && (guidanceAttempts.length === 0 || guidanceAttempts[0]?.status === "completed");
@@ -60,7 +67,8 @@ export function validateV13Lifecycle(mcpTools, guidanceAttempts = []) {
     && guidanceAttempts[0]?.retryable === true
     && guidanceAttempts[1]?.status === "completed";
   return [
-    ...v13ExactlyOnceTools.filter((tool) => mcpTools[tool] !== 1)
+    ...v13ExactlyOnceTools.filter((tool) => requireConfigure || tool !== "configure_hub")
+      .filter((tool) => mcpTools[tool] !== 1)
       .map((tool) => `${tool} must run exactly once; observed ${mcpTools[tool] ?? 0}`),
     ...(mcpTools.validate_okf_changes >= 1 && mcpTools.validate_okf_changes <= 2
       ? []
@@ -70,6 +78,7 @@ export function validateV13Lifecycle(mcpTools, guidanceAttempts = []) {
       : [`get_okf_authoring_schemas must succeed once, or succeed on one correction after retryable INVALID_ARGUMENT; observed ${guidanceCount}`]),
     ...Object.keys(mcpTools).filter((tool) => v13ForbiddenTools.has(tool))
       .map((tool) => `forbidden V13 lifecycle tool observed: ${tool}`),
+    ...(!requireConfigure && mcpTools.configure_hub ? ["configured Initial Ingest must not call configure_hub"] : []),
   ];
 }
 
@@ -134,6 +143,34 @@ function gitSync(root, args, commitTimestamp) {
   } });
   if (result.status !== 0) throw new Error(result.stderr.trim() || `git ${args.join(" ")} failed`);
   return result.stdout.trim();
+}
+
+function seedInitialIngestHub(runtimeRoot) {
+  const hub = createHubIdentity("agentbase-benchmark/isolated-hub", "main");
+  const localHubId = hubProfileId(hub);
+  const root = path.join(runtimeRoot, "data", "agentbase-mcp", "hubs", localHubId);
+  fs.mkdirSync(root, { recursive: true, mode: 0o700 });
+  gitSync(root, ["init", "--initial-branch=main"]);
+  fs.writeFileSync(path.join(root, "README.md"), renderHubReadme());
+  fs.writeFileSync(path.join(root, "index.md"), "---\nokf_version: \"0.2\"\n---\n\n# AgentBase-Hub\n");
+  const ci = renderHubCiBundle();
+  for (const [relative, bytes] of Object.entries(ci.files)) {
+    const target = path.join(root, ...relative.split("/"));
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, bytes, { mode: relative.endsWith(".mjs") ? 0o755 : 0o644 });
+  }
+  gitSync(root, ["add", "README.md", "index.md", ...Object.keys(ci.files)]);
+  gitSync(root, ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit",
+    "--no-gpg-sign", "--no-verify", "-m", `Initialize isolated benchmark Hub\n\nAgentBase-Hub-Kind: base\nAgentBase-Hub-ID: ${localHubId}\nAgentBase-Hub-Format: 1`],
+  "2026-08-24T00:00:00Z");
+  const baseCommit = gitSync(root, ["rev-parse", "HEAD"]);
+  gitSync(root, ["remote", "add", "origin", hub.canonicalHttpsUrl]);
+  gitSync(root, ["update-ref", "refs/agentbase/published", baseCommit]);
+  const environment = { ...process.env, HOME: path.join(runtimeRoot, "home"),
+    XDG_CONFIG_HOME: path.join(runtimeRoot, "config"), XDG_DATA_HOME: path.join(runtimeRoot, "data") };
+  activatePersistedHubConfiguration({ formatVersion: 1, kind: "remote", localHubId, localRoot: root,
+    baseCommit, catalogVersion: "7.0.0", host: hub.host, repository: hub.repository,
+    targetBranch: hub.targetBranch }, environment, null);
 }
 
 function createRefreshSource(repository, entry) {
@@ -389,6 +426,7 @@ function toolUsage(completedTools, arm, promptVersion) {
     : refreshPromptVersions.has(promptVersion) ? refreshRequiredTools
     : ["okf-author-v8", "okf-author-v9", "okf-author-v10", "okf-author-v11", "okf-author-v12"].includes(promptVersion)
     ? v8RequiredTools
+    : configuredInitialIngestPromptVersions.has(promptVersion) ? configuredInitialIngestRequiredTools
     : initialIngestPromptVersions.has(promptVersion) ? v13RequiredTools
     : ["okf-author-v4", "okf-author-v5", "okf-author-v6", "okf-author-v7"].includes(promptVersion)
       ? v4RequiredTools
@@ -426,6 +464,7 @@ export function runAgentRepository({
   fs.mkdirSync(path.join(runtimeRoot, "home"));
   fs.mkdirSync(runtimeTmp, { mode: 0o700 });
   const isRefresh = refreshPromptVersions.has(manifest.promptVersion);
+  if (arm === "mcp" && configuredInitialIngestPromptVersions.has(manifest.promptVersion)) seedInitialIngestHub(runtimeRoot);
   const sourceRepository = isRefresh ? createRefreshSource(repository, entry) : repository;
   if (isRefresh) seedRefreshHub(runtimeRoot, entry);
   const startedAt = new Date().toISOString();
@@ -480,7 +519,8 @@ export function runAgentRepository({
   writeJson(path.join(root, "run.json"), run);
   const args = buildCodexArgs({
     workspace, finalMessage, model: manifest.agent.model, reasoningEffort: manifest.agent.reasoningEffort, arm, runtimeRoot,
-    ...(initialIngestPromptVersions.has(promptVersion) ? { enabledTools: v13EnabledTools }
+    ...(configuredInitialIngestPromptVersions.has(promptVersion) ? { enabledTools: configuredInitialIngestEnabledTools }
+      : initialIngestPromptVersions.has(promptVersion) ? { enabledTools: v13EnabledTools }
       : isRefresh ? { enabledTools: refreshEnabledTools } : {}),
   });
   const result = spawnSync(executable, args, {
@@ -522,7 +562,8 @@ export function runAgentRepository({
   }
   const usage = toolUsage(summary.completedTools, arm, promptVersion);
   const v13LifecycleFailures = initialIngestPromptVersions.has(promptVersion)
-    ? validateV13Lifecycle(summary.activity.mcpTools, summary.activity.guidance.attempts) : [];
+    ? validateV13Lifecycle(summary.activity.mcpTools, summary.activity.guidance.attempts,
+      !configuredInitialIngestPromptVersions.has(promptVersion)) : [];
   const refreshLifecycleFailures = refreshPromptVersions.has(promptVersion)
     ? validateRefreshLifecycle(summary.activity.mcpTools) : [];
   const directMcpFailure = arm === "direct" && summary.activity.mcpToolCalls
