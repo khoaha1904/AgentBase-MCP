@@ -194,6 +194,15 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
   assert.deepEqual(validateBatchLifecycle(batchTools, 2), []);
   batchTools.accept_hub_okf_proposal = 1;
   assert.match(validateBatchLifecycle(batchTools, 2).at(-1), /forbidden Batch Init/);
+  const diverseRoot = path.resolve(import.meta.dirname, "..", "..", "benchmark", "repos", "aws-terraform-diverse");
+  const diverse = JSON.parse(fs.readFileSync(path.join(diverseRoot, "manifest.json"), "utf8"));
+  assert.equal(diverse.catalogVersion, "7.0.0");
+  assert.equal(diverse.agent.model, "gpt-5.6-sol");
+  assert.equal(diverse.repositories.length, 6);
+  assert.ok(diverse.repositories.every((entry) => /terraform|terragrunt/.test(entry.kind)));
+  assert.ok(diverse.repositories.every((entry) => !/(?:^|[-_/])sam(?:$|[-_/])|cloudformation/i.test(
+    `${entry.id}/${entry.kind}/${entry.path}`,
+  )));
 });
 
 test("[AB-BENCH-013..017] pair comparison reports quality and efficiency without a winner", () => {

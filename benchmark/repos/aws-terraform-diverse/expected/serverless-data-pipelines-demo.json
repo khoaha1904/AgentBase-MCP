@@ -1,0 +1,57 @@
+{
+  "version": 17,
+  "repository": "serverless-data-pipelines-demo",
+  "confirmedDomain": {
+    "identity": "domains/crawler",
+    "title": "Crawler",
+    "rootHeading": "AgentBase-Hub"
+  },
+  "requiredConcepts": [
+    {
+      "key": "crawler-domain",
+      "identityTerms": ["crawler"],
+      "type": "Domain",
+      "requiredMetadata": [],
+      "requiredSourcePaths": []
+    },
+    {
+      "key": "serverless-data-pipelines-repository",
+      "identityTerms": ["serverless", "data", "pipeline"],
+      "type": "Repository",
+      "requiredMetadata": [],
+      "requiredSourcePaths": ["README.md"]
+    },
+    {
+      "key": "serverless-data-pipeline-system",
+      "identityTerms": ["data", "pipeline"],
+      "type": "System",
+      "requiredMetadata": [],
+      "requiredSourcePaths": ["README.md"]
+    },
+    {
+      "key": "api-sourcing-function",
+      "identityTerms": ["api", "sourcing"],
+      "type": "Function",
+      "requiredMetadata": [],
+      "requiredSourcePaths": ["lambda_api.tf"]
+    }
+  ],
+  "embeddedKnowledge": [
+    {
+      "key": "glue-crawler-trigger",
+      "requiredTerms": ["glue", "crawler"],
+      "requiredSourcePaths": ["lambda_crawler.tf"],
+      "allowedParentTypes": ["System", "Function", "Flow"]
+    },
+    {
+      "key": "step-functions-orchestration",
+      "requiredTerms": ["step", "function"],
+      "requiredSourcePaths": ["step_fn.tf"],
+      "allowedParentTypes": ["System", "Function", "Flow"]
+    }
+  ],
+  "relationships": [
+    { "from": "serverless-data-pipelines-repository", "to": "crawler-domain", "kind": "part-of" },
+    { "from": "serverless-data-pipeline-system", "to": "crawler-domain", "kind": "part-of" }
+  ]
+}

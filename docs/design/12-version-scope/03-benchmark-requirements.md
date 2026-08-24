@@ -260,6 +260,13 @@ benchmarks.
   released compatibility surface. Current MVP Initial Ingest, Refresh and Batch
   qualification use authoring guidance plus `validate_okf_changes` and remain
   runnable. Removing legacy tools never authorizes a replacement model run.
+- **AB-BENCH-070** — Cross-repository MVP qualification pins a six-repository
+  AWS Terraform/Terragrunt suite spanning crawler/data pipeline,
+  recommendation, multi-account infrastructure, Lambda platform, ECS workload
+  and one intentionally sparse tutorial. Reference expectations contain only
+  representative important probes, never a complete required inventory.
+  Repositories run sequentially under AB-BENCH-048; SAM/CloudFormation remains
+  excluded and historical suites/results remain immutable.
 
 ## Context A/B interpretation
 

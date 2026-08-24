@@ -1,0 +1,57 @@
+{
+  "version": 17,
+  "repository": "hybrid-recommender-data-pipeline",
+  "confirmedDomain": {
+    "identity": "domains/recommendation",
+    "title": "Recommendation",
+    "rootHeading": "AgentBase-Hub"
+  },
+  "requiredConcepts": [
+    {
+      "key": "recommendation-domain",
+      "identityTerms": ["recommendation"],
+      "type": "Domain",
+      "requiredMetadata": [],
+      "requiredSourcePaths": []
+    },
+    {
+      "key": "hybrid-recommender-repository",
+      "identityTerms": ["hybrid", "recommender"],
+      "type": "Repository",
+      "requiredMetadata": [],
+      "requiredSourcePaths": ["readme.md"]
+    },
+    {
+      "key": "hybrid-recommender-pipeline-system",
+      "identityTerms": ["recommender", "pipeline"],
+      "type": "System",
+      "requiredMetadata": [],
+      "requiredSourcePaths": ["readme.md", "terraform/main.tf"]
+    },
+    {
+      "key": "stream-transformation-function",
+      "identityTerms": ["stream", "transformation"],
+      "type": "Function",
+      "requiredMetadata": [],
+      "requiredSourcePaths": ["terraform/modules/streaming-inference/lambda.tf"]
+    }
+  ],
+  "embeddedKnowledge": [
+    {
+      "key": "batch-etl-crawler",
+      "requiredTerms": ["glue", "crawler"],
+      "requiredSourcePaths": ["terraform/modules/etl/glue.tf"],
+      "allowedParentTypes": ["System", "Component", "Function", "Flow"]
+    },
+    {
+      "key": "streaming-recommendation-delivery",
+      "requiredTerms": ["kinesis", "recommendation"],
+      "requiredSourcePaths": ["terraform/modules/streaming-inference/kinesis.tf"],
+      "allowedParentTypes": ["System", "Component", "Function", "Flow"]
+    }
+  ],
+  "relationships": [
+    { "from": "hybrid-recommender-repository", "to": "recommendation-domain", "kind": "part-of" },
+    { "from": "hybrid-recommender-pipeline-system", "to": "recommendation-domain", "kind": "part-of" }
+  ]
+}
