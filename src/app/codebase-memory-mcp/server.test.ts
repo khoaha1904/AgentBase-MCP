@@ -89,6 +89,7 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
     const prepareTool = tools.tools.find((tool) => tool.name === "prepare_hub_okf");
     const finalizeTool = tools.tools.find((tool) => tool.name === "finalize_hub_okf_proposal");
     assert.match(prepareTool?.description ?? "", /changed paths, observed source state and known gaps/);
+    assert.match(JSON.stringify(prepareTool?.inputSchema), /New Initial Ingest requires repositories\/<slug>/);
     assert.ok("removals" in ((finalizeTool?.inputSchema.properties ?? {}) as Record<string, unknown>));
     assert.doesNotMatch(JSON.stringify(finalizeTool?.inputSchema), /supersede|retract|lifecycle/);
     assert.match(JSON.stringify(finalizeTool?.inputSchema), /observation_refs/);

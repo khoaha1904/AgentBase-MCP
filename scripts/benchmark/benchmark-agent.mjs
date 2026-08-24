@@ -465,8 +465,9 @@ function conceptIdentities(root) {
 export function validateFinalChangeCoverage(validatedIdentities, finalizedIdentities) {
   if (!Array.isArray(validatedIdentities)) return ["final successful validate_okf_changes identities are unavailable"];
   const validated = new Set(validatedIdentities);
-  const missing = finalizedIdentities.filter((identity) => !validated.has(identity));
-  const extra = validatedIdentities.filter((identity) => !finalizedIdentities.includes(identity));
+  const authoredIdentities = finalizedIdentities.filter((identity) => !identity.startsWith("questions/"));
+  const missing = authoredIdentities.filter((identity) => !validated.has(identity));
+  const extra = validatedIdentities.filter((identity) => !authoredIdentities.includes(identity));
   return [
     ...(missing.length ? [`final validate_okf_changes omitted finalized concepts: ${missing.join(", ")}`] : []),
     ...(extra.length ? [`final validate_okf_changes included non-finalized concepts: ${extra.join(", ")}`] : []),

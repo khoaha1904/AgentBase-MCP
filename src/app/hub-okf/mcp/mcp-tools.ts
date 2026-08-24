@@ -97,7 +97,7 @@ export const HUB_OKF_TOOLS = [
         subject_directory: {
           type: "string",
           pattern: HUB_PROPOSAL_SUBJECT_PATTERN.source,
-          description: "Logical proposal focus; source repository identity and changed concept paths remain independent.",
+          description: "Logical proposal focus. New Initial Ingest requires repositories/<slug>; Refresh reuses the existing subject returned by Hub continuity. Source repository identity and changed concept paths remain independent.",
         },
         confirmed_domain: {
           type: "object",

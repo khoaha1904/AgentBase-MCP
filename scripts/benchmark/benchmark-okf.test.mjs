@@ -114,6 +114,7 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
   assert.equal(expected.requiredConcepts.some((item) => item.type === "Flow"), false);
   assert.ok(expected.embeddedKnowledge.some((item) => item.key === "aha-alert-processing"));
   assert.deepEqual(validateFinalChangeCoverage(["repositories/a", "systems/a"], ["repositories/a", "systems/a"]), []);
+  assert.deepEqual(validateFinalChangeCoverage(["repositories/a"], ["questions/generated", "repositories/a"]), []);
   assert.match(validateFinalChangeCoverage(["repositories/a"], ["domains/a", "repositories/a"])[0], /omitted.*domains\/a/);
   const corrected = summarizeAgentEvents([
     JSON.stringify({ type: "item.completed", item: { type: "mcp_tool_call", tool: "get_okf_authoring_schemas",

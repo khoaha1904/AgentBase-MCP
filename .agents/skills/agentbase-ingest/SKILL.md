@@ -57,7 +57,9 @@ This workflow uses `preflight_hub_ingest`, the tools named by
    structured mapping wins and semantic keyword matches are diagnostic rather
    than a pass/fail gate. Pass that same evidence-bearing
    request to `prepare_hub_okf`; never replace it with free text `signals` or
-   supply an opaque evidence digest. Persist the confirmed
+   supply an opaque evidence digest. For Initial Ingest, set
+   `subject_directory` to one normalized `repositories/<repository-slug>` path;
+   the confirmed Domain is not the proposal subject. Persist the confirmed
    primary Domain as an owner-evidenced `Repository part-of Domain` relation.
    Run one bounded active-Hub identity match, then follow `agentbase-okf` inside
    the returned workspace. Enrich the returned OKF skeletons instead of
