@@ -22,7 +22,9 @@ với relative path đầy đủ.
 
 Một parent folder như `crawler-repos/` không phải Repository nếu các child là
 những Git repositories độc lập. Mỗi child có Repository ID và Domain assignment
-riêng; parent chỉ là batch/workspace grouping, không tạo Hub concept.
+riêng; parent chỉ là routing/batch/workspace grouping, không tạo Hub concept.
+Nhiều child có thể cùng một Domain, nhưng assignment vẫn được xác nhận từ bằng
+chứng của từng repository chứ không suy ra chỉ từ tên parent.
 
 ## Unsupported in version one
 

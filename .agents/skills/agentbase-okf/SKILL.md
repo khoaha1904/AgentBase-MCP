@@ -1,6 +1,6 @@
 ---
 name: agentbase-okf
-description: Author, refresh, validate, and review AgentBase Open Knowledge Format v0.2 bundle proposals from bounded repository evidence. Use when an AgentBase prepare operation returns a proposal workspace, when repository knowledge must become linked OKF concepts, or when rebuilding drafts while preserving maintainer guidance and other protected concepts.
+description: Support an AgentBase authoring workflow after an exact prepare operation returns a bounded OKF proposal workspace. Use to author and validate that workspace while preserving protected knowledge; ordinary questions and lifecycle requests belong to public AgentBase skills.
 ---
 
 # Author an AgentBase OKF proposal
@@ -8,6 +8,10 @@ description: Author, refresh, validate, and review AgentBase Open Knowledge Form
 Work only inside the exact prepared proposal's `bundle/` subtree. Treat the
 current `okf/`, proposal metadata, evidence bundle, provider cache, and source
 repository as read-only.
+
+The only MCP tool this file-authoring workflow calls directly is
+`validate_okf_changes`; lifecycle tools remain owned by the invoking product
+skill.
 
 ## Load the relevant rules
 
@@ -60,7 +64,7 @@ repository as read-only.
    `log.md`; do not generate one.
 6. Validate created/modified concepts with `validate_okf_changes`, supplying
    only their full Markdown plus unchanged target summaries from continuity or
-   exact search/traversal. Read each changed file and send its complete Markdown
+   exact search/read. Read each changed file and send its complete Markdown
    document bytes as `content`, never its path or a wrapper object. For every
    supplied concept or target, `identity` is
    exactly its normalized path relative to the OKF root with `.md` removed;

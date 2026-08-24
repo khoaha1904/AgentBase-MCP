@@ -1,6 +1,7 @@
 # 02 — Hub, Domain và Repository model
 
-> Trạng thái: Domain/Repository và Batch Initial Ingest implemented; monorepo runtime deferred.
+> Trạng thái: Domain/Repository và Batch Initial Ingest implemented;
+> subproject-scope automation trong monorepo deferred.
 
 High-level decision:
 [Hub, Domain và Repository được tổ chức thế nào?](../../present/02-hub-domains-and-repositories.md)
@@ -20,8 +21,9 @@ High-level decision:
 - [`05-cross-domain-navigation.md`](05-cross-domain-navigation.md) — liên kết
   sang Domain khác mà không đổi repository ownership.
 
-## Impact
+## Implementation delta hiện tại
 
-**Contained change.** Tái sử dụng Domain concept, owner guidance, `part-of` và
-query graph hiện tại. Runtime work sau này giới hạn ở schema/validation cho
-Repository primary Domain và host-skill preflight; không thêm registry/database.
+Repository primary Domain, owner confirmation, `part-of` validation và explicit
+Batch Initial Ingest đã implement. Parent multi-repo chỉ là grouping/routing
+scope. Phần còn deferred là tự động dùng monorepo subproject làm bounded source
+scope; không thêm registry, database hoặc subproject identity.

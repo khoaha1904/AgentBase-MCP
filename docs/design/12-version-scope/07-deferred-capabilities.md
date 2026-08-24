@@ -5,17 +5,18 @@
 - Batch Refresh and mixed Init/Refresh batches.
 - Additional Domain Enrichment profiles beyond exact AWS SQS, plus provider
   account discovery/scan and background enrichment.
-- Question-governance enrichment beyond the implemented AWS/SQS three-tier
-  packet: automatic conflict-to-`needs-review` inference and Repository/Domain/
-  Hub-wide Guidance scope.
+- Automatic conflict-to-`needs-review` inference beyond current exact typed
+  evidence. Broad Guidance scope is not planned; broad decisions update the
+  relevant Domain/System concept through normal proposals.
 - Strong-identity concept merge/redirect and history migration.
-- Full conflict-aware query composition across competing claims, Questions and
-  applicable Guidance; MVP only preserves and exposes the governed documents.
+- Richer deterministic conflict presentation beyond the current
+  `agentbase-query` host composition, only if real use shows it is insufficient.
 - Freshness marks in ordinary search/read and persisted freshness reports.
   Local reporting and scheduled CI are implemented; query overlay is not an MVP
   direction.
 - Static local HTML/graph review, only if structured review proves insufficient.
-- Remote repository file reader through MCP-managed authority.
+- **First post-phase priority:** bounded remote repository file reader through
+  active MCP-managed GitHub.com/GitHub Enterprise authority.
 - Azure/GCP profiles and additional released detectors.
 - Semantic profile migration when real Published knowledge is affected.
 - Safe cleanup of Published proposal artifacts after shared Questions become

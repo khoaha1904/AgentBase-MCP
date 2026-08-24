@@ -12,7 +12,28 @@ Refresh        → so sánh source với knowledge đã có
 ```
 
 `Initial Ingest` là lần Ingest đầu tiên của một canonical repository. Từ đó về
-sau repository chỉ dùng Refresh.
+sau repository chỉ dùng Refresh. Hai workflow cần một Remote Hub profile active;
+chưa config Hub thì AgentBase chỉ dùng Code Graph.
+
+## Scan workspace trước khi chọn workflow
+
+`agentbase-scan` inventory bounded Git repositories trong workspace người dùng
+chọn mà không dựng Code Graph. Nó đối chiếu strong repository identity với
+Published Hub và hiển thị ngắn:
+
+| State | Suggested action |
+|---|---|
+| Not in Hub | Initial Ingest |
+| Published, source advanced | Refresh |
+| Published, source unchanged | No action |
+| Init/Refresh Local Draft | Review or submit |
+| Init/Refresh open PR | Wait or reconcile |
+| Ambiguous fork/mirror/identity | Confirm |
+
+Kết quả kèm last-observed date/revision, rồi chờ người dùng chọn tất cả hoặc một
+subset. Scan không tự chạy suggestion. Nhiều repo mới đi vào Batch Initial
+Ingest; repo đã Published chạy single Refresh tuần tự. Không có remote Hub thì
+Scan chỉ liệt kê local repos và báo Hub classification unavailable.
 
 ## Initial Ingest
 
@@ -39,17 +60,16 @@ Refresh.
 - Chỉ cập nhật contribution của repository đang đọc; không xóa evidence của
   repository khác.
 - Không tự xóa knowledge cũ chỉ vì một lần discovery không thấy. Git/source diff
-  có thể hỗ trợ một explicit removal/retract/supersede proposal, nhưng PR phải
+  có thể hỗ trợ một explicit correction/removal proposal, nhưng PR phải
   trình bày reason/evidence để reviewer quyết định.
-- Refresh một repository reconcile với Published Hub và Local Draft liên quan,
-  không cần repository khác có trên máy. Batch Refresh mới đối chiếu chéo các
-  repository trong batch.
+- Refresh một repository reconcile với Published Hub và exact pending proposal/
+  publication chain của chính repository đó khi workflow cho phép; unrelated
+  Local Draft không vào ordinary matching. Repository khác không cần có trên máy.
 - Mọi kết quả vẫn là Local Draft và đi qua publication lifecycle ở
   [phần 11](11-review-accept-and-publish.md).
 
 Refresh không rebuild Hub, không tự publish và không coi “không tìm thấy” là
-bằng chứng chắc chắn rằng knowledge đã sai. Item chỉ chuyển thành `Superseded`
-hoặc `Retracted` theo quy tắc ở
+bằng chứng chắc chắn rằng knowledge đã sai. Correction/removal theo quy tắc ở
 [phần 07](07-conflicts-questions-and-maintainer-guidance.md).
 
 ## Trạng thái qualification hiện tại
@@ -93,9 +113,9 @@ phán quyết knowledge sai và không liên quan tới graph-cache freshness.
 
 ## Khi một lần chạy thất bại
 
-Failure được cô lập theo repository. Trong batch, draft của repository đã hoàn
-thành vẫn được giữ và query bình thường. Kết quả làm dở của repository lỗi mang
-trạng thái `Incomplete`, không vào query bình thường và không được publish.
+Failure được cô lập theo repository. Trong batch, checkpoint của repository đã
+hoàn thành vẫn được giữ để retry, nhưng toàn batch còn `Incomplete`: chưa có
+atomic proposal để query, Accept hoặc Publish.
 
 Người dùng có thể retry hoặc bỏ lần chạy lỗi. Retry cập nhật đúng draft cũ,
 không tạo concept/relation trùng; khi thành công, MCP chạy lại reconciliation
@@ -115,6 +135,7 @@ URL không phải identity chính; chúng được giữ làm aliases/evidence.
 ## Chưa implement
 
 - Batch Refresh hoặc batch trộn Init/Refresh.
+- `agentbase-scan` public workflow (đã chốt design, chờ implementation audit).
 - Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
 - Persisted freshness report và ordinary-query freshness marks; local report và CI đã có.
 - Full repository-identity recovery cho mọi rename/fork/mirror edge case.

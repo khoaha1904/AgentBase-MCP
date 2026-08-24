@@ -11,7 +11,8 @@
 - Hub prepare chỉ cho concept mới dùng selected schema và yêu cầu repository
   source reference.
 - Schema/concept/relationship validators chạy sau khi Agent đã viết Markdown.
-- Published Hub và pending local knowledge đã query được để tìm concept hiện có.
+- Published Hub local và current proposal được dùng để tìm concept hiện có;
+  unrelated Local Draft không thuộc ordinary discovery query.
 
 Nguồn baseline:
 
@@ -21,9 +22,9 @@ Nguồn baseline:
 
 ## Gap còn lại
 
-Runtime đã có candidate contract và ownership validation. Chưa có persistent
-candidate registry hoặc review UI; Agent vẫn là reasoning layer trong bounded
-skill workflow.
+Runtime đã có candidate contract và ownership validation. Không có persistent
+candidate registry hoặc review UI theo chủ ý; Agent vẫn là reasoning layer
+trong bounded skill workflow.
 
 ## Kết quả implementation
 

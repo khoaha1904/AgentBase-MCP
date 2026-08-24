@@ -25,9 +25,9 @@ export function controlledIndex(argumentsValue: Readonly<Record<string, unknown>
   } catch {
     throw new McpPolicyError("repo_path must resolve to an existing repository directory");
   }
-  if (argumentsValue.persistence === true) throw new McpPolicyError("source-local persistence is disabled; use persistence:false");
+  if (argumentsValue.persistence === true) throw new McpPolicyError("source-local persistence is disabled");
   if (argumentsValue.mode === "cross-repo-intelligence" || argumentsValue.target_projects !== undefined) {
-    throw new McpPolicyError("cross-repository indexing is not available in the Part 1 MCP surface");
+    throw new McpPolicyError("cross-repository indexing is not available in AgentBase");
   }
   return {
     repositoryRoot,

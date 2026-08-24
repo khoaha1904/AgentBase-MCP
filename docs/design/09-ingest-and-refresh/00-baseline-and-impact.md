@@ -1,6 +1,7 @@
 # 09 — Baseline and impact checkpoint
 
-> Trạng thái: Single-repository flow đã implement.
+> Trạng thái: Single-repository, Batch Initial Ingest, AWS/SQS Enrichment and
+> freshness CI implemented; workspace Scan design pending implementation audit.
 
 ## Baseline hiện tại
 
@@ -27,8 +28,9 @@ source state thay vì opaque caller input.
 
 ## Gap còn lại
 
-Không có durable multi-repository checkpoint/batch retry. OKF query chưa render
-contribution age và Hub chưa có derived freshness report.
+Public `agentbase-scan` chưa được audit/implemented. Batch Refresh và mixed
+Init/Refresh được giữ ngoài MVP; Batch Initial Ingest checkpoint/retry và Hub CI
+freshness projection đã implement.
 
 ## Kết quả
 

@@ -63,6 +63,11 @@ Hub là một trust boundary chung: có quyền Hub thì đọc được toàn b
 knowledge, không có ACL riêng theo Domain, concept hoặc field. Quyền đọc source
 vẫn phụ thuộc repository/provider tương ứng.
 
-Đây là authority contract cho remote-repository query; remote file reader vẫn
-chưa được implement trong MVP hiện tại. Cho tới khi có capability đó, khác repo
-chỉ dùng được khi source đã có local/workspace hoặc Hub có knowledge/snapshot.
+Đây là authority contract cho remote-repository query. Remote file reader được
+đưa khỏi MVP nhưng là query capability ưu tiên ngay sau phase này: nó sẽ dùng
+active MCP-managed GitHub/GitHub Enterprise token và exact repository/file/
+revision reference, không phụ thuộc path local của từng máy.
+
+Cho tới khi capability đó được release, khác repo chỉ dùng được khi source đã có
+local/workspace hoặc Hub có knowledge/snapshot/reference. Agent không dùng `gh`,
+ambient credential hoặc tự clone để lách giới hạn.

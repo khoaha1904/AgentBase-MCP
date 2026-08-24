@@ -20,7 +20,7 @@ MCP impact scan tạo một Migration Draft để owner review và một migrati
 
 - exact Published base, old/new catalog-detector-profile versions;
 - bounded affected concept identities và source/evidence references;
-- Added/Updated/Removed/Superseded changes cùng Questions/Limitations;
+- Added/Updated/Removed changes cùng Questions/Limitations;
 - one atomic Migration Draft → review → Accept → one PR to `main`.
 
 Thiếu evidence không tự reclassify hoặc xóa concept. Giữ current knowledge và

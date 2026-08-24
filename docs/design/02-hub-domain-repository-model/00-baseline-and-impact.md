@@ -1,16 +1,14 @@
 # 02 — Baseline and impact checkpoint
 
-> Trạng thái: Owner đã chấp nhận one-repository-one-Domain và inheritance.
+> Trạng thái: Current Domain/Repository baseline implemented; owner reconfirmed
+> one-repository-one-Domain and workspace grouping boundary.
 
 ## High-level hiện tại
 
 - Mỗi repository có đúng một Domain chính.
 - Relation xuyên Domain không làm repository thuộc thêm Domain.
-- High-level hiện còn nói monorepo có thể gắn từng subproject/phạm vi Ingest vào
-  Domain tương ứng.
-
-Hai ý đầu rõ ràng; ý monorepo có thể được hiểu thành một Git repository có nhiều
-Domain, nên đang mâu thuẫn với “mỗi repository đúng một Domain”.
+- Mọi subproject trong monorepo kế thừa Domain đó.
+- Parent folder chứa nhiều repository độc lập chỉ là routing/batch scope.
 
 ## Baseline hiện tại
 
@@ -19,9 +17,10 @@ AgentBase đã có:
 - canonical Domain concept `domains/<slug>`;
 - optional `confirmed_domain` gồm exact identity/title;
 - deterministic owner-guidance evidence cho xác nhận của người dùng;
-- validation bắt một current-source **System** có `part-of → Domain`;
+- validation bắt Repository và current-source System có `part-of → Domain`;
 - query tự suy ra Domain scope qua chuỗi `part-of`;
-- Repository concept và stable source repository ID độc lập với System/Domain.
+- Repository concept và stable source repository ID độc lập với System/Domain;
+- single-repository và Batch Initial Ingest Domain confirmation.
 
 Nguồn baseline:
 
@@ -32,19 +31,12 @@ Nguồn baseline:
 - [Domain-scoped query graph](../../../src/core/knowledge/query/hub-query-graph.ts)
 - [Repository source identity](../../../src/app/repository-okf/evidence/source-state.ts)
 
-## Gap
+## Gap hiện tại
 
-Baseline chưa có repository-primary-Domain contract:
-
-- Repository schema chưa có `part-of → Domain` guidance.
-- Confirmed Domain validation chỉ kiểm tra System, không kiểm tra Repository.
-- Một repository có thể prepare nhiều proposal với các confirmed Domain khác
-  nhau mà không có mismatch warning.
-- Runtime không đọc README/docs hoặc so sánh candidate với Domain hiện có; host
-  phải truyền exact confirmed Domain vào `prepare_hub_okf`.
-- Batch confirmation chưa có workflow chung.
-- Một subfolder trong Git monorepo được normalize về Git root, nên hiện không có
-  Repository ID riêng cho từng subproject.
+Core primary-Domain relation, validation và explicit Batch Initial Ingest đã
+implement. Subfolder trong monorepo vẫn normalize về Git root đúng theo product
+contract. Phần còn deferred là host automation dùng subproject như một bounded
+query/evidence scope; nó không cần Repository ID hoặc Domain riêng.
 
 ## Phần tái sử dụng được
 
@@ -54,7 +46,7 @@ Baseline chưa có repository-primary-Domain contract:
 - Host skill có thể đọc bounded README/docs và điều phối batch; không cần model
   SDK hoặc một Domain-classification service trong runtime.
 
-## Đề xuất tối thiểu
+## Contract hiện tại
 
 1. Giữ đúng quyết định một repository có một primary Domain.
 2. Lưu assignment bằng evidenced `Repository part-of → Domain` relation; không
@@ -63,8 +55,8 @@ Baseline chưa có repository-primary-Domain contract:
    Published/Local Draft; mismatch chỉ cảnh báo và dừng để người dùng sửa.
 4. Host skill đọc bounded root README/docs, search Domain hiện có, trình bày
    candidate/mismatch và chỉ gọi prepare sau xác nhận.
-5. Batch dùng cùng preflight cho từng repository rồi xác nhận một matrix; chưa
-   cần thêm batch MCP tool.
+5. Batch dùng cùng preflight cho từng repository rồi xác nhận một matrix và
+   chạy qua bounded Batch Initial Ingest tools hiện có.
 6. Mọi subproject trong một Git repository **kế thừa primary Domain của
    repository**. Subproject chỉ là evidence/query scope, không có Repository ID
    hoặc Domain assignment riêng.
@@ -78,11 +70,10 @@ nó báo maintainer thực hiện explicit reviewed correction và không tạo 
 
 ## Impact
 
-- Domain suggestion/confirmation skill: **Contained change**.
-- Repository `part-of` schema + validation: **Contained change**.
-- Batch preflight do host skill điều phối: **Contained change**.
-- Cho subproject có Domain/Repository identity riêng: **Broad change** qua source
-  identity, graph binding, evidence URI, refresh và Hub validation.
+Quyết định hiện tại không yêu cầu runtime model mới. Primary Domain, validation
+và batch đã có. Chỉ subproject-scope automation còn là contained host-skill
+change nếu implementation audit chứng minh cần bổ sung. Cho subproject có
+Domain/Repository identity riêng vẫn là broad change và ngoài scope.
 
 ## Quyết định đã chốt
 

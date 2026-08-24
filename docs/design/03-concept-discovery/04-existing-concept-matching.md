@@ -12,9 +12,11 @@ Trước khi tạo concept, Agent thực hiện một bounded match pass để t
 Một pass đối chiếu bao gồm:
 
 1. candidates/concepts đã materialize trong current proposal;
-2. active local Hub, vốn đã overlay Published knowledge và accepted pending
-   Local Draft commits;
+2. synchronized Published Hub local;
 3. exact references/aliases/technical identities có sẵn trong kết quả đó.
+
+Unrelated Local Draft commits không nằm trong ordinary match scope. Proposal
+hiện tại tự deduplicate nội bộ trước khi được Accept hoặc Publish.
 
 Ingest không gọi provider CLI hoặc scan repository khác để cố xác nhận indirect
 match. Việc đó thuộc Domain Enrichment.

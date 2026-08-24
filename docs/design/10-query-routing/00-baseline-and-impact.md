@@ -26,8 +26,8 @@ surface đọc nhỏ và deterministic; không thêm một reasoning router ho�
    Maintainer Guidance.
 2. Snapshot age và local Repository freshness report đã có, nhưng freshness mark
    trong ordinary search/read response còn deferred; scheduled CI đã dùng report này.
-3. Explicit current-source read reuse graph/file tools, nhưng chưa có bounded
-   remote-reference reader.
+3. Explicit current-source read reuse graph/file tools. Bounded remote-reference
+   reader là first post-phase query priority, không phải MVP blocker.
 
 ## Minimal direction
 
@@ -47,7 +47,7 @@ surface đọc nhỏ và deterministic; không thêm một reasoning router ho�
 | Published + Local Draft overlay | Rejected for MVP | Draft belongs to review/PR, not ordinary query. |
 | Conflict/Question composition | Contained after Part 07 | Shared Question runtime chưa tồn tại. |
 | Observed/current values | Reuse | Part 08 snapshot query + normal graph/file reads. |
-| Remote repository reference read | Broad change | Thêm credentialed GitHub read boundary; deferred. |
+| Remote repository reference read | First post-phase capability | Shared stable cross-repo source via MCP token; deferred khỏi MVP only. |
 | Freshness presentation/CI | Contained follow-up | Reuse implemented Repository report; ordinary response marks and scheduling remain. |
 
 Không có near rewrite. Query core hiện tại được giữ và chỉ đổi exact Git anchor
@@ -57,5 +57,7 @@ cùng public adapters.
 
 - Shared conflict/Question documents: Part 07.
 - Freshness scheduling and ordinary response marks: Part 09.08.
-- Remote repository reading and provider access: Parts 01, 06 and 11.
+- Remote repository reading: first post-phase capability using exact identity,
+  path/revision and MCP-managed GitHub.com/Enterprise token.
+- Provider access: Parts 06 and 11.
 - Query không tự clone, index hoặc gọi provider CLI.

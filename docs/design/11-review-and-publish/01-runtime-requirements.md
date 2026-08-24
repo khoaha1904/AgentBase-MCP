@@ -5,19 +5,21 @@ queries and ordinary coding never create Hub state, commits or publication.
 
 ## Local active knowledge
 
-- **AB-LOCAL-HUB-001** — Exactly one state is admitted globally: no Hub,
-  local-only Hub or remote-attached Hub. Local `main`, when present, is the
-  active query tree; remote identity fixes only on attach/bootstrap.
+- **AB-LOCAL-HUB-001** — Exactly one state is active: no Hub or one configured
+  remote Hub profile. Without a remote profile only Code Graph workflows run.
+  Each normalized host/repository/branch profile owns isolated Published and
+  Draft Git state.
 - **AB-LOCAL-HUB-002** — `prepare` creates an isolated workspace at an exact
   local commit without mutation. After authoring/finalization/inspection,
   `accept` commits the exact reviewed tree once to local `main` without network.
   Refresh omission never authorizes deletion; destructive changes require an
-  explicit lifecycle intent bound to the final reviewed bytes.
+  explicit correction/removal intent, reason and evidence bound to final bytes.
 - **AB-LOCAL-HUB-003** — Accepted commits bind stable proposal identity, mode,
   subject/source/evidence, parent/base, catalog/types, tree/diff digests and
   meaningful creation time through trailers plus atomic state.
-- **AB-LOCAL-HUB-004** — Search/read use accepted local `main`, include pending
-  accepted commits, exclude unaccepted workspaces and report commit/path.
+- **AB-LOCAL-HUB-004** — Ordinary search/read use only exact synchronized
+  Published state. Accepted pending commits and unaccepted workspaces are
+  available only to scan/status, inspection, review and publication workflows.
 - **AB-LOCAL-HUB-005** — Pending proposals derive from ordered first-parent Git
   ancestry after the admitted base; sidecars cannot invent pending commits.
 - **AB-LOCAL-HUB-006** — Submit publishes one non-empty dependency-safe selection
@@ -69,6 +71,11 @@ queries and ordinary coding never create Hub state, commits or publication.
   fails. Remote status best-effort reports exact target, current versus updates
   available, bounded open-PR count and synchronization/recovery state without
   mutating refs or knowledge.
+- **AB-LOCAL-HUB-019** — Explicit workspace Scan/status may correlate strong
+  local Repository identities with active-profile Local Draft and exact matching
+  PR metadata to recommend review, submit, wait or reconcile instead of a
+  duplicate Init/Refresh. It never exposes Draft bytes through ordinary Hub
+  search/read and performs no automatic workflow action.
 
 ## Reviewable PR publication
 
@@ -79,7 +86,7 @@ queries and ordinary coding never create Hub state, commits or publication.
   Scope, Knowledge Changes, Uncertainty, Evidence and Validation, and Reviewer
   Action. Scope identifies exact proposals, source Repositories, available
   Domains/revisions and accepted commits. Changes distinguish Added, Updated,
-  Removed and Superseded/Retracted; Questions, limitations and unavailable
+  Removed; Questions, limitations and unavailable
   optional detail remain visible.
 - **AB-PUBLISH-005** — PR prose/receipts contain no token, credential, local
   absolute path or unbounded model narrative.
@@ -89,8 +96,8 @@ queries and ordinary coding never create Hub state, commits or publication.
   same Repository.
 - **AB-PUBLISH-007** — Independent Repository Init proposals publish as separate
   branches/PRs from the same admitted Published `main`, even when their accepted
-  local commits are consecutive. First bootstrap alone retains its one-PR batch
-  transaction.
+  local commits are consecutive. Empty-remote bootstrap is a support-baseline
+  direct write, not a knowledge publication batch or PR.
 - **AB-PUBLISH-008** — MCP replays only each proposal's exact accepted
   contribution onto its publication base and admits repository, base
   branch/commit and head branch/commit before PR creation. For a governed
@@ -128,7 +135,8 @@ queries and ordinary coding never create Hub state, commits or publication.
   Each accepted Question-document edit increments revision exactly once;
   generic Ingest/Refresh cannot edit Question bytes or broaden mutable-draft
   policy. `Resolved` only means no maintainer action remains; competing current
-  positions stay visible until explicitly superseded/retracted.
+  positions stay visible until a reviewed correction/removal changes Published
+  bytes.
 - **AB-QUESTION-004** — An exact-revision answer attributed as `human:<id>`
   atomically proposes one stable Maintainer Guidance revision and the linked
   Question update. Published state does not change before ordinary validation,
@@ -136,6 +144,11 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-QUESTION-005** — Private Question indexes/caches are optional and fully
   rebuildable from one exact Hub commit. Clean cutover rejects orphan accepted
   Guidance instead of silently discarding prior Question context.
+- **AB-QUESTION-006** — The public `agentbase-hub` skill owns explicit Question
+  review: list bounded accepted Questions, answer only one selected exact
+  revision with `human:*` attribution, inspect the resulting proposal and stop
+  before Accept or Publish unless each later action is explicitly requested.
+  Ordinary `agentbase-query` remains read-only.
 - **AB-QUERY-001** — Code questions primarily use Code Graph; business/system/
   cross-repository questions primarily use local Hub; combined answers retain
   both source kinds and limitations.
@@ -182,8 +195,8 @@ queries and ordinary coding never create Hub state, commits or publication.
   internal Hub CI/reporting primitive. Ordinary MCP and Hub CLI query expose no
   dedicated freshness action and perform no source/provider/network probe,
   threshold, Question, Refresh or write.
-- **AB-QUERY-012** — A remote profile's public Hub search/read uses only exact
-  synchronized `remoteBase`. A local-only profile fails clearly because no
+- **AB-QUERY-012** — An active remote profile's public Hub search/read uses only
+  exact synchronized `remoteBase`. No-profile access fails clearly because no
   Published authority exists; accepted Local Draft never becomes queryable
   before publication and synchronization.
 - **AB-QUERY-013** — Public Hub query has two primitives: bounded search and
@@ -250,12 +263,12 @@ queries and ordinary coding never create Hub state, commits or publication.
   gaps or bounded discovery; a partial large-file read is not equivalent.
 - **AB-REFRESH-004..006** — Refresh changes only attributable current-repository
   contributions. Omission, age and search/graph absence preserve knowledge.
-  Removal, supersession and retraction require typed intent, reason and exact
-  current-source evidence; foreign evidence and ambiguous prose remain.
+  Correction/removal requires exact intent, reason and current-source evidence;
+  foreign evidence and ambiguous prose remain.
 - **AB-REFRESH-007..011** — Finalize fails on stale Hub/source or invalid source
   spans, treats unchanged bytes as successful `no_change`, preserves truthful
-  partial coverage, and groups review as Added, Updated, Removed,
-  Superseded/Retracted and Questions/Limitations. Only a reviewable contribution
+  partial coverage, and groups review as Added, Updated, Removed and Questions/
+  Limitations. Only a reviewable contribution
   records a new observed source checkpoint in its Repository concept.
 - **AB-REFRESH-012** — The packaged Refresh skill investigates Changed Source →
   Known Gaps → Bounded Discovery and stops before Accept, publication, provider
@@ -264,37 +277,41 @@ queries and ordinary coding never create Hub state, commits or publication.
 ## Lazy setup and first bootstrap
 
 - **AB-HUB-SETUP-001** — Hub is optional at install and for all Code Graph use.
-- **AB-HUB-SETUP-002** — Hub status is exactly `unconfigured`, `local-only` or
-  `remote`, resolved from owner-private global configuration, not caller cwd.
-- **AB-HUB-SETUP-003** — Only an unconfigured Hub-dependent action offers attach
-  existing versus create local-only, before proposal/Git mutation.
+- **AB-HUB-SETUP-002** — Hub status is exactly `unconfigured` or one active
+  `remote` profile, resolved from owner-private configuration, not caller cwd.
+- **AB-HUB-SETUP-003** — An unconfigured Hub-dependent action stops with compact
+  guidance to connect one remote URL/branch/token profile; it never creates a
+  local-only OKF authority implicitly.
 - **AB-HUB-SETUP-004** — Existing attach accepts one credential-free GitHub HTTPS
   URL plus exact target branch, clones that branch into staging, validates exact clean conformant OKF content
   and atomically admits it. A legacy existing Hub may omit the explanatory
   README; MCP-created new Hubs still include it.
 - **AB-HUB-SETUP-005** — Failed/interrupted setup preserves the prior admitted
   state and never leaves a partial active checkout.
-- **AB-HUB-SETUP-006** — New setup performs no network call and creates a private
-  local Git `main` containing explanatory README, OKF v0.2 root index and the
-  exact released read-only AgentBase-Hub CI workflow.
+- **AB-HUB-SETUP-006** — After explicit preview/confirmation, an exact empty
+  user-created remote may receive one bootstrap commit directly on the configured
+  target branch containing only the complete released baseline: standard README,
+  valid OKF v0.2 root `index.md` and exact read-only Hub CI bundle.
 - **AB-HUB-SETUP-007** — Base and knowledge commits have distinct explicit
   identities; pending ancestry rejects unclassified commits above the base.
-- **AB-HUB-SETUP-008** — Prepare, finalize, inspect, accept, query and pending
-  inventory work fully offline against local-only Hub.
+- **AB-HUB-SETUP-008** — After remote admission/synchronization, prepare,
+  finalize, inspect, accept, Published query and pending inventory may work from
+  that profile's local state without an automatic network call.
 - **AB-HUB-SETUP-009** — AgentBase never creates the GitHub repository. First
   publication requires an exact user-created empty repository; any existing ref
   rejects bootstrap.
-- **AB-HUB-SETUP-010** — Preview shows base/head/ordered knowledge and execute
-  requires explicit `all-to-main` or recommended
-  `base-to-main-knowledge-pr`; no mode is silently selected.
-- **AB-HUB-SETUP-011** — `all-to-main` creates the configured remote target at exact local head
-  once and opens no PR.
-- **AB-HUB-SETUP-012** — `base-to-main-knowledge-pr` creates the configured remote target at the
-  base and publishes all current knowledge in one branch/PR; with no knowledge
-  it creates base `main` only.
-- **AB-HUB-SETUP-013** — Private non-secret phase receipts bind repository, mode,
-  base/head and commits so retries reuse exact state and never rewrite a changed
-  `main`.
+- **AB-HUB-SETUP-010** — Bootstrap preview shows exact remote emptiness, target
+  branch, baseline paths/digest and the one-time direct-write exception. There
+  is no bootstrap publication-mode choice.
+- **AB-HUB-SETUP-011** — Confirmed bootstrap creates exactly the configured
+  target at the released baseline commit and opens no PR. It contains no Local
+  Draft or knowledge proposal.
+- **AB-HUB-SETUP-012 (retired)** — The former base-plus-knowledge bootstrap PR
+  mode is removed. Knowledge begins only through normal proposal PRs after the
+  complete baseline is admitted.
+- **AB-HUB-SETUP-013** — Private non-secret phase receipts bind repository,
+  target, baseline digest and commit so retry accepts only the exact ref created
+  by that intent and never rewrites a changed target.
 - **AB-HUB-SETUP-014** — After the remote target is fetched/admitted, configuration
   becomes `remote` and later work uses normal PR publication/synchronization.
 - **AB-HUB-SETUP-015** — The exact identity-bound profile token never enters tool arguments, Git URLs,
@@ -302,12 +319,12 @@ queries and ordinary coding never create Hub state, commits or publication.
   local work and request credential repair.
 - **AB-HUB-SETUP-016** — Configuration/receipts are owner-private, non-symlink,
   atomic and share the serialized Hub mutation boundary.
-- **AB-HUB-SETUP-017** — Offline verification covers no-Hub graph use, both setup
-  paths, local-only lifecycle, both bootstrap modes, races, permissions and
-  checkpoint recovery with disposable Git/fake GitHub.
-- **AB-HUB-SETUP-022** — Installation creates no Hub. The first Hub-dependent
-  authoring workflow preflight lazily creates a local-only Hub; status, Code Graph and
-  ordinary non-Hub work never create Hub state or perform network access.
+- **AB-HUB-SETUP-017** — Offline verification covers no-Hub graph/scan use,
+  existing remote connection, exact-empty full-baseline bootstrap, races,
+  permissions and checkpoint recovery with disposable Git/fake GitHub.
+- **AB-HUB-SETUP-022** — Installation creates no Hub and collects no token.
+  Only explicit Hub-profile connection creates/adopts Hub state; status, Code
+  Graph and workspace inventory never create Hub authority.
 - **AB-HUB-SETUP-023** — A remote profile is identified by normalized HTTPS
   GitHub host, repository and exact target branch. Each identity owns isolated
   local checkout, configuration and credential state; exactly one profile is
@@ -331,11 +348,11 @@ queries and ordinary coding never create Hub state, commits or publication.
   it canonicalizes host/repository/branch identity without moving the checkout
   or losing drafts. Active remote actions read only the exact profile token;
   the legacy global credential is a one-time migration source, never fallback.
-- **AB-HUB-SETUP-028** — Bootstrap holds both mutation and activation ownership,
-  rechecks the active profile before any remote write and converts the same
-  checkout to its canonical remote identity. Retry accepts only the one exact
-  target ref created by the interrupted intent. Profile admission precedes the
-  Published-ref update so either crash window remains recoverable.
+- **AB-HUB-SETUP-028** — Bootstrap holds mutation and activation ownership,
+  rechecks remote emptiness and active intent before its sole direct target write,
+  then admits the canonical profile and Published baseline atomically/recoverably.
+  Any pre-existing ref or byte drift stops; subsequent direct target writes are
+  forbidden.
 - **AB-HUB-SETUP-029** — Synchronization rejects rewritten Published ancestry,
   dirty candidates and blocking OKF integrity defects before atomic admission.
   This integrity subset does not require support-CI files or treat freshness as

@@ -23,12 +23,14 @@ một confirmation matrix:
 - User sửa Domain hoặc loại repository trước khi xác nhận matrix.
 - Không repository nào bắt đầu full Ingest khi matrix còn unresolved row.
 
-Sau confirmation, từng repository chạy độc lập. Failure của một repository
-không rollback draft hoàn thành của repository khác; reconciliation batch chỉ
-dùng các run hoàn thành.
+Sau confirmation, từng repository chạy tuần tự và có checkpoint riêng. Failure
+của một repository không xóa checkpoint hoàn chỉnh của repository khác, nhưng
+batch vẫn `Incomplete`: chưa có atomic proposal để Accept, Publish hoặc query
+như Published knowledge. Retry hoặc membership revision phải hoàn tất rồi mới
+finalize lại toàn batch.
 
 ## Runtime shape
 
-Phiên bản đầu không cần batch MCP endpoint. Host skill lặp bounded Hub search,
-source preflight và existing per-repository prepare tools, đồng thời giữ một
-batch plan trong session context. Durable knowledge chỉ bắt đầu ở proposal.
+Batch Initial Ingest dùng bounded MCP tools cho preflight, manifest, member run,
+finalize và inspection. Host skill giữ workflow dễ hiểu cho người dùng; durable
+reviewable knowledge chỉ xuất hiện ở atomic proposal sau finalize.

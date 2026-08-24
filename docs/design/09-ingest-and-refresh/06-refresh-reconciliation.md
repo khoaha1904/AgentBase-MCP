@@ -19,8 +19,8 @@ Rename/move có continuity thì update reference/identity hint, không xóa conc
 
 - Source removed nhưng concept còn foreign-source evidence: gỡ/update current
   repository contribution; không xóa shared concept.
-- Concept đã được thay bằng identity khác: propose `Superseded` + replacement.
-- Concept không còn hợp lệ nhưng history còn query value: propose `Retracted`.
+- Concept/knowledge đã được thay hoặc xác nhận sai: propose ordinary correction
+  hoặc removal với exact reason/evidence; Git giữ history.
 - AgentBase-owned concept chỉ có current-repo evidence, source bị xóa rõ và không
   còn history/query value: có thể propose file/navigation deletion.
 - Evidence chưa đủ: preserve current knowledge + Question/limitation.
@@ -36,7 +36,6 @@ Proposal inspection và PR summary phải group tối thiểu:
 Added
 Updated
 Removed
-Superseded / Retracted
 Questions / Limitations
 ```
 
@@ -46,7 +45,7 @@ Markdown/Git diff nhưng không phải tự suy ra lý do từ deleted bytes.
 
 ## Implementation delta
 
-Omission/elapsed time không còn authorize deletion. Destructive changes dùng
-typed lifecycle intent cùng exact evidence; foreign/protected content được giữ.
-Inspection đã group Added, Updated, Removed, Superseded/Retracted và
-Questions/Limitations. Rich PR body trình bày các group này vẫn thuộc phần 11.
+Omission/elapsed time không authorize deletion. Destructive changes dùng exact
+correction/removal intent cùng evidence; foreign/protected content được giữ.
+Inspection group Added, Updated, Removed và Questions/Limitations. Rich PR body
+trình bày các group này thuộc phần 11.

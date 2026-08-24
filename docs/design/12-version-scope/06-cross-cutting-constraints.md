@@ -1,7 +1,8 @@
 # 12.06 — Cross-cutting constraints
 
-- **Local-first:** graph, authoring, review, Accept and ordinary query work
-  without network; external access only through explicit bounded actions.
+- **Profile-local after sync:** Code Graph always works locally. Hub authoring,
+  review, Accept and Published query can work from the active profile's admitted
+  local state after connection/sync; no profile means no Hub/OKF authority.
 - **Provenance-first:** knowledge, relations, observations, Questions and human
   guidance retain attributed evidence; Hub is not a second source/code graph.
 - **Snapshot-default:** Hub snapshot answers first and source is read only when

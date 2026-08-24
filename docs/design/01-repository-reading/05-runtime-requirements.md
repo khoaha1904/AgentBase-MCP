@@ -91,25 +91,30 @@ fixture cost, so no incremental-speed or scale claim is accepted.
 
 - **AB-MCP-001** — `node src/cli.ts mcp` serves one local stdio connection from
   any caller cwd and starts without selecting a repository.
-- **AB-MCP-003** — The graph surface preserves the pinned schemas/names for 11
-  safe analysis tools plus controlled `index_repository`, forwarding raw result
-  blocks without OKF normalization.
+- **AB-MCP-003** — The graph surface exposes eight goal-level analysis tools
+  plus controlled `index_repository`, forwarding raw result blocks without OKF
+  normalization. Raw Cypher, graph-schema introspection and global project
+  inventory are not released AgentBase workflows.
 - **AB-MCP-004** — First indexing binds the connection to one absolute existing
   repository. A later sequential `index_repository` for another explicit root
   closes the prior provider session cleanly before binding the new root. Cleanup
   failure stops the switch; one connection never owns two provider children or
   combines their graph state.
-- **AB-MCP-005** — Indexing forces `persistence:false` and rejects source
+- **AB-MCP-005** — Public indexing accepts only one absolute `repo_path`, one
+  optional `full`/`moderate`/`fast` mode and one optional name. The gateway
+  forces private non-persistent provider state and defensively rejects source
   persistence, cross-repository mode and target-project arguments.
-- **AB-MCP-006** — `delete_project`, `manage_adr` and `ingest_traces` are absent.
+- **AB-MCP-006** — `query_graph`, `get_graph_schema`, `list_projects`,
+  `delete_project`, `manage_adr` and `ingest_traces` are absent.
 - **AB-MCP-007** — Codebase Memory owns graph semantics; the gateway neither
   parses source nor converts raw graph output into OKF.
 - **AB-MCP-008** — Graph state stays in private cache; stdout is protocol-only
   and bounded diagnostics use stderr.
 - **AB-MCP-009, AB-MCP-010** — Limits fail visibly without retry/partial success;
   each connection owns at most one provider child and idempotent cleanup.
-- **AB-MCP-011** — The `use-codebase-memory` skill guides graph-first map/search,
-  trace, exact snippets, coverage and pagination with pinned provenance.
+- **AB-MCP-011** — The internal supporting `use-codebase-memory` skill names the
+  exact nine-tool public graph surface and guides graph-first map/search, trace,
+  exact snippets, coverage and pagination with pinned provenance.
 - **AB-MCP-012** — Runtime and skill never run the upstream installer, edit
   source/client configuration or claim a watcher/daemon.
 - **AB-MCP-013** — Canonical MCP tests are isolated; native qualification uses a
@@ -122,3 +127,24 @@ fixture cost, so no incremental-speed or scale claim is accepted.
   host uses existing `search_graph` and `get_code_snippet` calls. No AgentBase
   source parser, durable live-value cache, hidden re-index or second graph is
   introduced.
+- **AB-MCP-016** — AgentBase's public descriptor layer never recommends an
+  omitted provider action. The eight non-indexing graph actions are advertised
+  as read-only, non-destructive and idempotent; controlled indexing remains a
+  private-state mutation that is non-destructive and idempotent. Curating these
+  hints does not alter pinned provider schema drift checks or forwarding.
+- **AB-MCP-017** — One Git root is one graph unit. A monorepo's subprojects are
+  scopes inside that graph; a directory containing independent Git repositories
+  is only routing scope. Repository selection uses an explicit target, the Git
+  root containing current context, or one uniquely known authorized local
+  checkout; ambiguity asks the user. Multi-repository source work switches
+  repositories sequentially after clean session shutdown and never combines
+  graphs or recursively scans arbitrary workspace paths.
+- **AB-MCP-018** — Graph creation and reuse are lazy. Opening a workspace and
+  Hub-only query create no graph. A workflow indexes or reuses only after exact
+  source from a resolved repository is required, with existing source/engine/
+  namespace receipt rules deciding reuse versus refresh. No prewarming,
+  background indexing, watcher or daemon is introduced.
+
+`AB-MCP-017` and `AB-MCP-018` are accepted product contracts. Their host-skill
+implementation status will be audited only after all twelve design areas are
+approved; this review does not claim that routing behavior is already shipped.

@@ -44,13 +44,11 @@ export async function executeHubCli(
       if (mode === "new" && (repositoryUrl || targetBranch)) throw new Error("--url and --branch are not accepted for a new local-only Hub");
       output = await actions.configure({ mode, ...(repositoryUrl ? { repositoryUrl } : {}), ...(targetBranch ? { targetBranch } : {}) });
     } else if (command === "bootstrap-preview" || command === "bootstrap") {
-      const mode = required(values, "--mode");
-      if (mode !== "all-to-main" && mode !== "base-to-main-knowledge-pr") throw new Error("--mode is invalid");
       const repositoryUrl = required(values, "--url");
       const targetBranch = required(values, "--branch");
       output = command === "bootstrap-preview"
-        ? await actions.previewBootstrap(repositoryUrl, targetBranch, mode)
-        : await actions.bootstrap(repositoryUrl, targetBranch, mode);
+        ? await actions.previewBootstrap(repositoryUrl, targetBranch)
+        : await actions.bootstrap(repositoryUrl, targetBranch);
     } else if (command === "prepare") {
       const mode = required(values, "--mode");
       if (mode !== "refresh") {

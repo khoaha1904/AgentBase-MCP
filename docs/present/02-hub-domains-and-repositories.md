@@ -1,9 +1,8 @@
 # 02 — Hub, Domain và Repository được tổ chức thế nào?
 
-> Trạng thái runtime: single-repository và explicit Batch Initial Ingest đã
-> implement offline; monorepo scope automation còn deferred.
-
-> Trạng thái: Hướng sản phẩm đã chốt; single-repository Domain/Repository foundation đã implement.
+> Trạng thái: Hướng sản phẩm đã chốt; single-repository và explicit Batch
+> Initial Ingest đã implement offline. Tự động giới hạn theo subproject trong
+> monorepo còn deferred.
 
 ## Câu trả lời ngắn
 
@@ -61,6 +60,10 @@ Với batch nhiều repository, người dùng có thể gán tất cả vào m�
 kiểm tra từng repository, cảnh báo repository bất thường và chờ người dùng;
 không tự đổi Domain hoặc tự loại repository.
 
+Một thư mục cha như `crawler-repos/` chỉ giúp nhóm và chọn các repository. Nó
+không tự trở thành Repository hoặc Domain trong Hub, và tên thư mục không đủ để
+xác nhận Domain. Mỗi child Git repository vẫn có identity và bằng chứng riêng.
+
 ## Điểm đã chốt
 
 - Một Domain có thể chứa kiến thức từ nhiều repository.
@@ -77,7 +80,9 @@ không tự đổi Domain hoặc tự loại repository.
 - Quan hệ khó xác minh giữa nhiều repository được trình bày ở
   [phần 06](06-cross-repository-and-cross-domain-relationships.md).
 
-## Còn để low-level quyết định
+## Preflight tối thiểu đã chốt
 
-- Chính xác những README/docs nào được đọc khi kiểm tra Domain.
-- Giao diện xác nhận cho một repository và batch nhiều repository.
+Agent chỉ đọc root README, root docs index và tài liệu overview được README link
+trực tiếp. Nó so với Domain đang có trong Hub rồi hiển thị đề xuất, bằng chứng và
+cảnh báo ngắn. Với batch, một bảng xác nhận chung vẫn giữ warning riêng cho từng
+repo. Không cần dựng Code Graph chỉ để xác nhận Domain.

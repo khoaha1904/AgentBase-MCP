@@ -5,7 +5,13 @@ import path from "node:path";
 import test from "node:test";
 
 import { connectSelectedClients, runInstaller } from "./install.mjs";
-import { installProductSkills, PRODUCT_SKILL_NAMES, rollbackProductSkills } from "./product-skills.mjs";
+import {
+  installProductSkills,
+  INTERNAL_PRODUCT_SKILL_NAMES,
+  PRODUCT_SKILL_NAMES,
+  PUBLIC_PRODUCT_SKILL_NAMES,
+  rollbackProductSkills,
+} from "./product-skills.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -13,7 +19,7 @@ function skillNames(root) {
   return fs.existsSync(root) ? fs.readdirSync(root).filter((name) => !name.startsWith(".")) : [];
 }
 
-test("[AB-INSTALL-025..031] installs only product skills with safe rerun, preflight and rollback", async (context) => {
+test("[AB-INSTALL-025..031][AB-QUESTION-006] installs only product skills with safe rerun, preflight and rollback", async (context) => {
   const temporaryRoots = [];
   context.after(() => temporaryRoots.forEach((root) => fs.rmSync(root, { recursive: true, force: true })));
   const environment = () => {
@@ -25,9 +31,19 @@ test("[AB-INSTALL-025..031] installs only product skills with safe rerun, prefli
   const both = environment();
   const first = installProductSkills({ clients: ["codex", "claude-code"], repositoryRoot, environment: both });
   assert.deepEqual(first.clients, { codex: "installed", "claude-code": "installed" });
+  assert.deepEqual(PUBLIC_PRODUCT_SKILL_NAMES, [
+    "agentbase-query", "agentbase-ingest", "agentbase-refresh",
+    "agentbase-batch-ingest", "agentbase-domain-enrichment", "agentbase-hub",
+  ]);
+  assert.deepEqual(INTERNAL_PRODUCT_SKILL_NAMES, ["use-codebase-memory", "agentbase-okf"]);
+  assert.equal(PRODUCT_SKILL_NAMES.length, 8);
+  const hubSkill = fs.readFileSync(path.join(repositoryRoot, ".agents", "skills", "agentbase-hub", "SKILL.md"), "utf8");
+  assert.match(hubSkill, /`list_hub_questions`/);
+  assert.match(hubSkill, /`answer_hub_question`/);
   assert.deepEqual(skillNames(path.join(both.CODEX_HOME, "skills")), [...PRODUCT_SKILL_NAMES].sort());
   assert.deepEqual(skillNames(path.join(both.HOME, ".claude", "skills")), [...PRODUCT_SKILL_NAMES].sort());
   assert.equal(skillNames(path.join(both.CODEX_HOME, "skills")).some((name) => name.startsWith("speckit-")), false);
+  assert.equal(PRODUCT_SKILL_NAMES.some((name) => name.startsWith("abs-")), false);
   assert.deepEqual(installProductSkills({ clients: ["codex", "claude-code"], repositoryRoot, environment: both }).clients,
     { codex: "already-installed", "claude-code": "already-installed" });
 

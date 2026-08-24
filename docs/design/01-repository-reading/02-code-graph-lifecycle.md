@@ -1,14 +1,16 @@
 # 01.02 — Code Graph lifecycle
 
-> Trạng thái: Local managed graph lifecycle implemented.
+> Trạng thái: Local managed graph lifecycle implemented; lazy host routing
+> contract pending implementation audit.
 
 ## Quyết định
 
 Code Graph có process/session tạm thời và cache local có thể tái sử dụng. Graph
-không phải Hub knowledge và không được publish.
+không phải Hub knowledge và không được publish. Một Git root là một graph unit:
+monorepo dùng một graph, còn các Git repository độc lập không dùng chung graph.
 
 ```text
-bắt đầu Ingest/Refresh
+bắt đầu workflow cần exact source
         ↓
 kiểm tra repository identity + source state + engine identity
         ↓
@@ -30,8 +32,10 @@ nhiều bounded queries trong cùng repository run
 
 ## Lifetime
 
-- Một Ingest/Refresh run bind đúng một repository root.
-- Agent được query nhiều lần trong run mà không đổi sang repository khác.
+- Việc mở workspace hoặc query Published Hub không tự tạo graph.
+- Một repository evidence round bind đúng một repository root.
+- Agent được query nhiều lần trong round; nếu workflow cần repo khác, session cũ
+  phải đóng sạch trước khi bind repo tiếp theo.
 - Provider process/session phải đóng ở success, failure và cancellation.
 - Cache và freshness receipt được giữ ngoài authored source để lần sau reuse.
 - Cache mất hoặc hỏng chỉ làm graph phải rebuild; không làm mất Hub knowledge.
@@ -39,6 +43,7 @@ nhiều bounded queries trong cùng repository run
 ## Boundary
 
 - Không watcher hoặc daemon mặc định.
+- Không prebuild mọi graph trong workspace và không gộp nhiều graph.
 - Không copy raw graph, provider cache hoặc freshness receipt vào Local Draft/Hub.
 - Không clone remote repository để tạo graph.
 - Không reuse graph giữa hai repository identity chỉ vì source trông giống nhau.

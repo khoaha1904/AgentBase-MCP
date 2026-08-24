@@ -4,7 +4,7 @@
 
 ## Không thêm storage layer
 
-Local Hub Git hiện tại là source of truth duy nhất cho publication state:
+Mỗi remote Hub profile có Git state riêng cho publication lifecycle:
 
 ```text
 remoteBase ── Published baseline
@@ -31,8 +31,12 @@ normal query reads the exact synchronized Published boundary.
 ## Query boundary
 
 Ordinary search/read uses exact `remoteBase`. `activeHead` and proposal commits
-remain available to inspect/review/PR workflows only. Local-only Hub has no
-Published authority and therefore no ordinary Hub query result.
+remain available to inspect/review/PR workflows only.
+
+Không có remote profile thì không khởi tạo local-only OKF authority: Hub query,
+Ingest, Refresh và Draft operations không chạy. Local Code Graph vẫn độc lập và
+dùng được. Chuyển profile chọn đúng state theo normalized remote URL + branch;
+không overlay hoặc migrate ngầm Draft giữa các profile.
 
 ## Failure rule
 

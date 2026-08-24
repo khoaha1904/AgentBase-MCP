@@ -1,6 +1,7 @@
 # 03.05 — Candidate review
 
-> Trạng thái: Candidate state remains transient; dedicated review UI chưa implement.
+> Trạng thái: Candidate state intentionally transient; dedicated review UI
+> không thuộc MVP.
 
 ## Lifecycle
 
@@ -22,6 +23,8 @@ có candidate database, Published Candidate hay candidate migration.
 - Question giữ đúng ambiguity, candidate references và next verification action.
 - Discard không để lại Hub content; diagnostics của run có thể đếm hoặc tóm tắt
   lý do bỏ nhưng không publish raw candidate inventory.
+- Discard của một run không tạo ignore/suppression record; source mới hoặc
+  Refresh sau có thể đưa candidate trở lại.
 - Nếu review chưa hoàn tất, candidate nằm trong mutable proposal workspace;
   Accept chỉ nhận các outcome đã materialize thành valid knowledge items.
 

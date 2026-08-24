@@ -52,7 +52,7 @@ suy ra predicate.
 
 Initial Ingest và Refresh chỉ điều tra repository đang được authorize:
 
-- target đã có trong Published Hub/eligible Local Draft và strong match: có thể
+- target đã có trong Published Hub/current proposal và strong match: có thể
   ghi relation ngay;
 - current repository đủ evidence để promote một independently useful target
   concept trong cùng proposal: có thể tạo target và relation cùng lúc;
@@ -61,7 +61,8 @@ Initial Ingest và Refresh chỉ điều tra repository đang được authorize
 - target có vẻ giống chỉ vì tên/prose: không auto-match;
 - không có interaction evidence: không tạo relation candidate chỉ từ suy đoán.
 
-Batch Ingest vẫn là nhiều lần Ingest cô lập chạy tuần tự. Nó không reconcile
+Unrelated Local Draft không thuộc matching scope. Batch Ingest vẫn là nhiều lần
+Ingest cô lập chạy tuần tự. Nó không reconcile
 candidates giữa các members và không trở thành Domain Enrichment ngầm.
 
 ## Candidate contract

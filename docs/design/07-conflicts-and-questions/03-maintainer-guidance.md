@@ -5,8 +5,7 @@
 ## Quyết định ngắn
 
 Maintainer Guidance là attributed human knowledge, không phải absolute truth.
-Mặc định nó chỉ áp dụng cho exact Question subject/property; Repository, Domain
-hoặc Hub-wide scope cần user xác nhận rõ.
+Trong MVP nó chỉ áp dụng cho exact Question subject/property.
 
 ## Khi nào tạo Guidance
 
@@ -24,17 +23,17 @@ và Publish như concept/Question khác.
 | Scope | Áp dụng | Authority |
 |---|---|---|
 | `subject-property` | Exact concept/relation candidate và property đang hỏi | Default. |
-| `repository` | Một canonical Repository ID | Post-MVP; user phải chọn rõ. |
-| `domain` | Một canonical Domain ID | Post-MVP; user phải chọn rõ và review impact. |
-| `hub` | Toàn Hub authority | Post-MVP; user phải explicit xác nhận broad scope. |
+| `repository` | Một canonical Repository ID | Không dùng trong MVP. |
+| `domain` | Một canonical Domain ID | Không dùng trong MVP. |
+| `hub` | Toàn Hub authority | Không dùng trong MVP. |
 
 Không suy rộng từ wording như “thường”, “chắc là” hoặc từ việc nhiều
 repositories đang dùng cùng một value. AI không tự nâng exact answer thành
 Domain/Hub policy.
 
-Broad Guidance không tự rewrite mọi concept trong scope. Query/authoring có thể
-áp dụng nó như attributed direction; actual knowledge changes vẫn cần proposal
-và evidence riêng.
+Quyết định rộng hơn được ghi bằng update có evidence vào Repository, Domain hoặc
+System concept liên quan qua Proposal bình thường. MCP không tạo broad Guidance
+scope engine.
 
 ## Guidance document
 
@@ -44,8 +43,7 @@ Một Guidance revision giữ:
 - normalized scope kind/target;
 - answer/decision ngắn gọn;
 - evidence/reason do maintainer cung cấp nếu có;
-- creation time và link trở lại Question;
-- supersede link khi một accepted Guidance mới thay thế nó.
+- creation time và link trở lại Question.
 
 Path hiện tại `guidance/<question-id>-r<revision>.md` được tái sử dụng. Question
 trỏ tới active Guidance; older revisions vẫn đọc được cho history nhưng query
@@ -59,9 +57,8 @@ mặc định không trình bày chúng như current guidance.
 - Human review có thể giữ Guidance, tạo revision thay thế hoặc thu hồi nó.
 - Chỉ accepted revision mới đưa Question về `Resolved`.
 
-Specific scope có thể được trình bày trước broad scope để người đọc hiểu context,
-nhưng specificity không tự biến nó thành truth winner. Hai applicable Guidance
-mâu thuẫn tạo/giữ Question thay vì engine âm thầm chọn một.
+Guidance không tự biến thành truth winner. Evidence mâu thuẫn tạo/giữ Question
+thay vì engine âm thầm chọn một.
 
 ## Volatile values
 
@@ -76,8 +73,7 @@ Answer proposal phải atomically:
 
 1. create new Guidance revision;
 2. update Question state và active Guidance link;
-3. supersede prior Guidance khi human thật sự thay decision;
-4. include any related knowledge/relation update selected for cùng resolution.
+3. include any related knowledge/relation update selected for cùng resolution.
 
 Nếu proposal chưa Accept thì Published Question/Guidance không đổi. Stale
 Question revision, invalid scope hoặc conflicting Hub base dừng trước mutation.
@@ -96,5 +92,5 @@ Question revision, invalid scope hoặc conflicting Hub base dừng trước mut
 ## Baseline impact
 
 Reuse current Guidance renderer/path, explicit `human:*` attribution và proposal
-lifecycle. Thay đổi chính là scope metadata, atomic Question update và
-superseded revision handling; không cần policy engine hoặc rules database.
+lifecycle. Exact scope và atomic Question update không cần policy engine hoặc
+rules database; Git giữ prior revision history.

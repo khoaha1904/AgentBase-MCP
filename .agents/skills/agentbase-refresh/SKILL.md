@@ -9,14 +9,19 @@ Produce either `no_change`, one reviewable partial/complete Local Draft, or an
 Incomplete result. Never Accept, publish, submit, synchronize, clone another
 repository, or invoke provider CLI from this workflow.
 
+This workflow uses `preflight_hub_ingest`, the tools named by
+`use-codebase-memory`, optional `list_okf_schemas`/`get_okf_schema`,
+`prepare_hub_okf`, `validate_okf_changes`, `finalize_hub_okf_proposal` and
+`inspect_hub_okf_proposal` only.
+
 ## Workflow
 
 1. Run `preflight_hub_ingest` for the exact local checkout. Continue only for
    one existing canonical Repository match. Route a new match to Initial Ingest;
    ask the owner to resolve an ambiguous fork/mirror match.
-2. Prepare `mode: refresh` without an evidence digest. Treat returned active
-   local `main`, source snapshot, continuity, known gaps and omitted counts as
-   the bounded baseline.
+2. Call `prepare_hub_okf` with `mode: refresh` and no evidence digest. Treat the
+   returned active local `main`, source snapshot, continuity, known gaps and
+   omitted counts as the bounded baseline.
 3. Investigate in order: exact changed source, known Questions/limitations/
    broken or aging references, then one small discovery pass. Before discovery,
    inspect the exact Git diff from the returned previously observed commit to
@@ -31,11 +36,13 @@ repository, or invoke provider CLI from this workflow.
    evidence ownership. Preserve ambiguous prose/metadata and declare a Question
    or limitation.
 6. Validate changed concepts once and perform at most one content repair.
-   Finalize once with Questions and any destructive `lifecycle_intents` bound to
-   the final bytes. Every intent needs a bounded reason and exact existing
-   current-Repository evidence resources. Use `supersede` only with a real
-   replacement concept. Do not invent evidence to make an intent pass.
-7. Present `no_change` or the complete grouped inspection. Stop before Accept.
+   Call `finalize_hub_okf_proposal` once with Questions and any destructive
+   `lifecycle_intents` bound to the final bytes. Every intent needs a bounded
+   reason and exact existing current-Repository evidence resources. Use
+   `supersede` only with a real replacement concept. Do not invent evidence to
+   make an intent pass.
+7. Call `inspect_hub_okf_proposal`, then present `no_change` or the complete
+   grouped inspection. Stop before Accept.
 
 ## Recovery
 

@@ -26,7 +26,7 @@ Proposal ──preview + Accept──→ Local Draft ──PR──→ In Review
 - Local Draft commit có thể tích lũy qua nhiều repository và được inspect/review;
   ordinary Hub query chỉ đọc Published.
 - Question và limitation chưa giải quyết có thể publish nếu giữ rõ provenance.
-- Resolve Question hoặc duyệt merge concept chỉ tạo Local Draft mới, không tự
+- Resolve Question hoặc correction/removal chỉ tạo Local Draft mới, không tự
   publish.
 - Một Domain Enrichment có thể gom updates của nhiều repository, Question và
   cross-repository relation thành một Local Draft/PR dependency-safe.
@@ -39,7 +39,7 @@ Proposal ──preview + Accept──→ Local Draft ──PR──→ In Review
 PR phải tự giải thích đủ để reviewer hiểu trước khi đọc file diff:
 
 - mục đích của proposal và repository/Domain liên quan;
-- knowledge nào được thêm, cập nhật, xóa, supersede/retract;
+- knowledge nào được thêm, cập nhật hoặc xóa;
 - Questions, limitations và source revision/evidence chính;
 - validation/qualification đã chạy và điều gì chưa được xác minh.
 
@@ -95,8 +95,7 @@ AgentBase phiên bản đầu không xây thêm ACL ghi riêng.
 
 Tool `submit_hub_okf_proposals` dùng token riêng của MCP. Mỗi Init tạo một branch
 và PR độc lập từ Published `main`; chuỗi cùng Repository tạo stack
-`main ← Init ← Refresh`, trong đó mỗi PR chỉ hiện delta của proposal đó. First
-bootstrap vẫn có thể dùng một batch PR vì đó là một transaction tạo Hub ban đầu.
+`main ← Init ← Refresh`, trong đó mỗi PR chỉ hiện delta của proposal đó.
 
 Tạo branch và PR Hub là **quyền hạn độc quyền của MCP** trong workflow này.
 Agent chỉ yêu cầu MCP submit proposal IDs; agent không được dùng `gh`, GitHub
@@ -109,11 +108,15 @@ merge, approve, close hoặc xóa branch. Khi Published `main` đổi, proposal 
 được reconcile tuần tự và cập nhật trên chính branch/PR hiện có; conflict phải
 được giải quyết trước khi branch đó được cập nhật.
 
-Hub Initialization là một PR hỗ trợ riêng, không trộn với knowledge proposal.
-Nó thêm README chuẩn khi thiếu và thêm/sửa đúng ba file CI khi CI chưa current;
-README đã tồn tại và CI current luôn được giữ nguyên. Hub tự chạy validator đã
-review mà không tải npm package, checkout MCP hay cần MCP token. Nếu baseline đã
-đủ thì không tạo PR; maintainer vẫn là người quyết định merge.
+Remote Hub hoàn toàn rỗng dùng một explicit Bootstrap ngoại lệ: sau preview và
+confirmation, MCP tạo thẳng target branch với complete baseline gồm root
+`index.md`, README chuẩn và CI. Commit này không chứa Local Draft/knowledge và
+là lần duy nhất MCP ghi trực tiếp target branch.
+
+Với Hub đã có branch, Initialization là support-only PR: thêm README khi thiếu
+và thêm/sửa đúng ba file CI khi CI chưa current; README đã tồn tại và CI current
+được giữ nguyên. Nếu baseline đã đủ thì không tạo PR. Hub tự chạy validator đã
+review mà không tải npm package, checkout MCP hay cần MCP token.
 
 README chuẩn là trang onboarding ngắn cho người đọc GitHub: giới thiệu Hub và
 AgentBase-MCP, trỏ vào `index.md`, giải thích Hub lưu knowledge/evidence chứ

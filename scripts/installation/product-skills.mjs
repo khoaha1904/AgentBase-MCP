@@ -2,14 +2,23 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-export const PRODUCT_SKILL_NAMES = Object.freeze([
-  "use-codebase-memory",
+export const PUBLIC_PRODUCT_SKILL_NAMES = Object.freeze([
+  "agentbase-query",
   "agentbase-ingest",
   "agentbase-refresh",
-  "agentbase-domain-enrichment",
   "agentbase-batch-ingest",
-  "agentbase-okf",
+  "agentbase-domain-enrichment",
   "agentbase-hub",
+]);
+
+export const INTERNAL_PRODUCT_SKILL_NAMES = Object.freeze([
+  "use-codebase-memory",
+  "agentbase-okf",
+]);
+
+export const PRODUCT_SKILL_NAMES = Object.freeze([
+  ...PUBLIC_PRODUCT_SKILL_NAMES,
+  ...INTERNAL_PRODUCT_SKILL_NAMES,
 ]);
 
 const CLIENT_IDS = new Set(["codex", "claude-code"]);

@@ -9,6 +9,10 @@ Produce one private manifest and, after reviewable evidence collection, one
 ordinary Enrichment proposal. Never log in for the user, read credentials,
 Accept, Publish, mutate cloud resources, scan an account, or infer completeness.
 
+Use only `prepare_domain_enrichment`, `revise_domain_enrichment_membership`,
+`run_domain_enrichment`, `finalize_domain_enrichment_proposal` and
+`inspect_hub_okf_proposal`.
+
 ## Workflow
 
 1. Confirm one Published Domain, 1–32 Published Repository IDs, 1–64 exact
@@ -33,8 +37,9 @@ Accept, Publish, mutate cloud resources, scan an account, or infer completeness.
    outcomes may be reused. Retry only explicitly named failed candidates from
    the exact current revision; never hide a retry loop.
 7. Call `finalize_domain_enrichment_proposal` with selected human decisions.
-   Inspect the grouped proposal and stop before Accept. Open Questions and
-   limitations are valid output; do not force completeness.
+   Call `inspect_hub_okf_proposal` for the grouped proposal and stop before
+   Accept. Open Questions and limitations are valid output; do not force
+   completeness.
 
 ## Provider boundary
 

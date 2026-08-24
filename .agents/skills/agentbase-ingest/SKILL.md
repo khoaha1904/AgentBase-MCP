@@ -1,12 +1,17 @@
 ---
 name: agentbase-ingest
-description: Ingest one authorized local source repository into a sparse, evidence-backed AgentBase OKF proposal preview. Use when a user asks to initialize, ingest, understand, or draft Hub knowledge for one repository; do not use for Refresh, multi-repository batches, provider CLI enrichment, Accept, or Publish.
+description: Ingest one authorized local source repository into a sparse, evidence-backed AgentBase OKF proposal preview. Use when a user asks to initialize, ingest, or draft Hub knowledge for one repository; do not use for ordinary questions, Refresh, multi-repository batches, provider CLI enrichment, Accept, or Publish.
 ---
 
 # Ingest one repository
 
 Create one reviewable proposal from bounded source evidence. The user supplies
 the repository, not an authoring prompt. Stop before Accept or Publish.
+
+This workflow uses `preflight_hub_ingest`, the tools named by
+`use-codebase-memory`, `get_okf_authoring_schemas`, `prepare_hub_okf`,
+`validate_okf_changes`, `finalize_hub_okf_proposal` and
+`inspect_hub_okf_proposal` only.
 
 ## Workflow
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "AgentBase Domain Enrichment"
+  short_description: "Enrich one Domain with bounded provider evidence"
+  default_prompt: "Use $agentbase-domain-enrichment to enrich this Published Domain with bounded provider evidence."

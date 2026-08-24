@@ -283,8 +283,8 @@ export function createHubRuntimeActions(
         ? attachExistingHub(input.repositoryUrl!, input.targetBranch!, environment)
         : createLocalHub(environment);
     },
-    async previewBootstrap(repositoryUrl, targetBranch, mode) { return previewHubBootstrap(repositoryUrl, targetBranch, mode, environment); },
-    async bootstrap(repositoryUrl, targetBranch, mode) { return executeHubBootstrap(repositoryUrl, targetBranch, mode, environment); },
+    async previewBootstrap(repositoryUrl, targetBranch) { return previewHubBootstrap(repositoryUrl, targetBranch, environment); },
+    async bootstrap(repositoryUrl, targetBranch) { return executeHubBootstrap(repositoryUrl, targetBranch, environment); },
     async preflight(sourceRepository) {
       if (!path.isAbsolute(sourceRepository) || !fs.statSync(sourceRepository).isDirectory()) {
         throw new Error("source repository must be an existing absolute directory");

@@ -4,12 +4,16 @@
 
 ## Câu trả lời ngắn
 
-Ingest tạo proposal để người dùng review. Accept biến proposal thành knowledge
-dùng được ngay ở local; nhiều Local Draft commit có thể được gom vào một PR.
+Khi đã cấu hình Remote Hub, Ingest tạo proposal để người dùng review. Accept
+khóa proposal thành Local Draft của đúng Hub đó; ordinary query vẫn chỉ đọc
+Published knowledge đã synchronize.
 
 ```text
 Repository ──Ingest──→ Proposal ──review + Accept──→ Local Draft ──PR──→ Published
 ```
+
+Chưa cấu hình Remote Hub thì AgentBase chỉ dùng Code Graph cho source local;
+Hub query, Ingest, Refresh và OKF Draft chưa có authority để chạy.
 
 ## Repository đóng góp gì?
 
@@ -49,9 +53,14 @@ PR có thể nhóm nhiều proposal commit liên tiếp từ nhiều lần Inges
 Lifecycle review, retry và cleanup được trình bày ở
 [phần 11](11-review-accept-and-publish.md).
 
+## Mỗi Hub có local state riêng
+
+Một Hub profile được nhận diện bằng normalized remote URL và branch. Mỗi profile
+có Published clone và Draft workspace riêng. Chuyển từ Hub A sang Hub B sẽ mở
+state B đã có hoặc tạo state B mới; Published/Draft của A được giữ nguyên nhưng
+không còn active và không bị trộn vào B.
+
 ## Low-level query decision
 
 Search/read uses exact synchronized Published state; proposal inspection owns
 pending changes.
-- ID dùng để nhận diện proposal commit đã publish.
-- Backup/shared draft có cần cho phiên bản sau hay không.

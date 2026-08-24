@@ -1,29 +1,22 @@
 # Installation requirements
 
-`./install.sh` prepares exact dependencies, optionally stores one Hub token,
-installs released product skills and transactionally registers the current
-checkout as user-global stdio MCP in selected clients. Installation never
-selects or creates a Hub.
+`./install.sh` prepares exact dependencies, installs released product skills and
+transactionally registers the current checkout as user-global stdio MCP in
+selected clients. Installation never selects/creates a Hub or asks for a token.
 
 ## Credential and non-interactive behavior
 
 - **AB-INSTALL-001** — Interactive selection changes exactly available selected
   Codex and/or Claude Code clients; unselected clients remain unchanged.
-- **AB-INSTALL-002** — Each accepted token character/paste displays one `*`;
-  Backspace removes one; completion, EOF, interrupt and failure restore terminal
-  state without printing token bytes.
-- **AB-INSTALL-003** — Empty Enter keeps tokenless local operation.
-  Non-interactive installation only prepares dependencies and never prompts,
-  selects clients or persists an ambient token. Hub choice stays lazy.
-- **AB-INSTALL-004** — An explicit token is atomically stored only at
-  `$XDG_CONFIG_HOME/agentbase-mcp/env` or `~/.config/agentbase-mcp/env` in a
-  `0700` directory and `0600` regular non-symlink file.
-- **AB-INSTALL-005** — Existing credential bytes are preserved unless
-  `--replace-token` succeeds; skip, invalid input, failure or interruption leaves
-  prior bytes unchanged.
-- **AB-INSTALL-006** — A non-empty process token wins; otherwise runtime admits
-  the exact global file. Unsafe owner/permissions/type/symlink/keys/content fails
-  closed without exposing bytes.
+- **AB-INSTALL-002 (retired)** — Installer token masking UI is removed.
+- **AB-INSTALL-003 (retired)** — Installer token skip/local-Hub choice is removed.
+- **AB-INSTALL-004 (retired)** — Installer global token persistence is removed.
+- **AB-INSTALL-005 (retired)** — Installer token replacement is removed.
+- **AB-INSTALL-006 (retired)** — Ambient/global token precedence is removed.
+
+Token entry and replacement belong only to the later owner-private
+`agentbase-hub` profile connection flow; no ambient/global token becomes a
+default for every Hub.
 
 ## Client registration transaction
 
@@ -48,15 +41,15 @@ selects or creates a Hub.
   deterministic recovery; unsafe, malformed or mismatched state blocks mutation.
 - **AB-INSTALL-015** — Missing clients, conflicts, command/verification failure,
   concurrency and unresolved rollback remain distinguishable and secret-free.
-- **AB-INSTALL-016** — Credential persistence is independent of registration;
-  client failure never erases an accepted token and tokens never enter entries.
+- **AB-INSTALL-016** — Registration never reads, writes or removes Hub
+  credentials, and tokens never enter client MCP entries.
 - **AB-INSTALL-017** — Canonical tests use isolated homes and deterministic
   client doubles, never real installed-client state.
 
 ## Terminal UI
 
 - **AB-INSTALL-018** — Interactive setup shows AgentBase-MCP identity followed
-  by Clients, optional GitHub access and Registration actions.
+  by Clients and Registration actions; GitHub/Hub setup is absent.
 - **AB-INSTALL-019** — ANSI terminals use Up/Down, Space and Enter multi-select;
   at least one client is required and output order is stable. Plain terminals
   use an append-only fallback.
@@ -66,17 +59,18 @@ selects or creates a Hub.
   and non-interactive modes emit no cursor/color ANSI.
 - **AB-INSTALL-022** — Completion maps provider results to readable client
   outcomes and tells the user to start a new selected client session.
-- **AB-INSTALL-023** — Rich rendering preserves masking, paste, Backspace,
-  skip, credential independence, transaction recovery, secret-free failure and
-  terminal restoration.
+- **AB-INSTALL-023** — Rich rendering preserves client selection, transaction
+  recovery, secret-free failure and terminal restoration without a credential UI.
 - **AB-INSTALL-024** — Deterministic tests cover chunked key sequences,
   multi-select, validation, color/narrow/dumb fallbacks, token/results and
   non-interactive output without real configuration mutation.
 
 ## Product skills
 
-- **AB-INSTALL-025** — Every interactively selected client receives exactly the
-  seven released product skills named by `.agents/skills/README.md`.
+- **AB-INSTALL-025** — Every interactively selected client receives exactly
+  nine released product skills named by `.agents/skills/README.md`: seven public
+  user-goal workflows including `agentbase-scan`, and two internal supporting
+  workflows.
 - **AB-INSTALL-026** — A fixed allowlist is release authority; `speckit-*` and
   every other repository-development skill are never installed.
 - **AB-INSTALL-027** — Codex uses `$CODEX_HOME/skills` with

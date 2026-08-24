@@ -134,8 +134,9 @@ State thay đổi chỉ qua proposal được review/Accept. Answer chưa Accept
 Published Question thành Resolved. Open Question có thể Published; Question state
 độc lập publication state.
 
-Competing current positions vẫn được query khi Question đã `resolved`. Chỉ
-explicit supersede/retract loại một position khỏi current view.
+Competing current positions vẫn được query khi Question đã `resolved`. Một
+position chỉ rời current view qua reviewed correction/removal có reason và
+evidence; Git giữ history.
 
 ## Authoring boundary
 

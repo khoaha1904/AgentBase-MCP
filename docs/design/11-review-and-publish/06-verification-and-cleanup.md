@@ -10,7 +10,7 @@ collector riêng cho MVP.
 ## Verification gates
 
 1. **Finalize** kiểm tra exact authored bundle, schema, links, relations,
-   Questions, ownership, lifecycle intent và proposal diff.
+   Questions, ownership, correction/removal intent và proposal diff.
 2. **Accept** kiểm tra exact tree/diff digest, base commit và immutable reviewed
    bytes trước khi tạo Local Draft commit.
 3. **Publish/Sync** kiểm tra exact remote/base/branch/proposal identity và clean

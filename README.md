@@ -7,8 +7,8 @@ AgentBase-MCP gives coding agents two complementary knowledge surfaces:
   cross-repository knowledge.
 
 The graph is disposable and never published. Hub knowledge is ordinary linked
-Markdown and Git history. Local acceptance is explicit and immediately
-queryable; remote publication is a separate reviewed action.
+Markdown and Git history. Local Draft is explicit review state; ordinary Hub
+query reads only the synchronized Published commit.
 
 ## Install and verify
 
@@ -21,12 +21,19 @@ npm run verify
 ```
 
 Interactive installation can register the current checkout as user-global
-`agentbase` stdio MCP in Codex, Claude Code or both and installs the seven
+`agentbase` stdio MCP in Codex, Claude Code or both and installs the eight
 AgentBase product skills for every selected client. Repository-development
 `speckit-*` skills are never installed. An exact rerun is a no-op; a conflicting
 same-name MCP entry or skill fails before replacement. Optional token input is
 masked and stored outside Git with private permissions; non-interactive
 installation only prepares dependencies.
+
+The released catalog has six public workflows—Ask, Ingest, Refresh, Batch
+Ingest, Domain Enrichment and Hub lifecycle—plus two internal supporting
+skills. Ask naturally, select the skill in the client, invoke
+`$agentbase-query` in Codex, or invoke `/agentbase-query` in Claude Code. These
+are client syntaxes for the same canonical skill; AgentBase installs no
+`abs-*` alias.
 
 ## Main entrypoints
 

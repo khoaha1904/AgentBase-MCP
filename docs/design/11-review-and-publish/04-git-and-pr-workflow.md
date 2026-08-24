@@ -43,13 +43,13 @@ main ← Init branch ← Refresh branch ← next Refresh branch
 Mỗi PR chỉ chứa delta của proposal đó. Khi predecessor đã merge, MCP retarget
 proposal kế tiếp về `main` trong explicit reconciliation; PR identity được giữ.
 
-### First bootstrap
+### Empty-remote bootstrap
 
-First bootstrap là ngoại lệ duy nhất có thể publish nhiều initial knowledge
-commits thành một batch PR, vì đó là một transaction tạo remote Hub authority.
-Nó giữ nguyên local checkout nhưng đổi ownership từ local-only ID sang canonical
-host/repository/branch ID dưới một activation lock. Retry chỉ nhận đúng target
-ref/commit mà intent trước đã tạo; ref khác dừng trước khi ghi tiếp.
+Explicit bootstrap là ngoại lệ direct-write duy nhất. Nó tạo target branch của
+một exact empty user-created remote với complete released README + root
+`index.md` + CI baseline, không replay knowledge proposal. Sau admission, mọi
+Init/Refresh/Batch/Enrichment knowledge đều dùng normal PR units. Existing Hub
+support repair dùng Initialization PR, không direct write.
 
 ## Exact replay and shared indexes
 
@@ -110,7 +110,7 @@ Published ref and every Local Draft unchanged.
 
 ## Hub Initialization PR
 
-Hub support initialization is a separate reviewed lifecycle, not an OKF
+For a non-empty existing Hub, support initialization is a separate reviewed lifecycle, not an OKF
 proposal. Preview fetches the exact configured remote target without replaying Local Drafts,
 preserves an existing README and skips exact current CI. It derives only the
 missing README and/or full released CI bundle, then binds their deterministic
@@ -119,7 +119,8 @@ digest. Explicit initialize may create or recover only
 changed base, ambiguous PR or byte drift stops. The same dedicated Hub token is
 used internally; the caller cannot provide a token, branch name or file bytes.
 The standard README is human onboarding only; canonical knowledge navigation
-remains in `index.md`.
+remains in `index.md`. Exact-empty bootstrap uses the same released support
+bytes directly only because no target branch exists for a PR.
 
 ## Current implementation gap
 

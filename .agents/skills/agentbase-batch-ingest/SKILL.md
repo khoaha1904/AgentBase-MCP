@@ -7,6 +7,14 @@ description: Ingest 2-32 explicit authorized local repositories in one confirmed
 
 Build one sparse review unit without mixing repository evidence.
 
+Use only `prepare_batch_hub_ingest`, `confirm_batch_hub_ingest`,
+`prepare_hub_okf`, `record_batch_hub_ingest_member`,
+`retry_batch_hub_ingest_member`, `revise_batch_hub_ingest_membership`,
+`finalize_batch_hub_ingest_proposal`, `inspect_hub_okf_proposal` and the exact
+graph tools named by `use-codebase-memory`, `get_okf_authoring_schemas` and
+`validate_okf_changes`. Never use ordinary repository Preflight/Finalize inside
+a confirmed batch.
+
 1. Call `prepare_batch_hub_ingest` with only the repository roots supplied by
    the user and one proposed Domain. Read only the returned bounded README/docs
    paths for each repo. Show one matrix with identity, evidence, Domain and

@@ -103,8 +103,8 @@ benchmarks.
   contract without receiving AgentBase MCP capability.
 - **AB-BENCH-032** — v4 MCP arms replace catalog list/select/per-schema reads and
   per-concept/relationship validation with `get_okf_authoring_schemas` and
-  `validate_okf_bundle`. The legacy fine-grained tools remain compatible but are
-  not required by v4.
+  `validate_okf_bundle`. This records the historical v4 interaction shape;
+  released-surface compatibility is superseded by AB-BENCH-069.
 - **AB-BENCH-033** — Each trace reports completed schema/validation calls and
   serialized supplied/result bytes, including per-tool detail. These payload
   diagnostics remain distinct from model token usage.
@@ -141,13 +141,16 @@ benchmarks.
   An explicit current-value probe may use normal authorized source reading, but
   ordinary Hub query performs no access probe or resolver call and no score
   requires complete configuration capture or an evidence winner.
-- **AB-BENCH-043** — V13 qualifies catalog `6.0.0` through the actual
-  single-repository Initial Ingest lifecycle in an isolated local-only Hub. It
+- **AB-BENCH-043** — V13 historically qualified catalog `6.0.0` through the
+  then-current single-repository Initial Ingest lifecycle in an isolated
+  local-only Hub. It
   requires status/setup, Preflight, one index/architecture pass,
   evidence-bearing guidance, prepare, changed-set validation, finalize and
   inspect; it fails on missing stages or any Accept, bootstrap, submit or
   synchronize call. Only the finalized proposal bundle becomes a scored
-  artifact and the source plus owner-native Hub remain unchanged.
+  artifact and the source plus owner-native Hub remain unchanged. Current
+  qualification instead uses an isolated admitted remote-profile fixture without
+  real network or credentials; historical V13 bytes remain unchanged.
 - **AB-BENCH-044** — V14 preserves the V13 lifecycle and catalog while making
   semantic-only role intent explicit through evidence-bound `suggested_type`.
   It requires structured mappings to remain `exact`, semantic roles to remain
@@ -252,6 +255,11 @@ benchmarks.
   removing generated Domain repository provenance after changed-set validation.
   V5 preserves generated skeleton provenance explicitly and does not weaken the
   final trust gate. A failed run never authorizes a replica.
+- **AB-BENCH-069** — Historical v1–v7 prompts and results remain immutable
+  evidence but their retired fine-grained MCP authoring tools are no longer a
+  released compatibility surface. Current MVP Initial Ingest, Refresh and Batch
+  qualification use authoring guidance plus `validate_okf_changes` and remain
+  runnable. Removing legacy tools never authorizes a replacement model run.
 
 ## Context A/B interpretation
 

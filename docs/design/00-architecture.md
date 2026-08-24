@@ -55,7 +55,8 @@ scripts/
 ```
 
 Product skill sources live under `.agents/skills/<goal>/`; its `README.md`
-separates the seven released workflows from development-only Spec Kit skills.
+separates seven public user-goal workflows and two internal supporting workflows
+from development-only Spec Kit skills.
 Interactive installation copies only the explicit product allowlist into each
 selected client's user scope. Do not create empty skill scaffolds before the
 workflow exists.
@@ -102,9 +103,10 @@ and returns visible recovery rather than hidden retry.
   watcher, UI, daemon or automatic transport retry exists.
 - Exact freshness reuse skips only indexing. Queries, source-integrity checks
   and cleanup always run; cache failure asks for explicit `--refresh`.
-- The public stdio gateway exposes safe Codebase Memory analysis, one controlled
-  `index_repository`, AgentBase schema/validation and local Hub lifecycle/query
-  tools. It omits provider mutation tools and binds one connection to one
+- The public stdio gateway exposes 42 goal-level tools: nine Codebase Memory
+  actions including one controlled `index_repository`, four AgentBase schema/
+  authoring actions and 29 local Hub lifecycle/query actions. It omits raw
+  provider expert/mutation tools and binds one connection to one
   repository at a time; a sequential repository change cleanly replaces the
   provider child and retains repository-private caches. Explicit current-value questions use ordinary graph/search/snippet
   reads from an observed value's source file; there is no live-reference parser,

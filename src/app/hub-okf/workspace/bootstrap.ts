@@ -3,8 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { createHubIdentity, hubProfileId, type LocalOnlyHubState } from "../../../core/hub/index.ts";
-import { GitHubHubApi, listRemoteRefs, runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
-import { resolveHubConfiguration } from "../configuration/configuration.ts";
+import { listRemoteRefs, runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
 import {
   acquireHubActivationLock,
   readPersistedHubConfiguration,
@@ -16,12 +15,9 @@ import {
 import { loadExactHubProfileToken } from "../configuration/credential-file.ts";
 import { HUB_PUBLISHED_REF } from "./local-hub.ts";
 import { admitPersistentLocalHub } from "./local-hub.ts";
-import { listPendingHubProposals, type PendingHubProposal } from "../review/pending.ts";
-import { publishPendingHubProposals, type HubBatchPublicationReceipt, type PublishGitHub } from "../publication/publish.ts";
 import { acquireHubMutationLock, releaseHubMutationLock, writeAtomicJson } from "../review/proposal-state.ts";
 import { normalizeGitHubHubUrl } from "./setup.ts";
 
-export type BootstrapMode = "all-to-main" | "base-to-main-knowledge-pr";
 export type BootstrapGit = (request: GitRequest) => Promise<GitOutput>;
 
 export type HubBootstrapIntent = Readonly<{
@@ -30,20 +26,15 @@ export type HubBootstrapIntent = Readonly<{
   canonicalHttpsUrl: string;
   host: string;
   targetBranch: string;
-  mode: BootstrapMode;
   localHubId: string;
   remoteHubId: string;
   baseCommit: string;
-  activeHead: string;
-  proposalIds: readonly string[];
-  commits: readonly string[];
 }>;
 
 export type HubBootstrapReceipt = Readonly<{
   intent: HubBootstrapIntent;
   phase: "prepared" | "target-pushed" | "remote-admitted" | "completed";
   remoteTarget?: string;
-  publication?: HubBatchPublicationReceipt;
 }>;
 
 function root(environment: NodeJS.ProcessEnv): string {
@@ -81,26 +72,23 @@ function writeReceipt(environment: NodeJS.ProcessEnv, receipt: HubBootstrapRecei
   writeAtomicJson(receiptPath(environment, receipt.intent.id), receipt);
 }
 
-function identity(host: string, repository: string, targetBranch: string, mode: BootstrapMode, base: string, head: string, commits: readonly string[]): string {
-  return createHash("sha256").update([host, repository, targetBranch, mode, base, head, ...commits].join("\0")).digest("hex").slice(0, 24);
+function identity(host: string, repository: string, targetBranch: string, base: string): string {
+  return createHash("sha256").update([host, repository, targetBranch, base].join("\0")).digest("hex").slice(0, 24);
 }
 
 async function localHistory(
   configuration: PersistedLocalHubConfiguration,
   git: BootstrapGit,
-): Promise<Readonly<{ state: LocalOnlyHubState; pending: readonly PendingHubProposal[] }>> {
-  const state = await admitPersistentLocalHub(configuration, git);
-  return { state, pending: await listPendingHubProposals(state, git) };
+): Promise<LocalOnlyHubState> {
+  return admitPersistentLocalHub(configuration, git);
 }
 
 export async function previewHubBootstrap(
   repositoryUrl: string,
   targetBranch: string,
-  mode: BootstrapMode,
   environment: NodeJS.ProcessEnv = process.env,
   git: BootstrapGit = runGit,
 ): Promise<HubBootstrapIntent> {
-  if (mode !== "all-to-main" && mode !== "base-to-main-knowledge-pr") throw new Error("Hub bootstrap mode is invalid");
   const configuration = readPersistedHubConfiguration(environment);
   if (!configuration) throw new Error("Hub bootstrap requires an active local-only Hub");
   const normalized = normalizeGitHubHubUrl(repositoryUrl);
@@ -112,13 +100,10 @@ export async function previewHubBootstrap(
   const localView: PersistedLocalHubConfiguration = { formatVersion: 1, kind: "local-only",
     localHubId: configuration.localHubId, localRoot: configuration.localRoot, baseCommit: configuration.baseCommit,
     catalogVersion: configuration.catalogVersion };
-  const { state, pending } = await localHistory(localView, git);
-  const commits = pending.map((item) => item.commit);
-  const id = identity(normalized.host, normalized.repository, targetBranch, mode, state.baseCommit, state.activeHead, commits);
+  const state = await localHistory(localView, git);
+  const id = identity(normalized.host, normalized.repository, targetBranch, state.baseCommit);
   return { id, host: normalized.host, repository: normalized.repository, canonicalHttpsUrl: normalized.canonicalHttpsUrl,
-    targetBranch, mode,
-    localHubId: state.localHubId, remoteHubId: hubProfileId(remoteIdentity), baseCommit: state.baseCommit, activeHead: state.activeHead,
-    proposalIds: pending.map((item) => item.id), commits };
+    targetBranch, localHubId: state.localHubId, remoteHubId: hubProfileId(remoteIdentity), baseCommit: state.baseCommit };
 }
 
 async function ensureOrigin(intent: HubBootstrapIntent, localRoot: string, git: BootstrapGit): Promise<void> {
@@ -144,14 +129,13 @@ function permissionFailure(error: unknown, token: string): Error {
 export async function executeHubBootstrap(
   repositoryUrl: string,
   targetBranch: string,
-  mode: BootstrapMode,
   environment: NodeJS.ProcessEnv = process.env,
-  options: Readonly<{ git?: BootstrapGit; github?: PublishGitHub }> = {},
+  options: Readonly<{ git?: BootstrapGit }> = {},
 ): Promise<HubBootstrapReceipt> {
   const git = options.git ?? runGit;
   const configuration = readPersistedHubConfiguration(environment);
   if (!configuration) throw new Error("Hub bootstrap requires an active local-only Hub");
-  const intent = await previewHubBootstrap(repositoryUrl, targetBranch, mode, environment, git);
+  const intent = await previewHubBootstrap(repositoryUrl, targetBranch, environment, git);
   const token = loadExactHubProfileToken(intent.remoteHubId, environment);
   if (!token) throw new Error("Hub bootstrap requires the owner-private target Hub profile token");
   const existingReceipt = readReceipt(environment, intent.id);
@@ -176,7 +160,7 @@ export async function executeHubBootstrap(
     if (receipt.phase === "prepared") {
       if (configuration.kind !== "local-only") throw new Error("prepared bootstrap requires local-only configuration");
       const refs = await listRemoteRefs(intent.canonicalHttpsUrl, configuration.localRoot, token, git);
-      const mainCommit = mode === "all-to-main" ? intent.activeHead : intent.baseCommit;
+      const mainCommit = intent.baseCommit;
       if (refs.length) {
         if (refs.length !== 1 || refs[0]?.ref !== `refs/heads/${intent.targetBranch}` || refs[0].commit !== mainCommit) {
           throw new Error("new Hub bootstrap requires an empty repository or its exact interrupted target ref");
@@ -201,7 +185,7 @@ export async function executeHubBootstrap(
         writeReceipt(environment, receipt);
       }
     }
-    const expectedMain = mode === "all-to-main" ? intent.activeHead : intent.baseCommit;
+    const expectedMain = intent.baseCommit;
     if (receipt.remoteTarget !== expectedMain) throw new Error("bootstrap receipt remote target is invalid");
     if (receipt.phase === "target-pushed") {
       await git({ args: ["fetch", "--no-tags", "origin", intent.targetBranch], cwd: configuration.localRoot, operation: "admit bootstrapped Hub target", token });
@@ -232,18 +216,7 @@ export async function executeHubBootstrap(
     releaseHubMutationLock(lock);
   }
 
-  if (receipt.phase === "remote-admitted" && mode === "base-to-main-knowledge-pr" && intent.proposalIds.length) {
-    const resolved = resolveHubConfiguration(environment);
-    if (resolved.kind !== "remote" || !resolved.hub) throw new Error("bootstrapped Hub remote configuration was not admitted");
-    const localHub = await admitPersistentLocalHub(resolved, git);
-    const github = options.github ?? new GitHubHubApi(createHubIdentity(intent.repository, intent.targetBranch, intent.host), token);
-    try {
-      const publication = await publishPendingHubProposals({ stateRoot: root(environment), localHub,
-        selectedProposalIds: intent.proposalIds, token, github, git, publicationMode: "batch" });
-      receipt = { ...receipt, phase: "completed", publication };
-      writeReceipt(environment, receipt);
-    } catch (error) { throw permissionFailure(error, token); }
-  } else if (receipt.phase === "remote-admitted") {
+  if (receipt.phase === "remote-admitted") {
     receipt = { ...receipt, phase: "completed" };
     writeReceipt(environment, receipt);
   }

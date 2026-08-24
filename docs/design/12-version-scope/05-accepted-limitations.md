@@ -10,7 +10,10 @@
 - Hub has one read trust boundary, no Domain/field ACL.
 - Structured IaC is Terraform/Terragrunt only; SAM/CloudFormation is rejected.
 - Query overlay, freshness marks in ordinary search/read, persisted freshness
-  reports and remote source reading are absent; local reporting and scheduled CI exist.
+  reports and remote source reading are absent; snapshot age, local reporting
+  and scheduled CI exist. Remote source reading is first post-phase priority.
+- Without a configured remote Hub, Hub query/Ingest/Refresh/Draft operations are
+  unavailable; Code Graph and bounded workspace Scan remain usable.
 - Review is structured text/diff; no generated HTML graph UI.
 - Accepted private proposal artifacts are retained; no cleanup scheduler.
 

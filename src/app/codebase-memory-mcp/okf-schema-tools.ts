@@ -7,7 +7,6 @@ import {
   normalizeHubConceptPath,
   OkfGuidanceInputError,
   parseConceptDocument,
-  selectOkfConceptSchemas,
   validateAgentBaseDraft,
   validateConceptAgainstSchema,
   validateOkfRelationships,
@@ -17,8 +16,7 @@ import {
 } from "../../core/knowledge/index.ts";
 
 export const OKF_SCHEMA_TOOL_NAMES = [
-  "list_okf_schemas", "get_okf_schema", "select_okf_schemas", "validate_okf_concept", "validate_okf_relationships",
-  "get_okf_authoring_schemas", "validate_okf_bundle", "validate_okf_changes",
+  "list_okf_schemas", "get_okf_schema", "get_okf_authoring_schemas", "validate_okf_changes",
 ] as const;
 export type OkfSchemaToolName = typeof OKF_SCHEMA_TOOL_NAMES[number];
 
@@ -70,33 +68,6 @@ export const OKF_SCHEMA_TOOLS = [
       type: "object", properties: { type: { type: "string", minLength: 1 } },
       required: ["type"], additionalProperties: false,
     },
-  },
-  {
-    name: "select_okf_schemas",
-    description: "Recommend schemas from repository evidence signals; the authoring agent retains the final choice.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        signals: { type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: 64 },
-      },
-      required: ["signals"], additionalProperties: false,
-    },
-  },
-  {
-    name: "validate_okf_concept",
-    description: "Validate Markdown against Google OKF, AgentBase draft policy and a known type schema.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        path: { type: "string", minLength: 1 }, content: { type: "string", minLength: 1 },
-      },
-      required: ["path", "content"], additionalProperties: false,
-    },
-  },
-  {
-    name: "validate_okf_relationships",
-    description: "Validate cross-document OKF relationship targets, Markdown links and known-schema guidance from bounded supplied content.",
-    inputSchema: conceptSetInputSchema,
   },
   {
     name: "get_okf_authoring_schemas",
@@ -154,11 +125,6 @@ export const OKF_SCHEMA_TOOLS = [
       },
       required: ["candidates", "semantic_observations", "resource_observations"], additionalProperties: false,
     },
-  },
-  {
-    name: "validate_okf_bundle",
-    description: "Validate draft policy, known schemas and cross-document relationships for a bounded supplied OKF bundle in one call.",
-    inputSchema: conceptSetInputSchema,
   },
   {
     name: "validate_okf_changes",
@@ -313,16 +279,6 @@ export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record
         ? result({ catalogVersion: AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, schema })
         : result({ error: `unknown AgentBase schema: ${args.type}`, googleOkfAllowsUnknownTypes: true }, true);
     }
-    if (name === "select_okf_schemas") {
-      const valid = Array.isArray(args.signals) && args.signals.length
-        && args.signals.every((signal) => typeof signal === "string" && Boolean(signal.trim()));
-      if (!valid) return result({ error: "signals must be a non-empty string list" }, true);
-      return result({
-        catalogVersion: AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
-        recommendations: selectOkfConceptSchemas(args.signals as string[]),
-        advisory: true,
-      });
-    }
     if (name === "get_okf_authoring_schemas") {
       let request: OkfAuthoringGuidanceRequest;
       try {
@@ -337,30 +293,11 @@ export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record
         advisory: true,
       });
     }
-    if (name === "validate_okf_relationships" || name === "validate_okf_bundle" || name === "validate_okf_changes") {
-      const supplied = suppliedConcepts(args, name === "validate_okf_changes" ? "changes" : "concepts");
-      if (!supplied.entries) return result({ error: supplied.error }, true);
-      const entries = supplied.entries;
-      if (name === "validate_okf_bundle" || name === "validate_okf_changes") {
-        const targets = name === "validate_okf_changes" ? suppliedTargets(args) : { entries: [] as OkfRelationshipTarget[] };
-        if (!targets.entries) return result({ error: targets.error }, true);
-        return validateBundle(entries, targets.entries);
-      }
-      const concepts = entries.map((item) => ({
-        identity: item.identity,
-        concept: parseConceptDocument(item.path, item.content),
-      }));
-      const validation = validateOkfRelationships(concepts, {
-        strictSourceIdentities: new Set(concepts.map((item) => item.identity)),
-      });
-      return result({ valid: validation.failures.length === 0, ...validation }, validation.failures.length > 0);
-    }
-    if (typeof args.path !== "string" || typeof args.content !== "string") {
-      return result({ error: "path and content must be strings" }, true);
-    }
-    const concept = parseConceptDocument(args.path, args.content);
-    const failures = [...validateAgentBaseDraft(concept), ...validateConceptAgainstSchema(concept)];
-    return result({ valid: failures.length === 0, type: concept.type, knownSchema: Boolean(getOkfConceptSchema(concept.type)), failures }, failures.length > 0);
+    const supplied = suppliedConcepts(args, "changes");
+    if (!supplied.entries) return result({ error: supplied.error }, true);
+    const targets = suppliedTargets(args);
+    if (!targets.entries) return result({ error: targets.error }, true);
+    return validateBundle(supplied.entries, targets.entries);
   } catch (error) {
     const message = error instanceof Error ? error.message : "concept validation failed";
     return name === "get_okf_authoring_schemas" && error instanceof OkfGuidanceInputError

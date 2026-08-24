@@ -130,7 +130,7 @@ async function addPublishedEnrichmentFixture(root: string): Promise<Readonly<{
   return { repositoryIds, questions, commit };
 }
 
-test("[AB-HUB-SETUP-006..008][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] local-only Hub accepts and inventories Draft without publishing query", async () => {
+test("[AB-HUB-SETUP-006..008][AB-HUB-SETUP-011..012][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] local-only Hub accepts and inventories Draft without publishing query", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "local-only-hub-e2e-"));
   const environment = { HOME: root, XDG_CONFIG_HOME: path.join(root, "config"), XDG_DATA_HOME: path.join(root, "data") };
   const actions = createHubRuntimeActions(environment, path.join(root, "state"));
@@ -273,7 +273,7 @@ test("[AB-HUB-SETUP-006..008][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] lo
       `${HUB_PROPOSAL_TRAILERS.diffDigest}: sha256:${bootstrapDigest}`,
       `${HUB_PROPOSAL_TRAILERS.catalog}: ${AGENTBASE_OKF_SCHEMA_CATALOG_VERSION}`, `${HUB_PROPOSAL_TRAILERS.mode}: new`,
     ].join("\n")], cwd: bootstrapLocal.localRoot, operation: "commit bootstrap draft", commitTimestamp: "2026-08-15T00:00:00Z" });
-    const bootstrapHead = (await runGit({ args: ["rev-parse", "HEAD"], cwd: bootstrapLocal.localRoot,
+    const bootstrapDraftHead = (await runGit({ args: ["rev-parse", "HEAD"], cwd: bootstrapLocal.localRoot,
       operation: "resolve bootstrap draft" })).stdout.trim();
     const bootstrapRemote = path.join(root, "bootstrap-remote.git");
     await runGit({ args: ["init", "--bare", "--initial-branch=main", bootstrapRemote], cwd: root, operation: "create bootstrap remote" });
@@ -282,7 +282,7 @@ test("[AB-HUB-SETUP-006..008][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] lo
     writeHubProfileToken(remoteProfileId, "bootstrap-token-canary", bootstrapEnvironment);
     let failPublishedAdmission = true;
     const bootstrapGit = async (request: GitRequest) => {
-      if (request.operation === "admit bootstrapped Published boundary" && failPublishedAdmission) {
+      if (request.operation === "inspect bootstrapped Published boundary" && failPublishedAdmission) {
         failPublishedAdmission = false; throw new Error("simulated post-activation crash");
       }
       const args = [...request.args];
@@ -293,14 +293,19 @@ test("[AB-HUB-SETUP-006..008][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] lo
       }
       return runGit(request);
     };
-    await assert.rejects(executeHubBootstrap(bootstrapUrl, "main", "all-to-main", bootstrapEnvironment,
+    await assert.rejects(executeHubBootstrap(bootstrapUrl, "main", bootstrapEnvironment,
       { git: bootstrapGit }), /simulated post-activation crash/);
     assert.equal(readPersistedHubConfiguration(bootstrapEnvironment)?.localHubId, remoteProfileId);
     assert.equal(fs.existsSync(path.join(bootstrapEnvironment.XDG_CONFIG_HOME, "agentbase-mcp", "hubs", `${bootstrapLocal.localHubId}.json`)), false);
-    const bootstrapped = await executeHubBootstrap(bootstrapUrl, "main", "all-to-main", bootstrapEnvironment, { git: bootstrapGit });
+    const bootstrapped = await executeHubBootstrap(bootstrapUrl, "main", bootstrapEnvironment, { git: bootstrapGit });
     assert.equal(bootstrapped.phase, "completed");
     assert.equal((await runGit({ args: ["rev-parse", `refs/agentbase/published`], cwd: bootstrapLocal.localRoot,
-      operation: "verify bootstrap Published boundary" })).stdout.trim(), bootstrapHead);
+      operation: "verify bootstrap Published boundary" })).stdout.trim(), bootstrapLocal.baseCommit);
+    assert.notEqual(bootstrapDraftHead, bootstrapLocal.baseCommit);
+    assert.equal((await runGit({ args: ["rev-parse", "refs/heads/main"], cwd: bootstrapRemote,
+      operation: "verify remote bootstrap target" })).stdout.trim(), bootstrapLocal.baseCommit);
+    assert.doesNotMatch((await runGit({ args: ["show", "refs/heads/main:README.md"], cwd: bootstrapRemote,
+      operation: "verify remote bootstrap README" })).stdout, /Bootstrap draft/);
 
     const legacyEnvironment = { HOME: path.join(root, "legacy-home"), XDG_CONFIG_HOME: path.join(root, "legacy-config"),
       XDG_DATA_HOME: path.join(root, "legacy-data") };

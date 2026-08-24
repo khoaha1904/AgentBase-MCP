@@ -13,10 +13,10 @@ import {
 import { createHubIdentity } from "../../core/hub/index.ts";
 import { createAgentBaseMcpServer } from "./server.ts";
 import { GatewaySession } from "./gateway-session.ts";
-import { SAFE_TOOLS } from "./tool-manifest.ts";
+import { PINNED_PROVIDER_TOOLS, SAFE_TOOLS, SAFE_TOOL_NAMES } from "./tool-manifest.ts";
 import { OKF_SCHEMA_TOOLS } from "./okf-schema-tools.ts";
 
-test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official client lists and calls the safe server surface", async () => {
+test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][AB-SCHEMA-049][AB-INGEST-003] official client lists and calls the safe server surface", async () => {
   const repo = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-server-repo-"));
   const secondRepo = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-server-repo-"));
   const state = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-server-state-"));
@@ -39,7 +39,7 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
       bindings.push(repositoryRoot);
       return {
       pid: 991,
-      tools: SAFE_TOOLS,
+      tools: PINNED_PROVIDER_TOOLS,
       async invoke(name) { return { content: [{ type: "text", text: `forwarded:${name}:${path.basename(repositoryRoot)}` }] }; },
       async close() {
         closes += 1;
@@ -58,10 +58,31 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
       [...HUB_OKF_TOOLS, ...OKF_SCHEMA_TOOLS, ...SAFE_TOOLS].map((tool) => tool.name),
     );
     const toolNames = tools.tools.map((tool) => tool.name);
+    assert.equal(toolNames.length, 42);
+    const retiredToolNames = ["query_graph", "get_graph_schema", "list_projects", "select_okf_schemas",
+      "validate_okf_concept", "validate_okf_relationships", "validate_okf_bundle"];
+    assert.equal(toolNames.some((name) => retiredToolNames.includes(name)), false);
+    assert.doesNotMatch(JSON.stringify(tools.tools), new RegExp(retiredToolNames.join("|")));
+    const indexTool = tools.tools.find((tool) => tool.name === "index_repository");
+    assert.deepEqual(Object.keys(indexTool?.inputSchema.properties ?? {}).sort(), ["mode", "name", "repo_path"]);
+    assert.doesNotMatch(JSON.stringify(indexTool), /cross-repo-intelligence|target_projects|persistence/);
+    assert.deepEqual(indexTool?.annotations, {
+      readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false,
+    });
+    for (const graphTool of tools.tools.filter((tool) => tool.name !== "index_repository"
+      && (SAFE_TOOL_NAMES as readonly string[]).includes(tool.name))) {
+      assert.deepEqual(graphTool.annotations, {
+        readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false,
+      });
+    }
     assert.deepEqual(toolNames.filter((name) => name === "search_hub_okf" || name === "read_hub_okf_concept"),
       ["search_hub_okf", "read_hub_okf_concept"]);
     assert.equal(toolNames.some((name) => ["traverse_hub_okf", "read_hub_observed_values", "read_hub_freshness"].includes(name)), false);
     assert.equal(toolNames.includes("list_hub_questions") && toolNames.includes("answer_hub_question"), true);
+    const bootstrapTools = tools.tools.filter((tool) => tool.name === "preview_hub_bootstrap" || tool.name === "bootstrap_hub");
+    assert.equal(bootstrapTools.length, 2);
+    assert.equal(bootstrapTools.every((tool) => !("mode" in (tool.inputSchema.properties ?? {}))), true);
+    assert.match(bootstrapTools.find((tool) => tool.name === "bootstrap_hub")?.description ?? "", /knowledge remains pending/);
     const prepareTool = tools.tools.find((tool) => tool.name === "prepare_hub_okf");
     const finalizeTool = tools.tools.find((tool) => tool.name === "finalize_hub_okf_proposal");
     assert.match(prepareTool?.description ?? "", /changed paths, observed source state and known gaps/);
@@ -159,7 +180,7 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
   const gateway = new GatewaySession({ projectRoot: "/agentbase", stateRoot: state,
     providerFactory: async () => {
       opened += 1;
-      return { pid: 993, tools: SAFE_TOOLS,
+      return { pid: 993, tools: PINNED_PROVIDER_TOOLS,
         async invoke() { return { content: [{ type: "text", text: "indexed" }] }; },
         async close() { return { status: "failed", pid: 993, graceful: false, forced: true, stderrBytes: 0 }; } };
     } });

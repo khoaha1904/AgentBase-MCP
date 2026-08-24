@@ -47,28 +47,26 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "preview_hub_bootstrap",
-    description: "Preview the exact base and knowledge commits for first publication to an empty GitHub repository.",
+    description: "Preview the exact support baseline commit for one-time direct initialization of an empty Hub repository.",
     inputSchema: {
       type: "object",
       properties: {
         repository_url: { type: "string", minLength: 1 },
         target_branch: { type: "string", minLength: 1 },
-        mode: { type: "string", enum: ["all-to-main", "base-to-main-knowledge-pr"] },
       },
-      required: ["repository_url", "target_branch", "mode"], additionalProperties: false,
+      required: ["repository_url", "target_branch"], additionalProperties: false,
     },
   },
   {
     name: "bootstrap_hub",
-    description: "Publish a local-only Hub to an explicitly supplied empty GitHub repository using the reviewed mode.",
+    description: "Write README, root index and Hub CI directly once to an explicitly supplied empty Hub; knowledge remains pending for later pull requests.",
     inputSchema: {
       type: "object",
       properties: {
         repository_url: { type: "string", minLength: 1 },
         target_branch: { type: "string", minLength: 1 },
-        mode: { type: "string", enum: ["all-to-main", "base-to-main-knowledge-pr"] },
       },
-      required: ["repository_url", "target_branch", "mode"], additionalProperties: false,
+      required: ["repository_url", "target_branch"], additionalProperties: false,
     },
   },
   {

@@ -1,0 +1,4 @@
+interface:
+  display_name: "AgentBase Batch Ingest"
+  short_description: "Ingest multiple repositories into one Domain draft"
+  default_prompt: "Use $agentbase-batch-ingest to ingest these repositories sequentially into one Domain proposal."

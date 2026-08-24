@@ -28,6 +28,8 @@ High-level decision:
   query và derived CI report.
 - [`09-runtime-requirements.md`](09-runtime-requirements.md) — current
   `AB-BATCH-*` contract cho Batch Initial Ingest.
+- [`10-workspace-scan.md`](10-workspace-scan.md) — bounded workspace inventory
+  và user-directed routing sang Init hoặc sequential Refresh.
 
 ## Implementation trace
 
@@ -38,8 +40,9 @@ High-level decision:
   foreign/protected evidence preservation và typed destructive intent.
 - Implemented offline: explicit 2..32-repository Batch Initial Ingest,
   sequential checkpoints, retry/membership revision và one atomic proposal.
-- Deferred: Batch Refresh, additional Domain Enrichment profiles, query age
-  presentation và scheduled freshness report.
+- Deferred: Batch Refresh, mixed Init/Refresh, additional Domain Enrichment
+  profiles, ordinary query age presentation và persisted freshness report.
+- Design accepted, pending implementation audit: public `agentbase-scan`.
 
 Qualification policy hiện dùng Sol cho Initial Ingest và Terra cho Refresh.
 Đây là benchmark configuration, không phải runtime model router của MCP.

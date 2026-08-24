@@ -16,12 +16,12 @@ evidence into a reviewed OKF proposal, accept it as Local Draft and later
 publish selected pending commits through a pull request. Ordinary Hub query
 reads only synchronized Published knowledge.
 
-Installation selects no Hub and Code Graph never requires one. The first OKF
-authoring workflow lazily creates a private local-only Hub at preflight. A remote Hub is an
-optional later connection identified by exact GitHub host, repository and
-target branch; its token remains owner-private. Each identity keeps independent
-local state, while one profile is active for query and authoring. Changing the
-active Hub never merges or copies knowledge between profiles.
+Installation selects no Hub and Code Graph never requires one. OKF authoring and
+Hub query require an explicitly configured remote profile identified by exact
+GitHub host, repository and target branch; its token remains owner-private.
+Each identity keeps independent Published/Draft state, while one profile is
+active. Changing the active Hub never merges or copies knowledge between
+profiles.
 
 ## Current flow
 
@@ -33,7 +33,7 @@ source repository
   -> normalize bounded provenance-bearing observations
   -> batch-select concrete OKF guidance and author a sparse proposal
   -> batch-validate, inspect and explicitly accept into Local Draft
-  -> optionally publish a safe pending prefix in one PR
+  -> publish user-selected dependency-safe proposal units through MCP-owned PRs
   -> after merge, synchronize and rebase remaining pending commits safely
   -> query synchronized Published knowledge
 ```
@@ -88,8 +88,9 @@ knowledge is protected. Absence from a later ingest is not deletion evidence.
 Local acceptance and remote publication are separate authorizations. Normal
 operation never creates a GitHub repository, writes remote `main`, merges or
 approves a PR, force-pushes, deletes branches, changes repository settings or
-drops pending local commits. The only direct remote-`main` write is an explicit
-first bootstrap into a user-created empty repository under a reviewed mode.
+drops pending local commits. The only direct target-branch write is an explicit
+empty-remote bootstrap of the complete released README + root index + CI
+baseline after preview/confirmation.
 
 ## Stable product requirements
 

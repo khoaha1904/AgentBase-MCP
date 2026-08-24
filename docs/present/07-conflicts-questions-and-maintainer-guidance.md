@@ -9,7 +9,8 @@ Question ghi điều chưa rõ; câu trả lời của người dùng là eviden
 không phải sự thật tuyệt đối.
 
 Question cũng là shared Hub knowledge. Trước Accept nó nằm trong proposal; sau
-Accept/Publish, máy khác pull Hub có thể đọc cùng trạng thái và provenance.
+Accept nó vẫn là Local Draft chỉ dành cho review. Chỉ sau khi PR merge và máy
+khác synchronize Published Hub thì Question mới xuất hiện trong ordinary query.
 Private machine ledger nếu có chỉ là cache dựng lại được, không phải authority.
 
 ## Xung đột được giữ thế nào?
@@ -47,8 +48,9 @@ Published.
 ## Maintainer Guidance
 
 Câu trả lời của người dùng được lưu thành user evidence hoặc Maintainer
-Guidance, không xóa nguồn cũ. Guidance mặc định chỉ áp dụng cho concept/relation
-đang hỏi; chỉ mở rộng ra Domain hoặc toàn Hub khi người dùng nói rõ.
+Guidance, không xóa nguồn cũ. Trong MVP, Guidance chỉ áp dụng cho exact
+Question/subject đang hỏi. Một quyết định rộng hơn được viết thành update của
+Domain/System concept qua Proposal bình thường, không dùng scope engine riêng.
 
 Evidence mới cùng hướng được bổ sung vào provenance. Evidence mới mâu thuẫn đưa
 Question về `Needs Review`, đồng thời vẫn giữ guidance và lịch sử cũ.
@@ -66,11 +68,10 @@ trở thành Maintainer Guidance.
 
 ## Knowledge đã sai hoặc lỗi thời
 
-- `Superseded`: item từng đúng nhưng đã được thông tin mới thay thế.
-- `Retracted`: item đã được xác nhận là sai.
+MVP không thêm trạng thái `superseded/retracted`. Khi evidence hoặc maintainer
+đã xác nhận rõ, Refresh tạo Proposal sửa hoặc xóa exact knowledge/concept cũ.
+Preview và PR phải nêu thứ bị xóa, lý do và evidence; Git giữ lịch sử và cho phép
+revert.
 
-Query mặc định không dùng hai loại item này làm claim hiện tại, nhưng vẫn có thể
-hiển thị chúng khi người dùng hỏi lịch sử hoặc nguồn xung đột. Chỉ có nguồn mâu
-thuẫn thì chưa đủ để tự đánh dấu; các claim vẫn cùng tồn tại. Trạng thái chỉ đổi
-khi có evidence rõ hoặc người dùng xác nhận, và thay đổi vẫn đi qua Local Draft
-rồi PR như các knowledge update khác.
+Chỉ có hai nguồn mâu thuẫn thì chưa đủ để tự xóa một phía. Hub vẫn giữ cả hai
+positions cùng provenance và Question cho tới khi có căn cứ thay đổi rõ ràng.

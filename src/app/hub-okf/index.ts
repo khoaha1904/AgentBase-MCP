@@ -25,7 +25,6 @@ export { HUB_README_PATH, renderHubReadme } from "./workspace/readme.ts";
 export {
   executeHubBootstrap,
   previewHubBootstrap,
-  type BootstrapMode,
   type HubBootstrapIntent,
   type HubBootstrapReceipt,
 } from "./workspace/bootstrap.ts";

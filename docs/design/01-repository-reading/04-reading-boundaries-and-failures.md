@@ -1,12 +1,22 @@
 # 01.04 — Reading boundaries and failures
 
-> Trạng thái: Single-repository reading/failure boundary implemented.
+> Trạng thái: Single-repository boundary implemented; workspace selection
+> contract pending implementation audit.
 
 ## Reading authority
 
-- Một run bind đúng repository root local hoặc workspace đã được user chỉ định.
+- Một Git monorepo bind một graph ở Git root; project con là scope/path bên
+  trong graph đó.
+- Thư mục cha chứa nhiều Git repository độc lập chỉ là routing scope, không phải
+  repository root hoặc graph identity.
+- Một evidence round bind đúng một repository root local đã được xác định.
 - Source read phải ở trong admitted root; không follow path/symlink thoát ra ngoài.
 - Không tự clone remote repository hoặc mở rộng từ repo sang cả workspace.
+- Không tự recursive scan máy/workspace để tìm repository ngoài phạm vi người
+  dùng đã mở hoặc chỉ định.
+- Explicit `agentbase-scan` được phép inventory bounded Git roots bên trong đúng
+  workspace người dùng chọn. Nó dừng tại mỗi Git root, không đọc sâu source và
+  không index Code Graph; đây không phải background/arbitrary scan.
 - Multi-repository command truyền danh sách root rõ ràng và xử lý mỗi root như
   một unit riêng; phần 09 sở hữu batch orchestration.
 

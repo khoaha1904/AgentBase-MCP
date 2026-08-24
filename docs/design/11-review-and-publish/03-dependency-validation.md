@@ -19,8 +19,8 @@ Thiếu một hard dependency làm Finalize fail:
 - removal để lại direct relation, Flow step, Question reference hoặc governed
   navigation bị dangling;
 - index trỏ tới file không tồn tại, duplicate target hoặc sửa protected lines;
-- proposal sửa protected bytes, vượt source ownership hoặc có lifecycle intent
-  thiếu reason/evidence/replacement bắt buộc.
+- proposal sửa protected bytes, vượt source ownership hoặc có correction/removal
+  intent thiếu reason/evidence/replacement bắt buộc.
 
 MCP trả exact bounded failures. Nó không tự thêm lại item, tự xóa relation, tạo
 Question hay sửa bundle để validation pass.
@@ -89,6 +89,6 @@ kiểm tra thêm publication dependency giữa accepted proposals:
 ## Current implementation gap
 
 Single-repository proposal đã validate relationship/Flow targets, links,
-Question evidence, protected bytes, additive indexes và lifecycle intent. Batch
+Question evidence, protected bytes, additive indexes và removal intent. Batch
 Ingest cùng bước AI-guided membership removal chưa implement; không cần thêm
 dependency graph database hoặc solver khi triển khai.

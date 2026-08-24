@@ -28,8 +28,8 @@ High-level decision:
 
 ## Cross-section decision từ Refresh
 
-PR review phải group `Added`, `Updated`, `Removed`, `Superseded/Retracted` và
-`Questions/Limitations`. Destructive changes hiển thị reason, source revision/
+PR review phải group `Added`, `Updated`, `Removed` và `Questions/Limitations`.
+Destructive changes hiển thị reason, source revision/
 diff evidence, affected relations và replacement; Git diff một mình không đủ
 giải thích vì sao Agent đề xuất xóa. Technical shape chi tiết sẽ được breakout
 khi phần 11 được review.
@@ -41,7 +41,7 @@ dedicated MCP Hub token. A created PR must summarize:
 
 1. **Purpose** — why this proposal exists and its Init/Refresh/Batch Init/Enrichment mode.
 2. **Scope** — Domain, repositories, source revisions and proposal IDs.
-3. **Knowledge changes** — Added, Updated, Removed, Superseded/Retracted.
+3. **Knowledge changes** — Added, Updated, Removed.
 4. **Uncertainty** — Questions, Limitations, conflicts and unresolved evidence.
 5. **Evidence and validation** — important sources, catalog/profile versions,
    deterministic validation and qualification status.
@@ -65,5 +65,6 @@ The Refresh PR shows only its Repository delta. An unrelated Init always gets
 its own branch/PR from Published `main`; local accepted ancestry is storage
 order only. After `main` advances, MCP merges the admitted new base into each
 remaining branch sequentially and updates the same PR/base when needed. A
-conflict stops before push. First bootstrap alone retains one batch PR. All
+conflict stops before push. Exact-empty bootstrap writes only the complete
+support baseline directly and opens no PR; all knowledge changes use PRs. All
 paths remain MCP-owned and must not be bypassed with `gh` or another token.

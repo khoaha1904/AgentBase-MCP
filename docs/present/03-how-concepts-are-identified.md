@@ -52,9 +52,8 @@ là embedded knowledge trong concept cha, không tự động thành một file 
 
 ## Đối chiếu và xử lý phần chưa rõ
 
-Trước khi tạo mới, Agent đối chiếu với Published Hub và Local Draft. Concept đã
-publish được mọi máy dùng chung Hub nhìn thấy; draft chưa publish chỉ có trên
-máy/workspace đã tạo nó.
+Trước khi tạo mới, Agent đối chiếu với Published Hub local đã đồng bộ và concept
+trong proposal hiện tại. Ordinary discovery không search những Local Draft khác.
 
 Một source trực tiếp có thể đủ để đề xuất concept; không có số lượng nguồn tối
 thiểu cố định. README hoặc ADR có thể là bằng chứng chính cho business rule và
@@ -65,9 +64,14 @@ review. Người dùng có thể promote thành concept, giữ thành Question h
 Khi nguồn xung đột, Agent không đoán; policy đầy đủ nằm ở
 [phần 07](07-conflicts-questions-and-maintainer-guidance.md).
 
+AI quyết định embedded/Question/bỏ qua bằng hai gate trên và phải nêu được lý do
+từ evidence. “Bỏ qua” chỉ có nghĩa không đưa candidate đó vào OKF của run hiện
+tại; nó không tạo ignore registry và Refresh sau vẫn có thể phát hiện lại.
+
 ## Trạng thái implementation
 
 - Candidate cần identity ổn định, query/link value và exact evidence; không dùng
   confidence score giả chính xác.
 - Initial Ingest đã tạo sparse proposal và cho phép knowledge bổ sung dần.
-- Candidate review UI riêng và cross-repository promotion vẫn chưa implement.
+- Candidate chỉ sống trong proposal workflow; MVP không cần registry hoặc UI
+  review riêng. Cross-repository promotion thuộc Domain Enrichment.

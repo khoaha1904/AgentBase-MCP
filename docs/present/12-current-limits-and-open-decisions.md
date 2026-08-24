@@ -1,11 +1,12 @@
 # 12 — Giới hạn và phạm vi của phiên bản đầu
 
-> Trạng thái: MVP boundary đã chốt và implemented; phần mở rộng nằm trong deferred scope.
+> Trạng thái: MVP boundary đã chốt; implementation audit đang chờ sau khi đồng
+> bộ đủ 12 phần.
 
 ## Câu trả lời ngắn
 
-Phiên bản đầu ưu tiên Hub overview, local-first và có provenance. Nó chấp nhận
-một số giới hạn để tránh đồng bộ, phân quyền và automation quá sớm.
+Phiên bản đầu ưu tiên Hub overview, Published-only query và provenance. Không
+cấu hình Remote Hub thì AgentBase chỉ dùng Code Graph/workspace Scan.
 
 ## Giới hạn được chấp nhận trong phiên bản đầu
 
@@ -23,6 +24,10 @@ một số giới hạn để tránh đồng bộ, phân quyền và automation 
 - Hub query chỉ đọc synchronized Published knowledge; Local Draft thuộc review.
 - Question runtime dùng shared Hub documents; private state chỉ là cache có thể
   rebuild, không phải authority.
+- Installer không hỏi Hub/token. `agentbase-hub` config URL, target branch và
+  token sau; mỗi profile giữ Published/Draft state riêng.
+- Một remote hoàn toàn rỗng được explicit Bootstrap thẳng target branch đúng một
+  lần với `index.md`, README và CI. Sau đó mọi knowledge đều qua PR.
 
 ## Quyết định high-level
 
@@ -33,9 +38,10 @@ mới; mirror/copy mơ hồ phải được người dùng xác nhận.
 ## Phần còn deferred
 
 - Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
-- Batch Refresh và freshness marks trong ordinary search/read.
+- Batch Refresh và mixed Init/Refresh.
 - Azure/GCP profile và semantic profile migration.
-- Static HTML/graph review và remote repository reader.
+- Static HTML/graph review.
+- Remote repository reader là capability ưu tiên đầu tiên ngay sau phase MVP.
 
 Rich deterministic PR summary, independent Init PR, same-Repository
 Init/Refresh stack và existing-PR reconciliation đã implement; chúng không còn

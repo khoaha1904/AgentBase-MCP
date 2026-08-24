@@ -14,11 +14,11 @@ High-level decision:
 - [`02-question-lifecycle.md`](02-question-lifecycle.md) — shared Question
   documents cùng Open, Resolved và Needs Review lifecycle.
 - [`03-maintainer-guidance.md`](03-maintainer-guidance.md) — human evidence,
-  explicit scope và Guidance revision/supersede rules.
+  exact Question scope và Guidance revision rules.
 - [`04-conflict-presentation.md`](04-conflict-presentation.md) — bounded
   positions, provenance, Guidance và Question trong Hub/query/PR.
-- [`05-supersede-and-retract.md`](05-supersede-and-retract.md) — item-level
-  supersede/retract, compact lifecycle record và historical query.
+- [`05-correction-and-removal.md`](05-correction-and-removal.md) — reviewed
+  correction/removal với PR evidence và Git history, không item tombstone.
 - [`06-batch-question-resolution.md`](06-batch-question-resolution.md) —
   automatic verification, recommended confirmation và direct maintainer input
   trong một Domain Enrichment draft.

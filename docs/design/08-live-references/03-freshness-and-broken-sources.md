@@ -1,6 +1,7 @@
 # 08.03 — Freshness and broken sources
 
-> Trạng thái: Repository warning report implemented; CI automation deferred.
+> Trạng thái: Repository warning projection và read-only Hub CI implemented;
+> ordinary answer presentation thuộc Part 10.
 
 ## Freshness
 
@@ -34,12 +35,14 @@ one exact admitted commit. It returns canonical identity when available, title,
 path, exact observed time, non-negative age and clean commit or dirty digest.
 Missing or malformed observation metadata remains visible as `unknown`.
 
-Unknown rows sort first, followed by observed rows from oldest to newest. The
-report labels Published versus Local Draft and never probes source, writes Hub,
-creates a Question or triggers Refresh.
+Unknown rows sort first, followed by observed rows from oldest to newest. CI
+runs this projection on the exact Published checkout. Local Draft freshness is
+available only to proposal inspection, not ordinary query. The projection never
+probes source, writes Hub, creates a Question or triggers Refresh.
 
 ## CI report
 
-A future periodic Hub check may adapt this same projection to a Published Hub
-checkout. The report is not knowledge authority, changes no concept and triggers
-no Refresh. Its exact CI workflow remains separate 09/11 work.
+Hub CI writes warning-only freshness context to the ephemeral GitHub Actions
+Summary. It creates no persisted report file, never changes exit status because
+of age, changes no concept and triggers no Refresh. Syntax, integrity and
+sensitive-value failures remain separate blocking checks owned by Part 11.

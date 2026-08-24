@@ -24,7 +24,9 @@ Mỗi candidate phải trả lời:
    concept khác tới nó không?
 
 Có cả hai gate thì candidate được đưa sang schema selection. Thiếu một gate thì
-Agent tìm thêm bounded evidence; vẫn chưa rõ thì giữ Question hoặc bỏ.
+Agent tìm thêm bounded evidence; vẫn chưa rõ và có ảnh hưởng thì giữ Question,
+còn không có independent value thì bỏ khỏi run hiện tại. Việc bỏ không được lưu
+thành suppression rule; Refresh sau có thể đánh giá lại bằng evidence mới.
 
 ## Candidate record tối thiểu
 

@@ -1,5 +1,4 @@
 import type { ConfirmedDomain, HubSearchOptions, OkfAuthoringGuidanceRequest } from "../../../core/knowledge/index.ts";
-import type { BootstrapMode } from "../workspace/bootstrap.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
 import type { HubLifecycleIntent } from "../../../core/knowledge/index.ts";
 import type { EnrichmentAnswer, EnrichmentCandidateInput } from "../enrichment/index.ts";
@@ -8,8 +7,8 @@ import type { ConfirmedDomain as BatchDomain } from "../../../core/knowledge/ind
 export type HubToolActions = Readonly<{
   status(): Promise<unknown>;
   configure(input: Readonly<{ mode: "existing" | "new"; repositoryUrl?: string; targetBranch?: string }>): Promise<unknown>;
-  previewBootstrap(repositoryUrl: string, targetBranch: string, mode: BootstrapMode): Promise<unknown>;
-  bootstrap(repositoryUrl: string, targetBranch: string, mode: BootstrapMode): Promise<unknown>;
+  previewBootstrap(repositoryUrl: string, targetBranch: string): Promise<unknown>;
+  bootstrap(repositoryUrl: string, targetBranch: string): Promise<unknown>;
   preflight(sourceRepository: string): Promise<unknown>;
   prepare(input: Readonly<{
     mode: "new" | "refresh";

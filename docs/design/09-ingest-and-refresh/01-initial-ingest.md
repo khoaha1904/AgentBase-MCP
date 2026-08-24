@@ -48,5 +48,6 @@ MCP render canonical Repository, confirmed Domain, selected concept và index
 skeletons trước khi Agent enrich; Agent không dựng frontmatter từ đầu. Catalog
 7 qualification bằng Sol tạo một valid partial 7-concept ECS full-stack bundle
 với System, frontend/backend Components, Interface và delivery Flow; AWS
-resource nội bộ được giữ embedded. Batch sentence ở trên vẫn là design target,
-chưa phải current runtime behavior.
+resource nội bộ được giữ embedded. Explicit Batch Initial Ingest đã implement
+offline bằng isolated
+sequential member checkpoints cùng one atomic proposal.

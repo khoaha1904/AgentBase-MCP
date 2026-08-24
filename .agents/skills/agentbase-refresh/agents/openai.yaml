@@ -1,0 +1,4 @@
+interface:
+  display_name: "AgentBase Refresh"
+  short_description: "Update one Repository as a reviewable OKF draft"
+  default_prompt: "Use $agentbase-refresh to refresh this Repository into a reviewable AgentBase OKF proposal."

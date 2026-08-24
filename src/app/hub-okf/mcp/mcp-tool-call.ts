@@ -224,13 +224,11 @@ export async function callHubOkfTool(
         ...(typeof targetBranch === "string" ? { targetBranch } : {}) }));
     }
     if (name === "preview_hub_bootstrap" || name === "bootstrap_hub") {
-      const mode = required(args, "mode");
-      if (mode !== "all-to-main" && mode !== "base-to-main-knowledge-pr") throw new Error("bootstrap mode is invalid");
       const repositoryUrl = required(args, "repository_url");
       const targetBranch = required(args, "target_branch");
       return result(name === "preview_hub_bootstrap"
-        ? await actions.previewBootstrap(repositoryUrl, targetBranch, mode)
-        : await actions.bootstrap(repositoryUrl, targetBranch, mode));
+        ? await actions.previewBootstrap(repositoryUrl, targetBranch)
+        : await actions.bootstrap(repositoryUrl, targetBranch));
     }
     if (name === "preflight_hub_ingest") {
       return result(await actions.preflight(required(args, "source_repository")));

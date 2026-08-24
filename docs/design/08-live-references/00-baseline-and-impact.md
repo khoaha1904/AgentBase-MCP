@@ -19,8 +19,8 @@ live-value state machine riêng.
 - `read_hub_okf_concept` đọc exact Published Markdown gồm snapshot và
   provenance; không bind hoặc probe repository.
 - Refresh reconcile theo item: omission preserves, current Repository chỉ sửa
-  contribution của nó, foreign observations phải giữ nguyên và lifecycle intent
-  owns explicit removal.
+  contribution của nó, foreign observations phải giữ nguyên và exact reviewed
+  correction/removal owns deletion.
 - Shared obvious-secret guard chặn authoring/publication/Hub CI. Exact Published
   Markdown read không tạo một field-level transformation layer riêng.
 - Normal Code Graph/search/snippet tools đã đọc authorized local source; không
@@ -43,18 +43,19 @@ current source. Runtime đã bỏ contract và action đó, không dual-read/dua
 
 Không có Published concept theo contract cũ nên không cần migration layer.
 
-## Capability còn deferred
+## Capability còn deferred hoặc chờ audit
 
-1. Freshness CI/report và stale warning orchestration.
-2. Remote repository file read qua MCP-managed token.
-3. Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
+1. Remote repository file read qua MCP-managed token chờ implementation audit.
+2. Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
+3. Ordinary answer wording/mark cho snapshot age thuộc Part 10; Hub CI freshness
+   projection đã implement warning-only.
 
 ## Impact checkpoint
 
 | Boundary | Impact | Lý do |
 |---|---|---|
 | Observed-value/file-source contract | Contained clean cutover | Xóa semantic locator fields và reuse existing snapshot/source validation. |
-| Snapshot query/freshness | Contained change | Read exact Published bytes; CI derives age/revision separately. |
+| Snapshot query/freshness | Implemented foundation | Read exact Published bytes; CI derives age/revision separately. |
 | Explicit local current-source read | Reuse | Existing graph/search/snippet tools; no live resolver. |
 | Historical integrity + shared Question | Contained after Part 07 | Dedicated proposal; current-path move only degrades lookup. |
 | Remote repository read | Broad change | MCP GitHub token, exact file authorization and degradation. |

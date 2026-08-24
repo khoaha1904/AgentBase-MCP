@@ -1,6 +1,7 @@
 # 10.01 — Source selection
 
-> Trạng thái: Technical design đã chốt theo high-level; host skill wiring chưa hoàn chỉnh.
+> Trạng thái: Implemented qua public skill `agentbase-query`; MCP không có
+> reasoning router hoặc combined-answer tool.
 
 ## Outcome
 
@@ -47,7 +48,7 @@ giữa các claim.
    trên. Snapshot và Question cũng nằm trong exact concept Markdown.
 
 Hai action này chỉ đọc exact Published commit đã synchronize về local. Local
-Draft được inspect/review riêng; local-only Hub chưa có Published để query.
+Draft được inspect/review riêng; không có remote profile thì Hub query unavailable.
 
 Search ambiguity chỉ hỏi lại Domain/repository khi lựa chọn đó làm thay đổi
 đáng kể kết quả. Không bắt user chọn “Hub mode” hay biết tên tool.
@@ -61,8 +62,8 @@ snapshot.
 ## Code Graph route
 
 1. Chọn đúng một explicit local repository root; không scan workspace cha.
-2. Reuse `use-codebase-memory`: index/reuse freshness, tìm structure/symbol/path,
-   rồi đọc exact snippet.
+2. Reuse internal support skill `use-codebase-memory`: index/reuse freshness,
+   tìm structure/symbol/path, rồi đọc exact snippet.
 3. Một MCP connection chỉ bind một repository tại một thời điểm. Muốn đọc local
    repository khác thì gọi controlled `index_repository` với exact root; gateway
    đóng sạch session cũ rồi bind session mới. Không ghép graph của nhiều repo.
@@ -107,5 +108,5 @@ luôn là workflow review riêng.
 - Reuses AB-QUERY-001 for Hub-versus-Code-Graph priority.
 - Reuses AB-QUERY-002..004 and AB-QUERY-012..013 for bounded exact-Published reads.
 - Reuses AB-MCP-015 and AB-QUERY-006..009 for snapshot/current-source separation.
-- Adds no runtime requirement until a later implementation slice changes the
-  existing tool or skill surface.
+- Capability 041 implements this routing in `agentbase-query` without changing
+  the existing 42-tool MCP surface.

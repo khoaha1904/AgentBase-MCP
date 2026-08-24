@@ -1,15 +1,16 @@
 # 01.01 — Skill orchestration
 
-> Trạng thái: Single-repository Ingest/Refresh orchestration implemented.
+> Trạng thái: Single-repository orchestration implemented; workspace routing
+> contract accepted and pending implementation audit.
 
 ## Quyết định
 
-Ingest/Refresh skill là workflow entrypoint. Agent chạy skill và quyết định bước
-điều tra tiếp theo; MCP cung cấp bounded tools và dữ liệu, không tự diễn giải
-repository hoặc tự chọn concept.
+`agentbase-query`, Ingest và Refresh là các public workflow entrypoint. Agent
+chạy skill và quyết định bước điều tra tiếp theo; MCP cung cấp bounded tools và
+dữ liệu, không tự diễn giải repository hoặc tự chọn concept.
 
 ```text
-Ingest/Refresh skill
+Public workflow skill
         ↓
 Agent điều phối từng bước
         ↓
@@ -22,6 +23,8 @@ Agent áp dụng concept/schema rules
 
 ### Skill
 
+- dùng Published Hub trước cho câu hỏi overview/Domain;
+- chỉ gọi Code Graph khi câu hỏi thật sự cần source local;
 - quy định thứ tự và điều kiện chuyển bước;
 - yêu cầu domain confirmation trước authoring;
 - gọi workflow Code Graph khi cần cấu trúc hoặc implementation evidence;
@@ -42,9 +45,24 @@ Agent áp dụng concept/schema rules
 - trả graph result, source snippet, validation và Hub operations có giới hạn;
 - không tự quyết định Domain, concept, schema hoặc truth.
 
+## Chọn repository trong workspace
+
+Một thư mục cha chứa nhiều Git repository chỉ là routing scope. Skill chọn
+repository theo thứ tự đơn giản sau:
+
+1. path hoặc repository được người dùng nêu rõ;
+2. Git root chứa working directory hiện tại;
+3. repository duy nhất mà Hub xác định và host đã biết có checkout trong
+   workspace được người dùng mở;
+4. nếu vẫn còn nhiều lựa chọn, hỏi người dùng.
+
+Agent không tự quét các thư mục tùy ý trên máy. Một câu hỏi cần source từ nhiều
+repository được xử lý tuần tự, đóng session hiện tại trước khi bind repo tiếp
+theo. Không tạo combined graph.
+
 ## Tái sử dụng skill hiện tại
 
-Ingest/Refresh skill điều phối hai workflow hiện có thay vì copy chúng:
+Public skill điều phối hai workflow nội bộ hiện có thay vì copy chúng:
 
 - `use-codebase-memory` cho map, search, trace và source retrieval;
 - `agentbase-okf` cho authoring, validation và review boundary.

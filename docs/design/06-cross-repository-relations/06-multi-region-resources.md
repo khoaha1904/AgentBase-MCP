@@ -72,7 +72,8 @@ Cách này ưu tiên graph nhỏ và đúng hơn một graph chi tiết nhưng m
 - Deployment được thay thế giữ history qua Git/supersede proposal; ID cũ không
   tiếp tục được trình bày như current alias.
 - Nếu evidence mới chứng minh deployments đã có independent query value,
-  Enrichment có thể propose split; reverse merge dùng explicit 06.05 workflow.
+  Enrichment có thể propose split; reverse merge của Published concepts được
+  giữ thành Question vì merge/redirect là post-MVP.
 
 ## Ví dụ
 
@@ -88,4 +89,3 @@ Cách này ưu tiên graph nhỏ và đúng hơn một graph chi tiết nhưng m
 Đây là **Contained change sau 06.02**. Không cần Region entity, deployment graph,
 new schema hoặc provider-specific concept tree. Independent deployment concepts
 chỉ xuất hiện khi concept qualification hiện tại chứng minh query value.
-

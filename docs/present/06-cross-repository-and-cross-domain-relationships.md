@@ -39,9 +39,12 @@ input/output và endpoint chỉ tạo match candidate. Trong Domain Enrichment,
 người dùng có thể cấp một CLI session đã login để Provider Verification kiểm
 tra read-only; MCP không login, lưu credential hoặc scan toàn bộ account/region.
 
-Nếu được xác nhận là cùng resource, Hub giữ một concept chuẩn cùng aliases,
-external identities, evidence, relation và lịch sử từ cả hai phía. Việc xác
-nhận chỉ tạo Local Draft, không tự thay đổi Published Hub.
+Nếu một Published concept đã là canonical và candidate mới chỉ bổ sung evidence,
+Domain Enrichment có thể enrich concept đó qua proposal. Duplicate trong cùng
+proposal có thể được gom trước Accept.
+
+Nếu hai concept đều đã Published, MVP giữ cả hai và tạo Question/merge
+candidate. Nó không tự merge, xóa hoặc tạo redirect; migration đó để sau MVP.
 
 Một lần Domain Enrichment có thể xử lý nhiều repository, Questions và relation
 candidate của cùng Domain. Kết quả được gom thành một publication change để
@@ -51,15 +54,11 @@ Cùng một logical resource ở nhiều region mặc định vẫn là một co
 deployment reference. Chỉ tách khi từng deployment có vai trò, lifecycle hoặc
 giá trị query độc lập.
 
-## Identity khi merge
+## Identity và giới hạn MVP
 
-Concept ID ổn định và tách khỏi display name. Published + Local Draft giữ ID đã
-Published; hai Local Draft cần người dùng xác nhận concept chuẩn. Hai concept
-đều Published không bao giờ tự merge và cần explicit review; quy tắc canonical
-ID/redirect được chuyển sang low-level.
+Concept ID ổn định và tách khỏi display name. External identity dùng envelope
+provider-neutral; AWS/SQS là verification profile đầu tiên. Account và region
+được xác nhận explicit khi identity cần scope đó, không thử nhiều region.
 
-## Còn để low-level quyết định
-
-- Cấu trúc external identity cho từng provider và IaC resource chưa deploy.
-- Cách chọn region, lệnh verification và mapping provider cụ thể.
-- Canonical ID, redirect và history khi hợp nhất hai concept đã Published.
+Merge/redirect hai Published concepts là post-MVP. Question giữ evidence để một
+migration được thiết kế và review sau mà không mất dấu duplicate.

@@ -38,6 +38,10 @@ Preflight trả:
 AI không tự xác nhận. User input cũng không được tin mù quáng: mismatch phải được
 hiển thị, nhưng owner là người quyết định cuối.
 
+Tên của parent folder có thể là một hint trình bày, không phải Domain evidence.
+Khi parent chứa nhiều Git repository, bounded documentation vẫn được kiểm tra
+riêng cho từng repo.
+
 ## New, Refresh và correction
 
 - Initial Ingest tạo/reuse Domain và Repository assignment sau xác nhận.

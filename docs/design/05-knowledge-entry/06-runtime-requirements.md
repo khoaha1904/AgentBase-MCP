@@ -11,7 +11,8 @@ Normative OKF source is pinned to commit
 ## Repository proposal lifecycle
 
 - **AB-MVP-008** — The current host coding agent performs synthesis through the
-  repository `agentbase-okf` skill; AgentBase adds no model SDK or model key.
+  internal supporting `agentbase-okf` skill after a public workflow prepares
+  the exact workspace; AgentBase adds no model SDK or model key.
 - **AB-MVP-009** — `okf prepare` byte-copies current knowledge into an isolated
   proposal and never mutates the shared `okf/` bundle.
 - **AB-MVP-010, AB-MVP-011** — Concept files have bounded parseable YAML
@@ -401,3 +402,8 @@ Normative OKF source is pinned to commit
   Embedded candidates remain self-owned. Interface/Resource promotion still
   needs candidate-owned semantic boundary evidence. Unknown evidence and
   source, schema and relationship gates remain strict.
+- **AB-SCHEMA-049** — The released MCP schema surface is exactly catalog list,
+  exact schema read, evidence-bearing authoring guidance and changed-set
+  validation. Fine-grained signal selection, per-concept validation, separate
+  relationship validation and whole-bundle validation are internal policy or
+  retired historical adapters, not public tools.

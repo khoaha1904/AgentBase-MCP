@@ -1,6 +1,6 @@
 # 12 — Version scope
 
-> Trạng thái: MVP capability boundary implemented and verified.
+> Trạng thái: MVP capability boundary owner-approved; implementation audit in progress.
 
 High-level decision:
 [Giới hạn và phạm vi phiên bản đầu](../../present/12-current-limits-and-open-decisions.md)
@@ -29,6 +29,8 @@ owner và một registry nữa sẽ thành dead-spec duplicate.
 
 - Catalog 7 with sparse provider-neutral concepts and embedded resources.
 - Local single-repository Initial Ingest/Refresh plus Batch Initial Ingest.
+- Public bounded workspace Scan routes user-selected repositories without graph
+  prebuild or mixed-batch machinery.
 - Bounded read-only AWS/SQS Domain Enrichment; no provider-wide scan or auto-publish.
 - Terraform/Terragrunt structured evidence; no SAM/CloudFormation support.
 - Sol Init and Terra Refresh are benchmark policy only.
@@ -36,3 +38,6 @@ owner và một registry nữa sẽ thành dead-spec duplicate.
   exist; MCP never merges.
 - Shared Question documents, exact-scope Guidance and AWS/SQS three-tier
   enrichment are implemented. Broader inference and provider profiles remain deferred.
+- No remote profile means Code Graph/Scan only; every remote URL+branch profile
+  isolates Published, Draft and credential state. Exact-empty bootstrap writes
+  README + root index + CI baseline directly once; later changes use PRs.

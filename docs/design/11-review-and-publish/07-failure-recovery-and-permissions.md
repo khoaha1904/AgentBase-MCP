@@ -14,9 +14,10 @@ dùng dedicated Hub token; không có quyền hay retry system thứ hai.
   action duy nhất được dùng Hub token.
 - Token nằm trong owner-private MCP configuration, không vào tool arguments,
   Git URL, Hub, receipt, error hoặc model context.
-- MCP publication authority chỉ gồm bounded branch push, PR create/adopt/update
-  và fetch; không gồm merge, approve, close, force-push, branch delete hay
-  repository settings.
+- MCP publication authority gồm bounded proposal-branch push, PR
+  create/adopt/update và fetch, plus exact-empty one-time baseline bootstrap. Nó
+  không gồm merge, approve, close, force-push, branch delete hay repository
+  settings.
 - Source/provider credentials là authority khác và không được mượn để publish.
 
 ## Failure classes

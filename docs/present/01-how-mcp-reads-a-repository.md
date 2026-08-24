@@ -1,6 +1,8 @@
 # 01 — MCP đọc một dự án như thế nào?
 
-> Trạng thái: Hướng sản phẩm đã chốt; local Code Graph và bounded source reading đã implement.
+> Trạng thái: Hướng sản phẩm đã chốt; local Code Graph đã implement. Quy tắc
+> chọn repository trong workspace nhiều repo chờ audit implementation sau khi
+> hoàn tất 12 phần.
 
 ## Câu trả lời ngắn
 
@@ -48,6 +50,36 @@ xuất để đưa vào Hub.
 
 Code Graph chỉ được dùng cho repository đã có local hoặc nằm trong workspace.
 MCP không tự clone repository remote để dựng graph khi người dùng query.
+
+## Khi workspace có nhiều repository
+
+Mỗi Git repository vẫn có Code Graph riêng. Thư mục cha chỉ là phạm vi giúp
+Agent chọn repository cần đọc, không trở thành một graph lớn.
+
+- Nếu thư mục đang mở là một Git monorepo, toàn bộ Git root dùng một graph;
+  các project con chỉ là những scope/path bên trong graph đó.
+- Nếu thư mục đang mở chứa nhiều Git repository độc lập, Agent chọn đúng repo
+  theo yêu cầu rõ ràng, repo chứa working directory hiện tại, hoặc mapping local
+  duy nhất đã biết từ Hub.
+- Nếu có nhiều repo đều hợp lý, Agent hỏi lại thay vì tự đoán.
+- Câu hỏi overview/domain dùng Published Hub trước và không cần dựng graph.
+- Câu hỏi cần source của nhiều repo đọc từng repo tuần tự; không gộp graph và
+  không tự quét toàn workspace.
+
+Ngoại lệ là khi người dùng gọi explicit `agentbase-scan`: workflow này chỉ tìm
+Git roots trong workspace đã chọn để lập inventory, có bounds rõ và không dựng
+Code Graph hay đọc source sâu.
+
+## Khi nào graph được tạo?
+
+Graph được tạo hoặc reuse theo kiểu lazy: chỉ khi một workflow thật sự cần đọc
+source chính xác của repository đã chọn. Việc mở thư mục cha hoặc chỉ query Hub
+không làm MCP prebuild graph.
+
+Trong Ingest, graph được tạo hoặc reuse ở bước điều tra. Trong Refresh, MCP chỉ
+reuse cache khi repository identity, source revision, engine và namespace khớp;
+nếu source đã đổi thì index lại. Process được đóng sau run, còn cache local có
+thể giữ lại. Không có watcher, daemon hoặc background indexing mặc định.
 
 ## Một câu để trình bày
 

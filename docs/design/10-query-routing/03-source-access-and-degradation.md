@@ -1,6 +1,7 @@
 # 10.03 — Source access and degradation
 
-> Trạng thái: Technical design đã chốt theo owner decisions; remote reader chưa implement.
+> Trạng thái: Local degradation contract accepted; remote reader is the first
+> post-phase query capability and is outside MVP only.
 
 ## Outcome
 
@@ -15,7 +16,8 @@ câu trả lời degrade về Hub/snapshot thay vì fail toàn bộ hoặc đoá
   concept hoặc field ACL riêng.
 - **Local source access**: user đã chọn một exact local/workspace repository root
   cho current MCP connection.
-- **Remote source access**: future bounded MCP action dùng MCP-managed token;
+- **Remote source access**: post-MVP bounded MCP action dùng active
+  MCP-managed GitHub.com/GitHub Enterprise token;
   calling agent không nhận token và không dùng `gh`/ambient credential.
 - **Provider access**: không thuộc normal query route; provider CLI observations
   chỉ chạy trong explicit Domain Enrichment workflow.
@@ -78,7 +80,8 @@ explicitly re-index; ordinary Hub/snapshot query không index.
 
 ## Remote references
 
-Remote file reading remains deferred. Khi chưa có action đó:
+Remote file reading is deferred from MVP but prioritized immediately after this
+phase. Khi chưa có action đó:
 
 - khác repository không local → `unavailable/repository-not-local`;
 - trả Hub knowledge và snapshot nếu có;
@@ -87,9 +90,16 @@ Remote file reading remains deferred. Khi chưa có action đó:
 - không clone repository, gọi GitHub trực tiếp hoặc mượn publication transport
   như một hidden reader.
 
-Future remote reader phải là capability riêng vì nó thay credential/permission
-boundary. Nó dùng exact Repository identity + bounded file reference và cùng
-degradation contract; Part 10 không tự thiết kế transport trong slice này.
+Remote reader capability dùng exact canonical Repository identity, bounded
+file/revision reference và active profile token. Token chỉ ở MCP server, không
+đưa cho Agent; GitHub.com và GitHub Enterprise khác base API nhưng dùng cùng
+product contract. Nó không clone repo, dùng `gh`, scan repo hoặc biến local path
+thành shared authority.
+
+Remote default branch/head phù hợp cho explicit current-source request; exact
+historical revision phù hợp để kiểm tra provenance. Transport, branch
+resolution và response bounds sẽ được chốt trong capability đó, không nhồi vào
+MVP query implementation.
 
 ## Integrity and safety failures
 

@@ -1,6 +1,7 @@
 # 07.00 — Baseline and impact
 
-> Trạng thái: Shared Question MVP đã implement; enrichment còn deferred.
+> Trạng thái: Shared Question và AWS/SQS three-tier enrichment đã implement;
+> per-item lifecycle states removed from MVP.
 
 ## Outcome
 
@@ -21,7 +22,8 @@ trong Domain Enrichment.
   exact revision check ngăn trả lời một Question đã đổi dưới chân user.
 - `answer_hub_question` yêu cầu explicit `human:*`, tạo đúng một Maintainer
   Guidance proposal và không sửa accepted Hub bytes trực tiếp.
-- Refresh đã có explicit remove/supersede/retract intent và review grouping.
+- Refresh đã có explicit removal/correction intent và review grouping; current
+  runtime terms `supersede/retract` cần được audit/simplify theo current contract.
 - Hub query đã đọc canonical claims/relations tại exact commit nhưng chưa compose
   conflict-aware answer đầy đủ.
 
@@ -34,8 +36,7 @@ trong Domain Enrichment.
 3. Maintainer Guidance hiện bind exact subject/property; chưa có reviewed
    Domain/Hub-wide scope hoặc provider evidence resolution.
 4. Conflict-aware query composition và batch Question resolution chưa có.
-5. Supersede/retract hiện tập trung Refresh contribution; general knowledge
-   history/visibility rules chưa breakout.
+5. Conflict-aware query composition đầy đủ thuộc phần 10.
 
 ## Impact checkpoint
 
@@ -46,7 +47,7 @@ trong Domain Enrichment.
 | Needs Review lifecycle | Contained after shared model | Thêm transition dựa trên new evidence/guidance revision. |
 | Maintainer Guidance scope | Contained change | Reuse current proposal/document path và explicit human authority. |
 | Conflict presentation | Contained after model | Chủ yếu query/read composition, không cần scorer. |
-| General supersede/retract | Broad change | Ảnh hưởng current query, history và destructive proposal validation. |
+| Exact correction/removal | Contained change | Proposal/PR nêu reason/evidence; Git giữ history, không thêm tombstone state. |
 | Batch Question resolution | Broad change | Dùng Domain Enrichment multi-repository proposal/checkpoints ở phần 06/09. |
 
 Không cần rewrite OKF concepts, Git-backed Hub hoặc proposal lifecycle. Phần 08

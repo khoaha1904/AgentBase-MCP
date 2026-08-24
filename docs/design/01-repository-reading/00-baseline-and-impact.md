@@ -1,6 +1,6 @@
 # 01 — Baseline and impact checkpoint
 
-> Trạng thái: Đã xác nhận hướng skill điều phối, MCP cung cấp công cụ.
+> Trạng thái: Baseline hiện tại đã implement; workspace routing mới chờ audit.
 
 ## Baseline hiện tại
 
@@ -11,7 +11,9 @@ AgentBase-MCP đã có các primitive cần thiết để đọc một repositor
 - source identity, freshness receipt và explicit refresh;
 - bounded evidence bundle có source path và line span;
 - kiểm tra repository không bị provider sửa trong graph round;
-- skill riêng cho Code Graph và skill riêng cho OKF authoring.
+- public `agentbase-query`, `agentbase-ingest`, `agentbase-refresh` và các
+  workflow batch/domain liên quan;
+- internal `use-codebase-memory` cho Code Graph và `agentbase-okf` cho authoring.
 
 Nguồn baseline:
 
@@ -21,24 +23,22 @@ Nguồn baseline:
 - [Managed graph skill](../../../.agents/skills/use-codebase-memory/SKILL.md)
 - [OKF authoring skill](../../../.agents/skills/agentbase-okf/SKILL.md)
 
-## Gap
+## Gap hiện tại
 
-Hai workflow hiện vẫn đứng riêng:
+Public skills đã điều phối Hub, Code Graph và authoring. Gap cần audit sau review
+12 phần chỉ còn ở host-level routing: khi caller đứng ở một thư mục cha chứa
+nhiều Git repository, Agent phải chọn một repository explicit hoặc duy nhất hợp
+lý trước khi gọi graph; nếu vẫn mơ hồ thì hỏi lại.
 
-1. skill Code Graph giúp Agent điều tra source;
-2. skill OKF bắt đầu khi proposal và bounded evidence đã được chuẩn bị.
-
-Chưa có một Ingest/Refresh skill làm entrypoint, điều phối việc đọc README/docs,
-dựng hoặc reuse graph, điều tra source, chuẩn bị evidence rồi chuyển sang
-authoring. Graph round hiện cũng nhận một task focus đã được caller chọn; nó
-không tự hiểu repository hoặc tự quyết định concept.
+MCP runtime không cần tự hiểu ý nghĩa workspace, tự chọn concept hoặc duy trì
+một registry mới. Graph round tiếp tục nhận đúng repository và task focus do
+workflow đã xác định.
 
 ## Impact
 
-**Contained change.** Tái sử dụng provider, MCP tools, freshness và evidence
-contracts. Không thêm graph engine, background worker, model SDK hoặc workflow
-database. Phần 01 chỉ thiết kế cách Agent/skill gọi các primitive; orchestration
-Ingest/Refresh đầy đủ thuộc phần 09.
+**Contained change.** Tái sử dụng provider, MCP tools, freshness, evidence và
+public skills hiện có. Không thêm graph engine, background worker, model SDK,
+workflow database, combined graph hoặc workspace registry.
 
 Nếu thiết kế sau này yêu cầu MCP tự khám phá toàn repository bằng một fixed
 pipeline không có Agent điều phối, impact sẽ thành broad change và mâu thuẫn với

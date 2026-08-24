@@ -23,10 +23,10 @@ immutable Local Draft commit
 PR preview/body + exact Git diff
 ```
 
-Preview nhóm `Added`, `Updated`, `Removed`, `Superseded/Retracted` và
-`Questions/Limitations`. Mỗi entry giữ path, change kind, allowed state, reason
-khi có, bounded before/after bytes và digest. Destructive entry phải giữ
-lifecycle reason/evidence; preview không tự suy diễn lý do từ Git diff.
+Preview nhóm `Added`, `Updated`, `Removed` và `Questions/Limitations`. Mỗi entry
+giữ path, change kind, allowed state, reason khi có, bounded before/after bytes
+và digest. Destructive entry phải giữ correction/removal reason/evidence;
+preview không tự suy diễn lý do từ Git diff.
 
 ## Atomic selection rule
 

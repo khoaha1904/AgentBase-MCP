@@ -1,7 +1,28 @@
 # Current capability
 
-Active capability: None.
-Most recent completed: [`039-install-product-skills`](039-install-product-skills/spec.md).
+Active capability: [`043-converge-product-contracts`](043-converge-product-contracts/spec.md).
+Most recent completed: [`042-correct-tool-guidance`](042-correct-tool-guidance/spec.md).
+
+Capability 043 reviews the twelve current product areas sequentially with the
+owner, aligns high-level and low-level authority, and defers runtime changes
+until one post-review implementation-gap audit. Part 01 now defines lazy
+per-Git-repository graphs and treats a multi-repository workspace directory as
+routing scope rather than one combined graph.
+
+Capability 042 keeps the released 42-tool surface unchanged while correcting
+public Code Graph guidance and safety hints, and assigns the existing Question
+review actions to the public Hub workflow.
+
+Capability 041 standardizes the released product-skill catalog into six public
+user-goal workflows and two internal supporting workflows. It adds one
+read-only `agentbase-query` owner for ordinary Hub/Code Graph questions, keeps
+canonical `agentbase-*` names across clients and adds no MCP tool or `abs-*`
+alias.
+
+Capability 040 reduces the released MCP surface from 49 to 42 tools: 29 Hub,
+four schema/authoring and nine Code Graph actions. It removes raw provider and
+legacy fine-grained adapters, curates `index_repository` to AgentBase's actual
+one-repository boundary and keeps every current MVP workflow unchanged.
 
 Capability 039 installs the seven released AgentBase product skills into the
 user scope of each interactively selected client. A fixed allowlist excludes

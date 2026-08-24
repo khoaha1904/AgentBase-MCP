@@ -1,6 +1,7 @@
 # 10.04 — Conflict-aware responses
 
-> Trạng thái: Technical design đã chốt theo Part 07; shared Question query chưa implement.
+> Trạng thái: Published Question/Guidance và conflict presentation được public
+> skill `agentbase-query` điều phối qua current query primitives.
 
 ## Outcome
 
@@ -30,8 +31,7 @@ Mỗi position giữ:
 - exact value/relation/identity statement;
 - knowledge kind và source role;
 - source reference, source/Hub revision, observed time/age khi có;
-- Published/Local Draft layer và proposal attribution;
-- active, superseded hoặc retracted lifecycle state khi applicable.
+- Published Hub hoặc transient current-source position và exact attribution.
 
 Positions có exact typed value/statement giống nhau có thể group để giảm lặp,
 nhưng mọi source/provenance vẫn còn. Positions khác nhau không overwrite,
@@ -51,9 +51,9 @@ publication state.
 - Question có missing evidence nhưng chưa có answer vẫn là useful knowledge;
   query không tạo placeholder position.
 
-Specific Guidance có thể trình bày trước broad Repository/Domain/Hub Guidance
-để giải thích context, nhưng specificity chỉ là display order. Hai Guidance
-mâu thuẫn vẫn giữ conflict.
+Exact Question-scoped Guidance được label rõ là human direction. Quyết định rộng
+hơn nằm trong evidenced Domain/System knowledge, không qua broad Guidance scope
+engine.
 
 ## Snapshot-default and current source
 
@@ -103,19 +103,18 @@ omitted_count
 ```
 
 Every position/guidance/question retains its own layer and provenance. Combined
-Published/Local Draft results may visually group identical positions but never
-erase layer attribution. Bounded truncation follows the underlying query limits
+Published/current-source results may visually group identical positions but
+never erase attribution. Bounded truncation follows the underlying query limits
 and reports `omitted_count`; the model does not choose which conflicting source
 to hide by preference.
 
-## Current versus historical view
+## Current versus Git history
 
-- Default query uses active positions plus relevant Question/Guidance.
-- Superseded/retracted positions are excluded from normal current answer.
-- Historical/conflict query includes retired positions with reason, evidence
-  and replacement.
-- A draft tombstone/removal from Part 10.02 remains visible next to Published
-  state until publication; it is not silently treated as already retired.
+- Default query uses Published positions plus relevant Question/Guidance.
+- Reviewed correction/removal changes the Published bytes after merge.
+- Prior bytes remain in Git history; MVP has no per-item retired state/query.
+- Local Draft changes remain visible through proposal inspection and PR review,
+  not ordinary query.
 
 ## Failure boundaries
 
@@ -129,7 +128,6 @@ to hide by preference.
 
 ## Minimal implementation impact
 
-Host response rules can first live in a query skill using current primitives.
-Structured shared conflict composition waits for Part 07 Question documents.
-No scorer, confidence engine, conflict database, universal query tool or new
+Host response rules live in `agentbase-query` using current primitives. No
+scorer, confidence engine, conflict database, universal query tool or new
 dependency is justified.

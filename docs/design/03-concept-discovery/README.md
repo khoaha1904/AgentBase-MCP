@@ -1,6 +1,7 @@
 # 03 — Concept discovery
 
-> Trạng thái: Candidate/guidance foundation đã implement; review UI chưa có.
+> Trạng thái: Candidate/guidance foundation đã implement; candidate registry/UI
+> riêng không thuộc MVP.
 
 High-level decision:
 [MCP nhận diện concept thế nào?](../../present/03-how-concepts-are-identified.md)
@@ -24,5 +25,6 @@ High-level decision:
 
 Initial Ingest guidance hiện yêu cầu identity basis, query/link value,
 standalone/embedded disposition và exact owned observations. Không có numeric
-confidence engine hay candidate database. Promote/drop UI và cross-repository
-matching sâu vẫn deferred.
+confidence engine, candidate database hoặc unrelated-Draft search. Outcomes
+được review trong proposal hiện tại; cross-repository matching sâu thuộc Domain
+Enrichment.

@@ -70,7 +70,7 @@ và liệt kê nhiều provenance sources.
 - Bounded omitted count cho biết còn sources/positions chưa hiện.
 - Explicit Question query có thể mở full current state và linked evidence.
 - Resolved Question vẫn hiện mọi competing position còn current cùng accepted
-  resolution. Chỉ positions đã explicit supersede/retract chuyển sang history.
+  resolution. Reviewed correction/removal đưa old bytes về Git history.
 
 ## Hub documents và PR review
 

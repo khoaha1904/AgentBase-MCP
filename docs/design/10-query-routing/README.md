@@ -1,6 +1,8 @@
 # 10 — Query routing
 
-> Trạng thái: Published-only Hub query implemented; current-source composition remains host policy.
+> Trạng thái: Published-only Hub query và current-source composition được điều
+> phối bởi public skill `agentbase-query`; MCP vẫn deterministic. Remote file
+> reader là first post-phase query capability, ngoài MVP hiện tại.
 
 High-level decision:
 [Query từ Code Graph và Hub](../../present/10-querying-code-graph-and-hub.md)

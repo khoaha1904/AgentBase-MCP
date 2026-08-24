@@ -36,8 +36,8 @@ không copy toàn bộ source hoặc biến mọi paragraph thành record.
 - Evidence không còn xuất hiện trong Refresh không tự xóa accepted claim.
 
 Source authority và freshness được trình bày để người đọc đánh giá, không biến
-thành numeric truth score. Một exact deployed observation có thể đủ để propose
-supersede/retract, nhưng vẫn cần explicit lifecycle intent và review.
+thành numeric truth score. Exact evidence có thể đủ để propose correction hoặc
+removal, nhưng vẫn cần explicit intent và review.
 
 ## Structured claims boundary
 

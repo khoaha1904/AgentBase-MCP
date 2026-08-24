@@ -70,8 +70,8 @@ AgentBase dùng để auto-match khi thiếu released profile.
 
 Một strong identity match chỉ trả lời “cùng resource”. Canonical relation vẫn
 cần interaction evidence theo phần 06.01. Hai Published concepts cùng giữ một
-strong key tạo conflict cần explicit merge review; validator không âm thầm chọn
-concept thắng.
+strong key tạo Question/merge candidate; MVP không merge hoặc redirect và
+validator không âm thầm chọn concept thắng.
 
 ## Account và region
 
@@ -126,4 +126,4 @@ Quy tắc quyết định khi nào nhiều deployments vẫn là một concept t
 
 AWS/SQS slice đã implement portable metadata validation, provider normalization
 và Hub-wide duplicate rejection mà không thêm database, Concept Schema hoặc
-migration bắt buộc. Duplicate concept merge/redirect vẫn là capability riêng.
+migration bắt buộc. Duplicate Published concept merge/redirect là post-MVP.
