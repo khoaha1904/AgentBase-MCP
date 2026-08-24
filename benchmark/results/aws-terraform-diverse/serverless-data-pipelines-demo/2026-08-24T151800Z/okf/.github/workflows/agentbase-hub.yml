@@ -1,0 +1,40 @@
+name: AgentBase Hub CI
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Hub
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: hub
+          persist-credentials: false
+      - name: Use Node.js 24
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "24.12.0"
+      - name: Verify bundled validator
+        run: |
+          cd hub
+          node --input-type=module <<'NODE'
+          import { createHash } from "node:crypto";
+          import fs from "node:fs";
+          const manifest = JSON.parse(fs.readFileSync(".agentbase/ci/manifest.json", "utf8"));
+          const actual = "sha256:" + createHash("sha256").update(fs.readFileSync(manifest.validator.path)).digest("hex");
+          const expected = "sha256:6bbd9018137b320980afb82a959d1c6a4b4756ca87b73dcd19f254e7a68d77bc";
+          if (manifest.format !== 3 || manifest.validator.path !== ".agentbase/ci/hub-validator.mjs"
+            || manifest.validator.sha256 !== expected || actual !== expected) throw new Error("bundled Hub validator checksum mismatch");
+          NODE
+      - name: Validate Hub and report freshness
+        run: node hub/.agentbase/ci/hub-validator.mjs --root hub --format github >> "$GITHUB_STEP_SUMMARY"
