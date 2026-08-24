@@ -12,6 +12,7 @@ import { discoverRepositorySourceState } from "../../src/app/repository-okf/inde
 import { activatePersistedHubConfiguration } from "../../src/app/hub-okf/configuration/configuration-file.ts";
 import { renderHubCiBundle } from "../../src/app/hub-okf/ci/artifact.ts";
 import { renderHubReadme } from "../../src/app/hub-okf/workspace/readme.ts";
+import { PRODUCT_SKILL_NAMES } from "../installation/product-skills.mjs";
 
 const projectRoot = path.resolve(import.meta.dirname, "../..");
 const requiredTools = ["index_repository", "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept"];
@@ -32,10 +33,16 @@ const v13EnabledTools = [
   ...v13RequiredTools, "search_graph", "trace_path", "get_code_snippet", "search_code",
   "search_hub_okf", "read_hub_okf_concept",
 ];
-const initialIngestPromptVersions = new Set(["okf-author-v13", "okf-author-v14", "okf-author-v15", "okf-author-v16"]);
-const configuredInitialIngestPromptVersions = new Set(["okf-author-v16"]);
+const initialIngestPromptVersions = new Set(["okf-author-v13", "okf-author-v14", "okf-author-v15", "okf-author-v16", "okf-author-v17"]);
+const configuredInitialIngestPromptVersions = new Set(["okf-author-v16", "okf-author-v17"]);
+const skillInitialIngestPromptVersions = new Set(["okf-author-v17"]);
 const configuredInitialIngestRequiredTools = v13RequiredTools.filter((tool) => tool !== "configure_hub");
 const configuredInitialIngestEnabledTools = v13EnabledTools.filter((tool) => tool !== "configure_hub");
+const skillInitialIngestRequiredTools = configuredInitialIngestRequiredTools.filter((tool) => tool !== "get_hub_status");
+const skillInitialIngestEnabledTools = [
+  ...skillInitialIngestRequiredTools, "search_graph", "trace_path", "get_code_snippet", "search_code",
+  "index_status", "check_index_coverage", "detect_changes", "search_hub_okf", "read_hub_okf_concept",
+];
 const refreshPromptVersions = new Set(["okf-refresh-v1", "okf-refresh-v2", "okf-refresh-v3"]);
 const refreshRequiredTools = [
   "get_hub_status", "preflight_hub_ingest", "index_repository", "get_architecture",
@@ -80,6 +87,12 @@ export function validateV13Lifecycle(mcpTools, guidanceAttempts = [], requireCon
       .map((tool) => `forbidden V13 lifecycle tool observed: ${tool}`),
     ...(!requireConfigure && mcpTools.configure_hub ? ["configured Initial Ingest must not call configure_hub"] : []),
   ];
+}
+
+export function validateSkillInitialIngestLifecycle(mcpTools, guidanceAttempts = []) {
+  const failures = validateV13Lifecycle(mcpTools, guidanceAttempts, false)
+    .filter((failure) => !failure.startsWith("get_hub_status must run exactly once"));
+  return [...failures, ...(mcpTools.get_hub_status ? ["skill-backed Initial Ingest must begin with preflight, not get_hub_status"] : [])];
 }
 
 export function validateRefreshLifecycle(mcpTools) {
@@ -134,6 +147,47 @@ export function benchmarkProvenanceRepositoryId(source, promptVersion) {
 
 function writeJson(file, value) {
   fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function directoryDigest(root) {
+  const hash = createHash("sha256");
+  const visit = (directory, relative = "") => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
+      const absolute = path.join(directory, entry.name);
+      const next = path.posix.join(relative, entry.name);
+      if (entry.isDirectory()) {
+        hash.update(`d\0${next}\0`);
+        visit(absolute, next);
+      } else if (entry.isFile()) {
+        hash.update(`f\0${next}\0`);
+        hash.update(fs.readFileSync(absolute));
+        hash.update("\0");
+      } else throw new Error(`benchmark skill entry is unsafe: ${absolute}`);
+    }
+  };
+  visit(root);
+  return `sha256:${hash.digest("hex")}`;
+}
+
+function installBenchmarkProductSkills(workspace) {
+  const targetRoot = path.join(workspace, ".agents", "skills");
+  fs.mkdirSync(targetRoot, { recursive: true });
+  return Object.fromEntries(PRODUCT_SKILL_NAMES.map((name) => {
+    const source = path.join(projectRoot, ".agents", "skills", name);
+    const target = path.join(targetRoot, name);
+    if (!fs.existsSync(path.join(source, "SKILL.md"))) throw new Error(`released product skill is unavailable: ${name}`);
+    fs.cpSync(source, target, { recursive: true, errorOnExist: true, force: false });
+    return [name, directoryDigest(target)];
+  }));
+}
+
+function validateBenchmarkProductSkills(workspace, expected) {
+  for (const [name, digest] of Object.entries(expected)) {
+    const target = path.join(workspace, ".agents", "skills", name);
+    if (!fs.existsSync(target) || directoryDigest(target) !== digest) {
+      throw new Error(`released product skill changed during benchmark: ${name}`);
+    }
+  }
 }
 
 function gitSync(root, args, commitTimestamp) {
@@ -426,6 +480,7 @@ function toolUsage(completedTools, arm, promptVersion) {
     : refreshPromptVersions.has(promptVersion) ? refreshRequiredTools
     : ["okf-author-v8", "okf-author-v9", "okf-author-v10", "okf-author-v11", "okf-author-v12"].includes(promptVersion)
     ? v8RequiredTools
+    : skillInitialIngestPromptVersions.has(promptVersion) ? skillInitialIngestRequiredTools
     : configuredInitialIngestPromptVersions.has(promptVersion) ? configuredInitialIngestRequiredTools
     : initialIngestPromptVersions.has(promptVersion) ? v13RequiredTools
     : ["okf-author-v4", "okf-author-v5", "okf-author-v6", "okf-author-v7"].includes(promptVersion)
@@ -440,9 +495,10 @@ export function requiredToolFailures(usage, observedTools) {
     : `required MCP tool not observed: ${tool}`);
 }
 
-function validateAgentWorkspace(workspace) {
+function validateAgentWorkspace(workspace, allowInstalledSkills = false) {
   const entries = fs.readdirSync(workspace).sort();
-  if (entries.length !== 1 || entries[0] !== "okf") {
+  const expected = allowInstalledSkills ? [".agents", "okf"] : ["okf"];
+  if (JSON.stringify(entries) !== JSON.stringify(expected)) {
     throw new Error(`agent workspace must contain only okf/, found: ${entries.join(", ") || "nothing"}`);
   }
   if (!fs.statSync(path.join(workspace, "okf")).isDirectory()) throw new Error("agent output okf is not a directory");
@@ -463,6 +519,8 @@ export function runAgentRepository({
   const runtimeTmp = path.join(runtimeRoot, "tmp");
   fs.mkdirSync(path.join(runtimeRoot, "home"));
   fs.mkdirSync(runtimeTmp, { mode: 0o700 });
+  const skillDigests = arm === "mcp" && skillInitialIngestPromptVersions.has(manifest.promptVersion)
+    ? installBenchmarkProductSkills(workspace) : null;
   const isRefresh = refreshPromptVersions.has(manifest.promptVersion);
   if (arm === "mcp" && configuredInitialIngestPromptVersions.has(manifest.promptVersion)) seedInitialIngestHub(runtimeRoot);
   const sourceRepository = isRefresh ? createRefreshSource(repository, entry) : repository;
@@ -511,6 +569,7 @@ export function runAgentRepository({
     catalogVersion: manifest.catalogVersion,
     promptVersion,
     promptDigest: `sha256:${createHash("sha256").update(portablePrompt).digest("hex")}`,
+    ...(skillDigests ? { productSkills: skillDigests } : {}),
     agent: { ...manifest.agent, executable, actualVersion },
     startedAt,
     completedAt: null,
@@ -519,7 +578,8 @@ export function runAgentRepository({
   writeJson(path.join(root, "run.json"), run);
   const args = buildCodexArgs({
     workspace, finalMessage, model: manifest.agent.model, reasoningEffort: manifest.agent.reasoningEffort, arm, runtimeRoot,
-    ...(configuredInitialIngestPromptVersions.has(promptVersion) ? { enabledTools: configuredInitialIngestEnabledTools }
+    ...(skillInitialIngestPromptVersions.has(promptVersion) ? { enabledTools: skillInitialIngestEnabledTools }
+      : configuredInitialIngestPromptVersions.has(promptVersion) ? { enabledTools: configuredInitialIngestEnabledTools }
       : initialIngestPromptVersions.has(promptVersion) ? { enabledTools: v13EnabledTools }
       : isRefresh ? { enabledTools: refreshEnabledTools } : {}),
   });
@@ -552,7 +612,8 @@ export function runAgentRepository({
       materializeRefreshOutput(runtimeRoot, workspace);
       validateRefreshKnowledge(workspace, entry);
     }
-    validateAgentWorkspace(workspace);
+    if (skillDigests) validateBenchmarkProductSkills(workspace, skillDigests);
+    validateAgentWorkspace(workspace, Boolean(skillDigests));
     const coverageFailures = initialIngestPromptVersions.has(promptVersion)
       ? validateFinalChangeCoverage(summary.activity.finalValidationIdentities, conceptIdentities(path.join(workspace, "okf"))) : [];
     if (coverageFailures.length) throw new Error(coverageFailures.join("; "));
@@ -561,9 +622,11 @@ export function runAgentRepository({
     failure = error instanceof Error ? error.message : "unknown agent failure";
   }
   const usage = toolUsage(summary.completedTools, arm, promptVersion);
-  const v13LifecycleFailures = initialIngestPromptVersions.has(promptVersion)
-    ? validateV13Lifecycle(summary.activity.mcpTools, summary.activity.guidance.attempts,
-      !configuredInitialIngestPromptVersions.has(promptVersion)) : [];
+  const v13LifecycleFailures = skillInitialIngestPromptVersions.has(promptVersion)
+    ? validateSkillInitialIngestLifecycle(summary.activity.mcpTools, summary.activity.guidance.attempts)
+    : initialIngestPromptVersions.has(promptVersion)
+      ? validateV13Lifecycle(summary.activity.mcpTools, summary.activity.guidance.attempts,
+        !configuredInitialIngestPromptVersions.has(promptVersion)) : [];
   const refreshLifecycleFailures = refreshPromptVersions.has(promptVersion)
     ? validateRefreshLifecycle(summary.activity.mcpTools) : [];
   const directMcpFailure = arm === "direct" && summary.activity.mcpToolCalls

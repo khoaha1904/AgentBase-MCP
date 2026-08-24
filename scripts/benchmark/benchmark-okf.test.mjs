@@ -8,7 +8,7 @@ import { assessOwnerReviewUsefulness, classifyInitialIngest, createAuthoringAsse
   createPairComparison, scoreSemanticBenchmark } from "./benchmark-okf.mjs";
 import {
   summarizeAgentEvents, validateBatchLifecycle, validateFinalChangeCoverage, validateRefreshKnowledge,
-  validateRefreshLifecycle, validateV13Lifecycle,
+  validateRefreshLifecycle, validateSkillInitialIngestLifecycle, validateV13Lifecycle,
 } from "./benchmark-agent.mjs";
 
 const repositoryId = "repository-example-aaaaaaaaaaaa";
@@ -197,13 +197,17 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
   const diverseRoot = path.resolve(import.meta.dirname, "..", "..", "benchmark", "repos", "aws-terraform-diverse");
   const diverse = JSON.parse(fs.readFileSync(path.join(diverseRoot, "manifest.json"), "utf8"));
   assert.equal(diverse.catalogVersion, "7.0.0");
-  assert.equal(diverse.promptVersion, "okf-author-v16");
+  assert.equal(diverse.promptVersion, "okf-author-v17");
   assert.equal(diverse.agent.model, "gpt-5.6-sol");
   assert.equal(diverse.repositories.length, 6);
   assert.ok(diverse.repositories.every((entry) => /terraform|terragrunt/.test(entry.kind)));
   assert.ok(diverse.repositories.every((entry) => !/(?:^|[-_/])sam(?:$|[-_/])|cloudformation/i.test(
     `${entry.id}/${entry.kind}/${entry.path}`,
   )));
+  const skillLifecycle = { ...lifecycleTools };
+  delete skillLifecycle.configure_hub;
+  delete skillLifecycle.get_hub_status;
+  assert.deepEqual(validateSkillInitialIngestLifecycle(skillLifecycle, corrected.attempts), []);
 });
 
 test("[AB-BENCH-013..017] pair comparison reports quality and efficiency without a winner", () => {

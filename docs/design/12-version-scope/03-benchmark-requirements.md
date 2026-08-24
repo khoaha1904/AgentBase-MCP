@@ -273,6 +273,15 @@ benchmarks.
   the runner, forbids configuration/publication/network actions and otherwise
   preserves the Initial Ingest lifecycle. This corrects benchmark setup only;
   it does not restore local-only Hub authority or change MCP runtime behavior.
+- **AB-BENCH-072** — Diverse-suite V16 is superseded before any model run
+  because its standalone authoring prompt duplicated the released product
+  workflow. V17 installs the exact released AgentBase skill set into the
+  isolated Codex workspace and explicitly invokes `$agentbase-ingest`; its
+  prompt supplies only owner input, benchmark isolation and artifact capture.
+  The run records skill-tree digests and validates that the installed copies do
+  not change. Lifecycle scoring follows the skill contract beginning at
+  `preflight_hub_ingest`, rather than requiring the obsolete prompt-only
+  `get_hub_status` step.
 
 ## Context A/B interpretation
 
