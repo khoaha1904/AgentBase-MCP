@@ -1,12 +1,10 @@
 #!/usr/bin/env node
-import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
-import { globalHubCredentialPath, loadGlobalHubToken, writeGlobalHubToken } from "../../src/app/hub-okf/configuration/credential-file.ts";
 import { registerClients } from "./client-registration.mjs";
-import { installProductSkills, rollbackProductSkills } from "./product-skills.mjs";
+import { installProductSkills, PRODUCT_SKILL_NAMES, rollbackProductSkills } from "./product-skills.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -57,15 +55,7 @@ class CharacterReader {
 }
 
 function parseArgs(args) {
-  const accepted = new Set(["--replace-token"]);
-  const unknown = args.filter((argument) => !accepted.has(argument));
-  if (unknown.length || new Set(args).size !== args.length) throw new Error("installer accepts only one optional --replace-token flag");
-  return { replaceToken: args.includes("--replace-token") };
-}
-
-function pathPresent(target) {
-  try { fs.lstatSync(target); return true; }
-  catch (error) { if (error?.code === "ENOENT") return false; throw error; }
+  if (args.length) throw new Error("installer accepts no arguments");
 }
 
 function terminalCapabilities(output, environment) {
@@ -94,12 +84,12 @@ function renderHeader(output, capabilities) {
   output.write(`${glyph.accent(`${glyph.brand} AgentBase-MCP`)}\n`);
   output.write(`${capabilities.narrow ? "Local code intelligence + shared knowledge" : "  Local code intelligence and shared knowledge"}\n`);
   if (!capabilities.narrow) output.write(`${glyph.accent(divider)}\n`);
-  output.write(`Setup: Clients ${glyph.arrow} GitHub access ${glyph.arrow} Registration\n\n`);
+  output.write(`Setup: Clients ${glyph.arrow} Registration\n\n`);
 }
 
 function step(output, capabilities, number, title, description) {
   const glyph = ui(capabilities);
-  output.write(`${glyph.accent(`${number}/3`)}  ${glyph.bold(title)}\n`);
+  output.write(`${glyph.accent(`${number}/2`)}  ${glyph.bold(title)}\n`);
   if (description) output.write(`${capabilities.narrow ? "" : "     "}${description}\n`);
 }
 
@@ -151,27 +141,6 @@ async function readClientSelection(reader, output, capabilities) {
   }
 }
 
-async function readMaskedToken(reader, output) {
-  const token = [];
-  output.write("GitHub Hub token (Enter to skip): ");
-  while (true) {
-    const character = await reader.next();
-    if (character === undefined || character === "\u0003") throw new InstallerCancelled();
-    if (character === "\n" || character === "\r") {
-      reader.endedLine(character);
-      output.write("\n");
-      return token.join("");
-    }
-    if (character === "\u007f" || character === "\b") {
-      if (token.length) { token.pop(); output.write("\b \b"); }
-      continue;
-    }
-    if (character < " " || character === "\u007f") continue;
-    token.push(character);
-    output.write("*");
-  }
-}
-
 function installDependencies() {
   return new Promise((resolve, reject) => {
     const child = spawn("npm", ["ci", "--no-fund"], { cwd: repositoryRoot, stdio: ["ignore", "ignore", "ignore"], shell: false });
@@ -205,12 +174,12 @@ export async function runInstaller(options = {}) {
   const runClientRegistration = options.runClientRegistration ?? registerClients;
   const runProductSkillInstallation = options.runProductSkillInstallation ?? installProductSkills;
   const runProductSkillRollback = options.runProductSkillRollback ?? rollbackProductSkills;
-  const parsed = parseArgs(args);
+  parseArgs(args);
   const interactive = Boolean(input.isTTY && output.isTTY && typeof input.setRawMode === "function");
   if (!interactive) {
     await runDependencyInstall();
     output.write("AgentBase-MCP: code prepared; interactive client registration skipped.\n");
-    return { clients: [], credential: "skipped", registration: "skipped" };
+    return { clients: [], registration: "skipped" };
   }
 
   const capabilities = terminalCapabilities(output, environment), glyph = ui(capabilities);
@@ -224,26 +193,7 @@ export async function runInstaller(options = {}) {
   try {
     const clients = await readClientSelection(reader, output, capabilities);
     output.write(`${glyph.accent(glyph.success)} Clients selected: ${clients.map((client) => client === "codex" ? "Codex" : "Claude Code").join(", ")}\n\n`);
-    const credentialPath = globalHubCredentialPath(environment);
-    const credentialExists = pathPresent(credentialPath);
-    if (credentialExists) {
-      const fileOnlyEnvironment = { ...environment };
-      delete fileOnlyEnvironment.AGENTBASE_HUB_GITHUB_TOKEN;
-      loadGlobalHubToken(fileOnlyEnvironment);
-    }
-    let credential = "preserved";
-    if (!credentialExists || parsed.replaceToken) {
-      step(output, capabilities, 2, "GitHub access", "Used later to read or publish an AgentBase-Hub.");
-      const token = await readMaskedToken(reader, output);
-      credential = token
-        ? writeGlobalHubToken(token, environment, { replace: parsed.replaceToken })
-        : credentialExists ? "preserved" : "skipped";
-    } else {
-      step(output, capabilities, 2, "GitHub access", "Used later to read or publish an AgentBase-Hub.");
-      output.write(`${glyph.accent(glyph.success)} Existing GitHub token preserved\n`);
-    }
-    output.write("\n");
-    step(output, capabilities, 3, "Connect clients", "Install product skills and register AgentBase-MCP.");
+    step(output, capabilities, 2, "Connect clients", "Install product skills and register AgentBase-MCP.");
     output.write(`${glyph.pending} Installing AgentBase skills and MCP...\n`);
     const { registration, skills } = await connectSelectedClients({
       clients,
@@ -260,12 +210,11 @@ export async function runInstaller(options = {}) {
       const result = registration.clients[client] === "already-registered" ? "Already connected" : "Connected";
       output.write(`  ${label.padEnd(13)} ${result}\n`);
       const skillResult = skills.clients[client] === "already-installed" ? "Already installed" : "Installed";
-      output.write(`  ${`${label} skills`.padEnd(13)} ${skillResult} (7)\n`);
+      output.write(`  ${`${label} skills`.padEnd(13)} ${skillResult} (${PRODUCT_SKILL_NAMES.length})\n`);
     }
-    const tokenResult = credential === "created" ? "Saved securely" : credential === "preserved" ? "Preserved" : "Skipped";
-    output.write(`  ${"GitHub token".padEnd(13)} ${tokenResult}\n\n`);
+    output.write("\n");
     output.write(`${glyph.bold("Next")}\n  Open a new ${clients.map((client) => client === "codex" ? "Codex" : "Claude Code").join(" or ")} session to load AgentBase-MCP.\n`);
-    return { clients, credential, registration, skills: skills.clients };
+    return { clients, registration, skills: skills.clients };
   } finally {
     input.setRawMode(false);
   }

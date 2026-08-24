@@ -74,11 +74,18 @@ test("[AB-INSTALL-025..031][AB-QUESTION-006] installs only product skills with s
   assert.deepEqual(skillNames(path.join(preserved.CODEX_HOME, "skills")), []);
 
   let skillInstallCalled = false;
+  const preparedEnvironment = environment();
   const preparedOnly = await runInstaller({
-    args: [], input: { isTTY: false }, output: { isTTY: false, write() {} }, environment: environment(),
+    args: [], input: { isTTY: false }, output: { isTTY: false, write() {} }, environment: preparedEnvironment,
     runDependencyInstall: async () => {},
     runProductSkillInstallation: async () => { skillInstallCalled = true; },
   });
   assert.equal(skillInstallCalled, false);
   assert.equal(preparedOnly.registration, "skipped");
+  assert.equal("credential" in preparedOnly, false);
+  assert.equal(fs.existsSync(path.join(preparedEnvironment.HOME, ".config", "agentbase-mcp")), false);
+  await assert.rejects(runInstaller({
+    args: ["--replace-token"], input: { isTTY: false }, output: { isTTY: false, write() {} },
+    environment: environment(), runDependencyInstall: async () => {},
+  }), /accepts no arguments/);
 });

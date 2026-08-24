@@ -62,7 +62,7 @@ default for every Hub.
 - **AB-INSTALL-023** — Rich rendering preserves client selection, transaction
   recovery, secret-free failure and terminal restoration without a credential UI.
 - **AB-INSTALL-024** — Deterministic tests cover chunked key sequences,
-  multi-select, validation, color/narrow/dumb fallbacks, token/results and
+  multi-select, validation, color/narrow/dumb fallbacks, client results and
   non-interactive output without real configuration mutation.
 
 ## Product skills
