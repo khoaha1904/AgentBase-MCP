@@ -10,7 +10,7 @@ thứ hai dễ stale.
 ```text
 accepted commit còn sau remoteBase     → Local Draft
 + matching open PR                     → In Review
-proposal identity có trong remote main → Published
+proposal identity có trong remote target branch → Published
 ```
 
 ## Rules
@@ -20,7 +20,7 @@ proposal identity có trong remote main → Published
 - **In Review**: Local Draft có exact matching open PR branch/base/head. Đây là
   derived display state, không thay thế Local Draft và không ghi vào Hub.
 - **Published**: chỉ khi Synchronize nhận diện proposal trong fetched remote
-  `main` bằng commit, proposal/diff trailer hoặc stable patch identity.
+  target branch bằng commit, proposal/diff trailer hoặc stable patch identity.
 - PR closed nhưng chưa merge: proposal vẫn là Local Draft và có thể được sửa/
   publish lại qua workflow review; MCP không tự reopen hoặc tạo PR khác âm thầm.
 - GitHub unavailable: publication review state là `unknown`; Local Draft không
@@ -28,6 +28,9 @@ proposal identity có trong remote main → Published
 
 Publication receipt và transaction phase chỉ phục vụ retry/recovery. Chúng
 không quyết định knowledge đã Published hay chưa.
+Một legacy transaction thiếu profile ID/prior Published có thể bind lại vào
+active profile chỉ khi exact Main/Published/candidate state vẫn khớp; khác biệt
+dừng để con người kiểm tra, không tự đoán.
 
 ## Transitions
 

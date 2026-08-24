@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-23
 
-**Status**: Approved
+**Status**: Complete
 
 **Input**: Make every released MVP journey reliable around a local-first,
 remote-optional Hub with isolated profiles, compact status, explicit sync and
@@ -24,7 +24,7 @@ Code Graph, then perform the first OKF authoring lifecycle and restart.
 
 1. Given a fresh install, Code Graph and status create no Hub and make no
    network call.
-2. Given the first OKF authoring mutation, one local-only Hub is created and the
+2. Given the first OKF authoring preflight, one local-only Hub is created and the
    proposal can be reviewed, accepted, queried and reopened after restart.
 
 ### User Story 2 - Connect and switch isolated Hub profiles (Priority: P1)
@@ -88,7 +88,7 @@ support CI.
 ### Functional Requirements
 
 - **FR-001**: Installation and Code Graph MUST remain Hub-independent; the first
-  authoring mutation MUST lazily establish local-only knowledge.
+  authoring preflight MUST lazily establish local-only knowledge.
 - **FR-002**: Every remote Hub MUST have a stable identity from normalized host,
   repository and branch, with isolated reusable local and credential state.
 - **FR-003**: Exactly one profile MUST be active; activation MUST NOT copy or

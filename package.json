@@ -9,6 +9,7 @@
   },
   "scripts": {
     "spec:check": "node scripts/checks/check-specs.mjs",
+    "configure:hub-token": "node scripts/installation/configure-hub-token.mjs",
     "build:hub-validator": "node scripts/build-hub-validator.mjs",
     "check:hub-validator": "node scripts/build-hub-validator.mjs --check",
     "typecheck": "tsc -p tsconfig.json --noEmit",

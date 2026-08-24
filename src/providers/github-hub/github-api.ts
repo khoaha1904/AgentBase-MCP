@@ -48,6 +48,7 @@ export class GitHubHubApi {
   readonly #http: GitHubHttp;
   readonly #timeoutMs: number;
   readonly #maximumResponseBytes: number;
+  readonly #apiBase: string;
 
   constructor(hub: HubIdentity, token: string, http: GitHubHttp = fetch, timeoutMs = 15_000, maximumResponseBytes = 1024 * 1024) {
     if (!token) throw new GitHubApiError("PERMISSION", "dedicated Hub token is missing");
@@ -56,13 +57,14 @@ export class GitHubHubApi {
     this.#http = http;
     this.#timeoutMs = timeoutMs;
     this.#maximumResponseBytes = maximumResponseBytes;
+    this.#apiBase = hub.host === "github.com" ? "https://api.github.com" : `https://${hub.host}/api/v3`;
   }
 
   async #request(method: "GET" | "POST" | "PATCH", route: string, body?: unknown): Promise<unknown> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.#timeoutMs);
     try {
-      const response = await this.#http(`https://api.github.com/repos/${this.#hub.repository}${route}`, {
+      const response = await this.#http(`${this.#apiBase}/repos/${this.#hub.repository}${route}`, {
         method,
         redirect: "error",
         signal: controller.signal,
@@ -143,6 +145,21 @@ export class GitHubHubApi {
     return values.map((value) => this.#pullRequest(value, headBranch));
   }
 
+  async countOpenPullRequests(baseBranch = this.#hub.targetBranch): Promise<Readonly<{ count: number; truncated: boolean }>> {
+    const query = new URLSearchParams({ state: "open", base: baseBranch, per_page: "100" });
+    const values = await this.#request("GET", `/pulls?${query.toString()}`);
+    if (!Array.isArray(values) || values.length > 100) throw new GitHubApiError("RESPONSE", "GitHub pulls response is invalid");
+    for (const value of values) {
+      const pull = object(value), base = object(pull.base);
+      integer(pull.number, "number");
+      text(pull.html_url, "html_url");
+      if (text(base.ref, "base.ref") !== baseBranch) {
+        throw new GitHubApiError("RESPONSE", "GitHub pull request base mismatch");
+      }
+    }
+    return { count: values.length, truncated: values.length === 100 };
+  }
+
   async createPullRequest(
     headBranch: string,
     headCommit: string,
@@ -165,18 +182,18 @@ export class GitHubHubApi {
     return this.#pullRequest(value, headBranch, headCommit, baseBranch);
   }
 
-  #pullRequest(value: unknown, expectedHead: string, expectedCommit?: string, expectedBase?: string): GitHubPullRequest {
+  #pullRequest(value: unknown, expectedHead?: string, expectedCommit?: string, expectedBase?: string): GitHubPullRequest {
     const pull = object(value), head = object(pull.head), base = object(pull.base);
     const headBranch = text(head.ref, "head.ref"), headCommit = text(head.sha, "head.sha");
     const headRepository = text(object(head.repo).full_name, "head.repo.full_name");
     const baseBranch = text(base.ref, "base.ref");
-    if (headRepository !== this.#hub.repository || headBranch !== expectedHead
+    if (headRepository !== this.#hub.repository || (expectedHead && headBranch !== expectedHead)
       || (expectedCommit && headCommit !== expectedCommit) || (expectedBase && baseBranch !== expectedBase)) {
       throw new GitHubApiError("RESPONSE", "GitHub pull request identity mismatch");
     }
     const number = integer(pull.number, "number");
     const url = text(pull.html_url, "html_url");
-    if (url !== `https://github.com/${this.#hub.repository}/pull/${number}`) {
+    if (url !== `https://${this.#hub.host}/${this.#hub.repository}/pull/${number}`) {
       throw new GitHubApiError("RESPONSE", "GitHub pull request URL mismatch");
     }
     return { number, url, headBranch, headCommit, headRepository, baseBranch };

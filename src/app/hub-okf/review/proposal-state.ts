@@ -28,13 +28,33 @@ export function readHubProposalState(proposalRoot: string): AnyHubProposal {
   return value;
 }
 
-export function acquireHubMutationLock(stateRoot: string, ownerId: string): HubMutationLock {
+function processIsAlive(pid: number): boolean {
+  try { process.kill(pid, 0); return true; }
+  catch (error) { return (error as NodeJS.ErrnoException).code === "EPERM"; }
+}
+
+export function acquireHubMutationLock(
+  stateRoot: string,
+  ownerId: string,
+  options: Readonly<{ recoverStaleOwner?: boolean }> = {},
+): HubMutationLock {
   if (!/^[A-Za-z0-9._:-]{8,128}$/.test(ownerId)) throw new Error("Hub mutation lock owner is invalid");
   const root = path.join(path.resolve(stateRoot), "mutation.lock");
   fs.mkdirSync(path.dirname(root), { recursive: true, mode: 0o700 });
+  if (fs.existsSync(root) && options.recoverStaleOwner) {
+    try {
+      const prior = JSON.parse(fs.readFileSync(path.join(root, "owner.json"), "utf8")) as { ownerId?: unknown; pid?: unknown };
+      if (prior.ownerId !== ownerId || (typeof prior.pid === "number" && processIsAlive(prior.pid))) {
+        throw new Error("another AgentBase-Hub mutation owns the local lock");
+      }
+      fs.rmSync(root, { recursive: true, force: false });
+    } catch (error) {
+      if (fs.existsSync(root)) throw new Error("another AgentBase-Hub mutation owns the local lock", { cause: error });
+    }
+  }
   try {
     fs.mkdirSync(root, { mode: 0o700 });
-    fs.writeFileSync(path.join(root, "owner.json"), `${JSON.stringify({ ownerId })}\n`, { mode: 0o600, flag: "wx" });
+    fs.writeFileSync(path.join(root, "owner.json"), `${JSON.stringify({ ownerId, pid: process.pid })}\n`, { mode: 0o600, flag: "wx" });
   } catch (error) {
     if (fs.existsSync(root)) throw new Error("another AgentBase-Hub mutation owns the local lock", { cause: error });
     throw error;

@@ -67,7 +67,7 @@ small gaps must be backfilled before benchmark, PR or capability completion.
   ledger authority. Exact-revision answers propose Guidance plus Question update
   atomically; Accept remains the state-change boundary. Broad Guidance,
   automatic conflict inference, query overlay,
-  ordinary-query freshness marks, visual review and profile migration are post-MVP capabilities.
+  ordinary-query freshness marks and visual review are post-MVP capabilities.
 
 Update current truth once in the narrowest high- or low-level document. Do not
 add handoff, roadmap, ADR or evidence-diary files that repeat it.

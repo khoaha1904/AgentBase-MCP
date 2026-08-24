@@ -7,9 +7,9 @@ import {
   getOkfAuthoringGuidance, getOkfConceptSchema, parseConceptDocument, repositorySourceResources, selectOkfConceptSchemas,
   type HubContinuityGap, type HubContinuityManifest,
 } from "../../../core/knowledge/index.ts";
-import { createCandidateWorktree, GitHubHubApi, removeCandidateWorktree } from "../../../providers/github-hub/index.ts";
+import { createCandidateWorktree, GitHubApiError, GitHubHubApi, removeCandidateWorktree } from "../../../providers/github-hub/index.ts";
 import { AWS_SQS_PROFILE, AWS_STS_PROFILE } from "../../../providers/aws-cli/index.ts";
-import type { AdmittedLocalHubState } from "../../../core/hub/index.ts";
+import { hubProfileId, type AdmittedLocalHubState } from "../../../core/hub/index.ts";
 import {
   discoverRepositorySourceChanges, discoverRepositorySourceState, resolveRepositorySourceRoot,
 } from "../../repository-okf/index.ts";
@@ -18,6 +18,8 @@ import { writeInitialIngestSkeletons } from "../authoring/initial-ingest-skeleto
 import { listHubQuestions } from "../authoring/questions.ts";
 import { acceptHubProposal } from "../review/accept.ts";
 import { resolveHubConfiguration, type OptionalHubConfiguration } from "../configuration/configuration.ts";
+import { migratePersistedHubConfiguration, readPersistedHubProfile } from "../configuration/configuration-file.ts";
+import { copyHubProfileToken, migrateHubProfileToken, removeHubProfileToken } from "../configuration/credential-file.ts";
 import { admitPersistentLocalHub } from "../workspace/local-hub.ts";
 import type { HubToolActions } from "../mcp/mcp-tools.ts";
 import { recoverSynchronizationTransaction } from "../publication/recovery.ts";
@@ -36,6 +38,7 @@ import { synchronizeLocalHub } from "../publication/synchronize.ts";
 import { attachExistingHub, createLocalHub } from "../workspace/setup.ts";
 import { executeHubBootstrap, previewHubBootstrap } from "../workspace/bootstrap.ts";
 import { createReviewActions } from "../review/review-actions.ts";
+import { writeAtomicJson } from "../review/proposal-state.ts";
 import {
   finalizeDomainEnrichment, prepareDomainEnrichment, readEnrichmentManifest, runDomainEnrichment,
 } from "../enrichment/index.ts";
@@ -114,7 +117,7 @@ function remoteFailure(error: unknown, token: string): Error {
   const message = (error instanceof Error ? error.message : "remote Hub action failed").split(token).join("[REDACTED]");
   if (/(?:status 401|status 403|exited with status)/i.test(message)) {
     return new Error(
-      "GitHub access is insufficient; update the one global token with repository read, Contents write and Pull requests write access, then retry",
+      "GitHub access is insufficient; update this Hub profile token with repository read, Contents write and Pull requests write access, then retry",
     );
   }
   return new Error(message);
@@ -157,41 +160,140 @@ export function createHubRuntimeActions(
   stateRoot = defaultStateRoot(),
 ): HubToolActions {
   const current = (): OptionalHubConfiguration => resolveHubConfiguration(environment);
-  const configured = () => {
+  const migrateActive = () => {
+    const before = current();
+    if (before.kind === "remote") {
+      const canonicalId = hubProfileId(before.hub), canonical = readPersistedHubProfile(canonicalId, environment);
+      if (canonical && (canonical.kind !== "remote" || canonical.localRoot !== before.localRoot
+        || canonical.baseCommit !== before.baseCommit || canonical.catalogVersion !== before.catalogVersion
+        || canonical.host !== before.host || canonical.repository !== before.repository
+        || canonical.targetBranch !== before.targetBranch)) {
+        throw new Error("canonical Hub profile already differs from the legacy profile");
+      }
+      migrateHubProfileToken(before.localHubId, environment);
+      copyHubProfileToken(before.localHubId, canonicalId, environment);
+    }
+    const migration = migratePersistedHubConfiguration(environment);
+    if (migration) {
+      removeHubProfileToken(migration.previousId, environment);
+      const transactions = path.join(path.resolve(stateRoot), "transactions");
+      if (fs.existsSync(transactions)) {
+        for (const entry of fs.readdirSync(transactions, { withFileTypes: true }).slice(0, 64)) {
+          if (!entry.isDirectory() || !/^sync-[a-z0-9]+$/.test(entry.name)) continue;
+          const target = path.join(transactions, entry.name, "transaction.json");
+          const state = JSON.parse(fs.readFileSync(target, "utf8")) as Record<string, unknown>;
+          if (state.localHubId === migration.previousId || state.localHubId === undefined) {
+            writeAtomicJson(target, { ...state, localHubId: migration.currentId });
+          }
+        }
+      }
+    }
+  };
+  const configured = (mutating = false) => {
+    if (mutating) migrateActive();
     const configuration = current();
     if (configuration.kind === "unconfigured") {
       throw new Error("AgentBase Hub is not configured; choose attach-existing or create-local before building OKF");
     }
     return configuration;
   };
-  const admit = async () => {
-    const configuration = configured();
+  const admit = async (createForAuthoring = false, mutating = createForAuthoring) => {
+    if (createForAuthoring && current().kind === "unconfigured") await createLocalHub(environment);
+    const configuration = configured(mutating);
     return configuration.kind === "remote"
       ? admitPersistentLocalHub(configuration) : admitPersistentLocalHub(configuration);
   };
   return {
     async status() {
       const configuration = current();
-      if (configuration.kind === "unconfigured") return { kind: "unconfigured", setupChoices: ["existing", "new"] };
-      const localHub = await admit();
-      const pending = await listPendingHubProposals(localHub);
-      return { kind: configuration.kind, localHubId: configuration.localHubId, localRoot: configuration.localRoot,
-        baseCommit: configuration.baseCommit, activeHead: localHub.activeHead, pendingCount: pending.length,
-        ...(configuration.kind === "remote" ? { repository: configuration.repository, targetBranch: "main" } : {}) };
+      if (configuration.kind === "unconfigured") return {
+        kind: "unconfigured", local: { state: "not-created" }, credential: "not-required",
+        sync: { state: "not-applicable" },
+      };
+      let localHub: Awaited<ReturnType<typeof admit>> | undefined;
+      let local: Record<string, unknown>;
+      let localReady = false;
+      try {
+        localHub = configuration.kind === "remote"
+          ? await admitPersistentLocalHub(configuration, undefined, { readOnly: true })
+          : await admitPersistentLocalHub(configuration, undefined, { readOnly: true });
+        try {
+          const pending = await listPendingHubProposals(localHub);
+          local = { state: "ready", published_head: localHub.remoteBase, active_head: localHub.activeHead,
+            draft_count: pending.length };
+          localReady = true;
+        } catch (error) {
+          local = { state: "degraded", published_head: localHub.remoteBase, active_head: localHub.activeHead,
+            detail: error instanceof Error ? error.message.slice(0, 240) : "pending inventory is unavailable" };
+        }
+      } catch (error) {
+        local = { state: "unavailable", detail: error instanceof Error ? error.message.slice(0, 240) : "local Hub is unavailable" };
+      }
+      const transactionsRoot = path.join(path.resolve(stateRoot), "transactions");
+      let recovery: string[] = [], recoveryInventoryError = false;
+      try {
+        recovery = fs.existsSync(transactionsRoot)
+          ? fs.readdirSync(transactionsRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory() && /^sync-[a-z0-9]+$/.test(entry.name))
+            .filter((entry) => {
+              try {
+                const state = JSON.parse(fs.readFileSync(path.join(transactionsRoot, entry.name, "transaction.json"), "utf8")) as { localHubId?: unknown };
+                if (state.localHubId === undefined) return true;
+                if (typeof state.localHubId !== "string" || !/^[a-f0-9]{24}$/.test(state.localHubId)) {
+                  recoveryInventoryError = true;
+                  return false;
+                }
+                return state.localHubId === configuration.localHubId;
+              } catch { recoveryInventoryError = true; return false; }
+            }).slice(0, 16).map((entry) => entry.name)
+          : [];
+      } catch { recoveryInventoryError = true; }
+      if (configuration.kind === "local-only") return {
+        kind: "local-only", local, credential: "not-required",
+        sync: recovery.length ? { state: "recovery-required", transaction_ids: recovery }
+          : recoveryInventoryError ? { state: "blocked", detail: "recovery inventory is unavailable" }
+            : { state: "not-applicable" },
+      };
+      let remote: Record<string, unknown> = { state: "unavailable", detail: "Hub profile credential is missing" };
+      let openPrCount: Readonly<{ count: number; truncated: boolean }> | "unavailable" = "unavailable";
+      let credential: "ready" | "missing" | "invalid" = configuration.token ? "ready" : "missing";
+      if (configuration.token) {
+        const github = new GitHubHubApi(configuration.hub, configuration.token);
+        try {
+          const ref = await github.getBranchRef(configuration.targetBranch);
+          remote = localHub
+            ? { state: ref.commit === localHub.remoteBase ? "current" : "updates-available", head: ref.commit }
+            : { state: "unavailable", head: ref.commit, detail: "local Published boundary is unavailable for comparison" };
+        } catch (error) {
+          if (error instanceof GitHubApiError && error.code === "PERMISSION") credential = "invalid";
+          remote = { state: "unavailable", detail: "remote branch could not be inspected" };
+        }
+        try { openPrCount = await github.countOpenPullRequests(configuration.targetBranch); }
+        catch { openPrCount = "unavailable"; }
+      }
+      return {
+        kind: "remote",
+        hub: { host: configuration.host, repository: configuration.repository, branch: configuration.targetBranch },
+        local, credential, remote, open_pr_count: openPrCount,
+        sync: recovery.length ? { state: "recovery-required", transaction_ids: recovery }
+          : recoveryInventoryError ? { state: "blocked", detail: "recovery inventory is unavailable" }
+            : localReady && credential === "ready" && remote.state !== "unavailable"
+              ? { state: "ready" } : { state: "blocked" },
+      };
     },
     async configure(input) {
+      if (current().kind !== "unconfigured") migrateActive();
       return input.mode === "existing"
-        ? attachExistingHub(input.repositoryUrl!, environment)
+        ? attachExistingHub(input.repositoryUrl!, input.targetBranch!, environment)
         : createLocalHub(environment);
     },
-    async previewBootstrap(repositoryUrl, mode) { return previewHubBootstrap(repositoryUrl, mode, environment); },
-    async bootstrap(repositoryUrl, mode) { return executeHubBootstrap(repositoryUrl, mode, environment); },
+    async previewBootstrap(repositoryUrl, targetBranch, mode) { return previewHubBootstrap(repositoryUrl, targetBranch, mode, environment); },
+    async bootstrap(repositoryUrl, targetBranch, mode) { return executeHubBootstrap(repositoryUrl, targetBranch, mode, environment); },
     async preflight(sourceRepository) {
       if (!path.isAbsolute(sourceRepository) || !fs.statSync(sourceRepository).isDirectory()) {
         throw new Error("source repository must be an existing absolute directory");
       }
       const source = discoverRepositorySourceState(sourceRepository);
-      const localHub = await admit();
+      const localHub = await admit(true);
       const context = await inspectInitialIngestHubContext(localHub, {
         displayName: source.displayName,
         ...source.identityHints,
@@ -203,8 +305,7 @@ export function createHubRuntimeActions(
         throw new Error("source repository must be an existing absolute directory");
       }
       const source = discoverRepositorySourceState(input.sourceRepository);
-      const configuration = configured();
-      const localHub = await admit();
+      const localHub = await admit(true);
       const repository = await inspectInitialIngestHubContext(localHub, {
         displayName: source.displayName,
         ...source.identityHints,
@@ -255,7 +356,7 @@ export function createHubRuntimeActions(
       const session = beginHubAuthoringSession({
         stateRoot,
         mode: input.mode,
-        ...(configuration.kind === "remote" ? { hub: configuration.hub } : { localHubId: configuration.localHubId }),
+        ...(localHub.kind === "local-only" ? { localHubId: localHub.localHubId } : { hub: localHub.hub }),
         baseCommit: localHub.activeHead,
         checkoutRoot: localHub.root,
         sourceRepositoryRoot: resolveRepositorySourceRoot(input.sourceRepository),
@@ -301,16 +402,18 @@ export function createHubRuntimeActions(
       };
     },
     async finalize(sessionId, questions, lifecycleIntents) {
-      const configuration = configured();
+      const configuration = configured(true);
       const session = readHubAuthoringSession(stateRoot, sessionId, configuration.localRoot);
       const source = discoverRepositorySourceState(session.sourceRepositoryRoot);
-      const localHub = await admit();
+      const localHub = configuration.kind === "remote"
+        ? await admitPersistentLocalHub(configuration)
+        : await admitPersistentLocalHub(configuration);
       return finalizeHubAuthoringSession(stateRoot, sessionId, configuration.localRoot, questions ?? [], lifecycleIntents ?? [], {
         commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest,
       }, localHub.activeHead);
     },
     async prepareBatch(input) {
-      const localHub = await admit();
+      const localHub = await admit(true);
       const members: BatchMember[] = [];
       for (const [order, sourceRepository] of input.sourceRepositories.entries()) {
         if (!path.isAbsolute(sourceRepository) || !fs.existsSync(sourceRepository)
@@ -335,12 +438,12 @@ export function createHubRuntimeActions(
         proposedDomain: manifest.domain, documentPaths: member.documentPaths, warnings: member.warnings })) };
     },
     async confirmBatch(input) {
-      const localHub = await admit(), prior = readBatchManifest(stateRoot, input.manifestId, input.manifestRevision);
+      const localHub = await admit(false, true), prior = readBatchManifest(stateRoot, input.manifestId, input.manifestRevision);
       if (prior.baseCommit !== localHub.activeHead) throw new Error("Hub base changed after batch preflight");
       return confirmBatchIngest({ stateRoot, ...input });
     },
     async recordBatchMember(input) {
-      const localHub = await admit(), manifest = readBatchManifest(stateRoot, input.manifestId, input.manifestRevision);
+      const localHub = await admit(false, true), manifest = readBatchManifest(stateRoot, input.manifestId, input.manifestRevision);
       const member = manifest.members.find((value) => value.id === input.memberId);
       if (!member) throw new Error("batch member is absent from current manifest");
       const source = discoverRepositorySourceState(member.root);
@@ -349,12 +452,12 @@ export function createHubRuntimeActions(
     },
     async retryBatchMember(input) { return retryBatchMember({ stateRoot, ...input }); },
     async reviseBatch(input) {
-      const localHub = await admit(), manifest = readBatchManifest(stateRoot, input.manifestId, input.manifestRevision);
+      const localHub = await admit(false, true), manifest = readBatchManifest(stateRoot, input.manifestId, input.manifestRevision);
       if (manifest.baseCommit !== localHub.activeHead) throw new Error("Hub base changed after batch preflight");
       return reviseBatchMembership({ stateRoot, ...input });
     },
     async finalizeBatch(input) {
-      const localHub = await admit(), manifest = readBatchManifest(stateRoot, input.manifestId, input.manifestRevision);
+      const localHub = await admit(false, true), manifest = readBatchManifest(stateRoot, input.manifestId, input.manifestRevision);
       const currentSources = new Map(manifest.members.map((member) => {
         const source = discoverRepositorySourceState(member.root);
         return [member.id, { commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest }] as const;
@@ -362,7 +465,7 @@ export function createHubRuntimeActions(
       return finalizeBatchIngest({ stateRoot, localHub, ...input, currentSources });
     },
     async prepareEnrichment(input) {
-      const localHub = await admit();
+      const localHub = await admit(false, true);
       return withPublishedHub(localHub, stateRoot, (publishedRoot) => {
         const manifest = prepareDomainEnrichment({ stateRoot, publishedRoot, baseCommit: localHub.remoteBase,
           ...input, createdAt: new Date().toISOString() });
@@ -370,7 +473,7 @@ export function createHubRuntimeActions(
       });
     },
     async reviseEnrichment(input) {
-      const localHub = await admit();
+      const localHub = await admit(false, true);
       const prior = readEnrichmentManifest(stateRoot, input.manifestId, input.manifestRevision);
       if (prior.baseCommit !== localHub.remoteBase) throw new Error("Published Hub base changed after enrichment Prepare");
       return withPublishedHub(localHub, stateRoot, (publishedRoot) => {
@@ -387,7 +490,7 @@ export function createHubRuntimeActions(
       });
     },
     async runEnrichment(input) {
-      const localHub = await admit();
+      const localHub = await admit(false, true);
       const manifest = readEnrichmentManifest(stateRoot, input.manifestId, input.manifestRevision);
       if (manifest.baseCommit !== localHub.remoteBase) throw new Error("Published Hub base changed after enrichment Prepare");
       return withPublishedHub(localHub, stateRoot, (publishedRoot) => runDomainEnrichment({
@@ -395,14 +498,14 @@ export function createHubRuntimeActions(
       }));
     },
     async finalizeEnrichment(input) {
-      const localHub = await admit();
+      const localHub = await admit(false, true);
       return withPublishedHub(localHub, stateRoot, (publishedRoot) => finalizeDomainEnrichment({
         stateRoot, publishedRoot, localHub, ...input,
       }));
     },
-    ...createReviewActions(stateRoot, (proposalId) => proposalRoot(stateRoot, proposalId), admit),
+    ...createReviewActions(stateRoot, (proposalId) => proposalRoot(stateRoot, proposalId), () => admit(false, true)),
     async accept(proposalId, proposalDigest) {
-      const localHub = await admit();
+      const localHub = await admit(false, true);
       return acceptHubProposal({
         stateRoot,
         localHub,
@@ -438,7 +541,7 @@ export function createHubRuntimeActions(
       catch (error) { throw remoteFailure(error, token); }
     },
     async initializeHub(input) {
-      const configuration = configured();
+      const configuration = configured(true);
       if (configuration.kind !== "remote" || !configuration.hub) throw new Error("Hub initialization requires an attached remote Hub");
       const token = requireHubToken(configuration.token), localHub = await admitPersistentLocalHub(configuration);
       try { return await executeHubInitialization({ stateRoot, localHub, token, github: new GitHubHubApi(configuration.hub, token) }, {
@@ -450,7 +553,7 @@ export function createHubRuntimeActions(
       return listPendingHubProposals(localHub);
     },
     async submitMany(proposalIds) {
-      const configuration = configured();
+      const configuration = configured(true);
       if (configuration.kind !== "remote" || !configuration.hub) throw new Error("local-only Hub requires first bootstrap before normal publication");
       const token = requireHubToken(configuration.token);
       const github = new GitHubHubApi(configuration.hub, token);
@@ -466,18 +569,18 @@ export function createHubRuntimeActions(
       } catch (error) { throw remoteFailure(error, token); }
     },
     async synchronize() {
-      const configuration = configured();
+      const configuration = configured(true);
       if (configuration.kind !== "remote") throw new Error("local-only Hub requires first bootstrap before synchronization");
       const token = requireHubToken(configuration.token);
       const localHub = await admitPersistentLocalHub(configuration);
       try { return await synchronizeLocalHub({ stateRoot, localHub, token }); }
       catch (error) { throw remoteFailure(error, token); }
     },
-    async recover(proposalId) {
-      const configuration = configured();
+    async recover(transactionId) {
+      const configuration = configured(true);
       if (configuration.kind !== "remote") throw new Error("local-only Hub has no synchronization transaction to recover");
-      const localHub = await admitPersistentLocalHub(configuration);
-      return recoverSynchronizationTransaction(stateRoot, proposalId, localHub);
+      const localHub = await admitPersistentLocalHub(configuration, undefined, { allowRecoveryState: true });
+      return recoverSynchronizationTransaction(stateRoot, transactionId, localHub);
     },
   };
 }

@@ -1,4 +1,4 @@
-export { assertHubRemote, createHubIdentity, HubValidationError, type HubIdentity } from "./identity.ts";
+export { assertHubRemote, createHubIdentity, hubProfileId, HubValidationError, type HubIdentity } from "./identity.ts";
 export {
   advanceHubProposal,
   assertDependencySafePrefix,

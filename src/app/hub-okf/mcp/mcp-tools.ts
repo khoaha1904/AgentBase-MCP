@@ -40,6 +40,7 @@ export const HUB_OKF_TOOLS = [
       properties: {
         mode: { type: "string", enum: ["existing", "new"] },
         repository_url: { type: "string", minLength: 1 },
+        target_branch: { type: "string", minLength: 1 },
       },
       required: ["mode"], additionalProperties: false,
     },
@@ -51,9 +52,10 @@ export const HUB_OKF_TOOLS = [
       type: "object",
       properties: {
         repository_url: { type: "string", minLength: 1 },
+        target_branch: { type: "string", minLength: 1 },
         mode: { type: "string", enum: ["all-to-main", "base-to-main-knowledge-pr"] },
       },
-      required: ["repository_url", "mode"], additionalProperties: false,
+      required: ["repository_url", "target_branch", "mode"], additionalProperties: false,
     },
   },
   {
@@ -63,9 +65,10 @@ export const HUB_OKF_TOOLS = [
       type: "object",
       properties: {
         repository_url: { type: "string", minLength: 1 },
+        target_branch: { type: "string", minLength: 1 },
         mode: { type: "string", enum: ["all-to-main", "base-to-main-knowledge-pr"] },
       },
-      required: ["repository_url", "mode"], additionalProperties: false,
+      required: ["repository_url", "target_branch", "mode"], additionalProperties: false,
     },
   },
   {
@@ -364,7 +367,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "list_pending_hub_okf",
-    description: "List ordered accepted local proposal commits not yet admitted in remote main.",
+    description: "List ordered accepted local proposal commits not yet admitted in the remote target branch.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
@@ -382,7 +385,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "synchronize_hub_okf",
-    description: "Fetch remote main and transactionally replay remaining accepted local proposals.",
+    description: "Fetch the configured remote target and transactionally replay remaining accepted local proposals.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
@@ -390,8 +393,8 @@ export const HUB_OKF_TOOLS = [
     description: "Recover one exact interrupted Hub transaction without resetting accepted commits.",
     inputSchema: {
       type: "object",
-      properties: { proposal_id: { type: "string", minLength: 1 } },
-      required: ["proposal_id"], additionalProperties: false,
+      properties: { transaction_id: { type: "string", minLength: 1 } },
+      required: ["transaction_id"], additionalProperties: false,
     },
   },
 ] as const;

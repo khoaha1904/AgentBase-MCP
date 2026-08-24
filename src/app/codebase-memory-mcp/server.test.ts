@@ -87,6 +87,16 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
     const hubStatus = await client.callTool({ name: "get_hub_status", arguments: {} });
     assert.equal(hubStatus.isError, undefined);
     assert.match(hubStatus.content[0]?.type === "text" ? hubStatus.content[0].text : "", /unconfigured/);
+    assert.equal(fs.existsSync(path.join(state, "config")), false, "status must not create Hub configuration state");
+    const before = await client.callTool({ name: "search_graph", arguments: { project: "fixture" } });
+    assert.equal(before.isError, true);
+    const indexed = await client.callTool({ name: "index_repository", arguments: { repo_path: repo } });
+    assert.equal(indexed.content[0]?.type, "text");
+    const graphWithoutHub = await client.callTool({ name: "get_architecture", arguments: { project: "fixture" } });
+    assert.match(graphWithoutHub.content[0]?.type === "text" ? graphWithoutHub.content[0].text : "", /forwarded:get_architecture/);
+    const stillUnconfigured = await client.callTool({ name: "get_hub_status", arguments: {} });
+    assert.match(stillUnconfigured.content[0]?.type === "text" ? stillUnconfigured.content[0].text : "", /unconfigured/);
+    assert.equal(fs.existsSync(path.join(state, "config")), false, "Code Graph use must not create Hub state");
     const unconfiguredHub = await client.callTool({ name: "prepare_hub_okf", arguments: {
       mode: "new", source_repository: repo, subject_directory: "repositories/acme",
       guidance_request: {
@@ -98,8 +108,9 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
         resource_observations: [],
       },
     } });
-    assert.equal(unconfiguredHub.isError, true);
-    assert.match(unconfiguredHub.content[0]?.type === "text" ? unconfiguredHub.content[0].text : "", /not configured/);
+    assert.equal(unconfiguredHub.isError, undefined);
+    const localStatus = await client.callTool({ name: "get_hub_status", arguments: {} });
+    assert.match(localStatus.content[0]?.type === "text" ? localStatus.content[0].text : "", /local-only/);
     const schemas = await client.callTool({ name: "list_okf_schemas", arguments: {} });
     assert.equal(schemas.isError, undefined);
     const invalidGuidance = await client.callTool({ name: "get_okf_authoring_schemas", arguments: {
@@ -118,10 +129,6 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-008][AB-MCP-010][AB-INGEST-003] official c
     assert.deepEqual({ code: guidanceError.code, retryable: guidanceError.retryable, recovery: guidanceError.recovery }, {
       code: "INVALID_ARGUMENT", retryable: true, recovery: "correct-and-retry-same-tool",
     });
-    const before = await client.callTool({ name: "search_graph", arguments: { project: "fixture" } });
-    assert.equal(before.isError, true);
-    const indexed = await client.callTool({ name: "index_repository", arguments: { repo_path: repo } });
-    assert.equal(indexed.content[0]?.type, "text");
     const observed = await client.callTool({ name: "read_hub_observed_values", arguments: { path: "systems/checkout.md" } });
     assert.equal(observed.isError, undefined);
     assert.match(observed.content[0]?.type === "text" ? observed.content[0].text : "", /"source_access":"not-checked"/);

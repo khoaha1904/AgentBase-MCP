@@ -2,7 +2,7 @@ import { spawn, type ChildProcessByStdio } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import type { Readable } from "node:stream";
+import type { Readable, Writable } from "node:stream";
 
 export type GitRequest = Readonly<{
   args: readonly string[];
@@ -13,9 +13,10 @@ export type GitRequest = Readonly<{
   signal?: AbortSignal;
   timeoutMs?: number;
   maximumOutputBytes?: number;
+  stdin?: string;
 }>;
 export type GitOutput = Readonly<{ stdout: string; stderr: string }>;
-type GitProcess = ChildProcessByStdio<null, Readable, Readable>;
+type GitProcess = ChildProcessByStdio<Writable, Readable, Readable>;
 export type SpawnGit = (executable: string, args: readonly string[], options: Readonly<{ cwd: string; env: NodeJS.ProcessEnv }>) => GitProcess;
 
 const SAFE_PATH = "/usr/local/bin:/usr/bin:/bin";
@@ -48,7 +49,7 @@ export function sanitizedGitEnvironment(askpass?: string, token?: string, commit
 }
 
 function defaultSpawn(executable: string, args: readonly string[], options: Readonly<{ cwd: string; env: NodeJS.ProcessEnv }>): GitProcess {
-  return spawn(executable, [...args], { ...options, shell: false, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
+  return spawn(executable, [...args], { ...options, shell: false, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] });
 }
 
 function createAskpass(): Readonly<{ directory: string; executable: string }> {
@@ -65,6 +66,7 @@ function createAskpass(): Readonly<{ directory: string; executable: string }> {
 
 export async function runGit(request: GitRequest, spawnGit: SpawnGit = defaultSpawn): Promise<GitOutput> {
   if (!request.operation || request.args.some((value) => value.includes("\0"))) throw new Error("invalid bounded Git request");
+  if (request.stdin?.includes("\0") || Buffer.byteLength(request.stdin ?? "") > 64 * 1024) throw new Error("invalid bounded Git input");
   if (request.token !== undefined && request.token.length === 0) throw new Error("Hub token cannot be empty");
   const helper = request.token ? createAskpass() : undefined;
   const maximum = request.maximumOutputBytes ?? 1024 * 1024;
@@ -74,6 +76,8 @@ export async function runGit(request: GitRequest, spawnGit: SpawnGit = defaultSp
         cwd: request.cwd,
         env: sanitizedGitEnvironment(helper?.executable, request.token, request.commitTimestamp),
       });
+      child.stdin.on("error", () => undefined);
+      child.stdin.end(request.stdin ?? "");
       const stdout: Buffer[] = [], stderr: Buffer[] = [];
       let size = 0, failure: Error | undefined;
       const fail = (message: string) => { if (!failure) { failure = new Error(`${request.operation}: ${message}`); child.kill("SIGKILL"); } };
@@ -179,7 +183,7 @@ export async function listRemoteRefs(
   token: string,
   runner: (request: GitRequest) => Promise<GitOutput> = runGit,
 ): Promise<readonly Readonly<{ ref: string; commit: string }>[]> {
-  if (!/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\.git$/.test(repositoryUrl)) {
+  if (!/^https:\/\/[A-Za-z0-9.-]+\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\.git$/.test(repositoryUrl)) {
     throw new Error("remote ref discovery requires a canonical GitHub HTTPS URL");
   }
   const result = await runner({

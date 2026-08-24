@@ -22,7 +22,7 @@ export type HubInitializationGitHub = Readonly<{
 
 export type HubInitializationIntent = Readonly<{
   repository: string;
-  target_branch: "main";
+  target_branch: string;
   base_commit: string;
   state: "current" | "changes-required";
   readme_state: "missing" | "present";
@@ -63,7 +63,7 @@ function filesDigest(files: Readonly<Record<string, Buffer>>): string {
 
 async function fetchRemoteMain(options: HubInitializationOptions, expected: string): Promise<void> {
   const git = options.git ?? runGit, ref = "refs/agentbase/hub-initialization/base";
-  await git({ args: ["fetch", "--no-tags", "origin", `+refs/heads/main:${ref}`], cwd: options.localHub.root,
+  await git({ args: ["fetch", "--no-tags", "origin", `+refs/heads/${options.localHub.hub.targetBranch}:${ref}`], cwd: options.localHub.root,
     operation: "fetch Hub initialization base", token: options.token });
   const fetched = (await git({ args: ["rev-parse", `${ref}^{commit}`], cwd: options.localHub.root,
     operation: "resolve Hub initialization base", maximumOutputBytes: 256 })).stdout.trim();
@@ -90,10 +90,10 @@ async function ciStateAt(localHub: LocalHubState, commit: string, bundle: HubCiB
   return "current";
 }
 
-function intendedFiles(readme: HubInitializationIntent["readme_state"], ci: HubInitializationIntent["ci_state"]): Readonly<Record<string, Buffer>> {
+function intendedFiles(readme: HubInitializationIntent["readme_state"], ci: HubInitializationIntent["ci_state"], targetBranch: string): Readonly<Record<string, Buffer>> {
   return {
     ...(readme === "missing" ? { [HUB_README_PATH]: Buffer.from(renderHubReadme()) } : {}),
-    ...(ci === "current" ? {} : renderHubCiBundle().files),
+    ...(ci === "current" ? {} : renderHubCiBundle(targetBranch).files),
   };
 }
 
@@ -102,17 +102,17 @@ function branch(digest: string): string { return `agentbase/hub-init-${digest.sl
 export async function previewHubInitialization(options: HubInitializationOptions): Promise<HubInitializationIntent> {
   if (!options.token) throw new Error("Hub initialization requires the dedicated Hub token");
   const repository = await options.github.getRepository();
-  if (repository.fullName !== options.localHub.hub.repository || repository.defaultBranch !== "main") {
+  if (repository.fullName !== options.localHub.hub.repository) {
     throw new Error("Hub initialization repository identity or target branch changed");
   }
-  const main = await options.github.getBranchRef("main");
+  const main = await options.github.getBranchRef(options.localHub.hub.targetBranch);
   await fetchRemoteMain(options, main.commit);
-  const git = options.git ?? runGit, bundle = renderHubCiBundle();
+  const git = options.git ?? runGit, bundle = renderHubCiBundle(options.localHub.hub.targetBranch);
   const readmeState = (await presentPaths(options.localHub, main.commit, [HUB_README_PATH], git)).length ? "present" : "missing";
   const ciState = await ciStateAt(options.localHub, main.commit, bundle, git);
-  const files = intendedFiles(readmeState, ciState), digest = filesDigest(files), paths = Object.keys(files).sort();
+  const files = intendedFiles(readmeState, ciState, options.localHub.hub.targetBranch), digest = filesDigest(files), paths = Object.keys(files).sort();
   return {
-    repository: repository.fullName, target_branch: "main", base_commit: main.commit,
+    repository: repository.fullName, target_branch: options.localHub.hub.targetBranch, base_commit: main.commit,
     state: paths.length ? "changes-required" : "current", readme_state: readmeState, ci_state: ciState,
     change_paths: paths, ci_format: HUB_CI_FORMAT_VERSION, initialization_digest: digest,
     head_branch: branch(digest),
@@ -134,7 +134,7 @@ async function validateRemoteHead(options: HubInitializationOptions, intent: Hub
   if (changed.length !== intent.change_paths.length || changed.some((value, index) => value !== intent.change_paths[index])) {
     throw new Error("existing Hub initialization branch changes files outside the reviewed baseline");
   }
-  const files = intendedFiles(intent.readme_state, intent.ci_state);
+  const files = intendedFiles(intent.readme_state, intent.ci_state, intent.target_branch);
   for (const relative of intent.change_paths) {
     const blob = (await git({ args: ["rev-parse", `${head}:${relative}`], cwd: options.localHub.root,
       operation: "validate Hub initialization bytes", maximumOutputBytes: 256 })).stdout.trim();
@@ -172,18 +172,18 @@ export async function initializeHub(
       const openPulls = await options.github.listPullRequestsForHead(intent.head_branch, "open");
       const allPulls = await options.github.listPullRequestsForHead(intent.head_branch, "all");
       if (openPulls.length > 1 || allPulls.length > 1
-        || allPulls.some((pull) => pull.headCommit !== existing.commit || pull.baseBranch !== "main")) {
+        || allPulls.some((pull) => pull.headCommit !== existing.commit || pull.baseBranch !== intent.target_branch)) {
         throw new Error("Hub initialization branch has ambiguous pull request state");
       }
       if (openPulls.length === 1) return { intent, result: "recovered", head_commit: existing.commit,
         pull_request: { number: openPulls[0]!.number, url: openPulls[0]!.url } };
       if (allPulls.length) throw new Error("Hub initialization branch belongs to a closed pull request");
       const pull = await options.github.createPullRequest(intent.head_branch, existing.commit,
-        "Initialize AgentBase-Hub", reviewBody(intent), "main");
+        "Initialize AgentBase-Hub", reviewBody(intent), intent.target_branch);
       return { intent, result: "recovered", head_commit: existing.commit,
         pull_request: { number: pull.number, url: pull.url } };
     }
-    const git = options.git ?? runGit, files = intendedFiles(intent.readme_state, intent.ci_state);
+    const git = options.git ?? runGit, files = intendedFiles(intent.readme_state, intent.ci_state, intent.target_branch);
     if (filesDigest(files) !== intent.initialization_digest) throw new Error("Hub initialization file set changed");
     fs.mkdirSync(path.resolve(options.stateRoot), { recursive: true, mode: 0o700 });
     const parent = fs.mkdtempSync(path.join(path.resolve(options.stateRoot), "hub-init-")), candidate = path.join(parent, "hub");
@@ -204,7 +204,7 @@ export async function initializeHub(
       await git({ args: ["push", "origin", `${head}:refs/heads/${intent.head_branch}`], cwd: candidate,
         operation: "push Hub initialization branch", token: options.token });
       const pull = await options.github.createPullRequest(intent.head_branch, head,
-        "Initialize AgentBase-Hub", reviewBody(intent), "main");
+        "Initialize AgentBase-Hub", reviewBody(intent), intent.target_branch);
       return { intent, result: "created", head_commit: head,
         pull_request: { number: pull.number, url: pull.url } };
     } finally {

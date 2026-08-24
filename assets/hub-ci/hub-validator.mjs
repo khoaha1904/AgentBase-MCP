@@ -8797,17 +8797,18 @@ import { createHash as createHash3 } from "node:crypto";
 var HUB_CI_WORKFLOW_PATH = ".github/workflows/agentbase-hub.yml";
 var HUB_CI_VALIDATOR_PATH = ".agentbase/ci/hub-validator.mjs";
 var HUB_CI_MANIFEST_PATH = ".agentbase/ci/manifest.json";
-var HUB_CI_FORMAT_VERSION = 2;
+var HUB_CI_FORMAT_VERSION = 3;
 var CHECKOUT_COMMIT = "11d5960a326750d5838078e36cf38b85af677262";
 var SETUP_NODE_COMMIT = "49933ea5288caeca8642d1e84afbd3f7d6820020";
-function renderHubCiWorkflow(validatorSha256) {
+function renderHubCiWorkflow(validatorSha256, targetBranch = "main") {
   if (!/^sha256:[a-f0-9]{64}$/.test(validatorSha256)) throw new Error("Hub CI validator digest is invalid");
+  if (!/^[A-Za-z0-9_][A-Za-z0-9._/-]*$/.test(targetBranch) || targetBranch.includes("..") || targetBranch.includes("//") || targetBranch.includes("@{") || targetBranch.endsWith("/")) throw new Error("Hub CI target branch is invalid");
   return `name: AgentBase Hub CI
 
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [${JSON.stringify(targetBranch)}]
   schedule:
     - cron: "17 3 * * 1"
   workflow_dispatch:
@@ -8932,7 +8933,7 @@ function validateCiSupport(root, relativeFiles) {
     const manifest = JSON.parse(fs3.readFileSync(path6.join(root, ...HUB_CI_MANIFEST_PATH.split("/")), "utf8"));
     if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) throw new Error("manifest must be an object");
     const record = manifest, validator = record.validator;
-    if (record.format !== HUB_CI_FORMAT_VERSION || !validator || typeof validator !== "object" || Array.isArray(validator)) {
+    if (record.format !== HUB_CI_FORMAT_VERSION || typeof record.target_branch !== "string" || !/^[A-Za-z0-9_][A-Za-z0-9._/-]*$/.test(record.target_branch) || record.target_branch.includes("..") || record.target_branch.includes("//") || record.target_branch.includes("@{") || record.target_branch.endsWith("/") || !validator || typeof validator !== "object" || Array.isArray(validator)) {
       throw new Error("manifest format is invalid");
     }
     const value = validator;
@@ -8942,7 +8943,7 @@ function validateCiSupport(root, relativeFiles) {
     const bytes = fs3.readFileSync(path6.join(root, ...HUB_CI_VALIDATOR_PATH.split("/")));
     const actual = hubCiBytesDigest(bytes);
     if (actual !== value.sha256) throw new Error("validator checksum mismatch");
-    if (fs3.readFileSync(path6.join(root, ...HUB_CI_WORKFLOW_PATH.split("/")), "utf8") !== renderHubCiWorkflow(actual)) {
+    if (fs3.readFileSync(path6.join(root, ...HUB_CI_WORKFLOW_PATH.split("/")), "utf8") !== renderHubCiWorkflow(actual, record.target_branch)) {
       throw new Error("workflow differs from the checksum-pinned released template");
     }
   } catch (error) {
@@ -8969,14 +8970,14 @@ function markdown(result) {
   lines.push("", "Freshness is warning context only; it does not trigger Refresh or mark knowledge incorrect.", "");
   return lines.join("\n");
 }
-async function validateHubCi(hubRoot, now = () => /* @__PURE__ */ new Date()) {
+async function validateHubCi(hubRoot, now = () => /* @__PURE__ */ new Date(), options = {}) {
   const root = fs3.realpathSync(path6.resolve(hubRoot));
   if (!fs3.statSync(root).isDirectory()) throw new Error("Hub CI root must be a directory");
   const relativeFiles = files(root), errors = [], warnings = [];
   const safe = safety(root, relativeFiles);
   errors.push(...safe.errors);
   warnings.push(...safe.warnings);
-  errors.push(...validateCiSupport(root, relativeFiles));
+  if (options.requireSupportCi !== false) errors.push(...validateCiSupport(root, relativeFiles));
   let bundle;
   try {
     bundle = loadOkfBundle(root, { requireAgentBaseRootIndex: true });

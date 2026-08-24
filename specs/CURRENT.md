@@ -1,7 +1,7 @@
 # Current capability
 
-Active capability: [`037-local-first-hub-control`](037-local-first-hub-control/spec.md).
-Most recent completed: [`036-readable-hub-readme`](036-readable-hub-readme/spec.md).
+Active capability: None.
+Most recent completed: [`037-local-first-hub-control`](037-local-first-hub-control/spec.md).
 
 Capability 037 makes Hub operation explicitly local-first and remote-optional.
 Each GitHub.com or GitHub Enterprise repository/branch identity owns isolated

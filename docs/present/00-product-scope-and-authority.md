@@ -17,7 +17,7 @@ it immediately and later publish selected pending commits through a pull
 request.
 
 Installation selects no Hub and Code Graph never requires one. The first OKF
-authoring mutation lazily creates a private local-only Hub. A remote Hub is an
+authoring workflow lazily creates a private local-only Hub at preflight. A remote Hub is an
 optional later connection identified by exact GitHub host, repository and
 target branch; its token remains owner-private. Each identity keeps independent
 local state, while one profile is active for query and authoring. Changing the

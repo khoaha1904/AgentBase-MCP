@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { createHubIdentity, type HubIdentity } from "../../../core/hub/index.ts";
-import { loadGlobalHubToken } from "./credential-file.ts";
+import { loadGlobalHubToken, loadHubProfileToken } from "./credential-file.ts";
 import {
   readPersistedHubConfiguration,
   type PersistedLocalHubConfiguration,
@@ -31,19 +31,20 @@ function legacyConfiguration(environment: NodeJS.ProcessEnv): HubConfiguration |
 }
 
 export function resolveHubConfiguration(environment: NodeJS.ProcessEnv = process.env): OptionalHubConfiguration {
-  const token = loadGlobalHubToken(environment);
   const persisted = readPersistedHubConfiguration(environment);
   if (persisted) {
+    const token = persisted.kind === "remote" ? loadHubProfileToken(persisted.localHubId, environment) : undefined;
     if (persisted.kind === "remote") return {
-      ...persisted, hub: createHubIdentity(persisted.repository, persisted.targetBranch), ...(token ? { token } : {}),
+      ...persisted, hub: createHubIdentity(persisted.repository, persisted.targetBranch, persisted.host), ...(token ? { token } : {}),
     };
     return { ...persisted, ...(token ? { token } : {}) };
   }
   const legacy = legacyConfiguration(environment);
-  if (!legacy) return { kind: "unconfigured", ...(token ? { token } : {}) };
+  const token = loadGlobalHubToken(environment);
+  if (!legacy) return { kind: "unconfigured" };
   return { formatVersion: 1, kind: "remote", localHubId: "0".repeat(24), localRoot: legacy.localRoot,
     baseCommit: "0".repeat(40), catalogVersion: "2.0.0", repository: legacy.hub.repository,
-    targetBranch: "main", hub: legacy.hub, ...(token ? { token } : {}) };
+    host: legacy.hub.host, targetBranch: legacy.hub.targetBranch, hub: legacy.hub, ...(token ? { token } : {}) };
 }
 
 export function loadHubConfiguration(environment: NodeJS.ProcessEnv): HubConfiguration {

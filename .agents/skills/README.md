@@ -19,6 +19,8 @@ its UI metadata inside its own directory.
   ingest explicit local repositories sequentially into one atomic proposal.
 - [`agentbase-okf`](agentbase-okf/SKILL.md) — current proposal-authoring workflow
   after AgentBase has prepared a bounded workspace.
+- [`agentbase-hub`](agentbase-hub/SKILL.md) — inspect local/remote Hub status,
+  connect or switch one isolated profile, synchronize and recover explicitly.
 
 ## Development skills
 

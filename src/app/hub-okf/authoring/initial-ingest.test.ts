@@ -173,7 +173,7 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] pre
     assert.ok(updatedRepository?.after);
     assert.equal(readRepositoryObservedSource(parseConceptDocument(updatedRepository.path, updatedRepository.after.content))?.commit,
       refresh.source.commit);
-    const status = await actions.status() as { pendingCount: number };
-    assert.equal(status.pendingCount, 1, "Initial Ingest was accepted locally; Refresh remained an unaccepted preview");
+    const status = await actions.status() as { local: { draft_count: number } };
+    assert.equal(status.local.draft_count, 1, "Initial Ingest was accepted locally; Refresh remained an unaccepted preview");
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });

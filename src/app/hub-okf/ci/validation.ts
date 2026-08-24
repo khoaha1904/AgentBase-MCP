@@ -119,7 +119,10 @@ function validateCiSupport(root: string, relativeFiles: readonly string[]): read
     const manifest = JSON.parse(fs.readFileSync(path.join(root, ...HUB_CI_MANIFEST_PATH.split("/")), "utf8")) as unknown;
     if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) throw new Error("manifest must be an object");
     const record = manifest as Record<string, unknown>, validator = record.validator;
-    if (record.format !== HUB_CI_FORMAT_VERSION || !validator || typeof validator !== "object" || Array.isArray(validator)) {
+    if (record.format !== HUB_CI_FORMAT_VERSION || typeof record.target_branch !== "string"
+      || !/^[A-Za-z0-9_][A-Za-z0-9._/-]*$/.test(record.target_branch) || record.target_branch.includes("..")
+      || record.target_branch.includes("//") || record.target_branch.includes("@{") || record.target_branch.endsWith("/")
+      || !validator || typeof validator !== "object" || Array.isArray(validator)) {
       throw new Error("manifest format is invalid");
     }
     const value = validator as Record<string, unknown>;
@@ -130,7 +133,7 @@ function validateCiSupport(root: string, relativeFiles: readonly string[]): read
     const bytes = fs.readFileSync(path.join(root, ...HUB_CI_VALIDATOR_PATH.split("/")));
     const actual = hubCiBytesDigest(bytes);
     if (actual !== value.sha256) throw new Error("validator checksum mismatch");
-    if (fs.readFileSync(path.join(root, ...HUB_CI_WORKFLOW_PATH.split("/")), "utf8") !== renderHubCiWorkflow(actual)) {
+    if (fs.readFileSync(path.join(root, ...HUB_CI_WORKFLOW_PATH.split("/")), "utf8") !== renderHubCiWorkflow(actual, record.target_branch)) {
       throw new Error("workflow differs from the checksum-pinned released template");
     }
   } catch (error) {
@@ -155,12 +158,13 @@ function markdown(result: Omit<HubCiResult, "summary_markdown">): string {
 export async function validateHubCi(
   hubRoot: string,
   now: () => Date = () => new Date(),
+  options: Readonly<{ requireSupportCi?: boolean }> = {},
 ): Promise<HubCiResult> {
   const root = fs.realpathSync(path.resolve(hubRoot));
   if (!fs.statSync(root).isDirectory()) throw new Error("Hub CI root must be a directory");
   const relativeFiles = files(root), errors: string[] = [], warnings: string[] = [];
   const safe = safety(root, relativeFiles); errors.push(...safe.errors); warnings.push(...safe.warnings);
-  errors.push(...validateCiSupport(root, relativeFiles));
+  if (options.requireSupportCi !== false) errors.push(...validateCiSupport(root, relativeFiles));
   let bundle: ReturnType<typeof loadOkfBundle>;
   try { bundle = loadOkfBundle(root, { requireAgentBaseRootIndex: true }); }
   catch (error) {

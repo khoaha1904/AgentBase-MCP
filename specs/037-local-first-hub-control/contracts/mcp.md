@@ -16,7 +16,7 @@ hub: { host, repository, branch }?
 local: { published_head, active_head, draft_count?, state, detail? }
 credential: not-required | ready | missing | invalid
 remote: { state: current | updates-available | unavailable, head?, detail? }?
-open_pr_count: number | unavailable
+open_pr_count: { count: number, truncated: boolean } | unavailable
 sync: { state: ready | blocked | recovery-required, bounded context? }
 ```
 

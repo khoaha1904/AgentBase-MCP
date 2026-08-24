@@ -20,6 +20,11 @@ export function globalHubCredentialPath(environment: NodeJS.ProcessEnv = process
   return path.join(credentialDirectory(environment), "env");
 }
 
+export function hubProfileCredentialPath(localHubId: string, environment: NodeJS.ProcessEnv = process.env): string {
+  if (!/^[a-f0-9]{24}$/.test(localHubId)) throw new Error("Hub profile ID is invalid");
+  return path.join(credentialDirectory(environment), "credentials", `${localHubId}.env`);
+}
+
 function ownerMatches(stat: fs.Stats): boolean {
   return typeof process.getuid !== "function" || stat.uid === process.getuid();
 }
@@ -94,6 +99,20 @@ export function loadGlobalHubToken(environment: NodeJS.ProcessEnv = process.env)
   return readCredentialFile(file);
 }
 
+export function loadHubProfileToken(localHubId: string, environment: NodeJS.ProcessEnv = process.env): string | undefined {
+  return loadExactHubProfileToken(localHubId, environment);
+}
+
+/** Exact identity-bound credential. Use for every prospective Hub attachment. */
+export function loadExactHubProfileToken(localHubId: string, environment: NodeJS.ProcessEnv = process.env): string | undefined {
+  const file = hubProfileCredentialPath(localHubId, environment);
+  if (lstatIfPresent(file)) {
+    admitDirectory(path.dirname(file), false);
+    return readCredentialFile(file);
+  }
+  return undefined;
+}
+
 function credentialBytes(token: string): Buffer {
   if (!token || /[\r\n\0]/.test(token)) throw new Error("Hub token must be a non-empty single-line value");
   return Buffer.from(`${TOKEN_KEY}=${token}\n`, "utf8");
@@ -129,4 +148,64 @@ export function writeGlobalHubToken(
     throw error;
   }
   return existed ? "replaced" : "created";
+}
+
+export function writeHubProfileToken(
+  localHubId: string,
+  token: string,
+  environment: NodeJS.ProcessEnv = process.env,
+  options: Readonly<{ replace?: boolean }> = {},
+): CredentialWriteResult {
+  const content = credentialBytes(token);
+  if (content.length > MAX_CREDENTIAL_BYTES) throw new Error("Hub token exceeds the credential size limit");
+  const file = hubProfileCredentialPath(localHubId, environment), directory = path.dirname(file);
+  admitDirectory(directory, true);
+  const existed = Boolean(lstatIfPresent(file));
+  if (existed) {
+    admitFile(file);
+    if (!options.replace) return "preserved";
+  }
+  const temporary = path.join(directory, `.credential-${process.pid}-${randomUUID()}.tmp`);
+  try {
+    fs.writeFileSync(temporary, content, { mode: 0o600, flag: "wx" });
+    fs.chmodSync(temporary, 0o600);
+    fs.renameSync(temporary, file);
+  } catch (error) {
+    if (fs.existsSync(temporary)) fs.rmSync(temporary, { force: true });
+    throw error;
+  }
+  return existed ? "replaced" : "created";
+}
+
+export function migrateHubProfileToken(localHubId: string, environment: NodeJS.ProcessEnv = process.env): void {
+  const profile = hubProfileCredentialPath(localHubId, environment);
+  if (lstatIfPresent(profile)) return;
+  // Only migrate the owner-private legacy file. Never bind an ambient process
+  // token to a newly selected Hub identity.
+  const legacyFile = globalHubCredentialPath(environment);
+  const legacy = lstatIfPresent(legacyFile) ? (admitDirectory(path.dirname(legacyFile), false), readCredentialFile(legacyFile)) : undefined;
+  if (legacy) writeHubProfileToken(localHubId, legacy, environment);
+}
+
+export function copyHubProfileToken(
+  previousId: string,
+  currentId: string,
+  environment: NodeJS.ProcessEnv = process.env,
+): void {
+  if (previousId === currentId) return;
+  const previous = loadExactHubProfileToken(previousId, environment);
+  const current = loadExactHubProfileToken(currentId, environment);
+  if (previous && current && previous !== current) throw new Error("canonical Hub profile credential already differs");
+  if (previous && !current) writeHubProfileToken(currentId, previous, environment);
+}
+
+export function removeHubProfileToken(
+  localHubId: string,
+  environment: NodeJS.ProcessEnv = process.env,
+): void {
+  const oldFile = hubProfileCredentialPath(localHubId, environment);
+  if (lstatIfPresent(oldFile)) {
+    admitFile(oldFile);
+    fs.rmSync(oldFile);
+  }
 }

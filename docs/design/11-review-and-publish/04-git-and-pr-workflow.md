@@ -6,13 +6,13 @@
 
 MCP biến explicit accepted proposal IDs thành dependency-safe Hub PRs bằng
 dedicated Hub token. Local accepted ancestry chỉ là storage order; publication
-base được tính theo Repository dependency và exact Published `main`.
+base được tính theo Repository dependency và exact Published target branch.
 
 ## Entry contract
 
 - User/Agent gọi `submit_hub_okf_proposals` với non-empty exact proposal IDs.
 - Proposal phải là accepted Local Draft trong admitted pending ancestry.
-- MCP fetch/admit exact remote repository, `main`, proposal commit/digest và
+- MCP fetch/admit exact remote repository, configured target branch, proposal commit/digest và
   existing branch/PR identity trước mutation.
 - Calling Agent không nhận token và không được thay bằng `gh`, ambient Git
   credential hoặc publisher khác.
@@ -22,7 +22,7 @@ base được tính theo Repository dependency và exact Published `main`.
 ### Independent Repository Init
 
 Mỗi Init của Repository khác nhau replay exact proposal contribution trên cùng
-Published `main`, dùng branch và PR riêng:
+Published target, dùng branch và PR riêng:
 
 ```text
 main ── PR Init A
@@ -47,6 +47,9 @@ proposal kế tiếp về `main` trong explicit reconciliation; PR identity đư
 
 First bootstrap là ngoại lệ duy nhất có thể publish nhiều initial knowledge
 commits thành một batch PR, vì đó là một transaction tạo remote Hub authority.
+Nó giữ nguyên local checkout nhưng đổi ownership từ local-only ID sang canonical
+host/repository/branch ID dưới một activation lock. Retry chỉ nhận đúng target
+ref/commit mà intent trước đã tạo; ref khác dừng trước khi ghi tiếp.
 
 ## Exact replay and shared indexes
 
@@ -59,7 +62,7 @@ the exact branch stored by the active Hub profile. No workflow substitutes the
 literal branch `main` for that configured target.
 
 Append-only shared `index.md` chỉ mang navigation lines do proposal chọn thêm.
-Khi Published `main` đã thêm navigation tương thích, MCP có thể union các exact
+Khi Published target đã thêm navigation tương thích, MCP có thể union các exact
 unique append-only lines với cùng heading. Conflict khác, heading drift hoặc
 non-navigation bytes phải dừng trước push; MCP không đoán merge result.
 
@@ -77,9 +80,9 @@ non-navigation bytes phải dừng trước push; MCP không đoán merge result
 - MCP không force-push, merge, approve, close PR, delete branch hoặc sửa repository
   settings.
 
-## Reconciliation when Published main advances
+## Reconciliation when Published target advances
 
-1. fetch exact remote `main`;
+1. fetch exact configured remote target;
 2. recognize proposals đã merge bằng proposal/patch identity;
 3. xử lý remaining branches tuần tự;
 4. merge new admitted base vào isolated branch candidate;
@@ -102,12 +105,13 @@ Published ref and every Local Draft unchanged.
   completed units và retry tiếp phần còn lại, không rollback PR đã tạo.
 - Network/permission failure giữ Local Draft và yêu cầu retry/credential repair.
 - Existing remote branch/PR drift không bị overwrite.
-- MCP never mutates remote `main`; maintainer merge remains the publication gate.
+- MCP never mutates the configured remote target directly after bootstrap;
+  maintainer merge remains the publication gate.
 
 ## Hub Initialization PR
 
 Hub support initialization is a separate reviewed lifecycle, not an OKF
-proposal. Preview fetches exact remote `main` without replaying Local Drafts,
+proposal. Preview fetches the exact configured remote target without replaying Local Drafts,
 preserves an existing README and skips exact current CI. It derives only the
 missing README and/or full released CI bundle, then binds their deterministic
 digest. Explicit initialize may create or recover only

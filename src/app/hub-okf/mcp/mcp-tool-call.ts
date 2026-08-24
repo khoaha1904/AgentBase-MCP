@@ -210,21 +210,27 @@ export async function callHubOkfTool(
       const mode = required(args, "mode");
       if (mode !== "existing" && mode !== "new") throw new Error("mode must be existing or new");
       const repositoryUrl = args.repository_url;
+      const targetBranch = args.target_branch;
       if (mode === "existing" && (typeof repositoryUrl !== "string" || !repositoryUrl)) {
         throw new Error("repository_url is required when attaching an existing Hub");
       }
-      if (mode === "new" && repositoryUrl !== undefined) {
-        throw new Error("repository_url is not accepted for a new local-only Hub");
+      if (mode === "existing" && (typeof targetBranch !== "string" || !targetBranch)) {
+        throw new Error("target_branch is required when attaching an existing Hub");
       }
-      return result(await actions.configure({ mode, ...(typeof repositoryUrl === "string" ? { repositoryUrl } : {}) }));
+      if (mode === "new" && (repositoryUrl !== undefined || targetBranch !== undefined)) {
+        throw new Error("repository_url and target_branch are not accepted for a new local-only Hub");
+      }
+      return result(await actions.configure({ mode, ...(typeof repositoryUrl === "string" ? { repositoryUrl } : {}),
+        ...(typeof targetBranch === "string" ? { targetBranch } : {}) }));
     }
     if (name === "preview_hub_bootstrap" || name === "bootstrap_hub") {
       const mode = required(args, "mode");
       if (mode !== "all-to-main" && mode !== "base-to-main-knowledge-pr") throw new Error("bootstrap mode is invalid");
       const repositoryUrl = required(args, "repository_url");
+      const targetBranch = required(args, "target_branch");
       return result(name === "preview_hub_bootstrap"
-        ? await actions.previewBootstrap(repositoryUrl, mode)
-        : await actions.bootstrap(repositoryUrl, mode));
+        ? await actions.previewBootstrap(repositoryUrl, targetBranch, mode)
+        : await actions.bootstrap(repositoryUrl, targetBranch, mode));
     }
     if (name === "preflight_hub_ingest") {
       return result(await actions.preflight(required(args, "source_repository")));
@@ -412,7 +418,7 @@ export async function callHubOkfTool(
       return result(await actions.submitMany(args.proposal_ids as string[]));
     }
     if (name === "synchronize_hub_okf") return result(await actions.synchronize());
-    if (name === "recover_hub_okf") return result(await actions.recover(required(args, "proposal_id")));
+    if (name === "recover_hub_okf") return result(await actions.recover(required(args, "transaction_id")));
     const proposalId = required(args, "proposal_id");
     if (name === "inspect_hub_okf_proposal") return result(await actions.inspect(proposalId));
     if (name === "accept_hub_okf_proposal") {

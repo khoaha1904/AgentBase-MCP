@@ -23,9 +23,9 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-LOCAL-HUB-006** — Submit publishes one non-empty dependency-safe selection
   as deterministic per-Repository publication units and opens/recovers their PRs.
 - **AB-LOCAL-HUB-007** — Only explicit attach, bootstrap, submit, synchronize and
-  Hub Initialization actions may use the global token. Normal operation never writes remote `main`, merges,
+  Hub Initialization actions may use the active profile token. Normal operation never writes the remote target branch, merges,
   approves, force-pushes, deletes branches, changes settings or overrides target.
-- **AB-LOCAL-HUB-008** — Synchronization fetches exact remote `main`, recognizes
+- **AB-LOCAL-HUB-008** — Synchronization fetches the exact configured remote target, recognizes
   published identity, rebases remaining commits in an isolated candidate and
   advances the active ref only after validation; conflict/interruption preserves
   original state and recovery evidence.
@@ -265,7 +265,7 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-HUB-SETUP-003** — Only an unconfigured Hub-dependent action offers attach
   existing versus create local-only, before proposal/Git mutation.
 - **AB-HUB-SETUP-004** — Existing attach accepts one credential-free GitHub HTTPS
-  URL, clones `main` into staging, validates exact clean conformant OKF content
+  URL plus exact target branch, clones that branch into staging, validates exact clean conformant OKF content
   and atomically admits it. A legacy existing Hub may omit the explanatory
   README; MCP-created new Hubs still include it.
 - **AB-HUB-SETUP-005** — Failed/interrupted setup preserves the prior admitted
@@ -283,17 +283,17 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-HUB-SETUP-010** — Preview shows base/head/ordered knowledge and execute
   requires explicit `all-to-main` or recommended
   `base-to-main-knowledge-pr`; no mode is silently selected.
-- **AB-HUB-SETUP-011** — `all-to-main` creates remote `main` at exact local head
+- **AB-HUB-SETUP-011** — `all-to-main` creates the configured remote target at exact local head
   once and opens no PR.
-- **AB-HUB-SETUP-012** — `base-to-main-knowledge-pr` creates remote `main` at the
+- **AB-HUB-SETUP-012** — `base-to-main-knowledge-pr` creates the configured remote target at the
   base and publishes all current knowledge in one branch/PR; with no knowledge
   it creates base `main` only.
 - **AB-HUB-SETUP-013** — Private non-secret phase receipts bind repository, mode,
   base/head and commits so retries reuse exact state and never rewrite a changed
   `main`.
-- **AB-HUB-SETUP-014** — After remote `main` is fetched/admitted, configuration
+- **AB-HUB-SETUP-014** — After the remote target is fetched/admitted, configuration
   becomes `remote` and later work uses normal PR publication/synchronization.
-- **AB-HUB-SETUP-015** — The one token never enters tool arguments, Git URLs,
+- **AB-HUB-SETUP-015** — The exact identity-bound profile token never enters tool arguments, Git URLs,
   repositories, configuration, receipts or errors. Missing permissions preserve
   local work and request credential repair.
 - **AB-HUB-SETUP-016** — Configuration/receipts are owner-private, non-symlink,
@@ -302,7 +302,7 @@ queries and ordinary coding never create Hub state, commits or publication.
   paths, local-only lifecycle, both bootstrap modes, races, permissions and
   checkpoint recovery with disposable Git/fake GitHub.
 - **AB-HUB-SETUP-022** — Installation creates no Hub. The first Hub-dependent
-  authoring mutation lazily creates a local-only Hub; status, Code Graph and
+  authoring workflow preflight lazily creates a local-only Hub; status, Code Graph and
   ordinary non-Hub work never create Hub state or perform network access.
 - **AB-HUB-SETUP-023** — A remote profile is identified by normalized HTTPS
   GitHub host, repository and exact target branch. Each identity owns isolated
@@ -322,3 +322,18 @@ queries and ordinary coding never create Hub state, commits or publication.
   guides secure profile/credential setup and calls synchronization only after
   explicit user intent. The MVP has no daemon, periodic task, hidden first-call
   pull, simultaneous multi-Hub query or cross-Hub merge.
+- **AB-HUB-SETUP-027** — Status is byte-for-byte read-only. Legacy profile,
+  credential and transaction migration runs only before an explicit mutation;
+  it canonicalizes host/repository/branch identity without moving the checkout
+  or losing drafts. Active remote actions read only the exact profile token;
+  the legacy global credential is a one-time migration source, never fallback.
+- **AB-HUB-SETUP-028** — Bootstrap holds both mutation and activation ownership,
+  rechecks the active profile before any remote write and converts the same
+  checkout to its canonical remote identity. Retry accepts only the one exact
+  target ref created by the interrupted intent. Profile admission precedes the
+  Published-ref update so either crash window remains recoverable.
+- **AB-HUB-SETUP-029** — Synchronization rejects rewritten Published ancestry,
+  dirty candidates and blocking OKF integrity defects before atomic admission.
+  This integrity subset does not require support-CI files or treat freshness as
+  a gate. Recovery binds exact Main/Published state and may take over only the
+  matching dead-process lock; legacy transactions remain idempotent.

@@ -9,9 +9,9 @@ import type { ConfirmedDomain as BatchDomain } from "../../../core/knowledge/ind
 
 export type HubToolActions = Readonly<{
   status(): Promise<unknown>;
-  configure(input: Readonly<{ mode: "existing" | "new"; repositoryUrl?: string }>): Promise<unknown>;
-  previewBootstrap(repositoryUrl: string, mode: BootstrapMode): Promise<unknown>;
-  bootstrap(repositoryUrl: string, mode: BootstrapMode): Promise<unknown>;
+  configure(input: Readonly<{ mode: "existing" | "new"; repositoryUrl?: string; targetBranch?: string }>): Promise<unknown>;
+  previewBootstrap(repositoryUrl: string, targetBranch: string, mode: BootstrapMode): Promise<unknown>;
+  bootstrap(repositoryUrl: string, targetBranch: string, mode: BootstrapMode): Promise<unknown>;
   preflight(sourceRepository: string): Promise<unknown>;
   prepare(input: Readonly<{
     mode: "new" | "refresh";
@@ -63,5 +63,5 @@ export type HubToolActions = Readonly<{
   listPending(): Promise<unknown>;
   submitMany(proposalIds: readonly string[]): Promise<unknown>;
   synchronize(): Promise<unknown>;
-  recover(proposalId: string): Promise<unknown>;
+  recover(transactionId: string): Promise<unknown>;
 }>;

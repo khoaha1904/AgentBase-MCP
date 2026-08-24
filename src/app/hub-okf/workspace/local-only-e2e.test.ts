@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { createLocalOnlyHubState } from "../../../core/hub/index.ts";
+import { createHubIdentity, createLocalOnlyHubState, hubProfileId, HUB_PROPOSAL_TRAILERS } from "../../../core/hub/index.ts";
 import {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, createQuestionId, loadOkfBundle, parseConceptDocument,
   parseQuestionDocument, readExternalIdentities, readObservedValues, renderConceptDocument,
@@ -18,9 +18,12 @@ import {
 } from "../enrichment/index.ts";
 import {
   HUB_CI_MANIFEST_PATH, HUB_CI_VALIDATOR_PATH, HUB_CI_WORKFLOW_PATH, createHubRuntimeActions,
-  renderHubCiBundle, validateHubCi,
+  executeHubBootstrap, readPersistedHubConfiguration, renderHubCiBundle, validateHubCi, writePersistedHubConfiguration,
 } from "../index.ts";
 import { attachExistingHub } from "./setup.ts";
+import {
+  hubProfileCredentialPath, loadExactHubProfileToken, writeGlobalHubToken, writeHubProfileToken,
+} from "../configuration/credential-file.ts";
 
 const repositoryGuidance = {
   candidates: [{ id: "repository", identityHint: "source", identityBasis: "checkout root",
@@ -133,7 +136,15 @@ test("[AB-HUB-SETUP-006..008][AB-BATCH-006][AB-HUB-CI-001..007][SC-003] local-on
   const actions = createHubRuntimeActions(environment, path.join(root, "state"));
   try {
     const repository = await sourceRepository(root);
-    const configured = await actions.configure({ mode: "new" }) as { localRoot: string; localHubId: string };
+    const tokenLauncher = spawnSync(process.execPath,
+      [path.resolve("scripts/installation/configure-hub-token.mjs"), "--repository-url", "https://github.com/acme/hub.git", "--target-branch", "main"],
+      { cwd: root, encoding: "utf8", env: { ...process.env, HOME: root, XDG_CONFIG_HOME: path.join(root, "launcher-config") } });
+    assert.equal(tokenLauncher.status, 1);
+    assert.match(tokenLauncher.stderr, /requires an interactive terminal/);
+    assert.equal((await actions.status() as { kind: string }).kind, "unconfigured");
+    await actions.preflight(repository);
+    const configured = readPersistedHubConfiguration(environment);
+    assert.ok(configured && configured.kind === "local-only");
     const workflow = renderHubCiBundle().files[HUB_CI_WORKFLOW_PATH]!.toString();
     assert.equal(fs.readFileSync(path.join(configured.localRoot, ...HUB_CI_WORKFLOW_PATH.split("/")), "utf8"), workflow);
     assert.equal(fs.existsSync(path.join(configured.localRoot, ...HUB_CI_VALIDATOR_PATH.split("/"))), true);
@@ -266,6 +277,74 @@ test("[AB-HUB-SETUP-006..008][AB-BATCH-006][AB-HUB-CI-001..007][SC-003] local-on
     assert.equal(searched.matches.some((match) => match.path === "repositories/repo-2.md"), true);
     assert.equal((await runGit({ args: ["remote"], cwd: configured.localRoot, operation: "verify no local Hub remote" })).stdout, "");
     await assert.rejects(actions.submitMany(["x"]), /first bootstrap/);
+
+    const bootstrapEnvironment = { HOME: path.join(root, "bootstrap-home"), XDG_CONFIG_HOME: path.join(root, "bootstrap-config"),
+      XDG_DATA_HOME: path.join(root, "bootstrap-data"), XDG_STATE_HOME: path.join(root, "bootstrap-state") };
+    const bootstrapActions = createHubRuntimeActions(bootstrapEnvironment, path.join(root, "bootstrap-runtime"));
+    const bootstrapLocal = await bootstrapActions.configure({ mode: "new" }) as {
+      localRoot: string; localHubId: string; baseCommit: string;
+    };
+    fs.appendFileSync(path.join(bootstrapLocal.localRoot, "README.md"), "\nBootstrap draft.\n");
+    await runGit({ args: ["add", "README.md"], cwd: bootstrapLocal.localRoot, operation: "stage bootstrap draft" });
+    const bootstrapProposalId = "9".repeat(24), bootstrapDigest = "9".repeat(64);
+    await runGit({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit", "-m", [
+      `AgentBase OKF proposal ${bootstrapProposalId}`, "", `${HUB_PROPOSAL_TRAILERS.id}: ${bootstrapProposalId}`,
+      `${HUB_PROPOSAL_TRAILERS.subject}: repositories/bootstrap`, `${HUB_PROPOSAL_TRAILERS.sourceId}: repository-bootstrap-aaaaaaaaaaaa`,
+      `${HUB_PROPOSAL_TRAILERS.evidenceDigest}: sha256:${bootstrapDigest}`,
+      `${HUB_PROPOSAL_TRAILERS.diffDigest}: sha256:${bootstrapDigest}`,
+      `${HUB_PROPOSAL_TRAILERS.catalog}: ${AGENTBASE_OKF_SCHEMA_CATALOG_VERSION}`, `${HUB_PROPOSAL_TRAILERS.mode}: new`,
+    ].join("\n")], cwd: bootstrapLocal.localRoot, operation: "commit bootstrap draft", commitTimestamp: "2026-08-15T00:00:00Z" });
+    const bootstrapHead = (await runGit({ args: ["rev-parse", "HEAD"], cwd: bootstrapLocal.localRoot,
+      operation: "resolve bootstrap draft" })).stdout.trim();
+    const bootstrapRemote = path.join(root, "bootstrap-remote.git");
+    await runGit({ args: ["init", "--bare", "--initial-branch=main", bootstrapRemote], cwd: root, operation: "create bootstrap remote" });
+    const bootstrapUrl = "https://github.com/acme/bootstrap-hub.git";
+    const remoteProfileId = hubProfileId(createHubIdentity("acme/bootstrap-hub", "main"));
+    writeHubProfileToken(remoteProfileId, "bootstrap-token-canary", bootstrapEnvironment);
+    let failPublishedAdmission = true;
+    const bootstrapGit = async (request: GitRequest) => {
+      if (request.operation === "admit bootstrapped Published boundary" && failPublishedAdmission) {
+        failPublishedAdmission = false; throw new Error("simulated post-activation crash");
+      }
+      const args = [...request.args];
+      const remoteIndex = args.findIndex((value) => value === bootstrapUrl || value === "origin");
+      if (["ls-remote", "push", "fetch"].includes(args[0] ?? "") && remoteIndex >= 0) {
+        args[remoteIndex] = bootstrapRemote;
+        return { stdout: execFileSync("/usr/bin/git", args, { cwd: request.cwd, encoding: "utf8" }), stderr: "" };
+      }
+      return runGit(request);
+    };
+    await assert.rejects(executeHubBootstrap(bootstrapUrl, "main", "all-to-main", bootstrapEnvironment,
+      { git: bootstrapGit }), /simulated post-activation crash/);
+    assert.equal(readPersistedHubConfiguration(bootstrapEnvironment)?.localHubId, remoteProfileId);
+    assert.equal(fs.existsSync(path.join(bootstrapEnvironment.XDG_CONFIG_HOME, "agentbase-mcp", "hubs", `${bootstrapLocal.localHubId}.json`)), false);
+    const bootstrapped = await executeHubBootstrap(bootstrapUrl, "main", "all-to-main", bootstrapEnvironment, { git: bootstrapGit });
+    assert.equal(bootstrapped.phase, "completed");
+    assert.equal((await runGit({ args: ["rev-parse", `refs/agentbase/published`], cwd: bootstrapLocal.localRoot,
+      operation: "verify bootstrap Published boundary" })).stdout.trim(), bootstrapHead);
+
+    const legacyEnvironment = { HOME: path.join(root, "legacy-home"), XDG_CONFIG_HOME: path.join(root, "legacy-config"),
+      XDG_DATA_HOME: path.join(root, "legacy-data") };
+    const legacyRoot = path.join(root, "legacy-hub");
+    fs.cpSync(configured.localRoot, legacyRoot, { recursive: true });
+    await runGit({ args: ["remote", "add", "origin", "https://github.com/acme/legacy-hub.git"], cwd: legacyRoot,
+      operation: "attach legacy migration remote" });
+    const legacyId = "a".repeat(24), canonicalLegacyId = hubProfileId(createHubIdentity("acme/legacy-hub", "main"));
+    writePersistedHubConfiguration({ formatVersion: 1, kind: "remote", localHubId: legacyId, localRoot: legacyRoot,
+      baseCommit: configured.baseCommit, catalogVersion: AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
+      host: "github.com", repository: "acme/legacy-hub", targetBranch: "main" }, legacyEnvironment);
+    writeGlobalHubToken("legacy-token-canary", legacyEnvironment);
+    const legacyState = path.join(root, "legacy-state"), legacyTransaction = path.join(legacyState, "transactions", "sync-legacy");
+    fs.mkdirSync(legacyTransaction, { recursive: true });
+    fs.writeFileSync(path.join(legacyTransaction, "transaction.json"), `${JSON.stringify({ phase: "prepared",
+      originalHead: (await runGit({ args: ["rev-parse", "HEAD"], cwd: legacyRoot, operation: "resolve legacy head" })).stdout.trim(),
+      candidateRoot: path.join(legacyTransaction, "candidate") })}\n`);
+    await createHubRuntimeActions(legacyEnvironment, legacyState).preflight(repository);
+    assert.equal(readPersistedHubConfiguration(legacyEnvironment)?.localHubId, canonicalLegacyId);
+    assert.equal(loadExactHubProfileToken(canonicalLegacyId, legacyEnvironment), "legacy-token-canary");
+    assert.equal(fs.existsSync(hubProfileCredentialPath(legacyId, legacyEnvironment)), false);
+    const migratedTransaction = JSON.parse(fs.readFileSync(path.join(legacyTransaction, "transaction.json"), "utf8")) as { localHubId?: string };
+    assert.equal(migratedTransaction.localHubId, canonicalLegacyId);
 
     const batchEnvironment = { HOME: path.join(root, "batch-home"), XDG_CONFIG_HOME: path.join(root, "batch-config"),
       XDG_DATA_HOME: path.join(root, "batch-data") };
@@ -498,9 +577,14 @@ test("[AB-HUB-SETUP-006..008][AB-BATCH-006][AB-HUB-CI-001..007][SC-003] local-on
     await runGit({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit", "-m", "legacy Hub without README"],
       cwd: configured.localRoot, operation: "commit legacy Hub fixture", commitTimestamp: "2026-08-13T00:00:01Z" });
     const attachEnvironment = { HOME: path.join(root, "attach-home"), XDG_CONFIG_HOME: path.join(root, "attach-config"),
-      XDG_DATA_HOME: path.join(root, "attach-data"), AGENTBASE_HUB_GITHUB_TOKEN: "token-canary" };
-    const attached = await attachExistingHub("https://github.com/acme/AgentBase-Hub", attachEnvironment, async (request: GitRequest) => {
+      XDG_DATA_HOME: path.join(root, "attach-data") };
+    const githubProfileId = hubProfileId(createHubIdentity("acme/AgentBase-Hub", "main"));
+    const enterpriseProfileId = hubProfileId(createHubIdentity("platform/Knowledge-Hub", "knowledge/release", "github.corp.example"));
+    writeHubProfileToken(githubProfileId, "github-token-canary", attachEnvironment);
+    writeHubProfileToken(enterpriseProfileId, "enterprise-token-canary", attachEnvironment);
+    const attached = await attachExistingHub("https://github.com/acme/AgentBase-Hub", "main", attachEnvironment, async (request: GitRequest) => {
       if (request.args[0] !== "clone") return runGit(request);
+      assert.equal(request.token, "github-token-canary");
       const destination = String(request.args.at(-1));
       fs.cpSync(configured.localRoot, destination, { recursive: true });
       await runGit({ args: ["remote", "add", "origin", "https://github.com/acme/AgentBase-Hub.git"],
@@ -509,5 +593,52 @@ test("[AB-HUB-SETUP-006..008][AB-BATCH-006][AB-HUB-CI-001..007][SC-003] local-on
     });
     assert.equal(attached.repository, "acme/AgentBase-Hub");
     assert.equal(fs.existsSync(path.join(attached.localRoot, "README.md")), false);
+    fs.writeFileSync(path.join(attached.localRoot, "README.md"), "# Profile A only\n");
+    await runGit({ args: ["add", "README.md"], cwd: attached.localRoot, operation: "stage profile A draft" });
+    await runGit({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit", "-m", "profile A local draft"],
+      cwd: attached.localRoot, operation: "commit profile A draft", commitTimestamp: "2026-08-14T00:00:00Z" });
+    const attachedHead = (await runGit({ args: ["rev-parse", "HEAD"], cwd: attached.localRoot, operation: "resolve profile A draft" })).stdout.trim();
+    const enterprise = await attachExistingHub("https://github.corp.example/platform/Knowledge-Hub.git", "knowledge/release",
+      attachEnvironment, async (request: GitRequest) => {
+        if (request.args[0] !== "clone") return runGit(request);
+        assert.equal(request.token, "enterprise-token-canary");
+        const destination = String(request.args.at(-1));
+        fs.cpSync(configured.localRoot, destination, { recursive: true });
+        await runGit({ args: ["branch", "-m", "knowledge/release"], cwd: destination,
+          operation: "name Enterprise fixture branch" });
+        await runGit({ args: ["remote", "add", "origin", "https://github.corp.example/platform/Knowledge-Hub.git"],
+          cwd: destination, operation: "add Enterprise Hub fixture origin" });
+        return { stdout: "", stderr: "" };
+      });
+    assert.equal(enterprise.host, "github.corp.example");
+    assert.equal(enterprise.targetBranch, "knowledge/release");
+    assert.notEqual(enterprise.localRoot, attached.localRoot);
+    assert.notEqual(enterprise.activeHead, attachedHead);
+    await assert.rejects(attachExistingHub("https://github.corp.example/platform/Other-Hub", "../invalid",
+      attachEnvironment), /target branch is invalid/);
+    assert.equal(readPersistedHubConfiguration(attachEnvironment)?.localHubId, enterprise.localHubId,
+      "failed activation preserves the previous active profile");
+    const switchedBack = await attachExistingHub("https://github.com/acme/AgentBase-Hub", "main", attachEnvironment, async (request) => {
+      if (request.args[0] === "ls-remote") {
+        assert.equal(request.token, "github-token-canary");
+        const head = (await runGit({ args: ["rev-parse", "HEAD"], cwd: attached.localRoot, operation: "resolve saved fixture" })).stdout.trim();
+        return { stdout: `${head}\trefs/heads/main\n`, stderr: "" };
+      }
+      return runGit(request);
+    });
+    assert.equal(switchedBack.localRoot, attached.localRoot);
+    assert.equal(fs.existsSync(enterprise.localRoot), true, "inactive Enterprise profile remains isolated and reusable");
+    fs.rmSync(hubProfileCredentialPath(attached.localHubId, attachEnvironment));
+    fs.writeFileSync(path.join(attached.localRoot, "dirty-status.tmp"), "local failure fixture\n");
+    const partialStatus = await createHubRuntimeActions({ HOME: attachEnvironment.HOME,
+      XDG_CONFIG_HOME: attachEnvironment.XDG_CONFIG_HOME, XDG_DATA_HOME: attachEnvironment.XDG_DATA_HOME },
+    path.join(root, "partial-status-state")).status() as {
+      kind: string; hub: { repository: string }; local: { state: string }; credential: string;
+    };
+    assert.deepEqual({ kind: partialStatus.kind, repository: partialStatus.hub.repository,
+      local: partialStatus.local.state, credential: partialStatus.credential }, {
+      kind: "remote", repository: "acme/AgentBase-Hub", local: "unavailable", credential: "missing",
+    });
+    fs.rmSync(path.join(attached.localRoot, "dirty-status.tmp"));
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });

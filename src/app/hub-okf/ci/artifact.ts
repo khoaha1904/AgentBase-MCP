@@ -22,16 +22,16 @@ function validatorBytes(): Buffer {
   return fs.readFileSync(path.join(root, "assets", "hub-ci", "hub-validator.mjs"));
 }
 
-export function renderHubCiBundle(): HubCiBundle {
+export function renderHubCiBundle(targetBranch = "main"): HubCiBundle {
   const validator = validatorBytes();
   const validatorDigest = hubCiBytesDigest(validator);
   const files: Readonly<Record<string, Buffer>> = {
-    [HUB_CI_WORKFLOW_PATH]: Buffer.from(renderHubCiWorkflow(validatorDigest)),
+    [HUB_CI_WORKFLOW_PATH]: Buffer.from(renderHubCiWorkflow(validatorDigest, targetBranch)),
     [HUB_CI_VALIDATOR_PATH]: validator,
     [HUB_CI_MANIFEST_PATH]: Buffer.from(renderHubCiManifest({
       version: HUB_CI_VALIDATOR_VERSION,
       sha256: validatorDigest,
-    })),
+    }, targetBranch)),
   };
   const digest = hubCiBytesDigest(Buffer.concat(Object.entries(files).flatMap(([name, bytes]) => [
     Buffer.from(`${name}\0${bytes.length}\0`), bytes, Buffer.from("\0"),

@@ -3,10 +3,13 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+import { createHubIdentity, hubProfileId } from "../../../core/hub/index.ts";
 import { AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, loadOkfBundle } from "../../../core/knowledge/index.ts";
 import { runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
-import { loadGlobalHubToken } from "../configuration/credential-file.ts";
+import { loadExactHubProfileToken } from "../configuration/credential-file.ts";
 import {
+  activatePersistedHubConfiguration,
+  readPersistedHubProfile,
   readPersistedHubConfiguration,
   writePersistedHubConfiguration,
   type PersistedHubConfiguration,
@@ -22,7 +25,9 @@ export type HubSetupResult = Readonly<{
   localRoot: string;
   baseCommit: string;
   activeHead: string;
+  host?: string;
   repository?: string;
+  targetBranch?: string;
 }>;
 
 export const HUB_BASE_TRAILERS = {
@@ -37,10 +42,10 @@ function dataDirectory(environment: NodeJS.ProcessEnv): string {
   return path.join(base, "agentbase-mcp", "hubs");
 }
 
-export function normalizeGitHubHubUrl(value: string): Readonly<{ repository: string; canonicalHttpsUrl: string }> {
+export function normalizeGitHubHubUrl(value: string): Readonly<{ host: string; repository: string; canonicalHttpsUrl: string }> {
   let url: URL;
   try { url = new URL(value); } catch { throw new Error("Hub URL must be an exact GitHub HTTPS repository URL"); }
-  if (url.protocol !== "https:" || url.hostname !== "github.com" || url.username || url.password || url.search || url.hash || url.port) {
+  if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash || url.port) {
     throw new Error("Hub URL must be a credential-free GitHub HTTPS repository URL");
   }
   const parts = url.pathname.replace(/\/$/, "").split("/").filter(Boolean);
@@ -50,7 +55,8 @@ export function normalizeGitHubHubUrl(value: string): Readonly<{ repository: str
     throw new Error("Hub URL repository identity is invalid");
   }
   const repository = `${owner}/${repositoryName}`;
-  return { repository, canonicalHttpsUrl: `https://github.com/${repository}.git` };
+  const host = url.hostname.toLowerCase();
+  return { host, repository, canonicalHttpsUrl: `https://${host}/${repository}.git` };
 }
 
 function exactCommit(value: string, label: string): string {
@@ -83,37 +89,74 @@ function privateParent(parent: string): void {
 function result(configuration: PersistedHubConfiguration, activeHead: string): HubSetupResult {
   return { kind: configuration.kind, localHubId: configuration.localHubId, localRoot: configuration.localRoot,
     baseCommit: configuration.baseCommit, activeHead,
-    ...(configuration.kind === "remote" ? { repository: configuration.repository } : {}) };
+    ...(configuration.kind === "remote" ? { host: configuration.host, repository: configuration.repository,
+      targetBranch: configuration.targetBranch } : {}) };
 }
 
 function setupFailure(error: unknown, token: string): Error {
   const message = error instanceof Error ? error.message : "Hub attachment failed";
   const redacted = token ? message.split(token).join("[REDACTED]") : message;
   if (/(?:status 401|status 403|exited with status)/i.test(redacted)) {
-    return new Error("GitHub access is insufficient; update the one global token with repository read access, then retry");
+    return new Error("GitHub access is insufficient; update this Hub profile token with repository read access, then retry");
   }
   return new Error(redacted);
 }
 
 export async function attachExistingHub(
   repositoryUrl: string,
+  targetBranch: string,
   environment: NodeJS.ProcessEnv = process.env,
   git: SetupGit = runGit,
 ): Promise<HubSetupResult> {
-  ensureNoConfiguration(environment);
-  const token = loadGlobalHubToken(environment);
-  if (!token) throw new Error("existing Hub attachment requires the global GitHub token");
+  const initialActiveHubId = readPersistedHubConfiguration(environment)?.localHubId;
   const normalized = normalizeGitHubHubUrl(repositoryUrl);
-  const localHubId = createHash("sha256").update(`github\0${normalized.repository}`).digest("hex").slice(0, 24);
+  if (!targetBranch) throw new Error("existing Hub attachment requires an exact target branch");
+  const hub = createHubIdentity(normalized.repository, targetBranch, normalized.host);
+  const localHubId = hubProfileId(hub);
+  const token = loadExactHubProfileToken(localHubId, environment);
+  if (!token) throw new Error("existing Hub attachment requires an owner-private Hub profile token");
+  const existing = readPersistedHubProfile(localHubId, environment);
+  if (existing) {
+    if (existing.kind !== "remote" || existing.host !== normalized.host || existing.repository !== normalized.repository
+      || existing.targetBranch !== targetBranch || !fs.existsSync(existing.localRoot)) {
+      throw new Error("saved Hub profile does not match its requested identity");
+    }
+    const branch = await git({ args: ["symbolic-ref", "--quiet", "--short", "HEAD"], cwd: existing.localRoot,
+      operation: "validate saved Hub branch" });
+    if (branch.stdout.trim() !== "main") throw new Error("saved Hub profile is not on its internal main branch");
+    const remote = await git({ args: ["remote", "get-url", "origin"], cwd: existing.localRoot,
+      operation: "validate saved Hub remote" });
+    if (remote.stdout.trim() !== normalized.canonicalHttpsUrl) throw new Error("saved Hub profile remote identity changed");
+    const config = await git({ args: ["config", "--local", "--null", "--list"], cwd: existing.localRoot,
+      operation: "validate saved Hub config" });
+    if (config.stdout.split("\0").some((entry) => /^url\..*\.insteadof\n/i.test(entry))) {
+      throw new Error("saved AgentBase-Hub contains a forbidden URL rewrite");
+    }
+    const remoteBranch = await git({ args: ["ls-remote", "--heads", normalized.canonicalHttpsUrl, `refs/heads/${targetBranch}`],
+      cwd: existing.localRoot, operation: "validate saved Hub target", token });
+    const remoteFields = remoteBranch.stdout.trim().split(/\s+/);
+    if (remoteFields.length !== 2 || !/^[a-f0-9]{40}$/.test(remoteFields[0]!)
+      || remoteFields[1] !== `refs/heads/${targetBranch}`) throw new Error("saved Hub target branch is unavailable");
+    const status = await git({ args: ["status", "--porcelain=v1", "--untracked-files=all"], cwd: existing.localRoot,
+      operation: "validate saved Hub tree" });
+    if (status.stdout.length) throw new Error("saved Hub profile tree is not clean");
+    loadOkfBundle(existing.localRoot, { requireAgentBaseRootIndex: true });
+    await git({ args: ["rev-parse", "--verify", "refs/agentbase/published^{commit}"], cwd: existing.localRoot,
+      operation: "validate saved Published boundary" });
+    const head = await git({ args: ["rev-parse", "--verify", "refs/heads/main^{commit}"], cwd: existing.localRoot,
+      operation: "validate saved Hub profile" });
+    activatePersistedHubConfiguration(existing, environment, initialActiveHubId ?? null);
+    return result(existing, exactCommit(head.stdout, "saved Hub head"));
+  }
   const parent = dataDirectory(environment), localRoot = path.join(parent, localHubId);
   privateParent(parent);
   if (fs.existsSync(localRoot)) throw new Error("owned Hub destination already exists without an admitted configuration");
   const staging = path.join(parent, `.attach-${localHubId}-${randomUUID()}`);
   try {
-    await git({ args: ["clone", "--branch", "main", "--single-branch", "--no-recurse-submodules", normalized.canonicalHttpsUrl, staging],
+    await git({ args: ["clone", "--branch", targetBranch, "--single-branch", "--no-recurse-submodules", normalized.canonicalHttpsUrl, staging],
       cwd: parent, operation: "attach existing AgentBase-Hub", token });
     const branch = await git({ args: ["symbolic-ref", "--quiet", "--short", "HEAD"], cwd: staging, operation: "validate attached Hub branch" });
-    if (branch.stdout.trim() !== "main") throw new Error("attached AgentBase-Hub checkout is not on main");
+    if (branch.stdout.trim() !== targetBranch) throw new Error("attached AgentBase-Hub checkout is not on the configured target branch");
     const remote = await git({ args: ["remote", "get-url", "origin"], cwd: staging, operation: "validate attached Hub remote" });
     if (remote.stdout.trim() !== normalized.canonicalHttpsUrl) throw new Error("attached AgentBase-Hub remote identity changed");
     const config = await git({ args: ["config", "--local", "--null", "--list"], cwd: staging, operation: "validate attached Hub config" });
@@ -126,11 +169,19 @@ export async function attachExistingHub(
     const baseCommit = await rootCommit(staging, git);
     const head = await git({ args: ["rev-parse", "--verify", "HEAD^{commit}"], cwd: staging, operation: "resolve attached Hub head" });
     const activeHead = exactCommit(head.stdout, "Hub head");
+    if (targetBranch !== "main") await git({ args: ["branch", "-m", "main"], cwd: staging, operation: "normalize local Hub branch" });
+    await git({ args: ["update-ref", "refs/agentbase/published", activeHead], cwd: staging, operation: "initialize Published boundary" });
     const configuration: PersistedHubConfiguration = { formatVersion: 1, kind: "remote", localHubId, localRoot, baseCommit,
-      catalogVersion: AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, repository: normalized.repository, targetBranch: "main" };
+      catalogVersion: AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, host: normalized.host,
+      repository: normalized.repository, targetBranch };
     fs.renameSync(staging, localRoot);
-    try { writePersistedHubConfiguration(configuration, environment); }
-    catch (error) { fs.rmSync(localRoot, { recursive: true, force: true }); throw error; }
+    try {
+      activatePersistedHubConfiguration(configuration, environment, initialActiveHubId ?? null);
+    }
+    catch (error) {
+      if (!readPersistedHubProfile(localHubId, environment)) fs.rmSync(localRoot, { recursive: true, force: true });
+      throw error;
+    }
     return result(configuration, activeHead);
   } catch (error) {
     if (fs.existsSync(staging)) fs.rmSync(staging, { recursive: true, force: true });
@@ -169,6 +220,8 @@ export async function createLocalHub(
       cwd: staging, operation: "commit AgentBase-Hub base", commitTimestamp: createdAt });
     const head = await git({ args: ["rev-parse", "--verify", "HEAD^{commit}"], cwd: staging, operation: "resolve local Hub base" });
     const baseCommit = exactCommit(head.stdout, "Hub base");
+    await git({ args: ["update-ref", "refs/agentbase/published", baseCommit], cwd: staging,
+      operation: "initialize local Published boundary" });
     const configuration: PersistedHubConfiguration = { formatVersion: 1, kind: "local-only", localHubId, localRoot,
       baseCommit, catalogVersion: AGENTBASE_OKF_SCHEMA_CATALOG_VERSION };
     fs.renameSync(staging, localRoot);

@@ -9,6 +9,7 @@ import { createHubIdentity, createLocalHubState, HUB_PROPOSAL_TRAILERS } from ".
 import { GitHubHubApi, type GitRequest, type GitHubPullRequest } from "../../../providers/github-hub/index.ts";
 import { publishPendingHubProposals, type PublishGitHub } from "./publish.ts";
 import { synchronizeLocalHub } from "./synchronize.ts";
+import { recoverSynchronizationTransaction } from "./recovery.ts";
 import {
   initializeHub, previewHubInitialization,
 } from "../ci/upgrade.ts";
@@ -21,19 +22,20 @@ const SOURCE_ID_B = "repository-beta-bbbbbbbbbbbb";
 const IDS = ["1".repeat(24), "2".repeat(24), "3".repeat(24), "4".repeat(24), "5".repeat(24)];
 const DIGESTS = ["a".repeat(64), "b".repeat(64), "c".repeat(64), "d".repeat(64), "e".repeat(64)];
 
-function git(cwd: string, args: readonly string[], environment?: NodeJS.ProcessEnv): string {
-  return execFileSync("/usr/bin/git", [...args], { cwd, encoding: "utf8", ...(environment ? { env: environment } : {}) }).trim();
+function git(cwd: string, args: readonly string[], environment?: NodeJS.ProcessEnv, input?: string): string {
+  return execFileSync("/usr/bin/git", [...args], { cwd, encoding: "utf8", ...(environment ? { env: environment } : {}),
+    ...(input === undefined ? {} : { input }) }).trim();
 }
 
 function concept(revision: string, purpose: string, sourceId = SOURCE_ID, title = "Acme"): string {
   return `---\ntype: Repository\ntitle: ${title}\ndescription: ${title} repository\nstatus: draft\n`
     + `generated: { by: 'agentbase/0.0.0', at: '2026-08-22T00:00:00Z' }\n`
-    + `sources:\n  - resource: repository://${sourceId}/README.md#L1-L1\n`
+    + `sources:\n  - id: source\n    resource: repository://${sourceId}/README.md#L1-L1\n`
     + `relationships:\n  - { kind: part-of, target: domains/crawler, evidence: [source] }\n`
     + `agentbase:\n  repository:\n    id: ${sourceId}\n    display_name: ${title.toLowerCase()}\n`
     + `    aliases: { remotes: [], root_commits: [] }\n`
     + `    observed_source: { commit: ${revision}, dirty: false, dirty_digest: null, observed_at: '2026-08-22T00:00:00Z' }\n`
-    + `---\n\n# Purpose\n\n${purpose}\n`;
+    + `---\n\n# Purpose\n\n${purpose}\n\n[Domain](../domains/crawler.md)\n`;
 }
 
 function commitMessage(id: string, mode: "new" | "refresh", digest: string,
@@ -119,7 +121,7 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021] MCP creat
     const betaCommit = git(hubRoot, ["rev-parse", "HEAD"]);
     retainedProposal(stateRoot, hubRoot, IDS[2]!, betaCommit, DIGESTS[2]!, "created", SOURCE_ID_B, "repositories/beta.md");
     fs.mkdirSync(path.join(hubRoot, "domains"));
-    fs.writeFileSync(path.join(hubRoot, "domains/crawler.md"), "---\ntype: Domain\ntitle: Crawler\ndescription: Crawler Domain\nstatus: draft\ngenerated: { by: 'agentbase/0.0.0', at: '2026-08-22T00:00:00Z' }\n---\n\n# Purpose\n\nCrawler.\n");
+    fs.writeFileSync(path.join(hubRoot, "domains/crawler.md"), `---\ntype: Domain\ntitle: Crawler\ndescription: Crawler Domain\nstatus: draft\ngenerated: { by: 'agentbase/0.0.0', at: '2026-08-22T00:00:00Z' }\nsources:\n  - resource: repository://${SOURCE_ID}/README.md#L1-L1\n---\n\n# Purpose\n\nCrawler.\n`);
     fs.writeFileSync(path.join(hubRoot, "domains/index.md"), "# Domains\n\n* [Crawler](crawler.md) - Domain\n");
     fs.appendFileSync(path.join(hubRoot, "index.md"), "\n* [Domains](domains/index.md) - business domains\n");
     git(hubRoot, ["add", "--all"]); git(hubRoot, ["-c", "user.name=Test", "-c", "user.email=test@localhost",
@@ -138,7 +140,7 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021] MCP creat
       profileVersions: { "aws.sts.caller-identity": 1, "aws.sqs.queue": 1 },
       candidates: [{ id: "candidate-111111111111111111111111", question: { id: "question-111111111111111111111111", revision: 1 } }],
     })}\n`);
-    fs.writeFileSync(path.join(hubRoot, "domains/batch.md"), "---\ntype: Domain\ntitle: Batch\ndescription: Batch Domain\nstatus: draft\ngenerated: { by: 'agentbase/0.0.0', at: '2026-08-22T00:00:00Z' }\n---\n\n# Purpose\n\nBatch.\n");
+    fs.writeFileSync(path.join(hubRoot, "domains/batch.md"), `---\ntype: Domain\ntitle: Batch\ndescription: Batch Domain\nstatus: draft\ngenerated: { by: 'agentbase/0.0.0', at: '2026-08-22T00:00:00Z' }\nsources:\n  - resource: repository://${SOURCE_ID}/README.md#L1-L1\n---\n\n# Purpose\n\nBatch.\n`);
     git(hubRoot, ["add", "domains/batch.md"]); git(hubRoot, ["-c", "user.name=Test", "-c", "user.email=test@localhost",
       "commit", "-m", batchCommitMessage(IDS[4]!, DIGESTS[4]!) ]);
     const batchCommit = git(hubRoot, ["rev-parse", "HEAD"]), batchRoot = path.join(stateRoot, "proposals", IDS[4]!);
@@ -155,7 +157,8 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021] MCP creat
           { repositoryId: SOURCE_ID_B, paths: ["repositories/beta.md"] }], sharedPaths: ["domains/batch.md"],
       } })}\n`);
     const localHub = createLocalHubState({ root: hubRoot, hub: createHubIdentity("agentbase/hub", "main"),
-      remoteBase, activeHead: batchCommit, catalogVersion: "7.0.0" });
+      localHubId: "f".repeat(24), remoteBase, activeHead: batchCommit, catalogVersion: "7.0.0" });
+    git(hubRoot, ["update-ref", "refs/agentbase/published", remoteBase]);
     const pushes: string[] = [], pullCalls: { title: string; body: string; base: string }[] = [];
     const pulls: (GitHubPullRequest & { state: "open" | "closed" })[] = [];
     let failBase: string | undefined;
@@ -199,7 +202,7 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021] MCP creat
       const environment = request.commitTimestamp
         ? { ...process.env, GIT_AUTHOR_DATE: request.commitTimestamp, GIT_COMMITTER_DATE: request.commitTimestamp }
         : undefined;
-      const stdout = git(request.cwd, args, environment);
+      const stdout = git(request.cwd, args, environment, request.stdin);
       if (request.args[0] === "push") {
         const branch = request.args.at(-1)!.split(":refs/heads/")[1];
         if (branch) {
@@ -310,9 +313,42 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021] MCP creat
     git(remote, ["update-ref", "refs/heads/main", remoteBase, driftHead]);
 
     git(remote, ["update-ref", "refs/heads/main", batch.headCommit, remoteBase]);
+    const rewrittenRoot = path.join(root, "rewritten-remote");
+    fs.mkdirSync(rewrittenRoot);
+    git(rewrittenRoot, ["init", "--initial-branch=main"]);
+    fs.writeFileSync(path.join(rewrittenRoot, "index.md"), "---\nokf_version: '0.2'\n---\n");
+    git(rewrittenRoot, ["add", "index.md"]);
+    git(rewrittenRoot, ["-c", "user.name=Test", "-c", "user.email=test@localhost", "commit", "-m", "unrelated rewrite"]);
+    const rewrittenHead = git(rewrittenRoot, ["rev-parse", "HEAD"]);
+    git(rewrittenRoot, ["push", "--force", remote, `${rewrittenHead}:refs/heads/main`]);
+    const transactionsBeforeRewrite = new Set(fs.existsSync(path.join(stateRoot, "transactions"))
+      ? fs.readdirSync(path.join(stateRoot, "transactions")) : []);
+    await assert.rejects(synchronizeLocalHub({ stateRoot, localHub, token: "github_pat_secret_canary", git: gitRunner }),
+      /no longer contains the admitted Published boundary/);
+    const rewriteTransaction = fs.readdirSync(path.join(stateRoot, "transactions"))
+      .find((entry) => !transactionsBeforeRewrite.has(entry));
+    assert.ok(rewriteTransaction);
+    await recoverSynchronizationTransaction(stateRoot, rewriteTransaction, localHub, gitRunner);
+    git(hubRoot, ["push", "--force", remote, `${batch.headCommit}:refs/heads/main`]);
     const synchronization = await synchronizeLocalHub({ stateRoot, localHub, token: "github_pat_secret_canary", git: gitRunner });
+    assert.equal(fs.existsSync(path.join(stateRoot, "transactions", synchronization.id)), false,
+      "successful synchronization closes its recovery transaction");
     const synchronizedHub = createLocalHubState({ root: hubRoot, hub: createHubIdentity("agentbase/hub", "main"),
-      remoteBase: batch.headCommit, activeHead: synchronization.activeHead, catalogVersion: "7.0.0" });
+      localHubId: "f".repeat(24), remoteBase: batch.headCommit, activeHead: synchronization.activeHead, catalogVersion: "7.0.0" });
+    const recoveryId = "sync-crashwindow", recoveryRoot = path.join(stateRoot, "transactions", recoveryId);
+    fs.mkdirSync(recoveryRoot, { recursive: true });
+    fs.writeFileSync(path.join(recoveryRoot, "transaction.json"), `${JSON.stringify({
+      phase: "validated", localHubId: synchronizedHub.localHubId, originalHead: synchronization.originalHead,
+      priorPublished: localHub.remoteBase, remoteHead: batch.headCommit, candidateHead: synchronization.activeHead,
+      candidateRoot: path.join(recoveryRoot, "candidate"),
+    })}\n`);
+    const staleLock = path.join(stateRoot, "mutation.lock");
+    fs.mkdirSync(staleLock, { recursive: true });
+    fs.writeFileSync(path.join(staleLock, "owner.json"), `${JSON.stringify({ ownerId: recoveryId, pid: 2_147_483_647 })}\n`);
+    git(hubRoot, ["checkout", "--detach", synchronization.activeHead]);
+    assert.equal((await recoverSynchronizationTransaction(stateRoot, recoveryId, synchronizedHub, gitRunner)).outcome, "already-advanced");
+    assert.equal(git(hubRoot, ["symbolic-ref", "--short", "HEAD"]), "main");
+    assert.equal(fs.existsSync(recoveryRoot), false);
     const reconciled = await publishPendingHubProposals({ ...common, localHub: synchronizedHub, selectedProposalIds: [IDS[2]!] });
     assert.equal(reconciled.pullRequest.number, independent.pullRequest.number);
     assert.notEqual(reconciled.headCommit, independent.headCommit);
@@ -368,5 +404,15 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021] MCP creat
     assert.equal((JSON.parse(requests[1]!.body!) as { base: string }).base, explicitBase);
     assert.equal(new URL(requests[2]!.url).searchParams.has("base"), false);
     assert.equal(requests[3]!.method, "PATCH");
+    const enterpriseRequests: string[] = [];
+    const enterprise = new GitHubHubApi(createHubIdentity("agentbase/hub", "release/knowledge", "github.corp.example"), "canary",
+      async (input) => {
+        enterpriseRequests.push(String(input));
+        return new Response(JSON.stringify([{ number: 7, html_url: "https://github.corp.example/agentbase/hub/pull/7",
+          head: { ref: "agentbase/change", sha: refreshCommit, repo: { full_name: "agentbase/hub" } },
+          base: { ref: "release/knowledge" } }]), { status: 200 });
+      });
+    assert.deepEqual(await enterprise.countOpenPullRequests(), { count: 1, truncated: false });
+    assert.match(enterpriseRequests[0]!, /^https:\/\/github\.corp\.example\/api\/v3\/repos\/agentbase\/hub\/pulls\?/);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });

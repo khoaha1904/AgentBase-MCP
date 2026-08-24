@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { createHubIdentity, type HubIdentity } from "../../../core/hub/index.ts";
+import { createHubIdentity, hubProfileId, type HubIdentity } from "../../../core/hub/index.ts";
 
 const MAX_BYTES = 16 * 1024;
 
@@ -22,12 +22,14 @@ export type PersistedRemoteHubConfiguration = Readonly<{
   localRoot: string;
   baseCommit: string;
   catalogVersion: string;
+  host: string;
   repository: string;
-  targetBranch: "main";
+  targetBranch: string;
 }>;
 
 export type PersistedHubConfiguration = PersistedLocalHubConfiguration | PersistedRemoteHubConfiguration;
 export type ActiveHubConfiguration = PersistedHubConfiguration & Readonly<{ hub?: HubIdentity; token?: string }>;
+type PersistedHubPointer = Readonly<{ formatVersion: 1; activeHubId: string }>;
 
 function directory(environment: NodeJS.ProcessEnv): string {
   const base = environment.XDG_CONFIG_HOME || environment.HOME || os.homedir();
@@ -37,6 +39,15 @@ function directory(environment: NodeJS.ProcessEnv): string {
 
 export function globalHubConfigurationPath(environment: NodeJS.ProcessEnv = process.env): string {
   return path.join(directory(environment), "hub.json");
+}
+
+function profilesDirectory(environment: NodeJS.ProcessEnv): string {
+  return path.join(directory(environment), "hubs");
+}
+
+function profilePath(localHubId: string, environment: NodeJS.ProcessEnv): string {
+  if (!/^[a-f0-9]{24}$/.test(localHubId)) throw new Error("Hub profile ID is invalid");
+  return path.join(profilesDirectory(environment), `${localHubId}.json`);
 }
 
 function owner(stat: fs.Stats): boolean {
@@ -71,7 +82,7 @@ function parse(value: unknown): PersistedHubConfiguration {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("global Hub configuration is invalid");
   const input = value as Record<string, unknown>;
   const common = ["formatVersion", "kind", "localHubId", "localRoot", "baseCommit", "catalogVersion"];
-  const allowed = input.kind === "remote" ? [...common, "repository", "targetBranch"] : common;
+  const allowed = input.kind === "remote" ? [...common, "host", "repository", "targetBranch"] : common;
   if (Object.keys(input).some((key) => !allowed.includes(key)) || input.formatVersion !== 1
     || (input.kind !== "local-only" && input.kind !== "remote")
     || typeof input.localHubId !== "string" || !/^[a-f0-9]{24}$/.test(input.localHubId)
@@ -81,10 +92,121 @@ function parse(value: unknown): PersistedHubConfiguration {
   }
   assertCommit(input.baseCommit, "base commit");
   if (input.kind === "remote") {
-    if (typeof input.repository !== "string" || input.targetBranch !== "main") throw new Error("global Hub remote configuration is invalid");
-    createHubIdentity(input.repository, input.targetBranch);
+    if (typeof input.repository !== "string" || typeof input.targetBranch !== "string") throw new Error("global Hub remote configuration is invalid");
+    if (input.host === undefined) input.host = "github.com";
+    if (typeof input.host !== "string") throw new Error("global Hub remote configuration is invalid");
+    createHubIdentity(input.repository, input.targetBranch, input.host);
   }
   return input as PersistedHubConfiguration;
+}
+
+function parsePointer(value: unknown): PersistedHubPointer | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const input = value as Record<string, unknown>;
+  if (Object.keys(input).length !== 2 || input.formatVersion !== 1
+    || typeof input.activeHubId !== "string" || !/^[a-f0-9]{24}$/.test(input.activeHubId)) return undefined;
+  return input as PersistedHubPointer;
+}
+
+function writePointer(file: string, localHubId: string): void {
+  const parent = path.dirname(file);
+  admitParent(parent, true);
+  const temporary = path.join(parent, `.active-${process.pid}-${Date.now().toString(36)}.tmp`);
+  try {
+    fs.writeFileSync(temporary, `${JSON.stringify({ formatVersion: 1, activeHubId: localHubId }, null, 2)}\n`,
+      { mode: 0o600, flag: "wx" });
+    fs.chmodSync(temporary, 0o600);
+    fs.renameSync(temporary, file);
+  } catch (error) {
+    if (fs.existsSync(temporary)) fs.rmSync(temporary, { force: true });
+    throw error;
+  }
+}
+
+function writeAtomic(file: string, configuration: PersistedHubConfiguration): void {
+  const parent = path.dirname(file);
+  admitParent(parent, true);
+  const temporary = path.join(parent, `.hub-${process.pid}-${Date.now().toString(36)}.tmp`);
+  try {
+    fs.writeFileSync(temporary, `${JSON.stringify(parse(configuration), null, 2)}\n`, { mode: 0o600, flag: "wx" });
+    fs.chmodSync(temporary, 0o600);
+    fs.renameSync(temporary, file);
+  } catch (error) {
+    if (fs.existsSync(temporary)) fs.rmSync(temporary, { force: true });
+    throw error;
+  }
+}
+
+export type HubActivationLock = Readonly<{ file: string; descriptor: number }>;
+
+export function acquireHubActivationLock(environment: NodeJS.ProcessEnv = process.env): HubActivationLock {
+  const parent = directory(environment);
+  admitParent(parent, true);
+  const file = path.join(parent, ".hub-activation.lock");
+  if (pathEntryExists(file)) {
+    try {
+      const value = JSON.parse(fs.readFileSync(file, "utf8")) as { pid?: unknown };
+      if (typeof value.pid !== "number") throw new Error("Hub activation lock is invalid");
+      let alive = true;
+      try { process.kill(value.pid, 0); }
+      catch (error) { alive = (error as NodeJS.ErrnoException).code === "EPERM"; }
+      if (alive) throw new Error("another Hub activation is in progress");
+      fs.rmSync(file);
+    } catch (error) {
+      if (pathEntryExists(file)) throw new Error("another Hub activation is in progress", { cause: error });
+    }
+  }
+  try {
+    const descriptor = fs.openSync(file, fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_WRONLY, 0o600);
+    fs.writeFileSync(descriptor, `${JSON.stringify({ pid: process.pid })}\n`);
+    fs.fsyncSync(descriptor);
+    return { file, descriptor };
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "EEXIST") throw new Error("another Hub activation is in progress");
+    throw error;
+  }
+}
+
+export function releaseHubActivationLock(lock: HubActivationLock): void {
+  fs.closeSync(lock.descriptor);
+  fs.rmSync(lock.file, { force: false });
+}
+
+function withActivationLock<T>(environment: NodeJS.ProcessEnv, operation: () => T): T {
+  const lock = acquireHubActivationLock(environment);
+  try { return operation(); }
+  finally { releaseHubActivationLock(lock); }
+}
+
+export function readPersistedHubProfile(
+  localHubId: string,
+  environment: NodeJS.ProcessEnv = process.env,
+): PersistedHubConfiguration | undefined {
+  const file = profilePath(localHubId, environment);
+  if (!pathEntryExists(file)) return undefined;
+  admitParent(path.dirname(file), false);
+  const stat = fs.lstatSync(file);
+  if (stat.isSymbolicLink() || !stat.isFile() || (stat.mode & 0o777) !== 0o600 || !owner(stat) || stat.size < 2 || stat.size > MAX_BYTES) {
+    throw new Error("Hub profile file is unsafe");
+  }
+  return parse(JSON.parse(fs.readFileSync(file, "utf8")) as unknown);
+}
+
+export function activatePersistedHubConfiguration(
+  configuration: PersistedHubConfiguration,
+  environment: NodeJS.ProcessEnv = process.env,
+  expectedActiveHubId?: string | null,
+): void {
+  withActivationLock(environment, () => {
+    const admitted = parse(configuration);
+    const active = readPersistedHubConfiguration(environment);
+    if (expectedActiveHubId !== undefined && (active?.localHubId ?? null) !== expectedActiveHubId) {
+      throw new Error("active Hub profile changed during configuration");
+    }
+    if (active) writeAtomic(profilePath(active.localHubId, environment), active);
+    writeAtomic(profilePath(admitted.localHubId, environment), admitted);
+    writePointer(globalHubConfigurationPath(environment), admitted.localHubId);
+  });
 }
 
 export function readPersistedHubConfiguration(environment: NodeJS.ProcessEnv = process.env): PersistedHubConfiguration | undefined {
@@ -98,7 +220,12 @@ export function readPersistedHubConfiguration(environment: NodeJS.ProcessEnv = p
   const descriptor = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
   try {
     const content = fs.readFileSync(descriptor, "utf8");
-    return parse(JSON.parse(content) as unknown);
+    const value = JSON.parse(content) as unknown;
+    const pointer = parsePointer(value);
+    if (!pointer) return parse(value);
+    const profile = readPersistedHubProfile(pointer.activeHubId, environment);
+    if (!profile || profile.localHubId !== pointer.activeHubId) throw new Error("active Hub profile is absent");
+    return profile;
   } catch (error) {
     if (error instanceof SyntaxError) throw new Error("global Hub configuration is invalid");
     throw error;
@@ -109,35 +236,69 @@ export function writePersistedHubConfiguration(
   configuration: PersistedHubConfiguration,
   environment: NodeJS.ProcessEnv = process.env,
 ): void {
-  const admitted = parse(configuration);
-  const file = globalHubConfigurationPath(environment), parent = path.dirname(file);
-  admitParent(parent, true);
-  if (pathEntryExists(file)) throw new Error("an active AgentBase-Hub is already configured");
-  const temporary = path.join(parent, `.hub-${process.pid}-${Date.now().toString(36)}.tmp`);
-  try {
-    fs.writeFileSync(temporary, `${JSON.stringify(admitted, null, 2)}\n`, { mode: 0o600, flag: "wx" });
-    fs.chmodSync(temporary, 0o600);
-    fs.renameSync(temporary, file);
-  } catch (error) {
-    if (fs.existsSync(temporary)) fs.rmSync(temporary, { force: true });
-    throw error;
-  }
+  withActivationLock(environment, () => {
+    const admitted = parse(configuration);
+    const file = globalHubConfigurationPath(environment), parent = path.dirname(file);
+    admitParent(parent, true);
+    if (pathEntryExists(file)) throw new Error("an active AgentBase-Hub is already configured");
+    writeAtomic(profilePath(admitted.localHubId, environment), admitted);
+    writePointer(file, admitted.localHubId);
+  });
 }
 
 export function replacePersistedHubConfiguration(
   expected: PersistedHubConfiguration,
   next: PersistedHubConfiguration,
   environment: NodeJS.ProcessEnv = process.env,
+  options: Readonly<{ activationLock?: HubActivationLock; retireExpected?: boolean }> = {},
 ): void {
-  const current = readPersistedHubConfiguration(environment);
-  if (!current || JSON.stringify(current) !== JSON.stringify(parse(expected))) throw new Error("active Hub configuration changed");
-  const file = globalHubConfigurationPath(environment), parent = path.dirname(file);
-  const temporary = path.join(parent, `.hub-${process.pid}-${Date.now().toString(36)}.tmp`);
+  const replace = () => {
+    const current = readPersistedHubConfiguration(environment);
+    if (!current || JSON.stringify(current) !== JSON.stringify(parse(expected))) throw new Error("active Hub configuration changed");
+    writeAtomic(profilePath(next.localHubId, environment), next);
+    writePointer(globalHubConfigurationPath(environment), next.localHubId);
+    if (options.retireExpected && expected.localHubId !== next.localHubId) {
+      fs.rmSync(profilePath(expected.localHubId, environment), { force: true });
+    }
+  };
+  if (options.activationLock) {
+    if (options.activationLock.file !== path.join(directory(environment), ".hub-activation.lock")) {
+      throw new Error("Hub activation lock does not belong to this configuration root");
+    }
+    replace();
+  } else withActivationLock(environment, replace);
+}
+
+export type HubConfigurationMigration = Readonly<{ previousId: string; currentId: string }>;
+
+export function migratePersistedHubConfiguration(
+  environment: NodeJS.ProcessEnv = process.env,
+): HubConfigurationMigration | undefined {
+  const file = globalHubConfigurationPath(environment);
+  if (!pathEntryExists(file)) return undefined;
+  const configuration = readPersistedHubConfiguration(environment);
+  const descriptor = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+  let legacy = false;
   try {
-    fs.writeFileSync(temporary, `${JSON.stringify(parse(next), null, 2)}\n`, { mode: 0o600, flag: "wx" });
-    fs.renameSync(temporary, file);
-  } catch (error) {
-    if (fs.existsSync(temporary)) fs.rmSync(temporary, { force: true });
-    throw error;
-  }
+    const value = JSON.parse(fs.readFileSync(descriptor, "utf8")) as unknown;
+    legacy = !parsePointer(value);
+  } finally { fs.closeSync(descriptor); }
+  if (!configuration) return undefined;
+  const currentId = configuration.kind === "remote"
+    ? hubProfileId(createHubIdentity(configuration.repository, configuration.targetBranch, configuration.host))
+    : configuration.localHubId;
+  if (!legacy && currentId === configuration.localHubId) return undefined;
+  return withActivationLock(environment, () => {
+    const current = readPersistedHubConfiguration(environment);
+    if (!current || current.localHubId !== configuration.localHubId) throw new Error("active Hub changed during migration");
+    const migrated = currentId === current.localHubId ? current : { ...current, localHubId: currentId };
+    const existing = readPersistedHubProfile(currentId, environment);
+    if (existing && JSON.stringify(existing) !== JSON.stringify(parse(migrated))) {
+      throw new Error("canonical Hub profile already differs from the legacy profile");
+    }
+    writeAtomic(profilePath(currentId, environment), migrated);
+    writePointer(file, currentId);
+    if (current.localHubId !== currentId) fs.rmSync(profilePath(current.localHubId, environment), { force: true });
+    return { previousId: current.localHubId, currentId };
+  });
 }

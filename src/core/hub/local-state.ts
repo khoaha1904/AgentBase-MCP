@@ -51,7 +51,6 @@ function assertCommit(value: string, label: string): void {
 
 export function createLocalHubState(input: LocalHubState): LocalHubState {
   if (!path.isAbsolute(input.root)) throw new HubValidationError("HUB_ROOT_INVALID", "local Hub root must be absolute");
-  if (input.hub.targetBranch !== "main") throw new HubValidationError("HUB_TARGET_INVALID", "AgentBase-Hub target branch must be main");
   assertCommit(input.remoteBase, "remoteBase");
   assertCommit(input.activeHead, "activeHead");
   if (!/^\d+\.\d+\.\d+$/.test(input.catalogVersion)) throw new HubValidationError("HUB_CATALOG_INVALID", "catalogVersion must be semantic version");
