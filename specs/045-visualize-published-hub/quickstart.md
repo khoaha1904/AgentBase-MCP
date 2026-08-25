@@ -15,9 +15,11 @@
 
 ## Model-backed diagram qualification
 
-After deterministic packet qualification passes, invoke the released
-`agentbase-diagram` skill once per supported type. Review that the rendered
-artifact preserves packet topology/direction and visibly handles omissions.
+After deterministic packet qualification passes **and the rich Domain below is
+published**, invoke the released `agentbase-diagram` skill once per supported
+type. Review that the rendered artifact preserves packet topology/direction and
+visibly handles omissions. Do not claim model qualification from a synthetic
+topology or force missing Dependency/Sequence data into the old sparse Hub.
 
 ## Rich Domain qualification
 
@@ -27,7 +29,8 @@ Only after implementation is green:
    preserving README, CI and Git history;
 2. ingest the eight selected Sock Shop service repositories;
 3. publish/review the resulting knowledge;
-4. qualify cross-repository diagrams and one static Domain site;
+4. qualify cross-repository diagrams and one static Domain site, including the
+   model-backed skill runs above;
 5. add the deployment repository only if the service batch cannot cover an
    important accepted diagram.
 
