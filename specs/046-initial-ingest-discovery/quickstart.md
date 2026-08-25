@@ -50,7 +50,8 @@ Expected fixture coverage:
 - exact clean default checkout is reused;
 - dirty/feature checkout bytes and branch remain unchanged while a detached
   default-commit worktree is analyzed;
-- default-head/source/Hub drift invalidates unsafe state;
+- source integrity/authority drift invalidates unsafe state while default-head
+  advance yields a freshness warning;
 - Batch members keep distinct Seed/Receipt/evidence state and one failed member
   leaves the atomic batch Incomplete.
 

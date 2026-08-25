@@ -129,7 +129,9 @@ Refresh input/behavior remains unchanged.
 
 Input name is unchanged. For a capability 046 Init session, Finalize also checks:
 
-- source/default head and Hub base still match;
+- the pinned source snapshot remains accessible and exact; a newer default head
+  is reported as `source-advanced` rather than rejected;
+- Hub base follows the stage-appropriate reconciliation contract;
 - every Receipt concept/embedded/Question expectation materialized;
 - ignored groups remain bounded inspection metadata, not Hub documents;
 - activity log changes are generated and use valid Hub log grammar.

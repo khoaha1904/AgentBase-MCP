@@ -2,7 +2,7 @@
 
 **Branch**: `046-initial-ingest-discovery` | **Date**: 2026-08-25 | **Spec**: [spec.md](spec.md)
 
-**Input**: Approved decisions D01–D29 in [decisions.md](decisions.md).
+**Input**: Approved decisions D01–D30 in [decisions.md](decisions.md).
 
 ## Summary
 

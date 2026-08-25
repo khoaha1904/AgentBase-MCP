@@ -269,9 +269,8 @@ remote default branch:
   default commit and never checks out, stashes or modifies the user's workspace.
 
 Discover builds or reuses a graph bound to that exact source snapshot. The same
-graph, Receipt and OKF proposal can continue to PR only while source and Hub base
-remain unchanged. A newer remote-default commit invalidates the relevant
-discovery/authoring state; changing only the graph cannot make old OKF valid.
+graph, Receipt and OKF proposal can continue only while that snapshot and its
+authority remain valid. Changing only the graph cannot make old OKF valid.
 Failure to resolve or access a Hub-bound remote default source makes that member
 Incomplete rather than falling back to a feature branch. Batch applies this
 rule sequentially and independently per repository.
@@ -323,9 +322,19 @@ source/Code Graph query but cannot become Hub knowledge. This removes the
 feature-draft publication path from the MVP and prevents an abandoned branch
 from entering the Hub through Refresh after a clean Init.
 
+### D30 — Remote default advance is freshness, not corruption
+
+Preflight proves the pinned commit was the remote default head at selection
+time. If that branch later advances, the exact immutable snapshot remains valid
+for review and publication and receives a visible `source-advanced` freshness
+warning. A later Refresh handles the newer commit. Invalidate discovery or
+authoring state only when the pinned source snapshot changes, disappears,
+becomes inaccessible, fails integrity checks or loses repository authority.
+Default-head advance alone must not restart a long Batch.
+
 ## Review closure
 
-Owner review is complete through D29. High-level presentation and low-level
+Owner review is complete through D30. High-level presentation and low-level
 living design must label this behavior as a pending Capability 046 target until
 implementation and released-skill qualification complete. Any later material
 implementation gap changes this record and the affected living design before

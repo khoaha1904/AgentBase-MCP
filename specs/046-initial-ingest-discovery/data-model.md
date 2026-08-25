@@ -21,8 +21,9 @@ Rules:
 - Current checkout is reusable only when clean and `HEAD == commit`.
 - Snapshot identity is `repositoryId + remote + defaultBranch + commit`;
   machine-local paths never enter evidence or Hub.
-- Default-head advance, repository switch or inaccessible source invalidates
-  downstream mutable state.
+- Repository switch, inaccessible/changed snapshot or lost authority invalidates
+  downstream mutable state. Default-head advance marks `source-advanced` but
+  does not invalidate the pinned snapshot.
 
 ## DiscoveryLane
 
@@ -155,6 +156,8 @@ Investigate → mutable Inventory
                      Ready for review | Incomplete
 ```
 
-Source/default-head/Hub-base drift invalidates the earliest unsafe state. Before
-Prepare, retry recreates Inventory and may reuse an exact graph. After Prepare,
-retry may reuse the checkpoint only while SourceSnapshot and Hub base match.
+Source snapshot or Hub-base drift invalidates the earliest unsafe state.
+Default-head advance is only a freshness warning. Before Prepare, retry recreates
+Inventory and may reuse an exact graph. After Prepare, retry may reuse the
+checkpoint while the pinned SourceSnapshot remains valid; Hub-base changes use
+the proposal reconciliation rules.
