@@ -40,16 +40,17 @@ must pass before renderer/model qualification or Hub knowledge reset.
 - [X] T015 Update `docs/design/13-visualization`, released skill/tool counts and `specs/CURRENT.md` to the exact implemented behavior; stop for owner review if implementation exposes a broad gap.
 - [X] T016 Run deterministic quickstart qualification, static-host smoke, fresh-process 44-tool qualification and `npm run verify`; record results in `specs/045-visualize-published-hub/verification.md`.
 - [X] T017 After T016 passes, create one recoverable knowledge-only reset commit in `../AgentBase-Hub/` while preserving README, CI and history.
-- [ ] T018 Sequentially ingest and publish the eight selected Sock Shop repositories into `../AgentBase-Hub/`.
-- [ ] T019 Invoke released `agentbase-diagram` once per supported type and qualify one static Domain site against that Published multi-repository Domain; record only explained variance in `specs/045-visualize-published-hub/verification.md`.
-- [ ] T020 Audit `specs/045-visualize-published-hub/` against implementation and close capability 045 in `specs/CURRENT.md` only when no required work remains.
+- [X] T018 Sequentially ingest and publish the eight selected Sock Shop repositories into `../AgentBase-Hub/`.
+- [X] T019 [US1] Add the owner-approved evidence-bound `System consumes Interface` relation to living schema/design, focused validation and the Published qualification knowledge.
+- [X] T020 Invoke released `agentbase-diagram` once per supported type and qualify one static Domain site against that Published multi-repository Domain; record only explained variance in `specs/045-visualize-published-hub/verification.md`.
+- [X] T021 Audit `specs/045-visualize-published-hub/` against implementation and close capability 045 in `specs/CURRENT.md` only when no required work remains.
 
 ## Dependencies and stopping rules
 
 - T001–T003 block both user stories.
 - US1 completes before US2 so packet truth is proven before adding presentation weight.
 - T017 is destructive knowledge replacement and is forbidden before T016 passes.
-- T019 requires the T018 Published Domain; the old three-repository Hub is not a
+- T020 requires the T018 Published Domain and T019 runtime relation; the old three-repository Hub is not a
   substitute because it contains no accepted runtime edge or Flow.
 - No AWS CLI, Domain-Hub repository creation, Pages publication, full-Hub 2D UI,
   watcher, daemon or automatic refresh belongs to these tasks.

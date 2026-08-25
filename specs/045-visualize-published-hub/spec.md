@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-25
 
-**Status**: Approved design; implementation pending
+**Status**: Complete
 
 **Input**: Add two separate visualization workflows over one truthful,
 deterministic Published Hub projection: lightweight query-scoped diagrams and
@@ -134,6 +134,10 @@ and node details without MCP, token or Hub access.
 - **FR-023**: A direct accepted cross-Domain relation MUST retain its external
   endpoint as a non-expandable boundary node. This MUST NOT change the endpoint's
   Domain membership or traverse the external Domain neighborhood.
+- **FR-024**: A source-backed service-level System MAY record
+  `consumes -> Interface` as a runtime dependency without creating a duplicate
+  Component. The relation MUST retain exact evidence and MUST NOT broaden into
+  inferred or generic System-to-System dependencies.
 
 ### Key Entities
 
@@ -174,6 +178,6 @@ and node details without MCP, token or Hub access.
 - Static hosting and repository creation remain owner-managed outside AgentBase.
 - WebGL is normally available; an unsupported browser receives a readable
   fallback message rather than a second 2D visualization product.
-- The first qualification Domain is the Sock Shop service ecosystem. Existing
-  three-repository knowledge is insufficient for Sequence and will be rebuilt
-  only after the implementation is ready.
+- The qualification Domain is the Published eight-repository Sock Shop service
+  ecosystem, including source-backed Flows and System-to-Interface runtime
+  consumption.

@@ -10,7 +10,9 @@ for one bounded packet, then delegates rendering to internal
 - **Architecture:** nodes plus structural/runtime edges; may render partial data
   with an omissions note.
 - **Dependency:** requires at least one accepted dependency/runtime edge. Zero
-  usable edges returns `insufficient-data`.
+  usable edges returns `insufficient-data`. A service-level System may supply
+  such an edge through an accepted `consumes -> Interface` relation; the
+  renderer does not derive dependency edges from prose or Flow steps.
 - **Sequence:** requires one Flow with contiguous `flow_steps`. Missing steps
   returns `insufficient-data`.
 

@@ -95,6 +95,14 @@ First pass deterministic fixtures and renderer boundaries. Then reset only Hub
 knowledge through Git and ingest the richer eight-repository Sock Shop Domain.
 README, CI, Git history and recoverability remain intact.
 
+### 6. Keep service dependency at the useful System boundary
+
+The qualification batch represents each independently useful microservice as a
+System. Extend only System relationship guidance with `consumes -> Interface`
+so exact runtime-call evidence can supply Dependency edges. Do not add duplicate
+Components, generic System-to-System `depends-on`, or reinterpret Flow steps as
+dependency predicates.
+
 ## Failure and Recovery
 
 | Failure | Required result |

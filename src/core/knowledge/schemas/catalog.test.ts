@@ -37,13 +37,16 @@ test("[AB-SCHEMA-030][AB-SCHEMA-036] Initial Ingest selection stays sparse and p
   assert.deepEqual(selectOkfConceptSchemas(["performance metric definition"], "enrichment").map((item) => item.type), ["Metric"]);
 });
 
-test("[AB-SCHEMA-030][AB-SCHEMA-038][AB-SCHEMA-044][AB-SCHEMA-045] schemas describe useful boundaries rather than cloud products", () => {
+test("[AB-SCHEMA-030][AB-SCHEMA-038][AB-SCHEMA-044][AB-SCHEMA-045][AB-SCHEMA-050] schemas describe useful boundaries rather than cloud products", () => {
   assert.equal(getOkfConceptSchema("Function")?.directoryHint, "components/<slug>.md");
   assert.match(getOkfConceptSchema("Component")?.purpose ?? "", /workload|build|ownership/);
   assert.match(getOkfConceptSchema("Resource")?.evidenceRequirements.join(" ") ?? "", /independent/);
   assert.match(getOkfConceptSchema("System")?.evidenceRequirements.join(" ") ?? "", /cooperating/);
   assert.deepEqual(getOkfConceptSchema("System")?.relationshipGuidance.find((item) => item.kind === "implemented-in")?.targetTypes,
     ["Repository"]);
+  assert.deepEqual(getOkfConceptSchema("System")?.relationshipGuidance.find((item) => item.kind === "consumes")?.targetTypes,
+    ["Interface"]);
+  assert.equal(getOkfConceptSchema("System")?.relationshipGuidance.some((item) => item.kind === "depends-on"), false);
   assert.equal(getOkfConceptSchema("Server"), undefined);
   assert.equal(getOkfConceptSchema("Queue"), undefined);
   const flowGuidance = getOkfConceptSchema("Flow")?.flowStepGuidance;

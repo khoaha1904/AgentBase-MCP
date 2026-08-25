@@ -17,6 +17,14 @@
 
 Entity và Metric là enrichment-only. Provider products không tạo schema mới.
 
+## Service-level runtime relations
+
+`System` là boundary đủ dùng cho một service khi không có workload con độc lập
+cần thành `Component`. Trong trường hợp đó, System có thể khai báo
+`consumes -> Interface` bằng exact runtime-call/subscription evidence. Không tạo
+Component trùng lặp chỉ để mang relation, và không mở rộng thành một
+`depends-on` System tổng quát.
+
 ## Embedded knowledge
 
 Queue, topic, event bus, table, bucket, database, load balancer và host mặc định

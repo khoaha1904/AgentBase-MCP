@@ -1,17 +1,18 @@
 # Current capability
 
-Active capability: [`045-visualize-published-hub`](045-visualize-published-hub/spec.md).
-Most recent completed: [`044-own-upstream-runtimes`](044-own-upstream-runtimes/spec.md).
+Active capability: None.
+Most recent completed: [`045-visualize-published-hub`](045-visualize-published-hub/spec.md).
 
 Capability 045 adds one deterministic presentation-neutral projection over one
 exact Published Domain. Two workflows consume it: lightweight focused
 Architecture/Dependency/Sequence diagrams and an explicit one-shot static 3D
 Domain site. It adds no OKF visualization schema, Draft overlay, graph database,
 watcher, live service or automatic publication. The projection, one 44th
-goal-level tool, diagram packet/skills and static
-Domain-site generator are implemented and pass the repository gate. Model-backed
-diagram qualification and the recoverable Hub reset/re-ingest remain pending;
-the reset is forbidden until that qualification passes.
+goal-level tool, diagram packet/skills and static Domain-site generator are
+implemented and pass the repository gate. The Hub was recoverably reset; the
+eight-repository Sock Shop Domain, two Flows and exact service-level
+`System consumes Interface` relations are Published. All three diagram types
+and the 24-node static site qualify against the same exact Published commit.
 
 Capability 044 implements the enterprise source migration for pinned Codebase Memory
 and diagram-design. It replaces Codebase Memory's public-package binary download

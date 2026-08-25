@@ -407,3 +407,8 @@ Normative OKF source is pinned to commit
   validation. Fine-grained signal selection, per-concept validation, separate
   relationship validation and whole-bundle validation are internal policy or
   retired historical adapters, not public tools.
+- **AB-SCHEMA-050** — A service-level `System` may declare canonical
+  `consumes -> Interface` with exact runtime call or subscription evidence and
+  resolving Markdown links. This supports truthful cross-repository dependency
+  knowledge without requiring a duplicate `Component`. It does not authorize a
+  generic System-to-System `depends-on` relation or inferred topology.

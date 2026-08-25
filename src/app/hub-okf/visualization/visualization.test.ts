@@ -81,9 +81,12 @@ function fixtureDocuments(): Map<string, string> {
     ["domains/commerce.md", concept({ type: "Domain", title: "Commerce" })],
     ["domains/fulfillment.md", concept({ type: "Domain", title: "Fulfillment" })],
     ["systems/orders.md", concept({ type: "System", title: "Orders",
-      body: "[Commerce](../domains/commerce.md)", relationships: `
+      body: "[Commerce](../domains/commerce.md) [Queue](../resources/shared-queue.md)", relationships: `
   - kind: part-of
     target: domains/commerce
+    evidence: [${SOURCE_ID}]
+  - kind: consumes
+    target: resources/shared-queue
     evidence: [${SOURCE_ID}]` })],
     ["systems/shipping.md", concept({ type: "System", title: "Shipping",
       body: "[Fulfillment](../domains/fulfillment.md)", relationships: `
@@ -182,6 +185,11 @@ test("[AB-VIS-001..004][AB-VIS-011..014] projection is deterministic, directed a
     "components/orders-worker", "resources/shared-queue",
     "resources/shared-queue", "components/orders-worker", true,
   ]);
+  const systemConsumption = first.edges.find((edge) => edge.predicate === "consumes"
+    && edge.declaredSource === "systems/orders");
+  assert.deepEqual(systemConsumption && [systemConsumption.displaySource,
+    systemConsumption.displayTarget, systemConsumption.displayClass, systemConsumption.directed],
+  ["systems/orders", "resources/shared-queue", "runtime", true]);
   assert.deepEqual(first.flows, [{ id: "flows/order-submit", steps: [{
     order: 1,
     source: "components/orders-api",
@@ -199,7 +207,7 @@ test("[AB-VIS-001..004][AB-VIS-011..014] projection is deterministic, directed a
   assert.throws(() => buildPublishedVisualizationProjection(graph, { ...options, domain: "domains/missing" }), /exact Published Domain/);
 });
 
-test("[AB-VIS-005..010] diagram packets preserve Published topology or report insufficient data", async () => {
+test("[AB-VIS-005..010][AB-SCHEMA-050] diagram packets preserve Published topology or report insufficient data", async () => {
   const documents = fixtureDocuments();
   const graph = await loadHubGraph({
     commit: "b".repeat(40),
@@ -216,8 +224,8 @@ test("[AB-VIS-005..010] diagram packets preserve Published topology or report in
     conceptIds: ["systems/orders", "components/orders-api", "resources/shared-queue"],
   });
   assert.equal(architecture.status, "ready");
-  assert.deepEqual(architecture.status === "ready" && architecture.packet.edges.map((edge) => edge.predicate),
-    ["publishes-to", "part-of"]);
+  assert.deepEqual(architecture.status === "ready" && new Set(architecture.packet.edges.map((edge) => edge.predicate)),
+    new Set(["consumes", "publishes-to", "part-of"]));
 
   const dependency = prepareDiagramPacket(projection, {
     diagramType: "dependency", conceptIds: ["components/orders-api", "resources/shared-queue"],
@@ -225,6 +233,12 @@ test("[AB-VIS-005..010] diagram packets preserve Published topology or report in
   assert.equal(dependency.status, "ready");
   assert.deepEqual(dependency.status === "ready" && dependency.packet.edges.map((edge) => edge.predicate),
     ["publishes-to"]);
+  const systemDependency = prepareDiagramPacket(projection, {
+    diagramType: "dependency", conceptIds: ["systems/orders", "resources/shared-queue"],
+  });
+  assert.equal(systemDependency.status, "ready");
+  assert.deepEqual(systemDependency.status === "ready"
+    && systemDependency.packet.edges.map((edge) => edge.predicate), ["consumes"]);
   assert.equal(prepareDiagramPacket(projection, {
     diagramType: "dependency", conceptIds: ["systems/orders", "components/orders-api"],
   }).status, "insufficient-data");
@@ -268,7 +282,7 @@ test("[AB-VIS-006..010][AB-VIS-012..014] static Domain site is reproducible, off
     { status: "built", commit: graph.commit, receipt: "agentbase-build.json" });
 
   const relativeFiles = ["agentbase-build.json", "assets/app.css", "assets/app.js",
-    "assets/three.module.min.js", "data/domain.json", "index.html"];
+    "assets/three.core.min.js", "assets/three.module.min.js", "data/domain.json", "index.html"];
   for (const relative of relativeFiles) {
     assert.deepEqual(fs.readFileSync(path.join(first, ...relative.split("/"))),
       fs.readFileSync(path.join(second, ...relative.split("/"))));
@@ -277,7 +291,7 @@ test("[AB-VIS-006..010][AB-VIS-012..014] static Domain site is reproducible, off
   assert.deepEqual(receipt.files.map((file: { path: string }) => file.path), relativeFiles.slice(1));
   assert.equal(receipt.commit, graph.commit);
   assert.equal("generatedAt" in receipt || "outputDirectory" in receipt, false);
-  const generatedText = relativeFiles.filter((relative) => !relative.endsWith("three.module.min.js"))
+  const generatedText = relativeFiles.filter((relative) => !relative.startsWith("assets/three."))
     .map((relative) => fs.readFileSync(path.join(first, ...relative.split("/")), "utf8")).join("\n");
   assert.doesNotMatch(generatedText, new RegExp(temporary.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.doesNotMatch(generatedText, /ghp_[A-Za-z0-9]{20,}|search_hub_okf|prepare_hub_visualization/);

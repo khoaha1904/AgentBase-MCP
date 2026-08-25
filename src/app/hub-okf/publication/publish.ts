@@ -167,7 +167,8 @@ async function reconcilePublicationBranch(
   existingCommit: string,
   baseCommit: string,
 ): Promise<string> {
-  await git({ args: ["fetch", "--no-tags", "origin", unit.branch], cwd: options.localHub.root,
+  await git({ args: ["fetch", "--no-tags", "origin",
+    `refs/heads/${unit.branch}:refs/remotes/origin/${unit.branch}`], cwd: options.localHub.root,
     operation: "fetch existing publication branch", token: options.token,
     ...(options.signal ? { signal: options.signal } : {}) });
   const fetched = await exactCommit(git, options.localHub.root, `refs/remotes/origin/${unit.branch}`,

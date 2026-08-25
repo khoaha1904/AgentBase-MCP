@@ -11,6 +11,7 @@ const THREE_VERSION = "0.183.0";
 const GENERATED_PATHS = [
   "assets/app.css",
   "assets/app.js",
+  "assets/three.core.min.js",
   "assets/three.module.min.js",
   "data/domain.json",
   "index.html",
@@ -45,6 +46,7 @@ export type DomainSiteBuildOptions = Readonly<{
 
 export type DomainSiteBuildDependencies = Readonly<{
   assetsRoot?: string;
+  threeCorePath?: string;
   threeModulePath?: string;
 }>;
 
@@ -77,6 +79,10 @@ function assertOutputTarget(value: string): Readonly<{ output: string; parent: s
 
 function defaultThreeModulePath(): string {
   return path.resolve(import.meta.dirname, "../../../..", "node_modules/three/build/three.module.min.js");
+}
+
+function defaultThreeCorePath(): string {
+  return path.resolve(import.meta.dirname, "../../../..", "node_modules/three/build/three.core.min.js");
 }
 
 function verifyThreeModule(target: string): Buffer {
@@ -120,6 +126,9 @@ export function buildStaticDomainSite(
     write(path.join(staging, "index.html"), readBounded(path.join(assetsRoot, "index.html")));
     write(path.join(staging, "assets/app.css"), readBounded(path.join(assetsRoot, "app.css")));
     write(path.join(staging, "assets/app.js"), readBounded(path.join(assetsRoot, "app.js")));
+    write(path.join(staging, "assets/three.core.min.js"), verifyThreeModule(
+      dependencies.threeCorePath ?? defaultThreeCorePath(),
+    ));
     write(path.join(staging, "assets/three.module.min.js"), verifyThreeModule(
       dependencies.threeModulePath ?? defaultThreeModulePath(),
     ));

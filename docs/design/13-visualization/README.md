@@ -1,7 +1,7 @@
 # 13 — Published visualization
 
-**Status:** implemented through deterministic local workflows; model-backed and
-multi-repository Domain qualification pending.
+**Status:** implemented and qualified against one exact eight-repository
+Published Domain.
 
 High-level owner: [Visualize Published knowledge](../../present/13-visualizing-published-knowledge.md).
 

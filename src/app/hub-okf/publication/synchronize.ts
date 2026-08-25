@@ -156,7 +156,11 @@ export async function synchronizeLocalHub(
       checkpoint(options.signal);
       try {
         await git({
-          args: ["cherry-pick", proposal.commit],
+          args: [
+            "-c", "user.name=AgentBase",
+            "-c", "user.email=agentbase@localhost",
+            "cherry-pick", proposal.commit,
+          ],
           cwd: candidateRoot,
           operation: "rebase pending Hub proposal",
           ...(options.signal ? { signal: options.signal } : {}),

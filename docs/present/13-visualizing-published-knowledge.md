@@ -53,7 +53,6 @@ thuộc nhiều Domain hoặc tự mở rộng cả Domain kia.
 - Architecture có thể partial; Dependency cần edge thật; Sequence cần
   `flow_steps` thật.
 
-Hub hiện tại đủ để vẽ overview cấu trúc nhưng còn ít runtime relations và chưa
-có Flow steps. Sau khi projection và renderer ổn định, knowledge hiện tại sẽ
-được re-ingest trên một Domain nhiều repository để qualification cả diagram và
-Domain site.
+Qualification hiện tại dùng một Domain có tám repository, runtime relations và
+Flow steps thật. Cả ba loại diagram và static 3D site đều được tạo từ cùng một
+Published commit; thiếu topology ở Domain khác vẫn được báo rõ thay vì suy diễn.

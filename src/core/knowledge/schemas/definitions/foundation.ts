@@ -28,6 +28,7 @@ export const FOUNDATION_SCHEMAS: readonly OkfConceptSchema[] = [
       relationshipGuidance: [
         { kind: "part-of", targetTypes: ["Domain"], evidence: "business boundary or owner guidance" },
         { kind: "implemented-in", targetTypes: ["Repository"], evidence: "source ownership evidence" },
+        { kind: "consumes", targetTypes: ["Interface"], evidence: "runtime call or subscription evidence" },
       ],
     },
   ),

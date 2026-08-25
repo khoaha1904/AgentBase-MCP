@@ -74,8 +74,10 @@ small gaps must be backfilled before benchmark, PR or capability completion.
   and 12-language profile rather than an npm postinstall binary. Linux x64 is
   qualified; macOS arm64 remains an explicit company-environment release gate.
   The Codebase Memory Graph UI frontend is excluded. Capability 045 now owns an
-  approved Published projection, focused diagram and static Domain-site design;
-  implementation has not started.
+  implemented Published projection, focused diagram and static Domain-site
+  workflow. Its eight-repository qualification Domain, source-backed Flows and
+  evidence-bound System-to-Interface consumption are Published; all three
+  diagrams and the static site pass real-data qualification.
 
 Update current truth once in the narrowest high- or low-level document. Do not
 add handoff, roadmap, ADR or evidence-diary files that repeat it.

@@ -42,6 +42,11 @@ The descriptor registry is the only presentation-direction owner.
 Every `flow_steps` entry renders its recorded `source → target`; the Agent may
 not reverse or invent it.
 
+Service-level runtime dependency uses the same accepted predicate authority:
+an evidenced `System consumes Interface` relation is a directed runtime edge.
+Flow steps remain sequence authority and are not silently converted into a
+different dependency predicate.
+
 ## Determinism and bounds
 
 IDs derive from existing concept IDs and declared endpoints. Same commit,

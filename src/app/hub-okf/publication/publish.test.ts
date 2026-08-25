@@ -197,7 +197,9 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021] MCP creat
         return pull;
       },
     };
+    const gitRequests: GitRequest[] = [];
     const gitRunner = async (request: GitRequest) => {
+      gitRequests.push(request);
       if (request.args[0] === "push") pushes.push(request.args.at(-1)!);
       const args = request.args[0] === "push" ? ["push", remote, ...request.args.slice(2)] : [...request.args];
       const environment = request.commitTimestamp
@@ -334,6 +336,9 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021] MCP creat
     await recoverSynchronizationTransaction(stateRoot, rewriteTransaction, localHub, gitRunner);
     git(hubRoot, ["push", "--force", remote, `${batch.headCommit}:refs/heads/main`]);
     const synchronization = await synchronizeLocalHub({ stateRoot, localHub, token: "github_pat_secret_canary", git: gitRunner });
+    assert.ok(gitRequests.some((request) => request.args.includes("cherry-pick")
+      && request.args.includes("user.name=AgentBase") && request.args.includes("user.email=agentbase@localhost")),
+    "synchronization replay supplies a bounded Git identity without relying on machine-global config");
     assert.equal(fs.existsSync(path.join(stateRoot, "transactions", synchronization.id)), false,
       "successful synchronization closes its recovery transaction");
     const synchronizedHub = createLocalHubState({ root: hubRoot, hub: createHubIdentity("agentbase/hub", "main"),
@@ -353,6 +358,9 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021] MCP creat
     assert.equal(git(hubRoot, ["symbolic-ref", "--short", "HEAD"]), "main");
     assert.equal(fs.existsSync(recoveryRoot), false);
     const reconciled = await publishPendingHubProposals({ ...common, localHub: synchronizedHub, selectedProposalIds: [IDS[2]!] });
+    assert.ok(gitRequests.some((request) => request.args.includes(
+      `refs/heads/agentbase/okf-${IDS[2]}:refs/remotes/origin/agentbase/okf-${IDS[2]}`)),
+    "publication reconciliation fetches an explicit remote-tracking ref for main-only Hub clones");
     assert.equal(reconciled.pullRequest.number, independent.pullRequest.number);
     assert.notEqual(reconciled.headCommit, independent.headCommit);
     assert.equal(git(hubRoot, ["merge-base", "--is-ancestor", batch.headCommit, reconciled.headCommit]), "");

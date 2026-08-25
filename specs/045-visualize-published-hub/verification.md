@@ -19,18 +19,27 @@
   `index.html`, app, local Three.js, Domain JSON and receipt each returned HTTP
   200 from a directory-only local server.
 
-## Explained pending qualification
+## Published multi-repository qualification — 2026-08-25
 
-- Knowledge-only Hub reset: pass at Published commit
-  `06455633f72f6faf9e5bcdc2c8e68643670e7e0c`; README, bundled validator,
-  workflow and Git history were preserved.
-- Eight-repository Batch Initial Ingest is resumable at manifest
-  `batch-ingest-6746445e0de76358affbcb38`; carts and catalogue have completed
-  member checkpoints. This is progress evidence, not final qualification.
+- Knowledge-only reset preserved README, bundled CI and Git history. Batch
+  Initial Ingest then Published all eight selected Sock Shop repositories under
+  `domains/retail`.
+- A source-backed Refresh Published two Flows and four exact
+  `System consumes Interface` runtime relations. Hub CI passed and the final
+  qualification commit is `07750f50f8ec84818505b82d0e8848fc8b8b6f3f`.
+- `agentbase-diagram` produced one self-contained artifact for each supported
+  type. Architecture contains nine nodes and eight supplied edges; Dependency
+  contains five nodes and four directed runtime edges; Sequence contains one
+  Flow, three actors and two ordered synchronous steps. No topology was added.
+- The one-shot Domain site contains 24 nodes, 40 edges, two Flows and no active
+  Questions. All six receipt digests match; `index.html`, app, both pinned local
+  Three.js modules and Domain JSON return HTTP 200 from a static local server.
+- Real qualification exposed and fixed three bounded implementation gaps: Git
+  identity was absent during synchronized replay, existing PR branch fetch did
+  not populate a remote-tracking ref in main-only clones, and Three.js 0.183
+  required its separate core module in the static bundle. Regression coverage
+  is included and `npm run verify` passes 62/62 tests.
 
-The current Published Hub contains three repositories and structural relations
-only. It has no accepted runtime edge or Flow, so it can truthfully qualify the
-site and partial Architecture but cannot qualify Dependency or Sequence.
-Model-backed `agentbase-diagram` runs are therefore intentionally scheduled
-after the eight-repository Sock Shop rebuild; no synthetic relation is used to
-claim success.
+Capability 045 meets SC-001 through SC-007. SC-008 remains fixture-qualified;
+the selected Retail data contains no accepted direct cross-Domain relation, so
+the implementation does not invent one merely to exercise the real site.

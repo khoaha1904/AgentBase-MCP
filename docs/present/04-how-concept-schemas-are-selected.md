@@ -41,6 +41,11 @@ Một workload dùng một Queue không bắt buộc tạo hai concept. Queue ch
 riêng khi nó vượt qua promotion gate; nếu không, parent vẫn giữ role, technology
 và exact sources của Queue trong bảng embedded knowledge.
 
+Một service-level `System` có thể `consumes` một `Interface` khi source chứng
+minh runtime call/subscription. AgentBase không bắt tạo thêm `Component` trùng
+tên chỉ để biểu diễn dependency. Quan hệ này vẫn cần exact evidence và link;
+không được suy ra từ việc hai concept cùng nằm trong một Domain.
+
 Nếu bằng chứng chưa đủ cho schema cụ thể, Agent dùng schema chung hơn kèm
 limitation. Nếu vẫn không chắc, Agent giữ Question thay vì đoán.
 
