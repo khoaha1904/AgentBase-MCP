@@ -109,4 +109,5 @@ luôn là workflow review riêng.
 - Reuses AB-QUERY-002..004 and AB-QUERY-012..013 for bounded exact-Published reads.
 - Reuses AB-MCP-015 and AB-QUERY-006..009 for snapshot/current-source separation.
 - Capability 041 implements this routing in `agentbase-query`; the current
-  released MCP surface contains 43 tools.
+  released MCP surface contains 44 tools. Visualization remains an explicit
+  separate workflow and ordinary query does not generate an artifact.

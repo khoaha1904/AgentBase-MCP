@@ -119,7 +119,7 @@ checkpoint tự nhiên là trước benchmark mới, trước PR và trước ca
 | 10 | Published-only snapshot-first query và optional local source composition implemented; remote read deferred |
 | 11 | Reviewable batch publication và exact same-Repository Init/Refresh stack implemented |
 | 12 | Terraform/Terragrunt MVP boundary implemented and verified; provider expansion deferred |
-| 13 | Shared Published projection, query diagrams and static Domain site approved; implementation pending |
+| 13 | Shared Published projection, query diagrams and static Domain site implemented; model/domain qualification pending |
 
 Current runtime authority nằm ở `docs/design`, code và active spec. Design trong
 thư mục này giải thích shape/trade-off và phải được cập nhật

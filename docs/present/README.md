@@ -68,7 +68,7 @@ presentation mới, giữ nguyên authority của các phần trước.
 | 10 | Hub search/read Published-only đã implement; ordinary freshness marks và remote source reader chưa có |
 | 11 | Review, Accept, rich batch PR và exact same-Repository Init/Refresh PR stack đã có; MCP không merge hoặc rebase các Init độc lập |
 | 12 | MVP hiện hỗ trợ Terraform/Terragrunt; SAM/CloudFormation chưa hỗ trợ |
-| 13 | Published projection, query diagram và static Domain site đã thiết kế; implementation chưa bắt đầu |
+| 13 | Published projection, query diagram và static Domain site đã implement; còn model/domain qualification |
 
 Model policy hiện chỉ là policy qualification: benchmark Initial Ingest dùng
 Sol, Refresh dùng Terra. Nó chưa phải hard-coded runtime rule của MCP.

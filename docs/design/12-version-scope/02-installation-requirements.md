@@ -68,9 +68,9 @@ default for every Hub.
 ## Product skills
 
 - **AB-INSTALL-025** — Every interactively selected client receives exactly
-  nine released product skills named by `.agents/skills/README.md`: seven public
-  user-goal workflows including `agentbase-scan`, and two internal supporting
-  workflows.
+  twelve released product skills named by `.agents/skills/README.md`: nine public
+  user-goal workflows including explicit visualization, and three internal
+  supporting workflows.
 - **AB-INSTALL-026** — A fixed allowlist is release authority; `speckit-*` and
   every other repository-development skill are never installed.
 - **AB-INSTALL-027** — Codex uses `$CODEX_HOME/skills` with

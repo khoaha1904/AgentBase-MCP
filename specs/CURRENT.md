@@ -7,16 +7,19 @@ Capability 045 adds one deterministic presentation-neutral projection over one
 exact Published Domain. Two workflows consume it: lightweight focused
 Architecture/Dependency/Sequence diagrams and an explicit one-shot static 3D
 Domain site. It adds no OKF visualization schema, Draft overlay, graph database,
-watcher, live service or automatic publication. Implementation has not started;
-Hub knowledge reset/re-ingest is forbidden until deterministic qualification
-passes.
+watcher, live service or automatic publication. The projection, one 44th
+goal-level tool, diagram packet/skills and static
+Domain-site generator are implemented and pass the repository gate. Model-backed
+diagram qualification and the recoverable Hub reset/re-ingest remain pending;
+the reset is forbidden until that qualification passes.
 
 Capability 044 implements the enterprise source migration for pinned Codebase Memory
 and diagram-design. It replaces Codebase Memory's public-package binary download
 with an AgentBase-owned source build/admission path for Linux x64 and macOS
 arm64, using one explicit 12-language parser-profile overlay. It excludes the
-Codebase Memory Graph UI frontend, retains inactive diagram source and preserves
-the 43-tool product surface. Linux x64 is qualified; company macOS arm64 remains
+Codebase Memory Graph UI frontend and preserved the then-43-tool product surface
+while leaving diagram source inactive for capability 045. Linux x64 is qualified;
+company macOS arm64 remains
 an enterprise release gate rather than a blocker for the next capability.
 
 Capability 043 reviews the twelve current product areas sequentially with the

@@ -4,6 +4,7 @@ const host = document.querySelector("#canvas-host");
 const labelHost = document.querySelector("#labels");
 const fallback = document.querySelector("#fallback");
 const typeFilter = document.querySelector("#type-filter");
+const repositoryFilter = document.querySelector("#repository-filter");
 const membershipFilter = document.querySelector("#membership-filter");
 const search = document.querySelector("#search");
 const highLevelTypes = new Set(["Domain", "System", "Repository"]);
@@ -81,6 +82,9 @@ async function start() {
   for (const type of [...new Set(projection.nodes.map((node) => node.type))].sort()) {
     const option = document.createElement("option"); option.value = type; option.textContent = type; typeFilter.append(option);
   }
+  for (const repository of projection.nodes.filter((node) => node.type === "Repository").sort((left, right) => left.title.localeCompare(right.title))) {
+    const option = document.createElement("option"); option.value = repository.id; option.textContent = repository.title; repositoryFilter.append(option);
+  }
 
   const scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(0x090d15, .012);
@@ -121,6 +125,7 @@ async function start() {
     return new Set([...visible].filter((id) => {
       const node = nodeById.get(id);
       return node && (typeFilter.value === "all" || node.type === typeFilter.value)
+        && (repositoryFilter.value === "all" || node.repositoryIds.includes(repositoryFilter.value))
         && (membershipFilter.value === "all" || node.membership === membershipFilter.value);
     }));
   }
@@ -197,11 +202,11 @@ async function start() {
     const match = projection.nodes.find((node) => `${node.title} ${node.id} ${node.description}`.toLowerCase().includes(query));
     if (match) { visible.add(match.id); for (const id of adjacency.get(match.id) ?? []) visible.add(id); showDetails(match.id); }
   });
-  typeFilter.addEventListener("change", rebuild); membershipFilter.addEventListener("change", rebuild);
+  typeFilter.addEventListener("change", rebuild); repositoryFilter.addEventListener("change", rebuild); membershipFilter.addEventListener("change", rebuild);
   document.querySelector("#focus-one").addEventListener("click", () => focus(1));
   document.querySelector("#focus-two").addEventListener("click", () => focus(2));
   document.querySelector("#reset").addEventListener("click", () => {
-    focused = undefined; selected = undefined; typeFilter.value = "all"; membershipFilter.value = "all";
+    focused = undefined; selected = undefined; typeFilter.value = "all"; repositoryFilter.value = "all"; membershipFilter.value = "all";
     visible = new Set(projection.nodes.filter((node) => highLevelTypes.has(node.type) || node.membership === "boundary").map((node) => node.id)); rebuild();
   });
 

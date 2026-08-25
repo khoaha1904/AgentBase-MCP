@@ -1,6 +1,7 @@
 # 13 — Published visualization
 
-**Status:** approved design for capability 045; implementation pending.
+**Status:** implemented through deterministic local workflows; model-backed and
+multi-repository Domain qualification pending.
 
 High-level owner: [Visualize Published knowledge](../../present/13-visualizing-published-knowledge.md).
 

@@ -9,14 +9,15 @@
 - Hub configuration already isolates and synchronizes one Published checkout.
 - diagram-design `2.6.5` is retained with an offline static HTML/SVG profile.
 
-## Gaps
+## Baseline gaps addressed by capability 045
 
-- Query graph currently includes governance documents as normal concepts and
-  has no presentation projection.
-- Predicate names do not yet have one render-direction descriptor registry.
-- No bounded diagram packet, static Domain snapshot or visualization build
-  receipt exists.
-- No released visualization skills or tool exist.
+- The shared projection now filters governance documents and attaches active
+  Questions as metadata.
+- One predicate descriptor registry now owns presentation direction.
+- Bounded diagram packets and reproducible static Domain build receipts now
+  exist.
+- Two public visualization skills, one internal renderer skill and one shared
+  goal-level MCP tool are released.
 
 ## Impact classification
 

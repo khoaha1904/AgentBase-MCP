@@ -19,6 +19,8 @@ export type VisualizationNode = Readonly<{
   description: string;
   domainIds: readonly string[];
   parentIds: readonly string[];
+  systemIds: readonly string[];
+  repositoryIds: readonly string[];
   sources: readonly string[];
   membership: "primary" | "boundary";
   expandable: boolean;
@@ -170,6 +172,17 @@ export function buildPublishedVisualizationProjection(
     values.add(edge.declaredTarget);
     parents.set(edge.declaredSource, values);
   }
+  const groupIds = (identity: string, type: "System" | "Repository", trail = new Set<string>()): readonly string[] => {
+    if (trail.has(identity)) return [];
+    const nextTrail = new Set(trail).add(identity), found = new Set<string>();
+    const self = concepts.get(identity);
+    if (self?.document.type === type) found.add(identity);
+    for (const parent of parents.get(identity) ?? []) {
+      if (!included.has(parent)) continue;
+      for (const value of groupIds(parent, type, nextTrail)) found.add(value);
+    }
+    return [...found].sort();
+  };
   const nodes = [...included].map((id): VisualizationNode => {
     const concept = concepts.get(id)!;
     const membership = primary.has(id) ? "primary" as const : "boundary" as const;
@@ -181,6 +194,8 @@ export function buildPublishedVisualizationProjection(
       description: concept.description,
       domainIds: [...graph.domains.get(id) ?? []].sort(),
       parentIds: [...parents.get(id) ?? []].filter((parent) => included.has(parent)).sort(),
+      systemIds: groupIds(id, "System"),
+      repositoryIds: groupIds(id, "Repository"),
       sources: sourceResources(concept),
       membership,
       expandable: membership === "primary",

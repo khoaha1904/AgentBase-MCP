@@ -1,7 +1,7 @@
 # Repository skills
 
-Released skills are grouped by product ownership. Seven public skills match user
-goals; two internal skills support those workflows. Some clients may still show
+Released skills are grouped by product ownership. Nine public skills match user
+goals; three internal skills support those workflows. Some clients may still show
 internal artifacts in a technical selector.
 
 ## Public skills
@@ -20,6 +20,10 @@ internal artifacts in a technical selector.
   one reviewable enrichment proposal.
 - [`agentbase-batch-ingest`](agentbase-batch-ingest/SKILL.md) — preflight and
   ingest explicit local repositories sequentially into one atomic proposal.
+- [`agentbase-diagram`](agentbase-diagram/SKILL.md) — render one focused
+  Architecture, Dependency or Sequence view from exact Published knowledge.
+- [`agentbase-domain-site`](agentbase-domain-site/SKILL.md) — explicitly export
+  one static offline 3D Published Domain snapshot after a visibility warning.
 - [`agentbase-hub`](agentbase-hub/SKILL.md) — inspect local/remote Hub status,
   review governed Questions, connect or switch one isolated profile,
   synchronize and recover explicitly.
@@ -30,6 +34,8 @@ internal artifacts in a technical selector.
   read exact source from one authorized local repository for a public workflow.
 - [`agentbase-okf`](agentbase-okf/SKILL.md) — author and validate the exact
   bounded proposal workspace prepared by a public workflow.
+- [`use-diagram-design`](use-diagram-design/SKILL.md) — render only a truthful
+  ready diagram packet into offline HTML/SVG for `agentbase-diagram`.
 
 ## Development skills
 

@@ -96,9 +96,12 @@ function fixtureDocuments(): Map<string, string> {
     target: domains/commerce
     evidence: [${SOURCE_ID}]` })],
     ["components/orders-api.md", concept({ type: "Component", title: "Orders API",
-      body: "[Orders](../systems/orders.md) [Queue](../resources/shared-queue.md)", relationships: `
+      body: "[Orders](../systems/orders.md) [Repository](../repositories/orders.md) [Queue](../resources/shared-queue.md)", relationships: `
   - kind: part-of
     target: systems/orders
+    evidence: [${SOURCE_ID}]
+  - kind: implemented-in
+    target: repositories/orders
     evidence: [${SOURCE_ID}]
   - kind: publishes-to
     target: resources/shared-queue
@@ -170,6 +173,8 @@ test("[AB-VIS-001..004][AB-VIS-011..014] projection is deterministic, directed a
     ["domains/fulfillment"]);
   assert.equal(first.nodes.some((node) => node.id === "systems/shipping"), false);
   assert.equal(first.nodes.some((node) => node.type === "Question" || node.type === "Maintainer Guidance"), false);
+  assert.deepEqual(first.nodes.find((node) => node.id === "components/orders-api")?.systemIds, ["systems/orders"]);
+  assert.deepEqual(first.nodes.find((node) => node.id === "components/orders-api")?.repositoryIds, ["repositories/orders"]);
 
   const trigger = first.edges.find((edge) => edge.predicate === "triggered-by");
   assert.deepEqual(trigger && [trigger.declaredSource, trigger.declaredTarget,

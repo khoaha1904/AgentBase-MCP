@@ -22,7 +22,7 @@ npm run verify
 ```
 
 Interactive installation can register the current checkout as user-global
-`agentbase` stdio MCP in Codex, Claude Code or both and installs the nine
+`agentbase` stdio MCP in Codex, Claude Code or both and installs the twelve
 AgentBase product skills for every selected client. Repository-development
 `speckit-*` skills are never installed. An exact rerun is a no-op; a conflicting
 same-name MCP entry or skill fails before replacement. Hub token input is not
@@ -32,9 +32,9 @@ dependencies and the owned native Code Graph provider but performs no skill or
 client mutation. npm dependencies use only the configured HTTPS registry;
 public registry fallback is rejected.
 
-The released catalog has seven public workflows—Ask, Scan, Ingest, Refresh, Batch
-Ingest, Domain Enrichment and Hub lifecycle—plus two internal supporting
-skills. Ask naturally, select the skill in the client, invoke
+The released catalog has nine public workflows—Ask, Scan, Ingest, Refresh, Batch
+Ingest, Domain Enrichment, focused Diagram, explicit Domain Site and Hub
+lifecycle—plus three internal supporting skills. Ask naturally, select the skill in the client, invoke
 `$agentbase-query` in Codex, or invoke `/agentbase-query` in Claude Code. These
 are client syntaxes for the same canonical skill; AgentBase installs no
 `abs-*` alias.

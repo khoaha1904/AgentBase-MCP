@@ -37,7 +37,7 @@ must pass before renderer/model qualification or Hub knowledge reset.
 
 ## Phase 4: Reconcile and qualify
 
-- [ ] T015 Update `docs/design/13-visualization`, released skill/tool counts and `specs/CURRENT.md` to the exact implemented behavior; stop for owner review if implementation exposes a broad gap.
+- [X] T015 Update `docs/design/13-visualization`, released skill/tool counts and `specs/CURRENT.md` to the exact implemented behavior; stop for owner review if implementation exposes a broad gap.
 - [ ] T016 Run deterministic quickstart qualification, `npm run verify` and one model-backed `agentbase-diagram` run per supported type; record only explained variance in `specs/045-visualize-published-hub/verification.md`.
 - [ ] T017 After T016 passes, create one recoverable knowledge-only reset commit in `../AgentBase-Hub/` while preserving README, CI and history.
 - [ ] T018 Sequentially ingest and publish the eight selected Sock Shop repositories into `../AgentBase-Hub/`, then record cross-repository diagram and static-site qualification in `specs/045-visualize-published-hub/verification.md`.

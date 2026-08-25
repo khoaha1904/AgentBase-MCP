@@ -55,7 +55,7 @@ scripts/
 ```
 
 Product skill sources live under `.agents/skills/<goal>/`; its `README.md`
-separates seven public user-goal workflows and two internal supporting workflows
+separates nine public user-goal workflows and three internal supporting workflows
 from development-only Spec Kit skills.
 Interactive installation copies only the explicit product allowlist into each
 selected client's user scope. Do not create empty skill scaffolds before the
@@ -94,7 +94,9 @@ and returns visible recovery rather than hidden retry.
 
 - Exact production package dependencies are
   `@modelcontextprotocol/client@2.0.0`,
-  `@modelcontextprotocol/server@2.0.0` and `yaml@2.9.0`.
+  `@modelcontextprotocol/server@2.0.0`, `yaml@2.9.0` and `three@0.183.0`.
+  Three.js is copied into explicit static Domain-site output; it is not a live
+  MCP UI runtime.
 - Codebase Memory `v0.10.8` is an attributed immutable source snapshot with one
   AgentBase-owned 12-language profile. Installation builds the current-platform
   artifact from those exact bytes; runtime verifies source/profile/platform,
@@ -105,9 +107,9 @@ and returns visible recovery rather than hidden retry.
   watcher, UI, daemon or automatic transport retry exists.
 - Exact freshness reuse skips only indexing. Queries, source-integrity checks
   and cleanup always run; cache failure asks for explicit `--refresh`.
-- The public stdio gateway exposes 43 goal-level tools: nine Codebase Memory
+- The public stdio gateway exposes 44 goal-level tools: nine Codebase Memory
   actions including one controlled `index_repository`, four AgentBase schema/
-  authoring actions and 30 local Hub lifecycle/query actions. It omits raw
+  authoring actions and 31 local Hub lifecycle/query/visualization actions. It omits raw
   provider expert/mutation tools and binds one connection to one
   repository at a time; a sequential repository change cleanly replaces the
   provider child and retains repository-private caches. Explicit current-value questions use ordinary graph/search/snippet
