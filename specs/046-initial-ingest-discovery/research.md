@@ -60,13 +60,16 @@ verifiable evidence and reuses existing safe Git/askpass/worktree primitives.
 digest for publication, or maintain a general clone service. They risk data,
 unverifiable evidence or unnecessary infrastructure.
 
-## R06 — Strict Initial Ingest cutover, Refresh compatibility
+## R06 — Strict Initial Ingest cutover, shared source authority
 
-**Decision**: New-mode Prepare requires a receipt in the capability 046 release;
-Refresh retains current inputs. Update released skills atomically with MCP.
+**Decision**: New-mode Prepare requires a receipt in the capability 046 release.
+Refresh retains its change-first inputs but shares the same exact remote-default
+SourceSnapshot authority. Update released skills atomically with MCP.
 
 **Rationale**: No concept has been published as an immutable product contract,
-and dual Initial Ingest paths would preserve the exact omission bug.
+and dual Initial Ingest paths would preserve the exact omission bug. Different
+publication source rules for Init and Refresh would still admit abandoned
+feature knowledge.
 
 **Alternatives considered**: Legacy fallback or a feature flag. Both double the
 qualification surface and allow bypassing coverage.

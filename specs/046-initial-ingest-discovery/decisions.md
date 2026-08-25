@@ -313,9 +313,19 @@ Investigate the Agent may split or merge groups when exact source evidence shows
 different semantics, but the resulting Inventory must preserve coverage back to
 all originating Seed IDs. MCP groups structure; the Agent still decides meaning.
 
+### D29 — One source authority for all Hub authoring
+
+Every Hub-bound repository authoring workflow that may later publish knowledge
+uses the same exact remote default-branch SourceSnapshot: single Init, Batch
+Init, normal Refresh and a future Full Discovery Refresh. The current local
+working tree, including feature or dirty state, remains available to ordinary
+source/Code Graph query but cannot become Hub knowledge. This removes the
+feature-draft publication path from the MVP and prevents an abandoned branch
+from entering the Hub through Refresh after a clean Init.
+
 ## Review closure
 
-Owner review is complete through D28. High-level presentation and low-level
+Owner review is complete through D29. High-level presentation and low-level
 living design must label this behavior as a pending Capability 046 target until
 implementation and released-skill qualification complete. Any later material
 implementation gap changes this record and the affected living design before

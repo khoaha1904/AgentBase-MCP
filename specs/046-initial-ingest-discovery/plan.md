@@ -2,7 +2,7 @@
 
 **Branch**: `046-initial-ingest-discovery` | **Date**: 2026-08-25 | **Spec**: [spec.md](spec.md)
 
-**Input**: Approved decisions D01–D28 in [decisions.md](decisions.md).
+**Input**: Approved decisions D01–D29 in [decisions.md](decisions.md).
 
 ## Summary
 
@@ -126,7 +126,7 @@ Reuse current Git/GitHub, authoring, batch and review entrypoints.
 
 ## Implementation Slices
 
-### 1. Exact Init source snapshot
+### 1. Exact Hub-authoring source snapshot
 
 - Generalize the existing GitHub repository lookup enough to resolve the local
   source remote's host/repository/default branch with the configured MCP token.
@@ -134,7 +134,8 @@ Reuse current Git/GitHub, authoring, batch and review entrypoints.
 - Reuse the current checkout only when clean and exact; otherwise create a
   deterministic detached worktree under private state. Never checkout/stash or
   run hooks/submodules in the user's worktree.
-- Bind Preflight, authoring and final drift checks to the snapshot identity.
+- Bind Init, Batch and Refresh Preflight, authoring and final drift checks to the
+  snapshot identity. Working-tree graphs remain query-only.
 
 ### 2. Provider capture and bounded census
 
@@ -155,7 +156,8 @@ Reuse current Git/GitHub, authoring, batch and review entrypoints.
 - Freeze guidance input/output plus coverage into a digest-bound Receipt and
   return `discovery_receipt_id`.
 - Change new-mode `prepare_hub_okf` to accept only that receipt ID. Refresh keeps
-  its existing signal/guidance behavior.
+  its change-first/guidance behavior but uses the same remote-default source
+  authority as Init.
 
 ### 4. Authoring materialization and gates
 
