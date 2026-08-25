@@ -11,21 +11,13 @@ capabilities:
    range through the active MCP-managed GitHub.com/GitHub Enterprise authority
    when Published snapshots are insufficient or the user explicitly requests
    current source. It does not clone or build a remote repository graph.
-2. **Published Hub graph review** — derive a read-only local graph from existing
-   Published OKF concepts and relations and render it on demand for domain-level
-   navigation. The graph is a rebuildable view, not another authority, database
-   or continuous service. Local Draft remains in proposal review and is not
-   mixed into ordinary Hub visualization.
-3. **Query-scoped diagrams** — let the agent use the owned diagram-design skill
-   to turn an explicit Hub query/result selection into self-contained local
-   HTML/SVG. A generated diagram is a presentation artifact, not new knowledge;
-   it never updates Hub unless the user starts the ordinary proposal workflow.
+2. **Published visualization** — now active as capability 045 and owned by
+   [`docs/design/13-visualization`](../13-visualization/README.md). It separates
+   query-scoped diagrams from an explicit one-shot static Domain site while
+   sharing one deterministic Published projection.
 
-The Hub graph and query diagram solve different jobs and must not be combined
-into one UI framework. A future Hub graph capability may evaluate Cytoscape.js
-for interactive rendering only when specified; capability 044 adds no such
-dependency. GitNexus and Potpie remain architectural references, not AgentBase
-runtime dependencies or alternative authorities.
+GitNexus and Potpie remain architectural references, not AgentBase runtime
+dependencies or alternative authorities.
 
 ## Post-MVP product capabilities
 

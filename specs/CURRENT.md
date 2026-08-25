@@ -1,7 +1,15 @@
 # Current capability
 
-Active capability: [`044-own-upstream-runtimes`](044-own-upstream-runtimes/spec.md).
-Most recent completed: [`043-converge-product-contracts`](043-converge-product-contracts/spec.md).
+Active capability: [`045-visualize-published-hub`](045-visualize-published-hub/spec.md).
+Most recent completed: [`044-own-upstream-runtimes`](044-own-upstream-runtimes/spec.md).
+
+Capability 045 adds one deterministic presentation-neutral projection over one
+exact Published Domain. Two workflows consume it: lightweight focused
+Architecture/Dependency/Sequence diagrams and an explicit one-shot static 3D
+Domain site. It adds no OKF visualization schema, Draft overlay, graph database,
+watcher, live service or automatic publication. Implementation has not started;
+Hub knowledge reset/re-ingest is forbidden until deterministic qualification
+passes.
 
 Capability 044 implements the enterprise source migration for pinned Codebase Memory
 and diagram-design. It replaces Codebase Memory's public-package binary download

@@ -32,6 +32,7 @@ Current requirement routes:
 - Local Hub and publication: `docs/design/11-review-and-publish/01-runtime-requirements.md`
 - Installation: `docs/design/12-version-scope/02-installation-requirements.md`
 - Benchmark: `docs/design/12-version-scope/03-benchmark-requirements.md`
+- Published visualization: `docs/design/13-visualization/04-runtime-requirements.md`
 - Product scope: `docs/present/00-product-scope-and-authority.md`
 - Architecture ownership: `docs/design/00-architecture.md`
 
@@ -72,8 +73,9 @@ small gaps must be backfilled before benchmark, PR or capability completion.
 - Codebase Memory now comes from AgentBase's attributed `v0.10.8` source snapshot
   and 12-language profile rather than an npm postinstall binary. Linux x64 is
   qualified; macOS arm64 remains an explicit company-environment release gate.
-  The Codebase Memory Graph UI frontend is excluded; diagram-design source
-  remains inactive until a separately designed visualization capability.
+  The Codebase Memory Graph UI frontend is excluded. Capability 045 now owns an
+  approved Published projection, focused diagram and static Domain-site design;
+  implementation has not started.
 
 Update current truth once in the narrowest high- or low-level document. Do not
 add handoff, roadmap, ADR or evidence-diary files that repeat it.

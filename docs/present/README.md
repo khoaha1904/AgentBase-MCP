@@ -53,8 +53,10 @@ liệu mơ hồ, không tự chọn một nguồn xung đột làm sự thật v
 10. [Query từ Code Graph và Hub](10-querying-code-graph-and-hub.md)
 11. [Review và Publish](11-review-accept-and-publish.md)
 12. [Giới hạn và phạm vi của phiên bản đầu](12-current-limits-and-open-decisions.md)
+13. [Visualize Published knowledge](13-visualizing-published-knowledge.md)
 
-Cả 12 phần high-level đã được review như một tổng thể.
+Cả 12 phần nền tảng đã được review như một tổng thể. Phần 13 là capability
+presentation mới, giữ nguyên authority của các phần trước.
 
 ## Trạng thái đồng bộ — 2026-08-24
 
@@ -66,6 +68,7 @@ Cả 12 phần high-level đã được review như một tổng thể.
 | 10 | Hub search/read Published-only đã implement; ordinary freshness marks và remote source reader chưa có |
 | 11 | Review, Accept, rich batch PR và exact same-Repository Init/Refresh PR stack đã có; MCP không merge hoặc rebase các Init độc lập |
 | 12 | MVP hiện hỗ trợ Terraform/Terragrunt; SAM/CloudFormation chưa hỗ trợ |
+| 13 | Published projection, query diagram và static Domain site đã thiết kế; implementation chưa bắt đầu |
 
 Model policy hiện chỉ là policy qualification: benchmark Initial Ingest dùng
 Sol, Refresh dùng Terra. Nó chưa phải hard-coded runtime rule của MCP.

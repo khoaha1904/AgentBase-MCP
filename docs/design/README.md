@@ -101,6 +101,7 @@ checkpoint tự nhiên là trước benchmark mới, trước PR và trước ca
 10. [Query routing](10-query-routing/README.md)
 11. [Review và Publish](11-review-and-publish/README.md)
 12. [Version scope](12-version-scope/README.md)
+13. [Published visualization](13-visualization/README.md)
 
 ## Implementation trace — 2026-08-24
 
@@ -118,6 +119,7 @@ checkpoint tự nhiên là trước benchmark mới, trước PR và trước ca
 | 10 | Published-only snapshot-first query và optional local source composition implemented; remote read deferred |
 | 11 | Reviewable batch publication và exact same-Repository Init/Refresh stack implemented |
 | 12 | Terraform/Terragrunt MVP boundary implemented and verified; provider expansion deferred |
+| 13 | Shared Published projection, query diagrams and static Domain site approved; implementation pending |
 
 Current runtime authority nằm ở `docs/design`, code và active spec. Design trong
 thư mục này giải thích shape/trade-off và phải được cập nhật
