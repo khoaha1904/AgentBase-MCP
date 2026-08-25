@@ -32,7 +32,7 @@ trong Domain Enrichment.
 1. Runtime chấp nhận explicit `needs-review`, nhưng chưa tự infer nó từ evidence
    mới mâu thuẫn Guidance.
 2. Baseline Ingest/Refresh hiện tạo Question từ observed-value references.
-   Capability 046 Initial Ingest sẽ reuse chính SharedQuestion renderer và thêm
+   Capability 046 Initial Ingest reuse chính SharedQuestion renderer và thêm
    private Receipt-bound QuestionPlan cho missing-evidence/relation/identity
    candidate có exact source revision; nó không tạo Question system thứ hai.
 3. Maintainer Guidance hiện bind exact subject/property; chưa có reviewed

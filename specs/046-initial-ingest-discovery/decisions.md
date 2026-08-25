@@ -1,6 +1,6 @@
 # Initial Ingest discovery — owner decision checkpoint
 
-> Status: owner decisions and reviewer corrections D01–D34 are approved. This
+> Status: owner decisions and reviewer corrections D01–D39 are approved. This
 > is a design checkpoint, not current runtime authority.
 
 ## Reference findings
@@ -26,13 +26,15 @@
 Discovery is broad across high-value source signals. Rendering stays selective:
 there is no concept quota and no requirement to copy the repository into OKF.
 A sparse result is valid only when important discovered signals have an explicit
-disposition.
+outcome.
 
 ### D02 — Responsibility split
 
 - Codebase Memory detects structural signals and helps locate source.
-- The host Agent interprets meaning and chooses a disposition.
-- MCP validates machine-signal acknowledgement, evidence, disposition and OKF integrity.
+- The host Agent interprets meaning, proposes candidates and chooses each group outcome.
+- Candidate records distinguish concept from embedded knowledge.
+- MCP derives mechanical fields and validates machine-signal acknowledgement,
+  evidence, outcomes and OKF integrity.
 
 Code Graph output does not decide concepts and is never Hub evidence by itself.
 
@@ -46,11 +48,12 @@ Every Init covers or explicitly limits:
 4. dependencies, integrations, data and channels;
 5. deploy and operational configuration.
 
-### D04 — Four dispositions
+### D04 — Three group outcomes
 
-Every important discovery group becomes exactly one of `concept`, `embedded`,
-`question` or `ignored` with a bounded reason. Question and Ignored items do not
-pass through schema selection.
+Every important discovery group becomes exactly one of `materialized`,
+`question` or `ignored`. A materialized group names one or more candidates;
+candidate records already carry `concept | embedded` disposition, parent and
+evidence. Question and Ignored items do not pass through schema selection.
 
 ### D05 — Preserve the five-stage workflow
 
@@ -138,13 +141,13 @@ is covered by adapter contract tests on upgrade.
 The per-connection Discovery Seed binds repository root/revision and captured
 machine signals; it is discarded on repo switch, revision change or session
 close. During Investigate, Inventory remains editable. Successful guidance
-freezes a compact Receipt containing lane statuses, items, dispositions, source
+freezes a compact Receipt containing lane statuses, items, outcomes, source
 references, limitations and an MCP-derived digest. Raw graph/source does not
 enter the Receipt.
 
 MCP validates `Discovery Seed -> Inventory -> OKF`: high-signal groups cannot be
-silently absent, and Concept/Embedded/Question dispositions must materialize in
-the proposal. Ignored groups appear only as bounded inspection counts/reasons.
+silently absent, and materialized candidates or Questions must appear in the
+proposal. Ignored groups appear only as bounded inspection counts/reasons.
 
 ### D14 — Receipt handoff
 
@@ -279,7 +282,7 @@ rule sequentially and independently per repository.
 
 Broad discovery is not exhaustive reading. Discover completes when every one of
 the five lanes is marked covered, absent-after-check or limited, and every
-important machine-signal group has one explicit disposition. It does not keep
+important machine-signal group has one explicit outcome. It does not keep
 traversing ordinary CRUD handlers, helpers, tests or individual functions to
 maximize concept count or benchmark recall. An unresolved P0 signal caused by
 source, authority or adapter failure makes the run Incomplete; remaining P1/P2
@@ -307,7 +310,7 @@ or one item per route/function/resource. Deterministic grouping may combine
 entry points belonging to one runtime, routes sharing one interface boundary,
 calls sharing a target/protocol and deployment resources supporting one
 workload. Low-value repeated items retain a count and bounded source samples.
-Each Seed group has a session-stable ID and receives exactly one disposition.
+Each Seed group has a session-stable ID and receives exactly one outcome.
 The Agent may materialize several concept or embedded outputs from that one
 group, but the coverage group itself is not split or merged in the MVP. MCP
 groups structure and owns coverage; the Agent still decides meaning and outputs.
@@ -419,9 +422,69 @@ AWS/SQS-only Domain Enrichment or retrofit already Published repositories; those
 require the already-deferred Full Discovery Refresh or an intentional clean
 re-ingest during qualification.
 
+### D35 — Question provenance is derived, not typed by the Agent
+
+The V18 probe showed that requiring an Agent to construct exact
+`repository://` strings duplicates facts already owned by the active Seed and
+guidance observations and creates a formatting-only failure mode. QuestionPlan
+input therefore names `candidate_key + evidence_id` from the same request. MCP
+validates that selection and derives the exact normalized resource plus
+SourceSnapshot revision before freezing the existing candidate-evidence
+reference. SharedQuestion/Hub bytes, revision identity and Finalize behavior do
+not change. The corrected benchmark uses immutable V19; V18 remains historical.
+
+### D36 — Inventory expresses meaning; MCP derives mechanics
+
+The V19 probe exposed a family of failures rather than one evidence bug:
+caller-authored private ID formats, repeated output parents, item evidence
+treated as if bounded Seed samples were exhaustive, materialized reasons rejected
+after the public schema accepted them, and one group unable to map both concept
+and embedded candidates. The Agent-facing Inventory therefore has three group
+outcomes: `materialized`, `question` and `ignored`. Materialized items select
+candidate IDs; Question data is nested in its origin item; ignored P0 points to
+a materialized origin group. MCP derives private item/QuestionPlan IDs,
+candidate disposition/parent, canonical Question provenance and internal
+cross-references. Item evidence lists are removed because candidates and Seed
+groups already retain their respective evidence. All bounded correctable
+Inventory defects are reported together. Existing private Receipts may be
+discarded and re-ingested; Published Hub/OKF needs no migration. V19 remains
+immutable and the corrected released-skill benchmark becomes V20.
+
+### D37 — Embedded identity is evidence, not wording
+
+V20 reached a ready Seed, Receipt and schema-valid nine-concept draft, then
+failed Finalize because the Agent improved `Best Buy API dependency` to `Best
+Buy public API dependency`. The exact candidate evidence remained visible, so
+the substring gate rejected truthful human-readable wording. Finalize therefore
+resolves the Receipt parent and verifies at least one exact candidate-owned
+repository evidence resource in its body. Missing evidence remains repairable;
+labels and prose are not machine identity. V20 remains immutable and the
+corrected benchmark becomes V21.
+
+### D38 — Missing embedded rows are Receipt-owned normalization
+
+V21 passed the new label rule and reached a schema-valid draft, but the Agent
+dropped the `scheduled_trigger` embedded row after already using its one
+changed-set repair. Detection alone still makes a deterministic prepared field
+an Agent responsibility. Finalize therefore preserves an authored row when it
+contains exact candidate-owned evidence and otherwise appends the canonical row
+from the frozen Receipt before validation. It does not reread source/graph,
+invent facts or consume repair. V21 remains immutable and the corrected
+benchmark becomes V22.
+
+### D39 — Embedded knowledge does not require a provider profile
+
+The V22 pre-run audit found a latent contradiction: a semantic-only external API
+candidate had explicit embedded disposition, valid parent and exact evidence,
+but guidance returned unsupported because no provider technology mapping
+existed. Detection must not override a validated embedded boundary. Such a
+candidate now returns embedded with provider-neutral technology and a visible
+limitation. Unsupported remains correct for standalone schema intent that cannot
+be selected safely.
+
 ## Review closure
 
-Owner review is complete through D34. High-level presentation and low-level
+Owner review is complete through D39. High-level presentation and low-level
 living design must label this behavior as a pending Capability 046 target until
 implementation and released-skill qualification complete. Any later material
 implementation gap changes this record and the affected living design before

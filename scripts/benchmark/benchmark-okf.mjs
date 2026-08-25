@@ -277,7 +277,8 @@ export function assessOwnerReviewUsefulness(concepts, { navigationFindings = [],
     findings.push(`${endpoints.length} API Endpoint concepts fragment one likely API surface`);
   }
   const functions = values.filter((concept) => concept.type === "Function");
-  if (functions.length >= 3 && !values.some((concept) => ["System", "Software Component", "Service"].includes(concept.type))) {
+  if (functions.length >= 3 && !values.some((concept) =>
+    ["System", "Component", "Flow", "Software Component", "Service"].includes(concept.type))) {
     findings.push(`${functions.length} Function concepts form an implementation inventory without a useful parent`);
   }
   return {
@@ -448,7 +449,8 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
       continue;
     }
     if (!Array.isArray(item.identityTerms) || !item.identityTerms.length) continue;
-    const ranked = [...actual.entries()].filter(([key]) => !usedActual.has(key)).flatMap(([key, concept]) => {
+    const ranked = [...actual.entries()].filter(([key, concept]) =>
+      !usedActual.has(key) && concept.type !== "Question").flatMap(([key, concept]) => {
       const nameIdentity = [key, concept.frontmatter.title]
         .filter((value) => typeof value === "string").join(" ").toLowerCase();
       const primaryIdentity = `${nameIdentity} ${typeof concept.frontmatter.description === "string" ? concept.frontmatter.description : ""}`;
@@ -595,6 +597,18 @@ function reportFor(entry, run, metrics) {
   const agent = run.agent ? `${run.agent.model} via ${run.agent.actualVersion}` : "unavailable";
   const catalogPrompt = run.catalogVersion && run.promptVersion
     ? `${run.catalogVersion} / ${run.promptVersion}` : "unavailable";
+  const discovery = run.discoveryQualification
+    ? `${run.discoveryQualification.status}; ${run.discoveryQualification.representativeChecks?.length ?? 0} representative checks`
+    : "not applicable";
+  const regression = metrics.regression?.status === "compared"
+    ? `Compared with ${metrics.regression.previousRunId}; ${metrics.regression.regressions.length
+      ? `regressions: ${metrics.regression.regressions.join("; ")}` : "no new hard regression"}`
+    : "No prior accepted run in this suite";
+  const defectSections = `\n## Defect boundaries\n\n`
+    + `### OKF\n\n${metrics.authoringAssessment.hardFailures.length
+      ? metrics.authoringAssessment.hardFailures.map((item) => `- ${item}`).join("\n") : "- None"}\n\n`
+    + `### MCP/runtime\n\n${run.failures?.length ? run.failures.map((item) => `- ${item}`).join("\n") : "- None"}\n\n`
+    + "### Benchmark\n\n- None\n";
   if (run.outcome !== "succeeded") {
     return `# ${entry.id} — agent OKF benchmark\n\n`
       + `- Agent: ${agent}\n`
@@ -603,8 +617,11 @@ function reportFor(entry, run, metrics) {
       + `- Authoring assessment: invalid\n`
       + `- Owner review: needs_revision\n`
       + `- Initial Ingest acceptance: invalid\n`
+      + `- Discovery qualification: ${discovery}\n`
+      + `- Regression: ${regression}\n`
       + `- Semantic metrics: not scored because the ${run.arm ?? "mcp"} arm lifecycle failed\n`
       + `\n## Hard failures\n\n${metrics.authoringAssessment.hardFailures.map((item) => `- ${item}`).join("\n")}\n`
+      + defectSections
       + `\n## Limitations\n\n${metrics.authoringAssessment.limitations.map((item) => `- ${item}`).join("\n")}\n`;
   }
   const measured = (value, ratio) => `${value === null ? "n/a" : `${value}%`} (${ratio.matched}/${ratio.total})`;
@@ -616,6 +633,8 @@ function reportFor(entry, run, metrics) {
     + `- Authoring assessment: ${metrics.authoringAssessment.status}\n`
     + `- Owner review: ${metrics.ownerReview.status}\n`
     + `- Initial Ingest acceptance: ${metrics.initialIngestAcceptance}\n`
+    + `- Discovery qualification: ${discovery}\n`
+    + `- Regression: ${regression}\n`
     + `- Reference concept coverage: ${measured(metrics.referenceConceptCoveragePercent, metrics.ratios.referenceConceptCoverage)}\n`
     + `- Recognized schema agreement: ${measured(metrics.recognizedSchemaAgreementPercent, metrics.ratios.recognizedSchemaAgreement)}\n`
     + `- Metadata completeness: ${measured(metrics.metadataCompletenessPercent, metrics.ratios.metadataCompleteness)}\n`
@@ -634,7 +653,53 @@ function reportFor(entry, run, metrics) {
       ? `\n## Hard failures\n\n${metrics.authoringAssessment.hardFailures.map((item) => `- ${item}`).join("\n")}\n` : "")
     + (metrics.ownerReview.findings.length
       ? `\n## Owner-review findings\n\n${metrics.ownerReview.findings.map((item) => `- ${item}`).join("\n")}\n` : "")
+    + defectSections
     + `\n## Limitations\n\n${metrics.authoringAssessment.limitations.map((item) => `- ${item}`).join("\n")}\n`;
+}
+
+export function createRunRegression(currentRun, currentMetrics, previous) {
+  if (!previous) return { status: "no-baseline", previousRunId: null, changes: {}, regressions: [] };
+  const numeric = ["referenceConceptCoveragePercent", "embeddedKnowledgeCoveragePercent",
+    "recognizedSchemaAgreementPercent", "metadataCompletenessPercent", "provenanceCoveragePercent"];
+  const changes = Object.fromEntries(numeric.flatMap((field) => Number.isFinite(currentMetrics[field])
+    && Number.isFinite(previous.metrics[field]) ? [[field, currentMetrics[field] - previous.metrics[field]]] : []));
+  for (const field of ["elapsedMs"]) if (Number.isFinite(currentRun[field]) && Number.isFinite(previous.run[field])) {
+    changes[field] = currentRun[field] - previous.run[field];
+  }
+  for (const field of ["inputTokens", "outputTokens", "reasoningOutputTokens"]) {
+    const current = currentRun.usage?.[field], prior = previous.run.usage?.[field];
+    if (Number.isFinite(current) && Number.isFinite(prior)) changes[field] = current - prior;
+  }
+  const acceptanceRank = { invalid: 0, valid_partial: 1, review_ready: 2 };
+  const regressions = [];
+  if (acceptanceRank[currentMetrics.initialIngestAcceptance] < acceptanceRank[previous.metrics.initialIngestAcceptance]) {
+    regressions.push(`Initial Ingest acceptance declined from ${previous.metrics.initialIngestAcceptance} to ${currentMetrics.initialIngestAcceptance}`);
+  }
+  if (previous.metrics.validation?.passed && !currentMetrics.validation?.passed) regressions.push("OKF validation changed from passed to failed");
+  if (previous.run.discoveryQualification?.status === "passed" && currentRun.discoveryQualification?.status !== "passed") {
+    regressions.push("Discovery qualification changed from passed to failed");
+  }
+  return { status: "compared", previousRunId: previous.runId, changes, regressions };
+}
+
+function previousAcceptedRun(root) {
+  const currentRunId = path.basename(root), parent = path.dirname(root);
+  if (!fs.existsSync(parent)) return null;
+  const candidates = fs.readdirSync(parent, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && runIdPattern.test(entry.name) && entry.name < currentRunId)
+    .map((entry) => entry.name).sort().reverse();
+  for (const runId of candidates) {
+    try {
+      const candidateRoot = path.join(parent, runId);
+      const run = readJson(path.join(candidateRoot, "run.json"));
+      const metrics = readJson(path.join(candidateRoot, "metrics.json"));
+      if (run.outcome === "succeeded" && metrics.authoringAssessment?.status === "reviewable"
+        && (!run.discoveryQualification || run.discoveryQualification.status === "passed")) {
+        return { runId, run, metrics };
+      }
+    } catch { /* An incomplete historical artifact is not an accepted baseline. */ }
+  }
+  return null;
 }
 
 function invalidMetrics(suite, repository, runId, error) {
@@ -759,6 +824,8 @@ function finalizeArmRoot({ manifest, entry, root, runId }) {
   }
   const fail = (failure) => {
     const metrics = invalidMetrics(manifest.suite, entry.id, runId, failure);
+    metrics.discoveryQualification = runData.discoveryQualification ?? null;
+    metrics.regression = createRunRegression(runData, metrics, previousAcceptedRun(root));
     writeJson(path.join(root, "metrics.json"), metrics);
     fs.writeFileSync(path.join(root, "report.md"), reportFor(entry, runData, metrics));
     return { run: runData, metrics: null, failure };
@@ -778,11 +845,13 @@ function finalizeArmRoot({ manifest, entry, root, runId }) {
       runId,
       arm: runData.arm ?? "mcp",
       ...scoreSemanticBenchmark(expectation, bundle, scoringRepositoryId(runData), path.resolve(projectRoot, entry.path)),
+      discoveryQualification: runData.discoveryQualification ?? null,
       okfTreeDigest: bundle.treeDigest,
     };
   } catch (error) {
     metrics = invalidMetrics(manifest.suite, entry.id, runId, error instanceof Error ? error.message : "unknown error");
   }
+  metrics.regression = createRunRegression(runData, metrics, previousAcceptedRun(root));
   writeJson(path.join(root, "metrics.json"), metrics);
   fs.writeFileSync(path.join(root, "report.md"), reportFor(entry, runData, metrics));
   return { run: runData, metrics, failure: null };

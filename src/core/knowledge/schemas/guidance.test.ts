@@ -82,6 +82,24 @@ test("[AB-SCHEMA-031][AB-SCHEMA-036][AB-SCHEMA-048] standalone concepts share at
   assert.equal(getOkfAuthoringGuidance(input).recommendations[2]?.status, "unsupported");
   Object.assign(input.candidates[1]!, { evidenceIds: ["evidence.queue", "docs.parent"] });
   assert.throws(() => getOkfAuthoringGuidance(input), /candidate queue cites evidence owned by another candidate/);
+
+  const providerNeutral = getOkfAuthoringGuidance({
+    candidates: [
+      { id: "parent", identityHint: "runtime", identityBasis: "workload boundary", queryValue: "Independent runtime",
+        evidenceIds: ["docs.parent"], disposition: "concept" as const, suggestedType: "Component" },
+      { id: "external", identityHint: "upstream API", identityBasis: "documented dependency",
+        queryValue: "External upstream dependency", evidenceIds: ["docs.external"], disposition: "embedded" as const,
+        parentCandidateId: "parent" },
+    ],
+    semanticObservations: [
+      { id: "docs.parent", candidateId: "parent", role: "implementation" as const, signal: "independent runtime", source },
+      { id: "docs.external", candidateId: "external", role: "documentation" as const, signal: "calls upstream API", source },
+    ],
+    resourceObservations: [],
+  }).recommendations[1]!;
+  assert.equal(providerNeutral.status, "embedded");
+  assert.deepEqual(providerNeutral.technology, {});
+  assert.match(providerNeutral.limitations.join(" "), /provider-neutral/);
 });
 
 test("[AB-SCHEMA-034][AB-SCHEMA-036][AB-SCHEMA-048] standalone System and Flow share attributable evidence", () => {

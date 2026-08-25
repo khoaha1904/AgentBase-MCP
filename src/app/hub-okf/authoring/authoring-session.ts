@@ -4,11 +4,16 @@ import path from "node:path";
 
 import type { AnyHubProposal, HubIdentity } from "../../../core/hub/index.ts";
 import {
-  loadOkfBundle, normalizeConfirmedDomain, normalizeRepositoryObservedValues,
-  parseRepositorySourceResource, readObservedValues, readRepositoryIdentityRecord,
-  renderConceptDocument, repositorySourceResources,
+  appendKnowledgeActivity, createRepositorySourceResource, loadOkfBundle, normalizeConfirmedDomain,
+  normalizeRepositoryObservedValues,
+  parseRepositorySourceResource, readObservedValues, readRepositoryIdentityRecord, repositorySourceResources,
+  renderConceptDocument,
+  repositoryActivityLogPath,
+  validateInventoryReceipt,
   type ConfirmedDomain, type HubRemovalDeclaration, type OkfAuthoringGuidance,
+  type InventoryReceipt,
   type OkfValue,
+  type RepositoryIdentityRecord,
 } from "../../../core/knowledge/index.ts";
 import {
   attachHubInspectionContext, inspectHubProposal, type HubChangeEntry, type HubProposalInspection,
@@ -16,8 +21,11 @@ import {
 import { prepareNewHubProposal } from "./prepare.ts";
 import { prepareRefreshHubProposal } from "./refresh.ts";
 import {
+  renderEmbeddedKnowledgeRow, writeInitialIngestSkeletons, type InitialIngestSkeleton,
+} from "./initial-ingest-skeleton.ts";
+import {
   assertQuestionAuthoringUntouched,
-  materializeQuestionDeclarations,
+  materializeQuestionDeclarations, materializeReceiptQuestionPlans,
   validateQuestionDeclarations,
   type QuestionDeclaration,
 } from "./questions.ts";
@@ -37,6 +45,10 @@ export type HubAuthoringSession = Readonly<{
   selectedSchemas: readonly string[];
   guidance?: OkfAuthoringGuidance;
   coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
+  discoveryReceipt?: InventoryReceipt;
+  skeletons?: readonly InitialIngestSkeleton[];
+  finalizeFailures?: number;
+  requireObservedRevision?: boolean;
   root: string;
   bundleRoot: string;
   baseRoot: string;
@@ -69,6 +81,8 @@ export type BeginHubAuthoringOptions = Readonly<{
   selectedSchemas: readonly string[];
   guidance?: OkfAuthoringGuidance;
   coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
+  discoveryReceipt?: InventoryReceipt;
+  requireObservedRevision?: boolean;
   createdAt: string;
 }>;
 
@@ -91,6 +105,34 @@ function copyCheckout(source: string, target: string): void {
   }
 }
 
+function writeSession(session: HubAuthoringSession): void {
+  const target = path.join(session.root, "session.json"), temporary = `${target}.${process.pid}.tmp`;
+  fs.writeFileSync(temporary, `${JSON.stringify(session, null, 2)}\n`, { mode: 0o600, flag: "wx" });
+  fs.renameSync(temporary, target);
+}
+
+function receiptTerminalPath(stateRoot: string, receiptId: string): string {
+  return path.join(path.resolve(stateRoot), "receipt-terminals", `${receiptId}.json`);
+}
+
+function writeReceiptTerminal(stateRoot: string, receipt: InventoryReceipt, proposalId: string): void {
+  const target = receiptTerminalPath(stateRoot, receipt.id);
+  privateDirectory(path.dirname(target));
+  if (fs.existsSync(target)) throw new Error("discovery Receipt is already terminal");
+  const temporary = `${target}.${process.pid}.tmp`;
+  fs.writeFileSync(temporary, `${JSON.stringify({ receiptId: receipt.id, receiptDigest: receipt.digest,
+    proposalId, state: "finalized" })}\n`, { mode: 0o600, flag: "wx" });
+  fs.renameSync(temporary, target);
+}
+
+export function markInventoryReceiptFinalized(
+  stateRoot: string,
+  receipt: InventoryReceipt,
+  proposalId: string,
+): void {
+  writeReceiptTerminal(stateRoot, receipt, proposalId);
+}
+
 export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): HubAuthoringSession {
   const authority = options.hub?.repository ?? options.localHubId;
   if (!authority || (!options.hub && !/^[a-f0-9]{24}$/.test(options.localHubId ?? ""))) throw new Error("Hub authoring authority is invalid");
@@ -102,12 +144,27 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
   if (options.coverage && options.coverage.partial !== (options.coverage.limitations.length > 0)) {
     throw new Error("Hub authoring coverage is inconsistent");
   }
+  if (options.discoveryReceipt && fs.existsSync(receiptTerminalPath(options.stateRoot, options.discoveryReceipt.id))) {
+    throw new Error("discovery Receipt already finalized and cannot create another session");
+  }
   const seed = [options.mode, authority, options.baseCommit, options.sourceRepositoryId,
     options.evidenceDigest, options.subjectDirectory, options.confirmedDomain?.identity ?? "",
-    options.confirmedDomain?.title ?? ""].join("\0");
+    options.confirmedDomain?.title ?? "", options.discoveryReceipt?.id ?? ""].join("\0");
   const id = `hub-session-${createHash("sha256").update(seed).digest("hex").slice(0, 24)}`;
   const root = path.join(path.resolve(options.stateRoot), "sessions", id);
-  if (fs.existsSync(root)) throw new Error("matching Hub authoring session already exists");
+  if (fs.existsSync(root)) {
+    if (!fs.existsSync(path.join(root, "session.json"))) fs.rmSync(root, { recursive: true, force: true });
+    else {
+    const existing = readHubAuthoringSession(options.stateRoot, id, options.checkoutRoot);
+    const matches = existing.mode === options.mode && existing.baseCommit === options.baseCommit
+      && existing.sourceRepositoryId === options.sourceRepositoryId && existing.evidenceDigest === options.evidenceDigest
+      && existing.subjectDirectory === options.subjectDirectory
+      && existing.discoveryReceipt?.digest === options.discoveryReceipt?.digest
+      && JSON.stringify(existing.sourceState) === JSON.stringify(options.sourceState);
+      if (!matches) throw new Error("matching Hub authoring session exists with different authority");
+      return existing;
+    }
+  }
   const baseRoot = path.join(root, "base"), bundleRoot = path.join(root, "bundle");
   privateDirectory(path.dirname(root)); privateDirectory(root);
   copyCheckout(options.checkoutRoot, baseRoot);
@@ -127,6 +184,8 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
     selectedSchemas: [...options.selectedSchemas],
     ...(options.guidance ? { guidance: options.guidance } : {}),
     ...(options.coverage ? { coverage: options.coverage } : {}),
+    ...(options.discoveryReceipt ? { discoveryReceipt: options.discoveryReceipt } : {}),
+    ...(options.requireObservedRevision ? { requireObservedRevision: true } : {}),
     root,
     bundleRoot,
     baseRoot,
@@ -134,7 +193,7 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
     sourceRepositoryRoot: path.resolve(options.sourceRepositoryRoot),
     createdAt: options.createdAt,
   };
-  fs.writeFileSync(path.join(root, "session.json"), `${JSON.stringify(session, null, 2)}\n`, { mode: 0o600 });
+  writeSession(session);
   return session;
 }
 
@@ -152,6 +211,7 @@ export function readHubAuthoringSession(
   const expected = path.resolve(expectedCheckoutRoot);
   const confirmedDomain = value.confirmedDomain
     ? normalizeConfirmedDomain({ identity: value.confirmedDomain.identity, title: value.confirmedDomain.title }) : undefined;
+  if (value.discoveryReceipt) validateInventoryReceipt(value.discoveryReceipt);
   if (value.formatVersion !== 1 || value.id !== sessionId || path.resolve(value.root) !== root
     || path.resolve(value.baseRoot) !== path.join(root, "base")
     || path.resolve(value.bundleRoot) !== path.join(root, "bundle")
@@ -166,7 +226,50 @@ export function readHubAuthoringSession(
     || (!value.hub && !/^[a-f0-9]{24}$/.test(value.localHubId ?? ""))) {
     throw new Error("Hub authoring session state is invalid");
   }
+  if (value.skeletons && (value.mode !== "new" || !value.discoveryReceipt
+    || value.skeletons.some((skeleton) => !skeleton.identity || !skeleton.path.endsWith(".md") || !skeleton.type))) {
+    throw new Error("Hub authoring skeleton state is invalid");
+  }
+  if (value.finalizeFailures !== undefined
+    && (!Number.isSafeInteger(value.finalizeFailures) || value.finalizeFailures < 0 || value.finalizeFailures > 2)) {
+    throw new Error("Hub authoring repair state is invalid");
+  }
   return value;
+}
+
+export function materializeInitialIngestSessionSkeletons(
+  stateRoot: string,
+  sessionId: string,
+  expectedCheckoutRoot: string,
+  repository: RepositoryIdentityRecord,
+): readonly InitialIngestSkeleton[] {
+  const session = readHubAuthoringSession(stateRoot, sessionId, expectedCheckoutRoot);
+  if (session.skeletons) return session.skeletons;
+  if (session.mode !== "new" || !session.discoveryReceipt) {
+    throw new Error("only receipt-bound Initial Ingest can materialize initial skeletons");
+  }
+  fs.rmSync(session.bundleRoot, { recursive: true, force: true });
+  copyCheckout(session.baseRoot, session.bundleRoot);
+  try {
+    const skeletons = writeInitialIngestSkeletons({
+      bundleRoot: session.bundleRoot,
+      subjectDirectory: session.subjectDirectory,
+      sourceRepositoryId: session.sourceRepositoryId,
+      repository,
+      ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),
+      request: session.discoveryReceipt.guidanceRequest,
+      guidance: session.discoveryReceipt.guidance,
+      createdAt: session.createdAt,
+      sourceState: session.sourceState,
+    });
+    const persisted = { ...session, skeletons };
+    writeSession(persisted);
+    return skeletons;
+  } catch (error) {
+    fs.rmSync(session.bundleRoot, { recursive: true, force: true });
+    copyCheckout(session.baseRoot, session.bundleRoot);
+    throw error;
+  }
 }
 
 function sourceLineCount(file: string): number {
@@ -186,8 +289,35 @@ function validateCurrentRepositorySources(session: HubAuthoringSession, bundleRo
     const previous = base.concepts.get(concept.conceptId);
     if (previous && fs.readFileSync(path.join(session.baseRoot, previous.path)).equals(
       fs.readFileSync(path.join(session.bundleRoot, concept.path)))) continue;
-    for (const resource of repositorySourceResources(concept)) {
+    const previousSources = new Set((Array.isArray(previous?.frontmatter.sources) ? previous.frontmatter.sources : []).flatMap((value) => {
+      const source = mapping(value);
+      return typeof source.id === "string" && typeof source.resource === "string"
+        ? [JSON.stringify([source.id, source.resource, source.observed_revision ?? null])] : [];
+    }));
+    const previousRevisionsByIdentity = new Map((Array.isArray(previous?.frontmatter.sources)
+      ? previous.frontmatter.sources : []).flatMap((value) => {
+      const source = mapping(value);
+      return typeof source.id === "string" && typeof source.resource === "string"
+        ? [[JSON.stringify([source.id, source.resource]), source.observed_revision] as const] : [];
+    }));
+    const sourceEntries = (Array.isArray(concept.frontmatter.sources) ? concept.frontmatter.sources : []).flatMap((value) => {
+      const source = mapping(value);
+      return typeof source.resource === "string" ? [{ source, resource: source.resource }] : [];
+    });
+    for (const { source: sourceEntry, resource } of sourceEntries) {
       if (!resource.startsWith(repositoryPrefix)) continue;
+      if (session.requireObservedRevision) {
+        const retained = typeof sourceEntry.id === "string"
+          && previousSources.has(JSON.stringify([sourceEntry.id, resource, sourceEntry.observed_revision ?? null]));
+        if (!retained && sourceEntry.observed_revision !== session.sourceState.commit) {
+          failures.push(`${concept.path}: new repository source must use observed_revision ${session.sourceState.commit}`);
+        }
+        const previousRevision = typeof sourceEntry.id === "string"
+          ? previousRevisionsByIdentity.get(JSON.stringify([sourceEntry.id, resource])) : undefined;
+        if (previousRevision !== undefined && previousRevision !== sourceEntry.observed_revision) {
+          failures.push(`${concept.path}: re-observed repository source must use a revision-distinct source ID`);
+        }
+      }
       const parsed = parseRepositorySourceResource(resource);
       if (!parsed || parsed.repositoryId !== session.sourceRepositoryId) {
         failures.push(`${concept.path}: repository source is not normalized`);
@@ -255,6 +385,161 @@ function mapping(value: OkfValue | undefined): Readonly<Record<string, OkfValue>
     ? value as Readonly<Record<string, OkfValue>> : {};
 }
 
+function appendEmbeddedRows(body: string, rows: readonly string[]): string {
+  if (!rows.length) return body;
+  const heading = "# Embedded Knowledge";
+  const header = "| Name | Role | Kind | Technology | Exact sources |";
+  const separator = "|---|---|---|---|---|";
+  const lines = body.trimEnd().split("\n");
+  const headerIndex = lines.findIndex((line) => line.trim() === header);
+  if (headerIndex >= 0 && lines[headerIndex + 1]?.trim() === separator) {
+    let insertAt = headerIndex + 2;
+    while (lines[insertAt]?.trimStart().startsWith("|")) insertAt += 1;
+    lines.splice(insertAt, 0, ...rows);
+    return `${lines.join("\n")}\n`;
+  }
+  const headingIndex = lines.findIndex((line) => line.trim() === heading);
+  if (headingIndex >= 0) {
+    lines.splice(headingIndex + 1, 0, "", header, separator, ...rows);
+    return `${lines.join("\n")}\n`;
+  }
+  return `${body.trimEnd()}\n\n${heading}\n\n${header}\n${separator}\n${rows.join("\n")}\n`;
+}
+
+function restoreReceiptEmbeddedKnowledge(session: HubAuthoringSession, root: string): void {
+  const receipt = session.discoveryReceipt;
+  if (!receipt || !session.skeletons) return;
+  const bundle = loadOkfBundle(root, { requireAgentBaseRootIndex: true });
+  const skeletons = new Map(session.skeletons.flatMap((skeleton) => skeleton.candidateId
+    ? [[skeleton.candidateId, skeleton] as const] : []));
+  const candidates = new Map(receipt.guidanceRequest.candidates.map((candidate) => [candidate.id, candidate]));
+  const recommendations = new Map(receipt.guidance.recommendations.map((item) => [item.candidateId, item]));
+  const observations = [...receipt.guidanceRequest.semanticObservations, ...receipt.guidanceRequest.resourceObservations];
+  const rowsByOwner = new Map<string, string[]>();
+  for (const output of receipt.inventory.items.flatMap((item) => item.outcome === "materialized" ? item.outputs : [])) {
+    const candidate = candidates.get(output.candidateId), recommendation = recommendations.get(output.candidateId);
+    if (candidate?.disposition !== "embedded" || recommendation?.status !== "embedded") continue;
+    const parent = output.parentCandidateId ? skeletons.get(output.parentCandidateId) : undefined;
+    const owner = parent ? bundle.concepts.get(parent.identity) : undefined;
+    if (!parent || !owner || recommendation.parentCandidateId !== output.parentCandidateId) continue;
+    const sources = candidate.evidenceIds.flatMap((id) => {
+      const observation = observations.find((entry) => entry.id === id);
+      return observation ? [{ id: observation.id.replaceAll(":", "-"), resource: createRepositorySourceResource(
+        receipt.source.repositoryId, observation.source.path, observation.source.startLine, observation.source.endLine,
+      ) }] : [];
+    });
+    if (!sources.length || sources.some((source) => owner.body.includes(`\`${source.resource}\``))) continue;
+    const row = renderEmbeddedKnowledgeRow(candidate, recommendation, sources);
+    const rows = rowsByOwner.get(owner.conceptId) ?? [];
+    if (!rows.includes(row)) rows.push(row);
+    rowsByOwner.set(owner.conceptId, rows);
+  }
+  for (const [ownerId, rows] of rowsByOwner) {
+    const owner = bundle.concepts.get(ownerId);
+    if (!owner) continue;
+    fs.writeFileSync(path.join(root, owner.path), renderConceptDocument({ ...owner,
+      body: appendEmbeddedRows(owner.body, rows) }), { mode: 0o600 });
+  }
+}
+
+function validateReceiptMaterialization(session: HubAuthoringSession, root: string): void {
+  const receipt = session.discoveryReceipt;
+  if (!receipt || !session.skeletons) throw new Error("receipt-bound Initial Ingest materialization state is missing");
+  const bundle = loadOkfBundle(root, { requireAgentBaseRootIndex: true });
+  const skeletons = new Map(session.skeletons.flatMap((skeleton) => skeleton.candidateId
+    ? [[skeleton.candidateId, skeleton] as const] : []));
+  const candidates = new Map(receipt.guidanceRequest.candidates.map((candidate) => [candidate.id, candidate]));
+  const recommendations = new Map(receipt.guidance.recommendations.map((item) => [item.candidateId, item]));
+  const observations = [...receipt.guidanceRequest.semanticObservations, ...receipt.guidanceRequest.resourceObservations];
+  const failures: string[] = [];
+  for (const item of receipt.inventory.items) for (const output of item.outputs) {
+    const candidate = candidates.get(output.candidateId), recommendation = recommendations.get(output.candidateId);
+    if (!candidate || !recommendation) { failures.push(`${item.id}: output candidate is unavailable`); continue; }
+    if (candidate.disposition === "concept") {
+      const skeleton = skeletons.get(output.candidateId), concept = skeleton ? bundle.concepts.get(skeleton.identity) : undefined;
+      if (!skeleton || !concept || !["exact", "suggested"].includes(recommendation.status)
+        || concept.type !== recommendation.schema?.type) {
+        failures.push(`${item.id}: concept output ${output.candidateId} did not materialize`);
+        continue;
+      }
+      const sources = new Set(repositorySourceResources(concept));
+      const expected = candidate.evidenceIds.flatMap((id) => {
+        const observation = observations.find((entry) => entry.id === id);
+        return observation ? [createRepositorySourceResource(receipt.source.repositoryId, observation.source.path,
+          observation.source.startLine, observation.source.endLine)] : [];
+      });
+      if (!expected.some((resource) => sources.has(resource))) {
+        failures.push(`${item.id}: concept output ${output.candidateId} lost Receipt evidence`);
+      }
+    } else if (candidate.disposition === "embedded") {
+      const parent = output.parentCandidateId ? skeletons.get(output.parentCandidateId) : undefined;
+      const owner = parent ? bundle.concepts.get(parent.identity) : undefined;
+      const expected = candidate.evidenceIds.flatMap((id) => {
+        const observation = observations.find((entry) => entry.id === id);
+        return observation ? [createRepositorySourceResource(receipt.source.repositoryId, observation.source.path,
+          observation.source.startLine, observation.source.endLine)] : [];
+      });
+      if (!parent || !owner || recommendation.status !== "embedded"
+        || recommendation.parentCandidateId !== output.parentCandidateId
+        || !expected.some((resource) => owner.body.includes(`\`${resource}\``))) {
+        failures.push(`${item.id}: embedded output ${output.candidateId} did not retain candidate evidence in its parent`);
+      }
+    }
+  }
+  if (failures.length) throw new Error(`Receipt materialization failed: ${failures.join("; ")}`);
+}
+
+function writeRepositoryInitActivity(
+  session: HubAuthoringSession,
+  root: string,
+  questionCount: number,
+): string {
+  const receipt = session.discoveryReceipt;
+  if (!receipt) throw new Error("Repository Init activity requires a discovery Receipt");
+  const relative = repositoryActivityLogPath(session.subjectDirectory);
+  const target = path.join(root, ...relative.split("/"));
+  const candidates = new Map(receipt.guidanceRequest.candidates.map((candidate) => [candidate.id, candidate]));
+  const outputCandidateIds = new Set(receipt.inventory.items.flatMap((item) => item.outcome === "materialized"
+    ? item.outputs.map((output) => output.candidateId) : []));
+  const conceptCount = [...outputCandidateIds].filter((id) => candidates.get(id)?.disposition === "concept").length;
+  const embeddedCount = [...outputCandidateIds].filter((id) => candidates.get(id)?.disposition === "embedded").length;
+  const covered = receipt.coverage.lanes.filter((lane) => lane.status !== "limited").length;
+  const summary = `Init at source ${receipt.source.commit}: ${conceptCount} concept output(s), ${embeddedCount} embedded output(s), ${questionCount} Question(s), ${covered}/${receipt.coverage.lanes.length} discovery lanes assessed; ${receipt.coverage.limitations.length} limitation(s).`;
+  fs.mkdirSync(path.dirname(target), { recursive: true, mode: 0o700 });
+  const current = fs.existsSync(target) ? fs.readFileSync(target, "utf8") : undefined;
+  fs.writeFileSync(target, appendKnowledgeActivity(current, {
+    date: session.createdAt.slice(0, 10), summary,
+  }), { mode: 0o600 });
+  return relative;
+}
+
+function receiptInspectionContext(
+  session: HubAuthoringSession,
+  root: string,
+  questionIds: readonly string[],
+): NonNullable<HubProposalInspection["discovery"]> {
+  const receipt = session.discoveryReceipt!;
+  const candidates = new Map(receipt.guidanceRequest.candidates.map((candidate) => [candidate.id, candidate]));
+  const embeddedGroups = [...new Set(receipt.inventory.items.filter((item) => item.outcome === "materialized")
+    .flatMap((item) => item.outputs.filter((output) => candidates.get(output.candidateId)?.disposition === "embedded")
+      .map((output) => candidates.get(output.candidateId)?.identityHint ?? output.candidateId)))]
+    .slice(0, 64);
+  const bundle = loadOkfBundle(root);
+  const relationsAndFlows = [...bundle.concepts.values()].filter((concept) => concept.type === "Flow"
+    || Array.isArray(concept.frontmatter.relationships) && concept.frontmatter.relationships.length > 0)
+    .map((concept) => concept.conceptId).sort().slice(0, 64);
+  return {
+    sourceRevision: receipt.source.commit,
+    lanes: receipt.coverage.lanes,
+    embeddedGroups,
+    relationsAndFlows,
+    questions: [...questionIds].slice(0, 64),
+    ignoredCounts: receipt.coverage.ignoredCounts,
+    ignoredReasons: Object.keys(receipt.coverage.ignoredCounts).sort(),
+    limitations: receipt.coverage.limitations,
+  };
+}
+
 function recordSuccessfulObservation(session: HubAuthoringSession): void {
   const bundle = loadOkfBundle(session.bundleRoot, { requireAgentBaseRootIndex: true });
   const repository = [...bundle.concepts.values()].find((concept) =>
@@ -290,9 +575,13 @@ export function finalizeHubAuthoringSession(
   removals: readonly HubRemovalDeclaration[] = [],
   currentSourceState?: HubAuthoringSourceState,
   currentHubHead?: string,
+  terminalizeReceipt = true,
 ): Readonly<{ result: "no_change"; inspection: HubProposalInspection; observedSource: HubAuthoringSourceState & Readonly<{ observedAt: string }> }
   | { proposal: AnyHubProposal; inspection: HubProposalInspection; observedSource: HubAuthoringSourceState & Readonly<{ observedAt: string }> }> {
   const session = readHubAuthoringSession(stateRoot, sessionId, expectedCheckoutRoot);
+  if ((session.finalizeFailures ?? 0) >= 2) {
+    throw new Error("Initial Ingest is incomplete after its one repair attempt; start a new authoring session");
+  }
   if (currentHubHead !== undefined && currentHubHead !== session.baseCommit) {
     throw new Error("Hub authoring base changed after Prepare");
   }
@@ -313,6 +602,8 @@ export function finalizeHubAuthoringSession(
     inspection?: HubProposalInspection;
     diff?: Readonly<{ entries: readonly HubChangeEntry[] }>;
   }>;
+  let receiptQuestionIds: readonly string[] = [];
+  let activityPath: string | undefined;
   try {
     assertQuestionAuthoringUntouched(session.baseRoot, session.bundleRoot);
     if (session.mode === "refresh"
@@ -321,15 +612,24 @@ export function finalizeHubAuthoringSession(
       recordSuccessfulObservation(session);
     }
     normalizeAuthoredObservations(session, normalizedRoot, removals);
+    restoreReceiptEmbeddedKnowledge(session, normalizedRoot);
     validateCurrentRepositorySources(session, normalizedRoot);
     const observations = [...loadOkfBundle(normalizedRoot).concepts.values()]
       .flatMap((concept) => readObservedValues(concept));
-    const declarations = validateQuestionDeclarations(questions, observations, session.sourceRepositoryId);
-    const materializedQuestions = materializeQuestionDeclarations(
-      session.baseRoot, normalizedRoot, declarations, observations, session.createdAt,
-    );
-    const questionPaths = declarations.length ? ["questions/index.md",
+    if (session.discoveryReceipt && (questions.length || removals.length)) {
+      throw new Error("receipt-bound Initial Ingest derives Questions and does not accept caller Questions or removals");
+    }
+    if (session.discoveryReceipt) validateReceiptMaterialization(session, normalizedRoot);
+    const declarations = session.discoveryReceipt ? []
+      : validateQuestionDeclarations(questions, observations, session.sourceRepositoryId);
+    const materializedQuestions = session.discoveryReceipt
+      ? materializeReceiptQuestionPlans(normalizedRoot, session.discoveryReceipt, session.skeletons ?? [], session.createdAt)
+      : materializeQuestionDeclarations(session.baseRoot, normalizedRoot, declarations, observations, session.createdAt);
+    const questionPaths = materializedQuestions.length ? ["questions/index.md",
       ...materializedQuestions.map((question) => `questions/${question.id}.md`)] : [];
+    receiptQuestionIds = session.discoveryReceipt ? materializedQuestions.map((question) => question.id) : [];
+    activityPath = session.discoveryReceipt
+      ? writeRepositoryInitActivity(session, normalizedRoot, materializedQuestions.length) : undefined;
     const common = {
       baseCommit: session.baseCommit,
       sourceRepositoryId: session.sourceRepositoryId,
@@ -341,6 +641,7 @@ export function finalizeHubAuthoringSession(
       signals: session.signals,
       selectedSchemas: session.selectedSchemas,
       questionPaths,
+      ...(activityPath ? { activityPaths: [activityPath] } : {}),
       ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),
       createdAt: session.createdAt,
     };
@@ -357,6 +658,14 @@ export function finalizeHubAuthoringSession(
   } catch (error) {
     fs.rmSync(staging, { recursive: true, force: true });
     fs.rmSync(normalizedRoot, { recursive: true, force: true });
+    if (session.discoveryReceipt) {
+      const finalizeFailures = Math.min(2, (session.finalizeFailures ?? 0) + 1);
+      writeSession({ ...session, finalizeFailures });
+      if (finalizeFailures >= 2) {
+        throw new Error(`Initial Ingest remains incomplete after one repair: ${error instanceof Error ? error.message : "validation failed"}`);
+      }
+      throw new Error(`${error instanceof Error ? error.message : "Initial Ingest validation failed"}; one repair attempt remains`);
+    }
     throw error;
   }
   fs.rmSync(normalizedRoot, { recursive: true, force: true });
@@ -370,13 +679,20 @@ export function finalizeHubAuthoringSession(
       observedSource: { ...session.sourceState, observedAt: session.createdAt } };
   }
   const reviewed = { proposal: finalized.proposal,
-    inspection: attachHubInspectionContext(inspection, questions, session.coverage) };
+    inspection: attachHubInspectionContext(inspection, questions, session.coverage,
+      session.discoveryReceipt && activityPath ? {
+        discovery: receiptInspectionContext(session, finalized.bundleRoot, receiptQuestionIds),
+        activity: { repositoryLog: activityPath, domainLog: null },
+      } : {}) };
   fs.cpSync(session.baseRoot, path.join(staging, "base"), { recursive: true, errorOnExist: true, force: false });
   fs.writeFileSync(path.join(staging, "inspection.json"), `${JSON.stringify(reviewed.inspection, null, 2)}\n`, { mode: 0o600 });
   fs.writeFileSync(path.join(staging, "runtime.json"), `${JSON.stringify({ checkoutRoot: session.checkoutRoot })}\n`, { mode: 0o600 });
   const proposalRoot = path.join(path.resolve(stateRoot), "proposals", reviewed.proposal.id);
   if (fs.existsSync(proposalRoot)) throw new Error("finalized Hub proposal already exists");
   fs.renameSync(staging, proposalRoot);
+  if (session.discoveryReceipt && terminalizeReceipt) {
+    writeReceiptTerminal(stateRoot, session.discoveryReceipt, reviewed.proposal.id);
+  }
   fs.rmSync(session.root, { recursive: true, force: true });
   return { ...reviewed, observedSource: { ...session.sourceState, observedAt: session.createdAt } };
 }

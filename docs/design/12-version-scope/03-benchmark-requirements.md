@@ -307,6 +307,32 @@ benchmarks.
   report separates OKF/MCP defects from benchmark defects and states improvement,
   regression, elapsed time and token use versus the prior accepted run. Token
   cost is measured before setting a product budget or narrowing discovery.
+- **AB-BENCH-076** — The failed V18 released-skill probe remains immutable
+  evidence of the manual Question source-reference defect. Its corrected
+  behavior uses new immutable prompt identity V19, the same fixture/model/run
+  policy and a fresh probe. Skill workspaces explicitly permit the installed
+  `.agents/` directory; if proposal output is absent, reporting names missing
+  `okf/` rather than claiming installed skills are forbidden. A replica remains
+  conditional on the fresh probe having no clear blocker.
+- **AB-BENCH-077** — The failed V19 released-skill probe remains immutable
+  evidence of over-strict Agent-authored Inventory mechanics. The normalized
+  three-outcome Inventory contract uses new immutable prompt identity V20 with
+  the same fixture, Sol model and sequential gate. The report must call out
+  whether mechanical ID, mixed concept/embedded output, bounded-sample evidence
+  or hidden sequential validation failures recur. A replica runs only after one
+  valid proposal without a clear blocker.
+- **AB-BENCH-078** — The failed V20 probe remains immutable evidence that exact
+  identity-hint substring matching is an invalid embedded-materialization gate.
+  Evidence-based Finalize uses new immutable prompt identity V21 with the same
+  fixture, Sol model and sequential gate. It must reach one valid proposal
+  without requiring the embedded label to equal the candidate hint; a replica
+  remains conditional on that first result having no clear blocker.
+- **AB-BENCH-079** — The failed V21 probe remains immutable evidence that merely
+  detecting an Agent-dropped embedded row still wastes the single repair budget.
+  Receipt-owned embedded normalization uses new immutable prompt identity V22
+  with the same fixture, Sol model and sequential gate. It must restore a
+  missing embedded row before Finalize validation; a replica remains conditional
+  on one valid first proposal without a clear blocker.
 
 ## Context A/B interpretation
 

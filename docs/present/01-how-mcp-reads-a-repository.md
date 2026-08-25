@@ -1,8 +1,8 @@
 # 01 — MCP đọc một dự án như thế nào?
 
-> Trạng thái: Local Code Graph đã implement. Capability 046 đã chốt thiết kế
-> broad discovery/selective OKF và remote-default source isolation; implementation
-> delta chưa triển khai.
+> Trạng thái: Local Code Graph và Capability 046 broad discovery/selective OKF,
+> remote-default source isolation đã implement; released-skill qualification
+> còn pending.
 
 ## Câu trả lời ngắn
 

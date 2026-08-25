@@ -80,7 +80,7 @@ test("[AB-INSTALL-025..031][AB-QUESTION-006] installs only product skills with s
     args: [], input: { isTTY: false }, output: { isTTY: false, write() {} }, environment: preparedEnvironment,
     runRegistryResolution: async () => { preparationOrder.push("registry"); return "https://registry.company.example/"; },
     runDependencyInstall: async () => { preparationOrder.push("dependencies"); },
-    runProviderPreparation: async () => { preparationOrder.push("provider"); },
+    runProviderActivation: async () => { preparationOrder.push("provider"); },
     runProductSkillInstallation: async () => { skillInstallCalled = true; },
   });
   assert.deepEqual(preparationOrder, ["registry", "dependencies", "provider"]);
@@ -93,9 +93,9 @@ test("[AB-INSTALL-025..031][AB-QUESTION-006] installs only product skills with s
     args: [], input: { isTTY: false }, output: { isTTY: false, write() {} }, environment: environment(),
     runRegistryResolution: async () => "https://registry.company.example/",
     runDependencyInstall: async () => {},
-    runProviderPreparation: async () => { throw new Error("provider preparation failed"); },
+    runProviderActivation: async () => { throw new Error("provider activation failed"); },
     runProductSkillInstallation: async () => { mutationAfterFailure = true; },
-  }), /provider preparation failed/);
+  }), /provider activation failed/);
   assert.equal(mutationAfterFailure, false);
   let registryChecked = false;
   await assert.rejects(runInstaller({
@@ -110,6 +110,6 @@ test("[AB-INSTALL-025..031][AB-QUESTION-006] installs only product skills with s
   await assert.rejects(runInstaller({
     args: ["--replace-token"], input: { isTTY: false }, output: { isTTY: false, write() {} },
     environment: environment(), runRegistryResolution: async () => "https://registry.company.example/",
-    runDependencyInstall: async () => {}, runProviderPreparation: async () => {},
+    runDependencyInstall: async () => {}, runProviderActivation: async () => {},
   }), /accepts no arguments/);
 });

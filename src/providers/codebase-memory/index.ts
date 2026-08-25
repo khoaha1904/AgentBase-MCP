@@ -100,7 +100,23 @@ export async function createScopedCodebaseMemoryProvider(options: ScopedCodebase
 
 export { CodebaseMemoryAdapter, indexRepository, type CodebaseMemoryAdapterOptions, type ProviderInvoker } from "./adapter.ts";
 export { CodebaseMemoryError, type CodebaseMemoryErrorCode } from "./errors.ts";
-export { resolveOwnedRuntime, type OwnedRuntime, type OwnedRuntimeOptions } from "./owned-runtime.ts";
+export {
+  parseArchitectureCapture,
+  parseCoveragePage,
+  parseIndexDiagnostic,
+  type ArchitectureCapture,
+  type CoverageEntry,
+  type CoveragePage,
+  type IndexDiagnostic,
+} from "./response-parser.ts";
+export {
+  ownedRuntimeTarget,
+  resolveOwnedRuntime,
+  verifyOwnedRuntimeBundle,
+  type OwnedRuntime,
+  type OwnedRuntimeBundleOptions,
+  type OwnedRuntimeOptions,
+} from "./owned-runtime.ts";
 export {
   openScopedSession,
   type ProviderCleanup,

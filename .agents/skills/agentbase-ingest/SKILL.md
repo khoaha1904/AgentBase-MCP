@@ -19,8 +19,11 @@ This workflow uses `preflight_hub_ingest`, the tools named by
    Call `preflight_hub_ingest`, compare the repository documents with returned
    Domain summaries, show evidence and warnings, then obtain one explicit
    primary-Domain confirmation.
-2. **Discover** — Follow `use-codebase-memory` for one repository map and one
-   bounded architecture pass. Reuse a fresh graph; never ingest graph records.
+2. **Discover** — Index exactly the `analysis_source_repository` returned by
+   Preflight and follow `use-codebase-memory`. The index call appends one
+   bounded Discovery Seed after its fixed diagnostic/architecture/census pass.
+   If the Seed is not `ready`, stop Incomplete. Reuse its graph; never ingest
+   graph records or raw Seed rows.
 3. **Investigate** — Detect technology, then decide promotion before selecting
    a schema. A standalone candidate needs stable identity and an independent query/link value,
    plus an evidenced deployment, ownership, contract, cross-boundary,
@@ -43,21 +46,33 @@ This workflow uses `preflight_hub_ingest`, the tools named by
    trigger, state and delivery sequence embedded; create a Flow only when it
    adds independent query or navigation value. This is an authoring heuristic,
    not a fixed concept-count rule.
-4. **Author** — Call `get_okf_authoring_schemas` with the qualified
-   candidates plus exact semantic/resource observations. Every candidate declares
+4. **Author** — Build one Inventory covering every Seed group without changing
+   MCP-owned lane, priority or group IDs. Give each group exactly one
+   `materialized`, `question` or `ignored` outcome. A materialized item names
+   only `candidate_ids`; candidate records already declare concept/embedded and
+   parent. Put Question data directly in its origin item and select only
+   `candidate_key + evidence_id` already present in the same guidance request.
+   P0 may be ignored only as `duplicate-covered` naming a materialized
+   `covered_by_origin_group_id`. Never create item/QuestionPlan IDs, output
+   parents, item evidence lists, repository source resources or revisions; MCP
+   derives all of them. Call `get_okf_authoring_schemas` with that Inventory, the qualified
+   candidates and exact semantic/resource observations. Every candidate declares
    `disposition: concept` or `disposition: embedded`; embedded candidates have
-   no `suggested_type`. Each evidence ID is
-   owned by one candidate: a candidate may cite only observations whose
-   `candidate_id` equals that candidate's `id`. For a semantic-only candidate,
+   no `suggested_type`. A valid embedded candidate remains parent-owned even
+   when no released provider profile identifies its technology; keep the
+   returned provider-neutral limitation. An observation's `candidate_id` is its primary
+   attribution; standalone candidates may share known observations, while an
+   embedded candidate cites only its own observations. For a semantic-only candidate,
    include one released provider-neutral `suggested_type` to expose the agent's
    intended role. Standalone `Interface` or `Resource` intent also requires a
    compatible `promotion` basis and exact candidate-owned semantic
    `evidence_ids`; if that boundary is not evidenced, submit the knowledge as
    embedded in its useful parent. Treat a returned `suggested` role as reviewable, never exact;
    structured mapping wins and semantic keyword matches are diagnostic rather
-   than a pass/fail gate. Pass that same evidence-bearing
-   request to `prepare_hub_okf`; never replace it with free text `signals` or
-   supply an opaque evidence digest. For Initial Ingest, set
+   than a pass/fail gate. The successful call returns one
+   `discovery_receipt_id`. Pass only that Receipt ID, source repository,
+   subject and confirmed Domain to `prepare_hub_okf`; never resend mutable
+   guidance, coverage, signals or an evidence digest. For Initial Ingest, set
    `subject_directory` to one normalized `repositories/<repository-slug>` path;
    the confirmed Domain is not the proposal subject. Persist the confirmed
    primary Domain as an owner-evidenced `Repository part-of Domain` relation.
@@ -77,8 +92,11 @@ This workflow uses `preflight_hub_ingest`, the tools named by
    evidence; remove, embed or defer a candidate rather than inventing support.
    Do not retry ambiguous/unsupported recommendations or any internal,
    integrity, authority or transport failure.
-5. **Validate** — Run changed-set and final validation. Make at most one repair
-   from exact failures. Inspect and present the complete proposal diff,
+5. **Validate** — Run changed-set and final validation. Preserve prepared
+   `sources[].observed_revision`. Do not author `questions/` or the Repository
+   activity log; Finalize renders both from the Receipt. Make at most one repair
+   from exact failures. If Finalize returns a Hub-base replacement session,
+   continue from its new skeletons without rerunning source discovery. Inspect and present the complete proposal diff,
    Questions, limitations and partial-coverage status.
 
 ## Stop rules

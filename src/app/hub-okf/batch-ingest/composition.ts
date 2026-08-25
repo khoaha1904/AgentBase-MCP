@@ -4,8 +4,9 @@ import path from "node:path";
 
 import { createHubProposal, type AdmittedLocalHubState, type AnyHubProposal } from "../../../core/hub/index.ts";
 import {
-  AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, conceptReferencesRepository, diffBundleProposal, loadOkfBundle, parseConceptDocument,
-  prepareBundleProposal, renderConceptDocument, validateBundleProposal,
+  AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, conceptReferencesRepository, diffBundleProposal, loadOkfBundle,
+  parseConceptDocument, parseQuestionDocument, prepareBundleProposal, renderConceptDocument,
+  repositorySourceResources, validateBundleProposal,
 } from "../../../core/knowledge/index.ts";
 import { attachHubInspectionContext, inspectHubProposal, type HubProposalInspection } from "../review/inspect.ts";
 import { readHubProposalState, writeHubProposalState } from "../review/proposal-state.ts";
@@ -89,6 +90,7 @@ export function composeBatchProposal(options: Readonly<{
   const owners = new Map<string, string>(), sharedPaths = new Set<string>();
   const memberPaths = new Map(options.manifest.members.map((member) => [member.id, new Set<string>()]));
   const proposalDigests: string[] = [], limitations: string[] = [];
+  const memberDiscoveries = new Map<string, HubProposalInspection["discovery"]>();
   const domainPath = `${options.manifest.domain.identity}.md`;
   try {
     for (const member of options.manifest.members) {
@@ -114,6 +116,24 @@ export function composeBatchProposal(options: Readonly<{
         }
         const previousOwner = owners.get(relative);
         if (previousOwner) throw new Error(`batch members overlap authored path ${relative}: ${previousOwner}, ${member.id}`);
+        if (relative.endsWith(".md") && path.posix.basename(relative) !== "log.md") {
+          const concept = loadOkfBundle(proposedRoot).concepts.get(relative.slice(0, -3));
+          if (concept?.type === "Question") {
+            const crossMember = parseQuestionDocument(concept).references.some((reference) =>
+              reference.referenceKind === "candidate-evidence"
+              && !reference.sourceResource.startsWith(`repository://${member.repositoryId}/`));
+            if (crossMember) throw new Error(`batch member Question contains cross-member evidence: ${relative}`);
+          } else if (concept && repositorySourceResources(concept).some((resource) =>
+            !resource.startsWith(`repository://${member.repositoryId}/`))) {
+            throw new Error(`batch member concept contains cross-member evidence: ${relative}`);
+          }
+        }
+        const bytes = fs.readFileSync(path.join(proposedRoot, relative), "utf8");
+        const referencedRepositoryIds = [...bytes.matchAll(/repository:\/\/(repository-[a-z0-9-]+-[a-f0-9]{12})\//g)]
+          .map((match) => match[1]);
+        if (referencedRepositoryIds.some((id) => id !== member.repositoryId)) {
+          throw new Error(`batch member output contains cross-member repository evidence: ${relative}`);
+        }
         owners.set(relative, member.id);
         memberPaths.get(member.id)!.add(relative);
         const target = path.join(targetRoot, relative);
@@ -121,6 +141,10 @@ export function composeBatchProposal(options: Readonly<{
         fs.copyFileSync(path.join(proposedRoot, relative), target);
       }
       const inspection = JSON.parse(fs.readFileSync(path.join(proposalRoot, "inspection.json"), "utf8")) as HubProposalInspection;
+      if (inspection.discovery?.sourceRevision !== undefined && inspection.discovery.sourceRevision !== member.source.commit) {
+        throw new Error(`batch member discovery revision is stale: ${member.id}`);
+      }
+      if (inspection.discovery) memberDiscoveries.set(member.id, inspection.discovery);
       limitations.push(...(inspection.coverage?.limitations ?? []).map((value) => `${member.repositoryId}: ${value}`));
     }
     const evidenceDigest = `sha256:${createHash("sha256").update(JSON.stringify({
@@ -141,7 +165,9 @@ export function composeBatchProposal(options: Readonly<{
     });
     const inspection: HubProposalInspection = { ...ordinaryInspection, batch: {
       members: options.manifest.members.map((member) => ({ repositoryId: member.repositoryId,
-        paths: [...memberPaths.get(member.id)!].sort() })), sharedPaths: [...sharedPaths].sort(),
+        paths: [...memberPaths.get(member.id)!].sort(),
+        ...(memberDiscoveries.get(member.id) ? { discovery: memberDiscoveries.get(member.id) } : {}) })),
+      sharedPaths: [...sharedPaths].sort(),
     } };
     const diffDigest = `sha256:${createHash("sha256").update(JSON.stringify(inspection.entries)).digest("hex")}`;
     const common = { mode: "batch-new" as const, subject: options.manifest.domain.identity,

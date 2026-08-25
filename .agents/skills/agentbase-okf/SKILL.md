@@ -52,6 +52,9 @@ skill.
    lifecycle, failure/operational boundary, audience or important graph role.
    Do not turn every route, handler, function or infrastructure block into a
    concept merely because it is concrete.
+   Preserve exact `sources[].observed_revision`; a newer observation must use a
+   revision-distinct source ID. Receipt-bound Questions are renderer-owned and
+   must not be authored under `questions/`.
    For Refresh, investigate `sourceChanges`, then `continuity.knownGaps`, then
    one small discovery pass. Omitted files, old observations and search/graph
    absence preserve accepted knowledge. Declare destructive removal only at
@@ -60,8 +63,8 @@ skill.
    "0.2"` and links only existing Domain, System and Repository entrypoint
    indexes. Preserve every existing nonblank root/category index line exactly
    and in order; repository authoring may append navigation but must never
-   rename the Hub heading or restyle earlier entries. Consume an existing valid
-   `log.md`; do not generate one.
+   rename the Hub heading or restyle earlier entries. Never edit or generate
+   `log.md`; successful lifecycle Finalize owns its concise activity entry.
 6. Validate created/modified concepts with `validate_okf_changes`, supplying
    only their full Markdown plus unchanged target summaries from continuity or
    exact search/read. Read each changed file and send its complete Markdown

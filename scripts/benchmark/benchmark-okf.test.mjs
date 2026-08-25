@@ -4,11 +4,11 @@ import path from "node:path";
 import test from "node:test";
 
 import { parseConceptDocument } from "../../src/core/knowledge/index.ts";
-import { assessOwnerReviewUsefulness, classifyInitialIngest, createAuthoringAssessment,
+import { assessOwnerReviewUsefulness, classifyInitialIngest, createAuthoringAssessment, createRunRegression,
   createPairComparison, scoreSemanticBenchmark } from "./benchmark-okf.mjs";
 import {
   summarizeAgentEvents, validateBatchLifecycle, validateFinalChangeCoverage, validateRefreshKnowledge,
-  validateRefreshLifecycle, validateSkillInitialIngestLifecycle, validateV13Lifecycle,
+  validateReceiptDiscoveryLifecycle, validateRefreshLifecycle, validateSkillInitialIngestLifecycle, validateV13Lifecycle,
 } from "./benchmark-agent.mjs";
 
 const repositoryId = "repository-example-aaaaaaaaaaaa";
@@ -61,6 +61,16 @@ test("[AB-BENCH-023] hard failures, not incomplete coverage, invalidate authorin
   ].join("\n"));
   assert.equal(assessOwnerReviewUsefulness(new Map([[domain.conceptId, domain]])).status,
     "useful_for_owner_review");
+  const useful = "# Responsibility\n\nThis source-backed workload participates in the repository's primary orchestration flow.\n\n# Limitations\n\nRuntime deployment state is unknown.";
+  const parentedFunctions = [
+    concept("components/one.md", "Function", "one", {}, ["one.tf"], useful),
+    concept("components/two.md", "Function", "two", {}, ["two.tf"], useful),
+    concept("components/three.md", "Function", "three", {}, ["three.tf"], useful),
+    concept("flows/primary.md", "Flow", "primary-flow", {}, ["flow.tf"], useful),
+  ];
+  assert.equal(assessOwnerReviewUsefulness(new Map(
+    parentedFunctions.map((item) => [item.conceptId, item]),
+  )).findings.some((finding) => /Function concepts form an implementation inventory/.test(finding)), false);
 });
 
 test("[AB-BENCH-004][AB-BENCH-005] semantic scorer keeps quality metrics separate", () => {
@@ -78,6 +88,17 @@ test("[AB-BENCH-004][AB-BENCH-005] semantic scorer keeps quality metrics separat
   assert.equal(result.recognizedSchemaAgreementPercent, 100);
   assert.equal(result.metadataCompletenessPercent, 100);
   assert.equal(result.provenanceCoveragePercent, 100);
+
+  const question = concept("questions/pipeline-ownership.md", "Question", "data-pipeline-ownership", {}, ["README.md"]);
+  const missingSystem = scoreSemanticBenchmark({
+    version: 18,
+    concepts: [{ key: "data-pipeline-system", identityTerms: ["data", "pipeline"], type: "System",
+      requiredMetadata: [], requiredSourcePaths: [] }],
+    relationships: [],
+  }, { concepts: new Map([[question.conceptId, question]]), warnings: [] }, repositoryId);
+  assert.deepEqual(missingSystem.classifications.concepts.contradicted, []);
+  assert.deepEqual(missingSystem.classifications.concepts.missingReference, ["data-pipeline-system"]);
+  assert.equal(missingSystem.authoringAssessment.status, "reviewable");
 });
 
 test("[AB-BENCH-045] embedded infrastructure is scored through its useful parent", () => {
@@ -188,7 +209,7 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
     "get_hub_status", "configure_hub", "prepare_batch_hub_ingest", "confirm_batch_hub_ingest",
     "finalize_batch_hub_ingest_proposal", "inspect_hub_okf_proposal",
   ].map((tool) => [tool, 1]));
-  for (const tool of ["index_repository", "get_architecture", "get_okf_authoring_schemas",
+  for (const tool of ["preflight_hub_ingest", "index_repository", "get_okf_authoring_schemas",
     "prepare_hub_okf", "validate_okf_changes", "record_batch_hub_ingest_member"]) batchTools[tool] = 2;
   assert.deepEqual(validateBatchLifecycle(batchTools, 2), []);
   batchTools.get_okf_authoring_schemas = 3;
@@ -209,6 +230,59 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
   delete skillLifecycle.configure_hub;
   delete skillLifecycle.get_hub_status;
   assert.deepEqual(validateSkillInitialIngestLifecycle(skillLifecycle, corrected.attempts), []);
+});
+
+test("[AB-BENCH-046] released-skill trace proves source-to-Seed-to-Receipt handoff", () => {
+  const seedId = `discovery-seed-${"a".repeat(24)}`;
+  const groupId = `discovery-group-${"b".repeat(24)}`;
+  const receiptId = `discovery-receipt-${"c".repeat(24)}`;
+  const commit = "d".repeat(40);
+  const completed = (tool, argumentsValue, values) => JSON.stringify({
+    type: "item.completed",
+    item: { type: "mcp_tool_call", tool, arguments: argumentsValue, status: "completed",
+      result: { content: values.map((value) => ({ type: "text", text: JSON.stringify(value) })) } },
+  });
+  const summary = summarizeAgentEvents([
+    completed("index_repository", {}, [{ project: "fixture" }, { agentbase_discovery_seed: {
+      id: seedId, state: "ready", source: { commit }, groups: [{ id: groupId,
+        lane: "deploy-operations", priority: "p0", kind: "infrastructure-workload",
+        sources: [{ path: "main.tf", startLine: 1, endLine: 1 }], hints: ["do-not-copy"] }],
+    } }]),
+    completed("get_okf_authoring_schemas", { discovery_inventory: { seed_id: seedId,
+      items: [{ origin_group_id: groupId, outcome: "materialized" }] } }, [{ discovery_receipt_id: receiptId }]),
+    completed("prepare_hub_okf", { discovery_receipt_id: receiptId }, [{ sessionId: "session" }]),
+  ].join("\n"));
+  assert.deepEqual(summary.activity.discovery.seed.groups, [{ id: groupId, lane: "deploy-operations",
+    priority: "p0", kind: "infrastructure-workload", sourcePaths: ["main.tf"] }]);
+  assert.equal(JSON.stringify(summary.activity.discovery).includes("do-not-copy"), false);
+  assert.deepEqual(validateReceiptDiscoveryLifecycle(summary.activity.discovery,
+    [{ lane: "deploy-operations", priority: "p0", sourcePath: "main.tf" }], commit), []);
+  const broken = structuredClone(summary.activity.discovery);
+  broken.prepareReceiptId = `discovery-receipt-${"e".repeat(24)}`;
+  assert.match(validateReceiptDiscoveryLifecycle(broken, [], commit).at(-1), /exact frozen Discovery Receipt/);
+  const superseded = structuredClone(summary.activity.discovery);
+  delete superseded.inventory.items[0].outcome;
+  superseded.inventory.items[0].disposition = "concept";
+  assert.match(validateReceiptDiscoveryLifecycle(superseded, [], commit).at(0), /unsupported outcome/);
+  const currentMetrics = metrics("reviewable");
+  currentMetrics.initialIngestAcceptance = "valid_partial";
+  const priorMetrics = metrics("reviewable");
+  priorMetrics.initialIngestAcceptance = "review_ready";
+  const regression = createRunRegression(
+    { elapsedMs: 90, usage: { inputTokens: 110 }, discoveryQualification: { status: "passed" } },
+    currentMetrics,
+    { runId: "2026-08-24T000000Z", run: { elapsedMs: 100, usage: { inputTokens: 100 },
+      discoveryQualification: { status: "passed" } }, metrics: priorMetrics },
+  );
+  assert.deepEqual(regression.changes.elapsedMs, -10);
+  assert.match(regression.regressions[0], /acceptance declined/);
+  const qualificationRoot = path.resolve(import.meta.dirname, "..", "..", "benchmark", "repos", "initial-ingest-discovery-v1");
+  const qualification = JSON.parse(fs.readFileSync(path.join(qualificationRoot, "manifest.json"), "utf8"));
+  const qualificationExpectation = JSON.parse(fs.readFileSync(path.join(qualificationRoot, "expectation.json"), "utf8"));
+  assert.equal(qualification.promptVersion, "okf-author-v22");
+  assert.equal(qualification.agent.model, "gpt-5.6-sol");
+  assert.equal(qualification.repositories.length, 1);
+  assert.ok(qualificationExpectation.discoveryChecks.every((check) => check.priority === "p0"));
 });
 
 test("[AB-BENCH-013..017] pair comparison reports quality and efficiency without a winner", () => {

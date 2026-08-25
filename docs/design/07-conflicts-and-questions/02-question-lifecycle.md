@@ -171,9 +171,12 @@ scope và evidence resources; không cần placeholder concept.
 
 Capability 046 Initial Ingest mở rộng đường tạo này bằng private QuestionPlan
 trong Discovery Receipt: plan dùng đúng các kind/reference ở trên, bind target
-candidate/final subject, property/scope, source revision, missing evidence và
-limitations. Finalize chỉ render khi subject và evidence đã materialize; nếu
-không, uncertainty giữ dạng limitation. Agent không gửi final Question bytes.
+candidate/final subject, property/scope, missing evidence và limitations. Agent
+chỉ chọn candidate/evidence ID trong request hiện tại; MCP derive normalized
+source resource và exact revision từ observation + active SourceSnapshot rồi
+freeze existing `candidate-evidence` reference. Finalize chỉ render khi subject
+và evidence đã materialize; nếu không, uncertainty giữ dạng limitation. Agent
+không gửi URI/revision hoặc final Question bytes.
 
 ## Resolution
 

@@ -46,11 +46,12 @@ function title(value: string): string {
   return trimmed ? `${trimmed[0]!.toUpperCase()}${trimmed.slice(1)}` : "Concept";
 }
 
-function sourceMap(options: WriteInitialIngestSkeletonsOptions): ReadonlyMap<string, Readonly<{ id: string; resource: string }>> {
+function sourceMap(options: WriteInitialIngestSkeletonsOptions): ReadonlyMap<string, Readonly<{ id: string; resource: string; observed_revision?: string }>> {
   const entries = [...options.request.semanticObservations, ...options.request.resourceObservations].map((observation) => [
     observation.id, { id: observation.id.replaceAll(":", "-"), resource: createRepositorySourceResource(
       options.sourceRepositoryId, observation.source.path, observation.source.startLine, observation.source.endLine,
-    ) },
+    ), ...(typeof options.sourceState.commit === "string" && /^[a-f0-9]{40}$/.test(options.sourceState.commit)
+      ? { observed_revision: options.sourceState.commit } : {}) },
   ] as const);
   const ids = entries.map(([, source]) => source.id);
   if (new Set(ids).size !== ids.length) throw new Error("observation IDs must remain unique as OKF source IDs");
@@ -59,8 +60,8 @@ function sourceMap(options: WriteInitialIngestSkeletonsOptions): ReadonlyMap<str
 
 function candidateSources(
   candidate: ConceptCandidate,
-  sources: ReadonlyMap<string, Readonly<{ id: string; resource: string }>>,
-): readonly Readonly<{ id: string; resource: string }>[] {
+  sources: ReadonlyMap<string, Readonly<{ id: string; resource: string; observed_revision?: string }>>,
+): readonly Readonly<{ id: string; resource: string; observed_revision?: string }>[] {
   return candidate.evidenceIds.map((id) => sources.get(id)).filter((item): item is { id: string; resource: string } => Boolean(item));
 }
 
@@ -68,11 +69,23 @@ function tableCell(value: string): string {
   return value.replaceAll("|", "\\|").replaceAll("\r", " ").replaceAll("\n", " ").trim();
 }
 
+export function renderEmbeddedKnowledgeRow(
+  candidate: ConceptCandidate,
+  recommendation: OkfAuthoringGuidance["recommendations"][number],
+  exactSources: readonly Readonly<{ id: string; resource: string }>[],
+): string {
+  const technology = [
+    [recommendation.technology.provider, recommendation.technology.product].filter(Boolean).join(" / "),
+    [recommendation.technology.sourceTool, recommendation.technology.resourceType].filter(Boolean).join(":"),
+  ].filter(Boolean).join("; ") || "not identified";
+  return `| ${tableCell(candidate.identityHint)} | ${tableCell(candidate.queryValue)} | ${tableCell(recommendation.technology.kind ?? "resource")} | ${tableCell(technology)} | ${exactSources.map((source) => `${tableCell(source.id)}: \`${tableCell(source.resource)}\``).join("<br>")} |`;
+}
+
 function embeddedKnowledge(
   parentCandidateId: string,
   recommendations: OkfAuthoringGuidance["recommendations"],
   candidates: ReadonlyMap<string, ConceptCandidate>,
-  sources: ReadonlyMap<string, Readonly<{ id: string; resource: string }>>,
+  sources: ReadonlyMap<string, Readonly<{ id: string; resource: string; observed_revision?: string }>>,
 ): string {
   const rows = recommendations.filter((item) => item.status === "embedded" && item.parentCandidateId === parentCandidateId)
     .map((recommendation) => {
@@ -80,11 +93,7 @@ function embeddedKnowledge(
       if (!candidate) throw new Error(`embedded recommendation has unknown candidate: ${recommendation.candidateId}`);
       const exactSources = candidateSources(candidate, sources);
       if (!exactSources.length) throw new Error(`embedded recommendation requires exact sources: ${candidate.id}`);
-      const technology = [
-        [recommendation.technology.provider, recommendation.technology.product].filter(Boolean).join(" / "),
-        [recommendation.technology.sourceTool, recommendation.technology.resourceType].filter(Boolean).join(":"),
-      ].filter(Boolean).join("; ") || "not identified";
-      return `| ${tableCell(candidate.identityHint)} | ${tableCell(candidate.queryValue)} | ${tableCell(recommendation.technology.kind ?? "resource")} | ${tableCell(technology)} | ${exactSources.map((source) => `${tableCell(source.id)}: \`${tableCell(source.resource)}\``).join("<br>")} |`;
+      return renderEmbeddedKnowledgeRow(candidate, recommendation, exactSources);
     });
   return rows.length ? [
     "# Embedded Knowledge", "",

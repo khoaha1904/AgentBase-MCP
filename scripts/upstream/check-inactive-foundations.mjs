@@ -59,10 +59,10 @@ function verifyDiagramFoundation() {
 function verifyNoActivation() {
   const rootPackage = readJson("package.json");
   const declared = { ...rootPackage.dependencies, ...rootPackage.devDependencies };
-  assert.equal(rootPackage.dependencies.three, "0.183.0",
-    "the approved offline Domain-site renderer must pin exact Three.js");
+  assert.equal(rootPackage.dependencies.cytoscape, "3.34.2",
+    "the approved offline Domain-site renderer must pin exact Cytoscape.js");
   for (const name of Object.keys(declared)) {
-    if (name === "three") continue;
+    if (name === "cytoscape") continue;
     assert.doesNotMatch(name, /diagram-design|playwright|chromium|react|vite/,
       `unapproved visualization dependency leaked into AgentBase: ${name}`);
   }

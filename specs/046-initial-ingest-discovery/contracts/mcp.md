@@ -83,32 +83,30 @@ adds required `discovery_inventory`:
     "seed_id": "discovery-seed-<24 hex>",
     "items": [
       {
-        "id": "inventory-item-...",
         "origin_group_id": "discovery-group-...",
-        "disposition": "concept | embedded | question | ignored",
-        "outputs": [
-          {
-            "candidate_id": "required for concept/embedded",
-            "parent_candidate_id": "required for embedded output"
-          }
-        ],
-        "question_plan_id": "required for question",
-        "reason": "duplicate-covered for ignored P0",
-        "covered_by_item_id": "required for ignored P0",
-        "evidence_ids": ["required except a truthful limitation-only item"]
-      }
-    ],
-    "question_plans": [
+        "outcome": "materialized",
+        "candidate_ids": ["candidate-..."]
+      },
       {
-        "id": "question-plan-...",
-        "kind": "existing SharedQuestion kind",
         "origin_group_id": "discovery-group-...",
-        "target_candidate_id": "candidate-...",
-        "property": "bounded property",
-        "scope_key": "bounded scope",
-        "candidate_evidence": ["source/revision-bound references"],
-        "missing_evidence": ["bounded text"],
-        "limitations": []
+        "outcome": "question",
+        "question": {
+          "kind": "existing SharedQuestion kind",
+          "target_candidate_id": "candidate-...",
+          "property": "bounded property",
+          "scope_key": "bounded scope",
+          "candidate_evidence": [
+            { "candidate_key": "candidate-...", "evidence_id": "observation-..." }
+          ],
+          "missing_evidence": ["bounded text"],
+          "limitations": []
+        }
+      },
+      {
+        "origin_group_id": "discovery-group-...",
+        "outcome": "ignored",
+        "reason": "duplicate-covered or bounded reason",
+        "covered_by_origin_group_id": "required for ignored P0"
       }
     ],
     "limitations": []
@@ -121,17 +119,23 @@ Rules:
 - lane status and P0 priority are MCP-derived, not accepted from the caller;
 - every P0 Seed group covered exactly once and no coverage-group split/merge;
 - every origin group belongs to the active Seed;
-- concept/embedded candidate references must match existing guidance candidates;
+- materialized candidate references must match existing guidance candidates;
+  MCP derives concept/embedded disposition and embedded parent from them;
 - Question plans use existing SharedQuestion kinds and candidate-evidence;
+  caller selects only candidate/evidence IDs from this request, while MCP
+  derives canonical source resource and observed revision before Receipt freeze;
   unbindable uncertainty must become a limitation before Receipt freeze;
 - Question/Ignored items bypass schema selection; ignored P0 permits only
-  `duplicate-covered` targeting a non-ignored item that will materialize;
+  `duplicate-covered` targeting a materialized origin group;
+- caller does not supply private item/QuestionPlan IDs, output parents,
+  item-level evidence lists or item-ID cross-references;
 - generated/out-of-scope signals must be classified below P0 before the Seed;
   a later P0 classification conflict becomes a limitation or Incomplete;
 - source spans remain inside the active SourceSnapshot;
 - non-terminal paging cannot prove absence; P0-hiding diagnostics or more than
   64 P0 groups return Incomplete/`DISCOVERY_OVERFLOW`;
-- invalid coverage returns the existing retryable `INVALID_ARGUMENT` shape.
+- invalid coverage returns the existing retryable `INVALID_ARGUMENT` shape with
+  one bounded set of all detected caller-correctable Inventory defects.
 
 Successful Initial Ingest output adds:
 
@@ -189,7 +193,13 @@ Finalize also checks:
   is reported as `source-advanced` rather than rejected;
 - Hub base follows the stage-appropriate reconciliation contract;
 - every Receipt concept/embedded/QuestionPlan expectation materialized and each
-  Question target/source evidence resolves inside the proposal;
+  Question target/source evidence resolves inside the proposal; embedded output
+  is matched by exact candidate-owned repository evidence in its resolved parent,
+  not by an identity-hint substring;
+- before that check, missing embedded rows are restored from the frozen Receipt
+  in the normalized proposal without rereading graph/source or consuming repair;
+- explicit embedded candidates with valid parent/evidence return embedded even
+  without a provider mapping, with a bounded technology limitation;
 - authored/retained evidence remains bound to its observed source commit;
 - ignored groups remain bounded inspection metadata, not Hub documents;
 - activity log changes are generated and use valid Hub log grammar.

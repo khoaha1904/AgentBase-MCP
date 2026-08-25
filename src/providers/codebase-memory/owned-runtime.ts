@@ -30,6 +30,10 @@ export type OwnedRuntimeOptions = Readonly<{
   architecture?: string;
 }>;
 
+export type OwnedRuntimeBundleOptions = OwnedRuntimeOptions & Readonly<{
+  runtimeRoot: string;
+}>;
+
 function failure(code: "OWNED_RUNTIME_MISSING" | "OWNED_RUNTIME_INVALID" | "SOURCE_INTEGRITY_FAILED"
   | "PROFILE_INTEGRITY_FAILED" | "EXECUTABLE_INTEGRITY_FAILED" | "EXECUTABLE_IDENTITY_FAILED",
 operation: string, message: string, cause?: unknown): never {
@@ -124,24 +128,46 @@ function expectedSurface(projectRoot: string): Readonly<{ manifest: string; sche
   return { manifest: sha256File(file), schema: sha256(canonical(selected)) };
 }
 
-function target(platform: NodeJS.Platform, architecture: string): string {
+export function ownedRuntimeTarget(platform: NodeJS.Platform, architecture: string): string {
   if (platform === "linux" && architecture === "x64") return "linux-x64";
   if (platform === "darwin" && architecture === "arm64") return "darwin-arm64";
   throw new CodebaseMemoryError("UNSUPPORTED_PLATFORM", "admit-owned-runtime", `unsupported platform: ${platform}-${architecture}`);
 }
 
-export async function resolveOwnedRuntime(options: OwnedRuntimeOptions): Promise<OwnedRuntime> {
+export async function verifyOwnedRuntimeBundle(options: OwnedRuntimeBundleOptions): Promise<OwnedRuntime> {
   const projectRoot = fs.realpathSync(options.projectRoot);
   const platform = options.platform ?? process.platform;
   const architecture = options.architecture ?? process.arch;
-  const platformTarget = target(platform, architecture);
+  ownedRuntimeTarget(platform, architecture);
   const vendorRoot = path.join(projectRoot, "vendor/codebase-memory");
   const sourceDigest = verifySource(vendorRoot);
   const profile = expectedProfile(vendorRoot);
   const surface = expectedSurface(projectRoot);
-  const runtimeRoot = path.join(projectRoot, "build/providers/codebase-memory", platformTarget);
+  const runtimeRoot = path.resolve(options.runtimeRoot);
+  if (!runtimeRoot.startsWith(`${projectRoot}${path.sep}`)) {
+    failure("OWNED_RUNTIME_INVALID", "admit-owned-runtime", "owned provider artifact root is outside AgentBase");
+  }
+  let runtimeMetadata: fs.Stats, runtimeLinkMetadata: fs.Stats;
+  try {
+    runtimeLinkMetadata = fs.lstatSync(runtimeRoot);
+    runtimeMetadata = fs.statSync(runtimeRoot);
+  } catch (cause) {
+    return failure("OWNED_RUNTIME_MISSING", "admit-owned-runtime", "owned provider artifact root is missing", cause);
+  }
+  if (runtimeLinkMetadata.isSymbolicLink() || !runtimeMetadata.isDirectory()) {
+    failure("OWNED_RUNTIME_INVALID", "admit-owned-runtime", "owned provider artifact root must be a regular directory");
+  }
   const manifestFile = path.join(runtimeRoot, "artifact-manifest.json");
   const executable = path.join(runtimeRoot, PROVIDER);
+  if (!fs.existsSync(manifestFile) || !fs.existsSync(executable)) {
+    failure("OWNED_RUNTIME_MISSING", "admit-owned-runtime",
+      "owned provider artifact executable or manifest is missing");
+  }
+  const entries = fs.readdirSync(runtimeRoot).sort();
+  if (entries.length !== 2 || entries[0] !== "artifact-manifest.json" || entries[1] !== PROVIDER) {
+    failure("OWNED_RUNTIME_INVALID", "admit-owned-runtime",
+      "owned provider artifact root must contain only the executable and artifact manifest");
+  }
   const manifest = readJson(manifestFile, "admit-owned-runtime");
   const expected = {
     schema_version: 1, provider: PROVIDER, provider_version: PROVIDER_VERSION,
@@ -192,4 +218,13 @@ export async function resolveOwnedRuntime(options: OwnedRuntimeOptions): Promise
       invocationMode: "one-shot-cli",
     },
   };
+}
+
+export async function resolveOwnedRuntime(options: OwnedRuntimeOptions): Promise<OwnedRuntime> {
+  const projectRoot = fs.realpathSync(options.projectRoot);
+  const platform = options.platform ?? process.platform;
+  const architecture = options.architecture ?? process.arch;
+  const platformTarget = ownedRuntimeTarget(platform, architecture);
+  return verifyOwnedRuntimeBundle({ ...options, projectRoot,
+    runtimeRoot: path.join(projectRoot, "build/providers/codebase-memory", platformTarget) });
 }

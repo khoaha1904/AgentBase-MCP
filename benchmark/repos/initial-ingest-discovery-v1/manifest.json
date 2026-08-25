@@ -1,0 +1,28 @@
+{
+  "suite": "initial-ingest-discovery-v1",
+  "version": 1,
+  "catalogVersion": "7.0.0",
+  "promptVersion": "okf-author-v22",
+  "agent": {
+    "provider": "codex-cli",
+    "executable": "codex",
+    "version": "codex-cli 0.149.0",
+    "model": "gpt-5.6-sol",
+    "reasoningEffort": "medium",
+    "timeoutMs": 900000
+  },
+  "repositories": [
+    {
+      "id": "serverless-data-pipelines-demo",
+      "kind": "terraform-data-crawler",
+      "path": "../fixtures/source-repos/serverless-data-pipelines-demo",
+      "commit": "1483d3869ecc148195bce092900d8556332db609",
+      "confirmedDomain": {
+        "identity": "domains/crawler",
+        "title": "Crawler",
+        "evidenceResource": "agentbase://owner-guidance/domains/crawler"
+      },
+      "expectation": "expectation.json"
+    }
+  ]
+}

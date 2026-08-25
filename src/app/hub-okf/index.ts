@@ -53,6 +53,8 @@ export {
 export {
   beginHubAuthoringSession,
   finalizeHubAuthoringSession,
+  materializeInitialIngestSessionSkeletons,
+  markInventoryReceiptFinalized,
   readHubAuthoringSession,
   type BeginHubAuthoringOptions,
   type HubAuthoringSession,
@@ -114,7 +116,7 @@ export {
   type HubOkfToolName,
   type HubToolActions,
 } from "./mcp/mcp-tools.ts";
-export { createHubRuntimeActions, tryCreateHubRuntimeActions } from "./query/runtime-actions.ts";
+export { createHubRuntimeActions, defaultHubRuntimeStateRoot, tryCreateHubRuntimeActions } from "./query/runtime-actions.ts";
 export {
   finalizeDomainEnrichment, prepareDomainEnrichment, runDomainEnrichment,
   type EnrichmentAnswer, type EnrichmentRunState,

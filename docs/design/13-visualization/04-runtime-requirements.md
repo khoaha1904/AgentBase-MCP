@@ -14,12 +14,16 @@
   Sequence from one bounded packet and returns visible insufficiency instead of
   hallucinating required edges or steps.
 - **AB-VIS-006** — `agentbase-domain-site` requires explicit invocation and
-  builds one static 3D site for exactly one Domain and Published commit.
+  builds one static 2D site for exactly one Domain and Published commit. It has
+  no second 3D mode.
 - **AB-VIS-007** — Generated Domain sites include local assets and a digest-bound
   build receipt, contain no credential/live endpoint/local source path, and need
-  no MCP or network source after generation.
+  no MCP or network source after generation. Browser resource URLs bind the
+  exact generator version and Published commit so one rendered page never mixes
+  files from different builds.
 - **AB-VIS-008** — Domain sites expose search, filters, 1–2 hop focus, node
-  details and lazy concept expansion while Questions remain badges by default.
+  details, lazy concept expansion and a default-off Flow-step toggle while
+  Questions remain badges by default.
 - **AB-VIS-009** — AgentBase adds at most one goal-level visualization MCP tool,
   two public skills and one internal renderer skill; no raw traversal/layout
   tools, database, watcher, daemon or live server are added.

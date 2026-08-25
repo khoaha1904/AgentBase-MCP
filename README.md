@@ -12,8 +12,10 @@ query reads only the synchronized Published commit.
 
 ## Install and verify
 
-Requires an approved Node.js `>=24.12 <25`, Git, Make, a C/C++ compiler and the
-platform system development libraries used by the owned Code Graph build.
+Requires an approved Node.js `>=24.12 <25` and the configured company npm
+registry. The repository already carries the reviewed Code Graph bundle for
+each released platform; ordinary users do not install Make, a compiler, zlib
+development headers or run a separate provider command.
 
 ```bash
 ./install.sh
@@ -28,8 +30,8 @@ AgentBase product skills for every selected client. Repository-development
 same-name MCP entry or skill fails before replacement. Hub token input is not
 part of installation; a Hub profile stores its token later through the
 masked terminal helper outside Git. Non-interactive installation prepares
-dependencies and the owned native Code Graph provider but performs no skill or
-client mutation. npm dependencies use only the configured HTTPS registry;
+dependencies and activates the bundled native Code Graph provider but performs
+no skill or client mutation. npm dependencies use only the configured HTTPS registry;
 public registry fallback is rejected.
 
 The released catalog has nine public workflows—Ask, Scan, Ingest, Refresh, Batch

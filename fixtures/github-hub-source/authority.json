@@ -1,0 +1,14 @@
+{
+  "repository": {
+    "full_name": "acme/source",
+    "default_branch": "main"
+  },
+  "head": {
+    "branch": "main",
+    "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "advanced_head": {
+    "branch": "main",
+    "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+}

@@ -3,8 +3,9 @@ import path from "node:path";
 
 import type { AdmittedLocalHubState } from "../../../core/hub/index.ts";
 import type { ConfirmedDomain } from "../../../core/knowledge/index.ts";
-import { finalizeHubAuthoringSession, readHubAuthoringSession } from "../authoring/authoring-session.ts";
-import type { QuestionDeclaration } from "../authoring/questions.ts";
+import {
+  finalizeHubAuthoringSession, markInventoryReceiptFinalized, readHubAuthoringSession,
+} from "../authoring/authoring-session.ts";
 import { writeAtomicJson } from "../review/proposal-state.ts";
 import { composeBatchProposal } from "./composition.ts";
 import {
@@ -19,6 +20,12 @@ export type BatchMemberCheckpoint = Readonly<{
   attempt: number;
   status: "pending" | "complete" | "failed";
   source: BatchSourceState;
+  sessionId?: string;
+  seedDigest?: string;
+  receiptId?: string;
+  receiptDigest?: string;
+  coverage?: Readonly<{ lanes: readonly Readonly<{ lane: string; status: string }>[];
+    limitations: readonly string[]; ignoredCounts: Readonly<Record<string, number>> }>;
   proposalRoot?: string;
   proposalId?: string;
   error?: string;
@@ -34,7 +41,14 @@ function readCheckpoint(stateRoot: string, manifestId: string, memberId: string)
   const value = JSON.parse(fs.readFileSync(target, "utf8")) as BatchMemberCheckpoint;
   if (value.formatVersion !== 1 || value.manifestId !== manifestId || value.memberId !== memberId
     || !Number.isSafeInteger(value.attempt) || value.attempt < 1
-    || !["pending", "complete", "failed"].includes(value.status)) throw new Error("batch member checkpoint is invalid");
+    || !["pending", "complete", "failed"].includes(value.status)
+    || value.sessionId !== undefined && !/^hub-session-[a-f0-9]{24}$/.test(value.sessionId)
+    || value.seedDigest !== undefined && !/^sha256:[a-f0-9]{64}$/.test(value.seedDigest)
+    || value.receiptId !== undefined && !/^discovery-receipt-[a-f0-9]{24}$/.test(value.receiptId)
+    || value.receiptDigest !== undefined && !/^sha256:[a-f0-9]{64}$/.test(value.receiptDigest)
+    || [value.seedDigest, value.receiptId, value.receiptDigest].filter((item) => item !== undefined).length % 3 !== 0) {
+    throw new Error("batch member checkpoint is invalid");
+  }
   return value;
 }
 
@@ -101,7 +115,6 @@ export function recordBatchMember(options: Readonly<{
   memberId: string;
   sessionId: string;
   currentSource: BatchSourceState;
-  questions?: readonly QuestionDeclaration[];
 }>): Readonly<{ status: "complete"; checkpoint: BatchMemberCheckpoint }
   | { status: "failed"; checkpoint: BatchMemberCheckpoint }> {
   const manifest = readBatchManifest(options.stateRoot, options.manifestId, options.manifestRevision);
@@ -110,14 +123,21 @@ export function recordBatchMember(options: Readonly<{
   if (!member) throw new Error("batch member is not in the current manifest");
   const session = readHubAuthoringSession(options.stateRoot, options.sessionId, options.localHub.root);
   if (session.mode !== "new" || session.baseCommit !== manifest.baseCommit
-    || session.sourceRepositoryId !== member.repositoryId || path.resolve(session.sourceRepositoryRoot) !== path.resolve(member.root)
+    || session.sourceRepositoryId !== member.repositoryId || path.resolve(session.sourceRepositoryRoot) !== path.resolve(member.analysisRoot)
     || !sameSource(session.sourceState, member.source) || !sameSource(options.currentSource, member.source)
     || session.confirmedDomain?.identity !== manifest.domain.identity) throw new Error("authoring session does not match exact batch member inputs");
+  if (!session.discoveryReceipt
+    || session.discoveryReceipt.source.repositoryId !== member.repositoryId
+    || session.discoveryReceipt.source.commit !== member.source.commit
+    || session.discoveryReceipt.publishedBase !== manifest.baseCommit
+    || session.discoveryReceipt.digest !== session.evidenceDigest) {
+    throw new Error("batch member requires its own exact discovery Receipt");
+  }
   const previous = readCheckpoint(options.stateRoot, manifest.id, member.id), attempt = (previous?.attempt ?? 0) + 1;
   let generatedProposalRoot: string | undefined;
   try {
     const finalized = finalizeHubAuthoringSession(options.stateRoot, session.id, options.localHub.root,
-      options.questions ?? [], [], options.currentSource, options.localHub.activeHead);
+      [], [], options.currentSource, options.localHub.activeHead, false);
     if ("result" in finalized) throw new Error("Initial Ingest batch member cannot finalize as no-change");
     const proposalRoot = path.join(path.resolve(options.stateRoot), "proposals", finalized.proposal.id);
     generatedProposalRoot = proposalRoot;
@@ -126,8 +146,18 @@ export function recordBatchMember(options: Readonly<{
     fs.rmSync(retainedRoot, { recursive: true, force: true }); fs.mkdirSync(path.dirname(retainedRoot), { recursive: true, mode: 0o700 });
     fs.renameSync(proposalRoot, retainedRoot);
     generatedProposalRoot = undefined;
+    if (session.discoveryReceipt) {
+      try { markInventoryReceiptFinalized(options.stateRoot, session.discoveryReceipt, finalized.proposal.id); }
+      catch (error) { fs.rmSync(retainedRoot, { recursive: true, force: true }); throw error; }
+    }
     const checkpoint: BatchMemberCheckpoint = { formatVersion: 1, manifestId: manifest.id,
       memberId: member.id, attempt, status: "complete", source: member.source,
+      sessionId: session.id,
+      ...(session.discoveryReceipt ? { seedDigest: session.discoveryReceipt.seedDigest,
+        receiptId: session.discoveryReceipt.id, receiptDigest: session.discoveryReceipt.digest,
+        coverage: { lanes: session.discoveryReceipt.coverage.lanes,
+          limitations: session.discoveryReceipt.coverage.limitations,
+          ignoredCounts: session.discoveryReceipt.coverage.ignoredCounts } } : {}),
       proposalRoot: retainedRoot, proposalId: finalized.proposal.id };
     writeAtomicJson(checkpointPath(options.stateRoot, manifest.id, member.id), checkpoint);
     return { status: "complete", checkpoint };
@@ -136,6 +166,9 @@ export function recordBatchMember(options: Readonly<{
     fs.rmSync(session.root, { recursive: true, force: true });
     const checkpoint: BatchMemberCheckpoint = { formatVersion: 1, manifestId: manifest.id,
       memberId: member.id, attempt, status: "failed", source: member.source,
+      sessionId: session.id,
+      ...(session.discoveryReceipt ? { seedDigest: session.discoveryReceipt.seedDigest,
+        receiptId: session.discoveryReceipt.id, receiptDigest: session.discoveryReceipt.digest } : {}),
       error: error instanceof Error ? error.message : "batch member Finalize failed" };
     writeAtomicJson(checkpointPath(options.stateRoot, manifest.id, member.id), checkpoint);
     return { status: "failed", checkpoint };

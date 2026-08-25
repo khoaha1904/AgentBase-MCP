@@ -231,6 +231,10 @@ export function validateAgentBaseDraft(concept: ConceptDocument): readonly strin
         else if (entry.resource.startsWith("repository://") && !parseRepositorySourceResource(entry.resource)) {
           failures.push(`${concept.path}: repository source resource is not normalized`);
         }
+        if (entry?.observed_revision !== undefined
+          && (typeof entry.observed_revision !== "string" || !/^[a-f0-9]{40}$/.test(entry.observed_revision))) {
+          failures.push(`${concept.path}: source observed_revision must be an exact 40-hex commit`);
+        }
         if (entry?.id !== undefined) {
           const validId = typeof entry.id === "string"
             && /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(entry.id)

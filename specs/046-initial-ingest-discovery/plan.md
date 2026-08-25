@@ -2,19 +2,55 @@
 
 **Branch**: `046-initial-ingest-discovery` | **Date**: 2026-08-25 | **Spec**: [spec.md](spec.md)
 
-**Input**: Approved decisions D01–D34 in [decisions.md](decisions.md).
+**Input**: Approved decisions D01–D39 in [decisions.md](decisions.md).
 
 ## Summary
 
 Keep the five-stage Initial Ingest and catalog 7, but move selectivity after
 discovery. Preflight binds an exact remote-default source snapshot through a
-private mirror without mutating the user's checkout. After indexing, MCP runs
-one deterministic provider/census recipe to create a compact Discovery Seed.
+private mirror without mutating the user's checkout. After Init or Batch Init
+indexing, MCP runs one deterministic provider/census recipe to create a compact Discovery Seed.
 The Agent interprets its groups in an Inventory; MCP owns lane/P0 coverage,
 schema guidance freezes a Receipt and Prepare creates one idempotent authoring
 session from it. Validation proves Seed-to-OKF coverage and OKF integrity.
 Inspection and activity logs expose useful decisions without publishing raw
 graph/inventory state.
+
+The post-V18 correction keeps the durable Question model unchanged. The public
+QuestionPlan request selects `candidate_key + evidence_id`; the MCP adapter
+resolves that selection through the current guidance observations and active
+Seed into the existing exact candidate-evidence resource/revision before the
+core validates and freezes the Receipt. No URI parser, migration or new state is
+added. Benchmark behavior moves to immutable V19 and fixes only its misleading
+missing-output message.
+
+The post-V19 correction replaces the duplicated four-way Inventory item shape
+with three Agent-facing outcomes. Materialized items select candidate IDs;
+Question data is nested in its origin item; ignored P0 points to an origin group.
+The MCP adapter deterministically derives private item/QuestionPlan IDs, output
+disposition/parent and canonical Question provenance. Core Receipt validation
+uses normalized `materialized | question | ignored` items and no item-level
+evidence list. Seed source samples remain bounded diagnostics rather than an
+exhaustive allowlist. Private pre-proposal Receipts are rebuildable and receive
+no migration; Hub/OKF bytes do not change. V19 stays immutable and qualification
+moves to V20.
+
+The post-V20 correction keeps embedded output human-readable while making its
+machine identity evidence-based. Finalize resolves the Receipt parent and
+requires at least one exact repository resource derived from the embedded
+candidate's owned evidence. It no longer compares label/prose with an identity
+hint. V20 stays immutable and qualification moves to V21.
+
+The post-V21 correction moves the remaining embedded-row mechanic fully into
+MCP. Finalize preserves any evidence-bearing authored row and restores only
+missing rows from the frozen Receipt before materialization validation. It does
+not reread source/graph or spend the Agent repair budget. V21 stays immutable
+and qualification moves to V22.
+
+The same boundary audit removes one latent contradiction: an explicit embedded
+candidate no longer becomes unsupported merely because technology detection
+has no provider mapping. It remains parent-owned provider-neutral knowledge with
+a limitation. Standalone schema intent keeps the existing unsupported gate.
 
 ## Technical Context
 
@@ -38,8 +74,8 @@ unchanged
 cache; compact repeated signals before model context; measure real Sol elapsed
 time/tokens before setting numeric budgets
 
-**Constraints**: No new public tool, schema, provider, model router, daemon,
-watcher, database, source-repository control mutation, provider CLI call,
+**Constraints**: No new public tool, concept role/catalog expansion, provider,
+model router, daemon, watcher, database, source-repository control mutation, provider CLI call,
 automatic Accept or Publish; same-host Hub token is the only network credential;
 ordinary query receives no remote-source materialization authority
 
@@ -56,10 +92,10 @@ ordinary query receives no remote-source materialization authority
   authority, token-bound and worktree-isolated; Code Intelligence remains local.
 - **Agent-Navigable Ownership — PASS**: source snapshot, gateway capture,
   discovery state, authoring and review retain separate existing owners.
-- **Cumulative Knowledge — PASS**: dispositions prevent silent omission without
+- **Cumulative Knowledge — PASS**: outcomes prevent silent omission without
   turning graph state into Hub content; no implicit deletion is added.
 - **Specification/Verification — PASS**: capability 046, `AB-MCP-019..024`,
-  `AB-INGEST-016`, `AB-BATCH-011..013` and `AB-BENCH-074..075` precede
+  `AB-INGEST-016..018`, `AB-BATCH-011..013` and `AB-BENCH-074..077` precede
   implementation.
 
 ### Post-design gate
@@ -91,11 +127,19 @@ specs/046-initial-ingest-discovery/
 ```text
 src/providers/github-hub/
 ├── github-api.ts            # generic repository/default-branch lookup
-└── git-process.ts           # private mirror fetch + detached source worktree
+├── git-process.ts           # bounded credential-isolated Git primitives
+└── source-snapshot.ts       # private mirror + exact detached source authority
 
 src/providers/codebase-memory/
-├── admission-deny.ts        # owned hard deny before provider file open
 └── response-parser.ts       # normalized Seed-driving provider facts
+
+vendor/codebase-memory/agentbase/patches/
+└── 0001-parser-profile.patch # owned overlay adds shared hard-deny admission
+
+vendor/codebase-memory/upstream/src/ # immutable pinned patch targets
+├── foundation/
+├── discover/discover.c
+└── pipeline/
 
 src/app/codebase-memory-mcp/
 ├── gateway-session.ts       # per-connection source binding/capture lifecycle
@@ -109,7 +153,7 @@ src/app/hub-okf/
 │   ├── prepare.ts           # consume resolved Receipt, not mutable guidance
 │   └── initial-ingest-skeleton.ts
 ├── batch-ingest/            # isolated per-member source/receipt checkpoints
-├── review/inspect.ts        # coverage/disposition inspection
+├── review/inspect.ts        # coverage/outcome inspection
 ├── publication/review-summary.ts
 └── query/runtime-actions.ts # Hub source preflight and drift checks
 
@@ -182,7 +226,7 @@ Git/GitHub, authoring, Batch and review entrypoints.
   non-ignored Inventory item; classify generated/out-of-scope signals below P0
   during Seed creation rather than using them as pass reasons.
 - Extend `get_okf_authoring_schemas` with an Inventory envelope. Validate every
-  important Seed group has one disposition and exact source/limitation. Do not
+  important Seed group has one outcome and exact source/limitation. Do not
   split/merge coverage groups; each item has one origin group and may map to
   multiple explicit output candidates.
 - Generate bounded P1 Flow candidates for explicit outbound/trigger/datastore
@@ -206,6 +250,12 @@ Git/GitHub, authoring, Batch and review entrypoints.
   before Finalize. Bind every Init/Refresh repository source entry to exact
   observed revision; a newer observation uses a revision-distinct source ID so
   retained claims cannot be relabeled.
+- For embedded materialization, resolve the Receipt parent and require retained
+  candidate-owned repository evidence. Do not compare Agent-readable prose or
+  table labels with an identity-hint substring.
+- Before that check, append canonical Receipt-derived rows only for embedded
+  candidates whose exact evidence is absent from the resolved parent; preserve
+  evidence-bearing Agent wording and other rows.
 - Extend the core validator and its standalone Hub-CI artifact with the same
   backward-compatible `sources[].observed_revision` rule.
 - Keep P1/P2 gaps review-ready; make authority, mutation, integrity and

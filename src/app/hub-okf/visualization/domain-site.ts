@@ -7,12 +7,13 @@ import {
   type PublishedVisualizationProjection,
 } from "../../../core/knowledge/index.ts";
 
-const THREE_VERSION = "0.183.0";
+const CYTOSCAPE_VERSION = "3.34.2";
+const DOMAIN_SITE_GENERATOR_VERSION = 2 as const;
+const BUILD_KEY_PLACEHOLDER = "__AGENTBASE_BUILD_KEY__";
 const GENERATED_PATHS = [
   "assets/app.css",
   "assets/app.js",
-  "assets/three.core.min.js",
-  "assets/three.module.min.js",
+  "assets/cytoscape.min.js",
   "data/domain.json",
   "index.html",
 ] as const;
@@ -20,7 +21,7 @@ const GENERATED_PATHS = [
 export type DomainSiteBuildReceipt = Readonly<{
   schemaVersion: 1;
   generator: "agentbase-domain-site";
-  generatorVersion: 1;
+  generatorVersion: typeof DOMAIN_SITE_GENERATOR_VERSION;
   hub: string;
   commit: string;
   domain: string;
@@ -46,8 +47,7 @@ export type DomainSiteBuildOptions = Readonly<{
 
 export type DomainSiteBuildDependencies = Readonly<{
   assetsRoot?: string;
-  threeCorePath?: string;
-  threeModulePath?: string;
+  cytoscapePath?: string;
 }>;
 
 function digest(bytes: Buffer | string): string {
@@ -77,19 +77,17 @@ function assertOutputTarget(value: string): Readonly<{ output: string; parent: s
   return { output, parent, existed: true };
 }
 
-function defaultThreeModulePath(): string {
-  return path.resolve(import.meta.dirname, "../../../..", "node_modules/three/build/three.module.min.js");
+function defaultCytoscapePath(): string {
+  return path.resolve(import.meta.dirname, "../../../..", "node_modules/cytoscape/dist/cytoscape.min.js");
 }
 
-function defaultThreeCorePath(): string {
-  return path.resolve(import.meta.dirname, "../../../..", "node_modules/three/build/three.core.min.js");
-}
-
-function verifyThreeModule(target: string): Buffer {
+function verifyCytoscape(target: string): Buffer {
   const packagePath = path.join(path.dirname(path.dirname(target)), "package.json");
-  if (!fs.existsSync(packagePath)) throw new Error("pinned offline Three.js package metadata is unavailable");
+  if (!fs.existsSync(packagePath)) throw new Error("pinned offline Cytoscape.js package metadata is unavailable");
   const manifest = JSON.parse(fs.readFileSync(packagePath, "utf8")) as { version?: unknown };
-  if (manifest.version !== THREE_VERSION) throw new Error(`Three.js ${THREE_VERSION} is required for deterministic Domain-site output`);
+  if (manifest.version !== CYTOSCAPE_VERSION) {
+    throw new Error(`Cytoscape.js ${CYTOSCAPE_VERSION} is required for deterministic Domain-site output`);
+  }
   return readBounded(target);
 }
 
@@ -123,14 +121,16 @@ export function buildStaticDomainSite(
   const staging = fs.mkdtempSync(path.join(target.parent, ".agentbase-domain-site-"));
   try {
     const assetsRoot = dependencies.assetsRoot ?? path.join(import.meta.dirname, "domain-site-assets");
-    write(path.join(staging, "index.html"), readBounded(path.join(assetsRoot, "index.html")));
+    const indexTemplate = readBounded(path.join(assetsRoot, "index.html")).toString("utf8");
+    if (!indexTemplate.includes(BUILD_KEY_PLACEHOLDER)) {
+      throw new Error("Domain-site index is missing its browser build-key placeholder");
+    }
+    const buildKey = `${DOMAIN_SITE_GENERATOR_VERSION}-${projection.commit}`;
+    write(path.join(staging, "index.html"), indexTemplate.replaceAll(BUILD_KEY_PLACEHOLDER, buildKey));
     write(path.join(staging, "assets/app.css"), readBounded(path.join(assetsRoot, "app.css")));
     write(path.join(staging, "assets/app.js"), readBounded(path.join(assetsRoot, "app.js")));
-    write(path.join(staging, "assets/three.core.min.js"), verifyThreeModule(
-      dependencies.threeCorePath ?? defaultThreeCorePath(),
-    ));
-    write(path.join(staging, "assets/three.module.min.js"), verifyThreeModule(
-      dependencies.threeModulePath ?? defaultThreeModulePath(),
+    write(path.join(staging, "assets/cytoscape.min.js"), verifyCytoscape(
+      dependencies.cytoscapePath ?? defaultCytoscapePath(),
     ));
     write(path.join(staging, "data/domain.json"), serializePublishedVisualizationProjection(projection));
 
@@ -141,7 +141,7 @@ export function buildStaticDomainSite(
     const receipt: DomainSiteBuildReceipt = {
       schemaVersion: 1,
       generator: "agentbase-domain-site",
-      generatorVersion: 1,
+      generatorVersion: DOMAIN_SITE_GENERATOR_VERSION,
       hub: projection.hub,
       commit: projection.commit,
       domain: projection.domain.id,

@@ -18,8 +18,9 @@ hoặc báo chưa đủ dữ liệu; Agent không tự nối các node cho đẹ
 ## 2. Generate Domain site một lần
 
 `agentbase-domain-site` là workflow nặng và chỉ chạy khi người dùng yêu cầu rõ.
-Nó generate một static 3D website cho đúng một Domain từ đúng một Published Hub
-commit. Site có search, filter, focus theo lân cận và sidebar đọc thông tin node.
+Nó generate một static 2D knowledge map cho đúng một Domain từ đúng một
+Published Hub commit. Site có search, filter, focus theo lân cận, Flow toggle
+và sidebar đọc thông tin node.
 
 Kết quả là một build directory cố định. Người dùng review rồi có thể copy sang
 repo riêng như `Domain-Hub` và publish bằng GitHub Pages. Sau khi generate, site
@@ -32,7 +33,7 @@ Published OKF commit
         ↓
 Published visualization projection
         ├── bounded packet → diagram
-        └── full Domain snapshot → static 3D site
+        └── full Domain snapshot → static 2D site
 ```
 
 Projection giữ concept, relation, direction, provenance và open Question. Nó
@@ -47,12 +48,12 @@ thuộc nhiều Domain hoặc tự mở rộng cả Domain kia.
 
 - Chỉ đọc Published Hub; không trộn Local Draft.
 - Không thay thế search/query knowledge hoặc Code Graph.
-- Không tạo 2D full-Hub UI.
+- Không tạo full-Hub UI hoặc giữ thêm một chế độ 3D.
 - Không watcher, daemon, live refresh hoặc auto-push Domain site.
 - Phải cảnh báo trước khi đưa knowledge nội bộ lên Pages/repo có visibility rộng.
 - Architecture có thể partial; Dependency cần edge thật; Sequence cần
   `flow_steps` thật.
 
 Qualification hiện tại dùng một Domain có tám repository, runtime relations và
-Flow steps thật. Cả ba loại diagram và static 3D site đều được tạo từ cùng một
+Flow steps thật. Cả ba loại diagram và static 2D site đều được tạo từ cùng một
 Published commit; thiếu topology ở Domain khác vẫn được báo rõ thay vì suy diễn.

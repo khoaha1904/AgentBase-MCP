@@ -26,7 +26,7 @@ tool, two public skills and one internal renderer wrapper. Reuse current OKF and
 Published checkout. Do not add an OKF schema, graph database, watcher, server or
 general UI framework.
 
-The static 3D site needs one pinned `three` runtime (`0.183.0`, already present
-in the audited upstream dependency set) bundled into generated output through
-the existing build toolchain. React, Vite and force-graph libraries are not
-needed.
+Capability 048 replaces the custom 3D presentation with pinned
+`cytoscape@3.34.2`, copied into generated output through the existing build
+toolchain. It removes `three`; React, Vite, Sigma/Graphology and force-graph
+libraries remain unnecessary.

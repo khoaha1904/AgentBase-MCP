@@ -7,12 +7,27 @@ import test from "node:test";
 import { createHubIdentity, hubProfileId } from "../../../core/hub/index.ts";
 import {
   getOkfAuthoringGuidance, loadOkfBundle, parseConceptDocument, readRepositoryObservedSource, validateOkfRelationships,
+  type InventoryReceipt,
 } from "../../../core/knowledge/index.ts";
-import { runGit } from "../../../providers/github-hub/index.ts";
+import { runGit, type SourceSnapshot } from "../../../providers/github-hub/index.ts";
 import { createHubRuntimeActions } from "../query/runtime-actions.ts";
 import { readPersistedHubConfiguration, replacePersistedHubConfiguration } from "../configuration/configuration-file.ts";
 import { createLocalHub } from "../workspace/setup.ts";
+import { createTestInventoryReceipt } from "../test-support.ts";
 import { writeInitialIngestSkeletons } from "./initial-ingest-skeleton.ts";
+
+async function localSourceSnapshot(input: Readonly<{
+  requestedRoot: string; repositoryId: string; hub: ReturnType<typeof createHubIdentity>; stateRoot: string;
+}>): Promise<SourceSnapshot> {
+  const requestedRoot = fs.realpathSync(input.requestedRoot);
+  const commit = (await runGit({ args: ["rev-parse", "HEAD"], cwd: requestedRoot,
+    operation: "resolve local source fixture" })).stdout.trim();
+  const repository = `fixtures/${path.basename(requestedRoot)}`;
+  return { repositoryId: input.repositoryId,
+    remote: { host: input.hub.host, repository, canonicalHttpsUrl: `https://${input.hub.host}/${repository}.git` },
+    defaultBranch: "main", commit, requestedRoot, analysisRoot: requestedRoot,
+    kind: "current-checkout", createdAt: "2026-08-25T00:00:00.000Z", privateRoot: input.stateRoot };
+}
 
 test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] preparation renders one generic inspectable skeleton bundle and stops", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-initial-ingest-"));
@@ -30,7 +45,11 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] pre
     await runGit({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit", "-m", "fixture"],
       cwd: source, operation: "commit ingest fixture", commitTimestamp: "2026-08-21T00:00:00Z" });
 
-    const actions = createHubRuntimeActions(environment, path.join(root, "state"));
+    const stateRoot = path.join(root, "state"), receipts = new Map<string, InventoryReceipt>();
+    const actions = createHubRuntimeActions(environment, stateRoot, {
+      sourceSnapshotResolver: localSourceSnapshot,
+      discoveryReceiptResolver: (id) => receipts.get(id),
+    });
     const local = await createLocalHub(environment), current = readPersistedHubConfiguration(environment);
     assert.ok(current?.kind === "local-only");
     const hub = createHubIdentity("acme/vehicle-events-hub", "main"), localHubId = hubProfileId(hub);
@@ -40,6 +59,7 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] pre
       host: hub.host, repository: hub.repository, targetBranch: hub.targetBranch }, environment, { retireExpected: true });
     const preflight = await actions.preflight(source) as {
       repository: { kind: string; repository: { id: string; displayName: string; remotes: string[]; rootCommits: string[] } };
+      source_authority: { remote: string; default_branch: string; commit: string };
     };
     assert.equal(preflight.repository.kind, "new");
     const guidanceRequest = {
@@ -87,14 +107,28 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] pre
     });
     assert.equal(fs.readFileSync(path.join(dedupeBundle, "index.md"), "utf8").split("\n")
       .filter((line) => line.includes("](repositories/index.md)")).length, 1);
+    const configured = readPersistedHubConfiguration(environment);
+    assert.ok(configured?.kind === "remote");
+    const publishedBase = (await runGit({ args: ["rev-parse", "HEAD"], cwd: configured.localRoot,
+      operation: "resolve test Published base" })).stdout.trim();
+    const receipt = createTestInventoryReceipt({
+      label: "vehicle-events",
+      source: { repositoryId: preflight.repository.repository.id,
+        remote: preflight.source_authority.remote, defaultBranch: preflight.source_authority.default_branch,
+        commit: preflight.source_authority.commit },
+      hubProfileId: localHubId,
+      publishedBase,
+      request: guidanceRequest,
+      limitations: ["runtime consumers were not present in this repository"],
+    });
+    receipts.set(receipt.id, receipt);
     const prepared = await actions.prepare({
       mode: "new", sourceRepository: source,
-      subjectDirectory: "repositories/vehicle-events", guidanceRequest,
+      subjectDirectory: "repositories/vehicle-events", discoveryReceiptId: receipt.id,
       confirmedDomain: {
         identity: "domains/vehicle-data", title: "Vehicle Data",
         evidenceResource: "agentbase://owner-guidance/domains/vehicle-data",
       },
-      coverage: { partial: true, limitations: ["runtime consumers were not present in this repository"] },
     }) as { sessionId: string; bundleRoot: string; sourceRepositoryId: string; selectedSchemas: string[];
       skeletons: readonly { identity: string; path: string; type: string }[]; authoringConstraints: readonly string[] };
     assert.match(prepared.authoringConstraints.join("\n"), /Preserve generated sources, relationships, repository identity metadata and navigation/);

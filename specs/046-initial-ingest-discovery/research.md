@@ -17,7 +17,7 @@ All duplicate the provider, expand tools and risk a second code graph.
 ## R02 — MCP owns coverage; Agent owns semantics
 
 **Decision**: MCP groups deterministic signals, assigns lanes/fixed P0 and
-validates acknowledgement; the Agent decides meaning, disposition and outputs.
+validates acknowledgement; the Agent decides meaning, group outcomes and outputs.
 
 **Rationale**: Structural grouping is stable enough for coverage. Concept,
 embedded knowledge and Questions require repository semantics.
@@ -92,7 +92,7 @@ All add noise and duplicate Git/PR history.
 
 ## R08 — Measure before optimizing model cost
 
-**Decision**: Group repeated signals, bound reads and stop on disposition
+**Decision**: Group repeated signals, bound reads and stop when required outcomes
 completion, but set no numeric token/time budget before the first real run.
 
 **Rationale**: Premature hard budgets could reproduce the sparse-discovery miss.

@@ -8,7 +8,7 @@ description: Ingest 2-32 explicit authorized local repositories in one confirmed
 Build one sparse review unit without mixing repository evidence.
 
 Use only `prepare_batch_hub_ingest`, `confirm_batch_hub_ingest`,
-`prepare_hub_okf`, `record_batch_hub_ingest_member`,
+`preflight_hub_ingest`, `prepare_hub_okf`, `record_batch_hub_ingest_member`,
 `retry_batch_hub_ingest_member`, `revise_batch_hub_ingest_membership`,
 `finalize_batch_hub_ingest_proposal`, `inspect_hub_okf_proposal` and the exact
 graph tools named by `use-codebase-memory`, `get_okf_authoring_schemas` and
@@ -21,23 +21,26 @@ a confirmed batch.
    warnings; do not begin authoring while any row is unresolved.
 2. Call `confirm_batch_hub_ingest` once with every exact member, its reviewed
    evidence path and `match` or explicit `override` decision.
-3. Process members sequentially in manifest order. For each member, follow the
-   Discover → Investigate → Author rules from `agentbase-ingest`, call
-   `prepare_hub_okf` in `new` mode with the same confirmed Domain, edit only that
+3. Process members sequentially in manifest order. For each member, call
+   `preflight_hub_ingest` on its original root to arm the exact SourceSnapshot
+   already selected by Batch, then follow the Seed → Inventory → Receipt rules
+   from `agentbase-ingest`. Call `prepare_hub_okf` in `new` mode with that
+   member's Receipt and the same confirmed Domain, edit only that
    session's bundle, then call `record_batch_hub_ingest_member` instead of the
-   ordinary Finalize tool. Never reuse raw source/graph observations across
+   ordinary Finalize tool. Never reuse a Seed, Receipt or evidence across
    members and never call provider CLI or investigate another repository.
-4. A truthful sparse member is complete. On `failed`, stop the sequence, explain
-   the exact failure and use `retry_batch_hub_ingest_member` only after the user
-   requests recovery. Prepare a new attempt for that member; completed siblings
-   remain untouched.
+4. A truthful sparse member is complete. A member-local `failed` checkpoint
+   does not block later siblings after the next repository switch confirms
+   clean provider closure. Record it, continue sequentially, then retry only
+   failed members. A shared Hub/source authority failure or uncertain provider
+   cleanup stops the Batch.
 5. If membership changes, call `revise_batch_hub_ingest_membership` with the
    complete replacement member set. Re-author invalidated/dangling work when the
    returned revision requires it; never silently drop a member contribution.
 6. After every current member is complete, call
    `finalize_batch_hub_ingest_proposal`, then `inspect_hub_okf_proposal`. Present
-   per-repository changes, shared Domain/index navigation, Questions,
-   limitations and partial coverage.
+   per-repository source revision and lane coverage, shared Domain/index
+   navigation, Questions, ignored reasons and limitations.
 
 Stop before Accept, submit, synchronization, provider enrichment or model
 benchmark. Do not scan the workspace, run members in parallel, split a finalized

@@ -282,7 +282,7 @@ test("[AB-VIS-006..010][AB-VIS-012..014] static Domain site is reproducible, off
     { status: "built", commit: graph.commit, receipt: "agentbase-build.json" });
 
   const relativeFiles = ["agentbase-build.json", "assets/app.css", "assets/app.js",
-    "assets/three.core.min.js", "assets/three.module.min.js", "data/domain.json", "index.html"];
+    "assets/cytoscape.min.js", "data/domain.json", "index.html"];
   for (const relative of relativeFiles) {
     assert.deepEqual(fs.readFileSync(path.join(first, ...relative.split("/"))),
       fs.readFileSync(path.join(second, ...relative.split("/"))));
@@ -291,12 +291,23 @@ test("[AB-VIS-006..010][AB-VIS-012..014] static Domain site is reproducible, off
   assert.deepEqual(receipt.files.map((file: { path: string }) => file.path), relativeFiles.slice(1));
   assert.equal(receipt.commit, graph.commit);
   assert.equal("generatedAt" in receipt || "outputDirectory" in receipt, false);
-  const generatedText = relativeFiles.filter((relative) => !relative.startsWith("assets/three."))
+  const generatedText = relativeFiles.filter((relative) => relative !== "assets/cytoscape.min.js")
     .map((relative) => fs.readFileSync(path.join(first, ...relative.split("/")), "utf8")).join("\n");
   assert.doesNotMatch(generatedText, new RegExp(temporary.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.doesNotMatch(generatedText, /ghp_[A-Za-z0-9]{20,}|search_hub_okf|prepare_hub_visualization/);
-  assert.match(fs.readFileSync(path.join(first, "index.html"), "utf8"), /3D view unavailable/);
-  assert.match(fs.readFileSync(path.join(first, "assets/app.js"), "utf8"), /fetch\("data\/domain\.json"\)/);
+  const generatedIndex = fs.readFileSync(path.join(first, "index.html"), "utf8");
+  const generatedApp = fs.readFileSync(path.join(first, "assets/app.js"), "utf8");
+  const browserBuildKey = `2-${graph.commit}`;
+  assert.match(generatedIndex, /Interactive 2D Domain knowledge map/);
+  assert.equal(generatedIndex.includes(`assets/app.css?build=${browserBuildKey}`), true);
+  assert.equal(generatedIndex.includes(`assets/cytoscape.min.js?build=${browserBuildKey}`), true);
+  assert.equal(generatedIndex.includes(`assets/app.js?build=${browserBuildKey}`), true);
+  assert.doesNotMatch(generatedIndex, /__AGENTBASE_BUILD_KEY__/);
+  assert.match(generatedApp, /new URL\(import\.meta\.url\)\.search/);
+  assert.match(generatedApp, /fetch\(`data\/domain\.json\$\{browserBuildQuery\}`\)/);
+  assert.match(generatedApp, /name: "concentric"/);
+  assert.match(generatedApp, /flowToggle\.checked/);
+  assert.equal(fs.existsSync(path.join(first, "assets/three.module.min.js")), false);
 
   assert.throws(() => buildStaticDomainSite(projection,
     { outputDirectory: "relative/site", visibilityAcknowledged: true }), /explicit absolute path/);

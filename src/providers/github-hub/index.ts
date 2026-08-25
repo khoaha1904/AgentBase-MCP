@@ -16,6 +16,15 @@ export {
   type SpawnGit,
 } from "./git-process.ts";
 export {
+  normalizeGitHubSourceRemote,
+  removeSourceSnapshotWorktree,
+  resolveSourceSnapshot,
+  type CanonicalGitHubRemote,
+  type SourceSnapshot,
+  type SourceSnapshotApi,
+  type SourceSnapshotGit,
+} from "./source-snapshot.ts";
+export {
   GitHubApiError,
   GitHubHubApi,
   type GitHubHttp,

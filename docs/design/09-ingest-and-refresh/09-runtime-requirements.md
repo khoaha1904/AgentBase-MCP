@@ -1,7 +1,7 @@
 # 09.09 — Batch Initial Ingest runtime requirements
 
-> Trạng thái: Baseline Batch Initial Ingest implemented offline. Capability 046
-> additions below are approved target requirements, implementation pending.
+> Trạng thái: Baseline Batch Initial Ingest và Capability 046 per-member
+> SourceSnapshot/Seed/Receipt additions đã implement offline.
 
 - **AB-BATCH-001** — Một batch bind exact Hub base, một confirmed Domain và
   2..32 explicit unique local repository roots; không scan workspace để tìm repo.

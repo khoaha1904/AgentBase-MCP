@@ -1,7 +1,7 @@
 # 01.04 — Reading boundaries and failures
 
-> Trạng thái: Baseline implemented; Capability 046 remote-default Init isolation
-> và bounded discovery census đã approved, implementation pending.
+> Trạng thái: Baseline, Capability 046 remote-default Init isolation và bounded
+> discovery census đã implement.
 
 ## Reading authority
 

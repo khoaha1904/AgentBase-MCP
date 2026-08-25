@@ -94,14 +94,16 @@ and returns visible recovery rather than hidden retry.
 
 - Exact production package dependencies are
   `@modelcontextprotocol/client@2.0.0`,
-  `@modelcontextprotocol/server@2.0.0`, `yaml@2.9.0` and `three@0.183.0`.
-  Three.js is copied into explicit static Domain-site output; it is not a live
-  MCP UI runtime.
+  `@modelcontextprotocol/server@2.0.0`, `yaml@2.9.0` and
+  `cytoscape@3.34.2`. Cytoscape.js is copied into explicit static Domain-site
+  output; it is not a live MCP UI runtime.
 - Codebase Memory `v0.10.8` is an attributed immutable source snapshot with one
-  AgentBase-owned 12-language profile. Installation builds the current-platform
-  artifact from those exact bytes; runtime verifies source/profile/platform,
-  tool surface and executable identity. It never searches `PATH`, accepts a user
-  binary or runs an installer/updater/configurator.
+  AgentBase-owned 12-language profile. A release maintainer explicitly builds
+  one reviewed bundle per supported platform from those exact bytes. Ordinary
+  installation only selects, verifies and atomically activates that bundled
+  artifact; runtime verifies source/profile/platform, tool surface and
+  executable identity. It never searches `PATH`, accepts a user binary,
+  downloads a provider or invokes the native build toolchain.
 - One short-lived stdio provider session owns one explicit repository evidence
   round and closes on every path. One-shot invocation is explicit rollback; no
   watcher, UI, daemon or automatic transport retry exists.

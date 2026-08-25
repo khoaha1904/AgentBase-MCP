@@ -27,6 +27,7 @@ type InspectionSummary = Readonly<{
   limitations: readonly string[];
   batchMembers: readonly string[];
   sharedPaths: readonly string[];
+  discovery: readonly string[];
 }>;
 
 type RepositoryScope = Readonly<{ domains: readonly string[]; revision?: string }>;
@@ -79,17 +80,39 @@ function readInspection(stateRoot: string, proposal: PendingHubProposal): Inspec
       || accepted.diffDigest !== proposal.diffDigest || accepted.acceptedCommit !== proposal.commit) return undefined;
     const inspection = record(JSON.parse(fs.readFileSync(path.join(root, "inspection.json"), "utf8")));
     const groups = record(inspection?.groups), uncertainty = record(groups?.questionsAndLimitations);
-    const questions = Array.isArray(uncertainty?.questions) ? uncertainty.questions.flatMap((item) => {
+    const discovery = record(inspection?.discovery);
+    const questions = [...(Array.isArray(uncertainty?.questions) ? uncertainty.questions.flatMap((item) => {
       const question = record(item), subject = safeText(question?.subject, "question"), property = safeText(question?.property, "unknown property");
       return [`${subject} · ${property}`];
+    }) : []), ...(Array.isArray(discovery?.questions)
+      ? discovery.questions.map((item) => safeText(item)).filter(Boolean) : [])];
+    const limitations = [...(Array.isArray(uncertainty?.limitations)
+      ? uncertainty.limitations.map((item) => safeText(item)).filter(Boolean) : []),
+    ...(Array.isArray(discovery?.limitations)
+      ? discovery.limitations.map((item) => safeText(item)).filter(Boolean) : [])];
+    const lanes = Array.isArray(discovery?.lanes) ? discovery.lanes.flatMap((item) => {
+      const lane = record(item);
+      return lane ? [`Lane ${safeText(lane.lane)}: ${safeText(lane.status)}${lane.limitation ? ` — ${safeText(lane.limitation)}` : ""}`] : [];
     }) : [];
-    const limitations = Array.isArray(uncertainty?.limitations)
-      ? uncertainty.limitations.map((item) => safeText(item)).filter(Boolean) : [];
+    const ignored = record(discovery?.ignoredCounts);
+    const discoverySummary = discovery ? bounded([
+      `Source revision: ${safeText(discovery.sourceRevision)}`,
+      ...lanes,
+      ...Object.entries(ignored ?? {}).map(([reason, count]) => `Ignored ${safeText(reason)}: ${safeText(String(count))}`),
+      ...(Array.isArray(discovery.embeddedGroups)
+        ? discovery.embeddedGroups.map((item) => `Embedded: ${safeText(item)}`) : []),
+      ...(Array.isArray(discovery.relationsAndFlows)
+        ? discovery.relationsAndFlows.map((item) => `Relation/Flow: ${safeText(item)}`) : []),
+    ]) : [];
     const batch = record(inspection?.batch);
     const batchMembers = Array.isArray(batch?.members) ? batch.members.flatMap((item) => {
       const member = record(item), repositoryId = safeText(member?.repositoryId, ""), paths = groupPaths(
         Array.isArray(member?.paths) ? member.paths.map((pathValue) => ({ path: pathValue })) : []);
-      return repositoryId ? [`${repositoryId}: ${paths.length ? paths.join(", ") : "shared navigation only"}`] : [];
+      const memberDiscovery = record(member?.discovery), memberLanes = Array.isArray(memberDiscovery?.lanes)
+        ? memberDiscovery.lanes.length : 0;
+      const memberLimitations = Array.isArray(memberDiscovery?.limitations) ? memberDiscovery.limitations.length : 0;
+      return repositoryId ? [`${repositoryId}: ${paths.length ? paths.join(", ") : "shared navigation only"}${memberDiscovery
+        ? `; source ${safeText(memberDiscovery.sourceRevision)}; lanes ${memberLanes}; limitations ${memberLimitations}` : ""}`] : [];
     }) : [];
     return {
       added: groupPaths(groups?.added),
@@ -100,6 +123,7 @@ function readInspection(stateRoot: string, proposal: PendingHubProposal): Inspec
       batchMembers: bounded(batchMembers),
       sharedPaths: groupPaths(Array.isArray(batch?.sharedPaths)
         ? batch.sharedPaths.map((pathValue) => ({ path: pathValue })) : []),
+      discovery: discoverySummary,
     };
   } catch {
     return undefined;
@@ -184,6 +208,8 @@ export function renderPublicationReview(options: PublicationReviewOptions): Publ
     ...(inspections.some((item) => item.batchMembers.length || item.sharedPaths.length)
       ? ["### Batch Attribution", bullets(bounded(inspections.flatMap((item) => item.batchMembers))),
         "### Shared Navigation", bullets(bounded(inspections.flatMap((item) => item.sharedPaths)))] : []),
+    ...(inspections.some((item) => item.discovery.length)
+      ? ["### Discovery", bullets(bounded(inspections.flatMap((item) => item.discovery)))] : []),
     "### Added", bullets(bounded(inspections.flatMap((item) => item.added))),
     "### Updated", bullets(bounded(inspections.flatMap((item) => item.updated))),
     "### Removed", bullets(bounded(inspections.flatMap((item) => item.removed))),

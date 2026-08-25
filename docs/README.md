@@ -71,8 +71,10 @@ small gaps must be backfilled before benchmark, PR or capability completion.
   review are post-MVP capabilities. Ordinary Hub query is deliberately
   Published-only; Local Draft is reviewed through proposal workflows.
 - Codebase Memory now comes from AgentBase's attributed `v0.10.8` source snapshot
-  and 12-language profile rather than an npm postinstall binary. Linux x64 is
-  qualified; macOS arm64 remains an explicit company-environment release gate.
+  and 12-language profile rather than an npm postinstall binary. Ordinary setup
+  verifies and activates a reviewed repository-contained platform bundle; it
+  never compiles the provider. Linux x64 is bundled and qualified; the reviewed
+  macOS arm64 bundle remains an explicit company-environment release gate.
   The Codebase Memory Graph UI frontend is excluded. Capability 045 now owns an
   implemented Published projection, focused diagram and static Domain-site
   workflow. Its eight-repository qualification Domain, source-backed Flows and

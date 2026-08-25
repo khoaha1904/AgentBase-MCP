@@ -12,9 +12,16 @@ export type BatchMember = Readonly<{
   id: string;
   order: number;
   root: string;
+  analysisRoot: string;
   repositoryId: string;
   displayName: string;
   source: BatchSourceState;
+  sourceAuthority: Readonly<{
+    remote: string;
+    defaultBranch: string;
+    commit: string;
+    kind: "current-checkout" | "detached-worktree";
+  }>;
   identityStatus: "new" | "existing" | "ambiguous";
   documentPaths: readonly string[];
   warnings: readonly string[];
@@ -50,10 +57,13 @@ function validateMembers(members: readonly BatchMember[], confirmed: boolean): v
     || new Set(members.map((member) => member.id)).size !== members.length) throw new Error("batch membership contains duplicates");
   for (const [index, member] of members.entries()) {
     if (!MEMBER.test(member.id) || member.order !== index || !path.isAbsolute(member.root)
+      || !path.isAbsolute(member.analysisRoot)
       || !REPOSITORY.test(member.repositoryId) || !member.displayName.trim()
-      || (member.source.commit !== null && !COMMIT.test(member.source.commit))
-      || typeof member.source.dirty !== "boolean" || (member.source.dirty !== Boolean(member.source.dirtyDigest))
-      || (member.source.dirtyDigest !== null && !DIGEST.test(member.source.dirtyDigest))) {
+      || !COMMIT.test(member.source.commit ?? "") || member.source.dirty || member.source.dirtyDigest !== null
+      || member.sourceAuthority.commit !== member.source.commit
+      || !/^https:\/\/[A-Za-z0-9.-]+\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\.git$/.test(member.sourceAuthority.remote)
+      || !member.sourceAuthority.defaultBranch
+      || !["current-checkout", "detached-worktree"].includes(member.sourceAuthority.kind)) {
       throw new Error(`batch member is invalid: ${member.id}`);
     }
     if (confirmed && (member.identityStatus !== "new" || !member.domainAssessment

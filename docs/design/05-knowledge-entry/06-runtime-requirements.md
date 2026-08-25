@@ -388,6 +388,36 @@ Normative OKF source is pinned to commit
   `(resource, observed_revision)`, so a newer observation uses a distinct source
   ID and cannot relabel a retained claim. This supersedes AB-INGEST-014's
   current-checkout wording for Hub-bound authoring only.
+- **AB-INGEST-017** — Receipt-bound Initial Ingest QuestionPlan input selects
+  only `candidate_key + evidence_id` already present in the same bounded
+  guidance request. MCP verifies candidate membership and derives the normalized
+  repository source resource plus active SourceSnapshot revision before Receipt
+  freeze. Unknown/mismatched selections return the ordinary one-correction
+  `INVALID_ARGUMENT` contract; the Agent never constructs provenance URIs or
+  revisions. Final SharedQuestion candidate-evidence shape is unchanged.
+- **AB-INGEST-018** — Agent-facing Discovery Inventory has only three group
+  outcomes: `materialized`, `question` and `ignored`. A materialized item names
+  candidate IDs; MCP derives candidate concept/embedded disposition, embedded
+  parent, Inventory/QuestionPlan IDs and canonical internal references from the
+  active Seed plus the same guidance request. Inventory items do not repeat
+  candidate evidence IDs. Bounded Seed source samples remain review context,
+  not an exhaustive evidence allowlist. Known candidate evidence remains
+  source-validated at guidance/Question/Finalize boundaries. P0 ignored still
+  requires `duplicate-covered` against a materialized origin group. MCP returns
+  all bounded caller-correctable Inventory defects found in one retryable
+  `INVALID_ARGUMENT`. Old private Receipts may be discarded and re-ingested;
+  no Published Hub/OKF migration is introduced.
+- **AB-INGEST-019** — Receipt-bound embedded materialization is proven by at
+  least one exact candidate-owned repository evidence resource remaining in the
+  resolved parent concept. Agent-authored human-readable label/prose may differ
+  from the candidate identity hint and is not a Finalize gate. Missing Receipt
+  evidence is never silently accepted; AB-INGEST-020 owns its normalization.
+- **AB-INGEST-020** — Before Receipt materialization validation, Finalize keeps
+  an existing embedded row that retains exact candidate-owned evidence and
+  deterministically restores a missing canonical row from the frozen Receipt
+  into its resolved parent. This normalization uses no graph/source reread and
+  does not consume the Agent repair budget. A row that still cannot be resolved
+  to a valid parent/evidence remains an integrity failure.
 - **AB-SCHEMA-043** — Exact supported Terraform/Terragrunt observations are
   high-priority when readily available. Their omission is a coverage diagnostic,
   not an invalidity condition for an otherwise truthful partial proposal.
@@ -418,3 +448,9 @@ Normative OKF source is pinned to commit
   resolving Markdown links. This supports truthful cross-repository dependency
   knowledge without requiring a duplicate `Component`. It does not authorize a
   generic System-to-System `depends-on` relation or inferred topology.
+- **AB-SCHEMA-051** — An explicit embedded candidate with a valid concept parent
+  and candidate-owned evidence remains `embedded` even when no released
+  detector/provider profile maps its technology. Guidance returns provider-
+  neutral metadata plus a limitation; `unsupported` is reserved for standalone
+  schema intent that cannot be safely selected. Detection never overrides the
+  Agent's validated embedded boundary.

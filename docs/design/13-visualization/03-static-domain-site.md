@@ -13,7 +13,7 @@ domain-site/
 ├── assets/
 │   ├── app.js
 │   ├── app.css
-│   └── three.module.min.js
+│   └── cytoscape.min.js
 ├── data/
 │   └── domain.json
 └── agentbase-build.json
@@ -31,11 +31,12 @@ reproducible.
 - other concepts expand lazily from the selected node;
 - direct cross-Domain endpoints appear as non-expandable boundary nodes;
 - search, type/repository filters, 1–2 hop focus and a readable sidebar;
-- deterministic seeded 3D positions derived at build time;
+- deterministic 2D layout with readable labels, pan and zoom;
+- Flow-step edges hidden by default behind one explicit toggle;
 - open Question counts as badges, not default nodes;
 - directed runtime edges and visually distinct structural links.
 
-The site uses bundled local assets and system fonts. It works from a static web
+The site uses bundled local Cytoscape.js and system fonts. It works from a static web
 host with no Hub/MCP access. Local preview is allowed with a warning that this
 is a fixed snapshot. AgentBase does not create a Domain-Hub repo, push, publish
 Pages, watch Hub changes or refresh the site automatically.

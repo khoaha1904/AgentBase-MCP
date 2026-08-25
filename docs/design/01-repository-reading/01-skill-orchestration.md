@@ -1,7 +1,7 @@
 # 01.01 — Skill orchestration
 
-> Trạng thái: Baseline orchestration implemented; Capability 046 Init-stage
-> guidance changes approved, implementation pending.
+> Trạng thái: Baseline orchestration và Capability 046 Init-stage receipt
+> handoff đã implement; released-skill qualification còn pending.
 
 ## Quyết định
 

@@ -10,6 +10,8 @@ import {
 import { createHubIdentity, hubProfileId } from "../../src/core/hub/index.ts";
 import { discoverRepositorySourceState } from "../../src/app/repository-okf/index.ts";
 import { activatePersistedHubConfiguration } from "../../src/app/hub-okf/configuration/configuration-file.ts";
+import { resolveHubConfiguration } from "../../src/app/hub-okf/configuration/configuration.ts";
+import { writeHubProfileToken } from "../../src/app/hub-okf/configuration/credential-file.ts";
 import { renderHubCiBundle } from "../../src/app/hub-okf/ci/artifact.ts";
 import { renderHubReadme } from "../../src/app/hub-okf/workspace/readme.ts";
 import { PRODUCT_SKILL_NAMES } from "../installation/product-skills.mjs";
@@ -33,12 +35,17 @@ const v13EnabledTools = [
   ...v13RequiredTools, "search_graph", "trace_path", "get_code_snippet", "search_code",
   "search_hub_okf", "read_hub_okf_concept",
 ];
-const initialIngestPromptVersions = new Set(["okf-author-v13", "okf-author-v14", "okf-author-v15", "okf-author-v16", "okf-author-v17"]);
-const configuredInitialIngestPromptVersions = new Set(["okf-author-v16", "okf-author-v17"]);
-const skillInitialIngestPromptVersions = new Set(["okf-author-v17"]);
+const initialIngestPromptVersions = new Set(["okf-author-v13", "okf-author-v14", "okf-author-v15", "okf-author-v16", "okf-author-v17", "okf-author-v18", "okf-author-v19", "okf-author-v20", "okf-author-v21", "okf-author-v22"]);
+const configuredInitialIngestPromptVersions = new Set(["okf-author-v16", "okf-author-v17", "okf-author-v18", "okf-author-v19", "okf-author-v20", "okf-author-v21", "okf-author-v22"]);
+const skillInitialIngestPromptVersions = new Set(["okf-author-v17", "okf-author-v18", "okf-author-v19", "okf-author-v20", "okf-author-v21", "okf-author-v22"]);
+const receiptQualificationPromptVersions = new Set(["okf-author-v18", "okf-author-v19", "okf-author-v20", "okf-author-v21", "okf-author-v22"]);
 const configuredInitialIngestRequiredTools = v13RequiredTools.filter((tool) => tool !== "configure_hub");
 const configuredInitialIngestEnabledTools = v13EnabledTools.filter((tool) => tool !== "configure_hub");
-const skillInitialIngestRequiredTools = configuredInitialIngestRequiredTools.filter((tool) => tool !== "get_hub_status");
+const receiptInitialIngestRequiredTools = [
+  "preflight_hub_ingest", "index_repository", "get_okf_authoring_schemas", "prepare_hub_okf",
+  "validate_okf_changes", "finalize_hub_okf_proposal", "inspect_hub_okf_proposal",
+];
+const skillInitialIngestRequiredTools = receiptInitialIngestRequiredTools;
 const skillInitialIngestEnabledTools = [
   ...skillInitialIngestRequiredTools, "search_graph", "trace_path", "get_code_snippet", "search_code",
   "index_status", "check_index_coverage", "detect_changes", "search_hub_okf", "read_hub_okf_concept",
@@ -55,7 +62,7 @@ const refreshEnabledTools = [
 const batchPromptVersions = new Set(["okf-batch-ingest-v1", "okf-batch-ingest-v2", "okf-batch-ingest-v3", "okf-batch-ingest-v4"]);
 const batchRequiredTools = [
   "get_hub_status", "configure_hub", "prepare_batch_hub_ingest", "confirm_batch_hub_ingest",
-  "index_repository", "get_architecture", "get_okf_authoring_schemas", "prepare_hub_okf",
+  "preflight_hub_ingest", "index_repository", "get_okf_authoring_schemas", "prepare_hub_okf",
   "validate_okf_changes", "record_batch_hub_ingest_member",
   "finalize_batch_hub_ingest_proposal", "inspect_hub_okf_proposal",
 ];
@@ -90,9 +97,102 @@ export function validateV13Lifecycle(mcpTools, guidanceAttempts = [], requireCon
 }
 
 export function validateSkillInitialIngestLifecycle(mcpTools, guidanceAttempts = []) {
-  const failures = validateV13Lifecycle(mcpTools, guidanceAttempts, false)
-    .filter((failure) => !failure.startsWith("get_hub_status must run exactly once"));
-  return [...failures, ...(mcpTools.get_hub_status ? ["skill-backed Initial Ingest must begin with preflight, not get_hub_status"] : [])];
+  const exactlyOnce = ["preflight_hub_ingest", "index_repository", "prepare_hub_okf", "inspect_hub_okf_proposal"];
+  const guidanceCount = mcpTools.get_okf_authoring_schemas ?? 0;
+  const cleanGuidance = guidanceCount === 1 && (guidanceAttempts.length === 0 || guidanceAttempts[0]?.status === "completed");
+  const correctedGuidance = guidanceCount === 2 && guidanceAttempts[0]?.status === "failed"
+    && guidanceAttempts[0]?.code === "INVALID_ARGUMENT" && guidanceAttempts[0]?.retryable === true
+    && guidanceAttempts[1]?.status === "completed";
+  return [
+    ...exactlyOnce.filter((tool) => mcpTools[tool] !== 1)
+      .map((tool) => `${tool} must run exactly once; observed ${mcpTools[tool] ?? 0}`),
+    ...((mcpTools.finalize_hub_okf_proposal ?? 0) >= 1 && (mcpTools.finalize_hub_okf_proposal ?? 0) <= 2
+      ? [] : [`finalize_hub_okf_proposal must run once, or twice after one repair; observed ${mcpTools.finalize_hub_okf_proposal ?? 0}`]),
+    ...((mcpTools.validate_okf_changes ?? 0) >= 1 && (mcpTools.validate_okf_changes ?? 0) <= 2
+      ? [] : [`validate_okf_changes must run once, or twice after one repair; observed ${mcpTools.validate_okf_changes ?? 0}`]),
+    ...(cleanGuidance || correctedGuidance ? []
+      : [`get_okf_authoring_schemas must freeze one Receipt after at most one input correction; observed ${guidanceCount}`]),
+    ...["get_hub_status", "configure_hub", ...v13ForbiddenTools].filter((tool) => mcpTools[tool])
+      .map((tool) => `forbidden skill-backed Initial Ingest tool observed: ${tool}`),
+  ];
+}
+
+function toolResultObjects(item) {
+  const values = [];
+  if (item?.result?.structured_content && typeof item.result.structured_content === "object") {
+    values.push(item.result.structured_content);
+  }
+  for (const block of item?.result?.content ?? []) {
+    if (block?.type !== "text" || typeof block.text !== "string") continue;
+    try {
+      const parsed = JSON.parse(block.text);
+      if (parsed && typeof parsed === "object") values.push(parsed);
+    } catch { /* Provider prose is not qualification evidence. */ }
+  }
+  return values;
+}
+
+function compactDiscoverySeed(seed) {
+  if (!seed || typeof seed !== "object") return null;
+  return {
+    id: seed.id ?? null,
+    state: seed.state ?? null,
+    sourceCommit: seed.source?.commit ?? null,
+    groups: Array.isArray(seed.groups) ? seed.groups.map((group) => ({
+      id: group?.id ?? null,
+      lane: group?.lane ?? null,
+      priority: group?.priority ?? null,
+      kind: group?.kind ?? null,
+      sourcePaths: Array.isArray(group?.sources)
+        ? [...new Set(group.sources.map((source) => source?.path).filter((value) => typeof value === "string"))].sort()
+        : [],
+    })) : [],
+  };
+}
+
+export function validateReceiptDiscoveryLifecycle(discovery, expectedChecks = [], expectedCommit = null) {
+  const failures = [];
+  const seed = discovery?.seed;
+  const inventory = discovery?.inventory;
+  if (!seed || seed.state !== "ready" || !/^discovery-seed-[a-f0-9]{24}$/.test(seed.id ?? "")) {
+    failures.push("index_repository did not return one ready Discovery Seed");
+  }
+  if (expectedCommit && seed?.sourceCommit !== expectedCommit) {
+    failures.push(`Discovery Seed source revision differs from the pinned fixture: ${seed?.sourceCommit ?? "unavailable"}`);
+  }
+  if (!inventory || inventory.seedId !== seed?.id) {
+    failures.push("successful guidance Inventory does not bind the observed Discovery Seed");
+  }
+  const inventoryItems = inventory?.items ?? [];
+  const allowedOutcomes = new Set(["materialized", "question", "ignored"]);
+  const outcomes = new Map(inventoryItems.map((item) => [item.originGroupId, item.outcome]));
+  for (const item of inventoryItems) {
+    if (!allowedOutcomes.has(item.outcome)) {
+      failures.push(`Inventory item has an unsupported outcome: ${item.originGroupId ?? "unknown"}`);
+    }
+  }
+  for (const group of seed?.groups ?? []) {
+    if (group.priority === "p0" && !outcomes.has(group.id)) {
+      failures.push(`P0 discovery group lacks an Inventory outcome: ${group.id}`);
+    }
+  }
+  for (const check of expectedChecks) {
+    const group = (seed?.groups ?? []).find((candidate) => candidate.lane === check.lane
+      && (!check.priority || candidate.priority === check.priority)
+      && candidate.sourcePaths.includes(check.sourcePath));
+    if (!group) {
+      failures.push(`representative ${check.lane} source did not enter the Seed: ${check.sourcePath}`);
+    } else if (!outcomes.has(group.id)) {
+      failures.push(`representative Seed group lacks a proposal outcome: ${group.id}`);
+    }
+  }
+  if (!/^discovery-receipt-[a-f0-9]{24}$/.test(discovery?.receiptId ?? "")) {
+    failures.push("successful guidance did not return one Discovery Receipt");
+  }
+  if (discovery?.prepareReceiptId !== discovery?.receiptId) {
+    failures.push("Prepare did not consume the exact frozen Discovery Receipt");
+  }
+  return [...new Set(failures)];
 }
 
 export function validateRefreshLifecycle(mcpTools) {
@@ -112,8 +212,8 @@ export function validateRefreshLifecycle(mcpTools) {
 export function validateBatchLifecycle(mcpTools, memberCount) {
   const once = ["get_hub_status", "configure_hub", "prepare_batch_hub_ingest",
     "confirm_batch_hub_ingest", "finalize_batch_hub_ingest_proposal", "inspect_hub_okf_proposal"];
-  const perMember = ["index_repository", "get_architecture", "prepare_hub_okf", "record_batch_hub_ingest_member"];
-  const forbidden = ["preflight_hub_ingest", "finalize_hub_okf_proposal", "accept_hub_okf_proposal",
+  const perMember = ["preflight_hub_ingest", "index_repository", "prepare_hub_okf", "record_batch_hub_ingest_member"];
+  const forbidden = ["finalize_hub_okf_proposal", "accept_hub_okf_proposal",
     "submit_hub_okf_proposals", "synchronize_hub_okf", "bootstrap_hub", "preview_hub_bootstrap",
     "prepare_domain_enrichment", "run_domain_enrichment"];
   return [
@@ -199,7 +299,7 @@ function gitSync(root, args, commitTimestamp) {
   return result.stdout.trim();
 }
 
-function seedInitialIngestHub(runtimeRoot) {
+function seedInitialIngestHub(runtimeRoot, token) {
   const hub = createHubIdentity("agentbase-benchmark/isolated-hub", "main");
   const localHubId = hubProfileId(hub);
   const root = path.join(runtimeRoot, "data", "agentbase-mcp", "hubs", localHubId);
@@ -225,6 +325,15 @@ function seedInitialIngestHub(runtimeRoot) {
   activatePersistedHubConfiguration({ formatVersion: 1, kind: "remote", localHubId, localRoot: root,
     baseCommit, catalogVersion: "7.0.0", host: hub.host, repository: hub.repository,
     targetBranch: hub.targetBranch }, environment, null);
+  writeHubProfileToken(localHubId, token, environment);
+}
+
+function qualificationHubToken(host) {
+  const configuration = resolveHubConfiguration(process.env);
+  if (configuration.kind !== "remote" || configuration.host !== host || !configuration.token) {
+    throw new Error(`released-skill qualification requires the configured AgentBase Hub token for ${host}`);
+  }
+  return configuration.token;
 }
 
 function createRefreshSource(repository, entry) {
@@ -375,6 +484,7 @@ export function summarizeAgentEvents(events) {
   const authoringActivity = {};
   const mcpTools = {};
   const guidanceAttempts = [];
+  const discovery = { seed: null, inventory: null, receiptId: null, prepareReceiptId: null };
   let usage = null;
   let finalValidationIdentities = null;
   for (const line of events.split("\n")) {
@@ -388,6 +498,31 @@ export function summarizeAgentEvents(events) {
           mcpTools[item.tool] = (mcpTools[item.tool] ?? 0) + 1;
           if (item.tool === "get_okf_authoring_schemas") {
             guidanceAttempts.push({ status: item.status, ...toolError(item) });
+            if (item.status === "completed") {
+              const inventory = item.arguments?.discovery_inventory;
+              if (inventory && typeof inventory === "object") {
+                discovery.inventory = {
+                  seedId: inventory.seed_id ?? null,
+                  items: Array.isArray(inventory.items) ? inventory.items.map((inventoryItem) => ({
+                    originGroupId: inventoryItem?.origin_group_id ?? null,
+                    outcome: inventoryItem?.outcome ?? null,
+                  })) : [],
+                };
+              }
+              for (const value of toolResultObjects(item)) {
+                if (typeof value.discovery_receipt_id === "string") discovery.receiptId = value.discovery_receipt_id;
+              }
+            }
+          }
+          if (item.tool === "index_repository" && item.status === "completed") {
+            for (const value of toolResultObjects(item)) {
+              const seed = compactDiscoverySeed(value.agentbase_discovery_seed);
+              if (seed) discovery.seed = seed;
+            }
+          }
+          if (item.tool === "prepare_hub_okf" && item.status === "completed"
+            && typeof item.arguments?.discovery_receipt_id === "string") {
+            discovery.prepareReceiptId = item.arguments.discovery_receipt_id;
           }
           if (authoringTools.has(item.tool)) {
             const argumentBytes = serializedBytes(item.arguments);
@@ -442,6 +577,7 @@ export function summarizeAgentEvents(events) {
       observedSourceReadBytes: null,
       limitation: "event trace does not prove complete source-read volume",
       finalValidationIdentities,
+      discovery,
     },
     completedTools: [...completed].sort(),
   };
@@ -500,7 +636,8 @@ function validateAgentWorkspace(workspace, allowInstalledSkills = false) {
   const entries = fs.readdirSync(workspace).sort();
   const expected = allowInstalledSkills ? [".agents", "okf"] : ["okf"];
   if (JSON.stringify(entries) !== JSON.stringify(expected)) {
-    throw new Error(`agent workspace must contain only okf/, found: ${entries.join(", ") || "nothing"}`);
+    const requirement = allowInstalledSkills ? "exactly .agents/ and okf/" : "only okf/";
+    throw new Error(`agent workspace must contain ${requirement}, found: ${entries.join(", ") || "nothing"}`);
   }
   if (!fs.statSync(path.join(workspace, "okf")).isDirectory()) throw new Error("agent output okf is not a directory");
 }
@@ -523,7 +660,9 @@ export function runAgentRepository({
   const skillDigests = arm === "mcp" && skillInitialIngestPromptVersions.has(manifest.promptVersion)
     ? installBenchmarkProductSkills(workspace) : null;
   const isRefresh = refreshPromptVersions.has(manifest.promptVersion);
-  if (arm === "mcp" && configuredInitialIngestPromptVersions.has(manifest.promptVersion)) seedInitialIngestHub(runtimeRoot);
+  if (arm === "mcp" && configuredInitialIngestPromptVersions.has(manifest.promptVersion)) {
+    seedInitialIngestHub(runtimeRoot, qualificationHubToken("github.com"));
+  }
   const sourceRepository = isRefresh ? createRefreshSource(repository, entry) : repository;
   if (isRefresh) seedRefreshHub(runtimeRoot, entry);
   const startedAt = new Date().toISOString();
@@ -630,6 +769,10 @@ export function runAgentRepository({
         !configuredInitialIngestPromptVersions.has(promptVersion)) : [];
   const refreshLifecycleFailures = refreshPromptVersions.has(promptVersion)
     ? validateRefreshLifecycle(summary.activity.mcpTools) : [];
+  const discoveryChecks = receiptQualificationPromptVersions.has(promptVersion)
+    ? JSON.parse(fs.readFileSync(path.join(manifest.root, entry.expectation), "utf8")).discoveryChecks ?? [] : [];
+  const discoveryLifecycleFailures = receiptQualificationPromptVersions.has(promptVersion)
+    ? validateReceiptDiscoveryLifecycle(summary.activity.discovery, discoveryChecks, entry.commit) : [];
   const directMcpFailure = arm === "direct" && summary.activity.mcpToolCalls
     ? ["direct arm unexpectedly observed MCP tool calls"] : [];
   const completed = {
@@ -640,6 +783,11 @@ export function runAgentRepository({
     process: { exitCode: result.status, signal: result.signal, error: result.error?.message ?? null },
     usage: summary.usage,
     activity: summary.activity,
+    discoveryQualification: receiptQualificationPromptVersions.has(promptVersion) ? {
+      status: discoveryLifecycleFailures.length ? "failed" : "passed",
+      representativeChecks: discoveryChecks,
+      failures: discoveryLifecycleFailures,
+    } : null,
     requiredToolUsage: usage,
     failures: [
       ...(failure ? [failure] : []),
@@ -647,6 +795,7 @@ export function runAgentRepository({
       ...requiredToolFailures(usage, summary.activity.mcpTools),
       ...v13LifecycleFailures,
       ...refreshLifecycleFailures,
+      ...discoveryLifecycleFailures,
     ],
   };
   if (completed.failures.length) completed.outcome = "failed";

@@ -28,9 +28,21 @@ export type HubProposalInspection = Readonly<{
   applicable: boolean;
   questions?: readonly QuestionDeclaration[];
   coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
+  discovery?: Readonly<{
+    sourceRevision: string;
+    lanes: readonly Readonly<{ lane: string; status: string; limitation?: string }>[];
+    embeddedGroups: readonly string[];
+    relationsAndFlows: readonly string[];
+    questions: readonly string[];
+    ignoredCounts: Readonly<Record<string, number>>;
+    ignoredReasons: readonly string[];
+    limitations: readonly string[];
+  }>;
+  activity?: Readonly<{ repositoryLog: string; domainLog: null }>;
   groups: HubInspectionGroups;
   batch?: Readonly<{
-    members: readonly Readonly<{ repositoryId: string; paths: readonly string[] }>[];
+    members: readonly Readonly<{ repositoryId: string; paths: readonly string[];
+      discovery?: HubProposalInspection["discovery"] }>[];
     sharedPaths: readonly string[];
   }>;
 }>;
@@ -62,11 +74,14 @@ export function attachHubInspectionContext(
   inspection: HubProposalInspection,
   questions: readonly QuestionDeclaration[] = inspection.questions ?? [],
   coverage: HubProposalInspection["coverage"] = inspection.coverage,
+  context: Readonly<Pick<HubProposalInspection, "discovery" | "activity">> = {},
 ): HubProposalInspection {
   return {
     ...inspection,
     ...(questions.length ? { questions } : {}),
     ...(coverage ? { coverage } : {}),
+    ...(context.discovery ? { discovery: context.discovery } : {}),
+    ...(context.activity ? { activity: context.activity } : {}),
     groups: groups(inspection.entries, questions, coverage?.limitations ?? []),
   };
 }

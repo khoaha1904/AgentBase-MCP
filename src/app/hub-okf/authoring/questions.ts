@@ -5,7 +5,9 @@ import path from "node:path";
 import type { AdmittedLocalHubState } from "../../../core/hub/index.ts";
 import {
   createQuestionId, loadOkfBundle, mergeOpenQuestion, parseQuestionDocument,
-  readObservedValues, renderQuestionDocument, renderQuestionIndex,
+  parseRepositorySourceResource, readObservedValues, readRepositoryIdentityRecord,
+  renderQuestionDocument, renderQuestionIndex,
+  type InventoryReceipt,
   type ObservedValue, type ObservedValueRole, type OkfValue,
   type OwnedItemQuestionReference, type QuestionState, type SharedQuestion,
 } from "../../../core/knowledge/index.ts";
@@ -133,10 +135,78 @@ export function materializeQuestionDeclarations(
   return affected;
 }
 
+function receiptQuestion(
+  plan: InventoryReceipt["inventory"]["questionPlans"][number],
+  subject: string,
+  createdAt: string,
+): SharedQuestion {
+  const identity = { kind: plan.kind, originSubject: subject, originProperty: plan.property, scopeKey: plan.scopeKey };
+  return {
+    id: createQuestionId(identity), revision: 1, state: "open", ...identity,
+    subject, property: plan.property,
+    references: plan.candidateEvidence.map((reference) => ({
+      referenceKind: "candidate-evidence" as const,
+      candidateKey: reference.candidateKey,
+      sourceResource: reference.sourceResource,
+      observedRevision: reference.observedRevision,
+    })),
+    missingEvidence: plan.missingEvidence,
+    limitations: plan.limitations,
+    guidance: [],
+    title: `Question: ${subject} ${plan.property}`,
+    createdAt,
+  };
+}
+
+export function materializeReceiptQuestionPlans(
+  targetRoot: string,
+  receipt: InventoryReceipt,
+  skeletons: readonly Readonly<{ candidateId?: string; identity: string }>[],
+  createdAt: string,
+): readonly SharedQuestion[] {
+  const skeletonByCandidate = new Map(skeletons.flatMap((skeleton) => skeleton.candidateId
+    ? [[skeleton.candidateId, skeleton] as const] : []));
+  const candidates = new Map(receipt.guidanceRequest.candidates.map((candidate) => [candidate.id, candidate]));
+  const current = new Map(questionDocuments(targetRoot).map((question) => [question.id, question]));
+  const affected: SharedQuestion[] = [];
+  for (const plan of receipt.inventory.questionPlans) {
+    const candidate = candidates.get(plan.targetCandidateId);
+    const ownerCandidateId = candidate?.disposition === "embedded" ? candidate.parentCandidateId : candidate?.id;
+    const owner = ownerCandidateId ? skeletonByCandidate.get(ownerCandidateId) : undefined;
+    if (!owner) throw new Error(`QuestionPlan ${plan.id} target did not materialize`);
+    for (const reference of plan.candidateEvidence) {
+      if (reference.observedRevision !== receipt.source.commit
+        || !reference.sourceResource.startsWith(`repository://${receipt.source.repositoryId}/`)) {
+        throw new Error(`QuestionPlan ${plan.id} evidence is outside the Receipt source`);
+      }
+    }
+    const incoming = receiptQuestion(plan, owner.identity, createdAt);
+    const existing = current.get(incoming.id);
+    const next = existing ? mergeOpenQuestion(existing, incoming) : incoming;
+    current.set(next.id, next);
+    affected.push(next);
+    writePrivateFile(targetRoot, `questions/${next.id}.md`, renderQuestionDocument(next));
+  }
+  if (affected.length) writePrivateFile(targetRoot, "questions/index.md", renderQuestionIndex([...current.values()]));
+  validateSharedQuestionBundle(targetRoot);
+  return affected;
+}
+
 export function validateSharedQuestionBundle(root: string): void {
   const bundle = loadOkfBundle(root), questions = questionDocuments(root), failures: string[] = [];
+  const repositoryIds = new Set([...bundle.concepts.values()].flatMap((concept) => {
+    const repository = readRepositoryIdentityRecord(concept);
+    return repository ? [repository.id] : [];
+  }));
   for (const question of questions) for (const reference of question.references) {
-    if (reference.referenceKind !== "owned-item") continue;
+    if (reference.referenceKind === "candidate-evidence") {
+      const parsed = parseRepositorySourceResource(reference.sourceResource);
+      if (!parsed || !repositoryIds.has(parsed.repositoryId)
+        || reference.observedRevision !== undefined && !/^[a-f0-9]{40}$/.test(reference.observedRevision)) {
+        failures.push(`${question.id}: candidate evidence does not resolve to a Hub Repository source`);
+      }
+      continue;
+    }
     const owner = bundle.concepts.get(reference.owner);
     if (!owner) { failures.push(`${question.id}: reference owner is missing: ${reference.owner}`); continue; }
     const sources = new Set((Array.isArray(owner.frontmatter.sources) ? owner.frontmatter.sources : [])
@@ -167,7 +237,15 @@ function questionView(root: string, question: SharedQuestion): GovernedQuestion 
     const owner = bundle.concepts.get(reference.owner);
     return owner ? readObservedValues(owner).filter((value) => value.id === reference.itemKey) : [];
   });
-  const repositoryId = observations[0]?.source.repositoryId;
+  const repositoryIds = new Set([
+    ...observations.flatMap((observation) => observation.source.repositoryId ? [observation.source.repositoryId] : []),
+    ...question.references.flatMap((reference) => {
+      if (reference.referenceKind !== "candidate-evidence") return [];
+      const parsed = parseRepositorySourceResource(reference.sourceResource);
+      return parsed ? [parsed.repositoryId] : [];
+    }),
+  ]);
+  const repositoryId = repositoryIds.size === 1 ? [...repositoryIds][0] : undefined;
   return { ...question, status: question.state, ...(repositoryId ? { sourceRepositoryId: repositoryId } : {}),
     observationIds: observations.map((value) => value.id), observations };
 }

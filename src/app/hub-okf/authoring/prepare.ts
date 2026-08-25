@@ -37,6 +37,7 @@ export type PrepareNewHubOptions = Readonly<{
   signals: readonly string[];
   selectedSchemas?: readonly string[];
   questionPaths?: readonly string[];
+  activityPaths?: readonly string[];
   createdAt: string;
 }>;
 export type PrepareNewLocalHubOptions = Omit<PrepareNewHubOptions, "hub"> & Readonly<{ localHubId: string }>;
@@ -87,6 +88,7 @@ export function prepareNewHubProposal(
   }
   const createdIdentities = new Set<string>();
   const questionPaths = new Set(options.questionPaths ?? []);
+  const activityPaths = new Set(options.activityPaths ?? []);
   for (const concept of authored.concepts.values()) {
     if (concept.type === "Question") {
       const previous = base.concepts.get(concept.conceptId);
@@ -136,7 +138,7 @@ export function prepareNewHubProposal(
     if (entry.change === "modified") return path.posix.basename(entry.path) !== "index.md";
     if (entry.change === "created") {
       const isIndex = path.posix.basename(entry.path) === "index.md";
-      return !isIndex && !authored.concepts.has(entry.path.slice(0, -3));
+      return !isIndex && !authored.concepts.has(entry.path.slice(0, -3)) && !activityPaths.has(entry.path);
     }
     return true;
   });

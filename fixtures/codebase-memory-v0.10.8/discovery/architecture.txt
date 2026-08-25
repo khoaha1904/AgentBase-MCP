@@ -1,0 +1,25 @@
+project: fixture
+total_nodes: 12
+total_edges: 15
+node_labels: 2  (cols: label count)
+  Function 8
+  File 4
+edge_types: 2  (cols: type count)
+  DEFINES 8
+  CALLS 7
+languages: 2  (cols: language files)
+  TypeScript 1
+  HCL 1
+packages: 1  (cols: name nodes fan_in fan_out)
+  app 8 0 1
+entry_points: 1  (cols: qn file)
+  fixture.src.handler.main src/handler.ts
+routes: 1  (cols: method path handler file)
+  POST /jobs fixture.src.handler.main src/handler.ts
+hotspots: 0  (cols: qn complexity file)
+boundaries: 1  (cols: from to calls)
+  app queue 1
+layers: 1  (cols: name layer reason)
+  app entry "outbound calls"
+clusters: 1  (cols: id nodes cohesion)
+  0 8 0.8

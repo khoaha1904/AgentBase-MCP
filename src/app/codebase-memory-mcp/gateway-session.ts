@@ -14,6 +14,7 @@ import {
 } from "../../providers/codebase-memory/index.ts";
 import { assertProviderManifest, isSafeToolName, SAFE_TOOL_NAMES, type SafeToolName } from "./tool-manifest.ts";
 import { controlledIndex } from "./tool-policy.ts";
+import { DiscoverySession } from "./discovery-session.ts";
 
 export type RawProviderFactory = (options: Readonly<{
   repositoryRoot: string;
@@ -24,6 +25,7 @@ export type GatewaySessionOptions = Readonly<{
   projectRoot: string;
   stateRoot?: string;
   providerFactory?: RawProviderFactory;
+  discoverySession?: DiscoverySession;
 }>;
 
 function privateCache(stateRoot: string, repositoryRoot: string): string {
@@ -70,6 +72,7 @@ function defaultProviderFactory(projectRoot: string): RawProviderFactory {
 export class GatewaySession {
   readonly #stateRoot: string;
   readonly #providerFactory: RawProviderFactory;
+  readonly #discoverySession: DiscoverySession;
   #repositoryRoot: string | undefined;
   #provider: ScopedSession | undefined;
   #binding: Promise<ScopedSession> | null = null;
@@ -78,6 +81,7 @@ export class GatewaySession {
   constructor(options: GatewaySessionOptions) {
     this.#stateRoot = options.stateRoot ?? defaultStateRoot();
     this.#providerFactory = options.providerFactory ?? defaultProviderFactory(options.projectRoot);
+    this.#discoverySession = options.discoverySession ?? new DiscoverySession();
   }
 
   get repositoryRoot(): string | undefined { return this.#repositoryRoot; }
@@ -112,15 +116,22 @@ export class GatewaySession {
     if (!isSafeToolName(tool)) throw new Error(`tool is not exposed by AgentBase: ${tool}`);
     let provider = this.#provider;
     let providerArguments = argumentsValue;
+    let indexedRoot: string | undefined;
     if (tool === "index_repository") {
       const controlled = controlledIndex(argumentsValue);
       provider = await this.#select(controlled.repositoryRoot);
       providerArguments = controlled.arguments;
+      indexedRoot = controlled.repositoryRoot;
     } else if (!provider) {
       throw new Error("index_repository must select one repository before graph reads on this MCP connection");
     }
     const result = await provider.invoke(tool as SafeToolName, providerArguments);
     if (!isCallToolResult(result)) throw new Error(`provider returned an invalid MCP result for ${tool}`);
+    if (tool === "index_repository" && indexedRoot && result.isError !== true) {
+      const project = typeof providerArguments.name === "string" && providerArguments.name.trim()
+        ? providerArguments.name.trim() : path.basename(indexedRoot);
+      return this.#discoverySession.captureAfterIndex({ repositoryRoot: indexedRoot, project, provider, result });
+    }
     return result;
   }
 

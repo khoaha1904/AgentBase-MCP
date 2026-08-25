@@ -1,20 +1,20 @@
 --- a/Makefile.cbm
 +++ b/Makefile.cbm
 @@ -708,6 +708,10 @@
- 
+
  BUILD_DIR = build/c
- 
+
 +# AgentBase supplies deterministic NULL factories for grammars omitted from its
 +# bounded parser profile. Empty in pristine upstream builds.
 +AGENTBASE_GRAMMAR_STUB_SRC ?=
 +
  # ── Object file compilation (grammars need relaxed warnings) ─────
- 
+
  # Grammar + tree-sitter runtime: compiled without -Werror (upstream code has warnings)
 @@ -1039,9 +1043,9 @@
  	else mv -f $@.tmp $@; rm -f $(BUILD_DIR)/codebase-memory-mcp; \
  	echo "=== build config changed -> full rebuild: $(BUILD_CONFIG_SIG) ==="; fi
- 
+
 -$(BUILD_DIR)/codebase-memory-mcp: $(MAIN_SRC) $(PROD_SRCS) $(EXTRACTION_SRCS) $(AC_LZ4_SRCS) $(ZSTD_SRCS) $(SQLITE_WRITER_SRC) $(OBJS_VENDORED_PROD) $(BUILD_DIR)/.build-config $(PROJECT_HDRS) | $(BUILD_DIR)
 +$(BUILD_DIR)/codebase-memory-mcp: $(MAIN_SRC) $(PROD_SRCS) $(AGENTBASE_GRAMMAR_STUB_SRC) $(EXTRACTION_SRCS) $(AC_LZ4_SRCS) $(ZSTD_SRCS) $(SQLITE_WRITER_SRC) $(OBJS_VENDORED_PROD) $(BUILD_DIR)/.build-config $(PROJECT_HDRS) | $(BUILD_DIR)
  	$(CC) $(CFLAGS_PROD) -o $@ \
@@ -24,7 +24,7 @@
  		$(OBJS_VENDORED_PROD) \
  		$(LDFLAGS)
 @@ -1066,7 +1070,7 @@
- 
+
  cbm-with-ui: embed $(OBJS_VENDORED_PROD)
  	$(CC) $(CFLAGS_PROD) -o $(BUILD_DIR)/codebase-memory-mcp \
 -		$(MAIN_SRC) $(PROD_SRCS_WITH_ASSETS) \
@@ -39,13 +39,13 @@
  #include "foundation/profile.h"
  #include "foundation/mem.h"
 +#include "lang_specs.h"
- 
+
  #include <errno.h>
  #include <stdint.h>
 @@ -2137,6 +2138,29 @@
      return rc;
  }
- 
+
 +static void filter_unavailable_grammars(cbm_pipeline_t *p, cbm_file_info_t *files, int *count) {
 +    int retained = 0;
 +    for (int i = 0; i < *count; i++) {
@@ -77,7 +77,7 @@
          goto cleanup;
      }
 +    filter_unavailable_grammars(p, files, &file_count);
- 
+
      /* Check for existing DB → try incremental or delete for reindex */
      rc = try_incremental_or_delete_db(p, files, file_count, baseline_manifest, baseline_count,
 @@ -2268,6 +2292,7 @@
@@ -87,7 +87,7 @@
 +        filter_unavailable_grammars(p, files, &file_count);
      }
      cbm_log_info("pipeline.route", "path", "full");
- 
+
 --- a/src/pipeline/pipeline.h
 +++ b/src/pipeline/pipeline.h
 @@ -115,7 +115,8 @@
@@ -100,3 +100,138 @@
                     * is a RESERVED phase string for Track C's crash-attribution
                     * signal and is intentionally NOT emitted today (the
                     * cross-LSP passes are best-effort/void with no genuine
+--- a/src/foundation/workspace.h
++++ b/src/foundation/workspace.h
+@@ -104,6 +104,11 @@
+ const char *cbm_workspace_home_dir(void);
+ const char *cbm_workspace_cache_dir(void);
+
++/* AgentBase-owned admission rule for source indexing. The path is repository
++ * relative and is rejected before stat/open when it names generated trees or
++ * credential-like material. */
++bool cbm_workspace_path_is_agentbase_denied(const char *relative_path);
++
+ #endif /* CBM_FOUNDATION_WORKSPACE_H */
+
+ /*
+--- a/src/foundation/workspace.c
++++ b/src/foundation/workspace.c
+@@ -9,6 +9,7 @@
+ #include "foundation/platform.h"
+ #include "foundation/sha256.h"
+
++#include <ctype.h>
+ #include <stdlib.h>
+
+ #include <stdio.h>
+@@ -30,6 +31,66 @@
+     return c == '/' || c == '\\';
+ }
+
++static bool ws_ends_with(const char *value, const char *suffix) {
++    size_t value_len = strlen(value);
++    size_t suffix_len = strlen(suffix);
++    return value_len >= suffix_len && strcmp(value + value_len - suffix_len, suffix) == 0;
++}
++
++bool cbm_workspace_path_is_agentbase_denied(const char *relative_path) {
++    if (!relative_path || !relative_path[0]) {
++        return true;
++    }
++    size_t length = strlen(relative_path);
++    if (length >= 4096U) {
++        return true;
++    }
++    char lowered[4096];
++    for (size_t i = 0; i <= length; i++) {
++        unsigned char c = (unsigned char)relative_path[i];
++        lowered[i] = ws_is_sep((char)c) ? '/' : (char)tolower(c);
++    }
++
++    static const char *denied_dirs[] = {
++        ".git", ".agentbase", ".codebase-memory", "node_modules", "vendor", "dist",
++        "build", "coverage", "target", ".terraform", ".cache", ".next", ".nuxt",
++        "__pycache__", NULL,
++    };
++    const char *cursor = lowered;
++    while (*cursor) {
++        const char *end = strchr(cursor, '/');
++        size_t component_len = end ? (size_t)(end - cursor) : strlen(cursor);
++        if (component_len == 0U || (component_len == 1U && cursor[0] == '.') ||
++            (component_len == 2U && cursor[0] == '.' && cursor[1] == '.')) {
++            return true;
++        }
++        for (int i = 0; denied_dirs[i]; i++) {
++            if (strlen(denied_dirs[i]) == component_len &&
++                strncmp(cursor, denied_dirs[i], component_len) == 0) {
++                return true;
++            }
++        }
++        if (!end) {
++            break;
++        }
++        cursor = end + 1;
++    }
++
++    const char *name = strrchr(lowered, '/');
++    name = name ? name + 1 : lowered;
++    if (strcmp(name, ".env") == 0 || strncmp(name, ".env.", 5U) == 0 ||
++        ws_ends_with(name, ".env") || strcmp(name, ".netrc") == 0 ||
++        strcmp(name, ".npmrc") == 0 || strcmp(name, ".pypirc") == 0 ||
++        strcmp(name, "credentials") == 0 || strcmp(name, "credentials.json") == 0 ||
++        strcmp(name, "id_rsa") == 0 || strcmp(name, "id_ed25519") == 0 ||
++        ws_ends_with(name, ".pem") || ws_ends_with(name, ".key") ||
++        ws_ends_with(name, ".p12") || ws_ends_with(name, ".pfx") ||
++        ws_ends_with(name, ".crt") || ws_ends_with(name, ".cer")) {
++        return true;
++    }
++    return false;
++}
++
+ /* Length of the volume prefix: "/" on POSIX, "C:/" for a drive, "//srv/share"
+  * for a UNC share. Returns 0 when the path is not absolute. */
+ static size_t ws_volume_prefix_len(const char *path) {
+--- a/src/discover/discover.c
++++ b/src/discover/discover.c
+@@ -886,6 +886,11 @@
+         return;
+     }
+
++    if (cbm_workspace_path_is_agentbase_denied(rel_path)) {
++        file_list_add_excluded(out, rel_path);
++        return;
++    }
++
+     struct stat st;
+     if (safe_stat(abs_path, &st) != 0) {
+         if (out->count_only) {
+--- a/src/pipeline/pass_envscan.c
++++ b/src/pipeline/pass_envscan.c
+@@ -23,6 +23,7 @@
+ #include "pipeline/pipeline.h"
+ #include "pipeline/pipeline_internal.h"
+ #include "foundation/log.h"
++#include "foundation/workspace.h"
+
+ #include <ctype.h>
+ #include "foundation/compat_fs.h"
+@@ -522,6 +523,10 @@
+         return 0;
+     }
+
++    if (cbm_workspace_path_is_agentbase_denied(rel)) {
++        return 0;
++    }
++
+     struct stat st;
+     if (envscan_safe_stat(full_path, &st) != 0) {
+         return 0;
+--- a/src/pipeline/pass_infrascan.c
++++ b/src/pipeline/pass_infrascan.c
+@@ -4,3 +4,3 @@
+- * Pure helper functions for detecting infrastructure file types,
+- * secret filtering, and parsing Dockerfiles, .env files, shell scripts,
+- * and Terraform files.
++ * Pure helper functions for parsing already-admitted infrastructure source.
++ * Repository walkers must apply cbm_workspace_path_is_agentbase_denied before
++ * opening a file; this unit never opens paths itself.

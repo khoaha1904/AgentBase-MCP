@@ -130,8 +130,9 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
       "revise_batch_hub_ingest_membership", "finalize_batch_hub_ingest_proposal"]);
     assert.doesNotMatch(JSON.stringify(batchTools), /workspace_scan|parallel|credential|publish|accept/);
     const recordBatch = batchTools.find((tool) => tool.name === "record_batch_hub_ingest_member");
-    assert.match(JSON.stringify(recordBatch), /observed_values.*exact property.*role.*source_id/);
-    assert.match(JSON.stringify(recordBatch), /\^\[A-Za-z0-9\]/);
+    assert.deepEqual(Object.keys(recordBatch?.inputSchema.properties ?? {}).sort(),
+      ["manifest_id", "manifest_revision", "member_id", "session_id"]);
+    assert.doesNotMatch(JSON.stringify(recordBatch), /questions|observed_values|observation_refs/);
     const hubStatus = await client.callTool({ name: "get_hub_status", arguments: {} });
     assert.equal(hubStatus.isError, undefined);
     assert.match(hubStatus.content[0]?.type === "text" ? hubStatus.content[0].text : "", /unconfigured/);
@@ -150,14 +151,7 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
     assert.equal(fs.existsSync(path.join(state, "config")), false, "Code Graph use must not create Hub state");
     const unconfiguredHub = await client.callTool({ name: "prepare_hub_okf", arguments: {
       mode: "new", source_repository: repo, subject_directory: "repositories/acme",
-      guidance_request: {
-        candidates: [{ id: "system", identity_hint: "acme", identity_basis: "documented capability",
-          query_value: "Acme capability", disposition: "concept", suggested_type: "System",
-          evidence_ids: ["docs.system"], promotion: { basis: "operational", evidence_ids: ["docs.system"] } }],
-        semantic_observations: [{ id: "docs.system", candidate_id: "system", role: "documentation",
-          signal: "software system capability", source: { path: "README.md", start_line: 1, end_line: 1 } }],
-        resource_observations: [],
-      },
+      discovery_receipt_id: `discovery-receipt-${"a".repeat(24)}`,
     } });
     assert.equal(unconfiguredHub.isError, true);
     assert.match(unconfiguredHub.content[0]?.type === "text" ? unconfiguredHub.content[0].text : "", /connect an existing Hub or bootstrap an empty remote Hub/);

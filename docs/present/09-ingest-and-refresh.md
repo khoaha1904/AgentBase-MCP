@@ -1,8 +1,7 @@
 # 09 — Ingest và Refresh
 
-> Trạng thái: Initial Ingest/Refresh và Batch Initial Ingest đã implement theo
-> baseline hiện tại. Capability 046 broad-discovery redesign đã được owner chốt;
-> implementation và qualification mới chưa chạy.
+> Trạng thái: Initial Ingest/Refresh, Batch Initial Ingest và Capability 046
+> broad-discovery runtime đã implement; released-skill qualification còn pending.
 
 ## Câu trả lời ngắn
 
@@ -47,10 +46,15 @@ Scan chỉ liệt kê local repos và báo Hub classification unavailable.
   relation xuyên repository.
 - Discover kiểm tra năm lane: identity, runtime, interface/event, integration/
   data/channel và deploy/operations. Tín hiệu quan trọng phải được xử lý thành
-  concept, embedded, Question hoặc ignored có lý do.
+  `materialized`, Question hoặc ignored có lý do. Concept hay embedded là thuộc
+  tính của candidate được chọn, không phải một quyết định lặp lại ở Seed group.
 - Completeness toàn repository và số lượng concept không phải success gate.
   Proposal vẫn selective, nhưng không được sparse bằng cách bỏ qua tín hiệu có
   giá trị cao mà không ghi nhận.
+- MCP chuẩn bị embedded knowledge trong parent. Agent có thể viết lại nhãn/prose
+  cho dễ đọc; Finalize xác nhận nó còn tồn tại bằng exact Receipt evidence, không
+  bắt câu chữ phải giống nguyên identity hint. Nếu Agent làm mất cả row,
+  Finalize phục hồi row chuẩn từ Receipt thay vì dùng repair budget.
 
 Preflight của Hub Init bind exact remote default-branch commit trước Discover.
 Checkout hiện tại chỉ được reuse khi clean và trùng exact commit đó; nếu repo
@@ -93,6 +97,13 @@ bằng chứng chắc chắn rằng knowledge đã sai. Correction/removal theo 
 - Capability 046 giữ nguyên lifecycle/catalog nhưng chuyển từ candidate-only
   validation sang `Discovery Seed → Inventory Receipt → OKF`, đồng thời benchmark
   released skill theo tier tín hiệu thay vì exact concept inventory.
+- Khi một Question cần source evidence, AI chỉ chọn candidate và evidence đã
+  gửi trong cùng Inventory. MCP tự bind repository URI và exact revision vào
+  Receipt; AI không tự ghép provenance string.
+- Inventory chỉ giữ quyết định có ý nghĩa: origin group, candidate outputs,
+  Question hoặc ignored reason. MCP tự sinh item/QuestionPlan ID, parent mapping
+  và internal references; bounded Seed source samples phục vụ review chứ không
+  phải allowlist đầy đủ của repository evidence.
 - Refresh dùng exact commit diff trước known gaps/discovery, giữ foreign evidence
   và dừng ở proposal. Hai run Terra liên tiếp cập nhật nhất quán health contract
   từ `/status` sang `/health` ở code + Terraform.
@@ -163,9 +174,6 @@ URL không phải identity chính; chúng được giữ làm aliases/evidence.
 ## Chưa implement
 
 - Batch Refresh hoặc batch trộn Init/Refresh.
-- `agentbase-scan` public workflow đã implemented theo bounded Published-only contract.
-- Capability 046 Discovery Seed, compact Inventory Receipt, coverage validation,
-  private-mirror source isolation và Repository activity summary.
 - Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
 - Persisted freshness report và ordinary-query freshness marks; local report và CI đã có.
 - Full repository-identity recovery cho mọi rename/fork/mirror edge case.

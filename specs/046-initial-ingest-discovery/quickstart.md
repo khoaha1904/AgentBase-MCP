@@ -25,7 +25,7 @@ Expected:
 - only an exact Init/Batch-member Preflight-armed root creates a Seed; ordinary
   query and normal Refresh keep their existing graph/change-first behavior;
 - provider index blocks remain intact and one bounded AgentBase Seed summary
-  exposes every dispositionable group ID;
+  exposes every group ID that requires an outcome;
 - malformed/partial Seed-driving output fails or records an explicit limitation;
 - paging reaches terminal coverage; P0 overflow cannot be silently dropped;
 - secret-like paths never appear in Seed or provider-visible census input;
@@ -41,7 +41,7 @@ node --test src/app/hub-okf/authoring/canonical-graph-e2e.test.ts
 Expected:
 
 - MCP—not caller input—derives lane status and P0; guidance rejects
-  missing/duplicate P0 dispositions, merged origin groups and any P0 ignored
+  missing/duplicate P0 outcomes, merged origin groups and any P0 ignored
   reason except a valid `duplicate-covered` target;
 - successful guidance returns one Receipt ID;
 - new Prepare rejects mutable guidance replay; identical retry returns the same
@@ -98,7 +98,7 @@ sequential replica.
 The report must include:
 
 - independent representative source-to-Seed P0 coverage followed by
-  Seed-to-proposal disposition, without exact concept inventory scoring;
+  Seed-to-proposal outcome, without exact concept inventory scoring;
 - change versus the prior accepted run and any new regression;
 - OKF/MCP defects separated from benchmark defects;
 - elapsed time and token usage;

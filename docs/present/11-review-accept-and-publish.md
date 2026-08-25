@@ -1,7 +1,8 @@
 # 11 — Review và Publish
 
-> Trạng thái: Init/Refresh stack, atomic Batch Initial Ingest và independent
-> Domain Enrichment PR đã implement offline.
+> Trạng thái: Init/Refresh stack, Capability 046 receipt-bound inspection/log,
+> atomic Batch Initial Ingest và independent Domain Enrichment PR đã implement
+> offline.
 
 ## Câu trả lời ngắn
 

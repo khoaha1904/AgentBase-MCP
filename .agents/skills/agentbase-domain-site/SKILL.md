@@ -1,6 +1,6 @@
 ---
 name: agentbase-domain-site
-description: Explicitly generate one static offline 3D site for a synchronized Published AgentBase Hub Domain. Use only for a deliberate one-shot Domain snapshot build; never trigger from ordinary questions or focused diagram requests.
+description: Explicitly generate one static offline 2D map for a synchronized Published AgentBase Hub Domain. Use only for a deliberate one-shot Domain snapshot build; never trigger from ordinary questions or focused diagram requests.
 ---
 
 # Build a static AgentBase Domain site

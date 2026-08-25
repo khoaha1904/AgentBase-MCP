@@ -88,7 +88,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "prepare_hub_okf",
-    description: "Prepare a local new or refresh AgentBase Hub OKF proposal without publishing. Refresh returns bounded changed paths, observed source state and known gaps. New Initial Ingest returns editable skeletons only for promoted concepts and embeds non-promoted resource knowledge in its parent. Preserve generated sources, relationships, repository identity metadata and navigation while enriching those skeletons. selectedSchemas is the hard allowlist; Initial Ingest always includes Repository.",
+    description: "Prepare a local new or refresh AgentBase Hub OKF proposal without publishing. New Initial Ingest consumes one frozen discovery receipt. Refresh returns bounded changed paths, observed source state and known gaps through its change-first guidance. Preserve generated sources, relationships, repository identity metadata and navigation while enriching returned skeletons.",
     inputSchema: {
       type: "object",
       properties: {
@@ -108,13 +108,17 @@ export const HUB_OKF_TOOLS = [
           },
           required: ["identity", "title"], additionalProperties: false,
         },
+        discovery_receipt_id: {
+          type: "string", pattern: "^discovery-receipt-[a-f0-9]{24}$",
+          description: "Required for new Initial Ingest and rejected for Refresh; returned by receipt-producing schema guidance.",
+        },
         signals: {
           type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: 64,
           description: "Optional legacy Refresh signals for newly discovered concept roles. Existing current-Repository concept roles are retained automatically.",
         },
         guidance_request: {
           type: "object",
-          description: "Required for new Initial Ingest; bounded source-backed candidates and observations. Every candidate declares disposition concept or embedded. candidate_id preserves primary attribution; standalone concepts may share known observations. Embedded candidates require parent_candidate_id, may cite only their own observations and receive no concept identity, path or relationship.",
+          description: "Refresh-only bounded source-backed candidates and observations. New Initial Ingest receives this immutable guidance through discovery_receipt_id.",
           properties: {
             candidates: { type: "array", minItems: 1, maxItems: 64, items: { type: "object" } },
             semantic_observations: { type: "array", maxItems: 64, items: { type: "object" } },
@@ -135,7 +139,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "finalize_hub_okf_proposal",
-    description: "Validate and lock an authored Hub workspace into one immutable local proposal. A Question may reference only existing agentbase.observed_values on its subject with the exact property, role and source_id; otherwise omit it and record a limitation.",
+    description: "Validate and lock an authored Hub workspace into one immutable local proposal. Receipt-bound Init derives Questions and Repository activity from its frozen Inventory; Refresh Questions may reference only exact existing agentbase.observed_values.",
     inputSchema: {
       type: "object",
       properties: {
@@ -198,26 +202,12 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "record_batch_hub_ingest_member",
-    description: "Finalize one existing Initial Ingest session into its exact private batch checkpoint. Questions may reference only existing agentbase.observed_values with exact property/role/source_id; otherwise omit them and keep a limitation.",
+    description: "Finalize one exact receipt-bound Initial Ingest session into its private batch checkpoint, retaining member source, Seed, Receipt and coverage identity.",
     inputSchema: { type: "object", properties: {
       manifest_id: { type: "string", pattern: "^batch-ingest-[a-f0-9]{24}$" },
       manifest_revision: { type: "integer", minimum: 1 },
       member_id: { type: "string", pattern: "^batch-member-[a-f0-9]{24}$" },
       session_id: { type: "string", pattern: "^hub-session-[a-f0-9]{24}$" },
-      questions: { type: "array", maxItems: 64, items: {
-        type: "object", properties: {
-          subject: { type: "string", minLength: 1, maxLength: 512 },
-          property: { type: "string", minLength: 1, maxLength: 128,
-            pattern: "^[A-Za-z0-9][A-Za-z0-9._-]*$",
-            description: "Exact property token already present in the subject's agentbase.observed_values; not a prose question." },
-          observation_refs: { type: "array", minItems: 1, maxItems: 64,
-            description: "Each role/source_id pair must exactly match an existing observed value with the same subject and property.", items: { type: "object", properties: {
-            role: { type: "string", enum: ["documentation", "implementation", "configuration", "provider"] },
-            source_id: { type: "string", minLength: 1, maxLength: 128 },
-          }, required: ["role", "source_id"], additionalProperties: false } },
-          missing_evidence: { type: "array", maxItems: 64, items: { type: "string", minLength: 1, maxLength: 512 } },
-        }, required: ["subject", "property", "observation_refs"], additionalProperties: false,
-      } },
     }, required: ["manifest_id", "manifest_revision", "member_id", "session_id"], additionalProperties: false },
   },
   {
@@ -323,7 +313,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "prepare_hub_visualization",
-    description: "Prepare a bounded truthful diagram packet or explicitly build one static offline 3D Domain site from an exact synchronized Published Hub commit. Never reads Local Draft or publishes the artifact.",
+    description: "Prepare a bounded truthful diagram packet or explicitly build one static offline 2D Domain site from an exact synchronized Published Hub commit. Never reads Local Draft or publishes the artifact.",
     inputSchema: {
       type: "object",
       properties: {

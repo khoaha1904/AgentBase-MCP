@@ -42,6 +42,13 @@ function encodeBranch(branch: string): string {
   return branch.split("/").map(encodeURIComponent).join("/");
 }
 
+function encodeRepository(repository: string): string {
+  if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository) || repository.includes("..")) {
+    throw new GitHubApiError("RESPONSE", "GitHub repository identity is invalid");
+  }
+  return repository.split("/").map(encodeURIComponent).join("/");
+}
+
 export class GitHubHubApi {
   readonly #hub: HubIdentity;
   readonly #token: string;
@@ -60,11 +67,16 @@ export class GitHubHubApi {
     this.#apiBase = hub.host === "github.com" ? "https://api.github.com" : `https://${hub.host}/api/v3`;
   }
 
-  async #request(method: "GET" | "POST" | "PATCH", route: string, body?: unknown): Promise<unknown> {
+  async #request(
+    method: "GET" | "POST" | "PATCH",
+    route: string,
+    body?: unknown,
+    repository = this.#hub.repository,
+  ): Promise<unknown> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.#timeoutMs);
     try {
-      const response = await this.#http(`${this.#apiBase}/repos/${this.#hub.repository}${route}`, {
+      const response = await this.#http(`${this.#apiBase}/repos/${encodeRepository(repository)}${route}`, {
         method,
         redirect: "error",
         signal: controller.signal,
@@ -93,22 +105,22 @@ export class GitHubHubApi {
     } finally { clearTimeout(timer); }
   }
 
-  async getRepository(): Promise<GitHubRepository> {
-    const value = object(await this.#request("GET", ""));
+  async getRepository(repository = this.#hub.repository): Promise<GitHubRepository> {
+    const value = object(await this.#request("GET", "", undefined, repository));
     const fullName = text(value.full_name, "full_name");
-    if (fullName !== this.#hub.repository) throw new GitHubApiError("RESPONSE", "GitHub repository identity mismatch");
+    if (fullName.toLowerCase() !== repository.toLowerCase()) throw new GitHubApiError("RESPONSE", "GitHub repository identity mismatch");
     return { fullName, defaultBranch: text(value.default_branch, "default_branch") };
   }
 
-  async getBranchRef(branch: string): Promise<GitHubRef> {
-    const value = object(await this.#request("GET", `/git/ref/heads/${encodeBranch(branch)}`));
+  async getBranchRef(branch: string, repository = this.#hub.repository): Promise<GitHubRef> {
+    const value = object(await this.#request("GET", `/git/ref/heads/${encodeBranch(branch)}`, undefined, repository));
     const commit = text(object(value.object).sha, "object.sha");
     if (!/^[a-f0-9]{40}$/.test(commit)) throw new GitHubApiError("RESPONSE", "GitHub ref commit is invalid");
     return { branch, commit };
   }
 
-  async findBranchRef(branch: string): Promise<GitHubRef | undefined> {
-    try { return await this.getBranchRef(branch); }
+  async findBranchRef(branch: string, repository = this.#hub.repository): Promise<GitHubRef | undefined> {
+    try { return await this.getBranchRef(branch, repository); }
     catch (error) {
       if (error instanceof GitHubApiError && error.code === "HTTP" && error.status === 404) return undefined;
       throw error;

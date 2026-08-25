@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { CodebaseMemoryError } from "./errors.ts";
-import { resolveOwnedRuntime } from "./owned-runtime.ts";
+import { resolveOwnedRuntime, verifyOwnedRuntimeBundle } from "./owned-runtime.ts";
 
 const surfaceSource = new URL("../../../fixtures/codebase-memory-v0.10.8/mcp-surface.json", import.meta.url);
 const safeTools = [
@@ -83,6 +83,17 @@ test("admits the exact repository-owned artifact", async (t) => {
   const runtime = await resolveOwnedRuntime({ projectRoot: value.root, platform: "linux", architecture: "x64" });
   assert.equal(runtime.identity.providerVersion, "0.10.8");
   assert.match(runtime.identity.packageIntegrity, /^source-sha256:[a-f0-9]{64};profile-sha256:[a-f0-9]{64}$/);
+});
+
+test("admits the same exact artifact from an explicit release bundle", async (t) => {
+  const value = fixture();
+  t.after(() => fs.rmSync(value.root, { recursive: true, force: true }));
+  const bundle = path.join(value.root, "vendor/codebase-memory/artifacts/linux-x64");
+  fs.mkdirSync(path.dirname(bundle), { recursive: true });
+  fs.renameSync(path.dirname(value.executable), bundle);
+  const runtime = await verifyOwnedRuntimeBundle({ projectRoot: value.root, runtimeRoot: bundle,
+    platform: "linux", architecture: "x64" });
+  assert.equal(runtime.runtimeRoot, bundle);
 });
 
 test("rejects a missing artifact", async (t) => {

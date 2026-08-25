@@ -23,7 +23,7 @@ internal artifacts in a technical selector.
 - [`agentbase-diagram`](agentbase-diagram/SKILL.md) — render one focused
   Architecture, Dependency or Sequence view from exact Published knowledge.
 - [`agentbase-domain-site`](agentbase-domain-site/SKILL.md) — explicitly export
-  one static offline 3D Published Domain snapshot after a visibility warning.
+  one static offline 2D Published Domain snapshot after a visibility warning.
 - [`agentbase-hub`](agentbase-hub/SKILL.md) — inspect local/remote Hub status,
   review governed Questions, connect or switch one isolated profile,
   synchronize and recover explicitly.

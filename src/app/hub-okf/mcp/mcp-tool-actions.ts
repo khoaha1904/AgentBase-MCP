@@ -19,6 +19,7 @@ export type HubToolActions = Readonly<{
     signals?: readonly string[];
     guidanceRequest?: OkfAuthoringGuidanceRequest;
     coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
+    discoveryReceiptId?: string;
   }>): Promise<unknown>;
   finalize(sessionId: string, questions?: readonly QuestionDeclaration[], removals?: readonly HubRemovalDeclaration[]): Promise<unknown>;
   prepareBatch(input: Readonly<{ sourceRepositories: readonly string[]; proposedDomain: BatchDomain }>): Promise<unknown>;

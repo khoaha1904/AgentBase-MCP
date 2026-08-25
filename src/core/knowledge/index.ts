@@ -1,6 +1,37 @@
 export const OKF_VERSION = "0.2" as const;
 export const OKF_SHARED_DIRECTORY = "okf" as const;
 export {
+  appendKnowledgeActivity,
+  parseKnowledgeActivityLog,
+  renderKnowledgeActivityLog,
+  repositoryActivityLogPath,
+  type KnowledgeActivityEntry,
+} from "./documents/activity-log.ts";
+export {
+  createInventoryReceipt,
+  createInventoryItemId,
+  createQuestionPlanId,
+  rebaseInventoryReceipt,
+  DISCOVERY_LANES,
+  DiscoveryValidationError,
+  validateDiscoveryInventory,
+  validateDiscoverySeed,
+  validateInventoryReceipt,
+  type CoverageResult,
+  type DiscoveryOutcome,
+  type DiscoveryGroup,
+  type DiscoveryInventory,
+  type DiscoveryLane,
+  type DiscoveryLaneResult,
+  type DiscoveryPriority,
+  type DiscoverySeed,
+  type DiscoverySourceIdentity,
+  type InventoryItem,
+  type InventoryOutput,
+  type InventoryReceipt,
+  type QuestionPlan,
+} from "./discovery.ts";
+export {
   normalizeHubRemovalDeclarations,
   type HubRemovalDeclaration,
 } from "./proposals/refresh.ts";

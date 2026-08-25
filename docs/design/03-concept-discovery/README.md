@@ -1,7 +1,7 @@
 # 03 — Concept discovery
 
-> Trạng thái: Candidate/guidance foundation đã implement. Capability 046
-> Discovery Seed/Inventory coverage target approved; implementation pending.
+> Trạng thái: Candidate/guidance foundation và Capability 046 Discovery
+> Seed/Inventory coverage đã implement.
 
 High-level decision:
 [MCP nhận diện concept thế nào?](../../present/03-how-concepts-are-identified.md)
@@ -29,6 +29,6 @@ confidence engine, candidate database hoặc unrelated-Draft search. Outcomes
 được review trong proposal hiện tại; cross-repository matching sâu thuộc Domain
 Enrichment.
 
-Target mới kiểm tra coverage trước schema selection: important discovery group
+Runtime kiểm tra coverage trước schema selection: important discovery group
 phải map sang concept, embedded, Question hoặc ignored reason. Đây là private
 session/receipt contract, không phải candidate registry, UI hay public tool mới.

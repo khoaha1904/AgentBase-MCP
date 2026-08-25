@@ -6,10 +6,10 @@ import { pathToFileURL } from "node:url";
 
 import { registerClients } from "./client-registration.mjs";
 import { installProductSkills, PRODUCT_SKILL_NAMES, rollbackProductSkills } from "./product-skills.mjs";
-import { prepareCodebaseMemory } from "../upstream/prepare-codebase-memory.mjs";
+import { activateBundledCodebaseMemory } from "./provider-bundle.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
-const PINNED_THREE_VERSION = "0.183.0";
+const PINNED_CYTOSCAPE_VERSION = "3.34.2";
 
 class InstallerCancelled extends Error {
   constructor() { super("installation cancelled"); }
@@ -192,14 +192,14 @@ function installDependencies(registry, environment = process.env) {
 }
 
 function verifyVisualizationRuntime() {
-  const packagePath = path.join(repositoryRoot, "node_modules", "three", "package.json");
-  const modulePath = path.join(repositoryRoot, "node_modules", "three", "build", "three.module.min.js");
+  const packagePath = path.join(repositoryRoot, "node_modules", "cytoscape", "package.json");
+  const modulePath = path.join(repositoryRoot, "node_modules", "cytoscape", "dist", "cytoscape.min.js");
   if (!fs.existsSync(packagePath) || !fs.existsSync(modulePath)) {
-    throw new Error("pinned offline Three.js runtime is unavailable after dependency installation");
+    throw new Error("pinned offline Cytoscape.js runtime is unavailable after dependency installation");
   }
   const manifest = JSON.parse(fs.readFileSync(packagePath, "utf8"));
-  if (manifest.version !== PINNED_THREE_VERSION) {
-    throw new Error(`Three.js ${PINNED_THREE_VERSION} is required; received ${String(manifest.version)}`);
+  if (manifest.version !== PINNED_CYTOSCAPE_VERSION) {
+    throw new Error(`Cytoscape.js ${PINNED_CYTOSCAPE_VERSION} is required; received ${String(manifest.version)}`);
   }
 }
 
@@ -224,7 +224,7 @@ export async function runInstaller(options = {}) {
   const environment = options.environment ?? process.env;
   const runRegistryResolution = options.runRegistryResolution ?? resolveRegistry;
   const runDependencyInstall = options.runDependencyInstall ?? installDependencies;
-  const runProviderPreparation = options.runProviderPreparation ?? prepareCodebaseMemory;
+  const runProviderActivation = options.runProviderActivation ?? activateBundledCodebaseMemory;
   const runClientRegistration = options.runClientRegistration ?? registerClients;
   const runProductSkillInstallation = options.runProductSkillInstallation ?? installProductSkills;
   const runProductSkillRollback = options.runProductSkillRollback ?? rollbackProductSkills;
@@ -233,10 +233,10 @@ export async function runInstaller(options = {}) {
   const registry = privateRegistry(await runRegistryResolution(environment));
   await runDependencyInstall(registry, environment);
   verifyVisualizationRuntime();
-  await runProviderPreparation();
+  await runProviderActivation();
   const interactive = Boolean(input.isTTY && output.isTTY && typeof input.setRawMode === "function");
   if (!interactive) {
-    output.write("AgentBase-MCP: dependencies and Code Graph prepared; interactive client registration skipped.\n");
+    output.write("AgentBase-MCP: dependencies and bundled Code Graph ready; interactive client registration skipped.\n");
     return { clients: [], registration: "skipped" };
   }
 

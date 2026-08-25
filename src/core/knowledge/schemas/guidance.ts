@@ -249,9 +249,9 @@ export function getOkfAuthoringGuidance(request: OkfAuthoringGuidanceRequest): O
       if (!mapped.length) return {
         ...base,
         parentCandidateId: candidate.parentCandidateId!,
-        status: "unsupported",
+        status: "embedded",
         limitations: [...limitations, ...ignoredStandaloneHints,
-          "embedded technology kind is not supported by a released provider profile"],
+          `embedded in ${candidate.parentCandidateId}; technology is retained provider-neutral because no released provider profile maps it`],
       };
       return {
         ...base,

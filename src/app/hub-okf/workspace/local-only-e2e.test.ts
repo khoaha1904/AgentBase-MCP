@@ -10,9 +10,10 @@ import {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, createQuestionId, loadOkfBundle, parseConceptDocument,
   parseQuestionDocument, readExternalIdentities, readObservedValues, renderConceptDocument,
   renderQuestionDocument, renderQuestionIndex, type SharedQuestion,
+  type InventoryReceipt, type OkfAuthoringGuidanceRequest,
 } from "../../../core/knowledge/index.ts";
 import { AwsCliAdapter, AwsCliError, type AwsProcessRunner } from "../../../providers/aws-cli/index.ts";
-import { runGit, type GitRequest } from "../../../providers/github-hub/index.ts";
+import { runGit, type GitRequest, type SourceSnapshot } from "../../../providers/github-hub/index.ts";
 import {
   finalizeDomainEnrichment, prepareDomainEnrichment, runDomainEnrichment,
 } from "../enrichment/index.ts";
@@ -25,6 +26,60 @@ import { attachExistingHub, createLocalHub } from "./setup.ts";
 import {
   hubProfileCredentialPath, loadExactHubProfileToken, writeGlobalHubToken, writeHubProfileToken,
 } from "../configuration/credential-file.ts";
+import { createTestInventoryReceipt } from "../test-support.ts";
+
+async function localSourceSnapshot(input: Readonly<{
+  requestedRoot: string; repositoryId: string; hub: ReturnType<typeof createHubIdentity>; stateRoot: string;
+}>): Promise<SourceSnapshot> {
+  const requestedRoot = fs.realpathSync(input.requestedRoot);
+  const commit = (await runGit({ args: ["rev-parse", "HEAD"], cwd: requestedRoot,
+    operation: "resolve local source fixture" })).stdout.trim();
+  const repository = `fixtures/${path.basename(requestedRoot)}`;
+  return { repositoryId: input.repositoryId,
+    remote: { host: input.hub.host, repository, canonicalHttpsUrl: `https://${input.hub.host}/${repository}.git` },
+    defaultBranch: "main", commit, requestedRoot, analysisRoot: requestedRoot,
+    kind: "current-checkout", createdAt: "2026-08-25T00:00:00.000Z", privateRoot: input.stateRoot };
+}
+
+function createTestHubRuntimeActions(
+  environment: NodeJS.ProcessEnv,
+  stateRoot: string,
+  receipts: ReadonlyMap<string, InventoryReceipt> = new Map(),
+) {
+  return createHubRuntimeActions(environment, stateRoot, {
+    sourceSnapshotResolver: localSourceSnapshot,
+    discoveryReceiptResolver: (id) => receipts.get(id),
+  });
+}
+
+async function registerTestReceipt(input: Readonly<{
+  environment: NodeJS.ProcessEnv;
+  stateRoot: string;
+  receipts: Map<string, InventoryReceipt>;
+  sourceRepository: string;
+  repositoryId: string;
+  request: OkfAuthoringGuidanceRequest;
+  label: string;
+  includeQuestion?: boolean;
+}>): Promise<InventoryReceipt> {
+  const configured = readPersistedHubConfiguration(input.environment);
+  assert.ok(configured?.kind === "remote");
+  const hub = createHubIdentity(configured.repository, configured.targetBranch, configured.host);
+  const snapshot = await localSourceSnapshot({ requestedRoot: input.sourceRepository,
+    repositoryId: input.repositoryId, hub, stateRoot: input.stateRoot });
+  const publishedBase = (await runGit({ args: ["rev-parse", "HEAD"], cwd: configured.localRoot,
+    operation: "resolve test Receipt Hub base" })).stdout.trim();
+  const receipt = createTestInventoryReceipt({ label: input.label,
+    source: { repositoryId: snapshot.repositoryId, remote: snapshot.remote.canonicalHttpsUrl,
+      defaultBranch: snapshot.defaultBranch, commit: snapshot.commit },
+    hubProfileId: hubProfileId(hub), publishedBase, request: input.request,
+    ...(input.includeQuestion ? { questions: [{ kind: "missing-evidence" as const,
+      targetCandidateId: input.request.candidates[0]!.id, property: "repository.purpose",
+      scopeKey: `repository-purpose-${input.label}`, missingEvidence: ["maintainer confirmation"] }] } : {}),
+  });
+  input.receipts.set(receipt.id, receipt);
+  return receipt;
+}
 
 const repositoryGuidance = {
   candidates: [{ id: "repository", identityHint: "source", identityBasis: "checkout root",
@@ -147,7 +202,8 @@ async function addPublishedEnrichmentFixture(root: string): Promise<Readonly<{
 test("[AB-HUB-SETUP-001..017][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] remote Hub keeps Draft separate from Published query", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "local-only-hub-e2e-"));
   const environment = { HOME: root, XDG_CONFIG_HOME: path.join(root, "config"), XDG_DATA_HOME: path.join(root, "data") };
-  const actions = createHubRuntimeActions(environment, path.join(root, "state"));
+  const runtimeState = path.join(root, "state"), receipts = new Map<string, InventoryReceipt>();
+  const actions = createTestHubRuntimeActions(environment, runtimeState, receipts);
   try {
     const repository = await sourceRepository(root);
     const tokenLauncher = spawnSync(process.execPath,
@@ -157,7 +213,9 @@ test("[AB-HUB-SETUP-001..017][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] re
     assert.match(tokenLauncher.stderr, /requires an interactive terminal/);
     assert.equal((await actions.status() as { kind: string }).kind, "unconfigured");
     await configureTestRemoteHub(environment, "acme/test-hub");
-    await actions.preflight(repository);
+    const initialContext = await actions.preflight(repository) as {
+      repository: { repository: { id: string } };
+    };
     const configured = readPersistedHubConfiguration(environment);
     assert.ok(configured && configured.kind === "remote");
     const workflow = renderHubCiBundle().files[HUB_CI_WORKFLOW_PATH]!.toString();
@@ -199,15 +257,21 @@ test("[AB-HUB-SETUP-001..017][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] re
     assert.equal(unsafeCi.passed, false);
     assert.match(unsafeCi.errors.join("\n"), /sensitive|forbidden/);
     for (const sequence of [1, 2]) {
+      const receipt = await registerTestReceipt({ environment, stateRoot: runtimeState, receipts,
+        sourceRepository: repository, repositoryId: initialContext.repository.repository.id,
+        request: repositoryGuidance, label: `local-e2e-repository-${sequence}`,
+        includeQuestion: sequence === 1 });
       const prepared = await actions.prepare({ mode: "new", sourceRepository: repository,
         subjectDirectory: `repositories/repo-${sequence}`,
-        guidanceRequest: repositoryGuidance }) as { sessionId: string; bundleRoot: string; sourceRepositoryId: string;
+        discoveryReceiptId: receipt.id }) as { sessionId: string; bundleRoot: string; sourceRepositoryId: string;
           source: { repositoryId: string; commit: string | null; dirty: boolean; dirtyDigest: string | null; limitations: readonly string[] } };
       fs.writeFileSync(path.join(prepared.bundleRoot, `repositories/repo-${sequence}.md`),
         `---\ntype: Repository\ntitle: Repo ${sequence}\ndescription: Repository ${sequence}\nstatus: draft\n`
         + `generated: { by: 'agentbase/0.0.0', at: '2026-08-13T00:00:00Z' }\n`
         + `sources:\n  - id: documentation\n    resource: repository://${prepared.sourceRepositoryId}/README.md#L1-L1\n`
+        + `    observed_revision: ${prepared.source.commit}\n`
         + `  - id: implementation\n    resource: repository://${prepared.sourceRepositoryId}/README.md#L1-L1\n`
+        + `    observed_revision: ${prepared.source.commit}\n`
         + `agentbase:\n  repository:\n    id: ${prepared.sourceRepositoryId}\n    display_name: source\n`
         + `    aliases: { remotes: [], root_commits: [] }\n  observed_values:\n`
         + `    - subject: repositories/repo-${sequence}\n      property: repository.purpose\n      role: documentation\n`
@@ -216,13 +280,7 @@ test("[AB-HUB-SETUP-001..017][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] re
         + `      property: repository.purpose\n      role: implementation\n      source_id: implementation\n`
         + `      value: 'Repository ${sequence} implementation'\n`
         + `---\n\n# Purpose\n\nRepo ${sequence}.\n`);
-      const finalized = await actions.finalize(prepared.sessionId, sequence === 1 ? [{
-        subject: "repositories/repo-1", property: "repository.purpose",
-        observationRefs: [
-          { role: "documentation", sourceId: "documentation" },
-          { role: "implementation", sourceId: "implementation" },
-        ], missingEvidence: [],
-      }] : []) as { proposal: { id: string; diffDigest: string } };
+      const finalized = await actions.finalize(prepared.sessionId) as { proposal: { id: string; diffDigest: string } };
       if (sequence === 1) {
         const inspected = await actions.inspect(finalized.proposal.id) as {
           inspection: { entries: readonly { path: string; change: string }[] };
@@ -236,13 +294,15 @@ test("[AB-HUB-SETUP-001..017][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] re
       await actions.accept(finalized.proposal.id, finalized.proposal.diffDigest);
       if (sequence === 1) {
         assert.equal(fs.existsSync(path.join(root, "state", "questions")), false);
-        const secondMachineActions = createHubRuntimeActions(environment, path.join(root, "state-second"));
+        const secondMachineActions = createTestHubRuntimeActions(environment, path.join(root, "state-second"));
         const [question] = await secondMachineActions.listQuestions({ status: "open" }) as readonly {
-          id: string; revision: number; observations: readonly { role: string; source: { resource: string } }[];
+          id: string; revision: number; observations: readonly unknown[];
+          references: readonly { referenceKind: string; sourceResource: string }[];
         }[];
         assert.ok(question);
-        assert.deepEqual(question.observations.map((value) => value.role).sort(), ["documentation", "implementation"]);
-        assert.equal(question.observations.every((value) => value.source.resource.startsWith("repository://")), true);
+        assert.deepEqual(question.observations, []);
+        assert.equal(question.references[0]?.referenceKind, "candidate-evidence");
+        assert.equal(question.references[0]?.sourceResource.startsWith("repository://"), true);
         const answered = await actions.answerQuestion({ questionId: question.id, revision: question.revision,
           answer: "Repository purpose is owner-confirmed.", maintainer: "human:khoa" }) as {
           question: { status: string };
@@ -265,7 +325,7 @@ test("[AB-HUB-SETUP-001..017][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] re
 
     const pending = await actions.listPending() as readonly unknown[];
     assert.equal(pending.length, 3);
-    const restartedActions = createHubRuntimeActions(environment, path.join(root, "state"));
+    const restartedActions = createTestHubRuntimeActions(environment, path.join(root, "state"));
     assert.equal((await restartedActions.listQuestions({ status: "resolved" }) as readonly unknown[]).length, 1);
     assert.deepEqual((await actions.search("Repo 2") as { matches: readonly unknown[] }).matches, []);
     await assert.rejects(actions.read("repositories/repo-2.md"), /Git exited with status 128/);
@@ -326,7 +386,7 @@ test("[AB-HUB-SETUP-001..017][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] re
     fs.writeFileSync(path.join(legacyTransaction, "transaction.json"), `${JSON.stringify({ phase: "prepared",
       originalHead: (await runGit({ args: ["rev-parse", "HEAD"], cwd: legacyRoot, operation: "resolve legacy head" })).stdout.trim(),
       candidateRoot: path.join(legacyTransaction, "candidate") })}\n`);
-    await createHubRuntimeActions(legacyEnvironment, legacyState).preflight(repository);
+    await createTestHubRuntimeActions(legacyEnvironment, legacyState).preflight(repository);
     assert.equal(readPersistedHubConfiguration(legacyEnvironment)?.localHubId, canonicalLegacyId);
     assert.equal(loadExactHubProfileToken(canonicalLegacyId, legacyEnvironment), "legacy-token-canary");
     assert.equal(fs.existsSync(hubProfileCredentialPath(legacyId, legacyEnvironment)), false);
@@ -335,7 +395,8 @@ test("[AB-HUB-SETUP-001..017][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] re
 
     const batchEnvironment = { HOME: path.join(root, "batch-home"), XDG_CONFIG_HOME: path.join(root, "batch-config"),
       XDG_DATA_HOME: path.join(root, "batch-data") };
-    const batchState = path.join(root, "batch-state"), batchActions = createHubRuntimeActions(batchEnvironment, batchState);
+    const batchState = path.join(root, "batch-state"), batchReceipts = new Map<string, InventoryReceipt>();
+    const batchActions = createTestHubRuntimeActions(batchEnvironment, batchState, batchReceipts);
     await configureTestRemoteHub(batchEnvironment, "acme/batch-hub");
     const batchRepositories = await Promise.all(["batch-source-a", "batch-source-b", "batch-source-c"]
       .map((name) => namedSourceRepository(root, name)));
@@ -355,10 +416,15 @@ test("[AB-HUB-SETUP-001..017][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] re
       manifestRevision: preparedBatch.manifest.revision, assessments: preparedBatch.manifest.members.map((member) => ({
         memberId: member.id, decision: "match", evidencePath: "README.md",
       })) }) as { id: string; revision: number; members: readonly { id: string; repositoryId: string }[] };
+    const batchCheckpoints = new Map<number, { proposalRoot: string }>();
+    let failedBatchMember: { index: number; id: string } | undefined;
     for (const [index, member] of confirmedBatch.members.entries()) {
+      const receipt = await registerTestReceipt({ environment: batchEnvironment, stateRoot: batchState,
+        receipts: batchReceipts, sourceRepository: batchRepositories[index]!, repositoryId: member.repositoryId,
+        request: batchGuidance(index + 1), label: `batch-member-${index + 1}` });
       let preparedMember = await batchActions.prepare({ mode: "new", sourceRepository: batchRepositories[index]!,
         subjectDirectory: `repositories/batch-${index + 1}`, confirmedDomain: domain,
-        guidanceRequest: batchGuidance(index + 1) }) as { sessionId: string; bundleRoot: string };
+        discoveryReceiptId: receipt.id }) as { sessionId: string; bundleRoot: string };
       const describeSystem = () => {
         const domainPath = path.join(preparedMember.bundleRoot, "domains", "crawler.md");
         fs.writeFileSync(domainPath, fs.readFileSync(domainPath, "utf8")
@@ -371,18 +437,39 @@ test("[AB-HUB-SETUP-001..017][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] re
           manifestRevision: confirmedBatch.revision, memberId: member.id,
           sessionId: preparedMember.sessionId }) as { status: string };
         assert.equal(failed.status, "failed");
-        await batchActions.retryBatchMember({ manifestId: confirmedBatch.id,
-          manifestRevision: confirmedBatch.revision, memberId: member.id });
-        preparedMember = await batchActions.prepare({ mode: "new", sourceRepository: batchRepositories[index]!,
-          subjectDirectory: "repositories/batch-2", confirmedDomain: domain,
-          guidanceRequest: batchGuidance(index + 1) }) as { sessionId: string; bundleRoot: string };
-        describeSystem();
+        failedBatchMember = { index, id: member.id };
+        continue;
       }
       const recorded = await batchActions.recordBatchMember({ manifestId: confirmedBatch.id,
         manifestRevision: confirmedBatch.revision, memberId: member.id,
-        sessionId: preparedMember.sessionId }) as { status: string };
+        sessionId: preparedMember.sessionId }) as { status: string; checkpoint: { proposalRoot: string } };
       assert.equal(recorded.status, "complete");
+      batchCheckpoints.set(index, recorded.checkpoint);
     }
+    assert.ok(batchCheckpoints.has(2), "a clean member-local failure does not prevent the later sibling");
+    assert.ok(failedBatchMember);
+    await batchActions.retryBatchMember({ manifestId: confirmedBatch.id,
+      manifestRevision: confirmedBatch.revision, memberId: failedBatchMember.id });
+    const retriedMember = await batchActions.prepare({ mode: "new", sourceRepository: batchRepositories[failedBatchMember.index]!,
+      subjectDirectory: "repositories/batch-2", confirmedDomain: domain,
+      discoveryReceiptId: [...batchReceipts.values()].find((receipt) =>
+        receipt.source.repositoryId === confirmedBatch.members[failedBatchMember.index]!.repositoryId)!.id,
+    }) as { sessionId: string; bundleRoot: string };
+    const retriedDomainPath = path.join(retriedMember.bundleRoot, "domains", "crawler.md");
+    fs.writeFileSync(retriedDomainPath, fs.readFileSync(retriedDomainPath, "utf8")
+      .replace(/(\* \[[^\]]+\]\([^)]+\)) - System/, "$1 - Operational batch member"));
+    const retried = await batchActions.recordBatchMember({ manifestId: confirmedBatch.id,
+      manifestRevision: confirmedBatch.revision, memberId: failedBatchMember.id,
+      sessionId: retriedMember.sessionId }) as { status: string; checkpoint: { proposalRoot: string } };
+    assert.equal(retried.status, "complete");
+    batchCheckpoints.set(failedBatchMember.index, retried.checkpoint);
+
+    const thirdRepository = path.join(batchCheckpoints.get(2)!.proposalRoot, "bundle", "repositories", "batch-3.md");
+    const validThirdRepository = fs.readFileSync(thirdRepository, "utf8");
+    fs.writeFileSync(thirdRepository, `${validThirdRepository.trimEnd()}\n\nCross evidence: repository://${confirmedBatch.members[0]!.repositoryId}/README.md#L1-L1\n`);
+    await assert.rejects(batchActions.finalizeBatch({ manifestId: confirmedBatch.id,
+      manifestRevision: confirmedBatch.revision }), /cross-member repository evidence/);
+    fs.writeFileSync(thirdRepository, validThirdRepository);
     fs.writeFileSync(path.join(batchRepositories[0]!, "README.md"), "# Changed during batch\n");
     await assert.rejects(batchActions.finalizeBatch({ manifestId: confirmedBatch.id,
       manifestRevision: confirmedBatch.revision }), /completion or rerun/);
@@ -617,7 +704,7 @@ test("[AB-HUB-SETUP-001..017][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] re
     assert.equal(fs.existsSync(enterprise.localRoot), true, "inactive Enterprise profile remains isolated and reusable");
     fs.rmSync(hubProfileCredentialPath(attached.localHubId, attachEnvironment));
     fs.writeFileSync(path.join(attached.localRoot, "dirty-status.tmp"), "local failure fixture\n");
-    const partialStatus = await createHubRuntimeActions({ HOME: attachEnvironment.HOME,
+    const partialStatus = await createTestHubRuntimeActions({ HOME: attachEnvironment.HOME,
       XDG_CONFIG_HOME: attachEnvironment.XDG_CONFIG_HOME, XDG_DATA_HOME: attachEnvironment.XDG_DATA_HOME },
     path.join(root, "partial-status-state")).status() as {
       kind: string; hub: { repository: string }; local: { state: string }; credential: string;

@@ -74,8 +74,9 @@ function uniqueSorted(values: readonly string[]): readonly string[] {
 function referenceKey(reference: QuestionReference): string {
   return reference.referenceKind === "owned-item"
     ? [reference.referenceKind, reference.owner, reference.itemKind, reference.itemKey,
-      reference.sourceId].join("\0")
-    : [reference.referenceKind, reference.candidateKey, reference.sourceResource].join("\0");
+      reference.sourceId, reference.observedRevision ?? ""].join("\0")
+    : [reference.referenceKind, reference.candidateKey, reference.sourceResource,
+      reference.observedRevision ?? ""].join("\0");
 }
 
 function parseReference(value: OkfValue, prefix: string): QuestionReference {

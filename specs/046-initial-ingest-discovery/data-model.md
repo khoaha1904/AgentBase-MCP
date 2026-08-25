@@ -60,8 +60,8 @@ Compact machine-derived structural signal.
 
 Groups may combine one runtime's entrypoints, one interface's routes, one
 target/protocol integration or one workload's deploy resources. They do not
-assert semantic OKF identity. One group receives one disposition; that
-disposition may name multiple materialized outputs without splitting the group.
+assert semantic OKF identity. One group receives one outcome; a materialized
+outcome may name multiple outputs without splitting the group.
 
 Fixed P0 classes are identity/confirmed-Domain anchors, evidenced
 runtime/entrypoint, explicit interface/trigger, explicit deploy/IaC workload,
@@ -83,36 +83,43 @@ architecture aspect recipe and safe census complete or disclose limitations. It
 resets on source/repository switch, revision change or connection close.
 Ordinary query and normal change-first Refresh never create this entity.
 
-## InventoryItem
+## InventoryItem submission
 
-Agent interpretation of one Seed group.
+Agent interpretation of one Seed group carries only semantic decisions:
 
-- `id`
-- `originGroupId`: one active Seed group ID
-- `disposition`: `concept | embedded | question | ignored`
-- `outputs`: required non-empty list for concept/embedded; each mapping has a
-  `candidateId` and, for embedded output, `parentCandidateId`
-- `questionPlanId`: required for question
-- `reason`: P0 ignored accepts only `duplicate-covered`
-- `coveredByItemId`: required for P0 duplicate and must resolve to a non-ignored
-  Inventory item whose output will materialize
-- `evidenceIds`: exact observations used by concept/embedded/question
+- `originGroupId`: one active Seed group ID;
+- `outcome`: `materialized | question | ignored`;
+- materialized: non-empty `candidateIds` from the same guidance request;
+- question: one nested Question submission;
+- ignored: bounded `reason`; P0 accepts only `duplicate-covered` plus
+  `coveredByOriginGroupId` resolving to a materialized group.
 
-Every important Seed group appears exactly once across Inventory items. Question
-and Ignored items never enter schema selection.
+Every important Seed group appears exactly once. Candidate records already own
+concept/embedded disposition, parent and evidence IDs, so Inventory does not
+repeat them. Bounded Seed source samples remain review context and do not reject
+other known source-valid candidate evidence.
+
+Before validation MCP normalizes each item into one private Receipt item with a
+deterministic `id`, derived output parent mappings, optional derived
+`questionPlanId` and P0 `coveredByItemId`. Normalized item outcome remains
+`materialized | question | ignored`; there is no item-level evidence list.
 
 ## QuestionPlan
 
 Private normalized plan reusing the existing SharedQuestion model.
 
-- `id`, `kind`: existing Question kind
+- MCP-derived `id`; caller supplies existing Question `kind`
 - `originGroupId`
 - `targetCandidateId`, later resolved `subjectId`
 - `property`, `scopeKey`
-- candidate/source evidence references including observed revision
+- submitted candidate evidence selections: `candidateKey + evidenceId` from the
+  same guidance request
 - `missingEvidence`, `limitations`
 
-An unbindable uncertainty is converted to a limitation before Receipt freeze.
+Before Receipt freeze, MCP converts every valid selection into the existing
+canonical `candidateKey + sourceResource + observedRevision` reference using the
+selected observation and active SourceSnapshot. The Agent never supplies those
+two provenance fields. An unbindable uncertainty is converted to a limitation before Receipt freeze.
 Every QuestionPlan admitted to a Receipt must materialize at Finalize; missing
 subject/source evidence is Incomplete and cannot silently downgrade.
 
@@ -147,7 +154,7 @@ Immutable compact result of guidance validation.
 
 - `id`: `discovery-receipt-<24 hex>`
 - `seedDigest`, SourceSnapshot identity, exact Hub profile ID and Published base
-- normalized lane results and dispositions
+- normalized lane results and group outcomes
 - guidance request/output for concept/embedded candidates
 - selected schemas
 - materialization expectations for concept, embedded and QuestionPlan items
@@ -159,12 +166,20 @@ persisted session by Receipt ID: an exact request digest returns the same sessio
 a mismatch rejects, and no persisted match requires the active frozen Receipt.
 Session creation is atomic, so a crash cannot leave a half-session. Finalized
 and cancelled sessions are terminal; one Receipt cannot create two sessions.
+An embedded expectation materializes when its resolved parent retains at least
+one exact repository resource derived from that candidate's owned evidence;
+human-readable labels are not Receipt identity.
+Finalize preserves such an authored row. If none remains, it appends the
+canonical candidate row derived from the frozen guidance/evidence into the
+normalized proposal before validation; mutable session prose is not rewritten.
+An embedded recommendation may have empty/provider-neutral technology when no
+detector profile maps it; parent and evidence identity remain sufficient.
 
 ## CoverageResult
 
 - per-lane status
 - P0 acknowledged/missing group IDs
-- materialized/missing disposition IDs
+- materialized/missing outcome IDs
 - ignored counts/reasons
 - limitations
 - outcome: `ready-for-review | incomplete`

@@ -52,11 +52,12 @@ active. Changing the active Hub never merges or copies knowledge between
 profiles.
 
 For enterprise installation, AgentBase owns pinned, attributed source snapshots
-for its Code Graph engine and future diagram foundation. Installation builds the
-current-platform Code Graph artifact through the configured company registry and
-local approved toolchain; ordinary use never downloads a public release binary.
-The Codebase Memory Graph UI frontend is excluded. Retained diagram-design
-source adds no released UI, renderer, tool or skill by itself.
+for its Code Graph engine and future diagram foundation. Release maintainers
+build one reviewed Code Graph bundle per supported platform; ordinary
+installation verifies and activates that repository-contained bundle without a
+compiler, native headers or a provider download. The Codebase Memory Graph UI
+frontend is excluded. Retained diagram-design source adds no released UI,
+renderer, tool or skill by itself.
 
 ## Current flow
 

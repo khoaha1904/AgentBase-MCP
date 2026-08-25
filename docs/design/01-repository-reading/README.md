@@ -1,8 +1,8 @@
 # 01 — Repository reading
 
-> Trạng thái: Core local reading và lazy multi-repository workspace routing đã
-> implement. Capability 046 thêm approved remote-default snapshot riêng cho Hub
-> Init; arbitrary remote clone/query vẫn ngoài scope và implementation còn pending.
+> Trạng thái: Core local reading, lazy multi-repository workspace routing và
+> Capability 046 remote-default Hub authoring snapshot đã implement; arbitrary
+> remote clone/query vẫn ngoài scope.
 
 High-level decision:
 [MCP đọc một dự án như thế nào?](../../present/01-how-mcp-reads-a-repository.md)

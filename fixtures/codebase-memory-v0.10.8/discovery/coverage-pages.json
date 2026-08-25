@@ -1,0 +1,53 @@
+[
+  {
+    "project": "fixture",
+    "signal": "best_effort",
+    "indexed_at": "2026-08-25T00:00:00Z",
+    "metadata": {
+      "generation": "2026-08-25T00:00:00Z",
+      "index_mode": "full",
+      "recorded_at": "2026-08-25T00:00:00Z",
+      "recording_status": "complete",
+      "ignored_files_stored": 0,
+      "ignored_files_total": 0,
+      "hash_records_complete": true,
+      "coverage_version": 1,
+      "generation_matches": true
+    },
+    "paths": [],
+    "scopes": [{
+      "requested_scope": ".",
+      "scope": ".",
+      "total": 201,
+      "has_more": true,
+      "next_offset": 200,
+      "entries": [{ "path": "legacy/partial.ts", "kind": "parse_partial", "detail": "10-12" }],
+      "status": "known_gaps"
+    }]
+  },
+  {
+    "project": "fixture",
+    "signal": "best_effort",
+    "indexed_at": "2026-08-25T00:00:00Z",
+    "metadata": {
+      "generation": "2026-08-25T00:00:00Z",
+      "index_mode": "full",
+      "recorded_at": "2026-08-25T00:00:00Z",
+      "recording_status": "complete",
+      "ignored_files_stored": 0,
+      "ignored_files_total": 0,
+      "hash_records_complete": true,
+      "coverage_version": 1,
+      "generation_matches": true
+    },
+    "paths": [],
+    "scopes": [{
+      "requested_scope": ".",
+      "scope": ".",
+      "total": 201,
+      "has_more": false,
+      "entries": [{ "path": "legacy/skipped.ts", "kind": "read", "detail": "read failed" }],
+      "status": "known_gaps"
+    }]
+  }
+]

@@ -1,7 +1,7 @@
 # 03.01 — Candidate discovery
 
-> Trạng thái: Bounded Agent candidate gates implemented; Capability 046 broad
-> discovery coverage target approved, implementation pending.
+> Trạng thái: Bounded Agent candidate gates và Capability 046 broad discovery
+> coverage đã implement.
 
 ## Discovery lanes và Seed
 
@@ -13,11 +13,26 @@ thành session-stable evidence groups; repeated low-value rows giữ count và s
 samples. Agent không tự khai lane status, priority hoặc absence.
 
 Investigate gửi một Inventory. Mỗi important Seed group phải map sang đúng
-một disposition: `concept`, `embedded`, `question` hoặc `ignored` với bounded
-reason. Coverage group không split/merge trong MVP; mỗi item có một origin group
-và một disposition nhưng có thể nêu nhiều output mappings. Guidance thành công
+one outcome: `materialized`, `question` hoặc `ignored`. Một materialized group
+có thể trỏ tới nhiều candidate; candidate đã khai concept/embedded và parent nên
+Inventory không khai lại. Coverage group không split/merge trong MVP; mỗi item
+có một origin group nhưng nhiều group có thể cùng đóng góp vào một candidate.
+Guidance thành công
 freeze compact Inventory Receipt; raw graph/
 source không vào Receipt hoặc Hub.
+
+Agent không tạo Inventory item ID, QuestionPlan ID, output parent hoặc
+candidate-level evidence list lần hai. MCP derive các field đó từ active Seed và
+cùng guidance request. Seed group source list chỉ là bounded samples để hiểu và
+review group; nó không được dùng như một exhaustive repository-evidence
+allowlist. Caller-correctable defects được trả thành một bounded diagnostic set
+trong cùng `INVALID_ARGUMENT`, tránh buộc Agent khám phá từng lỗi tuần tự.
+
+Materialized embedded candidate được bind vào parent bằng candidate-owned exact
+evidence. Human-readable label trong table/prose có thể được Agent cải thiện;
+Finalize không dùng exact identity-hint substring làm materialization gate.
+Nếu exact evidence không còn trong parent, MCP append lại canonical embedded row
+từ frozen Receipt trước validation; raw graph không được dùng lại.
 
 `get_okf_authoring_schemas` validates the submitted Inventory against the active Seed
 and returns `discovery_receipt_id`. New-mode `prepare_hub_okf` consumes that
@@ -26,10 +41,12 @@ the receipt is immutable connection state; Prepare atomically creates one
 private authoring session. Exact retry returns the same session; mismatched use
 fails.
 
-Question disposition tạo private QuestionPlan dùng existing SharedQuestion kind
-và candidate-evidence reference. Nó bind target/property/scope/source revision/
-missing evidence; Finalize render Question từ Receipt. Không bind được subject
-hoặc evidence thì giữ limitation, không tạo Question mồ côi.
+Question outcome tạo private QuestionPlan dùng existing SharedQuestion kind.
+Agent chọn `candidate_key + evidence_id` đã có trong cùng guidance request; MCP
+tự derive exact normalized source resource và SourceSnapshot revision trước khi
+freeze candidate-evidence reference vào Receipt. Agent không tự tạo
+`repository://` URI hoặc revision. Không bind được subject/evidence thì giữ
+limitation, không tạo Question mồ côi.
 
 ## Candidate sources
 
@@ -43,6 +60,11 @@ Agent tạo candidate từ evidence đã đọc, không từ tên đoán mò:
 
 Graph node, file, function, cloud keyword hoặc import chỉ là discovery signal.
 Chúng không tự động trở thành concept.
+
+Explicit `embedded` disposition không phụ thuộc provider profile. Nếu technology
+mapping không có, guidance vẫn trả embedded với provider-neutral metadata và
+limitation; `unsupported` chỉ áp dụng cho standalone promotion/schema không đủ
+bằng chứng hoặc không được catalog hỗ trợ.
 
 ## Hai qualification gates
 
@@ -77,7 +99,7 @@ tả phần thiếu cụ thể thay vì một con số trông chính xác giả.
 - Future intent hoặc docs mơ hồ không được trình bày như implemented state.
 - Candidate không được tạo chỉ để làm Hub chi tiết hơn.
 - Route, entrypoint, runtime root, API spec, IaC/deploy group, explicit service
-  boundary, channel và datastore không được biến mất trước disposition.
+  boundary, channel và datastore không được biến mất trước khi có outcome.
 - P0 classification do MCP cố định; P0 ignored chỉ nhận `duplicate-covered` trỏ
   tới một non-ignored item sẽ materialize. Generated/out-of-scope phải được xếp
   dưới P0 lúc tạo Seed, không dùng làm lý do pass P0.

@@ -6,7 +6,7 @@ description: Support an AgentBase workflow with bounded Code Graph navigation fo
 # Use the managed code graph
 
 Delegate graph construction and queries to the AgentBase MCP surface backed by
-exact `codebase-memory-mcp@0.10.1`. Treat raw graph data as private disposable
+exact owned `codebase-memory-mcp@0.10.8`. Treat raw graph data as private disposable
 working context, not OKF knowledge.
 
 Use only `index_repository`, `get_architecture`, `search_graph`, `trace_path`,
@@ -21,6 +21,9 @@ AgentBase tools.
 2. On a new MCP connection, call `index_repository` for that root. Give the
    project a clear name when useful. A later explicit index may switch the
    connection sequentially after clean provider closure; never combine graphs.
+   When Initial Ingest Preflight armed this exact root, the index result also
+   contains one bounded `agentbase_discovery_seed`. Preserve its group IDs,
+   lanes and limitations; later search/trace calls explain but never mutate it.
 3. Start structural discovery with `get_architecture` or `search_graph`. Use
    `trace_path` for callers, callees, impact and data flow instead of text grep.
 4. After finding an exact qualified name, use `get_code_snippet` to read the

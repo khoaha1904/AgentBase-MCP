@@ -1,7 +1,7 @@
 # 09.01 — Initial Ingest
 
-> Trạng thái: Baseline implemented/qualified. Capability 046 target approved;
-> discovery coverage implementation and requalification pending.
+> Trạng thái: Baseline qualified và Capability 046 discovery coverage runtime
+> implemented; released-skill requalification pending.
 
 ## User interaction
 
@@ -20,8 +20,9 @@ viết, provider login hoặc cross-repository investigation.
 ```
 
 Stage boundaries/checkpoints là deterministic. Agent reasoning chỉ nằm trong
-semantic discovery/investigation và phải disposition important group thành
-concept, embedded, Question hoặc ignored reason. MCP groups structure and
+semantic discovery/investigation và phải chọn outcome cho important group:
+materialized candidates, Question hoặc ignored reason. Candidate records đã
+chọn riêng disposition concept versus embedded. MCP groups structure and
 assigns lane/P0/validates coverage; Agent decides meaning. Không có progress thì
 dừng investigation.
 
@@ -35,7 +36,7 @@ graph. Without a Remote Hub there is no OKF Init/Local Draft.
 
 Success không yêu cầu full repository coverage hoặc concept quota. Một run thành
 công khi mọi discovery lane là covered, absent-after-check hoặc limited, mọi P0
-group có disposition và proposal valid/useful/provenance-bearing. P1/P2 thiếu có
+group có outcome và proposal valid/useful/provenance-bearing. P1/P2 thiếu có
 thể vẫn `Ready for review` cùng Question/limitation.
 
 Missing low-value details là diagnostics. Ambiguity quan trọng thành Question.
@@ -64,8 +65,12 @@ resource nội bộ được giữ embedded. Explicit Batch Initial Ingest đã 
 offline bằng isolated
 sequential member checkpoints cùng one atomic proposal.
 
+Prepared embedded rows là Receipt-bound mechanics. Agent có thể làm nhãn/prose
+dễ đọc hơn nhưng phải giữ candidate-owned source evidence; Finalize kiểm evidence
+đó trong parent thay vì so exact tên gợi ý. Row bị mất được MCP phục hồi từ
+Receipt trong normalized proposal, không yêu cầu Agent repair.
+
 Capability 046 does not add schema/catalog, public scanner tool or concept
-quota. It reuses pinned Codebase Memory, exposes more normalized diagnostics to
-the private Seed and requires released-skill qualification before replacing the
-baseline status above. It does not retrofit Published repositories; that remains
+quota. It reuses pinned Codebase Memory and exposes normalized diagnostics to
+the private Seed. It does not retrofit Published repositories; that remains
 future Full Discovery Refresh or an intentional qualification-data re-ingest.

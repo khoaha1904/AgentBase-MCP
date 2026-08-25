@@ -230,6 +230,15 @@ export async function callHubOkfTool(
       if (mode === "refresh" && args.evidence_digest !== undefined) {
         throw new Error("refresh derives evidence_digest; callers must not supply it");
       }
+      if (mode === "new" && (args.guidance_request !== undefined || args.coverage !== undefined || args.signals !== undefined)) {
+        throw new Error("new Initial Ingest accepts discovery_receipt_id instead of mutable guidance, coverage or signals");
+      }
+      if (mode === "new" && typeof args.discovery_receipt_id !== "string") {
+        throw new Error("new Initial Ingest requires discovery_receipt_id");
+      }
+      if (mode === "refresh" && args.discovery_receipt_id !== undefined) {
+        throw new Error("Refresh does not accept discovery_receipt_id");
+      }
       const confirmedDomain = args.confirmed_domain === undefined
         ? undefined : normalizeConfirmedDomain(args.confirmed_domain);
       const coverage = args.coverage;
@@ -250,6 +259,7 @@ export async function callHubOkfTool(
           ? args.signals as string[] : (() => { throw new Error("signals must be a string list"); })() }),
         ...(args.guidance_request === undefined ? {} : { guidanceRequest: guidanceRequest(args.guidance_request) }),
         ...(coverage === undefined ? {} : { coverage: coverage as { partial: boolean; limitations: string[] } }),
+        ...(typeof args.discovery_receipt_id === "string" ? { discoveryReceiptId: args.discovery_receipt_id } : {}),
       }));
     }
     if (name === "finalize_hub_okf_proposal") {
@@ -281,7 +291,7 @@ export async function callHubOkfTool(
       if (!Number.isInteger(revision) || Number(revision) < 1) throw new Error("manifest_revision must be positive");
       return result(await actions.recordBatchMember({ manifestId: required(args, "manifest_id"),
         manifestRevision: revision as number, memberId: required(args, "member_id"),
-        sessionId: required(args, "session_id"), questions: questionDeclarations(args.questions) }));
+        sessionId: required(args, "session_id") }));
     }
     if (name === "retry_batch_hub_ingest_member" || name === "finalize_batch_hub_ingest_proposal") {
       const revision = args.manifest_revision;

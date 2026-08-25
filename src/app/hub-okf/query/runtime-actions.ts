@@ -4,17 +4,28 @@ import os from "node:os";
 import path from "node:path";
 
 import {
-  getOkfAuthoringGuidance, getOkfConceptSchema, parseConceptDocument, repositorySourceResources, selectOkfConceptSchemas,
+  getOkfAuthoringGuidance, getOkfConceptSchema, loadOkfBundle, parseConceptDocument,
+  readRepositoryIdentityRecord, repositorySourceResources, selectOkfConceptSchemas,
   type HubContinuityGap, type HubContinuityManifest,
+  type InventoryReceipt,
 } from "../../../core/knowledge/index.ts";
-import { createCandidateWorktree, GitHubApiError, GitHubHubApi, removeCandidateWorktree } from "../../../providers/github-hub/index.ts";
+import {
+  createCandidateWorktree,
+  GitHubApiError,
+  GitHubHubApi,
+  removeCandidateWorktree,
+  resolveSourceSnapshot,
+  type SourceSnapshot,
+} from "../../../providers/github-hub/index.ts";
 import { AWS_SQS_PROFILE, AWS_STS_PROFILE } from "../../../providers/aws-cli/index.ts";
 import { hubProfileId, type AdmittedLocalHubState } from "../../../core/hub/index.ts";
 import {
   discoverRepositorySourceChanges, discoverRepositorySourceState, resolveRepositorySourceRoot,
 } from "../../repository-okf/index.ts";
-import { beginHubAuthoringSession, finalizeHubAuthoringSession, readHubAuthoringSession } from "../authoring/authoring-session.ts";
-import { writeInitialIngestSkeletons } from "../authoring/initial-ingest-skeleton.ts";
+import {
+  beginHubAuthoringSession, finalizeHubAuthoringSession, materializeInitialIngestSessionSkeletons,
+  readHubAuthoringSession,
+} from "../authoring/authoring-session.ts";
 import { listHubQuestions } from "../authoring/questions.ts";
 import { acceptHubProposal } from "../review/accept.ts";
 import { resolveHubConfiguration, type OptionalHubConfiguration } from "../configuration/configuration.ts";
@@ -51,7 +62,7 @@ import {
 } from "../batch-ingest/index.ts";
 import { initializeHub as executeHubInitialization, previewHubInitialization } from "../ci/upgrade.ts";
 
-function defaultStateRoot(): string {
+export function defaultHubRuntimeStateRoot(): string {
   const owner = typeof process.getuid === "function" ? String(process.getuid()) : "portable";
   return path.join(os.tmpdir(), `agentbase-${owner}`, "hub-runtime");
 }
@@ -159,8 +170,19 @@ function continuityDocumentGaps(
 
 export function createHubRuntimeActions(
   environment: NodeJS.ProcessEnv = process.env,
-  stateRoot = defaultStateRoot(),
+  stateRoot = defaultHubRuntimeStateRoot(),
+  dependencies: Readonly<{
+    sourceSnapshotResolver?: typeof resolveSourceSnapshot;
+    discoveryReceiptResolver?: (id: string) => InventoryReceipt | undefined;
+    discoveryReceiptRebaser?: (id: string, publishedBase: string) => InventoryReceipt | undefined;
+    onSourceSnapshot?: (snapshot: SourceSnapshot, mode: "new" | "refresh", authority: Readonly<{
+      hubProfileId: string;
+      publishedBase: string;
+    }>) => void;
+  }> = {},
 ): HubToolActions {
+  const pendingSourceSnapshots = new Map<string, SourceSnapshot>();
+  const sourceSnapshotsByAnalysisRoot = new Map<string, SourceSnapshot>();
   const current = (): OptionalHubConfiguration => resolveHubConfiguration(environment);
   const migrateActive = () => {
     const before = current();
@@ -205,6 +227,45 @@ export function createHubRuntimeActions(
   const admit = async (createForAuthoring = false, mutating = createForAuthoring) => {
     const configuration = configured(mutating);
     return admitPersistentLocalHub(configuration);
+  };
+  const rememberSourceSnapshot = (snapshot: SourceSnapshot) => {
+    pendingSourceSnapshots.set(snapshot.requestedRoot, snapshot);
+    if (snapshot.analysisRoot !== snapshot.requestedRoot) sourceSnapshotsByAnalysisRoot.set(snapshot.analysisRoot, snapshot);
+    return snapshot;
+  };
+  const sourceAuthority = (snapshot: SourceSnapshot) => ({
+    repository_id: snapshot.repositoryId,
+    remote: snapshot.remote.canonicalHttpsUrl,
+    default_branch: snapshot.defaultBranch,
+    commit: snapshot.commit,
+    analysis_source_repository: snapshot.analysisRoot,
+    kind: snapshot.kind,
+  });
+  const authorizeSource = async (requestedRoot: string, repositoryId: string): Promise<SourceSnapshot> => {
+    const configuration = configured(true);
+    if (configuration.kind !== "remote" || !configuration.hub) throw new Error("Hub-bound authoring requires one remote Hub profile");
+    const resolver = dependencies.sourceSnapshotResolver ?? resolveSourceSnapshot;
+    const token = configuration.token ?? (dependencies.sourceSnapshotResolver ? "injected-source-authority" : requireHubToken(configuration.token));
+    return rememberSourceSnapshot(await resolver({ requestedRoot, repositoryId, hub: configuration.hub,
+      token, stateRoot }));
+  };
+  const preparedSource = async (inputRoot: string, repositoryId: string): Promise<Readonly<{
+    snapshot: SourceSnapshot;
+    requestedSource: ReturnType<typeof discoverRepositorySourceState>;
+    source: ReturnType<typeof discoverRepositorySourceState>;
+  }>> => {
+    const selected = fs.realpathSync(inputRoot);
+    const fromAnalysis = sourceSnapshotsByAnalysisRoot.get(selected);
+    const pending = pendingSourceSnapshots.get(selected) ?? fromAnalysis;
+    const requestedRoot = pending?.requestedRoot ?? selected;
+    const requestedSource = discoverRepositorySourceState(requestedRoot);
+    const snapshot = pending ?? await authorizeSource(requestedRoot, repositoryId);
+    if (snapshot.repositoryId !== repositoryId) throw new Error("source snapshot Repository identity changed");
+    pendingSourceSnapshots.delete(snapshot.requestedRoot);
+    return { snapshot, requestedSource, source: { ...requestedSource, repositoryId,
+      commit: snapshot.commit, dirty: false, dirtyDigest: null, capturedAt: snapshot.createdAt,
+      limitations: [...new Set([...requestedSource.limitations,
+        "Hub authoring is bound to the exact remote default-branch source snapshot"])].sort() } };
   };
   return {
     async status() {
@@ -307,17 +368,34 @@ export function createHubRuntimeActions(
         displayName: source.displayName,
         ...source.identityHints,
       });
-      return { source, ...context };
+      if (context.repository.kind === "ambiguous") {
+        throw new Error(`repository identity is ambiguous: ${context.repository.reason}`);
+      }
+      const mode = context.repository.kind === "new" ? "new" : "refresh";
+      const requestedRoot = resolveRepositorySourceRoot(sourceRepository);
+      const cached = pendingSourceSnapshots.get(fs.realpathSync(requestedRoot));
+      const snapshot = cached?.repositoryId === context.repository.repository.id
+        ? cached : await authorizeSource(requestedRoot, context.repository.repository.id);
+      dependencies.onSourceSnapshot?.(snapshot, mode, {
+        hubProfileId: hubProfileId(localHub.hub),
+        publishedBase: localHub.activeHead,
+      });
+      return { source: { ...source, repositoryId: snapshot.repositoryId, commit: snapshot.commit,
+        dirty: false, dirtyDigest: null, capturedAt: snapshot.createdAt }, ...context,
+        source_authority: sourceAuthority(snapshot) };
     },
     async prepare(input) {
       if (!path.isAbsolute(input.sourceRepository) || !fs.statSync(input.sourceRepository).isDirectory()) {
         throw new Error("source repository must be an existing absolute directory");
       }
-      const source = discoverRepositorySourceState(input.sourceRepository);
+      const selectedInputRoot = fs.realpathSync(input.sourceRepository);
+      const pending = pendingSourceSnapshots.get(selectedInputRoot) ?? sourceSnapshotsByAnalysisRoot.get(selectedInputRoot);
+      const identityRoot = pending?.requestedRoot ?? selectedInputRoot;
+      const requestedSource = discoverRepositorySourceState(identityRoot);
       const localHub = await admit(true);
       const repository = await inspectInitialIngestHubContext(localHub, {
-        displayName: source.displayName,
-        ...source.identityHints,
+        displayName: requestedSource.displayName,
+        ...requestedSource.identityHints,
       }, { boundary: input.mode === "refresh" ? "active" : "published" });
       if (repository.repository.kind === "ambiguous") {
         throw new Error(`repository identity is ambiguous: ${repository.repository.reason}`);
@@ -329,6 +407,7 @@ export function createHubRuntimeActions(
         throw new Error("repository already exists in Published Hub; use Refresh");
       }
       const sourceRepositoryId = repository.repository.repository.id;
+      const { snapshot, source } = await preparedSource(input.sourceRepository, sourceRepositoryId);
       const knownGaps = listHubQuestions(localHub, { status: "open", limit: 100 })
         .filter((question) => question.sourceRepositoryId === sourceRepositoryId)
         .slice(0, 64)
@@ -339,18 +418,26 @@ export function createHubRuntimeActions(
           updatedAt: question.createdAt,
         }));
       let continuity = await buildActiveHubContinuity(localHub, sourceRepositoryId, input.subjectDirectory, { knownGaps });
-      const documentGaps = continuityDocumentGaps(localHub, continuity, resolveRepositorySourceRoot(input.sourceRepository));
+      const documentGaps = continuityDocumentGaps(localHub, continuity, snapshot.analysisRoot);
       continuity = { ...continuity, knownGaps: [...knownGaps, ...documentGaps].slice(0, 64) };
       const sourceChanges = input.mode === "refresh"
-        ? discoverRepositorySourceChanges(input.sourceRepository, continuity.observedSource?.commit, source)
+        ? discoverRepositorySourceChanges(snapshot.analysisRoot, continuity.observedSource?.commit, source)
         : undefined;
-      if (input.mode === "new" && !input.guidanceRequest) {
-        throw new Error("new Initial Ingest requires evidence-bearing guidance_request; source-less signals are refresh-only");
+      const receipt = input.mode === "new" && input.discoveryReceiptId
+        ? dependencies.discoveryReceiptResolver?.(input.discoveryReceiptId) : undefined;
+      if (input.mode === "new" && !receipt) {
+        throw new Error("new Initial Ingest requires one active frozen discovery Receipt");
+      }
+      if (receipt && (receipt.source.repositoryId !== sourceRepositoryId || receipt.source.commit !== snapshot.commit
+        || receipt.hubProfileId !== hubProfileId(localHub.hub) || receipt.publishedBase !== localHub.activeHead)) {
+        throw new Error("discovery Receipt source or Hub authority no longer matches Prepare");
       }
       const signals = input.confirmedDomain ? [...(input.signals ?? []), "business domain"] : (input.signals ?? []);
-      const guidance = input.guidanceRequest ? getOkfAuthoringGuidance(input.guidanceRequest) : undefined;
-      const evidenceDigest = authoringEvidenceDigest(sourceRepositoryId, source,
-        input.guidanceRequest ?? { signals, coverage: input.coverage });
+      const guidance = receipt?.guidance ?? (input.guidanceRequest ? getOkfAuthoringGuidance(input.guidanceRequest) : undefined);
+      const coverage = receipt ? { partial: receipt.coverage.limitations.length > 0,
+        limitations: receipt.coverage.limitations } : input.coverage;
+      const evidenceDigest = receipt?.digest ?? authoringEvidenceDigest(sourceRepositoryId, source,
+        input.guidanceRequest ?? { signals, coverage });
       const selectedSchemas = guidance
         ? [...new Set(guidance.recommendations.flatMap((item) => ["exact", "suggested"].includes(item.status) && item.schema ? [item.schema.type] : []))]
         : selectOkfConceptSchemas(signals).map((item) => item.type);
@@ -371,7 +458,7 @@ export function createHubRuntimeActions(
         hub: localHub.hub,
         baseCommit: localHub.activeHead,
         checkoutRoot: localHub.root,
-        sourceRepositoryRoot: resolveRepositorySourceRoot(input.sourceRepository),
+        sourceRepositoryRoot: snapshot.analysisRoot,
         sourceRepositoryId,
         sourceState: { commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest },
         evidenceDigest,
@@ -380,21 +467,15 @@ export function createHubRuntimeActions(
         signals,
         selectedSchemas,
         ...(guidance ? { guidance } : {}),
-        ...(input.coverage ? { coverage: input.coverage } : {}),
+        ...(coverage ? { coverage } : {}),
+        ...(receipt ? { discoveryReceipt: receipt } : {}),
+        requireObservedRevision: true,
         createdAt: new Date().toISOString(),
       });
-      const skeletons = input.mode === "new" && input.guidanceRequest && guidance
-        ? writeInitialIngestSkeletons({
-          bundleRoot: session.bundleRoot,
-          subjectDirectory: input.subjectDirectory,
-          sourceRepositoryId,
-          repository: repository.repository.repository,
-          ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),
-          request: input.guidanceRequest,
-          guidance,
-          createdAt: session.createdAt,
-          sourceState: session.sourceState,
-        }) : [];
+      const skeletons = input.mode === "new" && receipt
+        ? materializeInitialIngestSessionSkeletons(stateRoot, session.id, localHub.root,
+          repository.repository.repository)
+        : [];
       return {
         sessionId: session.id,
         bundleRoot: session.bundleRoot,
@@ -402,7 +483,9 @@ export function createHubRuntimeActions(
         selectedSchemas: session.selectedSchemas,
         sourceRepositoryId: session.sourceRepositoryId,
         evidenceDigest,
+        ...(receipt ? { discoveryReceiptId: receipt.id } : {}),
         source,
+        source_authority: sourceAuthority(snapshot),
         repositoryResolution: repository.repository,
         ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),
         continuity,
@@ -417,12 +500,60 @@ export function createHubRuntimeActions(
       const configuration = configured(true);
       const session = readHubAuthoringSession(stateRoot, sessionId, configuration.localRoot);
       const source = discoverRepositorySourceState(session.sourceRepositoryRoot);
-      const localHub = configuration.kind === "remote"
-        ? await admitPersistentLocalHub(configuration)
-        : await admitPersistentLocalHub(configuration);
-      return finalizeHubAuthoringSession(stateRoot, sessionId, configuration.localRoot, questions ?? [], removals ?? [], {
-        commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest,
-      }, localHub.activeHead);
+      const currentSource = { commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest };
+      if (JSON.stringify(currentSource) !== JSON.stringify(session.sourceState)) {
+        throw new Error("source repository changed after Prepare");
+      }
+      const localHub = await admitPersistentLocalHub(configuration);
+      if (localHub.activeHead !== session.baseCommit) {
+        if (!session.discoveryReceipt) return { result: "reprepare_required", reason: "hub-base-advanced", mode: session.mode,
+          previous_session_id: session.id, current_hub_base: localHub.activeHead };
+        const repository = [...loadOkfBundle(session.bundleRoot).concepts.values()].map(readRepositoryIdentityRecord)
+          .find((record) => record?.id === session.sourceRepositoryId);
+        if (!repository) throw new Error("replacement Initial Ingest cannot resolve its Repository identity");
+        const rematch = await inspectInitialIngestHubContext(localHub, {
+          displayName: repository.displayName, remotes: repository.remotes, rootCommits: repository.rootCommits,
+          ...(repository.forgeId ? { forgeId: repository.forgeId } : {}),
+        }, { boundary: "published" });
+        if (rematch.repository.kind !== "new") {
+          throw new Error("Repository entered Published Hub while Initial Ingest was being authored; use Refresh");
+        }
+        const replacementReceipt = dependencies.discoveryReceiptRebaser?.(session.discoveryReceipt.id, localHub.activeHead);
+        if (!replacementReceipt) throw new Error("Hub base advanced and the frozen discovery Receipt cannot be rebound");
+        const replacement = beginHubAuthoringSession({
+          stateRoot, mode: "new", hub: localHub.hub, baseCommit: localHub.activeHead,
+          checkoutRoot: localHub.root, sourceRepositoryRoot: session.sourceRepositoryRoot,
+          sourceRepositoryId: session.sourceRepositoryId, sourceState: session.sourceState,
+          evidenceDigest: replacementReceipt.digest, subjectDirectory: session.subjectDirectory,
+          ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),
+          signals: session.signals, selectedSchemas: session.selectedSchemas,
+          guidance: replacementReceipt.guidance,
+          coverage: { partial: replacementReceipt.coverage.limitations.length > 0,
+            limitations: replacementReceipt.coverage.limitations },
+          discoveryReceipt: replacementReceipt, requireObservedRevision: true,
+          createdAt: new Date().toISOString(),
+        });
+        const skeletons = materializeInitialIngestSessionSkeletons(stateRoot, replacement.id, localHub.root, repository);
+        fs.rmSync(session.root, { recursive: true, force: true });
+        return { result: "replacement_required", reason: "hub-base-advanced", source_discovery_reused: true,
+          previous_session_id: session.id, session_id: replacement.id,
+          discovery_receipt_id: replacementReceipt.id, bundle_root: replacement.bundleRoot,
+          base_commit: replacement.baseCommit, skeletons };
+      }
+      const finalized = finalizeHubAuthoringSession(stateRoot, sessionId, configuration.localRoot,
+        questions ?? [], removals ?? [], currentSource, localHub.activeHead);
+      if (!session.discoveryReceipt || configuration.kind !== "remote" || !configuration.token) return finalized;
+      try {
+        const repository = session.discoveryReceipt.source.remote.replace(`https://${configuration.host}/`, "").replace(/\.git$/, "");
+        const api = new GitHubHubApi(configuration.hub, configuration.token);
+        const remote = await api.getRepository(repository);
+        const ref = await api.getBranchRef(remote.defaultBranch, remote.fullName);
+        return { ...finalized, source_head: ref.commit === session.discoveryReceipt.source.commit
+          ? { status: "current", commit: ref.commit }
+          : { status: "source-advanced", observed_commit: session.discoveryReceipt.source.commit, current_commit: ref.commit } };
+      } catch {
+        return { ...finalized, source_head: { status: "unavailable", detail: "current source default head could not be checked" } };
+      }
     },
     async prepareBatch(input) {
       const localHub = await admit(true);
@@ -437,8 +568,12 @@ export function createHubRuntimeActions(
         const resolution = context.repository;
         const repository = resolution.kind === "ambiguous" ? resolution.candidates[0] : resolution.repository;
         if (!repository) throw new Error(`batch repository identity is unresolved: ${sourceRepository}`);
-        members.push({ id: batchMemberId(repository.id, root), order, root, repositoryId: repository.id,
-          displayName: repository.displayName, source: { commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest },
+        const snapshot = await authorizeSource(root, repository.id);
+        members.push({ id: batchMemberId(repository.id, root), order, root, analysisRoot: snapshot.analysisRoot,
+          repositoryId: repository.id, displayName: repository.displayName,
+          source: { commit: snapshot.commit, dirty: false, dirtyDigest: null },
+          sourceAuthority: { remote: snapshot.remote.canonicalHttpsUrl, defaultBranch: snapshot.defaultBranch,
+            commit: snapshot.commit, kind: snapshot.kind },
           identityStatus: resolution.kind, documentPaths: batchDocumentPaths(root),
           warnings: resolution.kind === "new" ? [] : [resolution.kind === "existing"
             ? "Repository already exists in Hub and requires Refresh" : resolution.reason] });
@@ -447,7 +582,8 @@ export function createHubRuntimeActions(
         domain: input.proposedDomain, members, createdAt: new Date().toISOString() });
       return { manifest, matrix: manifest.members.map((member) => ({ memberId: member.id,
         repositoryId: member.repositoryId, displayName: member.displayName, identityStatus: member.identityStatus,
-        proposedDomain: manifest.domain, documentPaths: member.documentPaths, warnings: member.warnings })) };
+        proposedDomain: manifest.domain, documentPaths: member.documentPaths, warnings: member.warnings,
+        sourceAuthority: member.sourceAuthority, analysisSourceRepository: member.analysisRoot })) };
     },
     async confirmBatch(input) {
       const localHub = await admit(false, true), prior = readBatchManifest(stateRoot, input.manifestId, input.manifestRevision);
@@ -458,7 +594,7 @@ export function createHubRuntimeActions(
       const localHub = await admit(false, true), manifest = readBatchManifest(stateRoot, input.manifestId, input.manifestRevision);
       const member = manifest.members.find((value) => value.id === input.memberId);
       if (!member) throw new Error("batch member is absent from current manifest");
-      const source = discoverRepositorySourceState(member.root);
+      const source = discoverRepositorySourceState(member.analysisRoot);
       return recordBatchMember({ stateRoot, localHub, ...input,
         currentSource: { commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest } });
     },
@@ -471,7 +607,7 @@ export function createHubRuntimeActions(
     async finalizeBatch(input) {
       const localHub = await admit(false, true), manifest = readBatchManifest(stateRoot, input.manifestId, input.manifestRevision);
       const currentSources = new Map(manifest.members.map((member) => {
-        const source = discoverRepositorySourceState(member.root);
+        const source = discoverRepositorySourceState(member.analysisRoot);
         return [member.id, { commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest }] as const;
       }));
       return finalizeBatchIngest({ stateRoot, localHub, ...input, currentSources });

@@ -1,12 +1,21 @@
 # Current capability
 
-Active capability: [`046-initial-ingest-discovery`](046-initial-ingest-discovery/spec.md) — owner design approved; implementation planning in progress, no runtime change yet.
-Most recent completed: [`045-visualize-published-hub`](045-visualize-published-hub/spec.md).
+Active capability: [`046-initial-ingest-discovery`](046-initial-ingest-discovery/spec.md) — implementation is qualified through the current valid-partial benchmark; exact Glue discovery remains the active improvement boundary.
+Most recent completed: [`048-readable-2d-domain-site`](048-readable-2d-domain-site/spec.md) — Retail and Crawler now publish readable 2D maps over the unchanged exact Published projection; the custom 3D presentation is removed.
 
-Capability 045 adds one deterministic presentation-neutral projection over one
+Capability 048 replaces only the generated Domain-site presentation. It removes
+the custom Three.js scene, retains the current projection and interactions, and
+adds no MCP tool, OKF field, graph store, live service or second renderer.
+
+Capability 046 runtime and offline qualification are implemented. Its real Sol
+qualification may now use the newly rebuilt approved patched Codebase Memory
+runtime; no pre-overlay binary may be used.
+
+Capability 045 added one deterministic presentation-neutral projection over one
 exact Published Domain. Two workflows consume it: lightweight focused
-Architecture/Dependency/Sequence diagrams and an explicit one-shot static 3D
-Domain site. It adds no OKF visualization schema, Draft overlay, graph database,
+Architecture/Dependency/Sequence diagrams and an explicit one-shot static
+Domain site, whose original 3D presentation is superseded by capability 048's
+2D map. It adds no OKF visualization schema, Draft overlay, graph database,
 watcher, live service or automatic publication. The projection, one 44th
 goal-level tool, diagram packet/skills and static Domain-site generator are
 implemented and pass the repository gate. The Hub was recoverably reset; the

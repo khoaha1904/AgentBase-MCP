@@ -31,6 +31,42 @@ export type SourceSnippet = Readonly<{
   text: string;
 }>;
 
+export type IndexDiagnostic = Readonly<{
+  project: string;
+  nodes: number;
+  edges: number;
+  status: "ready" | "empty";
+  parsePartialCount: number;
+  skippedCount: number;
+  notIndexedCount: number;
+  truncated: boolean;
+}>;
+
+export type CoverageEntry = Readonly<{
+  path: string;
+  kind: string;
+  detail?: string;
+}>;
+
+export type CoveragePage = Readonly<{
+  project: string;
+  recordingStatus: string;
+  generationMatches: boolean;
+  hashRecordsComplete: boolean;
+  status: "coverage_unavailable" | "known_gaps" | "no_recorded_issue";
+  total: number;
+  hasMore: boolean;
+  nextOffset?: number;
+  entries: readonly CoverageEntry[];
+}>;
+
+export type ArchitectureCapture = Readonly<{
+  project: string;
+  nodeCount: number;
+  edgeCount: number;
+  sections: Readonly<Record<string, readonly string[]>>;
+}>;
+
 function malformed(operation: string, message: string): never {
   throw new CodebaseMemoryError("PROVIDER_MALFORMED_OUTPUT", operation, message);
 }
@@ -85,6 +121,97 @@ function sectionLines(source: string, section: string): readonly string[] {
     values.push(line.trim());
   }
   return values;
+}
+
+function countSection(value: JsonObject, key: string, operation: string): Readonly<{ count: number; truncated: boolean }> {
+  const section = object(value[key], operation, key);
+  return {
+    count: integer(section.count, operation, `${key}.count`),
+    truncated: section.truncated === true,
+  };
+}
+
+export function parseIndexDiagnostic(response: unknown): IndexDiagnostic {
+  const value = structured(response, "index_status");
+  const status = text(value.status, "index_status", "status");
+  if (status !== "ready" && status !== "empty") malformed("index_status", "status must be ready or empty");
+  const partial = countSection(value, "parse_partial", "index_status");
+  const skipped = countSection(value, "skipped", "index_status");
+  const notIndexed = object(value.not_indexed, "index_status", "not_indexed");
+  const notIndexedCount = integer(notIndexed.dirs_count, "index_status", "not_indexed.dirs_count")
+    + integer(notIndexed.files_count, "index_status", "not_indexed.files_count");
+  return {
+    project: text(value.project, "index_status", "project"),
+    nodes: integer(value.nodes, "index_status", "nodes"),
+    edges: integer(value.edges, "index_status", "edges"),
+    status,
+    parsePartialCount: partial.count,
+    skippedCount: skipped.count,
+    notIndexedCount,
+    truncated: partial.truncated || skipped.truncated || notIndexed.truncated === true,
+  };
+}
+
+export function parseCoveragePage(response: unknown): CoveragePage {
+  const value = structured(response, "check_index_coverage");
+  const metadata = object(value.metadata, "check_index_coverage", "metadata");
+  if (!Array.isArray(value.scopes) || value.scopes.length !== 1) {
+    malformed("check_index_coverage", "exactly one scope result is required");
+  }
+  const scope = object(value.scopes[0], "check_index_coverage", "scope result");
+  const status = text(scope.status, "check_index_coverage", "scope status");
+  if (!["coverage_unavailable", "known_gaps", "no_recorded_issue"].includes(status)) {
+    malformed("check_index_coverage", "scope status is invalid");
+  }
+  if (!Array.isArray(scope.entries)) malformed("check_index_coverage", "scope entries must be an array");
+  const entries = scope.entries.map((entryValue, index) => {
+    const entry = object(entryValue, "check_index_coverage", `scope entry ${index + 1}`);
+    const detailValue = entry.detail ?? entry.reason ?? entry.error_ranges;
+    return {
+      path: text(entry.path ?? entry.rel_path, "check_index_coverage", "coverage path"),
+      kind: text(entry.kind ?? entry.phase, "check_index_coverage", "coverage kind"),
+      ...(typeof detailValue === "string" && detailValue.trim() ? { detail: detailValue } : {}),
+    };
+  });
+  const hasMore = scope.has_more === true;
+  const nextOffset = scope.next_offset;
+  if (hasMore && (!Number.isSafeInteger(nextOffset) || (nextOffset as number) < 1)) {
+    malformed("check_index_coverage", "non-terminal scope requires next_offset");
+  }
+  return {
+    project: text(value.project, "check_index_coverage", "project"),
+    recordingStatus: text(metadata.recording_status, "check_index_coverage", "metadata.recording_status"),
+    generationMatches: metadata.generation_matches === true,
+    hashRecordsComplete: metadata.hash_records_complete === true,
+    status: status as CoveragePage["status"],
+    total: integer(scope.total, "check_index_coverage", "scope total"),
+    hasMore,
+    ...(hasMore ? { nextOffset: nextOffset as number } : {}),
+    entries,
+  };
+}
+
+export function parseArchitectureCapture(response: unknown): ArchitectureCapture {
+  const source = architectureText(response);
+  const scalar = (name: string): string => {
+    const line = source.split(/\r?\n/).find((candidate) => candidate.startsWith(`${name}:`));
+    return line ? line.slice(name.length + 1).trim() : malformed("get_architecture", `architecture omitted ${name}`);
+  };
+  const nodeCount = Number(scalar("total_nodes"));
+  const edgeCount = Number(scalar("total_edges"));
+  if (!Number.isSafeInteger(nodeCount) || nodeCount < 0 || !Number.isSafeInteger(edgeCount) || edgeCount < 0) {
+    malformed("get_architecture", "architecture totals are invalid");
+  }
+  const sectionNames = [
+    "node_labels", "edge_types", "languages", "packages", "entry_points", "routes",
+    "hotspots", "boundaries", "layers", "clusters",
+  ] as const;
+  return {
+    project: scalar("project"),
+    nodeCount,
+    edgeCount,
+    sections: Object.fromEntries(sectionNames.map((name) => [name, sectionLines(source, name)])),
+  };
 }
 
 export function parseArchitecture(repositoryId: string, response: unknown): RepositoryOverview {

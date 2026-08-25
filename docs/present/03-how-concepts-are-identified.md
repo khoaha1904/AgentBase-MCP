@@ -1,7 +1,7 @@
 # 03 — MCP nhận diện concept trong repository thế nào?
 
-> Trạng thái: Catalog 7 đã implement. Capability 046 đã chốt discovery coverage
-> mới; implementation delta chưa triển khai.
+> Trạng thái: Catalog 7 và Capability 046 Discovery Seed/Inventory coverage đã
+> implement; released-skill qualification còn pending.
 
 ## Câu trả lời ngắn
 
@@ -43,14 +43,17 @@ Một thành phần được đề xuất thành concept riêng khi nó:
 
 Hub ưu tiên ranh giới có giá trị query/navigation. Cloud resource nội bộ thường
 là embedded knowledge trong concept cha, không tự động thành một file concept.
+Khi Agent đã chọn embedded với parent và evidence hợp lệ, việc MCP chưa nhận ra
+provider/product chỉ tạo limitation; nó không được làm knowledge biến mất.
 
 Một discovery group không đạt hai gate không biến mất âm thầm. Agent chọn đúng
-một disposition: `concept`, `embedded`, `question` hoặc `ignored` kèm bounded
-reason. MCP đối chiếu các disposition này với machine-derived Discovery Seed;
+một outcome: `materialized`, `question` hoặc `ignored` kèm bounded reason.
+Candidate đã xác định concept hay embedded nên Inventory không khai lại. MCP đối
+chiếu các outcome này với machine-derived Discovery Seed;
 không đặt quota concept và không yêu cầu mọi route/resource thành file.
 MCP tự xác định lane và mức P0/P1/P2 từ tín hiệu máy; Agent chỉ diễn giải ý nghĩa
 và chọn cách biểu diễn, nên không thể tự tuyên bố “đã kiểm tra đủ”. Một group có
-một disposition nhưng có thể tạo nhiều output nếu source thực sự cần.
+một outcome nhưng có thể tạo nhiều output nếu source thực sự cần.
 
 | Thứ được tìm thấy | Cách biểu diễn |
 |---|---|
@@ -85,8 +88,8 @@ registry và Refresh sau vẫn có thể phát hiện lại.
 - Candidate cần identity ổn định, query/link value và exact evidence; không dùng
   confidence score giả chính xác.
 - Initial Ingest hiện tạo sparse proposal và cho phép knowledge bổ sung dần.
-- Capability 046 sẽ thêm compact discovery groups, five-lane Inventory Receipt
-  và coverage validation để một sparse proposal không bỏ sót tín hiệu quan trọng
+- Capability 046 thêm compact discovery groups, five-lane Inventory Receipt và
+  coverage validation để một sparse proposal không bỏ sót tín hiệu quan trọng
   mà không giải thích.
 - Candidate chỉ sống trong proposal workflow; MVP không cần registry hoặc UI
   review riêng. Cross-repository promotion thuộc Domain Enrichment.

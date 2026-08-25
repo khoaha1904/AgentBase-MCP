@@ -7368,359 +7368,6 @@ import { createHash as createHash4 } from "node:crypto";
 import fs3 from "node:fs";
 import path6 from "node:path";
 
-// src/core/knowledge/documents/okf-document.ts
-var import_yaml = __toESM(require_dist(), 1);
-import path from "node:path";
-var OkfValidationError = class extends Error {
-  code;
-  documentPath;
-  constructor(code, message, documentPath, cause) {
-    super(message, cause === void 0 ? void 0 : { cause });
-    this.name = "OkfValidationError";
-    this.code = code;
-    if (documentPath !== void 0) this.documentPath = documentPath;
-  }
-};
-var FRONTMATTER_LIMIT = 64 * 1024;
-var MAX_DEPTH = 16;
-var MAX_NODES = 4096;
-var MAX_SCALAR_BYTES = 32 * 1024;
-function requireConceptPath(documentPath) {
-  const normalized = path.posix.normalize(documentPath);
-  if (!documentPath.endsWith(".md") || documentPath.startsWith("/") || normalized !== documentPath || documentPath.split("/").some((part) => !part || part === "." || part === "..") || ["index.md", "log.md"].includes(path.posix.basename(documentPath))) {
-    throw new OkfValidationError("INVALID_CONCEPT_PATH", "concept path must be a normalized non-reserved bundle-relative .md path", documentPath);
-  }
-}
-function extractFrontmatter(documentPath, source) {
-  const normalized = source.replace(/^\uFEFF/, "");
-  const match = normalized.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
-  if (!match || match[1] === void 0) {
-    throw new OkfValidationError("FRONTMATTER_MISSING", "concept must start with a delimited YAML frontmatter block", documentPath);
-  }
-  if (Buffer.byteLength(match[1]) > FRONTMATTER_LIMIT) {
-    throw new OkfValidationError("FRONTMATTER_LIMIT", `frontmatter exceeds ${FRONTMATTER_LIMIT} bytes`, documentPath);
-  }
-  return { yaml: match[1], body: normalized.slice(match[0].length).replace(/^\r?\n/, "") };
-}
-function plainMapping(value, documentPath) {
-  if (value === null || typeof value !== "object" || Array.isArray(value) || Object.getPrototypeOf(value) !== Object.prototype) {
-    throw new OkfValidationError("FRONTMATTER_MAPPING", "frontmatter must be one plain YAML mapping", documentPath);
-  }
-  return value;
-}
-function validateBounds(value, documentPath) {
-  let nodes = 0;
-  const visit = (current, depth) => {
-    nodes += 1;
-    if (nodes > MAX_NODES) throw new OkfValidationError("YAML_NODE_LIMIT", `frontmatter exceeds ${MAX_NODES} nodes`, documentPath);
-    if (depth > MAX_DEPTH) throw new OkfValidationError("YAML_DEPTH_LIMIT", `frontmatter exceeds depth ${MAX_DEPTH}`, documentPath);
-    if (typeof current === "string" && Buffer.byteLength(current) > MAX_SCALAR_BYTES) {
-      throw new OkfValidationError("YAML_SCALAR_LIMIT", `frontmatter scalar exceeds ${MAX_SCALAR_BYTES} bytes`, documentPath);
-    }
-    if (Array.isArray(current)) current.forEach((item) => visit(item, depth + 1));
-    else if (current !== null && typeof current === "object") {
-      for (const [key, item] of Object.entries(current)) {
-        if (Buffer.byteLength(key) > MAX_SCALAR_BYTES) {
-          throw new OkfValidationError("YAML_SCALAR_LIMIT", `frontmatter key exceeds ${MAX_SCALAR_BYTES} bytes`, documentPath);
-        }
-        visit(item, depth + 1);
-      }
-    }
-  };
-  visit(value, 0);
-}
-function parseFrontmatter(documentPath, yaml) {
-  const document = (0, import_yaml.parseDocument)(yaml, {
-    version: "1.2",
-    schema: "core",
-    strict: true,
-    stringKeys: true,
-    uniqueKeys: true,
-    customTags: [],
-    intAsBigInt: false
-  });
-  if (document.errors.length) {
-    const message = document.errors.map((error) => error.message).join("; ");
-    throw new OkfValidationError("YAML_PARSE", `frontmatter YAML error: ${message}`, documentPath);
-  }
-  let value;
-  try {
-    value = document.toJS({ maxAliasCount: 0, mapAsMap: false });
-  } catch (cause) {
-    throw new OkfValidationError("YAML_ALIAS", "frontmatter aliases are not allowed", documentPath, cause);
-  }
-  const frontmatter = plainMapping(value, documentPath);
-  validateBounds(frontmatter, documentPath);
-  return frontmatter;
-}
-function verificationEvents(value, documentPath) {
-  if (value === void 0) return [];
-  const values = Array.isArray(value) ? value : [value];
-  return values.map((event) => {
-    if (event === null || typeof event !== "object" || Array.isArray(event)) {
-      throw new OkfValidationError("VERIFIED_INVALID", "verified must be an event mapping or list of event mappings", documentPath);
-    }
-    const by = event.by;
-    const at = event.at;
-    if (typeof by !== "string" || !by.trim() || at !== void 0 && typeof at !== "string") {
-      throw new OkfValidationError("VERIFIED_INVALID", "verified events require non-empty by and optional string at", documentPath);
-    }
-    return at === void 0 ? { by } : { by, at };
-  });
-}
-function parseConceptDocument(documentPath, source) {
-  requireConceptPath(documentPath);
-  const extracted = extractFrontmatter(documentPath, source);
-  const frontmatter = parseFrontmatter(documentPath, extracted.yaml);
-  const type = frontmatter.type;
-  if (typeof type !== "string" || !type.trim()) {
-    throw new OkfValidationError("TYPE_REQUIRED", "concept frontmatter requires a non-empty type string", documentPath);
-  }
-  const statusValue = frontmatter.status;
-  const status = statusValue === void 0 ? "stable" : statusValue;
-  if (typeof status !== "string" || !status.trim()) {
-    throw new OkfValidationError("STATUS_INVALID", "status must be a non-empty string when present", documentPath);
-  }
-  return {
-    conceptId: documentPath.slice(0, -3),
-    path: documentPath,
-    type,
-    status,
-    frontmatter,
-    verified: verificationEvents(frontmatter.verified, documentPath),
-    body: extracted.body
-  };
-}
-function mapping(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
-}
-function parseRepositorySourceResource(value) {
-  const match = value.match(/^repository:\/\/(repository-[a-z0-9-]+-[a-f0-9]{12})\/([^#]+?)(?:#L(\d+)-L(\d+))?$/);
-  if (!match?.[1] || !match[2] || match[3] === void 0 !== (match[4] === void 0)) return void 0;
-  try {
-    const decoded = match[2].split("/").map((part) => decodeURIComponent(part));
-    if (!decoded.every((part) => Boolean(part) && part !== "." && part !== ".." && !part.includes("/") && !part.includes("\\"))) return void 0;
-    const relativePath = decoded.join("/");
-    const startLine = match[3] === void 0 ? void 0 : Number(match[3]);
-    const endLine = match[4] === void 0 ? void 0 : Number(match[4]);
-    if (startLine !== void 0 && (!Number.isSafeInteger(startLine) || !Number.isSafeInteger(endLine) || startLine < 1 || endLine < startLine)) return void 0;
-    const canonicalPath = decoded.map((part) => encodeURIComponent(part)).join("/");
-    const canonical = `repository://${match[1]}/${canonicalPath}${startLine === void 0 ? "" : `#L${startLine}-L${endLine}`}`;
-    return canonical === value ? {
-      repositoryId: match[1],
-      relativePath,
-      ...startLine === void 0 ? {} : { startLine, endLine }
-    } : void 0;
-  } catch {
-    return void 0;
-  }
-}
-function validateAgentBaseDraft(concept) {
-  const failures = [];
-  if (concept.status !== "draft") failures.push(`${concept.path}: AgentBase concept must use status: draft`);
-  const generated = mapping(concept.frontmatter.generated);
-  if (typeof generated?.by !== "string" || !generated.by.startsWith("agentbase/")) {
-    failures.push(`${concept.path}: generated.by must identify agentbase/<version>`);
-  }
-  if (typeof generated?.at !== "string" || Number.isNaN(Date.parse(generated.at))) {
-    failures.push(`${concept.path}: generated.at must be an ISO 8601 datetime`);
-  }
-  if (concept.verified.length || concept.frontmatter.verified !== void 0) {
-    failures.push(`${concept.path}: a newly generated AgentBase draft must not claim verified events`);
-  }
-  const sources = concept.frontmatter.sources;
-  if (sources !== void 0) {
-    if (!Array.isArray(sources)) failures.push(`${concept.path}: sources must be a list`);
-    else {
-      const ids = /* @__PURE__ */ new Set();
-      for (const source of sources) {
-        const entry = mapping(source);
-        if (!entry || typeof entry.resource !== "string" || !entry.resource.trim()) failures.push(`${concept.path}: every source requires resource`);
-        else if (entry.resource.startsWith("repository://") && !parseRepositorySourceResource(entry.resource)) {
-          failures.push(`${concept.path}: repository source resource is not normalized`);
-        }
-        if (entry?.id !== void 0) {
-          const validId = typeof entry.id === "string" && /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(entry.id) && !ids.has(entry.id);
-          if (!validId) failures.push(`${concept.path}: source ids must be stable and unique`);
-          else if (typeof entry.id === "string") ids.add(entry.id);
-        }
-      }
-      const footnotes = [...concept.body.matchAll(/\[\^([^\]]+)\]/g)].map((match) => match[1]).filter((id) => Boolean(id));
-      for (const id of new Set(footnotes)) {
-        if (!ids.has(id)) failures.push(`${concept.path}: footnote ${id} does not resolve to sources[].id`);
-      }
-    }
-  }
-  return failures;
-}
-function parseReservedFrontmatter(documentPath, source) {
-  if (!source.startsWith("---\n") && !source.startsWith("---\r\n")) return { body: source };
-  const extracted = extractFrontmatter(documentPath, source);
-  return { frontmatter: parseFrontmatter(documentPath, extracted.yaml), body: extracted.body };
-}
-
-// src/core/knowledge/query/hub-query-graph.ts
-import path2 from "node:path";
-
-// src/core/knowledge/documents/relationship-vocabulary.ts
-var CANONICAL_RELATIONSHIP_KINDS = [
-  "part-of",
-  "provides",
-  "consumes",
-  "depends-on",
-  "triggered-by",
-  "publishes-to",
-  "reads-from",
-  "writes-to",
-  "implemented-in",
-  "declared-by",
-  "deployed-as",
-  "runs-on"
-];
-var FLOW_STEP_ACTIONS = ["invokes", "publishes", "delivers", "reads", "writes"];
-var FLOW_STEP_MODES = ["synchronous", "asynchronous"];
-function isCanonicalRelationshipKind(value) {
-  return CANONICAL_RELATIONSHIP_KINDS.includes(value);
-}
-
-// src/core/knowledge/query/hub-query-graph.ts
-function mapping2(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
-}
-function text(value) {
-  return typeof value === "string" ? value.trim() : "";
-}
-function relationships(concept) {
-  if (!Array.isArray(concept.frontmatter.relationships)) return [];
-  return concept.frontmatter.relationships.flatMap((raw) => {
-    const entry = mapping2(raw);
-    const kind = text(entry?.kind), target = text(entry?.target);
-    const evidence = Array.isArray(entry?.evidence) ? entry.evidence.filter((item) => typeof item === "string") : [];
-    return kind && target && isCanonicalRelationshipKind(kind) ? [{ source: concept.conceptId, kind, target, evidence }] : [];
-  });
-}
-function deriveDomains(concepts, edges) {
-  const parents = /* @__PURE__ */ new Map();
-  for (const edge of edges) {
-    if (edge.kind !== "part-of" || !concepts.has(edge.target)) continue;
-    parents.set(edge.source, [...parents.get(edge.source) ?? [], edge.target]);
-  }
-  const result = /* @__PURE__ */ new Map();
-  const visit = (identity, trail = /* @__PURE__ */ new Set()) => {
-    const known = result.get(identity);
-    if (known) return known;
-    if (trail.has(identity)) return [];
-    const concept = concepts.get(identity);
-    if (!concept) return [];
-    if (concept.document.type === "Domain") {
-      result.set(identity, [identity]);
-      return [identity];
-    }
-    const nextTrail = new Set(trail).add(identity);
-    const found = [...new Set((parents.get(identity) ?? []).flatMap((parent) => visit(parent, nextTrail)))].sort();
-    result.set(identity, found);
-    return found;
-  };
-  for (const identity of concepts.keys()) visit(identity);
-  return result;
-}
-function normalizeHubConceptPath(value) {
-  if (value.includes("\0") || value.includes("\\") || path2.posix.isAbsolute(value)) throw new Error("Hub concept path must be normalized and relative");
-  const normalized = path2.posix.normalize(value);
-  if (normalized === "." || normalized.startsWith("../") || !normalized.endsWith(".md")) throw new Error("Hub concept path must identify one Markdown file");
-  return normalized;
-}
-async function loadHubGraph(reader, maximumDocumentBytes) {
-  const concepts = /* @__PURE__ */ new Map(), paths = /* @__PURE__ */ new Map();
-  const edges = [];
-  const markdownPaths = [...await reader.listMarkdownPaths()].map(normalizeHubConceptPath).sort();
-  for (const relativePath of markdownPaths) {
-    if (["index.md", "log.md"].includes(path2.posix.basename(relativePath))) continue;
-    const content = await reader.readMarkdown(relativePath);
-    if (Buffer.byteLength(content) > maximumDocumentBytes) continue;
-    try {
-      const document = parseConceptDocument(relativePath, content);
-      concepts.set(document.conceptId, {
-        document,
-        title: text(document.frontmatter.title) || document.body.match(/^#\s+(.+)$/m)?.[1]?.trim() || document.conceptId,
-        description: text(document.frontmatter.description)
-      });
-      paths.set(document.path, document.conceptId);
-      edges.push(...relationships(document));
-    } catch {
-    }
-  }
-  return { commit: reader.commit, concepts, paths, markdownPaths, edges, domains: deriveDomains(concepts, edges) };
-}
-function summarizeHubConcept(graph, identity) {
-  const value = graph.concepts.get(identity);
-  if (!value) throw new Error(`Hub concept does not exist: ${identity}`);
-  return {
-    identity,
-    path: value.document.path,
-    type: value.document.type,
-    title: value.title,
-    description: value.description,
-    domains: graph.domains.get(identity) ?? []
-  };
-}
-
-// src/core/knowledge/query/hub-query.ts
-function validateList(values, name) {
-  if (values === void 0) return void 0;
-  if (!values.length || values.length > 32 || values.some((value) => !value.trim() || value.length > 128)) {
-    throw new Error(`${name} must contain 1..32 non-empty values`);
-  }
-  return new Set(values);
-}
-async function listHubConcepts(reader, options = {}) {
-  const limit = options.limit ?? 100;
-  if (!Number.isInteger(limit) || limit < 1 || limit > 512) throw new Error("Hub concept list limit must be 1..512");
-  const types = validateList(options.types, "types");
-  const graph = await loadHubGraph(reader, options.maximumDocumentBytes ?? 256 * 1024);
-  return [...graph.concepts.keys()].filter((identity) => !types || types.has(graph.concepts.get(identity).document.type)).sort().slice(0, limit).map((identity) => summarizeHubConcept(graph, identity));
-}
-
-// src/core/knowledge/governance/repository-identity.ts
-function mapping3(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
-}
-function stringList(value) {
-  return Array.isArray(value) && value.every((item) => typeof item === "string") ? value : [];
-}
-function readRepositoryIdentityRecord(concept) {
-  if (concept.type !== "Repository") return void 0;
-  const agentbase = mapping3(concept.frontmatter.agentbase);
-  const repository = mapping3(agentbase?.repository);
-  if (!repository || typeof repository.id !== "string" || typeof repository.display_name !== "string" || !/^repository-[a-z0-9-]+-[a-f0-9]{12}$/.test(repository.id)) return void 0;
-  const aliases = mapping3(repository.aliases);
-  return normalizeRecord({
-    id: repository.id,
-    displayName: repository.display_name,
-    remotes: stringList(aliases?.remotes),
-    rootCommits: stringList(aliases?.root_commits),
-    ...typeof repository.forge_id === "string" ? { forgeId: repository.forge_id } : {}
-  });
-}
-function readRepositoryObservedSource(concept) {
-  if (concept.type !== "Repository") return void 0;
-  const repository = mapping3(mapping3(concept.frontmatter.agentbase)?.repository);
-  const observed = mapping3(repository?.observed_source);
-  if (!observed || observed.commit !== null && (typeof observed.commit !== "string" || !/^[a-f0-9]{40}$/.test(observed.commit)) || typeof observed.dirty !== "boolean" || observed.dirty_digest !== null && (typeof observed.dirty_digest !== "string" || !/^sha256:[a-f0-9]{64}$/.test(observed.dirty_digest)) || typeof observed.observed_at !== "string" || !Number.isFinite(Date.parse(observed.observed_at))) return void 0;
-  return {
-    commit: observed.commit,
-    dirty: observed.dirty,
-    dirtyDigest: observed.dirty_digest,
-    observedAt: observed.observed_at
-  };
-}
-function unique(values) {
-  return [...new Set(values.map((value) => value.trim().toLowerCase()).filter(Boolean))].sort();
-}
-function normalizeRecord(record) {
-  return { ...record, remotes: unique(record.remotes), rootCommits: unique(record.rootCommits) };
-}
-
 // src/core/knowledge/schemas/definition.ts
 var generatedEvidence = ["title", "description", "generated", "sources"];
 var limitations = "State missing or contradictory evidence explicitly; never invent semantic fields.";
@@ -8005,6 +7652,362 @@ function validateConceptAgainstSchema(concept) {
   const selected = getOkfConceptSchema(concept.type);
   if (!selected) return [];
   return selected.requiredFrontmatter.flatMap((field) => concept.frontmatter[field] === void 0 ? [`${concept.path}: ${concept.type} requires ${field}`] : []);
+}
+
+// src/core/knowledge/documents/okf-document.ts
+var import_yaml = __toESM(require_dist(), 1);
+import path from "node:path";
+var OkfValidationError = class extends Error {
+  code;
+  documentPath;
+  constructor(code, message, documentPath, cause) {
+    super(message, cause === void 0 ? void 0 : { cause });
+    this.name = "OkfValidationError";
+    this.code = code;
+    if (documentPath !== void 0) this.documentPath = documentPath;
+  }
+};
+var FRONTMATTER_LIMIT = 64 * 1024;
+var MAX_DEPTH = 16;
+var MAX_NODES = 4096;
+var MAX_SCALAR_BYTES = 32 * 1024;
+function requireConceptPath(documentPath) {
+  const normalized = path.posix.normalize(documentPath);
+  if (!documentPath.endsWith(".md") || documentPath.startsWith("/") || normalized !== documentPath || documentPath.split("/").some((part) => !part || part === "." || part === "..") || ["index.md", "log.md"].includes(path.posix.basename(documentPath))) {
+    throw new OkfValidationError("INVALID_CONCEPT_PATH", "concept path must be a normalized non-reserved bundle-relative .md path", documentPath);
+  }
+}
+function extractFrontmatter(documentPath, source) {
+  const normalized = source.replace(/^\uFEFF/, "");
+  const match = normalized.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
+  if (!match || match[1] === void 0) {
+    throw new OkfValidationError("FRONTMATTER_MISSING", "concept must start with a delimited YAML frontmatter block", documentPath);
+  }
+  if (Buffer.byteLength(match[1]) > FRONTMATTER_LIMIT) {
+    throw new OkfValidationError("FRONTMATTER_LIMIT", `frontmatter exceeds ${FRONTMATTER_LIMIT} bytes`, documentPath);
+  }
+  return { yaml: match[1], body: normalized.slice(match[0].length).replace(/^\r?\n/, "") };
+}
+function plainMapping(value, documentPath) {
+  if (value === null || typeof value !== "object" || Array.isArray(value) || Object.getPrototypeOf(value) !== Object.prototype) {
+    throw new OkfValidationError("FRONTMATTER_MAPPING", "frontmatter must be one plain YAML mapping", documentPath);
+  }
+  return value;
+}
+function validateBounds(value, documentPath) {
+  let nodes = 0;
+  const visit = (current, depth) => {
+    nodes += 1;
+    if (nodes > MAX_NODES) throw new OkfValidationError("YAML_NODE_LIMIT", `frontmatter exceeds ${MAX_NODES} nodes`, documentPath);
+    if (depth > MAX_DEPTH) throw new OkfValidationError("YAML_DEPTH_LIMIT", `frontmatter exceeds depth ${MAX_DEPTH}`, documentPath);
+    if (typeof current === "string" && Buffer.byteLength(current) > MAX_SCALAR_BYTES) {
+      throw new OkfValidationError("YAML_SCALAR_LIMIT", `frontmatter scalar exceeds ${MAX_SCALAR_BYTES} bytes`, documentPath);
+    }
+    if (Array.isArray(current)) current.forEach((item) => visit(item, depth + 1));
+    else if (current !== null && typeof current === "object") {
+      for (const [key, item] of Object.entries(current)) {
+        if (Buffer.byteLength(key) > MAX_SCALAR_BYTES) {
+          throw new OkfValidationError("YAML_SCALAR_LIMIT", `frontmatter key exceeds ${MAX_SCALAR_BYTES} bytes`, documentPath);
+        }
+        visit(item, depth + 1);
+      }
+    }
+  };
+  visit(value, 0);
+}
+function parseFrontmatter(documentPath, yaml) {
+  const document = (0, import_yaml.parseDocument)(yaml, {
+    version: "1.2",
+    schema: "core",
+    strict: true,
+    stringKeys: true,
+    uniqueKeys: true,
+    customTags: [],
+    intAsBigInt: false
+  });
+  if (document.errors.length) {
+    const message = document.errors.map((error) => error.message).join("; ");
+    throw new OkfValidationError("YAML_PARSE", `frontmatter YAML error: ${message}`, documentPath);
+  }
+  let value;
+  try {
+    value = document.toJS({ maxAliasCount: 0, mapAsMap: false });
+  } catch (cause) {
+    throw new OkfValidationError("YAML_ALIAS", "frontmatter aliases are not allowed", documentPath, cause);
+  }
+  const frontmatter = plainMapping(value, documentPath);
+  validateBounds(frontmatter, documentPath);
+  return frontmatter;
+}
+function verificationEvents(value, documentPath) {
+  if (value === void 0) return [];
+  const values = Array.isArray(value) ? value : [value];
+  return values.map((event) => {
+    if (event === null || typeof event !== "object" || Array.isArray(event)) {
+      throw new OkfValidationError("VERIFIED_INVALID", "verified must be an event mapping or list of event mappings", documentPath);
+    }
+    const by = event.by;
+    const at = event.at;
+    if (typeof by !== "string" || !by.trim() || at !== void 0 && typeof at !== "string") {
+      throw new OkfValidationError("VERIFIED_INVALID", "verified events require non-empty by and optional string at", documentPath);
+    }
+    return at === void 0 ? { by } : { by, at };
+  });
+}
+function parseConceptDocument(documentPath, source) {
+  requireConceptPath(documentPath);
+  const extracted = extractFrontmatter(documentPath, source);
+  const frontmatter = parseFrontmatter(documentPath, extracted.yaml);
+  const type = frontmatter.type;
+  if (typeof type !== "string" || !type.trim()) {
+    throw new OkfValidationError("TYPE_REQUIRED", "concept frontmatter requires a non-empty type string", documentPath);
+  }
+  const statusValue = frontmatter.status;
+  const status = statusValue === void 0 ? "stable" : statusValue;
+  if (typeof status !== "string" || !status.trim()) {
+    throw new OkfValidationError("STATUS_INVALID", "status must be a non-empty string when present", documentPath);
+  }
+  return {
+    conceptId: documentPath.slice(0, -3),
+    path: documentPath,
+    type,
+    status,
+    frontmatter,
+    verified: verificationEvents(frontmatter.verified, documentPath),
+    body: extracted.body
+  };
+}
+function mapping(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
+}
+function parseRepositorySourceResource(value) {
+  const match = value.match(/^repository:\/\/(repository-[a-z0-9-]+-[a-f0-9]{12})\/([^#]+?)(?:#L(\d+)-L(\d+))?$/);
+  if (!match?.[1] || !match[2] || match[3] === void 0 !== (match[4] === void 0)) return void 0;
+  try {
+    const decoded = match[2].split("/").map((part) => decodeURIComponent(part));
+    if (!decoded.every((part) => Boolean(part) && part !== "." && part !== ".." && !part.includes("/") && !part.includes("\\"))) return void 0;
+    const relativePath = decoded.join("/");
+    const startLine = match[3] === void 0 ? void 0 : Number(match[3]);
+    const endLine = match[4] === void 0 ? void 0 : Number(match[4]);
+    if (startLine !== void 0 && (!Number.isSafeInteger(startLine) || !Number.isSafeInteger(endLine) || startLine < 1 || endLine < startLine)) return void 0;
+    const canonicalPath = decoded.map((part) => encodeURIComponent(part)).join("/");
+    const canonical = `repository://${match[1]}/${canonicalPath}${startLine === void 0 ? "" : `#L${startLine}-L${endLine}`}`;
+    return canonical === value ? {
+      repositoryId: match[1],
+      relativePath,
+      ...startLine === void 0 ? {} : { startLine, endLine }
+    } : void 0;
+  } catch {
+    return void 0;
+  }
+}
+function validateAgentBaseDraft(concept) {
+  const failures = [];
+  if (concept.status !== "draft") failures.push(`${concept.path}: AgentBase concept must use status: draft`);
+  const generated = mapping(concept.frontmatter.generated);
+  if (typeof generated?.by !== "string" || !generated.by.startsWith("agentbase/")) {
+    failures.push(`${concept.path}: generated.by must identify agentbase/<version>`);
+  }
+  if (typeof generated?.at !== "string" || Number.isNaN(Date.parse(generated.at))) {
+    failures.push(`${concept.path}: generated.at must be an ISO 8601 datetime`);
+  }
+  if (concept.verified.length || concept.frontmatter.verified !== void 0) {
+    failures.push(`${concept.path}: a newly generated AgentBase draft must not claim verified events`);
+  }
+  const sources = concept.frontmatter.sources;
+  if (sources !== void 0) {
+    if (!Array.isArray(sources)) failures.push(`${concept.path}: sources must be a list`);
+    else {
+      const ids = /* @__PURE__ */ new Set();
+      for (const source of sources) {
+        const entry = mapping(source);
+        if (!entry || typeof entry.resource !== "string" || !entry.resource.trim()) failures.push(`${concept.path}: every source requires resource`);
+        else if (entry.resource.startsWith("repository://") && !parseRepositorySourceResource(entry.resource)) {
+          failures.push(`${concept.path}: repository source resource is not normalized`);
+        }
+        if (entry?.observed_revision !== void 0 && (typeof entry.observed_revision !== "string" || !/^[a-f0-9]{40}$/.test(entry.observed_revision))) {
+          failures.push(`${concept.path}: source observed_revision must be an exact 40-hex commit`);
+        }
+        if (entry?.id !== void 0) {
+          const validId = typeof entry.id === "string" && /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(entry.id) && !ids.has(entry.id);
+          if (!validId) failures.push(`${concept.path}: source ids must be stable and unique`);
+          else if (typeof entry.id === "string") ids.add(entry.id);
+        }
+      }
+      const footnotes = [...concept.body.matchAll(/\[\^([^\]]+)\]/g)].map((match) => match[1]).filter((id) => Boolean(id));
+      for (const id of new Set(footnotes)) {
+        if (!ids.has(id)) failures.push(`${concept.path}: footnote ${id} does not resolve to sources[].id`);
+      }
+    }
+  }
+  return failures;
+}
+function parseReservedFrontmatter(documentPath, source) {
+  if (!source.startsWith("---\n") && !source.startsWith("---\r\n")) return { body: source };
+  const extracted = extractFrontmatter(documentPath, source);
+  return { frontmatter: parseFrontmatter(documentPath, extracted.yaml), body: extracted.body };
+}
+
+// src/core/knowledge/query/hub-query-graph.ts
+import path2 from "node:path";
+
+// src/core/knowledge/documents/relationship-vocabulary.ts
+var CANONICAL_RELATIONSHIP_KINDS = [
+  "part-of",
+  "provides",
+  "consumes",
+  "depends-on",
+  "triggered-by",
+  "publishes-to",
+  "reads-from",
+  "writes-to",
+  "implemented-in",
+  "declared-by",
+  "deployed-as",
+  "runs-on"
+];
+var FLOW_STEP_ACTIONS = ["invokes", "publishes", "delivers", "reads", "writes"];
+var FLOW_STEP_MODES = ["synchronous", "asynchronous"];
+function isCanonicalRelationshipKind(value) {
+  return CANONICAL_RELATIONSHIP_KINDS.includes(value);
+}
+
+// src/core/knowledge/query/hub-query-graph.ts
+function mapping2(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
+}
+function text(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+function relationships(concept) {
+  if (!Array.isArray(concept.frontmatter.relationships)) return [];
+  return concept.frontmatter.relationships.flatMap((raw) => {
+    const entry = mapping2(raw);
+    const kind = text(entry?.kind), target = text(entry?.target);
+    const evidence = Array.isArray(entry?.evidence) ? entry.evidence.filter((item) => typeof item === "string") : [];
+    return kind && target && isCanonicalRelationshipKind(kind) ? [{ source: concept.conceptId, kind, target, evidence }] : [];
+  });
+}
+function deriveDomains(concepts, edges) {
+  const parents = /* @__PURE__ */ new Map();
+  for (const edge of edges) {
+    if (edge.kind !== "part-of" || !concepts.has(edge.target)) continue;
+    parents.set(edge.source, [...parents.get(edge.source) ?? [], edge.target]);
+  }
+  const result = /* @__PURE__ */ new Map();
+  const visit = (identity, trail = /* @__PURE__ */ new Set()) => {
+    const known = result.get(identity);
+    if (known) return known;
+    if (trail.has(identity)) return [];
+    const concept = concepts.get(identity);
+    if (!concept) return [];
+    if (concept.document.type === "Domain") {
+      result.set(identity, [identity]);
+      return [identity];
+    }
+    const nextTrail = new Set(trail).add(identity);
+    const found = [...new Set((parents.get(identity) ?? []).flatMap((parent) => visit(parent, nextTrail)))].sort();
+    result.set(identity, found);
+    return found;
+  };
+  for (const identity of concepts.keys()) visit(identity);
+  return result;
+}
+function normalizeHubConceptPath(value) {
+  if (value.includes("\0") || value.includes("\\") || path2.posix.isAbsolute(value)) throw new Error("Hub concept path must be normalized and relative");
+  const normalized = path2.posix.normalize(value);
+  if (normalized === "." || normalized.startsWith("../") || !normalized.endsWith(".md")) throw new Error("Hub concept path must identify one Markdown file");
+  return normalized;
+}
+async function loadHubGraph(reader, maximumDocumentBytes) {
+  const concepts = /* @__PURE__ */ new Map(), paths = /* @__PURE__ */ new Map();
+  const edges = [];
+  const markdownPaths = [...await reader.listMarkdownPaths()].map(normalizeHubConceptPath).sort();
+  for (const relativePath of markdownPaths) {
+    if (["index.md", "log.md"].includes(path2.posix.basename(relativePath))) continue;
+    const content = await reader.readMarkdown(relativePath);
+    if (Buffer.byteLength(content) > maximumDocumentBytes) continue;
+    try {
+      const document = parseConceptDocument(relativePath, content);
+      concepts.set(document.conceptId, {
+        document,
+        title: text(document.frontmatter.title) || document.body.match(/^#\s+(.+)$/m)?.[1]?.trim() || document.conceptId,
+        description: text(document.frontmatter.description)
+      });
+      paths.set(document.path, document.conceptId);
+      edges.push(...relationships(document));
+    } catch {
+    }
+  }
+  return { commit: reader.commit, concepts, paths, markdownPaths, edges, domains: deriveDomains(concepts, edges) };
+}
+function summarizeHubConcept(graph, identity) {
+  const value = graph.concepts.get(identity);
+  if (!value) throw new Error(`Hub concept does not exist: ${identity}`);
+  return {
+    identity,
+    path: value.document.path,
+    type: value.document.type,
+    title: value.title,
+    description: value.description,
+    domains: graph.domains.get(identity) ?? []
+  };
+}
+
+// src/core/knowledge/query/hub-query.ts
+function validateList(values, name) {
+  if (values === void 0) return void 0;
+  if (!values.length || values.length > 32 || values.some((value) => !value.trim() || value.length > 128)) {
+    throw new Error(`${name} must contain 1..32 non-empty values`);
+  }
+  return new Set(values);
+}
+async function listHubConcepts(reader, options = {}) {
+  const limit = options.limit ?? 100;
+  if (!Number.isInteger(limit) || limit < 1 || limit > 512) throw new Error("Hub concept list limit must be 1..512");
+  const types = validateList(options.types, "types");
+  const graph = await loadHubGraph(reader, options.maximumDocumentBytes ?? 256 * 1024);
+  return [...graph.concepts.keys()].filter((identity) => !types || types.has(graph.concepts.get(identity).document.type)).sort().slice(0, limit).map((identity) => summarizeHubConcept(graph, identity));
+}
+
+// src/core/knowledge/governance/repository-identity.ts
+function mapping3(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
+}
+function stringList(value) {
+  return Array.isArray(value) && value.every((item) => typeof item === "string") ? value : [];
+}
+function readRepositoryIdentityRecord(concept) {
+  if (concept.type !== "Repository") return void 0;
+  const agentbase = mapping3(concept.frontmatter.agentbase);
+  const repository = mapping3(agentbase?.repository);
+  if (!repository || typeof repository.id !== "string" || typeof repository.display_name !== "string" || !/^repository-[a-z0-9-]+-[a-f0-9]{12}$/.test(repository.id)) return void 0;
+  const aliases = mapping3(repository.aliases);
+  return normalizeRecord({
+    id: repository.id,
+    displayName: repository.display_name,
+    remotes: stringList(aliases?.remotes),
+    rootCommits: stringList(aliases?.root_commits),
+    ...typeof repository.forge_id === "string" ? { forgeId: repository.forge_id } : {}
+  });
+}
+function readRepositoryObservedSource(concept) {
+  if (concept.type !== "Repository") return void 0;
+  const repository = mapping3(mapping3(concept.frontmatter.agentbase)?.repository);
+  const observed = mapping3(repository?.observed_source);
+  if (!observed || observed.commit !== null && (typeof observed.commit !== "string" || !/^[a-f0-9]{40}$/.test(observed.commit)) || typeof observed.dirty !== "boolean" || observed.dirty_digest !== null && (typeof observed.dirty_digest !== "string" || !/^sha256:[a-f0-9]{64}$/.test(observed.dirty_digest)) || typeof observed.observed_at !== "string" || !Number.isFinite(Date.parse(observed.observed_at))) return void 0;
+  return {
+    commit: observed.commit,
+    dirty: observed.dirty,
+    dirtyDigest: observed.dirty_digest,
+    observedAt: observed.observed_at
+  };
+}
+function unique(values) {
+  return [...new Set(values.map((value) => value.trim().toLowerCase()).filter(Boolean))].sort();
+}
+function normalizeRecord(record) {
+  return { ...record, remotes: unique(record.remotes), rootCommits: unique(record.rootCommits) };
 }
 
 // src/core/knowledge/documents/okf-bundle.ts
@@ -8345,8 +8348,14 @@ function referenceKey(reference) {
     reference.owner,
     reference.itemKind,
     reference.itemKey,
-    reference.sourceId
-  ].join("\0") : [reference.referenceKind, reference.candidateKey, reference.sourceResource].join("\0");
+    reference.sourceId,
+    reference.observedRevision ?? ""
+  ].join("\0") : [
+    reference.referenceKind,
+    reference.candidateKey,
+    reference.sourceResource,
+    reference.observedRevision ?? ""
+  ].join("\0");
 }
 function parseReference(value, prefix) {
   const entry = mapping5(value);
@@ -8788,8 +8797,18 @@ function questionDocuments(root) {
 }
 function validateSharedQuestionBundle(root) {
   const bundle = loadOkfBundle(root), questions = questionDocuments(root), failures = [];
+  const repositoryIds = new Set([...bundle.concepts.values()].flatMap((concept) => {
+    const repository = readRepositoryIdentityRecord(concept);
+    return repository ? [repository.id] : [];
+  }));
   for (const question of questions) for (const reference of question.references) {
-    if (reference.referenceKind !== "owned-item") continue;
+    if (reference.referenceKind === "candidate-evidence") {
+      const parsed = parseRepositorySourceResource(reference.sourceResource);
+      if (!parsed || !repositoryIds.has(parsed.repositoryId) || reference.observedRevision !== void 0 && !/^[a-f0-9]{40}$/.test(reference.observedRevision)) {
+        failures.push(`${question.id}: candidate evidence does not resolve to a Hub Repository source`);
+      }
+      continue;
+    }
     const owner = bundle.concepts.get(reference.owner);
     if (!owner) {
       failures.push(`${question.id}: reference owner is missing: ${reference.owner}`);
