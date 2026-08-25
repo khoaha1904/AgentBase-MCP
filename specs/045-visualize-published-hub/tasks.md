@@ -39,7 +39,7 @@ must pass before renderer/model qualification or Hub knowledge reset.
 
 - [X] T015 Update `docs/design/13-visualization`, released skill/tool counts and `specs/CURRENT.md` to the exact implemented behavior; stop for owner review if implementation exposes a broad gap.
 - [X] T016 Run deterministic quickstart qualification, static-host smoke, fresh-process 44-tool qualification and `npm run verify`; record results in `specs/045-visualize-published-hub/verification.md`.
-- [ ] T017 After T016 passes, create one recoverable knowledge-only reset commit in `../AgentBase-Hub/` while preserving README, CI and history.
+- [X] T017 After T016 passes, create one recoverable knowledge-only reset commit in `../AgentBase-Hub/` while preserving README, CI and history.
 - [ ] T018 Sequentially ingest and publish the eight selected Sock Shop repositories into `../AgentBase-Hub/`.
 - [ ] T019 Invoke released `agentbase-diagram` once per supported type and qualify one static Domain site against that Published multi-repository Domain; record only explained variance in `specs/045-visualize-published-hub/verification.md`.
 - [ ] T020 Audit `specs/045-visualize-published-hub/` against implementation and close capability 045 in `specs/CURRENT.md` only when no required work remains.

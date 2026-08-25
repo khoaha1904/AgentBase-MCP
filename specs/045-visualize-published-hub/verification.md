@@ -21,6 +21,13 @@
 
 ## Explained pending qualification
 
+- Knowledge-only Hub reset: pass at Published commit
+  `06455633f72f6faf9e5bcdc2c8e68643670e7e0c`; README, bundled validator,
+  workflow and Git history were preserved.
+- Eight-repository Batch Initial Ingest is resumable at manifest
+  `batch-ingest-6746445e0de76358affbcb38`; carts and catalogue have completed
+  member checkpoints. This is progress evidence, not final qualification.
+
 The current Published Hub contains three repositories and structural relations
 only. It has no accepted runtime edge or Flow, so it can truthfully qualify the
 site and partial Architecture but cannot qualify Dependency or Sequence.
