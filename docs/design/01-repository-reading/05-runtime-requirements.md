@@ -155,21 +155,43 @@ fixture cost, so no incremental-speed or scale claim is accepted.
   source from a resolved repository is required, with existing source/engine/
   namespace receipt rules deciding reuse versus refresh. No prewarming,
   background indexing, watcher or daemon is introduced.
-- **AB-MCP-019** — Capability 046 Hub Init resolves the exact authorized remote
-  default-branch commit before indexing. It reuses a checkout only when clean
-  and exact, otherwise analyzes an isolated detached worktree/cache without
-  checkout, stash, hook execution or source-worktree mutation. Ordinary query
-  receives no remote materialization authority.
-- **AB-MCP-020** — The gateway derives a private Discovery Seed from index
-  diagnostics plus normalized routes, entry points, packages, boundaries,
-  layers, hotspots and clusters and a bounded repository-file census. Routes,
-  entry points, explicit boundaries, source groups and partial diagnostics may
-  gate coverage; hotspots/clusters/packages remain investigation hints.
+- **AB-MCP-019** — Capability 046 Hub-bound Init, Batch and Refresh resolve the exact authorized remote
+  default-branch commit before indexing. Canonical remote must uniquely resolve
+  on the active Hub host; API/fetch use only Hub-token HTTPS into a
+  profile/source-scoped private bare mirror outside the source repo and verify
+  the same commit. It reuses a checkout only when clean/exact, otherwise uses a
+  detached private worktree. It never mutates source refs/worktree or uses local
+  filters, hooks, submodules, LFS, SSH agent or ambient credentials. Ordinary
+  query receives no remote materialization authority.
+- **AB-MCP-020** — After exact Init/Batch-member Preflight arms one analysis root
+  and indexing that root succeeds, the gateway itself derives a private Seed
+  by running index status, terminal/paged coverage, explicit architecture
+  aspects `overview|structure|dependencies|routes|languages|packages|
+  entry_points|hotspots|boundaries|layers|clusters` and a bounded safe census.
+  `file_tree`, `cycles` and Agent search/trace do not enter the Seed. The index
+  result preserves provider blocks and appends one bounded AgentBase Seed
+  summary with the IDs the Agent must disposition; no new tool/schema input is
+  added. Ordinary query and normal change-first Refresh never arm this recipe or
+  create a Seed; future Full Discovery Refresh is deferred.
 - **AB-MCP-021** — Provider response-shape fixtures cover every Seed-driving
   field on source/provider upgrades. Unsupported or partial output produces an
   explicit lane limitation or failure according to P0 impact; it never silently
   appears as an empty repository.
+- **AB-MCP-022** — An AgentBase-owned hard-deny patch at the pinned provider's
+  admission/read boundary excludes symlink escapes, generated/vendor/build output
+  and secret-like paths (including `.env*`, credential/key/cert and Agent state)
+  before any file open/index/census. It does not dirty the exact worktree and is
+  covered by owned-runtime integrity/compatibility fixtures; tests prove denied
+  paths never appear in Seed-driving output.
+- **AB-MCP-023** — MCP owns five-lane status and fixed P0 classification. A
+  non-terminal page cannot prove absence; a diagnostic able to hide P0 or more
+  than 64 P0 groups makes the member Incomplete. P1/P2 overflow is grouped and
+  disclosed rather than dropped.
+- **AB-MCP-024** — Private mirror/worktree cleanup accepts only non-symlink,
+  mode-0700, marker-owned validated paths. Completion/cancel/invalidation cleans
+  worktrees unless an exact resumable checkpoint owns them; bounded crash GC may
+  remove only validated reconstructable state.
 
 `AB-MCP-017` and `AB-MCP-018` are accepted product contracts. Capability 046
-adds approved `AB-MCP-019..021`; those additions are not shipped until its
+adds approved `AB-MCP-019..024`; those additions are not shipped until its
 implementation and qualification complete.

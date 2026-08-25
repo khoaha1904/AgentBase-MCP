@@ -159,7 +159,7 @@ Question có thể được tạo từ:
 Creation cần ít nhất một exact evidence/candidate reference hoặc một explicit
 human decision request. Pure model speculation không được tạo Question.
 
-Trong ordinary Ingest/Refresh, `property` là một stable token đã tồn tại trên
+Trong baseline ordinary Ingest/Refresh, `property` là một stable token đã tồn tại trên
 `agentbase.observed_values` của cùng subject, không phải nguyên câu hỏi. Mỗi
 `observation_ref` phải match exact property + role + source ID. Nếu concept chưa
 có observation phù hợp, agent giữ uncertainty trong prose/Limitations và bỏ qua
@@ -168,6 +168,12 @@ Question declaration; không tạo observation giả chỉ để qua validation.
 Question được tạo trong cùng proposal với knowledge/candidate làm phát sinh nó
 khi có thể. Nếu source concept chưa tồn tại, Question vẫn dùng stable candidate
 scope và evidence resources; không cần placeholder concept.
+
+Capability 046 Initial Ingest mở rộng đường tạo này bằng private QuestionPlan
+trong Discovery Receipt: plan dùng đúng các kind/reference ở trên, bind target
+candidate/final subject, property/scope, source revision, missing evidence và
+limitations. Finalize chỉ render khi subject và evidence đã materialize; nếu
+không, uncertainty giữ dạng limitation. Agent không gửi final Question bytes.
 
 ## Resolution
 

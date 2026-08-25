@@ -28,7 +28,9 @@ loại claim; wording của claim không được mạnh hơn điều nguồn ch
 
 ## Provenance
 
-Mỗi attributed claim/relation giữ source ID và exact reference. Provider
+Mỗi attributed claim/relation giữ source ID, exact reference và source revision
+đã quan sát; Refresh không được gắn revision mới lên retained evidence cũ nếu
+chưa đọc/xác nhận lại source đó. Provider
 observation còn bind provider/account/region, observed time và resource identity.
 Observed snapshot tuân theo phần 01/08 và không được trình bày như current truth.
 

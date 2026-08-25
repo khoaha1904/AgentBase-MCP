@@ -7,21 +7,29 @@
 
 Discover chạy năm lane: repository identity/product; runtime/entrypoint;
 interface/route/event/trigger; dependency/integration/data/channel; và deploy/
-operations. MCP tạo private per-connection Discovery Seed từ provider output và
-bounded file census. Raw graph nodes được compact thành session-stable evidence
-groups; repeated low-value rows giữ count và source samples.
+operations. Sau index, MCP tự chạy fixed provider baseline và bounded safe file
+census để tạo private per-connection Discovery Seed. Raw graph nodes được compact
+thành session-stable evidence groups; repeated low-value rows giữ count và source
+samples. Agent không tự khai lane status, priority hoặc absence.
 
-Investigate tạo mutable Inventory. Mỗi important Seed group phải map sang đúng
+Investigate gửi một Inventory. Mỗi important Seed group phải map sang đúng
 một disposition: `concept`, `embedded`, `question` hoặc `ignored` với bounded
-reason. Agent có thể split/merge group khi exact evidence yêu cầu nhưng phải giữ
-trace về mọi originating Seed ID. Guidance thành công freeze compact Inventory
-Receipt; raw graph/source không vào Receipt hoặc Hub.
+reason. Coverage group không split/merge trong MVP; mỗi item có một origin group
+và một disposition nhưng có thể nêu nhiều output mappings. Guidance thành công
+freeze compact Inventory Receipt; raw graph/
+source không vào Receipt hoặc Hub.
 
-`get_okf_authoring_schemas` validate mutable Inventory against the active Seed
+`get_okf_authoring_schemas` validates the submitted Inventory against the active Seed
 and returns `discovery_receipt_id`. New-mode `prepare_hub_okf` consumes that
 exact ID instead of trusting a re-sent mutable guidance payload. Before Prepare
-the receipt is session-only; after Prepare its compact form belongs to the
-private authoring checkpoint for safe retry.
+the receipt is immutable connection state; Prepare atomically creates one
+private authoring session. Exact retry returns the same session; mismatched use
+fails.
+
+Question disposition tạo private QuestionPlan dùng existing SharedQuestion kind
+và candidate-evidence reference. Nó bind target/property/scope/source revision/
+missing evidence; Finalize render Question từ Receipt. Không bind được subject
+hoặc evidence thì giữ limitation, không tạo Question mồ côi.
 
 ## Candidate sources
 
@@ -70,6 +78,11 @@ tả phần thiếu cụ thể thay vì một con số trông chính xác giả.
 - Candidate không được tạo chỉ để làm Hub chi tiết hơn.
 - Route, entrypoint, runtime root, API spec, IaC/deploy group, explicit service
   boundary, channel và datastore không được biến mất trước disposition.
+- P0 classification do MCP cố định; P0 ignored chỉ nhận `duplicate-covered` trỏ
+  tới một non-ignored item sẽ materialize. Generated/out-of-scope phải được xếp
+  dưới P0 lúc tạo Seed, không dùng làm lý do pass P0.
+- Explicit outbound/trigger/datastore boundary có thể tạo một P1 Flow candidate
+  và một representative trace; không tạo process graph.
 - CRUD handler, helper, test, generated/vendor row và lockfile-only dependency
   được group/ignore; important không đồng nghĩa standalone concept.
 

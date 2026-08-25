@@ -37,7 +37,7 @@ discovery, not a concept quota or a second Code Graph.
 - the per-repository member path reused by Batch Initial Ingest;
 - one private per-session Discovery Seed and one compact prepared Inventory Receipt;
 - coverage-aware schema guidance, preparation, validation and inspection;
-- concise Repository/Domain knowledge activity logs;
+- one concise Repository knowledge activity entry for successful Init;
 - real skill-driven qualification after implementation.
 
 ## Non-goals
@@ -47,7 +47,8 @@ discovery, not a concept quota or a second Code Graph.
 - automatic provider access;
 - placeholder external concepts;
 - automatic Accept, PR creation or publication;
-- schema/catalog expansion;
+- concept-role or catalog expansion; the backward-compatible repository-source
+  provenance field needed to bind exact observed revision is in scope;
 - mandatory subagents, parallel ingest or a runtime model router;
 - token optimization before a measured implementation result.
 
@@ -56,12 +57,17 @@ discovery, not a concept quota or a second Code Graph.
 1. Scan remains read-only and builds no graph. Initial Ingest requires one
    active Remote Hub and selects the exact remote default-branch commit before
    Discover; it never checks out or stashes the user's working tree.
-2. Discover derives one private Seed from normalized pinned-provider signals
-   plus a bounded file census and compacts repeated technical rows into
-   traceable evidence groups.
-3. Investigate closes five lanes and gives every important Seed group one
+2. After Init/Batch Init Preflight arms an exact analysis root and that root is
+   indexed, MCP derives one private Seed by running index diagnostics, a
+   fixed explicit architecture baseline and a bounded secret-safe file census.
+   It appends a bounded Seed summary to unchanged provider result blocks so the
+   Agent can disposition group IDs. Search/trace calls investigate the Seed but
+   do not define or mutate it.
+3. MCP assigns five lane results and fixed P0 classes. Investigate gives every
+   important Seed group one
    `concept`, `embedded`, `question` or `ignored` disposition backed by exact
-   authorized repository source or a truthful limitation.
+   authorized repository source/revision or a truthful limitation. The Agent
+   interprets meaning but cannot self-declare priority, coverage or absence.
 4. Successful guidance freezes one compact Inventory Receipt. Prepare consumes
    the receipt identity, and Validate checks both Seed-to-OKF coverage and normal
    OKF integrity before inspection.
@@ -69,12 +75,23 @@ discovery, not a concept quota or a second Code Graph.
    Questions or limitations. Authority, mutation, integrity or unresolved P0
    coverage failure is Incomplete and cannot be queried, accepted or published.
 6. Batch applies the same source and discovery contract sequentially per member,
-   keeps evidence isolated and produces one atomic proposal without cross-member
-   reconciliation.
+   keeps evidence isolated and produces one atomic proposal. A confirmed-clean
+   member-local failure does not stop siblings, but the Batch cannot Finalize
+   until every member completes or the user revises membership.
 7. Inspection and PR presentation include source revision, lane coverage,
    embedded knowledge, relations/Flows, Questions, limitations and bounded
-   ignored reasons. Successful knowledge changes update concise Repository or
-   Domain logs; failed attempts and raw inventory never enter the Hub.
+   ignored reasons. Successful Init updates only the Repository log; failed
+   attempts and raw inventory never enter the Hub.
+8. Hub-bound source access uses a same-host Hub credential and an AgentBase-owned
+   private mirror/worktree outside the user repository. It never uses SSH or
+   ambient Git credentials, and secret-like paths are excluded before indexing.
+9. Questions reuse the existing SharedQuestion/candidate-evidence model and are
+   rendered from a Receipt-bound QuestionPlan. Receipt/session creation is
+   idempotent and crash-safe; Hub-base movement never forces unchanged source
+   discovery to rerun.
+10. Normal Refresh uses the common remote-default SourceSnapshot but retains its
+    change-first guidance path without an Init Seed/Inventory/Receipt. Ordinary
+    query also never creates a Seed.
 
 ## Acceptance scenarios
 
@@ -91,16 +108,31 @@ discovery, not a concept quota or a second Code Graph.
   winner.
 - A partial/unsupported provider area yields a named lane limitation or
   Incomplete P0 failure instead of appearing as an empty repository.
+- A non-terminal coverage page cannot prove absence; P0 overflow or a diagnostic
+  that can hide P0 makes the member Incomplete rather than silently truncating.
+- A P0 group can be ignored only as a duplicate of an item that will actually
+  materialize; generated/out-of-scope signals are classified below P0 earlier.
+- An outbound/trigger/datastore boundary may become one P1 Flow candidate and
+  one representative trace without creating a process graph.
+- A differently named local remote is admitted only when it uniquely matches
+  canonical repository identity; ambiguity asks the user instead of assuming
+  `origin`.
+- An existing Published repository is not silently re-initialized. Broad
+  retrofit remains a future Full Discovery Refresh; qualification may explicitly
+  reset/re-ingest disposable Hub data.
 - The released `agentbase-ingest` skill completes the exact workflow without a
   public scanner tool, model router, provider call, Accept or Publish action.
 
 ## Success criteria
 
-- Offline contracts prove exact source isolation, provider-shape compatibility,
-  Seed grouping, disposition coverage, receipt handoff, retry invalidation,
-  batch isolation, inspection and activity-log rendering.
+- Offline contracts prove exact source isolation, same-host token-only access,
+  secret-path exclusion, provider-shape compatibility, deterministic Seed
+  construction, paging/overflow handling, disposition and QuestionPlan coverage,
+  receipt/session idempotency, Hub-base retry phases, Batch continuation,
+  inspection and Repository-log rendering.
 - One real skill-driven Sol probe produces a structurally valid proposal and
-  acknowledges representative P0 evidence without an exact concept inventory.
+  independently proves representative source P0 entered the Seed, then verifies
+  its proposal disposition without imposing an exact concept inventory.
 - A valid probe authorizes at most one sequential identical replica; reports
   separate product defects from benchmark defects and include change versus the
   previous run, elapsed time and token use.

@@ -115,6 +115,10 @@ không overload một fake Repository ID hoặc tạo một PR cho mỗi reposit
 - Không đọc Local Draft/open PR làm knowledge baseline.
 - Không scan provider account, service hoặc nhiều regions để tự tìm candidate.
 - Không tự Accept/Publish chỉ vì verification thành công.
+- Current implemented provider slice chỉ xác minh bounded AWS/SQS candidates.
+  Source-only API/hostname relations ngoài slice này giữ embedded/Question cho
+  tới một future source-only enrichment profile; Capability 046 không tự mở rộng
+  Domain Enrichment.
 
 ## Baseline impact
 

@@ -382,6 +382,12 @@ Normative OKF source is pinned to commit
   constraint for its generated skeletons. Agent authoring may enrich prose and
   add evidence, but preserves generated sources, relationships, Repository
   identity metadata and navigation. Final validation remains the trust gate.
+- **AB-INGEST-016** — Capability 046 Init/Refresh validates repository evidence
+  against its exact remote-default SourceSnapshot. Every authored repository
+  `sources[]` entry has a 40-hex `observed_revision`; source identity is
+  `(resource, observed_revision)`, so a newer observation uses a distinct source
+  ID and cannot relabel a retained claim. This supersedes AB-INGEST-014's
+  current-checkout wording for Hub-bound authoring only.
 - **AB-SCHEMA-043** — Exact supported Terraform/Terragrunt observations are
   high-priority when readily available. Their omission is a coverage diagnostic,
   not an invalidity condition for an otherwise truthful partial proposal.

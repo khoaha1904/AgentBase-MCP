@@ -1,7 +1,7 @@
 # Initial Ingest discovery — owner decision checkpoint
 
-> Status: decisions through the activity-log discussion are approved. This is a
-> design checkpoint, not current runtime authority.
+> Status: owner decisions and reviewer corrections D01–D34 are approved. This
+> is a design checkpoint, not current runtime authority.
 
 ## Reference findings
 
@@ -307,10 +307,10 @@ or one item per route/function/resource. Deterministic grouping may combine
 entry points belonging to one runtime, routes sharing one interface boundary,
 calls sharing a target/protocol and deployment resources supporting one
 workload. Low-value repeated items retain a count and bounded source samples.
-Each Seed group has a session-stable ID and must receive a disposition. During
-Investigate the Agent may split or merge groups when exact source evidence shows
-different semantics, but the resulting Inventory must preserve coverage back to
-all originating Seed IDs. MCP groups structure; the Agent still decides meaning.
+Each Seed group has a session-stable ID and receives exactly one disposition.
+The Agent may materialize several concept or embedded outputs from that one
+group, but the coverage group itself is not split or merged in the MVP. MCP
+groups structure and owns coverage; the Agent still decides meaning and outputs.
 
 ### D29 — One source authority for all Hub authoring
 
@@ -332,9 +332,96 @@ authoring state only when the pinned source snapshot changes, disappears,
 becomes inaccessible, fails integrity checks or loses repository authority.
 Default-head advance alone must not restart a long Batch.
 
+### D31 — One host-bound credential authority in the MVP
+
+The active Hub credential may access source repositories only on the exact same
+GitHub.com or GitHub Enterprise host as the active Hub. Canonicalize admitted
+HTTPS, `ssh://git@...` and SCP-style `git@host:owner/repository.git` identity to
+credential-free HTTPS, but never reuse SSH agent or ambient Git credentials for
+network access. A source on another host, an ambiguous/missing canonical remote
+or insufficient per-repository token permission makes that member Incomplete.
+Multi-host source credential profiles are deferred.
+
+### D32 — Activity-log ownership stays narrow
+
+Initial Ingest writes only the affected Repository activity log; its routine
+Repository-to-Domain membership does not also write a Domain log. Repository
+logs remain the home for later repo-owned Refresh, correction and Question
+resolution summaries. Domain logs are reserved for Domain Enrichment,
+cross-repository relation/Flow work and explicit Domain-level corrections,
+including reviewed membership correction. Capability 046 implements the Init
+Repository entry only; Git/PR/diff remains complete history.
+
+### D33 — Recoverable Batch member failure does not stop siblings
+
+A semantic, materialization or member-local provider failure marks that member
+failed and, after confirmed clean provider/worktree cleanup, Batch continues
+sequentially with remaining members. Uncertain cleanup, process corruption,
+Hub/source authority failure or invalid shared base stops the whole Batch.
+Finalize remains unavailable until every confirmed member is complete or the
+user explicitly revises membership; retry replaces only failed member state and
+reuses exact completed sibling checkpoints.
+
+### D34 — Reviewer corrections make discovery deterministic, not larger
+
+After an Init/Batch-Init Preflight arms the exact analysis root and indexing that
+root succeeds, MCP—not the Agent—runs one fixed private baseline over index
+status/coverage, explicit architecture aspects (`overview`, `structure`,
+`dependencies`, `routes`, `languages`, `packages`, `entry_points`, `hotspots`,
+`boundaries`, `layers`, `clusters`) and a bounded safe file census. `file_tree`
+and `cycles` are excluded. Search and trace remain bounded Agent investigation,
+not Seed accumulation. MCP assigns lane status and fixed P0 classes; the Agent
+cannot self-declare coverage, absence or priority.
+
+P0 covers repository/confirmed-Domain identity, evidenced runtime/entrypoint,
+explicit interface/trigger, explicit deploy/IaC workload, explicit outbound
+dependency and diagnostics that may hide any of them. A non-terminal page cannot
+prove absence. P0 overflow or a limitation capable of hiding P0 makes the member
+Incomplete; lower-priority overflow is grouped and disclosed. A P0 group may be
+ignored only as `duplicate-covered` with a target Inventory item that will
+materialize. Generated/out-of-scope signals are classified below P0 before Seed
+publication; discovering that classification only later becomes a limitation or
+Incomplete result, not ignored success.
+
+Questions reuse the existing SharedQuestion model and candidate-evidence
+reference. A private QuestionPlan binds kind, target subject/candidate, property,
+scope, source/revision and missing evidence; Finalize renders it from the
+immutable Receipt rather than trusting mutable question text. An unbindable
+uncertainty stays a limitation. One outbound/trigger/datastore boundary may
+produce a bounded P1 Flow candidate and one representative trace; no process
+graph is added.
+
+Remote source materialization uses an AgentBase-owned, profile/source-scoped
+private bare mirror and detached worktree outside the user repository. It
+normalizes a unique canonical remote, uses only same-host Hub-token HTTPS,
+verifies the fetched commit against the API result, and never uses local refs,
+filters, hooks, submodules, LFS, SSH agent or ambient Git credentials. Provider
+admission excludes secret-like paths before indexing. Cleanup is marker-owned
+and path-validated. Evidence authored from a snapshot retains its exact source
+revision so later Refresh cannot relabel old claims.
+
+For that armed Init only, `index_repository` preserves the provider result blocks
+and appends one bounded AgentBase Seed summary so the Agent can see group IDs
+without a new public tool. Ordinary query and normal change-first Refresh do not
+create a Seed; future Full Discovery Refresh may opt in later.
+Each Inventory item names one origin group and may carry multiple output
+mappings. The Receipt is immutable connection state until Prepare atomically creates one
+persisted authoring session. Identical Prepare retry returns that session;
+mismatched input is rejected; finalized/cancelled sessions are terminal. Hub
+base movement before Init Finalize retains unchanged source/Seed/Inventory,
+rematches Published identity, issues a new Receipt and creates a replacement
+authoring session without rerunning source discovery. Normal Refresh instead
+reruns its existing preparation/guidance against the new Published base while
+reusing unchanged source analysis; it has no Discovery Receipt. After Finalize,
+normal publication reconciliation applies.
+Capability 046 does not broaden current
+AWS/SQS-only Domain Enrichment or retrofit already Published repositories; those
+require the already-deferred Full Discovery Refresh or an intentional clean
+re-ingest during qualification.
+
 ## Review closure
 
-Owner review is complete through D30. High-level presentation and low-level
+Owner review is complete through D34. High-level presentation and low-level
 living design must label this behavior as a pending Capability 046 target until
 implementation and released-skill qualification complete. Any later material
 implementation gap changes this record and the affected living design before

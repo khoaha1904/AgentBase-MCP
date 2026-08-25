@@ -55,7 +55,9 @@ Scan chỉ liệt kê local repos và báo Hub classification unavailable.
 Preflight của Hub Init bind exact remote default-branch commit trước Discover.
 Checkout hiện tại chỉ được reuse khi clean và trùng exact commit đó; nếu repo
 đang ở feature branch, dirty hoặc khác commit, MCP dùng detached worktree/cache
-tạm và không checkout/stash/sửa workspace. Scan không build graph. Không có
+tạm của AgentBase ngoài source repo và không checkout/stash/sửa workspace. Mọi
+Hub-bound Init/Batch/Refresh dùng token Hub trên cùng host qua HTTPS; không dùng
+SSH hay ambient Git credential. Scan không build graph. Không có
 active Remote Hub thì AgentBase chỉ Scan và dùng source/Code Graph, không tạo
 OKF Draft.
 
@@ -131,13 +133,19 @@ Failure được cô lập theo repository. Trong batch, checkpoint của reposi
 hoàn thành vẫn được giữ để retry, nhưng toàn batch còn `Incomplete`: chưa có
 atomic proposal để query, Accept hoặc Publish.
 
+Lỗi riêng của một member không dừng các member sau nếu cleanup đã được xác nhận
+an toàn. Lỗi authority chung, process hoặc cleanup không chắc chắn sẽ dừng cả
+batch. Finalize chỉ mở khi mọi member hoàn thành hoặc người dùng sửa membership.
+
 Người dùng có thể retry hoặc bỏ lần chạy lỗi. Retry cập nhật đúng draft cũ,
 không tạo concept/relation trùng; khi thành công, MCP chạy lại reconciliation
 cần thiết.
 
-Trước Prepare, retry chạy lại Discover/Investigate nhưng có thể reuse graph cùng
-exact revision. Sau Prepare, Author/Validate được resume từ Receipt/workspace
-khi source và Hub base còn khớp. P0 signal chưa xử lý do source/authority/adapter
+Với Init, Hub base đổi trước Finalize thì MCP rematch, cấp Receipt/session mới
+nhưng reuse Seed/Inventory cùng source. Normal Refresh không có Receipt; nó chỉ
+chạy lại prepare/guidance trên base mới. Không index lại nếu source không đổi;
+sau Finalize dùng publication reconciliation. P0 signal chưa
+xử lý do source/authority/adapter
 failure làm run `Incomplete`; thiếu P1/P2 có thể vẫn `Ready for review` cùng
 Question/limitation.
 
@@ -157,7 +165,7 @@ URL không phải identity chính; chúng được giữ làm aliases/evidence.
 - Batch Refresh hoặc batch trộn Init/Refresh.
 - `agentbase-scan` public workflow đã implemented theo bounded Published-only contract.
 - Capability 046 Discovery Seed, compact Inventory Receipt, coverage validation,
-  remote-default worktree isolation và activity-log summaries.
+  private-mirror source isolation và Repository activity summary.
 - Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
 - Persisted freshness report và ordinary-query freshness marks; local report và CI đã có.
 - Full repository-identity recovery cho mọi rename/fork/mirror edge case.

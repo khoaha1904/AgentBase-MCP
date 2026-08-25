@@ -48,6 +48,9 @@ Một discovery group không đạt hai gate không biến mất âm thầm. Age
 một disposition: `concept`, `embedded`, `question` hoặc `ignored` kèm bounded
 reason. MCP đối chiếu các disposition này với machine-derived Discovery Seed;
 không đặt quota concept và không yêu cầu mọi route/resource thành file.
+MCP tự xác định lane và mức P0/P1/P2 từ tín hiệu máy; Agent chỉ diễn giải ý nghĩa
+và chọn cách biểu diễn, nên không thể tự tuyên bố “đã kiểm tra đủ”. Một group có
+một disposition nhưng có thể tạo nhiều output nếu source thực sự cần.
 
 | Thứ được tìm thấy | Cách biểu diễn |
 |---|---|
@@ -73,8 +76,9 @@ Khi nguồn xung đột, Agent không đoán; policy đầy đủ nằm ở
 [phần 07](07-conflicts-questions-and-maintainer-guidance.md).
 
 AI quyết định embedded/Question/bỏ qua bằng hai gate trên và phải nêu được lý do
-từ evidence. “Bỏ qua” chỉ có nghĩa không đưa candidate đó vào OKF của run hiện
-tại; nó không tạo ignore registry và Refresh sau vẫn có thể phát hiện lại.
+từ evidence. P0 chỉ được bỏ qua bằng nhóm lý do hữu hạn MCP kiểm được. “Bỏ qua”
+chỉ có nghĩa không đưa candidate đó vào OKF của run hiện tại; nó không tạo ignore
+registry và Refresh sau vẫn có thể phát hiện lại.
 
 ## Trạng thái implementation
 

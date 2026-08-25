@@ -73,8 +73,9 @@ authoring rồi Finalize lại.
 
 Successful proposal materializes concise newest-first entries in
 `repositories/<slug>/log.md` for repository-owned activity and
-`domains/<slug>/log.md` for membership/Enrichment/cross-repository relation or
-Flow activity. Existing Hub log grammar remains authoritative. Do not log query,
+`domains/<slug>/log.md` only for Enrichment, cross-repository relation/Flow or
+explicit Domain correction. Routine Repository membership does not duplicate a
+Domain log entry. Existing Hub log grammar remains authoritative. Do not log query,
 tool call, raw Inventory or failed/Incomplete attempt. Git commit, PR and exact
 diff remain the complete audit history.
 

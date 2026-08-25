@@ -293,7 +293,9 @@ benchmarks.
   weakened.
 - **AB-BENCH-074** — Capability 046 qualification invokes the exact released
   `agentbase-ingest` skill against exact clean remote-default fixture revisions.
-  P0 scoring gates repository identity, runtime/entrypoint, interface/trigger,
+  The harness independently proves representative source evidence entered the
+  machine Seed before separately checking its proposal disposition. P0 scoring
+  gates repository identity, runtime/entrypoint, interface/trigger,
   deploy evidence, explicit outbound dependency acknowledgement and proposal
   integrity. P1 useful Flow/data/integration/limitations may remain partial;
   P2 CRUD/helper/test details are diagnostics, not completeness requirements.

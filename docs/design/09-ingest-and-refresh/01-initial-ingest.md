@@ -13,8 +13,8 @@ viết, provider login hoặc cross-repository investigation.
 
 ```text
 1. Preflight   Hub + repository/Domain + exact remote-default source
-2. Discover    graph + bounded file census → private Discovery Seed
-3. Investigate five lanes + exact source → mutable Inventory
+2. Discover    graph + MCP fixed baseline/census → private Discovery Seed
+3. Investigate five lanes + exact source → submitted Inventory
 4. Author      freeze Receipt → guidance/skeletons → OKF proposal
 5. Validate    Seed/Receipt coverage + OKF integrity + preview
 ```
@@ -22,13 +22,14 @@ viết, provider login hoặc cross-repository investigation.
 Stage boundaries/checkpoints là deterministic. Agent reasoning chỉ nằm trong
 semantic discovery/investigation và phải disposition important group thành
 concept, embedded, Question hoặc ignored reason. MCP groups structure and
-validates coverage; Agent decides meaning. Không có progress thì dừng
-investigation.
+assigns lane/P0/validates coverage; Agent decides meaning. Không có progress thì
+dừng investigation.
 
 Preflight requires an active Remote Hub. It resolves exact remote default-branch
-commit before graph creation, reuses current checkout only on a clean exact
-match and otherwise uses an isolated detached worktree/cache. Scan itself does
-not create a graph. Without a Remote Hub there is no OKF Init/Local Draft.
+commit before graph creation through same-host Hub-token HTTPS. It reuses current
+checkout only on a clean exact match and otherwise uses an AgentBase-private
+mirror/worktree outside the source repository. Scan itself does not create a
+graph. Without a Remote Hub there is no OKF Init/Local Draft.
 
 ## Success
 
@@ -39,7 +40,8 @@ thể vẫn `Ready for review` cùng Question/limitation.
 
 Missing low-value details là diagnostics. Ambiguity quan trọng thành Question.
 Integrity/validation failure tạo Incomplete run và không vào query/publish.
-P0 source/authority/adapter gap chưa xử lý cũng tạo Incomplete.
+P0 source/authority/adapter gap, P0-hiding pagination/diagnostic hoặc P0 overflow
+chưa xử lý cũng tạo Incomplete.
 
 ## Repair budget
 
@@ -65,4 +67,5 @@ sequential member checkpoints cùng one atomic proposal.
 Capability 046 does not add schema/catalog, public scanner tool or concept
 quota. It reuses pinned Codebase Memory, exposes more normalized diagnostics to
 the private Seed and requires released-skill qualification before replacing the
-baseline status above.
+baseline status above. It does not retrofit Published repositories; that remains
+future Full Discovery Refresh or an intentional qualification-data re-ingest.

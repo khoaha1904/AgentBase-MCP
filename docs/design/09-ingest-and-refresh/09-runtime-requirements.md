@@ -37,3 +37,7 @@
   staging và coverage result; evidence của member này không cover member khác.
 - **AB-BATCH-012** — Không resolve/access được exact remote default source làm
   member Incomplete; workflow không fallback sang feature/dirty checkout.
+- **AB-BATCH-013** — Recoverable member-local semantic/materialization/provider
+  failure tiếp tục sequential siblings sau confirmed-clean cleanup. Uncertain
+  cleanup/process/shared Hub/source authority failure dừng Batch. Finalize chỉ
+  mở khi mọi confirmed member complete hoặc membership được explicit revise.

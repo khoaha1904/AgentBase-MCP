@@ -24,29 +24,33 @@ Entry complete bind canonical Repository ID, exact source revision/dirty digest,
 evidence digest và completed staging digest. Raw graph/candidate context không
 cần durable recovery.
 
-Capability 046 giữ Seed/Inventory mutable chỉ trước Prepare. Guidance thành
-công freeze compact Receipt. Trước Prepare, retry chạy lại Discover/Investigate
-nhưng có thể reuse verified graph cache cùng exact source revision. Sau Prepare,
-Receipt và workspace private có thể resume Author/Validate khi source và Hub base
-còn exact; raw graph/source không cần durable checkpoint.
+Capability 046 giữ Seed trong connection và nhận Inventory một lần để freeze
+immutable Receipt. Prepare atomically tạo persisted authoring session; exact
+retry trả cùng session ID, mismatched input bị reject. Raw graph/Inventory không
+cần durable checkpoint.
 
 ## Retry
 
 - Retry chạy lại failed repository, không chạy lại completed siblings.
 - Completed staging chỉ reuse khi exact source identity/digest còn khớp.
 - Source đã đổi thì invalidates và rerun đúng repository đó.
-- Remote default branch advance invalidates Seed/Receipt/proposal của member
-  liên quan; không được chỉ thay graph rồi publish OKF cũ.
-- Hub base đã advance thì batch reconcile/revalidate với base mới; chỉ quay lại
-  source investigation nếu conflict/missing evidence thật sự yêu cầu.
+- Remote default branch advance chỉ thêm `source-advanced`; pinned exact snapshot
+  vẫn valid. Chỉ snapshot đổi/mất/không access hoặc mất authority mới invalidate.
+- Với Init, Hub base advance trước Finalize giữ unchanged source/Seed/final
+  Inventory, rematch identity, issue Receipt mới và tạo replacement session;
+  session bind base cũ không tiếp tục được. Normal Refresh không có Receipt: nó
+  reuse source/change analysis và chạy lại prepare/guidance trên base mới. Sau
+  Finalize dùng publication reconciliation. Chỉ source snapshot đổi mới rerun
+  discovery.
 - Retry không tạo duplicate candidate/concept vì cùng batch membership và
   repository checkpoint được thay thế, không append mù.
 
 ## Cancellation và cleanup
 
 User có thể cancel Incomplete batch và xóa private staging/cache receipt thuộc
-run đó. Accepted Hub commits, shared graph cache hợp lệ và source repository
-không bị sửa. Cleanup failure được báo rõ; không tự coi run đã biến mất.
+run đó. Cleanup chỉ đụng marker-owned validated private paths; accepted Hub
+commits, reusable graph cache hợp lệ và source repository không bị sửa. Cleanup
+failure được báo rõ; không tự coi run đã biến mất.
 
 ## Bounds
 

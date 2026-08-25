@@ -31,8 +31,10 @@ trong Domain Enrichment.
 
 1. Runtime chấp nhận explicit `needs-review`, nhưng chưa tự infer nó từ evidence
    mới mâu thuẫn Guidance.
-2. Initial Ingest/Refresh MVP tạo Question từ observed-value references của đúng
-   source Repository; relation/identity candidate sẽ đi qua Domain Enrichment.
+2. Baseline Ingest/Refresh hiện tạo Question từ observed-value references.
+   Capability 046 Initial Ingest sẽ reuse chính SharedQuestion renderer và thêm
+   private Receipt-bound QuestionPlan cho missing-evidence/relation/identity
+   candidate có exact source revision; nó không tạo Question system thứ hai.
 3. Maintainer Guidance hiện bind exact subject/property; chưa có reviewed
    Domain/Hub-wide scope hoặc provider evidence resolution.
 4. Conflict-aware query composition và batch Question resolution chưa có.

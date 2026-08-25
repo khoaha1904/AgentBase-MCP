@@ -14,7 +14,7 @@ Người dùng gọi skill ingest/refresh
              ↓
 Preflight bind exact repository/source snapshot
              ↓
-Discover yêu cầu MCP lập hoặc reuse bản đồ repository
+Discover lập/reuse graph rồi MCP chạy một baseline cố định
              ↓
 Code Graph tìm file, function, dependency và luồng gọi
              ↓
@@ -53,9 +53,10 @@ xuất để đưa vào Hub.
 Code Graph chỉ được dùng cho repository đã có local hoặc nằm trong workspace.
 MCP không tự clone repository remote để dựng graph khi người dùng query.
 
-Hub Initial Ingest là ngoại lệ có authority rõ: Preflight có thể tạo một
-detached worktree/cache tạm từ exact remote default-branch commit. Đây không
-phải query-time clone và không thay đổi checkout người dùng.
+Hub authoring là ngoại lệ có authority rõ: Preflight dùng token của active Hub
+để lấy exact remote default-branch commit từ cùng GitHub/GHE host vào cache riêng
+của AgentBase. Đây không phải query-time clone và không thay đổi checkout, refs
+hay credential của repository người dùng.
 
 ## Khi workspace có nhiều repository
 
@@ -78,12 +79,20 @@ Code Graph hay đọc source sâu.
 
 ## MCP đọc sâu tới đâu?
 
-Discover kiểm kê rộng các nhóm có tín hiệu cao: root README, runtime/package
+Trong Initial Ingest/Batch Init, sau khi index exact Preflight source, MCP tự
+chạy một baseline cố định gồm index diagnostics,
+architecture aspects và file census an toàn; không phụ thuộc Agent nhớ gọi đủ
+tool. Kết quả index giữ nguyên dữ liệu graph và kèm một Seed summary nhỏ để Agent
+thấy các group ID cần xử lý. Discover kiểm kê rộng các nhóm có tín hiệu cao: root README, runtime/package
 manifest, entrypoint, interface/route/event/trigger, integration/data/channel,
 Terraform/Terragrunt, deploy và CI. Nó không crawl toàn bộ source hay `docs/`.
 Agent chỉ mở sâu file mà graph/census chỉ ra là quan trọng; generated/vendor/
-build output bị loại, lockfile chỉ là dependency hint. Mỗi nhóm quan trọng phải
-được xử lý hoặc ghi limitation, nhưng không bắt buộc trở thành concept.
+build và secret-like paths bị loại, lockfile chỉ là dependency hint. Mỗi nhóm
+quan trọng phải được xử lý hoặc ghi limitation, nhưng không bắt buộc trở thành
+concept.
+
+Query thường và normal change-first Refresh không chạy baseline này hoặc tạo
+Discovery Seed. Chúng vẫn dùng graph/source theo đúng phạm vi riêng.
 
 ## Khi nào graph được tạo?
 

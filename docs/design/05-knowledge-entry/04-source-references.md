@@ -15,8 +15,10 @@ span remains optional review evidence at the observed revision, not a durable
 locator.
 
 Reference không chứa absolute checkout root, cache path, credential hoặc raw
-provider response. Proposal metadata/evidence bundle bind repository revision,
-dirty digest, engine identity và limitation của evidence round.
+provider response. Mỗi authored/retained source entry bind exact observed
+repository revision; proposal metadata/evidence bundle còn bind overall source
+snapshot, engine identity và limitation của evidence round. Refresh không được
+relabel older retained claims bằng revision mới chỉ vì Repository đã advance.
 
 Provider-derived snapshots use the separately validated bounded
 `provider-observation://` source from Part 08.06; they never masquerade as a

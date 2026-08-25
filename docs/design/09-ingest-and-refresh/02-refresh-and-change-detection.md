@@ -34,6 +34,12 @@ investigation, không có nghĩa đọc mọi file hoặc bắt completeness 100
 Full refresh vẫn giữ source authority, candidate gates, one guidance call,
 validation và one-repair budget như normal Refresh.
 
+Đây là approved future **Full Discovery Refresh**, chưa được Capability 046
+implement. Capability 046 chỉ đưa exact remote-default SourceSnapshot authority
+vào normal Refresh và broad discovery vào new Init; nó không silently re-init
+Published repository. Qualification Hub có thể intentionally reset/re-ingest
+disposable data để đo Init mới.
+
 ## Reconciliation
 
 Refresh chỉ thay contribution của current repository và giữ foreign-source

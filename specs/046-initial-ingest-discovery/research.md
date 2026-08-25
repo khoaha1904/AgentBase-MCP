@@ -2,8 +2,9 @@
 
 ## R01 — Use the pinned provider, not a second scanner
 
-**Decision**: Capture more of Codebase Memory `0.10.8` architecture/index output
-and add only a bounded file census.
+**Decision**: After indexing, MCP runs one fixed private Codebase Memory `0.10.8`
+baseline—status, terminal/paged coverage and explicit architecture aspects—plus
+one bounded secret-safe file census.
 
 **Rationale**: The provider already found routes, entrypoints and boundaries
 missed by current OKF guidance. GitNexus supports broad-extract/select-later;
@@ -13,10 +14,10 @@ ontology.
 **Alternatives considered**: New public scanner, full AST pass, raw graph dump.
 All duplicate the provider, expand tools and risk a second code graph.
 
-## R02 — Keep semantic decisions with the Agent
+## R02 — MCP owns coverage; Agent owns semantics
 
-**Decision**: MCP groups deterministic signals and validates acknowledgement;
-the Agent decides meaning and disposition.
+**Decision**: MCP groups deterministic signals, assigns lanes/fixed P0 and
+validates acknowledgement; the Agent decides meaning, disposition and outputs.
 
 **Rationale**: Structural grouping is stable enough for coverage. Concept,
 embedded knowledge and Questions require repository semantics.
@@ -38,7 +39,8 @@ global ledger, add a public discovery tool. Each increases trust surface or API.
 ## R04 — Receipt identity replaces mutable guidance replay
 
 **Decision**: Guidance freezes a digest-bound compact Receipt; new-mode Prepare
-accepts its ID. Persist it only after Prepare.
+accepts its ID and atomically creates one existing authoring session. Exact
+retry returns that session; no separate mutable receipt state machine exists.
 
 **Rationale**: MCP can prove the proposal came from the validated Inventory and
 support safe resume without retaining raw source/graph state.
@@ -50,11 +52,13 @@ private detail durable and heavy.
 ## R05 — Resolve remote default without changing the working tree
 
 **Decision**: Resolve default branch through the configured GitHub/GHE API,
-fetch the exact commit into an AgentBase namespaced ref and use an isolated
-detached worktree when current checkout is not a clean exact match.
+fetch and verify the exact commit over token-only HTTPS into a profile-scoped
+AgentBase-private bare mirror, then use an isolated detached worktree when the
+current checkout is not a clean exact match.
 
 **Rationale**: It preserves in-progress feature work, produces remotely
-verifiable evidence and reuses existing safe Git/askpass/worktree primitives.
+verifiable evidence and avoids mutating user refs or inheriting local filters,
+SSH credentials, hooks, submodules or LFS behavior.
 
 **Alternatives considered**: Checkout/stash/restore user worktrees, accept dirty
 digest for publication, or maintain a general clone service. They risk data,
@@ -76,8 +80,9 @@ qualification surface and allow bypassing coverage.
 
 ## R07 — Logs are summaries, Git remains history
 
-**Decision**: Materialize only successful Repository/Domain activity entries
-with the existing validated `log.md` grammar.
+**Decision**: Capability 046 materializes only a successful Repository Init
+entry with the existing validated `log.md` grammar. Domain logs remain owned by
+Enrichment/cross-repository/explicit Domain correction workflows.
 
 **Rationale**: Humans can see knowledge evolution without introducing an event
 store or copying raw execution detail into OKF.
@@ -95,3 +100,32 @@ The released skill benchmark will expose real elapsed time and token use.
 
 **Alternatives considered**: Fixed file counts, concept quotas or exhaustive
 reading. None represents useful coverage reliably across repository shapes.
+
+## R09 — Reuse existing Questions and add only a private plan
+
+**Decision**: Inventory carries a normalized QuestionPlan that targets the
+existing SharedQuestion kinds and candidate-evidence reference; Finalize renders
+from the immutable Receipt.
+
+**Rationale**: The core already models conflict, missing evidence, relation and
+identity uncertainty. A second question system or caller-authored final text
+would duplicate governance and weaken traceability.
+
+## R10 — Honest pagination and bounded overflow
+
+**Decision**: A non-terminal page cannot establish absence. P0 checks reach a
+terminal result or become limited; P0-hiding limitations and P0 overflow block
+readiness, while P1/P2 overflow is grouped and disclosed.
+
+**Rationale**: Silent truncation recreates the original defect. Bounded grouping
+keeps context manageable without pretending full coverage.
+
+## R11 — Do not import reference-product architecture
+
+**Decision**: Borrow GitNexus's broad-extract/select-later principle and
+Potpie's explicit coverage thinking, but add no graph database, ontology,
+process graph, parallel-agent orchestration or UI to this capability.
+
+**Rationale**: AgentBase's product value is compact, source-backed, reviewable
+OKF. Those systems solve different retrieval/execution problems and would expand
+the MVP without closing the measured Init omission.

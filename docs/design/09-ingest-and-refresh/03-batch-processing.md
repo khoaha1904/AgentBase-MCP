@@ -24,14 +24,17 @@ preflight batch
   riêng.
 - Agent context không trộn raw source/graph của nhiều repo.
 - Repository failure không rollback completed repository staging.
+- Recoverable member-local failure tiếp tục sang sibling sau khi cleanup được
+  xác nhận; uncertain cleanup/process/shared authority failure dừng cả Batch.
 - Cross-repository discovery/provider verification không chạy trong batch
   Ingest; Domain Enrichment làm sau.
 
-Capability 046 Preflight resolves each member's exact remote default commit
-before Discover. A clean exact-matching checkout may be reused; feature/dirty/
-different revisions use an isolated detached worktree/cache. Batch never
-checkout/stash/restore user worktrees. Each member builds/reuses a graph only
-after this source selection and owns its own Seed/Receipt.
+Capability 046 Preflight resolves each member's exact remote default commit on
+the active Hub host before Discover. A clean exact-matching checkout may be
+reused; feature/dirty/different revisions use an AgentBase-private mirror and
+detached worktree. Batch never checkout/stash/restore user worktrees or use SSH/
+ambient Git credentials. Each member builds/reuses a graph only after source
+selection and owns its own Seed/Receipt.
 
 ## Vì sao chưa parallel
 
@@ -63,7 +66,8 @@ one proposal → one Accept → one PR
 
 ## Failure membership
 
-Repository failure làm batch Incomplete; completed repository staging được giữ.
+Repository failure làm batch Incomplete; completed repository staging được giữ
+và later siblings có thể vẫn hoàn thành.
 User retry repository lỗi hoặc xác nhận loại nó và finalize một batch membership
 mới. Khi loại một repo khỏi draft đã có, AI bỏ attributable contributions, sửa
 hard dangling dependencies hoặc hỏi user nếu meaning mơ hồ, rồi MCP Finalize

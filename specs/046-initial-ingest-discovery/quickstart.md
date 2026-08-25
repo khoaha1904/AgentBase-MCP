@@ -20,8 +20,15 @@ node --test src/providers/codebase-memory/owned-runtime.test.ts
 Expected:
 
 - scan does not create a graph;
-- captured provider fixtures produce stable Seed groups;
+- fixed post-index calls produce stable Seed groups independently of Agent call
+  order; `file_tree`, `cycles`, search and trace do not enter the Seed;
+- only an exact Init/Batch-member Preflight-armed root creates a Seed; ordinary
+  query and normal Refresh keep their existing graph/change-first behavior;
+- provider index blocks remain intact and one bounded AgentBase Seed summary
+  exposes every dispositionable group ID;
 - malformed/partial Seed-driving output fails or records an explicit limitation;
+- paging reaches terminal coverage; P0 overflow cannot be silently dropped;
+- secret-like paths never appear in Seed or provider-visible census input;
 - tool list count/names remain unchanged.
 
 ## 2. Initial Ingest authoring contracts
@@ -33,10 +40,14 @@ node --test src/app/hub-okf/authoring/canonical-graph-e2e.test.ts
 
 Expected:
 
-- guidance rejects missing/duplicate P0 dispositions;
+- MCP—not caller input—derives lane status and P0; guidance rejects
+  missing/duplicate P0 dispositions, merged origin groups and any P0 ignored
+  reason except a valid `duplicate-covered` target;
 - successful guidance returns one Receipt ID;
-- new Prepare rejects mutable guidance replay and consumes the Receipt once;
-- Finalize checks materialization and creates valid Repository activity log;
+- new Prepare rejects mutable guidance replay; identical retry returns the same
+  persisted authoring session and mismatched reuse fails;
+- Finalize renders existing SharedQuestions from Receipt-bound QuestionPlans,
+  checks exact-revision materialization and creates a Repository activity log;
 - P1/P2 limitations remain review-ready.
 
 ## 3. Source and Batch isolation
@@ -50,10 +61,15 @@ Expected fixture coverage:
 - exact clean default checkout is reused;
 - dirty/feature checkout bytes and branch remain unchanged while a detached
   default-commit worktree is analyzed;
+- private source materialization uses same-host token-only HTTPS outside the
+  source repo and rejects ambiguous/cross-host/TOCTOU-mismatched identity;
 - source integrity/authority drift invalidates unsafe state while default-head
   advance yields a freshness warning;
-- Batch members keep distinct Seed/Receipt/evidence state and one failed member
-  leaves the atomic batch Incomplete.
+- Init Hub-base advance before Finalize issues a new Receipt/replacement session
+  without rerunning unchanged source discovery; Refresh reruns its existing
+  base-bound preparation without a Receipt;
+- Batch members keep distinct Seed/Receipt/evidence state; a recoverable failed
+  member does not stop siblings but leaves the atomic Batch Incomplete.
 
 ## 4. Canonical offline gate
 
@@ -81,7 +97,8 @@ sequential replica.
 
 The report must include:
 
-- P0/P1/P2 coverage without exact concept inventory scoring;
+- independent representative source-to-Seed P0 coverage followed by
+  Seed-to-proposal disposition, without exact concept inventory scoring;
 - change versus the prior accepted run and any new regression;
 - OKF/MCP defects separated from benchmark defects;
 - elapsed time and token usage;

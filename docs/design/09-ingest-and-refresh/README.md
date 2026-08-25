@@ -46,7 +46,7 @@ High-level decision:
 - Implemented MVP: public bounded `agentbase-scan`.
 - Approved/pending capability 046: remote-default Init source isolation,
   Discovery Seed → Inventory Receipt → OKF coverage gates, expanded inspection
-  and concise Repository/Domain activity logs.
+  and one concise Repository Init activity entry.
 
 Qualification policy hiện dùng Sol cho Initial Ingest và Terra cho Refresh.
 Đây là benchmark configuration, không phải runtime model router của MCP.
