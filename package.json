@@ -10,6 +10,9 @@
   "scripts": {
     "spec:check": "node scripts/checks/check-specs.mjs",
     "configure:hub-token": "node scripts/installation/configure-hub-token.mjs",
+    "prepare:codebase-memory": "node scripts/upstream/prepare-codebase-memory.mjs",
+    "verify:upstreams": "node scripts/upstream/manage-upstreams.mjs verify codebase-memory && node scripts/upstream/manage-upstreams.mjs verify diagram-design",
+    "check:upstream-foundations": "node scripts/upstream/check-inactive-foundations.mjs",
     "build:hub-validator": "node scripts/build-hub-validator.mjs",
     "check:hub-validator": "node scripts/build-hub-validator.mjs --check",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -24,7 +27,7 @@
     "integration:codebase-memory": "node src/cli.ts codebase-memory:integration",
     "benchmark:codebase-memory": "node src/cli.ts codebase-memory:benchmark",
     "benchmark:okf": "node scripts/benchmark/benchmark-okf.mjs",
-    "check": "npm run spec:check && npm run check:hub-validator && npm run typecheck && npm run depcruise && npm run knip && npm run gitleaks && npm test",
+    "check": "npm run spec:check && npm run check:upstream-foundations && npm run check:hub-validator && npm run typecheck && npm run depcruise && npm run knip && npm run gitleaks && npm test",
     "verify": "npm run check && git diff --check"
   },
   "devDependencies": {
@@ -38,11 +41,9 @@
   "dependencies": {
     "@modelcontextprotocol/client": "2.0.0",
     "@modelcontextprotocol/server": "2.0.0",
-    "codebase-memory-mcp": "0.10.1",
     "yaml": "2.9.0"
   },
   "allowScripts": {
-    "codebase-memory-mcp@0.10.1": true,
     "@swc/core@1.16.0": true
   }
 }

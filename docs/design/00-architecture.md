@@ -92,12 +92,14 @@ and returns visible recovery rather than hidden retry.
 
 ## Runtime boundaries
 
-- Exact production dependencies are `codebase-memory-mcp@0.10.1`,
+- Exact production package dependencies are
   `@modelcontextprotocol/client@2.0.0`,
   `@modelcontextprotocol/server@2.0.0` and `yaml@2.9.0`.
-- AgentBase resolves only its package-private graph executable and verifies its
-  admitted identity. It never searches `PATH`, accepts a user binary or runs the
-  provider's installer/updater/configurator.
+- Codebase Memory `v0.10.8` is an attributed immutable source snapshot with one
+  AgentBase-owned 12-language profile. Installation builds the current-platform
+  artifact from those exact bytes; runtime verifies source/profile/platform,
+  tool surface and executable identity. It never searches `PATH`, accepts a user
+  binary or runs an installer/updater/configurator.
 - One short-lived stdio provider session owns one explicit repository evidence
   round and closes on every path. One-shot invocation is explicit rollback; no
   watcher, UI, daemon or automatic transport retry exists.

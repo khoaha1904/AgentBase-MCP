@@ -1,0 +1,102 @@
+--- a/Makefile.cbm
++++ b/Makefile.cbm
+@@ -708,6 +708,10 @@
+ 
+ BUILD_DIR = build/c
+ 
++# AgentBase supplies deterministic NULL factories for grammars omitted from its
++# bounded parser profile. Empty in pristine upstream builds.
++AGENTBASE_GRAMMAR_STUB_SRC ?=
++
+ # ── Object file compilation (grammars need relaxed warnings) ─────
+ 
+ # Grammar + tree-sitter runtime: compiled without -Werror (upstream code has warnings)
+@@ -1039,9 +1043,9 @@
+ 	else mv -f $@.tmp $@; rm -f $(BUILD_DIR)/codebase-memory-mcp; \
+ 	echo "=== build config changed -> full rebuild: $(BUILD_CONFIG_SIG) ==="; fi
+ 
+-$(BUILD_DIR)/codebase-memory-mcp: $(MAIN_SRC) $(PROD_SRCS) $(EXTRACTION_SRCS) $(AC_LZ4_SRCS) $(ZSTD_SRCS) $(SQLITE_WRITER_SRC) $(OBJS_VENDORED_PROD) $(BUILD_DIR)/.build-config $(PROJECT_HDRS) | $(BUILD_DIR)
++$(BUILD_DIR)/codebase-memory-mcp: $(MAIN_SRC) $(PROD_SRCS) $(AGENTBASE_GRAMMAR_STUB_SRC) $(EXTRACTION_SRCS) $(AC_LZ4_SRCS) $(ZSTD_SRCS) $(SQLITE_WRITER_SRC) $(OBJS_VENDORED_PROD) $(BUILD_DIR)/.build-config $(PROJECT_HDRS) | $(BUILD_DIR)
+ 	$(CC) $(CFLAGS_PROD) -o $@ \
+-		$(MAIN_SRC) $(PROD_SRCS) \
++		$(MAIN_SRC) $(PROD_SRCS) $(AGENTBASE_GRAMMAR_STUB_SRC) \
+ 		$(EXTRACTION_SRCS) $(AC_LZ4_SRCS) $(ZSTD_SRCS) $(SQLITE_WRITER_SRC) \
+ 		$(OBJS_VENDORED_PROD) \
+ 		$(LDFLAGS)
+@@ -1066,7 +1070,7 @@
+ 
+ cbm-with-ui: embed $(OBJS_VENDORED_PROD)
+ 	$(CC) $(CFLAGS_PROD) -o $(BUILD_DIR)/codebase-memory-mcp \
+-		$(MAIN_SRC) $(PROD_SRCS_WITH_ASSETS) \
++		$(MAIN_SRC) $(PROD_SRCS_WITH_ASSETS) $(AGENTBASE_GRAMMAR_STUB_SRC) \
+ 		$(EXTRACTION_SRCS) $(AC_LZ4_SRCS) $(ZSTD_SRCS) $(SQLITE_WRITER_SRC) \
+ 		$(OBJS_VENDORED_PROD) \
+ 		$(wildcard $(BUILD_DIR)/embedded/embed_*.o) \
+--- a/src/pipeline/pipeline.c
++++ b/src/pipeline/pipeline.c
+@@ -36,6 +36,7 @@
+ #include "foundation/compat_thread.h"
+ #include "foundation/profile.h"
+ #include "foundation/mem.h"
++#include "lang_specs.h"
+ 
+ #include <errno.h>
+ #include <stdint.h>
+@@ -2137,6 +2138,29 @@
+     return rc;
+ }
+ 
++static void filter_unavailable_grammars(cbm_pipeline_t *p, cbm_file_info_t *files, int *count) {
++    int retained = 0;
++    for (int i = 0; i < *count; i++) {
++        if (!cbm_ts_language(files[i].language)) {
++            cbm_pipeline_add_file_error(p, files[i].rel_path,
++                                        "language not enabled by AgentBase parser profile",
++                                        "unsupported");
++            free(files[i].path);
++            free(files[i].rel_path);
++            continue;
++        }
++        if (retained != i) {
++            files[retained] = files[i];
++        }
++        retained++;
++    }
++    if (retained != *count) {
++        cbm_log_info("pipeline.parser_profile", "retained", itoa_buf(retained), "unsupported",
++                     itoa_buf(*count - retained));
++    }
++    *count = retained;
++}
++
+ static int cbm_pipeline_run_staged(cbm_pipeline_t *p) {
+     if (!p) {
+         return CBM_NOT_FOUND;
+@@ -2224,6 +2247,7 @@
+         rc = CBM_PIPELINE_ABORT_PRESERVE_DB;
+         goto cleanup;
+     }
++    filter_unavailable_grammars(p, files, &file_count);
+ 
+     /* Check for existing DB → try incremental or delete for reindex */
+     rc = try_incremental_or_delete_db(p, files, file_count, baseline_manifest, baseline_count,
+@@ -2268,6 +2292,7 @@
+             rc = CBM_NOT_FOUND;
+             goto cleanup;
+         }
++        filter_unavailable_grammars(p, files, &file_count);
+     }
+     cbm_log_info("pipeline.route", "path", "full");
+ 
+--- a/src/pipeline/pipeline.h
++++ b/src/pipeline/pipeline.h
+@@ -115,7 +115,8 @@
+                    * but contains tree-sitter ERROR/MISSING regions whose
+                    * constructs are absent from the graph (best-effort signal —
+                    * absence of the flag is NOT a completeness guarantee). The
+-                   * MCP layer reports it separately from skipped[]. "cross_lsp"
++                   * MCP layer reports it separately from skipped[]. "unsupported"
++                   * means the recognized language is outside the active parser profile. "cross_lsp"
+                    * is a RESERVED phase string for Track C's crash-attribution
+                    * signal and is intentionally NOT emitted today (the
+                    * cross-LSP passes are best-effort/void with no genuine

@@ -7,7 +7,7 @@ import { isCallToolResult, type CallToolResult } from "@modelcontextprotocol/ser
 
 import {
   openScopedSession,
-  resolveManagedPackage,
+  resolveOwnedRuntime,
   type ProviderCleanup,
   type ProviderToolDescriptor,
   type ScopedSession,
@@ -29,7 +29,7 @@ export type GatewaySessionOptions = Readonly<{
 function privateCache(stateRoot: string, repositoryRoot: string): string {
   const root = path.resolve(stateRoot);
   if (root === repositoryRoot || root.startsWith(`${repositoryRoot}${path.sep}`)) throw new Error("MCP cache must remain outside source");
-  const cache = path.join(root, "mcp", "codebase-memory", "0.10.1",
+  const cache = path.join(root, "mcp", "codebase-memory", "0.10.8",
     createHash("sha256").update(repositoryRoot).digest("hex").slice(0, 24));
   fs.mkdirSync(cache, { recursive: true, mode: 0o700 });
   fs.chmodSync(cache, 0o700);
@@ -43,7 +43,7 @@ function defaultStateRoot(): string {
 
 function defaultProviderFactory(projectRoot: string): RawProviderFactory {
   return async ({ repositoryRoot, cacheRoot }) => {
-    const managed = await resolveManagedPackage({ projectRoot });
+    const managed = await resolveOwnedRuntime({ projectRoot });
     return openScopedSession({
       binary: managed.executable,
       cwd: repositoryRoot,

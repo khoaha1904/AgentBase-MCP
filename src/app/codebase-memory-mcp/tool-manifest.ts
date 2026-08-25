@@ -16,22 +16,28 @@ type Manifest = Readonly<{
   tools: readonly ProviderToolDescriptor[];
 }>;
 
-function readManifest(): Manifest {
-  const value = JSON.parse(fs.readFileSync(new URL("../../../fixtures/codebase-memory-v0.10.1/mcp-surface.json", import.meta.url), "utf8")) as Manifest;
-  if (value.provider !== "codebase-memory-mcp" || value.version !== "0.10.1") {
+function readManifest(version: "0.10.1" | "0.10.8"): Manifest {
+  const value = JSON.parse(fs.readFileSync(new URL(`../../../fixtures/codebase-memory-v${version}/mcp-surface.json`, import.meta.url), "utf8")) as Manifest;
+  if (value.provider !== "codebase-memory-mcp" || value.version !== version) {
     throw new Error("captured Codebase Memory MCP manifest is invalid");
   }
   return value;
 }
 
-const manifest = readManifest();
-const capturedByName = new Map(manifest.tools.map((tool) => [tool.name, tool]));
-const capturedSafeTools = SAFE_TOOL_NAMES.map((name) => {
-  const tool = capturedByName.get(name);
-  if (!tool) throw new Error(`captured Codebase Memory MCP manifest is missing ${name}`);
-  return tool;
-});
-export const PINNED_PROVIDER_TOOLS = Object.freeze(capturedSafeTools.map((tool) => Object.freeze(tool)));
+const providerManifest = readManifest("0.10.8");
+const publicManifest = readManifest("0.10.1");
+function selectedTools(manifest: Manifest): ProviderToolDescriptor[] {
+  const byName = new Map(manifest.tools.map((tool) => [tool.name, tool]));
+  return SAFE_TOOL_NAMES.map((name) => {
+    const tool = byName.get(name);
+    if (!tool) throw new Error(`captured Codebase Memory MCP manifest is missing ${name}`);
+    return tool;
+  });
+}
+const providerTools = selectedTools(providerManifest);
+const publicTools = selectedTools(publicManifest);
+export const PINNED_PROVIDER_TOOLS = Object.freeze(providerTools.map((tool) => Object.freeze(tool)));
+const capturedSafeTools = publicTools;
 
 const READ_ONLY_GRAPH_ANNOTATIONS = Object.freeze({
   readOnlyHint: true,

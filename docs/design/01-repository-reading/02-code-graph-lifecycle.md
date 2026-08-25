@@ -51,6 +51,6 @@ nhiều bounded queries trong cùng repository run
 
 ## Baseline reuse
 
-Thiết kế giữ nguyên managed provider workspace, graph freshness receipt và
+Thiết kế giữ nguyên owned provider workspace, graph freshness receipt và
 cleanup contract hiện tại. Low-level implementation chỉ cần để umbrella skill
 định tuyến đúng lifecycle; không cần một cache manager mới.

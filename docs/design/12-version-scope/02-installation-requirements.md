@@ -83,5 +83,29 @@ default for every Hub.
 - **AB-INSTALL-030** — If MCP registration later fails, rollback removes only
   unchanged skill directories created by that run and preserves every
   pre-existing destination.
-- **AB-INSTALL-031** — Non-interactive setup remains dependency-only and never
-  installs product skills.
+- **AB-INSTALL-031** — Non-interactive setup remains preparation-only and never
+  installs product skills or registers clients.
+
+## Owned native provider preparation
+
+- **AB-INSTALL-032** — Installation requires approved Node.js `>=24.12 <25`, a
+  supported `linux-x64` or `darwin-arm64` host, Git, Make, C/C++ toolchain and
+  required platform system headers/libraries before product registration.
+- **AB-INSTALL-033** — npm dependency preparation uses the user's one configured
+  HTTPS registry with registry-host replacement; public npm/yarn and GitHub
+  package authorities are rejected rather than used as fallback.
+- **AB-INSTALL-034** — After dependencies, installation verifies both immutable
+  upstream inventories and prepares the owned Codebase Memory artifact before
+  copying skills or changing a client MCP entry.
+- **AB-INSTALL-035** — Provider preparation uses repository-owned source and the
+  local approved toolchain only. It applies the parser-profile patch in
+  disposable staging and never downloads a release binary or builds on ordinary
+  MCP startup.
+- **AB-INSTALL-036** — A failed preflight, build, probe or admission preserves
+  the previously admitted artifact and leaves skills/client registration
+  unchanged. Later registration failure uses the existing registration/skill
+  rollback and may retain the already valid artifact.
+- **AB-INSTALL-037** — Non-interactive setup still prepares dependencies and the
+  native provider, but performs no skill or client mutation.
+- **AB-INSTALL-038** — Graph UI and diagram-design dependencies are not installed
+  by this capability. Their source and lock/profile are audit inputs only.

@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 
 import { registerClients } from "./client-registration.mjs";
 import { installProductSkills, PRODUCT_SKILL_NAMES, rollbackProductSkills } from "./product-skills.mjs";
+import { prepareCodebaseMemory } from "../upstream/prepare-codebase-memory.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -141,9 +142,46 @@ async function readClientSelection(reader, output, capabilities) {
   }
 }
 
-function installDependencies() {
+function assertNodeVersion(version) {
+  const [major, minor] = version.split(".").map(Number);
+  if (major !== 24 || minor < 12) throw new Error(`Node >=24.12 <25 is required; received ${version}`);
+}
+
+function privateRegistry(value) {
+  let registry;
+  try { registry = new URL(value); }
+  catch { throw new Error("npm registry configuration is not a valid URL"); }
+  if (registry.protocol !== "https:") throw new Error("npm registry must use HTTPS");
+  if (["registry.npmjs.org", "npmjs.org", "registry.yarnpkg.com", "npm.pkg.github.com"].includes(registry.hostname)) {
+    throw new Error("AgentBase enterprise installation requires a configured internal npm registry");
+  }
+  return registry.href;
+}
+
+function resolveRegistry(environment) {
+  const configured = environment.npm_config_registry || environment.NPM_CONFIG_REGISTRY;
+  if (configured) return Promise.resolve(configured);
   return new Promise((resolve, reject) => {
-    const child = spawn("npm", ["ci", "--no-fund"], { cwd: repositoryRoot, stdio: ["ignore", "ignore", "ignore"], shell: false });
+    const child = spawn("npm", ["config", "get", "registry"], {
+      cwd: repositoryRoot, env: { ...environment }, stdio: ["ignore", "pipe", "pipe"], shell: false,
+    });
+    const stdout = [], stderr = [];
+    child.stdout.on("data", (chunk) => stdout.push(chunk));
+    child.stderr.on("data", (chunk) => stderr.push(chunk));
+    child.once("error", () => reject(new Error("npm registry configuration could not be read")));
+    child.once("exit", (code) => code === 0
+      ? resolve(Buffer.concat(stdout).toString("utf8").trim())
+      : reject(new Error(`npm registry configuration failed: ${Buffer.concat(stderr).toString("utf8").trim()}`)));
+  });
+}
+
+function installDependencies(registry, environment = process.env) {
+  return new Promise((resolve, reject) => {
+    const child = spawn("npm", ["ci", "--no-fund", "--no-audit", `--registry=${registry}`, "--replace-registry-host=always"], {
+      cwd: repositoryRoot,
+      env: { ...environment, npm_config_registry: registry, npm_config_replace_registry_host: "always" },
+      stdio: ["ignore", "ignore", "ignore"], shell: false,
+    });
     child.once("error", () => reject(new Error("dependency installation could not start")));
     child.once("exit", (code, signal) => code === 0
       ? resolve()
@@ -170,23 +208,26 @@ export async function runInstaller(options = {}) {
   const input = options.input ?? process.stdin;
   const output = options.output ?? process.stdout;
   const environment = options.environment ?? process.env;
+  const runRegistryResolution = options.runRegistryResolution ?? resolveRegistry;
   const runDependencyInstall = options.runDependencyInstall ?? installDependencies;
+  const runProviderPreparation = options.runProviderPreparation ?? prepareCodebaseMemory;
   const runClientRegistration = options.runClientRegistration ?? registerClients;
   const runProductSkillInstallation = options.runProductSkillInstallation ?? installProductSkills;
   const runProductSkillRollback = options.runProductSkillRollback ?? rollbackProductSkills;
   parseArgs(args);
+  assertNodeVersion(options.nodeVersion ?? process.versions.node);
+  const registry = privateRegistry(await runRegistryResolution(environment));
+  await runDependencyInstall(registry, environment);
+  await runProviderPreparation();
   const interactive = Boolean(input.isTTY && output.isTTY && typeof input.setRawMode === "function");
   if (!interactive) {
-    await runDependencyInstall();
-    output.write("AgentBase-MCP: code prepared; interactive client registration skipped.\n");
+    output.write("AgentBase-MCP: dependencies and Code Graph prepared; interactive client registration skipped.\n");
     return { clients: [], registration: "skipped" };
   }
 
   const capabilities = terminalCapabilities(output, environment), glyph = ui(capabilities);
   renderHeader(output, capabilities);
-  output.write(`${glyph.pending} Preparing dependencies...\n`);
-  await runDependencyInstall();
-  output.write(`${glyph.accent(glyph.success)} Dependencies ready\n\n`);
+  output.write(`${glyph.accent(glyph.success)} Dependencies and Code Graph ready\n\n`);
   const reader = new CharacterReader(input);
   input.setRawMode(true);
   input.resume();

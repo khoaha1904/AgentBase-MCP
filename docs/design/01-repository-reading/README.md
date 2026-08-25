@@ -24,7 +24,7 @@ High-level decision:
 ## Implementation delta hiện tại
 
 `agentbase-query`, `use-codebase-memory`, Initial Ingest và Refresh đã nối
-Published Hub, managed Codebase Memory, exact source reads và evidence
+Published Hub, owned Codebase Memory, exact source reads và evidence
 validation. Graph vẫn private/rebuildable và chỉ dùng cho repo local/workspace.
 Batch Ingest xử lý danh sách repository explicit tuần tự ở phần 09. Public Scan
 inventory bounded Git roots; query skill chọn một root rõ ràng hoặc hỏi lại và

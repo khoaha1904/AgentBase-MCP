@@ -36,7 +36,7 @@ async function realProvider(
     repositoryRoot: workspace.allowedRoot,
     project: workspace.project,
     cacheRoot: workspace.cacheRoot,
-    managedPackage: { projectRoot: agentBaseRoot, allowRecovery: true },
+    ownedRuntime: { projectRoot: agentBaseRoot },
     timeoutMs: 120_000,
   };
   const provider = await (request.transport === "scoped-session"

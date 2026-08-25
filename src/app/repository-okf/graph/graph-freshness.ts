@@ -59,7 +59,7 @@ function validEngine(value: unknown): value is EngineIdentity {
   ])) return false;
   return value.provider === "codebase-memory-mcp"
     && value.packageName === "codebase-memory-mcp"
-    && value.providerVersion === "0.10.1"
+    && value.providerVersion === "0.10.8"
     && bounded(value.packageIntegrity, 1024)
     && typeof value.executableSha256 === "string" && SHA256.test(value.executableSha256)
     && Number.isSafeInteger(value.adapterVersion) && Number(value.adapterVersion) > 0

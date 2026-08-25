@@ -11,6 +11,34 @@ AgentBase has two products:
   Knowledge Format Markdown. It contains no graph engine, MCP runtime or hidden
   operational database.
 
+## Durable team knowledge boundary
+
+AgentBase is a Git-native knowledge publishing system for a team, not a general
+living-context database. A team connects a bounded set of repositories to one
+Hub and improves that Hub over time through Ingest, Refresh, Questions, Domain
+Enrichment and ordinary pull-request review.
+
+Repository graphs, provider reads and source investigation are rebuildable
+inputs. Their useful conclusions are reduced into consistent, human-readable
+OKF documents with provenance, uncertainty and navigation back to source. The
+reviewed OKF output and its Git history are the durable shared product.
+
+As more repositories are published and revisited, AgentBase may propose better
+cross-repository relationships and replace weak assumptions with stronger
+evidence. It does not require one ingest to be complete, and it never treats an
+automatically inferred graph edge as accepted team knowledge without the normal
+review boundary.
+
+AgentBase may learn implementation patterns from code-graph and context-graph
+products, but keeps a different result and authority model:
+
+- Code intelligence remains detailed, local, disposable and source-derived.
+- Hub knowledge remains sparse, portable, reviewable and team-owned.
+- Git diff, pull-request review and Git history remain the publication and
+  correction mechanism.
+- AgentBase does not attempt to retain every code fact, development event or
+  external-workflow record in a hidden canonical graph.
+
 A user can investigate source through a disposable local graph, turn bounded
 evidence into a reviewed OKF proposal, accept it as Local Draft and later
 publish selected pending commits through a pull request. Ordinary Hub query
@@ -22,6 +50,13 @@ GitHub host, repository and target branch; its token remains owner-private.
 Each identity keeps independent Published/Draft state, while one profile is
 active. Changing the active Hub never merges or copies knowledge between
 profiles.
+
+For enterprise installation, AgentBase owns pinned, attributed source snapshots
+for its Code Graph engine and future diagram foundation. Installation builds the
+current-platform Code Graph artifact through the configured company registry and
+local approved toolchain; ordinary use never downloads a public release binary.
+The retained Graph UI and diagram source add no released UI, renderer, tool or
+skill by themselves.
 
 ## Current flow
 
@@ -112,6 +147,7 @@ baseline after preview/confirmation.
 ## Current non-goals
 
 - A second graph model, shared raw graphs, background watchers or a daemon.
+- A general-purpose living context graph or complete SDLC event store.
 - Automatic OKF generation from ordinary coding or indexing.
 - Automatic publication, merge or GitHub repository creation.
 - A complete universal ontology or one file/directory per schema.

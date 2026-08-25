@@ -74,18 +74,42 @@ test("[AB-INSTALL-025..031][AB-QUESTION-006] installs only product skills with s
   assert.deepEqual(skillNames(path.join(preserved.CODEX_HOME, "skills")), []);
 
   let skillInstallCalled = false;
+  const preparationOrder = [];
   const preparedEnvironment = environment();
   const preparedOnly = await runInstaller({
     args: [], input: { isTTY: false }, output: { isTTY: false, write() {} }, environment: preparedEnvironment,
-    runDependencyInstall: async () => {},
+    runRegistryResolution: async () => { preparationOrder.push("registry"); return "https://registry.company.example/"; },
+    runDependencyInstall: async () => { preparationOrder.push("dependencies"); },
+    runProviderPreparation: async () => { preparationOrder.push("provider"); },
     runProductSkillInstallation: async () => { skillInstallCalled = true; },
   });
+  assert.deepEqual(preparationOrder, ["registry", "dependencies", "provider"]);
   assert.equal(skillInstallCalled, false);
   assert.equal(preparedOnly.registration, "skipped");
   assert.equal("credential" in preparedOnly, false);
   assert.equal(fs.existsSync(path.join(preparedEnvironment.HOME, ".config", "agentbase-mcp")), false);
+  let mutationAfterFailure = false;
+  await assert.rejects(runInstaller({
+    args: [], input: { isTTY: false }, output: { isTTY: false, write() {} }, environment: environment(),
+    runRegistryResolution: async () => "https://registry.company.example/",
+    runDependencyInstall: async () => {},
+    runProviderPreparation: async () => { throw new Error("provider preparation failed"); },
+    runProductSkillInstallation: async () => { mutationAfterFailure = true; },
+  }), /provider preparation failed/);
+  assert.equal(mutationAfterFailure, false);
+  let registryChecked = false;
+  await assert.rejects(runInstaller({
+    args: [], nodeVersion: "22.22.3", input: { isTTY: false }, output: { isTTY: false, write() {} },
+    environment: environment(), runRegistryResolution: async () => { registryChecked = true; return "https://registry.company.example/"; },
+  }), /Node >=24\.12 <25/);
+  assert.equal(registryChecked, false);
+  await assert.rejects(runInstaller({
+    args: [], input: { isTTY: false }, output: { isTTY: false, write() {} }, environment: environment(),
+    runRegistryResolution: async () => "https://registry.npmjs.org/",
+  }), /internal npm registry/);
   await assert.rejects(runInstaller({
     args: ["--replace-token"], input: { isTTY: false }, output: { isTTY: false, write() {} },
-    environment: environment(), runDependencyInstall: async () => {},
+    environment: environment(), runRegistryResolution: async () => "https://registry.company.example/",
+    runDependencyInstall: async () => {}, runProviderPreparation: async () => {},
   }), /accepts no arguments/);
 });

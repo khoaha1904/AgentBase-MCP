@@ -33,7 +33,7 @@ export function prepareProviderWorkspace(repositoryRoot: string, repositoryId: s
     throw new Error("provider cache must remain outside the allowed repository root");
   }
   privateDirectory(absoluteStateRoot);
-  const providerRoot = path.join(absoluteStateRoot, "provider", "codebase-memory", "0.10.1");
+  const providerRoot = path.join(absoluteStateRoot, "provider", "codebase-memory", "0.10.8");
   privateDirectory(path.join(absoluteStateRoot, "provider"));
   privateDirectory(path.join(absoluteStateRoot, "provider", "codebase-memory"));
   privateDirectory(providerRoot);
@@ -44,15 +44,15 @@ export function prepareProviderWorkspace(repositoryRoot: string, repositoryId: s
   privateDirectory(cacheRoot);
   const namespaceId = createHash("sha256")
     .update("codebase-memory").update("\0")
-    .update("0.10.1").update("\0")
+    .update("0.10.8").update("\0")
     .update(repositoryId).update("\0")
     .update(scope)
     .digest("hex");
-  const metadataRoot = path.join(absoluteStateRoot, "metadata", "codebase-memory", "0.10.1", identityDigest.slice(0, 24), scope);
+  const metadataRoot = path.join(absoluteStateRoot, "metadata", "codebase-memory", "0.10.8", identityDigest.slice(0, 24), scope);
   privateDirectory(path.join(absoluteStateRoot, "metadata"));
   privateDirectory(path.join(absoluteStateRoot, "metadata", "codebase-memory"));
-  privateDirectory(path.join(absoluteStateRoot, "metadata", "codebase-memory", "0.10.1"));
-  privateDirectory(path.join(absoluteStateRoot, "metadata", "codebase-memory", "0.10.1", identityDigest.slice(0, 24)));
+  privateDirectory(path.join(absoluteStateRoot, "metadata", "codebase-memory", "0.10.8"));
+  privateDirectory(path.join(absoluteStateRoot, "metadata", "codebase-memory", "0.10.8", identityDigest.slice(0, 24)));
   privateDirectory(metadataRoot);
   return {
     cacheRoot,

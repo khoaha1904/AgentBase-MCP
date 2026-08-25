@@ -1,16 +1,17 @@
 # Code Graph runtime requirements
 
-Current requirements for managed Codebase Memory, graph evidence, freshness and the
+Current requirements for owned Codebase Memory, graph evidence, freshness and the
 agent-facing stdio MCP. The graph remains detailed, private and disposable.
 
-## Managed provider and evidence
+## Owned provider and evidence
 
-- **AB-MVP-001, AB-GRAPH-005, AB-MCP-002** — AgentBase owns exact dependency
-  `codebase-memory-mcp@0.10.1`, resolves only its package-private executable and
-  never requests a user path or searches `PATH`.
-- **AB-MVP-002** — Admission binds package integrity, executable SHA-256 and
-  reported version before use; missing, corrupt, offline or unsupported state
-  fails closed.
+- **AB-MVP-001, AB-GRAPH-005, AB-MCP-002** — AgentBase owns the attributed
+  Codebase Memory `v0.10.8` source snapshot and one explicit 12-language parser
+  profile. Runtime resolves only the current-platform artifact prepared from
+  those bytes and never accepts a user path or searches `PATH`.
+- **AB-MVP-002** — Admission binds upstream commit, source/profile digests,
+  platform, adapter/tool-surface identity, executable SHA-256 and reported
+  version before use; missing, corrupt, stale or unsupported state fails closed.
 - **AB-MVP-003, AB-GRAPH-013** — Bounded shell-free one-shot invocation remains
   explicit diagnostic rollback only. It never installs, updates, configures or
   starts a standing provider and is never an automatic retry.
@@ -23,7 +24,16 @@ agent-facing stdio MCP. The graph remains detailed, private and disposable.
   dirty digest, queries, normalized facts, relative sources, limitations and a
   deterministic digest without absolute checkout/cache paths.
 - **AB-MVP-007** — Canonical verification replays captured output and fake
-  processes; native integration is opt-in.
+  processes. Explicit native qualification owns Linux x64 and macOS arm64
+  evidence; both must pass before a source migration closes.
+- **AB-MVP-008** — Preparation verifies pristine inventories, applies the
+  AgentBase patch only in disposable staging, probes the accepted private
+  provider surface and atomically publishes an ignored artifact. Ordinary MCP
+  startup never builds, downloads, updates or recovers the provider.
+- **AB-MVP-009** — Codebase Memory Graph UI and diagram-design remain attributed
+  inactive source foundations. No UI, HTTP server, diagram skill or renderer is
+  installed; a future diagram path is self-contained static HTML/SVG with
+  system fonts and no browser/remote-asset dependency.
 
 ## Scoped-session promotion and lifecycle
 

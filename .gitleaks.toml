@@ -4,4 +4,9 @@ title = "AgentBase-MCP gitleaks config"
 useDefault = true
 
 [allowlist]
-regexes = ['''AB-OBS-[a-f0-9]{24}''']
+regexes = [
+  '''AB-OBS-[a-f0-9]{24}'''
+]
+paths = [
+  '''^(vendor/codebase-memory/upstream|build/upstreams/codebase-memory/[^/]+)/(internal/cbm/vendored/zstd/zstd\.c|tests/test_pipeline\.c|vendored/sqlite3/sqlite3(ext\.h|\.c)|vendored/xxhash/xxhash\.h)$'''
+]

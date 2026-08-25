@@ -37,11 +37,19 @@ mới; mirror/copy mơ hồ phải được người dùng xác nhận.
 
 ## Phần còn deferred
 
+- Capability 044 trước hết chỉ migrate source/build của Codebase Memory và giữ
+  diagram-design ở trạng thái chưa kích hoạt; không thêm UI hoặc tool mới.
+- Source/build đã được xác minh trên Linux x64; macOS arm64 trong môi trường công
+  ty vẫn là gate bắt buộc trước khi capability 044 được đóng.
+- Remote repository reader có giới hạn, dùng token MCP cho GitHub/GitHub
+  Enterprise và không clone/build graph cho repo remote.
+- Published Hub graph là view local, read-only, dựng lại được từ OKF đã publish;
+  không phải database hay nguồn sự thật thứ hai.
+- Diagram theo query dùng diagram-design để tạo HTML/SVG local từ phần knowledge
+  người dùng chọn; diagram không tự trở thành Hub knowledge.
 - Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
 - Batch Refresh và mixed Init/Refresh.
 - Azure/GCP profile và semantic profile migration.
-- Static HTML/graph review.
-- Remote repository reader là capability ưu tiên đầu tiên ngay sau phase MVP.
 
 Rich deterministic PR summary, independent Init PR, same-Repository
 Init/Refresh stack và existing-PR reconciliation đã implement; chúng không còn

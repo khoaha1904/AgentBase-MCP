@@ -12,7 +12,8 @@ query reads only the synchronized Published commit.
 
 ## Install and verify
 
-Requires Node.js `>=24.12 <25`.
+Requires an approved Node.js `>=24.12 <25`, Git, Make, a C/C++ compiler and the
+platform system development libraries used by the owned Code Graph build.
 
 ```bash
 ./install.sh
@@ -26,8 +27,10 @@ AgentBase product skills for every selected client. Repository-development
 `speckit-*` skills are never installed. An exact rerun is a no-op; a conflicting
 same-name MCP entry or skill fails before replacement. Hub token input is not
 part of installation; a Hub profile stores its token later through the
-masked terminal helper outside Git. Non-interactive installation only prepares
-dependencies.
+masked terminal helper outside Git. Non-interactive installation prepares
+dependencies and the owned native Code Graph provider but performs no skill or
+client mutation. npm dependencies use only the configured HTTPS registry;
+public registry fallback is rejected.
 
 The released catalog has seven public workflows—Ask, Scan, Ingest, Refresh, Batch
 Ingest, Domain Enrichment and Hub lifecycle—plus two internal supporting
@@ -50,7 +53,7 @@ Collect a bounded observation without creating OKF:
 node src/cli.ts observe /absolute/repository symbolName
 ```
 
-Run exact managed Codebase Memory integration or explicit refresh:
+Run exact owned Codebase Memory integration or explicit refresh:
 
 ```bash
 npm run integration:codebase-memory -- /absolute/repository symbolName
@@ -71,6 +74,8 @@ npm run benchmark:okf -- finalize aws-serverless <UTC-run-id> aws-health-aware
 
 Real provider, GitHub and model operations remain opt-in. `npm run verify` is
 offline and uses fakes, captured responses, disposable Git and fake GitHub HTTP.
+Pinned Graph UI and diagram-design source are retained for later capabilities
+but are not installed, started or exposed by this release.
 
 ## Documentation
 

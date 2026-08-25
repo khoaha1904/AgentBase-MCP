@@ -1,19 +1,19 @@
 import { CodebaseMemoryAdapter, indexRepository, type CodebaseMemoryAdapterOptions } from "./adapter.ts";
-import type { ManagedPackageOptions } from "./managed-package.ts";
-import { resolveManagedPackage } from "./managed-package.ts";
+import type { OwnedRuntimeOptions } from "./owned-runtime.ts";
+import { resolveOwnedRuntime } from "./owned-runtime.ts";
 import { invokeProviderTool } from "./process.ts";
 import { openScopedSession, type ProviderCleanup, type ScopedSessionOptions } from "./session.ts";
 import type { EngineIdentity } from "../../core/observations/index.ts";
 import type { TaskContextProvider } from "../../core/code-intelligence/index.ts";
 
 export const CODEBASE_MEMORY_PACKAGE = "codebase-memory-mcp" as const;
-export const CODEBASE_MEMORY_VERSION = "0.10.1" as const;
+export const CODEBASE_MEMORY_VERSION = "0.10.8" as const;
 export const CODEBASE_MEMORY_INVOCATION = "one-shot-cli" as const;
 export type CodebaseMemoryTransport = "one-shot" | "scoped-session";
 
 export type CodebaseMemoryProviderOptions = Omit<CodebaseMemoryAdapterOptions, "invoke"> & Readonly<{
   cacheRoot: string;
-  managedPackage?: ManagedPackageOptions;
+  ownedRuntime?: OwnedRuntimeOptions;
   timeoutMs?: number;
 }>;
 
@@ -26,7 +26,7 @@ export type ManagedCodebaseMemoryProvider = Readonly<{
 }>;
 
 export async function createCodebaseMemoryProvider(options: CodebaseMemoryProviderOptions): Promise<ManagedCodebaseMemoryProvider> {
-  const managed = await resolveManagedPackage(options.managedPackage ?? { projectRoot: process.cwd() });
+  const managed = await resolveOwnedRuntime(options.ownedRuntime ?? { projectRoot: process.cwd() });
   const invoke = (tool: Parameters<typeof invokeProviderTool>[0]["tool"], argumentsValue: Readonly<Record<string, unknown>>) => invokeProviderTool({
     binary: managed.executable,
     tool,
@@ -63,7 +63,7 @@ export type ScopedCodebaseMemoryProviderOptions = CodebaseMemoryProviderOptions 
 }>;
 
 export async function createScopedCodebaseMemoryProvider(options: ScopedCodebaseMemoryProviderOptions): Promise<ManagedCodebaseMemoryProvider> {
-  const managed = await resolveManagedPackage(options.managedPackage ?? { projectRoot: process.cwd() });
+  const managed = await resolveOwnedRuntime(options.ownedRuntime ?? { projectRoot: process.cwd() });
   const session = await openScopedSession({
     binary: managed.executable,
     cwd: options.repositoryRoot,
@@ -100,7 +100,7 @@ export async function createScopedCodebaseMemoryProvider(options: ScopedCodebase
 
 export { CodebaseMemoryAdapter, indexRepository, type CodebaseMemoryAdapterOptions, type ProviderInvoker } from "./adapter.ts";
 export { CodebaseMemoryError, type CodebaseMemoryErrorCode } from "./errors.ts";
-export { resolveManagedPackage, type ManagedPackage, type ManagedPackageOptions } from "./managed-package.ts";
+export { resolveOwnedRuntime, type OwnedRuntime, type OwnedRuntimeOptions } from "./owned-runtime.ts";
 export {
   openScopedSession,
   type ProviderCleanup,

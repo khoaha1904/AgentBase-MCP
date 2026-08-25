@@ -6,7 +6,7 @@ export type JsonValue = JsonPrimitive | readonly JsonValue[] | Readonly<{ [key: 
 export type EngineIdentity = Readonly<{
   provider: "codebase-memory-mcp";
   packageName: "codebase-memory-mcp";
-  providerVersion: "0.10.1";
+  providerVersion: "0.10.8";
   packageIntegrity: string;
   executableSha256: string;
   adapterVersion: number;

@@ -56,7 +56,7 @@ Normative OKF source is pinned to commit
 - **AB-OBS-001, AB-OBS-004** — `observe` is a separate user action for one
   repository/symbol. It never starts implicitly and never creates, validates,
   changes or applies OKF; OKF needs another explicit command.
-- **AB-OBS-002** — Exact managed Codebase Memory owns indexing, graph structure,
+- **AB-OBS-002** — Exact owned Codebase Memory owns indexing, graph structure,
   graph semantics and graph queries; AgentBase owns no parallel canonical graph.
 - **AB-OBS-003** — Only normalized evidence crosses the bridge: exact engine and
   source identity, bounded queries, facts, relative sources, completeness,
@@ -65,7 +65,7 @@ Normative OKF source is pinned to commit
   changes remain visible.
 - **AB-OBS-006** — Invalid input, provider failure, source mutation or cleanup
   failure returns a distinct failure and no partial observation.
-- **AB-OBS-007** — Observation preserves package-private admission, private
+- **AB-OBS-007** — Observation preserves exact owned-artifact admission, private
   cache, bounded process/session, source integrity and confirmed cleanup.
 
 ## Observed values

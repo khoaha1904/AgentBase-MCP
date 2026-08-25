@@ -118,7 +118,7 @@ export function parseArchitecture(repositoryId: string, response: unknown): Repo
     entryPoints,
     boundaries,
     completeness: "complete",
-    limitations: ["architecture overview is parsed from the bounded v0.10.1 text format"],
+    limitations: ["architecture overview is parsed from the bounded v0.10.8 text format"],
   };
 }
 

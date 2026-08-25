@@ -6,7 +6,7 @@
 
 AgentBase-MCP đã có các primitive cần thiết để đọc một repository:
 
-- managed Codebase Memory session cho đúng một repository local;
+- owned Codebase Memory session cho đúng một repository local;
 - index, architecture, graph search, trace và exact source snippet;
 - source identity, freshness receipt và explicit refresh;
 - bounded evidence bundle có source path và line span;
@@ -20,7 +20,7 @@ Nguồn baseline:
 - [Repository OKF boundary](../../../src/app/repository-okf/README.md)
 - [Graph round](../../../src/app/repository-okf/graph/graph-round.ts)
 - [Evidence preparation](../../../src/app/repository-okf/evidence/prepare-evidence.ts)
-- [Managed graph skill](../../../.agents/skills/use-codebase-memory/SKILL.md)
+- [Owned graph skill](../../../.agents/skills/use-codebase-memory/SKILL.md)
 - [OKF authoring skill](../../../.agents/skills/agentbase-okf/SKILL.md)
 
 ## Gap hiện tại

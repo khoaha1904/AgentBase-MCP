@@ -2,18 +2,20 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 
 import { Client } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const require = createRequire(import.meta.url);
-const packageRoot = path.dirname(require.resolve("codebase-memory-mcp/package.json"));
-const binary = path.join(packageRoot, "bin", "codebase-memory-mcp");
+const binary = process.env.AGENTBASE_CBM_BINARY;
+const version = process.env.AGENTBASE_CBM_VERSION;
+if (!binary || !version) {
+  throw new Error("AGENTBASE_CBM_BINARY and AGENTBASE_CBM_VERSION are required");
+}
 const cache = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-mcp-capture-"));
-const target = path.join(root, "fixtures", "codebase-memory-v0.10.1", "mcp-surface.json");
+const target = process.env.AGENTBASE_CBM_TARGET
+  ?? path.join(root, "fixtures", `codebase-memory-v${version}`, "mcp-surface.json");
 const allowed = new Set([
   "index_repository", "search_graph", "query_graph", "trace_path",
   "get_code_snippet", "get_graph_schema", "get_architecture", "search_code",
@@ -34,10 +36,11 @@ try {
   if (tools.length !== allowed.size) throw new Error(`expected ${allowed.size} safe tools, received ${tools.length}`);
   const fixture = {
     provider: "codebase-memory-mcp",
-    version: "0.10.1",
+    version,
     resultContract: "forward raw MCP content, structuredContent and isError fields without OKF normalization",
     tools,
   };
+  fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.writeFileSync(target, `${JSON.stringify(fixture, null, 2)}\n`, { mode: 0o600 });
   process.stdout.write(`${target}\n`);
 } finally {

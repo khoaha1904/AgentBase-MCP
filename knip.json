@@ -6,8 +6,9 @@
     "scripts/**/*.mjs"
   ],
   "project": ["src/**/*.ts", "scripts/**/*.mjs"],
+  "ignore": ["vendor/**"],
   "ignoreDependencies": ["@swc/core"],
-  "ignoreBinaries": ["gitleaks"],
+  "ignoreBinaries": ["gitleaks", "patch"],
   "rules": {
     "exports": "off",
     "types": "off"

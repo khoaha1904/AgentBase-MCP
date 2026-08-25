@@ -69,6 +69,10 @@ small gaps must be backfilled before benchmark, PR or capability completion.
   automatic conflict inference, ordinary-query freshness marks and visual
   review are post-MVP capabilities. Ordinary Hub query is deliberately
   Published-only; Local Draft is reviewed through proposal workflows.
+- Codebase Memory now comes from AgentBase's attributed `v0.10.8` source snapshot
+  and 12-language profile rather than an npm postinstall binary. Linux x64 is
+  qualified; macOS arm64 remains the explicit company-environment closure gate.
+  Graph UI and diagram-design source remain inactive.
 
 Update current truth once in the narrowest high- or low-level document. Do not
 add handoff, roadmap, ADR or evidence-diary files that repeat it.
