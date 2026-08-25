@@ -289,6 +289,19 @@ detail may produce a Ready-for-review proposal with Questions or limitations.
 Do not set a fixed concept quota or premature token/time target. Measure the
 real skill workflow first, then optimize only demonstrated cost.
 
+### D27 — Bounded repository reading
+
+Read the root README when present and inspect primary runtime/package manifests,
+API specifications, Terraform/Terragrunt, Docker/deploy, CI and runtime config
+groups. For `docs/`, inspect its index, filenames and headings first; read deeper
+only for relevant architecture/deployment/integration documents or documents
+linked by the root README. Use Code Graph signals to open source at entry points,
+routes, triggers, integrations and runtime boundaries. Generated/vendor/build
+output is excluded, and lockfiles are dependency hints rather than attributed
+behavior evidence. When parser coverage misses an important area, permit bounded
+direct reading of relevant files and record the limitation. Do not crawl all
+documentation or source merely for completeness.
+
 ## Pending review
 
 - No owner decision remains recorded at this checkpoint. Continue the
