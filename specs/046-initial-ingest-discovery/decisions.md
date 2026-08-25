@@ -302,6 +302,18 @@ behavior evidence. When parser coverage misses an important area, permit bounded
 direct reading of relevant files and record the limitation. Do not crawl all
 documentation or source merely for completeness.
 
+### D28 — Compact discovery groups
+
+The Discovery Seed presents compact evidence groups rather than raw graph nodes
+or one item per route/function/resource. Deterministic grouping may combine
+entry points belonging to one runtime, routes sharing one interface boundary,
+calls sharing a target/protocol and deployment resources supporting one
+workload. Low-value repeated items retain a count and bounded source samples.
+Each Seed group has a session-stable ID and must receive a disposition. During
+Investigate the Agent may split or merge groups when exact source evidence shows
+different semantics, but the resulting Inventory must preserve coverage back to
+all originating Seed IDs. MCP groups structure; the Agent still decides meaning.
+
 ## Pending review
 
 - No owner decision remains recorded at this checkpoint. Continue the
