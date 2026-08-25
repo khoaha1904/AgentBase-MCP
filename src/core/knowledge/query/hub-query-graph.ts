@@ -21,6 +21,7 @@ export type HubConceptSummary = Readonly<{
 export type HubGraphEdge = Readonly<{ source: string; kind: string; target: string; evidence: readonly string[] }>;
 export type HubGraphConcept = Readonly<{ document: ConceptDocument; title: string; description: string }>;
 export type HubGraph = Readonly<{
+  commit: string;
   concepts: ReadonlyMap<string, HubGraphConcept>;
   paths: ReadonlyMap<string, string>;
   markdownPaths: readonly string[];
@@ -106,7 +107,7 @@ export async function loadHubGraph(reader: HubQueryReader, maximumDocumentBytes:
       // Navigation Markdown is not promoted into a graph concept.
     }
   }
-  return { concepts, paths, markdownPaths, edges, domains: deriveDomains(concepts, edges) };
+  return { commit: reader.commit, concepts, paths, markdownPaths, edges, domains: deriveDomains(concepts, edges) };
 }
 
 export function summarizeHubConcept(graph: HubGraph, identity: string): HubConceptSummary {

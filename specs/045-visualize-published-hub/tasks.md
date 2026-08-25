@@ -8,9 +8,9 @@ must pass before renderer/model qualification or Hub knowledge reset.
 
 ## Phase 1: Shared Published projection
 
-- [ ] T001 Add the canonical predicate display-direction registry in `src/core/knowledge/visualization/predicate-descriptors.ts`.
-- [ ] T002 Add deterministic one-Domain Published projection, direct non-expandable cross-Domain boundaries, governance filtering, Question badges, Flow steps, omissions and hard bounds in `src/core/knowledge/visualization/published-projection.ts`.
-- [ ] T003 Add one requirement-linked projection fixture covering direction, Domain isolation/boundaries, candidate exclusion, active/resolved Questions, determinism and bounds in `src/app/hub-okf/visualization/visualization.test.ts`.
+- [X] T001 Add the canonical predicate display-direction registry in `src/core/knowledge/visualization/predicate-descriptors.ts`.
+- [X] T002 Add deterministic one-Domain Published projection, direct non-expandable cross-Domain boundaries, governance filtering, Question badges, Flow steps, omissions and hard bounds in `src/core/knowledge/visualization/published-projection.ts`.
+- [X] T003 Add one requirement-linked projection fixture covering direction, Domain isolation/boundaries, candidate exclusion, active/resolved Questions, determinism and bounds in `src/app/hub-okf/visualization/visualization.test.ts`.
 
 **Checkpoint**: Same commit/Domain produces byte-equivalent truthful data and no presentation state enters OKF.
 

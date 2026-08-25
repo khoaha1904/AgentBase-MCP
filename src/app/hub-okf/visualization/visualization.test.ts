@@ -1,0 +1,190 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import {
+  buildPublishedVisualizationProjection,
+  createQuestionId,
+  displayEndpoints,
+  loadHubGraph,
+  renderQuestionDocument,
+  serializePublishedVisualizationProjection,
+  type QuestionKind,
+  type QuestionState,
+  type SharedQuestion,
+} from "../../../core/knowledge/index.ts";
+
+const SOURCE_ID = "fixture";
+const SOURCE = `sources:\n  - id: ${SOURCE_ID}\n    resource: repository://repository-visualization-aaaaaaaaaaaa/README.md#L1-L2`;
+
+function concept(input: Readonly<{
+  type: string;
+  title: string;
+  description?: string;
+  body?: string;
+  relationships?: string;
+  flowSteps?: string;
+}>): string {
+  return `---
+type: ${input.type}
+title: ${input.title}
+description: ${input.description ?? input.title}
+${SOURCE}
+relationships:${input.relationships ?? " []"}${input.flowSteps ? `\nflow_steps:${input.flowSteps}` : ""}
+---
+
+# ${input.title}
+
+${input.body ?? input.description ?? input.title}
+`;
+}
+
+function question(input: Readonly<{
+  kind: QuestionKind;
+  state: QuestionState;
+  subject: string;
+  property: string;
+}>): Readonly<{ path: string; content: string }> {
+  const origin = { kind: input.kind, originSubject: input.subject,
+    originProperty: input.property, scopeKey: `scope-${input.property}` };
+  const id = createQuestionId(origin);
+  const value: SharedQuestion = {
+    id,
+    revision: input.state === "resolved" ? 2 : 1,
+    ...origin,
+    state: input.state,
+    subject: input.subject,
+    property: input.property,
+    references: [{ referenceKind: "candidate-evidence", candidateKey: `candidate/${input.property}`,
+      sourceResource: "repository://repository-visualization-aaaaaaaaaaaa/README.md#L1-L2" }],
+    missingEvidence: ["More evidence is required."],
+    limitations: [],
+    guidance: input.state === "resolved" ? ["guidance/resolved"] : [],
+    title: `Question ${input.property}`,
+    createdAt: "2026-08-25T00:00:00.000Z",
+  };
+  return { path: `questions/${id}.md`, content: renderQuestionDocument(value) };
+}
+
+function fixtureDocuments(): Map<string, string> {
+  const active = question({ kind: "missing-evidence", state: "open",
+    subject: "components/orders-api", property: "timeout" });
+  const resolved = question({ kind: "conflict", state: "resolved",
+    subject: "systems/orders", property: "owner" });
+  const candidate = question({ kind: "relation-candidate", state: "needs-review",
+    subject: "relationships/orders-shipping", property: "target" });
+  return new Map([
+    ["domains/commerce.md", concept({ type: "Domain", title: "Commerce" })],
+    ["domains/fulfillment.md", concept({ type: "Domain", title: "Fulfillment" })],
+    ["systems/orders.md", concept({ type: "System", title: "Orders",
+      body: "[Commerce](../domains/commerce.md)", relationships: `
+  - kind: part-of
+    target: domains/commerce
+    evidence: [${SOURCE_ID}]` })],
+    ["systems/shipping.md", concept({ type: "System", title: "Shipping",
+      body: "[Fulfillment](../domains/fulfillment.md)", relationships: `
+  - kind: part-of
+    target: domains/fulfillment
+    evidence: [${SOURCE_ID}]` })],
+    ["repositories/orders.md", concept({ type: "Repository", title: "Orders repository",
+      body: "[Commerce](../domains/commerce.md)", relationships: `
+  - kind: part-of
+    target: domains/commerce
+    evidence: [${SOURCE_ID}]` })],
+    ["components/orders-api.md", concept({ type: "Component", title: "Orders API",
+      body: "[Orders](../systems/orders.md) [Queue](../resources/shared-queue.md)", relationships: `
+  - kind: part-of
+    target: systems/orders
+    evidence: [${SOURCE_ID}]
+  - kind: publishes-to
+    target: resources/shared-queue
+    evidence: [${SOURCE_ID}]` })],
+    ["components/orders-worker.md", concept({ type: "Component", title: "Orders Worker",
+      body: "[Orders](../systems/orders.md) [Queue](../resources/shared-queue.md)", relationships: `
+  - kind: part-of
+    target: systems/orders
+    evidence: [${SOURCE_ID}]
+  - kind: triggered-by
+    target: resources/shared-queue
+    evidence: [${SOURCE_ID}]` })],
+    ["resources/shared-queue.md", concept({ type: "Interface", title: "Shared Queue",
+      body: "[Shipping](../systems/shipping.md)", relationships: `
+  - kind: part-of
+    target: systems/shipping
+    evidence: [${SOURCE_ID}]` })],
+    ["components/shipping-worker.md", concept({ type: "Component", title: "Shipping Worker",
+      body: "[Shipping](../systems/shipping.md)", relationships: `
+  - kind: part-of
+    target: systems/shipping
+    evidence: [${SOURCE_ID}]` })],
+    ["flows/order-submit.md", concept({ type: "Flow", title: "Submit order",
+      body: "[Orders](../systems/orders.md) [API](../components/orders-api.md) [Queue](../resources/shared-queue.md)",
+      relationships: `
+  - kind: part-of
+    target: systems/orders
+    evidence: [${SOURCE_ID}]`, flowSteps: `
+  - order: 1
+    source: components/orders-api
+    action: publishes
+    target: resources/shared-queue
+    mode: asynchronous
+    evidence: [${SOURCE_ID}]` })],
+    [active.path, active.content],
+    [resolved.path, resolved.content],
+    [candidate.path, candidate.content],
+    ["guidance/resolved.md", concept({ type: "Maintainer Guidance", title: "Resolved guidance" })],
+  ]);
+}
+
+test("[AB-VIS-001..004][AB-VIS-011..014] projection is deterministic, directed and Domain bounded", async () => {
+  const documents = fixtureDocuments();
+  const reader = {
+    commit: "a".repeat(40),
+    async listMarkdownPaths() { return [...documents.keys()].reverse(); },
+    async readMarkdown(relativePath: string) {
+      const value = documents.get(relativePath);
+      if (!value) throw new Error(`missing fixture: ${relativePath}`);
+      return value;
+    },
+  };
+  const graph = await loadHubGraph(reader, 256 * 1024);
+  const options = { hub: "github.com/acme/hub#main", domain: "domains/commerce" };
+  const first = buildPublishedVisualizationProjection(graph, options);
+  const second = buildPublishedVisualizationProjection(graph, options);
+
+  assert.equal(first.commit, reader.commit);
+  assert.equal(serializePublishedVisualizationProjection(first), serializePublishedVisualizationProjection(second));
+  assert.deepEqual(displayEndpoints("triggered-by", "worker", "queue"),
+    { source: "queue", target: "worker", directed: true });
+  assert.deepEqual(displayEndpoints("part-of", "child", "parent"),
+    { source: "child", target: "parent", directed: false });
+
+  assert.deepEqual(first.nodes.filter((node) => node.membership === "boundary").map((node) => node.id),
+    ["resources/shared-queue"]);
+  assert.equal(first.nodes.find((node) => node.id === "resources/shared-queue")?.expandable, false);
+  assert.deepEqual(first.nodes.find((node) => node.id === "resources/shared-queue")?.domainIds,
+    ["domains/fulfillment"]);
+  assert.equal(first.nodes.some((node) => node.id === "systems/shipping"), false);
+  assert.equal(first.nodes.some((node) => node.type === "Question" || node.type === "Maintainer Guidance"), false);
+
+  const trigger = first.edges.find((edge) => edge.predicate === "triggered-by");
+  assert.deepEqual(trigger && [trigger.declaredSource, trigger.declaredTarget,
+    trigger.displaySource, trigger.displayTarget, trigger.directed], [
+    "components/orders-worker", "resources/shared-queue",
+    "resources/shared-queue", "components/orders-worker", true,
+  ]);
+  assert.deepEqual(first.flows, [{ id: "flows/order-submit", steps: [{
+    order: 1,
+    source: "components/orders-api",
+    action: "publishes",
+    target: "resources/shared-queue",
+    mode: "asynchronous",
+    evidence: [SOURCE_ID],
+  }] }]);
+  assert.deepEqual(first.questions.map((item) => [item.subject, item.state]),
+    [["components/orders-api", "open"]]);
+  assert.equal(first.omissions.some((item) => item.subject === "relationships/orders-shipping"), true);
+  assert.equal(first.edges.some((edge) => edge.declaredSource === "relationships/orders-shipping"), false);
+
+  assert.throws(() => buildPublishedVisualizationProjection(graph, { ...options, maximumNodes: 2 }), /node limit exceeded/);
+  assert.throws(() => buildPublishedVisualizationProjection(graph, { ...options, domain: "domains/missing" }), /exact Published Domain/);
+});

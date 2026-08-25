@@ -25,6 +25,14 @@ export {
   type HubSearchResult,
 } from "./query/hub-query.ts";
 export {
+  loadHubGraph,
+  resolveHubIdentity,
+  summarizeHubConcept,
+  type HubGraph,
+  type HubGraphConcept,
+  type HubGraphEdge,
+} from "./query/hub-query-graph.ts";
+export {
   buildHubContinuity,
   type HubContinuityGap,
   type HubContinuityManifest,
@@ -88,6 +96,26 @@ export {
   isCanonicalRelationshipKind,
   type CanonicalRelationshipKind,
 } from "./documents/relationship-vocabulary.ts";
+export {
+  displayEndpoints,
+  relationshipDisplayDescriptor,
+  RELATIONSHIP_DISPLAY_DESCRIPTORS,
+  type RelationshipDisplayClass,
+  type RelationshipDisplayDescriptor,
+  type RelationshipDisplayDirection,
+} from "./visualization/predicate-descriptors.ts";
+export {
+  buildPublishedVisualizationProjection,
+  serializePublishedVisualizationProjection,
+  type PublishedVisualizationProjection,
+  type PublishedVisualizationProjectionOptions,
+  type VisualizationEdge,
+  type VisualizationFlow,
+  type VisualizationFlowStep,
+  type VisualizationNode,
+  type VisualizationOmission,
+  type VisualizationQuestion,
+} from "./visualization/published-projection.ts";
 export {
   diffBundleProposal,
   isMutableAgentBaseDraft,
