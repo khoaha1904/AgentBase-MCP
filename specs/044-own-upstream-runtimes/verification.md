@@ -42,6 +42,11 @@
   not a performance promise.
 - Admitted executable SHA-256:
   `fc9df9744c2130f5d4064833a25e3e482fc727b0b8735c8447c492e82067ae98`.
+- A second cold build from the committed pristine snapshot/profile produced the
+  same executable SHA-256, then passed admission, the 12-language profile,
+  43-tool MCP index/query qualification and the complete 59-test gate. This
+  confirms same-host build reproducibility rather than reuse of the first
+  artifact.
 - Artifact manifest binds Linux x64, upstream/source/profile identity, accepted
   tool surface and adapter version. Runtime admission, representative real
   graph qualification, source immutability, lifecycle cleanup and all drift
