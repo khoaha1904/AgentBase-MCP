@@ -277,6 +277,18 @@ Failure to resolve or access a Hub-bound remote default source makes that member
 Incomplete rather than falling back to a feature branch. Batch applies this
 rule sequentially and independently per repository.
 
+### D26 — Discovery completion rule
+
+Broad discovery is not exhaustive reading. Discover completes when every one of
+the five lanes is marked covered, absent-after-check or limited, and every
+important machine-signal group has one explicit disposition. It does not keep
+traversing ordinary CRUD handlers, helpers, tests or individual functions to
+maximize concept count or benchmark recall. An unresolved P0 signal caused by
+source, authority or adapter failure makes the run Incomplete; remaining P1/P2
+detail may produce a Ready-for-review proposal with Questions or limitations.
+Do not set a fixed concept quota or premature token/time target. Measure the
+real skill workflow first, then optimize only demonstrated cost.
+
 ## Pending review
 
 - No owner decision remains recorded at this checkpoint. Continue the
