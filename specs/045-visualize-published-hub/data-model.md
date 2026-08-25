@@ -19,9 +19,11 @@ projection; fixed bounds fail instead of truncating.
 - existing concept ID/path/type/title/description;
 - Domain IDs and structural parent IDs;
 - repository/system grouping IDs when derivable;
+- `primary` or `boundary` membership and an expansion flag;
 - safe provenance references suitable for display.
 
-No coordinates, colors or renderer settings.
+No coordinates, colors or renderer settings. Boundary nodes are included only
+as direct accepted-edge endpoints and cannot expand into their external Domain.
 
 ## VisualizationEdge
 

@@ -131,6 +131,9 @@ and node details without MCP, token or Hub access.
   and rendering contracts pass; later qualification MAY reset only knowledge
   through an explicit recoverable Hub commit before re-ingesting the selected
   multi-repository Domain.
+- **FR-023**: A direct accepted cross-Domain relation MUST retain its external
+  endpoint as a non-expandable boundary node. This MUST NOT change the endpoint's
+  Domain membership or traverse the external Domain neighborhood.
 
 ### Key Entities
 
@@ -162,6 +165,8 @@ and node details without MCP, token or Hub access.
   generated artifacts.
 - **SC-007**: The official MCP listing grows by no more than one tool and the
   canonical offline verification remains green.
+- **SC-008**: Qualification retains one direct cross-Domain relation as a
+  boundary without adding unrelated external-Domain nodes.
 
 ## Assumptions
 

@@ -12,6 +12,7 @@ One deterministic projection contains:
 
 - commit and Domain identity;
 - concept nodes with ID, path, type, title, description and parents;
+- direct cross-Domain endpoints marked as non-expandable boundary nodes;
 - accepted relationship edges with predicate, declared endpoints, display
   endpoints, evidence IDs and direction class;
 - ordered `flow_steps` with action, mode and evidence;
@@ -21,6 +22,11 @@ One deterministic projection contains:
 Question and Maintainer Guidance documents are not normal graph nodes. Resolved
 Questions are not shown. A relation candidate is metadata only until it becomes
 an accepted canonical relation.
+
+The selected Domain owns primary nodes. A valid accepted edge from a primary
+node to another Domain retains the direct endpoint as a boundary node and stops
+there. Its Domain membership remains unchanged; the projection does not traverse
+or import the external Domain neighborhood.
 
 ## Predicate directions
 

@@ -39,6 +39,10 @@ Projection giữ concept, relation, direction, provenance và open Question. Nó
 không lưu màu, tọa độ hoặc layout vào Hub. Relation candidate chưa được chấp
 nhận không trở thành edge.
 
+Một relation đã Published có thể nối sang Domain khác. View vẫn thuộc đúng một
+Domain: đầu bên ngoài chỉ hiện như boundary node và không bị hiểu thành repository
+thuộc nhiều Domain hoặc tự mở rộng cả Domain kia.
+
 ## Ranh giới
 
 - Chỉ đọc Published Hub; không trộn Local Draft.

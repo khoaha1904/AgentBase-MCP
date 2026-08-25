@@ -67,7 +67,9 @@ the 3D site remains a replaceable presentation artifact.
 
 Keep `loadHubGraph` as the parsing boundary. A new projection filters governance
 documents, validates one Domain, resolves active Question badges and converts
-accepted relations through a single predicate descriptor registry.
+accepted relations through a single predicate descriptor registry. Direct
+cross-Domain endpoints become non-expandable boundary nodes; traversal stops at
+that edge.
 
 ### 2. Add one tool with two explicit modes
 

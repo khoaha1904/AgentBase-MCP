@@ -29,6 +29,7 @@ reproducible.
 - one Domain per site;
 - Domain, System and Repository nodes visible first;
 - other concepts expand lazily from the selected node;
+- direct cross-Domain endpoints appear as non-expandable boundary nodes;
 - search, type/repository filters, 1–2 hop focus and a readable sidebar;
 - deterministic seeded 3D positions derived at build time;
 - open Question counts as badges, not default nodes;

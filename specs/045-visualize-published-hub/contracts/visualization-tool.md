@@ -24,7 +24,9 @@ Rules:
   explicitly selected by the caller; acknowledgment proves the visibility
   warning was presented before the write-capable call.
 - Diagram selection accepts at most 64 unique IDs.
-- Unknown fields, cross-Domain concepts and Local Draft identity are rejected.
+- Unknown fields, arbitrary cross-Domain selections and Local Draft identity are
+  rejected. Direct external endpoints already present as projection boundary
+  nodes may be included only with their accepted connecting edge.
 
 ## Diagram result
 

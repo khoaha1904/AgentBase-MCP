@@ -33,3 +33,6 @@
 - **AB-VIS-013** — Capability qualification covers truthful partial
   Architecture, Dependency with accepted edges, Sequence with real Flow steps,
   static offline site operation and explicit insufficient-data cases.
+- **AB-VIS-014** — One-Domain views retain directly related Published external
+  endpoints as non-expandable boundary nodes without changing repository/Domain
+  membership or traversing the external Domain.
