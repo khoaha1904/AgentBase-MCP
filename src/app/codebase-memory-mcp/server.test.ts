@@ -24,11 +24,15 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
   const bindings: string[] = [];
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const runtimeActions = createHubRuntimeActions({ HOME: state, XDG_CONFIG_HOME: path.join(state, "config") }, path.join(state, "hub-runtime"));
-  let initializationPreviews = 0, initializations = 0;
+  let initializationPreviews = 0, initializations = 0, visualizations = 0;
   const hubActions = { ...runtimeActions,
     async previewHubInitialization() { initializationPreviews += 1; return { state: "changes-required", base_commit: "a".repeat(40) }; },
     async initializeHub(input: Readonly<{ expectedBase: string; expectedInitializationDigest: string }>) {
       initializations += 1; return input;
+    },
+    async visualize(input: Readonly<{ mode: "diagram"; domain: string;
+      diagramType: "architecture" | "dependency" | "sequence"; conceptIds: readonly string[] }>) {
+      visualizations += 1; return { status: "ready", ...input };
     },
   };
   const current = createAgentBaseMcpServer({
@@ -58,7 +62,7 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
       [...HUB_OKF_TOOLS, ...OKF_SCHEMA_TOOLS, ...SAFE_TOOLS].map((tool) => tool.name),
     );
     const toolNames = tools.tools.map((tool) => tool.name);
-    assert.equal(toolNames.length, 43);
+    assert.equal(toolNames.length, 44);
     const retiredToolNames = ["query_graph", "get_graph_schema", "list_projects", "select_okf_schemas",
       "validate_okf_concept", "validate_okf_relationships", "validate_okf_bundle"];
     assert.equal(toolNames.some((name) => retiredToolNames.includes(name)), false);
@@ -77,6 +81,19 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
     }
     assert.deepEqual(toolNames.filter((name) => name === "search_hub_okf" || name === "read_hub_okf_concept"),
       ["search_hub_okf", "read_hub_okf_concept"]);
+    const visualizationTool = tools.tools.find((tool) => tool.name === "prepare_hub_visualization");
+    assert.deepEqual(Object.keys(visualizationTool?.inputSchema.properties ?? {}).sort(),
+      ["concept_ids", "diagram_type", "domain", "mode"]);
+    assert.deepEqual(visualizationTool?.inputSchema.properties?.mode, { type: "string", enum: ["diagram"] });
+    const visualization = await client.callTool({ name: "prepare_hub_visualization", arguments: {
+      mode: "diagram", domain: "domains/commerce", diagram_type: "architecture",
+      concept_ids: ["systems/orders"],
+    } });
+    assert.deepEqual(JSON.parse(visualization.content[0]?.type === "text" ? visualization.content[0].text : "{}"), {
+      status: "ready", mode: "diagram", domain: "domains/commerce",
+      diagramType: "architecture", conceptIds: ["systems/orders"],
+    });
+    assert.equal(visualizations, 1);
     assert.equal(toolNames.some((name) => ["traverse_hub_okf", "read_hub_observed_values", "read_hub_freshness"].includes(name)), false);
     assert.equal(toolNames.includes("list_hub_questions") && toolNames.includes("answer_hub_question"), true);
     assert.equal(toolNames.filter((name) => name === "scan_workspace_repositories").length, 1);

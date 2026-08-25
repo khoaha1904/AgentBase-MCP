@@ -9,12 +9,14 @@ export const PUBLIC_PRODUCT_SKILL_NAMES = Object.freeze([
   "agentbase-refresh",
   "agentbase-batch-ingest",
   "agentbase-domain-enrichment",
+  "agentbase-diagram",
   "agentbase-hub",
 ]);
 
 export const INTERNAL_PRODUCT_SKILL_NAMES = Object.freeze([
   "use-codebase-memory",
   "agentbase-okf",
+  "use-diagram-design",
 ]);
 
 export const PRODUCT_SKILL_NAMES = Object.freeze([

@@ -7650,7 +7650,7 @@ async function loadHubGraph(reader, maximumDocumentBytes) {
     } catch {
     }
   }
-  return { concepts, paths, markdownPaths, edges, domains: deriveDomains(concepts, edges) };
+  return { commit: reader.commit, concepts, paths, markdownPaths, edges, domains: deriveDomains(concepts, edges) };
 }
 function summarizeHubConcept(graph, identity) {
   const value = graph.concepts.get(identity);
@@ -8290,6 +8290,21 @@ function validateOkfRelationships(concepts, options = {}) {
   }
   return { relationships: relationships2, flowSteps, failures, warnings };
 }
+
+// src/core/knowledge/visualization/predicate-descriptors.ts
+var STRUCTURAL = /* @__PURE__ */ new Set([
+  "part-of",
+  "implemented-in",
+  "declared-by",
+  "deployed-as",
+  "runs-on"
+]);
+var REVERSE = /* @__PURE__ */ new Set(["triggered-by", "reads-from"]);
+var RELATIONSHIP_DISPLAY_DESCRIPTORS = Object.freeze(Object.fromEntries(CANONICAL_RELATIONSHIP_KINDS.map((kind) => [kind, Object.freeze({
+  kind,
+  displayClass: STRUCTURAL.has(kind) ? "structural" : "runtime",
+  direction: STRUCTURAL.has(kind) ? "undirected" : REVERSE.has(kind) ? "reverse" : "declared"
+})])));
 
 // src/core/knowledge/governance/questions.ts
 import { createHash as createHash2 } from "node:crypto";

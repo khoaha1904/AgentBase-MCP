@@ -62,10 +62,18 @@ export { acceptHubProposal, type AcceptHubOptions } from "./review/accept.ts";
 export {
   readPublishedHubConcept,
   readPublishedRepositoryInventory,
+  projectPublishedHubDomain,
   searchPublishedHub,
   type PublishedRepositoryInventoryItem,
   type HubQueryGit,
 } from "./query/query.ts";
+export {
+  prepareDiagramPacket,
+  type DiagramPacket,
+  type DiagramPacketOptions,
+  type DiagramPacketResult,
+  type DiagramType,
+} from "./visualization/diagram-packet.ts";
 export {
   readInReviewProposalIds,
   scanWorkspaceRepositories,

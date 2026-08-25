@@ -90,13 +90,6 @@ export {
   type ValidatedOkfFlowStep,
 } from "./documents/okf-relationships.ts";
 export {
-  CANONICAL_RELATIONSHIP_KINDS,
-  FLOW_STEP_ACTIONS,
-  FLOW_STEP_MODES,
-  isCanonicalRelationshipKind,
-  type CanonicalRelationshipKind,
-} from "./documents/relationship-vocabulary.ts";
-export {
   displayEndpoints,
   relationshipDisplayDescriptor,
   RELATIONSHIP_DISPLAY_DESCRIPTORS,
@@ -116,6 +109,13 @@ export {
   type VisualizationOmission,
   type VisualizationQuestion,
 } from "./visualization/published-projection.ts";
+export {
+  CANONICAL_RELATIONSHIP_KINDS,
+  FLOW_STEP_ACTIONS,
+  FLOW_STEP_MODES,
+  isCanonicalRelationshipKind,
+  type CanonicalRelationshipKind,
+} from "./documents/relationship-vocabulary.ts";
 export {
   diffBundleProposal,
   isMutableAgentBaseDraft,

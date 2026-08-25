@@ -1,6 +1,8 @@
 import {
   buildHubContinuity,
+  buildPublishedVisualizationProjection,
   listHubConcepts,
+  loadHubGraph,
   parseConceptDocument,
   readRepositoryIdentityRecord,
   readRepositoryObservedSource,
@@ -18,6 +20,7 @@ import {
   type RepositoryIdentityRecord,
   type RepositoryIdentityResolution,
   type RepositoryObservedSource,
+  type PublishedVisualizationProjection,
 } from "../../../core/knowledge/index.ts";
 import { runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
 import type { AdmittedLocalHubState } from "../../../core/hub/index.ts";
@@ -136,4 +139,19 @@ export function readPublishedHubConcept(
   git: HubQueryGit = runGit,
 ): Promise<HubQueryMatch> {
   return readHubConcept(publishedReader(localHub, git), relativePath);
+}
+
+export async function projectPublishedHubDomain(
+  localHub: AdmittedLocalHubState,
+  domain: string,
+  git: HubQueryGit = runGit,
+): Promise<PublishedVisualizationProjection> {
+  if (localHub.kind === "local-only") {
+    throw new Error("Published Hub visualization is unavailable until a remote Hub is attached and synchronized");
+  }
+  const graph = await loadHubGraph(publishedReader(localHub, git), 256 * 1024);
+  return buildPublishedVisualizationProjection(graph, {
+    hub: `${localHub.hub.host}/${localHub.hub.repository}#${localHub.hub.targetBranch}`,
+    domain,
+  });
 }

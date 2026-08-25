@@ -12,6 +12,7 @@ import {
   type QuestionState,
   type SharedQuestion,
 } from "../../../core/knowledge/index.ts";
+import { prepareDiagramPacket } from "./diagram-packet.ts";
 
 const SOURCE_ID = "fixture";
 const SOURCE = `sources:\n  - id: ${SOURCE_ID}\n    resource: repository://repository-visualization-aaaaaaaaaaaa/README.md#L1-L2`;
@@ -187,4 +188,54 @@ test("[AB-VIS-001..004][AB-VIS-011..014] projection is deterministic, directed a
 
   assert.throws(() => buildPublishedVisualizationProjection(graph, { ...options, maximumNodes: 2 }), /node limit exceeded/);
   assert.throws(() => buildPublishedVisualizationProjection(graph, { ...options, domain: "domains/missing" }), /exact Published Domain/);
+});
+
+test("[AB-VIS-005..010] diagram packets preserve Published topology or report insufficient data", async () => {
+  const documents = fixtureDocuments();
+  const graph = await loadHubGraph({
+    commit: "b".repeat(40),
+    async listMarkdownPaths() { return [...documents.keys()]; },
+    async readMarkdown(relativePath: string) { return documents.get(relativePath)!; },
+  }, 256 * 1024);
+  const projection = buildPublishedVisualizationProjection(graph, {
+    hub: "github.com/acme/hub#main", domain: "domains/commerce",
+  });
+  const before = serializePublishedVisualizationProjection(projection);
+
+  const architecture = prepareDiagramPacket(projection, {
+    diagramType: "architecture",
+    conceptIds: ["systems/orders", "components/orders-api", "resources/shared-queue"],
+  });
+  assert.equal(architecture.status, "ready");
+  assert.deepEqual(architecture.status === "ready" && architecture.packet.edges.map((edge) => edge.predicate),
+    ["publishes-to", "part-of"]);
+
+  const dependency = prepareDiagramPacket(projection, {
+    diagramType: "dependency", conceptIds: ["components/orders-api", "resources/shared-queue"],
+  });
+  assert.equal(dependency.status, "ready");
+  assert.deepEqual(dependency.status === "ready" && dependency.packet.edges.map((edge) => edge.predicate),
+    ["publishes-to"]);
+  assert.equal(prepareDiagramPacket(projection, {
+    diagramType: "dependency", conceptIds: ["systems/orders", "components/orders-api"],
+  }).status, "insufficient-data");
+
+  const sequence = prepareDiagramPacket(projection, {
+    diagramType: "sequence", conceptIds: ["flows/order-submit"],
+  });
+  assert.equal(sequence.status, "ready");
+  assert.deepEqual(sequence.status === "ready" && sequence.packet.flows[0]?.steps.map((step) => step.order), [1]);
+  assert.deepEqual(sequence.status === "ready" && sequence.packet.nodes.map((node) => node.id),
+    ["components/orders-api", "flows/order-submit", "resources/shared-queue"]);
+  assert.equal(prepareDiagramPacket(projection, {
+    diagramType: "sequence", conceptIds: ["systems/orders"],
+  }).status, "insufficient-data");
+
+  assert.throws(() => prepareDiagramPacket(projection, {
+    diagramType: "architecture", conceptIds: ["systems/shipping"],
+  }), /outside the Published Domain projection/);
+  assert.throws(() => prepareDiagramPacket(projection, {
+    diagramType: "architecture", conceptIds: ["resources/shared-queue"],
+  }), /boundary concepts require their accepted connecting edge/);
+  assert.equal(serializePublishedVisualizationProjection(projection), before);
 });

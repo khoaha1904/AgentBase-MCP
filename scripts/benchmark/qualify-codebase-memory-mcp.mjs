@@ -72,7 +72,7 @@ try {
     elapsedMs: Number((performance.now() - started).toFixed(3)),
   };
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
-  if (result.tools.length !== 43 || Object.entries(result).some(([key, value]) => key !== "tools" && key !== "elapsedMs" && value !== true)) {
+  if (result.tools.length !== 44 || Object.entries(result).some(([key, value]) => key !== "tools" && key !== "elapsedMs" && value !== true)) {
     process.exitCode = 1;
   }
 } finally {

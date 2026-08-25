@@ -16,11 +16,11 @@ must pass before renderer/model qualification or Hub knowledge reset.
 
 ## Phase 2: User Story 1 — Focused diagram (P1)
 
-- [ ] T004 [US1] Implement Architecture, Dependency and Sequence packet selection plus explicit insufficient outcomes in `src/app/hub-okf/visualization/diagram-packet.ts`.
-- [ ] T005 [US1] Add `diagram` mode for `prepare_hub_visualization` in `src/app/hub-okf/mcp/mcp-tools.ts`, `src/app/hub-okf/mcp/mcp-tool-actions.ts` and `src/app/hub-okf/mcp/mcp-tool-call.ts`.
-- [ ] T006 [US1] Create the narrow internal renderer wrapper in `.agents/skills/use-diagram-design/SKILL.md`, activate only its approved offline profile in `vendor/diagram-design/agentbase/static-profile.json` and reconcile `scripts/upstream/check-inactive-foundations.mjs` without exposing the full upstream skill.
-- [ ] T007 [US1] Create the public lightweight workflow in `.agents/skills/agentbase-diagram/SKILL.md`, add both skills to `scripts/installation/product-skills.mjs` and update exact installation behavior in `scripts/installation/product-skills.test.mjs`.
-- [ ] T008 [US1] Extend `src/app/hub-okf/visualization/visualization.test.ts`, `src/app/codebase-memory-mcp/server.test.ts` and `scripts/benchmark/qualify-codebase-memory-mcp.mjs` for ready/insufficient packets, the exact 44-tool schema and no Hub mutation.
+- [X] T004 [US1] Implement Architecture, Dependency and Sequence packet selection plus explicit insufficient outcomes in `src/app/hub-okf/visualization/diagram-packet.ts`.
+- [X] T005 [US1] Add `diagram` mode for `prepare_hub_visualization` in `src/app/hub-okf/mcp/mcp-tools.ts`, `src/app/hub-okf/mcp/mcp-tool-actions.ts` and `src/app/hub-okf/mcp/mcp-tool-call.ts`.
+- [X] T006 [US1] Create the narrow internal renderer wrapper in `.agents/skills/use-diagram-design/SKILL.md`, activate only its approved offline profile in `vendor/diagram-design/agentbase/static-profile.json` and reconcile `scripts/upstream/check-inactive-foundations.mjs` without exposing the full upstream skill.
+- [X] T007 [US1] Create the public lightweight workflow in `.agents/skills/agentbase-diagram/SKILL.md`, add both skills to `scripts/installation/product-skills.mjs` and update exact installation behavior in `scripts/installation/product-skills.test.mjs`.
+- [X] T008 [US1] Extend `src/app/hub-okf/visualization/visualization.test.ts`, `src/app/codebase-memory-mcp/server.test.ts` and `scripts/benchmark/qualify-codebase-memory-mcp.mjs` for ready/insufficient packets, the exact 44-tool schema and no Hub mutation.
 
 **Checkpoint**: Diagram data is truthful and released through one lightweight skill; no Domain site path runs implicitly.
 

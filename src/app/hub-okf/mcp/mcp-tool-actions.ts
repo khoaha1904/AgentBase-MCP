@@ -49,6 +49,12 @@ export type HubToolActions = Readonly<{
   accept(proposalId: string, proposalDigest: string): Promise<unknown>;
   search(query: string, options?: HubSearchOptions): Promise<unknown>;
   read(relativePath: string): Promise<unknown>;
+  visualize(input: Readonly<{
+    mode: "diagram";
+    domain: string;
+    diagramType: "architecture" | "dependency" | "sequence";
+    conceptIds: readonly string[];
+  }>): Promise<unknown>;
   previewHubInitialization(): Promise<unknown>;
   initializeHub(input: Readonly<{ expectedBase: string; expectedInitializationDigest: string }>): Promise<unknown>;
   listQuestions(options: Readonly<{ status?: "open" | "resolved" | "needs-review"; limit?: number }>): Promise<unknown>;

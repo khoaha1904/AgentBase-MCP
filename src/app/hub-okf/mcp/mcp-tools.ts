@@ -322,6 +322,23 @@ export const HUB_OKF_TOOLS = [
     },
   },
   {
+    name: "prepare_hub_visualization",
+    description: "Prepare a bounded truthful diagram packet from one exact synchronized Published Hub Domain. Returns insufficient-data instead of inventing missing topology.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        mode: { type: "string", enum: ["diagram"] },
+        domain: { type: "string", pattern: "^domains/[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        diagram_type: { type: "string", enum: ["architecture", "dependency", "sequence"] },
+        concept_ids: {
+          type: "array", minItems: 1, maxItems: 64, uniqueItems: true,
+          items: { type: "string", minLength: 1, maxLength: 512 },
+        },
+      },
+      required: ["mode", "domain", "diagram_type", "concept_ids"], additionalProperties: false,
+    },
+  },
+  {
     name: "preview_hub_initialization",
     description: "Preview missing README and CI support files against exact remote Hub main without replaying knowledge drafts.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },

@@ -32,7 +32,7 @@ function verifyNoGraphUiFrontend() {
 
 function verifyDiagramFoundation() {
   const profile = readJson("vendor/diagram-design/agentbase/static-profile.json");
-  assert.equal(profile.status, "inactive");
+  assert.equal(profile.status, "active-diagram-only");
   assert.deepEqual(profile.allowedOutput, ["html", "svg"]);
   assert.equal(profile.fontPolicy, "system-only");
 
@@ -52,6 +52,8 @@ function verifyDiagramFoundation() {
 
   assert.equal(fs.existsSync(path.join(repositoryRoot, ".agents/skills/diagram-design")), false,
     "diagram-design must not be installed as an AgentBase skill");
+  assert.equal(fs.existsSync(path.join(repositoryRoot, ".agents/skills/use-diagram-design/SKILL.md")), true,
+    "the narrow offline AgentBase diagram wrapper must be present");
 }
 
 function verifyNoActivation() {
@@ -67,4 +69,4 @@ verifyInventories();
 verifyNoGraphUiFrontend();
 verifyDiagramFoundation();
 verifyNoActivation();
-process.stdout.write("inactive foundations: verified and not activated\n");
+process.stdout.write("upstream foundations: verified with narrow diagram activation\n");

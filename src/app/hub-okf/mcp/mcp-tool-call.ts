@@ -343,6 +343,22 @@ export async function callHubOkfTool(
       }));
     }
     if (name === "read_hub_okf_concept") return result(await actions.read(required(args, "path")));
+    if (name === "prepare_hub_visualization") {
+      if (args.mode !== "diagram") throw new Error("visualization mode must be diagram");
+      if (args.diagram_type !== "architecture" && args.diagram_type !== "dependency" && args.diagram_type !== "sequence") {
+        throw new Error("diagram_type must be architecture, dependency or sequence");
+      }
+      const conceptIds = stringList(args.concept_ids, "concept_ids", false);
+      if (conceptIds.length > 64 || new Set(conceptIds).size !== conceptIds.length) {
+        throw new Error("concept_ids must contain at most 64 unique values");
+      }
+      return result(await actions.visualize({
+        mode: "diagram",
+        domain: required(args, "domain"),
+        diagramType: args.diagram_type,
+        conceptIds,
+      }));
+    }
     if (name === "preview_hub_initialization") return result(await actions.previewHubInitialization());
     if (name === "initialize_hub") return result(await actions.initializeHub({
       expectedBase: required(args, "expected_base"),

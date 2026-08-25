@@ -28,8 +28,10 @@ import {
   inspectInitialIngestHubContext,
   readPublishedRepositoryInventory,
   readPublishedHubConcept,
+  projectPublishedHubDomain,
   searchPublishedHub,
 } from "./query.ts";
+import { prepareDiagramPacket } from "../visualization/diagram-packet.ts";
 import { readInReviewProposalIds, scanWorkspaceRepositories } from "./workspace-scan.ts";
 import { listPendingHubProposals } from "../review/pending.ts";
 import { publishPendingHubProposals } from "../publication/publish.ts";
@@ -529,6 +531,11 @@ export function createHubRuntimeActions(
     async read(relativePath) {
       const localHub = await admit();
       return readPublishedHubConcept(localHub, relativePath);
+    },
+    async visualize(input) {
+      const localHub = await admit();
+      const projection = await projectPublishedHubDomain(localHub, input.domain);
+      return prepareDiagramPacket(projection, input);
     },
     async previewHubInitialization() {
       const configuration = configured();
