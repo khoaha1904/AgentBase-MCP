@@ -59,9 +59,12 @@ function verifyDiagramFoundation() {
 function verifyNoActivation() {
   const rootPackage = readJson("package.json");
   const declared = { ...rootPackage.dependencies, ...rootPackage.devDependencies };
+  assert.equal(rootPackage.dependencies.three, "0.183.0",
+    "the approved offline Domain-site renderer must pin exact Three.js");
   for (const name of Object.keys(declared)) {
-    assert.doesNotMatch(name, /diagram-design|playwright|chromium|three|react|vite/,
-      `inactive foundation leaked into AgentBase dependencies: ${name}`);
+    if (name === "three") continue;
+    assert.doesNotMatch(name, /diagram-design|playwright|chromium|react|vite/,
+      `unapproved visualization dependency leaked into AgentBase: ${name}`);
   }
 }
 

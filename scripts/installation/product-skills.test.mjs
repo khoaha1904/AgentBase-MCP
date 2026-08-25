@@ -33,10 +33,10 @@ test("[AB-INSTALL-025..031][AB-QUESTION-006] installs only product skills with s
   assert.deepEqual(first.clients, { codex: "installed", "claude-code": "installed" });
   assert.deepEqual(PUBLIC_PRODUCT_SKILL_NAMES, [
     "agentbase-query", "agentbase-scan", "agentbase-ingest", "agentbase-refresh",
-    "agentbase-batch-ingest", "agentbase-domain-enrichment", "agentbase-diagram", "agentbase-hub",
+    "agentbase-batch-ingest", "agentbase-domain-enrichment", "agentbase-diagram", "agentbase-domain-site", "agentbase-hub",
   ]);
   assert.deepEqual(INTERNAL_PRODUCT_SKILL_NAMES, ["use-codebase-memory", "agentbase-okf", "use-diagram-design"]);
-  assert.equal(PRODUCT_SKILL_NAMES.length, 11);
+  assert.equal(PRODUCT_SKILL_NAMES.length, 12);
   const hubSkill = fs.readFileSync(path.join(repositoryRoot, ".agents", "skills", "agentbase-hub", "SKILL.md"), "utf8");
   assert.match(hubSkill, /`list_hub_questions`/);
   assert.match(hubSkill, /`answer_hub_question`/);

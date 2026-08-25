@@ -344,7 +344,22 @@ export async function callHubOkfTool(
     }
     if (name === "read_hub_okf_concept") return result(await actions.read(required(args, "path")));
     if (name === "prepare_hub_visualization") {
-      if (args.mode !== "diagram") throw new Error("visualization mode must be diagram");
+      if (args.mode === "domain-site") {
+        if (args.diagram_type !== undefined || args.concept_ids !== undefined) {
+          throw new Error("domain-site mode does not accept diagram selection fields");
+        }
+        if (args.visibility_acknowledged !== true) throw new Error("visibility_acknowledged must be true for domain-site mode");
+        return result(await actions.visualize({
+          mode: "domain-site",
+          domain: required(args, "domain"),
+          outputDirectory: required(args, "output_directory"),
+          visibilityAcknowledged: true,
+        }));
+      }
+      if (args.mode !== "diagram") throw new Error("visualization mode must be diagram or domain-site");
+      if (args.output_directory !== undefined || args.visibility_acknowledged !== undefined) {
+        throw new Error("diagram mode does not accept Domain-site output fields");
+      }
       if (args.diagram_type !== "architecture" && args.diagram_type !== "dependency" && args.diagram_type !== "sequence") {
         throw new Error("diagram_type must be architecture, dependency or sequence");
       }

@@ -10,6 +10,7 @@ export const PUBLIC_PRODUCT_SKILL_NAMES = Object.freeze([
   "agentbase-batch-ingest",
   "agentbase-domain-enrichment",
   "agentbase-diagram",
+  "agentbase-domain-site",
   "agentbase-hub",
 ]);
 

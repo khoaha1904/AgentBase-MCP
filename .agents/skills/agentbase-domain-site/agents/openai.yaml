@@ -1,0 +1,6 @@
+interface:
+  display_name: "Build AgentBase Domain Site"
+  short_description: "Export a static Published Domain map"
+  default_prompt: "Use $agentbase-domain-site to explicitly build one static Published Domain snapshot."
+policy:
+  allow_implicit_invocation: false

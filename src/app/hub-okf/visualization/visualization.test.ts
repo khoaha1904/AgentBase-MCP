@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 
 import {
@@ -13,6 +16,7 @@ import {
   type SharedQuestion,
 } from "../../../core/knowledge/index.ts";
 import { prepareDiagramPacket } from "./diagram-packet.ts";
+import { buildStaticDomainSite } from "./domain-site.ts";
 
 const SOURCE_ID = "fixture";
 const SOURCE = `sources:\n  - id: ${SOURCE_ID}\n    resource: repository://repository-visualization-aaaaaaaaaaaa/README.md#L1-L2`;
@@ -238,4 +242,56 @@ test("[AB-VIS-005..010] diagram packets preserve Published topology or report in
     diagramType: "architecture", conceptIds: ["resources/shared-queue"],
   }), /boundary concepts require their accepted connecting edge/);
   assert.equal(serializePublishedVisualizationProjection(projection), before);
+});
+
+test("[AB-VIS-006..010][AB-VIS-012..014] static Domain site is reproducible, offline and no-overwrite", async (context) => {
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-domain-site-test-"));
+  context.after(() => fs.rmSync(temporary, { recursive: true, force: true }));
+  const documents = fixtureDocuments();
+  const graph = await loadHubGraph({
+    commit: "c".repeat(40),
+    async listMarkdownPaths() { return [...documents.keys()]; },
+    async readMarkdown(relativePath: string) { return documents.get(relativePath)!; },
+  }, 256 * 1024);
+  const projection = buildPublishedVisualizationProjection(graph, {
+    hub: "github.com/acme/hub#main", domain: "domains/commerce",
+  });
+  const first = path.join(temporary, "first"), second = path.join(temporary, "second");
+  const result = buildStaticDomainSite(projection, { outputDirectory: first, visibilityAcknowledged: true });
+  buildStaticDomainSite(projection, { outputDirectory: second, visibilityAcknowledged: true });
+  assert.deepEqual({ status: result.status, commit: result.commit, receipt: result.receipt },
+    { status: "built", commit: graph.commit, receipt: "agentbase-build.json" });
+
+  const relativeFiles = ["agentbase-build.json", "assets/app.css", "assets/app.js",
+    "assets/three.module.min.js", "data/domain.json", "index.html"];
+  for (const relative of relativeFiles) {
+    assert.deepEqual(fs.readFileSync(path.join(first, ...relative.split("/"))),
+      fs.readFileSync(path.join(second, ...relative.split("/"))));
+  }
+  const receipt = JSON.parse(fs.readFileSync(path.join(first, "agentbase-build.json"), "utf8"));
+  assert.deepEqual(receipt.files.map((file: { path: string }) => file.path), relativeFiles.slice(1));
+  assert.equal(receipt.commit, graph.commit);
+  assert.equal("generatedAt" in receipt || "outputDirectory" in receipt, false);
+  const generatedText = relativeFiles.filter((relative) => !relative.endsWith("three.module.min.js"))
+    .map((relative) => fs.readFileSync(path.join(first, ...relative.split("/")), "utf8")).join("\n");
+  assert.doesNotMatch(generatedText, new RegExp(temporary.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.doesNotMatch(generatedText, /ghp_[A-Za-z0-9]{20,}|search_hub_okf|prepare_hub_visualization/);
+  assert.match(fs.readFileSync(path.join(first, "index.html"), "utf8"), /3D view unavailable/);
+  assert.match(fs.readFileSync(path.join(first, "assets/app.js"), "utf8"), /fetch\("data\/domain\.json"\)/);
+
+  assert.throws(() => buildStaticDomainSite(projection,
+    { outputDirectory: "relative/site", visibilityAcknowledged: true }), /explicit absolute path/);
+  assert.throws(() => buildStaticDomainSite(projection,
+    { outputDirectory: path.parse(temporary).root, visibilityAcknowledged: true }), /filesystem root/);
+  const occupied = path.join(temporary, "occupied"); fs.mkdirSync(occupied); fs.writeFileSync(path.join(occupied, "keep"), "keep");
+  assert.throws(() => buildStaticDomainSite(projection,
+    { outputDirectory: occupied, visibilityAcknowledged: true }), /new or empty/);
+  assert.equal(fs.readFileSync(path.join(occupied, "keep"), "utf8"), "keep");
+
+  const interrupted = path.join(temporary, "interrupted"); fs.mkdirSync(interrupted);
+  const stagesBefore = fs.readdirSync(temporary).filter((name) => name.startsWith(".agentbase-domain-site-")).length;
+  assert.throws(() => buildStaticDomainSite(projection,
+    { outputDirectory: interrupted, visibilityAcknowledged: true }, { assetsRoot: path.join(temporary, "missing-assets") }));
+  assert.deepEqual(fs.readdirSync(interrupted), []);
+  assert.equal(fs.readdirSync(temporary).filter((name) => name.startsWith(".agentbase-domain-site-")).length, stagesBefore);
 });

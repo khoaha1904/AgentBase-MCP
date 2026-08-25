@@ -26,12 +26,12 @@ must pass before renderer/model qualification or Hub knowledge reset.
 
 ## Phase 3: User Story 2 — Static Domain site (P2)
 
-- [ ] T009 [US2] Add pinned `three@0.183.0` and registry/offline dependency checks in `package.json`, `package-lock.json`, `scripts/installation/install.mjs` and `scripts/upstream/check-inactive-foundations.mjs`, while retaining the React/Vite/browser-download prohibitions.
-- [ ] T010 [US2] Add dependency-light static 3D browser assets with seeded layout, lazy expansion, search, filters, focus, sidebar, Question badges and WebGL fallback in `src/app/hub-okf/visualization/domain-site-assets/`.
-- [ ] T011 [US2] Implement safe staged generation, local Three.js asset copy, reproducible receipt/digests and no-overwrite recovery in `src/app/hub-okf/visualization/domain-site.ts`.
-- [ ] T012 [US2] Add visibility acknowledgment and `domain-site` mode for `prepare_hub_visualization` to the existing MCP files without adding another tool.
-- [ ] T013 [US2] Create the explicit heavy workflow and visibility warning in `.agents/skills/agentbase-domain-site/SKILL.md`, add it to `scripts/installation/product-skills.mjs` and update `scripts/installation/product-skills.test.mjs`.
-- [ ] T014 [US2] Extend `src/app/hub-okf/visualization/visualization.test.ts` for receipt digests, secret/path scanning, static operation, unsafe/non-empty targets and interrupted-build recovery.
+- [X] T009 [US2] Add pinned `three@0.183.0` and registry/offline dependency checks in `package.json`, `package-lock.json`, `scripts/installation/install.mjs` and `scripts/upstream/check-inactive-foundations.mjs`, while retaining the React/Vite/browser-download prohibitions.
+- [X] T010 [US2] Add dependency-light static 3D browser assets with seeded layout, lazy expansion, search, filters, focus, sidebar, Question badges and WebGL fallback in `src/app/hub-okf/visualization/domain-site-assets/`.
+- [X] T011 [US2] Implement safe staged generation, local Three.js asset copy, reproducible receipt/digests and no-overwrite recovery in `src/app/hub-okf/visualization/domain-site.ts`.
+- [X] T012 [US2] Add visibility acknowledgment and `domain-site` mode for `prepare_hub_visualization` to the existing MCP files without adding another tool.
+- [X] T013 [US2] Create the explicit heavy workflow and visibility warning in `.agents/skills/agentbase-domain-site/SKILL.md`, add it to `scripts/installation/product-skills.mjs` and update `scripts/installation/product-skills.test.mjs`.
+- [X] T014 [US2] Extend `src/app/hub-okf/visualization/visualization.test.ts` for receipt digests, secret/path scanning, static operation, unsafe/non-empty targets and interrupted-build recovery.
 
 **Checkpoint**: One self-contained static site builds explicitly and runs without Hub/MCP/token/source access.
 

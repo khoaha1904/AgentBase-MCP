@@ -323,19 +323,21 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "prepare_hub_visualization",
-    description: "Prepare a bounded truthful diagram packet from one exact synchronized Published Hub Domain. Returns insufficient-data instead of inventing missing topology.",
+    description: "Prepare a bounded truthful diagram packet or explicitly build one static offline 3D Domain site from an exact synchronized Published Hub commit. Never reads Local Draft or publishes the artifact.",
     inputSchema: {
       type: "object",
       properties: {
-        mode: { type: "string", enum: ["diagram"] },
+        mode: { type: "string", enum: ["diagram", "domain-site"] },
         domain: { type: "string", pattern: "^domains/[a-z0-9]+(?:-[a-z0-9]+)*$" },
         diagram_type: { type: "string", enum: ["architecture", "dependency", "sequence"] },
         concept_ids: {
           type: "array", minItems: 1, maxItems: 64, uniqueItems: true,
           items: { type: "string", minLength: 1, maxLength: 512 },
         },
+        output_directory: { type: "string", minLength: 1, description: "Explicit absolute new or empty local directory for a one-shot static site." },
+        visibility_acknowledged: { type: "boolean", description: "Must be true after warning that the output copies Published knowledge." },
       },
-      required: ["mode", "domain", "diagram_type", "concept_ids"], additionalProperties: false,
+      required: ["mode", "domain"], additionalProperties: false,
     },
   },
   {

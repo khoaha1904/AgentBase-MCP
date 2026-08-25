@@ -31,7 +31,8 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
       initializations += 1; return input;
     },
     async visualize(input: Readonly<{ mode: "diagram"; domain: string;
-      diagramType: "architecture" | "dependency" | "sequence"; conceptIds: readonly string[] }>) {
+      diagramType: "architecture" | "dependency" | "sequence"; conceptIds: readonly string[] }>
+      | Readonly<{ mode: "domain-site"; domain: string; outputDirectory: string; visibilityAcknowledged: true }>) {
       visualizations += 1; return { status: "ready", ...input };
     },
   };
@@ -83,8 +84,8 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
       ["search_hub_okf", "read_hub_okf_concept"]);
     const visualizationTool = tools.tools.find((tool) => tool.name === "prepare_hub_visualization");
     assert.deepEqual(Object.keys(visualizationTool?.inputSchema.properties ?? {}).sort(),
-      ["concept_ids", "diagram_type", "domain", "mode"]);
-    assert.deepEqual(visualizationTool?.inputSchema.properties?.mode, { type: "string", enum: ["diagram"] });
+      ["concept_ids", "diagram_type", "domain", "mode", "output_directory", "visibility_acknowledged"]);
+    assert.deepEqual(visualizationTool?.inputSchema.properties?.mode, { type: "string", enum: ["diagram", "domain-site"] });
     const visualization = await client.callTool({ name: "prepare_hub_visualization", arguments: {
       mode: "diagram", domain: "domains/commerce", diagram_type: "architecture",
       concept_ids: ["systems/orders"],
@@ -93,7 +94,15 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
       status: "ready", mode: "diagram", domain: "domains/commerce",
       diagramType: "architecture", conceptIds: ["systems/orders"],
     });
-    assert.equal(visualizations, 1);
+    const site = await client.callTool({ name: "prepare_hub_visualization", arguments: {
+      mode: "domain-site", domain: "domains/commerce", output_directory: "/tmp/domain-site",
+      visibility_acknowledged: true,
+    } });
+    assert.deepEqual(JSON.parse(site.content[0]?.type === "text" ? site.content[0].text : "{}"), {
+      status: "ready", mode: "domain-site", domain: "domains/commerce",
+      outputDirectory: "/tmp/domain-site", visibilityAcknowledged: true,
+    });
+    assert.equal(visualizations, 2);
     assert.equal(toolNames.some((name) => ["traverse_hub_okf", "read_hub_observed_values", "read_hub_freshness"].includes(name)), false);
     assert.equal(toolNames.includes("list_hub_questions") && toolNames.includes("answer_hub_question"), true);
     assert.equal(toolNames.filter((name) => name === "scan_workspace_repositories").length, 1);

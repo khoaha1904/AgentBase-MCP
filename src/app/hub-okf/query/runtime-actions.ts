@@ -32,6 +32,7 @@ import {
   searchPublishedHub,
 } from "./query.ts";
 import { prepareDiagramPacket } from "../visualization/diagram-packet.ts";
+import { buildStaticDomainSite } from "../visualization/domain-site.ts";
 import { readInReviewProposalIds, scanWorkspaceRepositories } from "./workspace-scan.ts";
 import { listPendingHubProposals } from "../review/pending.ts";
 import { publishPendingHubProposals } from "../publication/publish.ts";
@@ -535,7 +536,9 @@ export function createHubRuntimeActions(
     async visualize(input) {
       const localHub = await admit();
       const projection = await projectPublishedHubDomain(localHub, input.domain);
-      return prepareDiagramPacket(projection, input);
+      return input.mode === "diagram"
+        ? prepareDiagramPacket(projection, input)
+        : buildStaticDomainSite(projection, input);
     },
     async previewHubInitialization() {
       const configuration = configured();

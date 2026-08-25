@@ -54,6 +54,11 @@ export type HubToolActions = Readonly<{
     domain: string;
     diagramType: "architecture" | "dependency" | "sequence";
     conceptIds: readonly string[];
+  }> | Readonly<{
+    mode: "domain-site";
+    domain: string;
+    outputDirectory: string;
+    visibilityAcknowledged: true;
   }>): Promise<unknown>;
   previewHubInitialization(): Promise<unknown>;
   initializeHub(input: Readonly<{ expectedBase: string; expectedInitializationDigest: string }>): Promise<unknown>;

@@ -75,6 +75,13 @@ export {
   type DiagramType,
 } from "./visualization/diagram-packet.ts";
 export {
+  buildStaticDomainSite,
+  type DomainSiteBuildDependencies,
+  type DomainSiteBuildOptions,
+  type DomainSiteBuildReceipt,
+  type DomainSiteBuildResult,
+} from "./visualization/domain-site.ts";
+export {
   readInReviewProposalIds,
   scanWorkspaceRepositories,
   type WorkspaceRepositoryClassification,

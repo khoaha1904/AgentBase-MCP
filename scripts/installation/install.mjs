@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { pathToFileURL } from "node:url";
@@ -8,6 +9,7 @@ import { installProductSkills, PRODUCT_SKILL_NAMES, rollbackProductSkills } from
 import { prepareCodebaseMemory } from "../upstream/prepare-codebase-memory.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
+const PINNED_THREE_VERSION = "0.183.0";
 
 class InstallerCancelled extends Error {
   constructor() { super("installation cancelled"); }
@@ -189,6 +191,18 @@ function installDependencies(registry, environment = process.env) {
   });
 }
 
+function verifyVisualizationRuntime() {
+  const packagePath = path.join(repositoryRoot, "node_modules", "three", "package.json");
+  const modulePath = path.join(repositoryRoot, "node_modules", "three", "build", "three.module.min.js");
+  if (!fs.existsSync(packagePath) || !fs.existsSync(modulePath)) {
+    throw new Error("pinned offline Three.js runtime is unavailable after dependency installation");
+  }
+  const manifest = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+  if (manifest.version !== PINNED_THREE_VERSION) {
+    throw new Error(`Three.js ${PINNED_THREE_VERSION} is required; received ${String(manifest.version)}`);
+  }
+}
+
 export async function connectSelectedClients(options) {
   const runProductSkillInstallation = options.runProductSkillInstallation ?? installProductSkills;
   const runProductSkillRollback = options.runProductSkillRollback ?? rollbackProductSkills;
@@ -218,6 +232,7 @@ export async function runInstaller(options = {}) {
   assertNodeVersion(options.nodeVersion ?? process.versions.node);
   const registry = privateRegistry(await runRegistryResolution(environment));
   await runDependencyInstall(registry, environment);
+  verifyVisualizationRuntime();
   await runProviderPreparation();
   const interactive = Boolean(input.isTTY && output.isTTY && typeof input.setRawMode === "function");
   if (!interactive) {
