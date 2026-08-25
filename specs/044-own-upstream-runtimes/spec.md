@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-25
 
-**Status**: In Progress
+**Status**: Implemented; macOS arm64 enterprise release gate pending
 
 **Input**: Migrate pinned Codebase Memory and diagram-design source into
 AgentBase so an enterprise installation can build and run without downloading
@@ -110,8 +110,8 @@ AgentBase patch/profile, and detect unrecorded drift offline.
 - An unsupported source language is present in a repository.
 - The imported upstream contains generated files larger than the Git host's
   accepted object limit.
-- Graph UI or diagram rendering dependencies try to fetch fonts, browsers,
-  URLs or release artifacts during preparation.
+- Diagram rendering dependencies try to fetch fonts, browsers, URLs or release
+  artifacts during preparation.
 - Upstream tool schemas drift even though the executable still reports the
   expected version.
 
@@ -156,9 +156,10 @@ AgentBase patch/profile, and detect unrecorded drift offline.
 - **FR-014**: Canonical verification MUST be offline and deterministic. Native
   builds and per-platform qualification MAY remain explicit platform lanes, but
   both supported lanes MUST produce retained evidence before migration closes.
-- **FR-015**: Graph UI source MUST be retained and buildable from the approved
-  registry, but AgentBase MUST NOT start, expose or register that UI in this
-  capability.
+- **FR-015**: The Codebase Memory Graph UI frontend and its React/Three/Vite
+  dependency tree MUST NOT be retained, built, started, exposed or registered
+  by AgentBase. Upstream C runtime files shared with the core binary MAY remain
+  unchanged when they introduce no released HTTP/UI authority.
 - **FR-016**: diagram-design source MUST be retained with an offline-safe
   static HTML/SVG path, but AgentBase MUST NOT add a diagram skill, public tool,
   Hub UI or automatic rendering in this capability.
@@ -199,9 +200,10 @@ AgentBase patch/profile, and detect unrecorded drift offline.
 - **SC-001**: A public-network-denied installation using configured internal
   dependencies completes without any attempted public URL or GitHub Release
   access.
-- **SC-002**: Linux x64 and macOS arm64 each pass provider identity, nine-action
-  surface, lifecycle and fixture-evidence qualification from the same pinned
-  source/profile identity.
+- **SC-002**: Linux x64 passes provider identity, nine-action surface, lifecycle
+  and fixture-evidence qualification. macOS arm64 MUST pass the same retained
+  qualification from the same pinned source/profile identity before AgentBase
+  claims enterprise macOS release support.
 - **SC-003**: Unsupported source-language fixtures are skipped predictably,
   while all 12 profile-language fixtures are recognized without provider crash.
 - **SC-004**: The tracked Codebase Memory snapshot remains below 200 MiB and
@@ -231,5 +233,5 @@ AgentBase patch/profile, and detect unrecorded drift offline.
 - SQL and the other 147 upstream grammars are deferred until a real repository
   requires them. Adding a language changes the profile and requires focused
   qualification.
-- Future Hub graph visualization and evidence-backed diagram rendering are
-  separate capabilities after this supply-chain migration is stable.
+- Future Hub visualization and evidence-backed diagram rendering are separate
+  AgentBase capabilities and MUST NOT depend on the removed Codebase Memory UI.

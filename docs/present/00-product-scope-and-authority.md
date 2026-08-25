@@ -55,8 +55,8 @@ For enterprise installation, AgentBase owns pinned, attributed source snapshots
 for its Code Graph engine and future diagram foundation. Installation builds the
 current-platform Code Graph artifact through the configured company registry and
 local approved toolchain; ordinary use never downloads a public release binary.
-The retained Graph UI and diagram source add no released UI, renderer, tool or
-skill by themselves.
+The Codebase Memory Graph UI frontend is excluded. Retained diagram-design
+source adds no released UI, renderer, tool or skill by itself.
 
 ## Current flow
 

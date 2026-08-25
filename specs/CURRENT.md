@@ -3,13 +3,13 @@
 Active capability: [`044-own-upstream-runtimes`](044-own-upstream-runtimes/spec.md).
 Most recent completed: [`043-converge-product-contracts`](043-converge-product-contracts/spec.md).
 
-Capability 044 plans the enterprise source migration for pinned Codebase Memory
+Capability 044 implements the enterprise source migration for pinned Codebase Memory
 and diagram-design. It replaces Codebase Memory's public-package binary download
 with an AgentBase-owned source build/admission path for Linux x64 and macOS
-arm64, using one explicit 12-language parser-profile overlay. It retains Graph
-UI and diagram source without releasing a UI, tool or skill and preserves the
-43-tool product surface. Implementation and Linux x64 qualification are in
-progress; company macOS arm64 qualification remains required before closure.
+arm64, using one explicit 12-language parser-profile overlay. It excludes the
+Codebase Memory Graph UI frontend, retains inactive diagram source and preserves
+the 43-tool product surface. Linux x64 is qualified; company macOS arm64 remains
+an enterprise release gate rather than a blocker for the next capability.
 
 Capability 043 reviews the twelve current product areas sequentially with the
 owner, aligns high-level and low-level authority, and completed the approved

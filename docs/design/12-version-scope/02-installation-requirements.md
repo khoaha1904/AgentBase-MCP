@@ -107,5 +107,6 @@ default for every Hub.
   rollback and may retain the already valid artifact.
 - **AB-INSTALL-037** — Non-interactive setup still prepares dependencies and the
   native provider, but performs no skill or client mutation.
-- **AB-INSTALL-038** — Graph UI and diagram-design dependencies are not installed
-  by this capability. Their source and lock/profile are audit inputs only.
+- **AB-INSTALL-038** — Codebase Memory Graph UI source/dependencies are excluded.
+  diagram-design dependencies are not installed by this capability; its source
+  and static profile are audit inputs only.

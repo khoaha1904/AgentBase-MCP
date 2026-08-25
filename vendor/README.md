@@ -41,7 +41,9 @@ There is no automatic updater. For a proposed upstream revision:
    arm64 through approved toolchains and registries; and
 8. request explicit owner approval for the migration.
 
-Graph UI and diagram-design are source foundations only. Capability 044 does
-not install or start either one. The future diagram boundary is self-contained
+Codebase Memory's Graph UI frontend is excluded from the released snapshot;
+shared upstream C runtime scaffolding remains inert because removing it would
+fork the core build. diagram-design is a source foundation only and capability
+044 does not install or start it. The future diagram boundary is self-contained
 static HTML/SVG with system fonts; browser downloads, Playwright/Chromium, PNG
 automation, remote fonts/assets and URL onboarding are excluded.

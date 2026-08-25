@@ -30,10 +30,11 @@ agent-facing stdio MCP. The graph remains detailed, private and disposable.
   AgentBase patch only in disposable staging, probes the accepted private
   provider surface and atomically publishes an ignored artifact. Ordinary MCP
   startup never builds, downloads, updates or recovers the provider.
-- **AB-MVP-009** — Codebase Memory Graph UI and diagram-design remain attributed
-  inactive source foundations. No UI, HTTP server, diagram skill or renderer is
-  installed; a future diagram path is self-contained static HTML/SVG with
-  system fonts and no browser/remote-asset dependency.
+- **AB-MVP-009** — The Codebase Memory Graph UI frontend is excluded from the
+  released source snapshot. Its upstream C runtime scaffolding may remain only
+  where shared by the core build and receives no HTTP/UI authority.
+  diagram-design remains an attributed inactive source foundation; no diagram
+  skill or renderer is installed by capability 044.
 
 ## Scoped-session promotion and lifecycle
 

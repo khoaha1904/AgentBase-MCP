@@ -21,7 +21,7 @@ before this decision.
 ## Phase 1: Own the approved source inputs
 
 - [X] T004 [US3] Add `vendor/README.md` and minimal local-source import/inventory utilities defining immutable upstream, AgentBase overlay and generated-artifact ownership, with nested-Git, checksum, path and 100 MB guards.
-- [X] T005 [US3] Import approved Codebase Memory `v0.10.8` core, Graph UI and only the 12 accepted grammar inputs with provenance, licenses/notices and deterministic inventory.
+- [X] T005 [US3] Import approved Codebase Memory `v0.10.8` core and only the 12 accepted grammar inputs with provenance, licenses/notices and deterministic inventory; exclude the Graph UI frontend.
 - [X] T006 [US1] Add the exact parser profile plus one external patch that limits grammar compilation/registration and turns omitted recognized languages into visible unsupported skips.
 - [X] T007 [US1] Prove the patch applies only in disposable staging and run one compact supported/unsupported-language qualification; record retained size and largest file.
 - [X] T008 [US3] Import diagram-design `2.6.5`/`648c2a597839301e06df1e7434a08bde9f42eed3` with provenance, licenses/notices and deterministic inventory, without installing its skill or runtime dependencies.
@@ -55,7 +55,7 @@ download.
 
 - [X] T017 [US1] Capture the accepted `v0.10.8` tool manifest and prove the official MCP listing remains 43 tools with the same nine Code Graph actions.
 - [X] T018 [US1] Run representative supported-language graph/evidence/lifecycle fixtures against the owned build and confirm no unintended OKF/Hub workflow change.
-- [X] T019 [US3] Verify Graph UI dependencies are auditable through the configured registry and diagram-design supports a self-contained static HTML/SVG path; keep both inactive and exclude browser downloads, remote fonts, URL onboarding and PNG automation.
+- [X] T019 [US3] Verify the Graph UI frontend is absent and diagram-design supports a self-contained static HTML/SVG path; keep rendering inactive and exclude browser downloads, remote fonts, URL onboarding and PNG automation.
 - [X] T020 [US3] Add maintainer instructions for local approved source updates, inventory regeneration, patch review and explicit requalification; add no automatic updater.
 
 **Checkpoint**: The provider version and distribution changed through separate,
@@ -65,16 +65,18 @@ reviewable comparisons. No public product surface was added.
 
 - [X] T021 Reconcile the current repository-reading, installation and deferred-capability documents plus the minimal matching high-level text before closure.
 - [X] T022 Run `npm run verify`, vendor/profile checks and Linux x64 native qualification; record deterministic and native evidence in `verification.md`.
-- [ ] T023 Run the same native qualification on macOS arm64 with approved Node 24 and internal registry, appending platform evidence without changing code to fit the environment.
-- [ ] T024 Audit spec/plan/tasks against implementation and close `specs/CURRENT.md` only when both platform lanes pass and no design drift remains.
+- [ ] T023 [ENTERPRISE RELEASE GATE] Run the same native qualification on macOS arm64 with approved Node 24 and internal registry, appending platform evidence without changing code to fit the environment.
+- [X] T024 Audit spec/plan/tasks against implementation, close Linux development and carry T023 visibly as an external release gate without claiming macOS support.
 
 ## Dependencies and stopping rules
 
 - Phase 0 precedes all imported-source or runtime changes.
 - Phase 1 precedes native admission; Phase 2 precedes npm/installer cutover.
 - Phase 3 precedes compatibility and platform qualification.
-- T023 requires the company macOS environment. If unavailable, implementation
-  may reach a clean Linux breakpoint but capability 044 remains unqualified.
+- T023 is an enterprise release gate requiring the company macOS environment.
+  It does not block Linux development closure or the next separately scoped
+  capability, but AgentBase MUST NOT claim macOS arm64 release qualification
+  until that lane passes.
 - A model benchmark is not automatic. Run one only if deterministic version
   qualification exposes a material risk to OKF authoring.
 - No Hub cleanup/PR, UI server, diagram rendering or context-graph database is

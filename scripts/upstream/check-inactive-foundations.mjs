@@ -20,21 +20,9 @@ function verifyInventories() {
   }
 }
 
-function verifyGraphUi() {
-  const packageJson = readJson("vendor/codebase-memory/upstream/graph-ui/package.json");
-  const lock = readJson("vendor/codebase-memory/upstream/graph-ui/package-lock.json");
-  assert.equal(packageJson.private, true, "Graph UI must remain a private package");
-  assert.equal(lock.lockfileVersion, 3, "Graph UI must retain an auditable npm lockfile");
-
-  for (const [name, entry] of Object.entries(lock.packages ?? {})) {
-    if (entry.resolved !== undefined) {
-      assert.match(entry.resolved, /^https:\/\/registry\.npmjs\.org\//,
-        `Graph UI lock entry has a non-registry source: ${name}`);
-      assert.match(entry.integrity ?? "", /^sha512-/,
-        `Graph UI lock entry lacks sha512 integrity: ${name}`);
-    }
-  }
-
+function verifyNoGraphUiFrontend() {
+  assert.equal(fs.existsSync(path.join(repositoryRoot, "vendor/codebase-memory/upstream/graph-ui")), false,
+    "Graph UI frontend must not be retained in the released source snapshot");
   const preparation = fs.readFileSync(
     path.join(repositoryRoot, "scripts/upstream/prepare-codebase-memory.mjs"), "utf8",
   );
@@ -76,7 +64,7 @@ function verifyNoActivation() {
 }
 
 verifyInventories();
-verifyGraphUi();
+verifyNoGraphUiFrontend();
 verifyDiagramFoundation();
 verifyNoActivation();
 process.stdout.write("inactive foundations: verified and not activated\n");

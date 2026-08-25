@@ -19,7 +19,7 @@
 - [x] Supported/unsupported language behavior and repository size gates are explicit. [Spec FR-004–FR-006]
 - [x] Public-egress, build, platform and admission boundaries are explicit. [Spec FR-007–FR-012]
 - [x] Existing public behavior and deterministic/native qualification are preserved. [Spec FR-013–FR-014]
-- [x] Graph UI, diagram, browser and remote-asset boundaries are explicit. [Spec FR-015–FR-017]
+- [x] Graph UI exclusion plus diagram, browser and remote-asset boundaries are explicit. [Spec FR-015–FR-017]
 - [x] Runtime baseline, update governance, spec-sync policy and pre-import version qualification are explicit. [Spec FR-018–FR-021]
 - [x] Failure, recovery and unsupported-language edge cases are covered. [Spec Edge Cases]
 

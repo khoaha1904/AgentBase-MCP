@@ -126,6 +126,6 @@ retain exact generated manifests instead.
 
 The build may use the configured company registry and approved compiler tools;
 it may not fall back to public hosts. Runtime admits one exact repository-owned
-artifact and never searches `PATH`. Graph UI and diagram source are inert in
-this capability, so their server/browser/remote-asset behaviors are not granted
-runtime authority.
+artifact and never searches `PATH`. Graph UI frontend source is excluded and
+diagram source is inert in this capability, so no server/browser/remote-asset
+behavior is granted runtime authority.

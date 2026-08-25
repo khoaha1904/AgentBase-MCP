@@ -71,8 +71,9 @@ small gaps must be backfilled before benchmark, PR or capability completion.
   Published-only; Local Draft is reviewed through proposal workflows.
 - Codebase Memory now comes from AgentBase's attributed `v0.10.8` source snapshot
   and 12-language profile rather than an npm postinstall binary. Linux x64 is
-  qualified; macOS arm64 remains the explicit company-environment closure gate.
-  Graph UI and diagram-design source remain inactive.
+  qualified; macOS arm64 remains an explicit company-environment release gate.
+  The Codebase Memory Graph UI frontend is excluded; diagram-design source
+  remains inactive until a separately designed visualization capability.
 
 Update current truth once in the narrowest high- or low-level document. Do not
 add handoff, roadmap, ADR or evidence-diary files that repeat it.

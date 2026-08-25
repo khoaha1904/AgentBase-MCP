@@ -118,8 +118,11 @@ vendor/
     └── upstream/                 # pristine 2.6.5/commit snapshot
 ```
 
-The import is selective but deterministic: Codebase Memory core/UI source and
-only the 12 approved grammar shims/directories are retained. No imported file is
+The import is selective but deterministic: Codebase Memory core source and only
+the 12 approved grammar shims/directories are retained; the `graph-ui/`
+frontend and its dependency lock are excluded. A small upstream C HTTP/layout
+layer remains unchanged because the upstream core build and index supervisor
+share it, but AgentBase grants it no HTTP/UI authority. No imported file is
 edited in place. A local-source import command regenerates the snapshot and
 inventory; it never clones or downloads.
 
@@ -175,13 +178,13 @@ Build output is staged and renamed atomically. A failed build never overwrites
 the last admitted platform directory. Runtime does not trust `PATH` or a
 user-supplied executable.
 
-### 5. Preserve present behavior, retain future source only
+### 5. Preserve present behavior and keep future rendering separate
 
 The provider still runs through AgentBase's current short-lived/scoped bounded
-adapters, with UI/watchers/daemon/config disabled. The Graph UI source and its
-lockfile remain auditable and buildable, but no HTTP server is started. The
-diagram-design snapshot remains inactive; its default future boundary is static
-HTML/SVG with no Playwright, browser download, remote font or URL onboarding.
+adapters, with UI/watchers/daemon/config disabled. The Graph UI frontend is not
+part of AgentBase source. The diagram-design snapshot remains inactive; its
+default future boundary is static HTML/SVG with no Playwright, browser download,
+remote font or URL onboarding.
 
 ### 6. Upstream updates are explicit migrations
 
