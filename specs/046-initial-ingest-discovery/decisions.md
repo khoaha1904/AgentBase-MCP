@@ -1,0 +1,251 @@
+# Initial Ingest discovery — owner decision checkpoint
+
+> Status: decisions through the activity-log discussion are approved. This is a
+> design checkpoint, not current runtime authority.
+
+## Reference findings
+
+- GitNexus performs broad deterministic structural extraction first, including
+  routes, entry points, call paths and process candidates, then ranks, groups
+  and deduplicates. AgentBase adopts the discovery lesson, not its graph model.
+- Potpie's current local baseline is harness-led rather than scanner-written.
+  It requires explicit discovery lanes and an evidence matrix before a graph
+  write. AgentBase adopts the explicit-coverage lesson, not Potpie's ontology or
+  tool surface.
+- The pinned Codebase Memory `0.10.8` already exposes more useful architecture
+  evidence than AgentBase's normalized overview currently retains. Capability
+  046 should use that provider rather than introduce another parser.
+- Reference projects are learning inputs only. The target is the best fit for
+  AgentBase, Codebase Memory and compact OKF; there is no requirement to balance
+  or imitate the two products.
+
+## Approved decisions
+
+### D01 — Broad discovery, selective knowledge
+
+Discovery is broad across high-value source signals. Rendering stays selective:
+there is no concept quota and no requirement to copy the repository into OKF.
+A sparse result is valid only when important discovered signals have an explicit
+disposition.
+
+### D02 — Responsibility split
+
+- Codebase Memory detects structural signals and helps locate source.
+- The host Agent interprets meaning and chooses a disposition.
+- MCP validates machine-signal acknowledgement, evidence, disposition and OKF integrity.
+
+Code Graph output does not decide concepts and is never Hub evidence by itself.
+
+### D03 — Five discovery lanes
+
+Every Init covers or explicitly limits:
+
+1. repository identity and product purpose;
+2. runtime units and entry points;
+3. interfaces, routes, events and triggers;
+4. dependencies, integrations, data and channels;
+5. deploy and operational configuration.
+
+### D04 — Four dispositions
+
+Every important discovery group becomes exactly one of `concept`, `embedded`,
+`question` or `ignored` with a bounded reason. Question and Ignored items do not
+pass through schema selection.
+
+### D05 — Preserve the five-stage workflow
+
+Keep `Preflight -> Discover -> Investigate -> Author -> Validate`.
+
+- Preflight binds repo/revision, reads bounded root docs, confirms Domain and
+  routes an existing Repository to Refresh.
+- Discover indexes once and builds a machine-derived Discovery Seed.
+- Investigate closes the five lanes and creates the Inventory.
+- Author validates guidance, prepares skeletons and writes concepts, embedded
+  knowledge and Questions.
+- Validate applies separate discovery-coverage and OKF-integrity gates before
+  Finalize/Inspect.
+
+### D06 — Important versus low-value signals
+
+Routes, entry points, runtime roots, API specs, IaC/deploy files, explicit
+service boundaries, channels and datastores require acknowledgement. Individual
+CRUD handlers, ordinary functions, lockfile-only dependencies, generated code,
+vendor code and non-authoritative fixtures can be grouped or ignored. Important
+means “must be handled,” not “must become a concept.”
+
+### D07 — Evidence and snapshots
+
+Code Graph is a locator. Attributed OKF claims and relations cite authorized
+repository source paths/spans. Root docs establish stated purpose; code/config,
+API specs and IaC establish implementation or desired state. Small direct,
+non-sensitive values are rendered snapshot-first with revision/time. Large or
+scattered configuration keeps a general file reference. Live/provider-only
+values become limitations or Questions during Init.
+
+### D08 — Concept boundaries
+
+Repository and confirmed Domain assignment are mandatory anchors. System is not
+automatic: it represents an evidenced runtime/product identity. Components map
+to meaningful workloads within a System; Function maps only to an independently
+triggered/deployed function; Interface groups a useful contract rather than one
+CRUD route; Flow represents a source-proven goal/operational sequence rather
+than a raw call trace. Queue, topic, table, bucket, host and similar resources
+stay embedded unless they have independent ownership, operational, lifecycle,
+security, failure or shared-contract value. Catalog 7 remains unchanged.
+
+### D09 — Cross-repository relations
+
+Init records every outbound dependency found in its authorized repository. It
+creates a relation only when an exact Published target is uniquely resolved by
+strong identity evidence. Otherwise it retains an embedded candidate or
+Question for later Domain Enrichment. It does not create placeholder external
+concepts. New members inside one Batch are not reconciled against each other
+during Init.
+
+### D10 — Outcome semantics
+
+The public result is either `Ready for review` or `Incomplete`. A ready result
+may have partial coverage, Questions and limitations. Incomplete is reserved for
+authority, process, source-mutation, integrity or unrepaired validation failure
+that prevents a trustworthy proposal. Detailed internal benchmark categories
+may remain internal.
+
+### D11 — Retry and checkpoint behavior
+
+The user calls Init again; MCP decides resume or restart.
+
+- Before Prepare, retry restarts Discover/Investigate but may reuse a verified
+  Code Graph cache for the same revision.
+- After Prepare, Author/Validate may resume from the retained private workspace
+  and Inventory Receipt when repo revision and Hub base still match.
+- Source/base/integrity drift invalidates unsafe state and starts a new attempt.
+- Incomplete output is never queryable, acceptable or publishable.
+- Batch retries only the failed member when exact completed checkpoints remain valid.
+
+### D12 — Codebase Memory integration
+
+Gateway captures index diagnostics and normalizes the pinned provider's routes,
+entry points, packages, boundaries, layers, hotspots and clusters. A bounded
+source-file census groups API specs, Terraform/Terragrunt, Docker/deploy, CI,
+runtime manifests and root docs. Routes, entry points, service boundaries,
+source groups and partial/unsupported diagnostics may drive coverage gates;
+hotspots, clusters and raw package boundaries are investigation hints only.
+No public `scan_for_okf_concepts` tool is added. Provider-format compatibility
+is covered by adapter contract tests on upgrade.
+
+### D13 — Discovery Seed and Inventory Receipt
+
+The per-connection Discovery Seed binds repository root/revision and captured
+machine signals; it is discarded on repo switch, revision change or session
+close. During Investigate, Inventory remains editable. Successful guidance
+freezes a compact Receipt containing lane statuses, items, dispositions, source
+references, limitations and an MCP-derived digest. Raw graph/source does not
+enter the Receipt.
+
+MCP validates `Discovery Seed -> Inventory -> OKF`: high-signal groups cannot be
+silently absent, and Concept/Embedded/Question dispositions must materialize in
+the proposal. Ignored groups appear only as bounded inspection counts/reasons.
+
+### D14 — Receipt handoff
+
+`get_okf_authoring_schemas` should return a `discovery_receipt_id` after
+validating the inventory. New-mode `prepare_hub_okf` consumes that exact receipt
+instead of trusting a re-sent mutable guidance request. Before Prepare the
+receipt is session-only; after Prepare its compact form belongs to the private
+authoring checkpoint. This adds no public tool or workflow database.
+
+### D15 — Public skill behavior
+
+The user invokes only `agentbase-ingest`. Internal Codebase Memory and OKF skills
+guide the five stages. Routine ambiguity becomes a Question instead of an
+interactive interruption. Only Domain, Repository identity or scope/authority
+ambiguity may block for user confirmation. MCP does not choose the harness
+model; Sol remains the Init qualification recommendation, not a runtime router.
+
+### D16 — Init, Refresh and Enrichment boundary
+
+Init creates the first broad repository-local baseline. Normal Refresh remains
+change-first, then known gaps, then a small discovery pass. A later explicit
+Full Discovery Refresh may rerun broad discovery after an MCP upgrade or owner
+audit while preserving Repository identity. Domain Enrichment resolves
+cross-repository/provider candidates after publication. It does not replace
+repo-local discovery.
+
+### D17 — Batch behavior
+
+Batch reuses isolated single-repository Init sequentially. Each member owns its
+Seed, Receipt, staging and checkpoint. One member's evidence cannot support
+another. The batch validates and publishes one atomic proposal; cross-member
+reconciliation waits for post-publish Domain Enrichment. Parallel/model-router
+work remains deferred until measured need.
+
+### D18 — Review presentation
+
+Proposal inspection shows Repository/Domain/revision, concept adds/updates/
+deletes, embedded groups, relations/Flows, Questions, five-lane coverage,
+Ignored group counts/reasons and limitations. Raw Inventory and graph records do
+not enter the PR. Structured inspection plus Markdown diff remains the MVP;
+HTML review is optional later.
+
+### D19 — Qualification policy
+
+Benchmark the released skill, not a synthetic authoring prompt. Expectations are
+tiered: P0 identity/runtime/interface/deploy/outbound-evidence/integrity signals
+are blocking; P1 useful Flows/data/integrations/limitations may yield partial;
+P2 CRUD/helper/test details are not completeness targets. Do not require exact
+concept counts, names or one exact evidence-file combination when another valid
+representation exists. Run sequentially; stop on an obvious blocker, otherwise
+run one identical replica. Report improvements, regressions, OKF/MCP issues,
+benchmark issues, elapsed time and tokens. Measure tokens before optimizing.
+
+### D20 — Large repositories and monorepos
+
+One Git root gets one Init and one Code Graph. A parent workspace containing
+multiple Git roots routes through Scan/Batch. A real monorepo receives one whole
+repo overview; path-scoped architecture may investigate evidenced runtime roots
+without reindexing. Unsupported/partial parser coverage is a limitation and may
+fall back to bounded direct source reading; it is not automatically a failed
+run. Do not infer one System per `apps/*` directory without semantic evidence.
+
+### D21 — Questions
+
+Question is durable unresolved knowledge, not an error or a dump for every
+missing detail. Useful kinds include identity, relation, ownership/scope,
+runtime value and conflict. Questions include observed evidence, missing proof,
+options/recommendation when available and affected concepts/relations. Only
+Repository identity and primary Domain questions block Init. Resolution remains
+proposal/review based and user answers remain user evidence rather than absolute
+truth. Similar questions are grouped to prevent flooding.
+
+### D22 — Init mutation authority
+
+Init may add its Repository, owned concepts, confirmed Domain relation,
+navigation, Questions and strongly resolved outgoing relations. It must not
+delete or rewrite Published knowledge owned by another repository, merge old
+concepts, repair stale Hub content or re-Init an existing Repository. Existing
+Repository routes to Refresh. Hub-base advance triggers rebase/revalidation and
+returns to source investigation only when evidence or identity actually changed.
+
+### D23 — Human-readable knowledge activity
+
+Keep Git commit/PR and proposal diff as authoritative history. Add concise
+non-concept activity summaries at:
+
+```text
+repositories/<slug>/log.md
+domains/<slug>/log.md
+```
+
+Repository logs cover successful Init, Refresh, corrections and Question
+resolution affecting that repo. Domain logs cover successful Enrichment,
+cross-repository relation/Flow and membership changes. Do not log queries, tool
+calls, raw Inventory or failed/Incomplete attempts into the Hub. Logs use the
+existing validated date/bullet format, newest first; concepts may link to their
+log. Do not place history in indexes, every concept or one global log.
+
+## Pending review
+
+- No owner decision remains recorded at this checkpoint. Continue the
+  sequential low-level review; append new decisions here before relying on chat history.
+- After review completion, reconcile the approved behavior into the high-level
+  presentation and low-level living design before implementation begins.

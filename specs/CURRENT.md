@@ -1,6 +1,6 @@
 # Current capability
 
-Active capability: None.
+Active capability: [`046-initial-ingest-discovery`](046-initial-ingest-discovery/spec.md) — owner design review in progress; no implementation yet.
 Most recent completed: [`045-visualize-published-hub`](045-visualize-published-hub/spec.md).
 
 Capability 045 adds one deterministic presentation-neutral projection over one
