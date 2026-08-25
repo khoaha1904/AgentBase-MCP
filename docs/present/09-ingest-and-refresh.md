@@ -1,7 +1,8 @@
 # 09 — Ingest và Refresh
 
-> Trạng thái: Initial Ingest/Refresh đã qualify; Batch Initial Ingest và AWS/SQS
-> Domain Enrichment đã implement offline.
+> Trạng thái: Initial Ingest/Refresh và Batch Initial Ingest đã implement theo
+> baseline hiện tại. Capability 046 broad-discovery redesign đã được owner chốt;
+> implementation và qualification mới chưa chạy.
 
 ## Câu trả lời ngắn
 
@@ -44,9 +45,19 @@ Scan chỉ liệt kê local repos và báo Hub classification unavailable.
   nội bộ, limitation và Question tự động.
 - Match chưa chắc chắn chỉ tạo candidate/Question, không tự merge hoặc tự tạo
   relation xuyên repository.
-- Completeness toàn repository không phải success gate. Một proposal nhỏ, hợp
-  lệ và có provenance tốt hơn một run dài cố author mọi thứ; các lần Refresh có
-  thể bổ sung knowledge dần.
+- Discover kiểm tra năm lane: identity, runtime, interface/event, integration/
+  data/channel và deploy/operations. Tín hiệu quan trọng phải được xử lý thành
+  concept, embedded, Question hoặc ignored có lý do.
+- Completeness toàn repository và số lượng concept không phải success gate.
+  Proposal vẫn selective, nhưng không được sparse bằng cách bỏ qua tín hiệu có
+  giá trị cao mà không ghi nhận.
+
+Preflight của Hub Init bind exact remote default-branch commit trước Discover.
+Checkout hiện tại chỉ được reuse khi clean và trùng exact commit đó; nếu repo
+đang ở feature branch, dirty hoặc khác commit, MCP dùng detached worktree/cache
+tạm và không checkout/stash/sửa workspace. Scan không build graph. Không có
+active Remote Hub thì AgentBase chỉ Scan và dùng source/Code Graph, không tạo
+OKF Draft.
 
 Mỗi canonical repository chỉ Initial Ingest một lần. Không có remote lock vì
 rủi ro hai máy cùng làm việc này rất thấp. Nếu bị trùng, bản publish trước giữ
@@ -77,6 +88,9 @@ bằng chứng chắc chắn rằng knowledge đã sai. Correction/removal theo 
 - Initial Ingest dùng bounded five-stage lifecycle, catalog 7 skeleton/template
   và dừng ở inspectable proposal. Benchmark ECS full-stack bằng Sol tạo 7
   concept hữu ích mà không promote mọi AWS resource.
+- Capability 046 giữ nguyên lifecycle/catalog nhưng chuyển từ candidate-only
+  validation sang `Discovery Seed → Inventory Receipt → OKF`, đồng thời benchmark
+  released skill theo tier tín hiệu thay vì exact concept inventory.
 - Refresh dùng exact commit diff trước known gaps/discovery, giữ foreign evidence
   và dừng ở proposal. Hai run Terra liên tiếp cập nhật nhất quán health contract
   từ `/status` sang `/health` ở code + Terraform.
@@ -121,6 +135,12 @@ Người dùng có thể retry hoặc bỏ lần chạy lỗi. Retry cập nhậ
 không tạo concept/relation trùng; khi thành công, MCP chạy lại reconciliation
 cần thiết.
 
+Trước Prepare, retry chạy lại Discover/Investigate nhưng có thể reuse graph cùng
+exact revision. Sau Prepare, Author/Validate được resume từ Receipt/workspace
+khi source và Hub base còn khớp. P0 signal chưa xử lý do source/authority/adapter
+failure làm run `Incomplete`; thiếu P1/P2 có thể vẫn `Ready for review` cùng
+Question/limitation.
+
 ## Canonical repository
 
 Initial Ingest tạo một `Repository ID` ổn định trong Hub. Tên folder và remote
@@ -136,6 +156,8 @@ URL không phải identity chính; chúng được giữ làm aliases/evidence.
 
 - Batch Refresh hoặc batch trộn Init/Refresh.
 - `agentbase-scan` public workflow đã implemented theo bounded Published-only contract.
+- Capability 046 Discovery Seed, compact Inventory Receipt, coverage validation,
+  remote-default worktree isolation và activity-log summaries.
 - Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
 - Persisted freshness report và ordinary-query freshness marks; local report và CI đã có.
 - Full repository-identity recovery cho mọi rename/fork/mirror edge case.

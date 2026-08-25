@@ -1,6 +1,7 @@
 # 01.01 — Skill orchestration
 
-> Trạng thái: Single-repository orchestration và workspace routing implemented.
+> Trạng thái: Baseline orchestration implemented; Capability 046 Init-stage
+> guidance changes approved, implementation pending.
 
 ## Quyết định
 
@@ -42,6 +43,8 @@ Agent áp dụng concept/schema rules
 - bind một repository root được phép;
 - quản lý provider lifecycle và freshness;
 - trả graph result, source snippet, validation và Hub operations có giới hạn;
+- tạo compact machine Discovery Seed và validate coverage/disposition; không
+  diễn giải semantic meaning thay Agent;
 - không tự quyết định Domain, concept, schema hoặc truth.
 
 ## Chọn repository trong workspace
@@ -66,13 +69,20 @@ Public skill điều phối hai workflow nội bộ hiện có thay vì copy ch�
 - `use-codebase-memory` cho map, search, trace và source retrieval;
 - `agentbase-okf` cho authoring, validation và review boundary.
 
+Public `agentbase-ingest` vẫn là entrypoint duy nhất. Nó bắt đầu Preflight,
+Discover, Investigate, Author, Validate; không thêm prompt người dùng hoặc public
+scanner skill/tool. Chỉ Domain, repository identity hoặc scope/authority
+ambiguity được hỏi blocking; uncertainty khác trở thành Question/limitation.
+
 Các rule chi tiết vẫn có một owner. Umbrella skill chỉ định tuyến và truyền kết
 quả giữa hai workflow; không import nội dung bằng cách sao chép nguyên skill.
 
 ## Non-goals
 
 - Không thêm prompt người dùng phải tự viết.
-- Không để MCP chạy một fixed autonomous scan và tự tạo concept.
+- Không để MCP chạy một fixed autonomous scan và tự tạo concept. Machine Seed
+  chỉ capture/group structural signals; Agent vẫn điều tra và disposition.
 - Không ingest raw graph vào Hub.
-- Không clone repository remote để dựng graph.
+- Không clone repository remote cho ordinary query. Hub Init được phép tạo
+  detached worktree/cache từ exact authorized remote default commit.
 - Không gộp Accept hoặc Publish vào quyền Ingest/Refresh mặc định.

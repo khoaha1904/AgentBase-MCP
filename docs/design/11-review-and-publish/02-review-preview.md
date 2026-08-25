@@ -23,7 +23,10 @@ immutable Local Draft commit
 PR preview/body + exact Git diff
 ```
 
-Preview nhóm `Added`, `Updated`, `Removed` và `Questions/Limitations`. Mỗi entry
+Preview nhóm `Added`, `Updated`, `Removed` và `Questions/Limitations`. Initial
+Ingest còn hiển thị Repository/Domain/revision, five-lane coverage, embedded
+groups, relations/Flows và ignored counts/reasons; raw Seed/Inventory/graph
+không vào review/PR. Mỗi entry
 giữ path, change kind, allowed state, reason khi có, bounded before/after bytes
 và digest. Destructive entry phải giữ correction/removal reason/evidence;
 preview không tự suy diễn lý do từ Git diff.
@@ -65,6 +68,15 @@ authoring rồi Finalize lại.
 - Invalid/non-applicable inspection không được Accept.
 - Proposal bytes/base thay đổi sau inspection làm Accept fail closed.
 - Preview không đọc source, probe credential, Refresh, Accept hay Publish.
+
+## Knowledge activity summaries
+
+Successful proposal materializes concise newest-first entries in
+`repositories/<slug>/log.md` for repository-owned activity and
+`domains/<slug>/log.md` for membership/Enrichment/cross-repository relation or
+Flow activity. Existing Hub log grammar remains authoritative. Do not log query,
+tool call, raw Inventory or failed/Incomplete attempt. Git commit, PR and exact
+diff remain the complete audit history.
 
 ## Current implementation gap
 

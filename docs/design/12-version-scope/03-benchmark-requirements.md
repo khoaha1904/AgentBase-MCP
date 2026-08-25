@@ -291,6 +291,20 @@ benchmarks.
   and excludes Finalize-generated Questions only from that pre-Finalize
   coverage comparison; neither final OKF validation nor Question governance is
   weakened.
+- **AB-BENCH-074** — Capability 046 qualification invokes the exact released
+  `agentbase-ingest` skill against exact clean remote-default fixture revisions.
+  P0 scoring gates repository identity, runtime/entrypoint, interface/trigger,
+  deploy evidence, explicit outbound dependency acknowledgement and proposal
+  integrity. P1 useful Flow/data/integration/limitations may remain partial;
+  P2 CRUD/helper/test details are diagnostics, not completeness requirements.
+  No scorer requires an exact concept count, concept name or one exact source
+  combination when another source-truthful representation satisfies the role.
+- **AB-BENCH-075** — Capability 046 runs one sequential probe and stops on a hard
+  lifecycle/integrity/coverage blocker. A valid run without a clear blocker may
+  run one identical sequential replica to compare semantic stability. Every
+  report separates OKF/MCP defects from benchmark defects and states improvement,
+  regression, elapsed time and token use versus the prior accepted run. Token
+  cost is measured before setting a product budget or narrowing discovery.
 
 ## Context A/B interpretation
 

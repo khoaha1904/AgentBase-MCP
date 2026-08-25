@@ -1,6 +1,27 @@
 # 03.01 — Candidate discovery
 
-> Trạng thái: Bounded Agent discovery + deterministic gates implemented.
+> Trạng thái: Bounded Agent candidate gates implemented; Capability 046 broad
+> discovery coverage target approved, implementation pending.
+
+## Discovery lanes và Seed
+
+Discover chạy năm lane: repository identity/product; runtime/entrypoint;
+interface/route/event/trigger; dependency/integration/data/channel; và deploy/
+operations. MCP tạo private per-connection Discovery Seed từ provider output và
+bounded file census. Raw graph nodes được compact thành session-stable evidence
+groups; repeated low-value rows giữ count và source samples.
+
+Investigate tạo mutable Inventory. Mỗi important Seed group phải map sang đúng
+một disposition: `concept`, `embedded`, `question` hoặc `ignored` với bounded
+reason. Agent có thể split/merge group khi exact evidence yêu cầu nhưng phải giữ
+trace về mọi originating Seed ID. Guidance thành công freeze compact Inventory
+Receipt; raw graph/source không vào Receipt hoặc Hub.
+
+`get_okf_authoring_schemas` validate mutable Inventory against the active Seed
+and returns `discovery_receipt_id`. New-mode `prepare_hub_okf` consumes that
+exact ID instead of trusting a re-sent mutable guidance payload. Before Prepare
+the receipt is session-only; after Prepare its compact form belongs to the
+private authoring checkpoint for safe retry.
 
 ## Candidate sources
 
@@ -47,6 +68,10 @@ tả phần thiếu cụ thể thay vì một con số trông chính xác giả.
 - Một source trực tiếp có thể đủ; không đặt minimum source count giả tạo.
 - Future intent hoặc docs mơ hồ không được trình bày như implemented state.
 - Candidate không được tạo chỉ để làm Hub chi tiết hơn.
+- Route, entrypoint, runtime root, API spec, IaC/deploy group, explicit service
+  boundary, channel và datastore không được biến mất trước disposition.
+- CRUD handler, helper, test, generated/vendor row và lockfile-only dependency
+  được group/ignore; important không đồng nghĩa standalone concept.
 
 ## Deterministic/AI balance
 

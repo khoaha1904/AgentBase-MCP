@@ -1,8 +1,8 @@
 # 01 — MCP đọc một dự án như thế nào?
 
-> Trạng thái: Hướng sản phẩm đã chốt; local Code Graph đã implement. Quy tắc
-> chọn repository trong workspace nhiều repo chờ audit implementation sau khi
-> hoàn tất 12 phần.
+> Trạng thái: Local Code Graph đã implement. Capability 046 đã chốt thiết kế
+> broad discovery/selective OKF và remote-default source isolation; implementation
+> delta chưa triển khai.
 
 ## Câu trả lời ngắn
 
@@ -12,13 +12,15 @@ những đoạn code và tài liệu cần thiết để làm bằng chứng.
 ```text
 Người dùng gọi skill ingest/refresh
              ↓
-Agent yêu cầu MCP lập bản đồ repository
+Preflight bind exact repository/source snapshot
+             ↓
+Discover yêu cầu MCP lập hoặc reuse bản đồ repository
              ↓
 Code Graph tìm file, function, dependency và luồng gọi
              ↓
-Agent dùng bản đồ để tìm đúng nơi cần kiểm tra
+MCP gom tín hiệu thành bounded discovery groups
              ↓
-MCP đọc code hoặc tài liệu gốc để lấy bằng chứng
+Agent điều tra nhóm quan trọng và đọc nguồn gốc làm bằng chứng
 ```
 
 ## Tại sao cần Code Graph?
@@ -51,6 +53,10 @@ xuất để đưa vào Hub.
 Code Graph chỉ được dùng cho repository đã có local hoặc nằm trong workspace.
 MCP không tự clone repository remote để dựng graph khi người dùng query.
 
+Hub Initial Ingest là ngoại lệ có authority rõ: Preflight có thể tạo một
+detached worktree/cache tạm từ exact remote default-branch commit. Đây không
+phải query-time clone và không thay đổi checkout người dùng.
+
 ## Khi workspace có nhiều repository
 
 Mỗi Git repository vẫn có Code Graph riêng. Thư mục cha chỉ là phạm vi giúp
@@ -70,16 +76,28 @@ Ngoại lệ là khi người dùng gọi explicit `agentbase-scan`: workflow n�
 Git roots trong workspace đã chọn để lập inventory, có bounds rõ và không dựng
 Code Graph hay đọc source sâu.
 
+## MCP đọc sâu tới đâu?
+
+Discover kiểm kê rộng các nhóm có tín hiệu cao: root README, runtime/package
+manifest, entrypoint, interface/route/event/trigger, integration/data/channel,
+Terraform/Terragrunt, deploy và CI. Nó không crawl toàn bộ source hay `docs/`.
+Agent chỉ mở sâu file mà graph/census chỉ ra là quan trọng; generated/vendor/
+build output bị loại, lockfile chỉ là dependency hint. Mỗi nhóm quan trọng phải
+được xử lý hoặc ghi limitation, nhưng không bắt buộc trở thành concept.
+
 ## Khi nào graph được tạo?
 
 Graph được tạo hoặc reuse theo kiểu lazy: chỉ khi một workflow thật sự cần đọc
 source chính xác của repository đã chọn. Việc mở thư mục cha hoặc chỉ query Hub
 không làm MCP prebuild graph.
 
-Trong Ingest, graph được tạo hoặc reuse ở bước điều tra. Trong Refresh, MCP chỉ
-reuse cache khi repository identity, source revision, engine và namespace khớp;
-nếu source đã đổi thì index lại. Process được đóng sau run, còn cache local có
-thể giữ lại. Không có watcher, daemon hoặc background indexing mặc định.
+Trong Ingest, graph được tạo hoặc reuse ở bước Discover sau khi Preflight đã
+chọn exact source. Nếu current checkout clean và trùng remote default commit,
+MCP dùng nó; nếu feature/dirty/khác commit, MCP dùng detached worktree tạm. Trong
+Refresh, cache chỉ được reuse khi repository identity, source revision, engine
+và namespace khớp; nếu source đã đổi thì index lại. Process được đóng sau run,
+còn cache local có thể giữ lại. Không có watcher, daemon hoặc background
+indexing mặc định.
 
 ## Một câu để trình bày
 

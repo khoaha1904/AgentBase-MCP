@@ -41,6 +41,7 @@ PR phải tự giải thích đủ để reviewer hiểu trước khi đọc fil
 - mục đích của proposal và repository/Domain liên quan;
 - knowledge nào được thêm, cập nhật hoặc xóa;
 - Questions, limitations và source revision/evidence chính;
+- coverage của năm discovery lane, embedded groups và ignored counts/reasons;
 - validation/qualification đã chạy và điều gì chưa được xác minh.
 
 Git diff vẫn là evidence cuối, nhưng không được bắt reviewer tự suy ra toàn bộ
@@ -53,6 +54,9 @@ không trở thành knowledge authority, không cần service/database riêng v�
 tự Accept hoặc Publish.
 
 Trước PR, MCP xác nhận Hub Published mới nhất và yêu cầu giải quyết Git conflict.
+Hub Init còn xác nhận proposal vẫn bind exact remote default-branch source
+commit đã dùng ở Discover; source advance làm proposal quay lại validation/
+discovery phù hợp thay vì publish evidence cũ.
 Thứ tự commit của Local Draft chỉ là thứ tự lưu local, không mặc nhiên là
 dependency publication. Mỗi Repository Init có thể mở PR riêng cùng lúc từ
 Published `main`; Refresh chỉ phụ thuộc proposal trước của chính Repository đó.
@@ -107,6 +111,12 @@ metadata tùy chọn bị thiếu được ghi là unavailable. MCP không dùng
 merge, approve, close hoặc xóa branch. Khi Published `main` đổi, proposal còn mở
 được reconcile tuần tự và cập nhật trên chính branch/PR hiện có; conflict phải
 được giải quyết trước khi branch đó được cập nhật.
+
+Successful proposal còn cập nhật concise human-readable activity summary:
+`repositories/<slug>/log.md` cho Init/Refresh/correction/Question resolution và
+`domains/<slug>/log.md` cho membership/Enrichment/cross-repository relation hoặc
+Flow. Git/PR/diff vẫn là history authority; log không ghi query, raw Inventory,
+tool call hay failed/Incomplete attempt.
 
 Remote Hub hoàn toàn rỗng dùng một explicit Bootstrap ngoại lệ: sau preview và
 confirmation, MCP tạo thẳng target branch với complete baseline gồm root

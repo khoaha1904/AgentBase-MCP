@@ -18,9 +18,16 @@ Private machine ledger nếu có chỉ là cache dựng lại được, không p
 - Nhiều nguồn cùng hỗ trợ một claim được giữ làm provenance.
 - Nhiều claim mâu thuẫn được trình bày song song; Hub không tự chọn theo độ mới
   hoặc trạng thái Published.
+- Source role được giữ rõ: code/config/API spec/IaC mô tả implementation hoặc
+  desired technical state; README/docs có thể mô tả intent hay contract cũ.
+  Không có luật chung “code luôn thắng docs”.
 - Nguồn quá mơ hồ để tạo claim được giữ cùng candidate/Question.
 - Question và limitation chưa giải quyết vẫn có thể publish nếu ghi rõ điều chưa
   biết và nguồn liên quan.
+
+Mâu thuẫn ảnh hưởng behavior, ownership, relation hoặc vận hành được gom thành
+Question. Khác biệt nhỏ có thể được giữ trực tiếp dưới dạng các snapshot/claim
+có nguồn mà không ngắt Initial Ingest.
 
 ## Vòng đời của Question
 

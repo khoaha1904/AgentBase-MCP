@@ -27,6 +27,12 @@ preflight batch
 - Cross-repository discovery/provider verification không chạy trong batch
   Ingest; Domain Enrichment làm sau.
 
+Capability 046 Preflight resolves each member's exact remote default commit
+before Discover. A clean exact-matching checkout may be reused; feature/dirty/
+different revisions use an isolated detached worktree/cache. Batch never
+checkout/stash/restore user worktrees. Each member builds/reuses a graph only
+after this source selection and owns its own Seed/Receipt.
+
 ## Vì sao chưa parallel
 
 Parallel graph/Agent runs tăng process/account load và tạo thêm Hub base/rebase

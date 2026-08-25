@@ -1,6 +1,7 @@
 # Capability 046 — Initial Ingest discovery quality
 
-> Status: owner design review in progress; behavior, living docs and implementation are unchanged.
+> Status: owner design approved; living docs describe the pending target and
+> runtime implementation remains unchanged.
 
 ## Objective
 
@@ -50,8 +51,62 @@ discovery, not a concept quota or a second Code Graph.
 - mandatory subagents, parallel ingest or a runtime model router;
 - token optimization before a measured implementation result.
 
+## Required behavior
+
+1. Scan remains read-only and builds no graph. Initial Ingest requires one
+   active Remote Hub and selects the exact remote default-branch commit before
+   Discover; it never checks out or stashes the user's working tree.
+2. Discover derives one private Seed from normalized pinned-provider signals
+   plus a bounded file census and compacts repeated technical rows into
+   traceable evidence groups.
+3. Investigate closes five lanes and gives every important Seed group one
+   `concept`, `embedded`, `question` or `ignored` disposition backed by exact
+   authorized repository source or a truthful limitation.
+4. Successful guidance freezes one compact Inventory Receipt. Prepare consumes
+   the receipt identity, and Validate checks both Seed-to-OKF coverage and normal
+   OKF integrity before inspection.
+5. A trustworthy selective proposal is Ready for review even with P1/P2 gaps,
+   Questions or limitations. Authority, mutation, integrity or unresolved P0
+   coverage failure is Incomplete and cannot be queried, accepted or published.
+6. Batch applies the same source and discovery contract sequentially per member,
+   keeps evidence isolated and produces one atomic proposal without cross-member
+   reconciliation.
+7. Inspection and PR presentation include source revision, lane coverage,
+   embedded knowledge, relations/Flows, Questions, limitations and bounded
+   ignored reasons. Successful knowledge changes update concise Repository or
+   Domain logs; failed attempts and raw inventory never enter the Hub.
+
+## Acceptance scenarios
+
+- A clean checkout at the exact remote default commit is indexed once and its
+  graph may be reused through proposal creation.
+- A feature/dirty/different checkout is left byte-for-byte unchanged while Init
+  analyzes an isolated exact remote-default worktree/cache.
+- Explicit route, entrypoint, runtime, outbound integration and deploy signals
+  cannot silently disappear even when only a small number of concepts is useful.
+- Twenty related CRUD routes may become one Interface group or embedded summary;
+  they are not required to become twenty concepts.
+- Conflicting README and technical configuration claims retain their source
+  roles; a material conflict creates a grouped Question rather than an invented
+  winner.
+- A partial/unsupported provider area yields a named lane limitation or
+  Incomplete P0 failure instead of appearing as an empty repository.
+- The released `agentbase-ingest` skill completes the exact workflow without a
+  public scanner tool, model router, provider call, Accept or Publish action.
+
+## Success criteria
+
+- Offline contracts prove exact source isolation, provider-shape compatibility,
+  Seed grouping, disposition coverage, receipt handoff, retry invalidation,
+  batch isolation, inspection and activity-log rendering.
+- One real skill-driven Sol probe produces a structurally valid proposal and
+  acknowledges representative P0 evidence without an exact concept inventory.
+- A valid probe authorizes at most one sequential identical replica; reports
+  separate product defects from benchmark defects and include change versus the
+  previous run, elapsed time and token use.
+
 ## Owner decisions
 
-The detailed, compaction-safe decision record is in
+The detailed, compaction-safe approved decision record is in
 [`decisions.md`](decisions.md). Living high-level and low-level documents are
-updated only after the owner finishes this sequential review.
+marked as the pending Capability 046 target until implementation qualifies it.

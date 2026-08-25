@@ -1,7 +1,8 @@
 # 09 — Ingest và Refresh
 
-> Trạng thái: Single-repository Init/Refresh, Batch Initial Ingest và bounded
-> Domain Enrichment, local Repository freshness report and Hub CI implemented; Batch Refresh deferred.
+> Trạng thái: Single-repository Init/Refresh, Batch Initial Ingest, bounded
+> Domain Enrichment, freshness report và Hub CI đã implement theo baseline.
+> Capability 046 Initial Ingest discovery redesign approved; implementation pending.
 
 High-level decision:
 [Ingest và Refresh](../../present/09-ingest-and-refresh.md)
@@ -43,6 +44,9 @@ High-level decision:
 - Deferred: Batch Refresh, mixed Init/Refresh, additional Domain Enrichment
   profiles, ordinary query age presentation và persisted freshness report.
 - Implemented MVP: public bounded `agentbase-scan`.
+- Approved/pending capability 046: remote-default Init source isolation,
+  Discovery Seed → Inventory Receipt → OKF coverage gates, expanded inspection
+  and concise Repository/Domain activity logs.
 
 Qualification policy hiện dùng Sol cho Initial Ingest và Terra cho Refresh.
 Đây là benchmark configuration, không phải runtime model router của MCP.

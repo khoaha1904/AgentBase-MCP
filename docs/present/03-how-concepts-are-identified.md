@@ -1,6 +1,7 @@
 # 03 — MCP nhận diện concept trong repository thế nào?
 
-> Trạng thái: Đã đồng bộ catalog 7 và Initial Ingest hiện tại.
+> Trạng thái: Catalog 7 đã implement. Capability 046 đã chốt discovery coverage
+> mới; implementation delta chưa triển khai.
 
 ## Câu trả lời ngắn
 
@@ -20,6 +21,8 @@ Local Draft để người dùng review
 ```
 
 Code Graph là bản đồ tìm kiếm, không phải danh sách concept để sao chép vào Hub.
+Initial Ingest vì vậy **discover rộng nhưng publish chọn lọc**: MCP phải nhìn
+thấy các nhóm tín hiệu quan trọng trước, còn OKF chỉ giữ knowledge có ích.
 
 ## Schema và concept khác nhau thế nào?
 
@@ -40,6 +43,11 @@ Một thành phần được đề xuất thành concept riêng khi nó:
 
 Hub ưu tiên ranh giới có giá trị query/navigation. Cloud resource nội bộ thường
 là embedded knowledge trong concept cha, không tự động thành một file concept.
+
+Một discovery group không đạt hai gate không biến mất âm thầm. Agent chọn đúng
+một disposition: `concept`, `embedded`, `question` hoặc `ignored` kèm bounded
+reason. MCP đối chiếu các disposition này với machine-derived Discovery Seed;
+không đặt quota concept và không yêu cầu mọi route/resource thành file.
 
 | Thứ được tìm thấy | Cách biểu diễn |
 |---|---|
@@ -72,6 +80,9 @@ tại; nó không tạo ignore registry và Refresh sau vẫn có thể phát hi
 
 - Candidate cần identity ổn định, query/link value và exact evidence; không dùng
   confidence score giả chính xác.
-- Initial Ingest đã tạo sparse proposal và cho phép knowledge bổ sung dần.
+- Initial Ingest hiện tạo sparse proposal và cho phép knowledge bổ sung dần.
+- Capability 046 sẽ thêm compact discovery groups, five-lane Inventory Receipt
+  và coverage validation để một sparse proposal không bỏ sót tín hiệu quan trọng
+  mà không giải thích.
 - Candidate chỉ sống trong proposal workflow; MVP không cần registry hoặc UI
   review riêng. Cross-repository promotion thuộc Domain Enrichment.

@@ -49,6 +49,12 @@ MCP không chạy NLP toàn Hub để đoán prose nào mâu thuẫn. Prose conf
 thành governed conflict khi proposal/Question giữ exact evidence và bounded
 summary.
 
+Trong repository discovery, source roles không bị ép thành một winner: code,
+config, API spec và IaC có thể mô tả implemented/desired technical state; README
+và docs có thể mô tả intent hoặc contract cũ. Material conflict ảnh hưởng
+behavior, ownership, relation hoặc operations tạo grouped Question. Khác biệt
+nhỏ có thể ở lại dưới dạng attributed claims/snapshots mà không block Init.
+
 ## Ordering, không phải ranking truth
 
 Presentation order deterministic để dễ đọc:

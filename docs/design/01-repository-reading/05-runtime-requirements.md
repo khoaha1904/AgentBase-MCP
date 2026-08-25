@@ -155,7 +155,21 @@ fixture cost, so no incremental-speed or scale claim is accepted.
   source from a resolved repository is required, with existing source/engine/
   namespace receipt rules deciding reuse versus refresh. No prewarming,
   background indexing, watcher or daemon is introduced.
+- **AB-MCP-019** — Capability 046 Hub Init resolves the exact authorized remote
+  default-branch commit before indexing. It reuses a checkout only when clean
+  and exact, otherwise analyzes an isolated detached worktree/cache without
+  checkout, stash, hook execution or source-worktree mutation. Ordinary query
+  receives no remote materialization authority.
+- **AB-MCP-020** — The gateway derives a private Discovery Seed from index
+  diagnostics plus normalized routes, entry points, packages, boundaries,
+  layers, hotspots and clusters and a bounded repository-file census. Routes,
+  entry points, explicit boundaries, source groups and partial diagnostics may
+  gate coverage; hotspots/clusters/packages remain investigation hints.
+- **AB-MCP-021** — Provider response-shape fixtures cover every Seed-driving
+  field on source/provider upgrades. Unsupported or partial output produces an
+  explicit lane limitation or failure according to P0 impact; it never silently
+  appears as an empty repository.
 
-`AB-MCP-017` and `AB-MCP-018` are accepted product contracts. Their host-skill
-implementation status will be audited only after all twelve design areas are
-approved; this review does not claim that routing behavior is already shipped.
+`AB-MCP-017` and `AB-MCP-018` are accepted product contracts. Capability 046
+adds approved `AB-MCP-019..021`; those additions are not shipped until its
+implementation and qualification complete.

@@ -1,7 +1,8 @@
 # 01 — Repository reading
 
 > Trạng thái: Core local reading và lazy multi-repository workspace routing đã
-> implement; remote clone vẫn ngoài scope.
+> implement. Capability 046 thêm approved remote-default snapshot riêng cho Hub
+> Init; arbitrary remote clone/query vẫn ngoài scope và implementation còn pending.
 
 High-level decision:
 [MCP đọc một dự án như thế nào?](../../present/01-how-mcp-reads-a-repository.md)
@@ -30,3 +31,8 @@ Batch Ingest xử lý danh sách repository explicit tuần tự ở phần 09. 
 inventory bounded Git roots; query skill chọn một root rõ ràng hoặc hỏi lại và
 gateway thay repository session tuần tự. Không có combined graph hoặc workspace
 registry.
+
+Capability 046 giữ gateway/provider này nhưng thêm machine-derived Discovery
+Seed, compact signal groups và bounded source census. Hub Init có thể materialize
+exact remote default commit trong detached worktree/cache; nó không đổi authority
+của ordinary query hoặc tự clone repository ngoài workflow đã chọn.

@@ -1,6 +1,7 @@
 # 09.01 — Initial Ingest
 
-> Trạng thái: Implemented và model-qualified trên Terraform full-stack fixture.
+> Trạng thái: Baseline implemented/qualified. Capability 046 target approved;
+> discovery coverage implementation and requalification pending.
 
 ## User interaction
 
@@ -11,25 +12,34 @@ viết, provider login hoặc cross-repository investigation.
 ## Stages
 
 ```text
-1. Preflight   repository identity + Domain confirmation
-2. Discover    README/docs + one architecture pass
-3. Investigate shortlist candidates + exact source evidence
-4. Author      bounded Hub match + one guidance call + proposal workspace
-5. Validate    deterministic validation + at most one repair + preview
+1. Preflight   Hub + repository/Domain + exact remote-default source
+2. Discover    graph + bounded file census → private Discovery Seed
+3. Investigate five lanes + exact source → mutable Inventory
+4. Author      freeze Receipt → guidance/skeletons → OKF proposal
+5. Validate    Seed/Receipt coverage + OKF integrity + preview
 ```
 
 Stage boundaries/checkpoints là deterministic. Agent reasoning chỉ nằm trong
-semantic discovery/investigation và phải tạo evidence mới, qualify/drop một
-candidate hoặc ghi ambiguity cụ thể. Không có progress thì dừng investigation.
+semantic discovery/investigation và phải disposition important group thành
+concept, embedded, Question hoặc ignored reason. MCP groups structure and
+validates coverage; Agent decides meaning. Không có progress thì dừng
+investigation.
+
+Preflight requires an active Remote Hub. It resolves exact remote default-branch
+commit before graph creation, reuses current checkout only on a clean exact
+match and otherwise uses an isolated detached worktree/cache. Scan itself does
+not create a graph. Without a Remote Hub there is no OKF Init/Local Draft.
 
 ## Success
 
-Success không yêu cầu full repository coverage. Một run thành công khi tạo được
-một valid, useful, provenance-bearing proposal hoặc kết luận có evidence rằng
-không có useful change trong budget hiện tại.
+Success không yêu cầu full repository coverage hoặc concept quota. Một run thành
+công khi mọi discovery lane là covered, absent-after-check hoặc limited, mọi P0
+group có disposition và proposal valid/useful/provenance-bearing. P1/P2 thiếu có
+thể vẫn `Ready for review` cùng Question/limitation.
 
 Missing low-value details là diagnostics. Ambiguity quan trọng thành Question.
 Integrity/validation failure tạo Incomplete run và không vào query/publish.
+P0 source/authority/adapter gap chưa xử lý cũng tạo Incomplete.
 
 ## Repair budget
 
@@ -51,3 +61,8 @@ với System, frontend/backend Components, Interface và delivery Flow; AWS
 resource nội bộ được giữ embedded. Explicit Batch Initial Ingest đã implement
 offline bằng isolated
 sequential member checkpoints cùng one atomic proposal.
+
+Capability 046 does not add schema/catalog, public scanner tool or concept
+quota. It reuses pinned Codebase Memory, exposes more normalized diagnostics to
+the private Seed and requires released-skill qualification before replacing the
+baseline status above.

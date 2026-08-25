@@ -32,7 +32,8 @@ nhiều bounded queries trong cùng repository run
 ## Lifetime
 
 - Việc mở workspace hoặc query Published Hub không tự tạo graph.
-- Một repository evidence round bind đúng một repository root.
+- Một repository evidence round bind đúng một admitted source root/revision;
+  Hub Init có thể dùng detached remote-default worktree đã được Preflight chọn.
 - Agent được query nhiều lần trong round; nếu workflow cần repo khác, session cũ
   phải đóng sạch trước khi bind repo tiếp theo.
 - Provider process/session phải đóng ở success, failure và cancellation.
@@ -44,7 +45,9 @@ nhiều bounded queries trong cùng repository run
 - Không watcher hoặc daemon mặc định.
 - Không prebuild mọi graph trong workspace và không gộp nhiều graph.
 - Không copy raw graph, provider cache hoặc freshness receipt vào Local Draft/Hub.
-- Không clone remote repository để tạo graph.
+- Không clone remote repository cho ordinary query/arbitrary discovery. Exact
+  remote-default materialization của Hub Init là bounded workflow input, không
+  background clone authority.
 - Không reuse graph giữa hai repository identity chỉ vì source trông giống nhau.
 - Failed refresh không được giả vờ cache mới là fresh; caller nhận failure rõ và
   có thể retry explicit.

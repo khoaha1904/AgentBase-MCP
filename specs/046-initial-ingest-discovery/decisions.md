@@ -257,13 +257,12 @@ no global rule that code always defeats documentation.
 ### D25 — Source selection for local and Hub Init
 
 `agentbase-scan` reports repository, branch, dirty state and Hub membership
-without building a Code Graph. Source selection happens during Init Preflight,
-before Discover:
+without building a Code Graph. Initial Ingest requires one active Remote Hub;
+without it AgentBase offers Scan and source/Code Graph work only, not OKF
+authoring or a Local Draft. Source selection happens during Init Preflight,
+before Discover. Init targets the exact current commit of the repository's
+remote default branch:
 
-- local-only Init may analyze the authorized current working tree and binds a
-  dirty state by its existing exact digest contract;
-- Hub-bound Init targets the exact current commit of the repository's remote
-  default branch;
 - the current checkout is reused only when it is clean and already matches that
   exact remote commit;
 - otherwise MCP creates an isolated detached worktree/cache for the remote
@@ -314,9 +313,11 @@ Investigate the Agent may split or merge groups when exact source evidence shows
 different semantics, but the resulting Inventory must preserve coverage back to
 all originating Seed IDs. MCP groups structure; the Agent still decides meaning.
 
-## Pending review
+## Review closure
 
-- No owner decision remains recorded at this checkpoint. Continue the
-  sequential low-level review; append new decisions here before relying on chat history.
-- After review completion, reconcile the approved behavior into the high-level
-  presentation and low-level living design before implementation begins.
+Owner review is complete through D28. High-level presentation and low-level
+living design must label this behavior as a pending Capability 046 target until
+implementation and released-skill qualification complete. Any later material
+implementation gap changes this record and the affected living design before
+runtime code changes; small grouped gaps follow the same reconciliation before
+the capability closes.

@@ -1,6 +1,7 @@
 # 01.04 — Reading boundaries and failures
 
-> Trạng thái: Single-repository boundary và explicit workspace selection implemented.
+> Trạng thái: Baseline implemented; Capability 046 remote-default Init isolation
+> và bounded discovery census đã approved, implementation pending.
 
 ## Reading authority
 
@@ -8,7 +9,11 @@
   trong graph đó.
 - Thư mục cha chứa nhiều Git repository độc lập chỉ là routing scope, không phải
   repository root hoặc graph identity.
-- Một evidence round bind đúng một repository root local đã được xác định.
+- Một evidence round bind đúng một admitted source root và exact revision.
+- Ordinary query/source work dùng repository local đã được chọn. Hub Init bind
+  remote default commit ở Preflight; current checkout chỉ reuse khi clean và
+  exact-match, còn lại dùng detached worktree/cache tạm mà không checkout/stash
+  workspace người dùng.
 - Source read phải ở trong admitted root; không follow path/symlink thoát ra ngoài.
 - Không tự clone remote repository hoặc mở rộng từ repo sang cả workspace.
 - Không tự recursive scan máy/workspace để tìm repository ngoài phạm vi người
@@ -18,6 +23,15 @@
   không index Code Graph; đây không phải background/arbitrary scan.
 - Multi-repository command truyền danh sách root rõ ràng và xử lý mỗi root như
   một unit riêng; phần 09 sở hữu batch orchestration.
+
+## Bounded discovery census
+
+Capability 046 Discover kiểm kê root README, primary manifests, API specs,
+Terraform/Terragrunt, Docker/deploy, CI/runtime config và graph-derived entrypoint,
+route/event/trigger, boundary, integration/data/channel groups. `docs/` chỉ được
+inspect index/filename/heading trước rồi đọc sâu tài liệu liên quan; generated,
+vendor và build output bị loại, lockfile chỉ là hint. Seed giữ compact groups,
+counts và bounded source samples thay vì raw graph/source inventory.
 
 ## Partial fallback
 
@@ -47,6 +61,7 @@ không chứng minh một concept/relation không tồn tại.
 ### Dừng repository run
 
 - repository/source authority không hợp lệ;
+- Hub Init không resolve/access được exact remote default branch;
 - source thay đổi trong lúc evidence round đang chạy;
 - provider cleanup không xác định được;
 - không còn exact evidence đáng tin nào để tạo useful Draft;
