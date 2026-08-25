@@ -243,6 +243,40 @@ calls, raw Inventory or failed/Incomplete attempts into the Hub. Logs use the
 existing validated date/bullet format, newest first; concepts may link to their
 log. Do not place history in indexes, every concept or one global log.
 
+### D24 — Conflicting repository sources
+
+Do not silently choose one source as absolute truth when repository evidence
+conflicts. Preserve each useful claim with its source role and revision: direct
+code/config/API specifications/IaC describe implemented or desired technical
+state, while README/docs may describe intent or an older public contract. Render
+small safe values as attributed snapshots. Create a grouped Question when the
+conflict materially affects behavior, ownership, relations or operations;
+otherwise retain the attributed difference without interrupting Init. There is
+no global rule that code always defeats documentation.
+
+### D25 — Source selection for local and Hub Init
+
+`agentbase-scan` reports repository, branch, dirty state and Hub membership
+without building a Code Graph. Source selection happens during Init Preflight,
+before Discover:
+
+- local-only Init may analyze the authorized current working tree and binds a
+  dirty state by its existing exact digest contract;
+- Hub-bound Init targets the exact current commit of the repository's remote
+  default branch;
+- the current checkout is reused only when it is clean and already matches that
+  exact remote commit;
+- otherwise MCP creates an isolated detached worktree/cache for the remote
+  default commit and never checks out, stashes or modifies the user's workspace.
+
+Discover builds or reuses a graph bound to that exact source snapshot. The same
+graph, Receipt and OKF proposal can continue to PR only while source and Hub base
+remain unchanged. A newer remote-default commit invalidates the relevant
+discovery/authoring state; changing only the graph cannot make old OKF valid.
+Failure to resolve or access a Hub-bound remote default source makes that member
+Incomplete rather than falling back to a feature branch. Batch applies this
+rule sequentially and independently per repository.
+
 ## Pending review
 
 - No owner decision remains recorded at this checkpoint. Continue the
