@@ -12,7 +12,7 @@ import {
   renderQuestionDocument, renderQuestionIndex, type SharedQuestion,
   type InventoryReceipt, type OkfAuthoringGuidanceRequest,
 } from "../../../core/knowledge/index.ts";
-import { AwsCliAdapter, AwsCliError, type AwsProcessRunner } from "../../../providers/aws-cli/index.ts";
+import { AwsCliAdapter, AwsCliError } from "../../../providers/aws-cli/index.ts";
 import { runGit, type GitRequest, type SourceSnapshot } from "../../../providers/github-hub/index.ts";
 import {
   finalizeDomainEnrichment, prepareDomainEnrichment, runDomainEnrichment,
@@ -27,6 +27,7 @@ import {
   hubProfileCredentialPath, loadExactHubProfileToken, writeGlobalHubToken, writeHubProfileToken,
 } from "../configuration/credential-file.ts";
 import { createTestInventoryReceipt } from "../test-support.ts";
+import { createMockAwsSqsRunner } from "../test-support/mock-aws-sqs.ts";
 
 async function localSourceSnapshot(input: Readonly<{
   requestedRoot: string; repositoryId: string; hub: ReturnType<typeof createHubIdentity>; stateRoot: string;
@@ -199,7 +200,7 @@ async function addPublishedEnrichmentFixture(root: string): Promise<Readonly<{
   return { repositoryIds, questions, commit };
 }
 
-test("[AB-HUB-SETUP-001..017][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] remote Hub keeps Draft separate from Published query", async () => {
+test("[AB-HUB-SETUP-001..017][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012][AB-ENRICH-011..014] remote Hub keeps Draft separate from Published query", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "local-only-hub-e2e-"));
   const environment = { HOME: root, XDG_CONFIG_HOME: path.join(root, "config"), XDG_DATA_HOME: path.join(root, "data") };
   const runtimeState = path.join(root, "state"), receipts = new Map<string, InventoryReceipt>();
@@ -532,25 +533,14 @@ test("[AB-HUB-SETUP-001..017][AB-BATCH-006][AB-HUB-CI-001..007][AB-QUERY-012] re
     const manifest = prepareDomainEnrichment({ stateRoot, publishedRoot: enrichmentRoot, baseCommit: fixture.commit,
       domainId: "domains/crawler", repositoryIds: fixture.repositoryIds, candidates, accountId, regions: [region, otherRegion],
       createdAt: "2026-08-13T00:00:03Z" });
-    const calls: readonly string[][] = [];
-    let reviewFailures = 0;
-    const runner: AwsProcessRunner = async (args) => {
-      (calls as string[][]).push([...args]);
-      if (args[0] === "--version") return { stdout: "", stderr: "aws-cli/2.30.0 Python/3.13" };
-      if (args[0] === "sts") return { stdout: JSON.stringify({ Account: accountId }), stderr: "" };
-      const nameIndex = args.indexOf("--queue-name"), urlIndex = args.indexOf("--queue-url"), regionIndex = args.indexOf("--region");
-      const callRegion = regionIndex >= 0 ? args[regionIndex + 1]! : region;
-      if (nameIndex >= 0) {
-        const name = args[nameIndex + 1]!;
-        if (name === "crawler-review") throw new AwsCliError("unauthorized", "AWS denied the exact read-only operation");
-        if (name === "crawler-results" && callRegion === otherRegion && reviewFailures++ === 0) throw new AwsCliError("throttled", "bounded provider throttling", true);
-        return { stdout: JSON.stringify({ QueueUrl: `https://sqs.${callRegion}.amazonaws.com/${accountId}/${name}` }), stderr: "" };
-      }
-      const queueUrl = args[urlIndex + 1]!, name = queueUrl.split("/").at(-1)!;
-      return { stdout: JSON.stringify({ Attributes: { QueueArn: `arn:aws:sqs:${callRegion}:${accountId}:${name}`,
-        VisibilityTimeout: "30", MessageRetentionPeriod: "345600", ReceiveMessageWaitTimeSeconds: "0" } }), stderr: "" };
-    };
-    const adapter = new AwsCliAdapter(runner);
+    const mock = createMockAwsSqsRunner({ accountId, queues: [
+      ...["crawler-events", "crawler-results", "crawler-review", "crawler-identity"].map((name) => ({ name, accountId, region })),
+      { name: "crawler-results", accountId, region: otherRegion },
+    ], failures: [
+      { name: "crawler-review", accountId, region, operation: "get-queue-url", kind: "unauthorized", message: "AWS denied the exact read-only operation" },
+      { name: "crawler-results", accountId, region: otherRegion, operation: "get-queue-url", kind: "throttled", message: "bounded provider throttling", retryable: true },
+    ] });
+    const calls = mock.calls, adapter = new AwsCliAdapter(mock.runner);
     let mismatchedResourceCall = false;
     const mismatchedAdapter = new AwsCliAdapter(async (args) => {
       if (args[0] === "--version") return { stdout: "", stderr: "aws-cli/2.30.0 Python/3.13" };

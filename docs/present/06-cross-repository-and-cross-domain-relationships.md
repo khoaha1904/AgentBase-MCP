@@ -1,6 +1,7 @@
 # 06 — Quan hệ giữa nhiều repository và nhiều Domain
 
-> Trạng thái: High-level đã chốt; exact AWS/SQS Domain Enrichment đã implement offline.
+> Trạng thái: High-level đã chốt; exact AWS/SQS Domain Enrichment và mock
+> qualification harness đã implement offline.
 
 ## Câu trả lời ngắn
 
@@ -55,6 +56,21 @@ candidate. Nó không tự merge, xóa hoặc tạo redirect; migration đó đ�
 Một lần Domain Enrichment có thể xử lý nhiều repository, Questions và relation
 candidate của cùng Domain. Kết quả được gom thành một publication change để
 review; verification thành công không tự sửa Published knowledge.
+
+## Mock qualification của Domain Enrichment
+
+Khi cần kiểm chứng topology nhưng chưa có AWS account hoặc Published Domain đủ
+rộng, qualification harness có thể dùng một temporary Published fixture. Agent
+điều tra source/evidence hiện có, ghi các liên kết liên repo thành candidate
+hypothesis có confidence, rồi gắn queue name/account/region và ARN deterministic
+trong fixture. Mock CLI trả về đúng shape của released SQS read-only profile để
+chạy cùng reconciliation/proposal path.
+
+Mock chỉ chứng minh workflow và các outcome (`confirmed`, `rejected`,
+`unresolved`, `failed`); nó không chứng minh resource tồn tại trong AWS. Mock
+observation phải bị giới hạn trong test/qualification state, không được trở thành
+provider truth hoặc được publish vào Hub thật. Candidate generator tổng quát,
+account scan và tự động suy luận quan hệ không nằm trong capability này.
 
 Cùng một logical resource ở nhiều region mặc định vẫn là một concept với nhiều
 deployment reference. Chỉ tách khi từng deployment có vai trò, lifecycle hoặc

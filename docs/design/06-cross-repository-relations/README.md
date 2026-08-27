@@ -24,6 +24,9 @@ High-level decision:
   concept, regional deployment references và split boundary.
 - [`07-runtime-requirements.md`](07-runtime-requirements.md) — stable
   `AB-ENRICH-*` requirements cho bounded Domain Enrichment runtime.
+- [`08-mock-provider-qualification.md`](08-mock-provider-qualification.md) —
+  fixture-only mock CLI/provider path để kiểm chứng candidate liên repo mà
+  không tạo provider truth giả trong Published Hub.
 
 ## Dependency hiện tại
 

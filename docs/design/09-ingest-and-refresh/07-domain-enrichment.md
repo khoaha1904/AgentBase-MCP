@@ -2,6 +2,10 @@
 
 > Trạng thái: AWS/SQS MVP đã implement offline; chưa chạy real AWS qualification.
 
+Qualification-only mock provider path thuộc capability 053 và đã implement. Nó
+dùng temporary Published fixture và dừng ở proposal/inspection; không thay thế
+real AWS qualification hoặc làm thay đổi Domain Enrichment authority.
+
 ## Entry và authority
 
 User chọn một Domain, explicit Published repositories/candidates và báo provider

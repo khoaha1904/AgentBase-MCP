@@ -1,7 +1,10 @@
 # Current capability
 
 Active capability: None.
-Most recent completed: [`052-resource-node-promotion`](052-resource-node-promotion/spec.md) —
+Most recent completed: [`053-mock-domain-enrichment-qualification`](053-mock-domain-enrichment-qualification/spec.md) —
+fixture-only mock Domain Enrichment qualification is complete; mock observations
+remain outside canonical Hub publication.
+Previous completed: [`052-resource-node-promotion`](052-resource-node-promotion/spec.md) —
 evidence-backed provider-neutral Resource node promotion, common AWS
 qualification fixtures and direct technology-aware query are complete; the
 fresh resource-bearing Crawler model qualification remains explicitly deferred.

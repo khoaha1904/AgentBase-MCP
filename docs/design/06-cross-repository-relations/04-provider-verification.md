@@ -19,6 +19,11 @@ user login CLI
 CLI verification chỉ bổ sung evidence khi source/Hub chưa đủ. Nó không phải bước
 bắt buộc của mọi relation.
 
+Qualification có thể inject một mock process runner ở test boundary để trả về
+output deterministic theo đúng argv/response contract của profile. Đây là
+harness nội bộ, không phải provider session giả cho MCP production; mock output
+không chứng minh resource tồn tại và không được publish như AWS evidence.
+
 ## Authority boundary
 
 - User chịu trách nhiệm login và nói MCP có thể dùng session hiện tại.

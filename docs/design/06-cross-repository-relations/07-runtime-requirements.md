@@ -35,6 +35,20 @@
 - **AB-ENRICH-010** — Missing CLI/login/scope, access denied và not found giữ
   existing knowledge cùng limitation. Protocol, timeout, integrity hoặc unsafe
   output không admit partial observation.
+- **AB-ENRICH-011** — Fixture-only qualification MAY inject a deterministic
+  process runner/adapter that follows the released SQS argv and normalized
+  response contract; production MCP tools MUST continue using the real bounded
+  provider adapter.
+- **AB-ENRICH-012** — Cross-repository hypotheses MUST retain source/evidence
+  ownership and confidence. A guessed queue name, ARN or relation MUST remain a
+  candidate/Question until an accepted provider observation or maintainer answer
+  resolves it.
+- **AB-ENRICH-013** — Mock observations MUST run against an ephemeral or
+  explicitly test-scoped Published fixture and MUST NOT be admitted as current
+  provider truth or published to the canonical Hub.
+- **AB-ENRICH-014** — Mock qualification MUST exercise deterministic confirmed,
+  rejected, unresolved/failed and retry outcomes without network calls, real
+  credentials or account-wide enumeration.
 
 AWS v1 chỉ release `aws.sts.caller-identity@1` và `aws.sqs.queue@1`. Azure/GCP,
 account scan, concept redirect/merge, background enrichment và provider lookup
