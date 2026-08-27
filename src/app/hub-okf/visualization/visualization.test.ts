@@ -117,7 +117,7 @@ function fixtureDocuments(): Map<string, string> {
   - kind: triggered-by
     target: resources/shared-queue
     evidence: [${SOURCE_ID}]` })],
-    ["resources/shared-queue.md", concept({ type: "Interface", title: "Shared Queue",
+    ["resources/shared-queue.md", concept({ type: "Resource", title: "Shared Queue",
       body: "[Shipping](../systems/shipping.md)", relationships: `
   - kind: part-of
     target: systems/shipping

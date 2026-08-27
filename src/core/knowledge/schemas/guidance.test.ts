@@ -180,6 +180,57 @@ test("[AB-SCHEMA-033][AB-SCHEMA-036][AB-SCHEMA-042] detection does not promote n
   }), /Interface\/Resource promotion requires semantic evidence/);
 });
 
+test("[AB-SCHEMA-052][AB-SCHEMA-053][AB-SCHEMA-054] common AWS resources promote only with boundary evidence", () => {
+  for (const [resourceType, product, kind] of [
+    ["aws_sqs_queue", "sqs", "message-queue"],
+    ["aws_sns_topic", "sns", "message-topic"],
+    ["aws_cloudwatch_event_bus", "eventbridge", "event-bus"],
+    ["aws_s3_bucket", "s3", "object-storage"],
+    ["aws_dynamodb_table", "dynamodb", "database-table"],
+    ["aws_db_instance", "rds", "database"],
+  ] as const) {
+    const base = resource(product, resourceType);
+    const result = getOkfAuthoringGuidance({
+      ...base,
+      candidates: [{ ...base.candidates[0]!, evidenceIds: [`evidence.${product}`, `semantic.${product}`], suggestedType: "Resource",
+        promotion: { basis: "operational" as const, evidenceIds: [`evidence.${product}`, `semantic.${product}`] } }],
+      semanticObservations: [{ id: `semantic.${product}`, candidateId: product, role: "implementation" as const,
+        signal: `shared ${product} resource with independent operational lifecycle`, source }],
+      resourceObservations: [{ ...base.resourceObservations[0]!, id: `evidence.${product}`, candidateId: product }],
+    }).recommendations[0]!;
+    assert.equal(result.status, "suggested", resourceType);
+    assert.equal(result.schema?.type, "Resource", resourceType);
+    assert.equal(result.technology.product, product, resourceType);
+    assert.equal(result.technology.kind, kind, resourceType);
+  }
+});
+
+test("[AB-SCHEMA-052][AB-SCHEMA-053] name-only resource identity remains unsupported", () => {
+  const input = resource("orders-queue", "aws_sqs_queue");
+  assert.throws(() => getOkfAuthoringGuidance({
+    ...input,
+    candidates: [{ ...input.candidates[0]!, suggestedType: "Resource",
+      promotion: { basis: "operational" as const, evidenceIds: ["evidence.orders-queue"] } }],
+  }), /Interface\/Resource promotion requires semantic evidence/);
+});
+
+test("[AB-SCHEMA-055] future-provider technology reuses the generic Resource role", () => {
+  const input = resource("pubsub", "google_pubsub_topic");
+  const result = getOkfAuthoringGuidance({
+    ...input,
+    candidates: [{ ...input.candidates[0]!, evidenceIds: ["evidence.pubsub", "semantic.pubsub"],
+      suggestedType: "Resource", promotion: { basis: "cross-boundary" as const,
+        evidenceIds: ["evidence.pubsub", "semantic.pubsub"] } }],
+    semanticObservations: [{ id: "semantic.pubsub", candidateId: "pubsub", role: "implementation" as const,
+      signal: "shared messaging resource crosses an ownership boundary", source }],
+    resourceObservations: [{ ...input.resourceObservations[0]!, id: "evidence.pubsub", candidateId: "pubsub" }],
+  }).recommendations[0]!;
+  assert.equal(result.status, "suggested");
+  assert.equal(result.schema?.type, "Resource");
+  assert.equal(result.technology.provider, "google");
+  assert.equal(result.providerProfile, undefined);
+});
+
 test("[AB-SCHEMA-033][AB-SCHEMA-040] Terraform-family evidence is bounded and source-truthful", () => {
   const result = getOkfAuthoringGuidance(resource("queue", "${var.resource_type}"));
   assert.equal(result.recommendations[0]?.status, "ambiguous");

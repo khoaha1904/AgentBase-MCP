@@ -29,6 +29,9 @@ reproducible.
 - one Domain per site;
 - every non-governance concept admitted by the Domain scope is visible first,
   including Repository-associated concepts;
+- promoted `Resource` nodes (for example a shared queue/topic) are visible as
+  normal concepts; embedded resource rows remain in their parent document and
+  are not rendered as synthetic nodes;
 - direct cross-Domain endpoints appear as non-expandable boundary nodes;
 - circular nodes use labels below the node; search, type/repository filters,
   1–2 hop focus and a readable right-side selection drawer;

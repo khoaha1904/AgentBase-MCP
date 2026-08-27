@@ -8080,6 +8080,13 @@ function tags(concept) {
   if (!Array.isArray(value)) return [];
   return [...new Set(value.filter((item) => typeof item === "string").map((item) => item.trim()).filter(Boolean))].sort();
 }
+function technology(concept) {
+  const agentbase = concept.frontmatter.agentbase;
+  if (agentbase === null || typeof agentbase !== "object" || Array.isArray(agentbase)) return [];
+  const metadata = agentbase.technology;
+  if (metadata === null || typeof metadata !== "object" || Array.isArray(metadata)) return [];
+  return Object.values(metadata).filter((value) => typeof value === "string").map((value) => value.trim()).filter(Boolean).sort();
+}
 function deriveDomains(concepts, edges) {
   const parents = /* @__PURE__ */ new Map();
   for (const edge of edges) {
@@ -8177,6 +8184,7 @@ async function loadHubGraph(reader, maximumDocumentBytes) {
         title: text(document.frontmatter.title) || document.body.match(/^#\s+(.+)$/m)?.[1]?.trim() || document.conceptId,
         description: text(document.frontmatter.description),
         tags: tags(document),
+        technology: technology(document),
         sections: splitHubMarkdownSections(document.conceptId, document.body)
       });
       paths.set(document.path, document.conceptId);

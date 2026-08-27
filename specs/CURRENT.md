@@ -1,7 +1,10 @@
 # Current capability
 
 Active capability: None.
-Most recent completed: [`051-mcp-reliability-hardening`](051-mcp-reliability-hardening/spec.md) — MCP safety/failure visibility, bounded discovery qualification and deterministic Crawler query metrics are complete; the pinned Codebase Memory upgrade rehearsal remains explicitly owner-deferred.
+Most recent completed: [`052-resource-node-promotion`](052-resource-node-promotion/spec.md) —
+evidence-backed provider-neutral Resource node promotion, common AWS
+qualification fixtures and direct technology-aware query are complete; the
+fresh resource-bearing Crawler model qualification remains explicitly deferred.
 
 Capability 050 is complete: it reuses the exact Published projection, adds no
 Hub schema or runtime dependency, and keeps the static site offline.

@@ -41,3 +41,7 @@
 - **AB-VIS-014** — One-Domain views retain directly related Published external
   endpoints as non-expandable boundary nodes without changing repository/Domain
   membership or traversing the external Domain.
+- **AB-VIS-015** — Visualization renders only Published concepts admitted by the
+  node-eligibility gate. A promoted provider-neutral Resource (such as shared SQS
+  or SNS) is a normal node; embedded resource rows and unresolved candidates are
+  not synthetic nodes and remain visible only through parent/query context.

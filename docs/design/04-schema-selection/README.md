@@ -19,12 +19,16 @@ High-level decision:
   cho Terraform và các source type về sau.
 - [`05-catalog-cutover.md`](05-catalog-cutover.md) — thay catalog hiện tại và
   rebuild draft mà không có content migration.
+- [`06-node-eligibility-and-provider-coverage.md`](06-node-eligibility-and-provider-coverage.md)
+  — gate để một concept trở thành graph node và rollout coverage theo nhóm
+  provider phổ biến.
 
 ## Current implementation
 
 Catalog `7.0.0` giữ tám Initial Ingest roles: Repository, Domain, System,
 Component, Function, Interface, Flow và Resource. Entity/Metric chỉ dùng cho
 enrichment. AWS Profile v2 + Terraform-family Detector v1 tách technology khỏi
-concept role; resource nội bộ mặc định embedded. Terraform/Terragrunt được hỗ
-trợ, SAM/CloudFormation chưa hỗ trợ. Legacy/foreign type vẫn readable nhưng
-AgentBase không author type đã retired.
+concept role; resource nội bộ mặc định embedded, còn shared/independently
+operated resources có thể promote thành Resource theo node-eligibility gate.
+Terraform/Terragrunt được hỗ trợ, SAM/CloudFormation chưa hỗ trợ.
+Legacy/foreign type vẫn readable nhưng AgentBase không author type đã retired.

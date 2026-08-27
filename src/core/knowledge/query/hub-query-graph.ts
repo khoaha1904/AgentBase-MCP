@@ -33,6 +33,7 @@ export type HubGraphConcept = Readonly<{
   title: string;
   description: string;
   tags: readonly string[];
+  technology: readonly string[];
   sections: readonly HubMarkdownSection[];
 }>;
 export type HubGraph = Readonly<{
@@ -57,6 +58,16 @@ function tags(concept: ConceptDocument): readonly string[] {
   if (!Array.isArray(value)) return [];
   return [...new Set(value.filter((item): item is string => typeof item === "string")
     .map((item) => item.trim()).filter(Boolean))].sort();
+}
+
+function technology(concept: ConceptDocument): readonly string[] {
+  const agentbase = concept.frontmatter.agentbase;
+  if (agentbase === null || typeof agentbase !== "object" || Array.isArray(agentbase)) return [];
+  const metadata = (agentbase as Readonly<Record<string, OkfValue>>).technology;
+  if (metadata === null || typeof metadata !== "object" || Array.isArray(metadata)) return [];
+  return Object.values(metadata as Readonly<Record<string, OkfValue>>)
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim()).filter(Boolean).sort();
 }
 
 function deriveDomains(
@@ -169,6 +180,7 @@ export async function loadHubGraph(reader: HubQueryReader, maximumDocumentBytes:
         title: text(document.frontmatter.title) || document.body.match(/^#\s+(.+)$/m)?.[1]?.trim() || document.conceptId,
         description: text(document.frontmatter.description),
         tags: tags(document),
+        technology: technology(document),
         sections: splitHubMarkdownSections(document.conceptId, document.body),
       });
       paths.set(document.path, document.conceptId);

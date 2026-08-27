@@ -458,3 +458,19 @@ Normative OKF source is pinned to commit
   neutral metadata plus a limitation; `unsupported` is reserved for standalone
   schema intent that cannot be safely selected. Detection never overrides the
   Agent's validated embedded boundary.
+- **AB-SCHEMA-052** — A standalone Resource candidate requires stable identity,
+  independent query/link value and candidate-owned evidence of an operational or
+  integration boundary. Terraform declaration, technology mapping, keyword or
+  display name alone never promotes a Resource.
+- **AB-SCHEMA-053** — Messaging transport (queue, topic or event bus) is modeled
+  as provider-neutral `Resource` when independently operated/shared; an
+  API/event/message contract is `Interface` only when its contract value also
+  passes the standalone gates. Transport and contract are never silently merged.
+- **AB-SCHEMA-054** — The common AWS profile may classify Lambda, SQS, SNS,
+  EventBridge, S3, DynamoDB and RDS using existing generic roles and technology
+  metadata. EC2/VM remains hosting evidence unless an independently evidenced
+  workload is promoted to Component/Function.
+- **AB-SCHEMA-055** — Provider extensions reuse the catalog roles, canonical
+  relationship vocabulary, external-identity envelope and evidence ownership.
+  A provider profile may add mapping, identity normalization and evidence
+  adapters, but may not introduce provider-specific concept types or predicates.

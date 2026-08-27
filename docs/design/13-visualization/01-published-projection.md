@@ -6,6 +6,14 @@ Input is one exact synchronized Published Hub commit plus an exact Domain ID.
 Frontmatter `status` does not choose Published versus Draft; Git commit identity
 does. The projection never reads the active proposal tree.
 
+## Node admission
+
+Projection chỉ nhận concept đã Published và vượt node-eligibility gate. Embedded
+knowledge, governance documents và unresolved candidates không phải nodes; chúng
+chỉ xuất hiện qua parent overview/query hoặc omissions. `Resource` nodes dùng
+role provider-neutral và có thể đại diện queue/topic khi identity, query/link
+value và boundary evidence đầy đủ.
+
 ## Output
 
 One deterministic projection contains:

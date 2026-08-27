@@ -17,6 +17,11 @@ bucket, load balancer hoặc host thường nằm trong `Embedded Knowledge` c�
 Function/Component/System. Chỉ promote thành `Interface` hoặc `Resource` khi có
 shared contract, ownership, lifecycle hay operational value độc lập.
 
+Một resource đủ điều kiện sẽ là một `Resource` node, không phải một schema
+AWS-specific. Node policy này provider-neutral: AWS SQS, GCP Pub/Sub hay Azure
+Service Bus đều dùng cùng role `Resource`; provider/product/resource type chỉ là
+technology metadata.
+
 ## Agent ánh xạ công nghệ thế nào?
 
 - **Cloud Provider Profile** hiểu resource của AWS, Azure hoặc GCP.
@@ -27,9 +32,15 @@ shared contract, ownership, lifecycle hay operational value độc lập.
 
 ```text
 aws_lambda_function → Function concept + AWS/Lambda metadata
-aws_sqs_queue       → embedded queue knowledge trong parent
-aws_dynamodb_table  → embedded table knowledge trong parent
+aws_sqs_queue       → Resource node nếu shared/independently operated
+aws_sns_topic       → Resource node nếu có fan-out hoặc cross-boundary usage
+aws_dynamodb_table  → Resource node nếu có independent data boundary
 ```
+
+Declaration hoặc technology detection một mình vẫn chỉ tạo embedded knowledge.
+Resource promotion cần stable identity, independent query/link value và evidence
+về ownership/lifecycle/usage. Chi tiết gate và outcome nằm ở
+[node eligibility](../design/04-schema-selection/06-node-eligibility-and-provider-coverage.md).
 
 Người dùng gọi một skill Ingest chung; Agent tự chọn profile phù hợp. Khi cần
 kiểm tra resource thật, người dùng login CLI và cho phép Provider Verification
@@ -66,5 +77,10 @@ limitation. Nếu vẫn không chắc, Agent giữ Question thay vì đoán.
   vẫn readable theo open-world compatibility nhưng AgentBase không author mới.
 - AgentBase không author type đã retired; foreign unknown OKF types vẫn được đọc
   và bảo toàn theo open-world compatibility.
+- AWS profile hiện có mapping cho Lambda, SQS, SNS, EventBridge, S3, RDS,
+  DynamoDB và EC2/VM hosting evidence. Node promotion được rollout theo nhóm
+  messaging trước, rồi data resources; không promote mọi resource declaration.
 - Azure/GCP profile, semantic profile migration và provider verification vẫn là
-  phần mở rộng sau MVP.
+  phần mở rộng sau MVP. Khi thêm provider, giữ nguyên catalog/identity/relation
+  contract và chỉ bổ sung profile, parser, evidence adapter cùng conformance
+  fixtures; không tạo schema hoặc predicate theo provider.

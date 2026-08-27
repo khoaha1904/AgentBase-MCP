@@ -131,7 +131,7 @@ function buildProjection(graph: HubGraph, key: string): HubSearchProjection {
         sectionOrdinal: section?.ordinal ?? -1,
         identityPathTitle: `${identity} ${concept.document.path} ${concept.title}`,
         description: concept.description,
-        typeTags: `${concept.document.type} ${concept.tags.join(" ")}`,
+        typeTags: `${concept.document.type} ${concept.tags.join(" ")} ${concept.technology.join(" ")}`,
         heading: section?.headingPath.join(" ") ?? "",
         body: section?.searchText ?? "",
         linkContext,

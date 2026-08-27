@@ -89,3 +89,8 @@
 - **AB-QUERY-018** — Query failure/omission behavior MUST remain deterministic for
   one exact Published commit. No new query language, durable index, semantic
   fallback, or public traversal tool is introduced by this hardening.
+- **AB-QUERY-019** — Search indexes provider/product/resource-type metadata from
+  standalone concepts when present, while embedded resource text remains
+  searchable through its parent. Promoted Resource concepts return as independent
+  results with their accepted relation context; embedded rows never become
+  synthetic search identities.

@@ -264,6 +264,114 @@ test("[AB-QUERY-016][AB-QUERY-018] Crawler qualification keeps representative co
   assert.equal(results.filter(Boolean).length / results.length, 1, "Crawler top-five recall should be 100%");
 });
 
+test("[AB-QUERY-019][AB-SCHEMA-053] shared Resource is independently searchable between two repositories", async () => {
+  resetHubSearchProjectionCache();
+  const values = new Map([
+    ["domains/messaging.md", concept("Domain", "Messaging", "Shared messaging domain.", "Cross-repository transport.")],
+    ["repositories/producer.md", concept("Repository", "Producer", "Producer repository.", "Publishes orders.", `
+  - kind: part-of
+    target: domains/messaging
+    evidence: [producer-domain]`)],
+    ["repositories/consumer.md", concept("Repository", "Consumer", "Consumer repository.", "Consumes orders.", `
+  - kind: part-of
+    target: domains/messaging
+    evidence: [consumer-domain]`)],
+    ["components/order-publisher.md", concept("Function", "Order Publisher", "Publishes orders.", "Sends messages to the Orders Queue.\n[Orders Queue](/resources/orders-queue.md)", `
+  - kind: implemented-in
+    target: repositories/producer
+    evidence: [producer-source]
+  - kind: publishes-to
+    target: resources/orders-queue
+    evidence: [producer-source]`)],
+    ["components/order-consumer.md", concept("Function", "Order Consumer", "Consumes orders.", "Triggered by the Orders Queue.\n[Orders Queue](/resources/orders-queue.md)", `
+  - kind: implemented-in
+    target: repositories/consumer
+    evidence: [consumer-source]
+  - kind: triggered-by
+    target: resources/orders-queue
+    evidence: [consumer-source]`)],
+    ["resources/orders-queue.md", `---
+type: Resource
+title: Orders Queue
+description: Shared asynchronous orders transport.
+agentbase:
+  technology:
+    provider: aws
+    product: sqs
+    resourceType: aws_sqs_queue
+---
+# Orders Queue
+
+Shared SQS transport.
+`],
+  ]);
+  const reader = {
+    commit: "s".repeat(40),
+    async listMarkdownPaths() { return [...values.keys()]; },
+    async readMarkdown(relativePath: string) {
+      const value = values.get(relativePath);
+      if (!value) throw new Error("missing");
+      return value;
+    },
+  };
+  const result = await searchHubConcepts(reader, "sqs orders queue", { domain: "domains/messaging", limit: 10 });
+  assert.equal(result.status, "ok");
+  const matches = result.status === "ok" ? result.matches : [];
+  assert.equal(matches.some((match) => match.identity === "resources/orders-queue"), true);
+  const queue = matches.find((match) => match.identity === "resources/orders-queue");
+  assert.deepEqual(queue?.context?.filter((context) => context.kind === "relationship")
+    .map((context) => context.predicate).sort(), ["publishes-to", "triggered-by"]);
+});
+
+test("[AB-QUERY-019][AB-SCHEMA-053] SNS fan-out keeps one topic node and bounded subscriber context", async () => {
+  resetHubSearchProjectionCache();
+  const values = new Map([
+    ["domains/alerts.md", concept("Domain", "Alerts", "Alerting domain.", "Shared notification transport.")],
+    ["components/publisher.md", concept("Function", "Alert Publisher", "Publishes alerts.", "Publishes alerts to the [Alerts Topic](/resources/alerts-topic.md).", `
+  - kind: publishes-to
+    target: resources/alerts-topic
+    evidence: [publisher-source]`)],
+    ["components/email-subscriber.md", concept("Function", "Email Subscriber", "Sends alert emails.", "Triggered by the [Alerts Topic](/resources/alerts-topic.md).", `
+  - kind: triggered-by
+    target: resources/alerts-topic
+    evidence: [email-source]`)],
+    ["components/slack-subscriber.md", concept("Function", "Slack Subscriber", "Sends Slack alerts.", "Triggered by the [Alerts Topic](/resources/alerts-topic.md).", `
+  - kind: triggered-by
+    target: resources/alerts-topic
+    evidence: [slack-source]`)],
+    ["resources/alerts-topic.md", `---
+type: Resource
+title: Alerts Topic
+description: Shared fan-out alert transport.
+agentbase:
+  technology:
+    provider: aws
+    product: sns
+    resourceType: aws_sns_topic
+---
+# Alerts Topic
+
+Shared SNS topic.
+`],
+  ]);
+  const reader = {
+    commit: "t".repeat(40),
+    async listMarkdownPaths() { return [...values.keys()]; },
+    async readMarkdown(relativePath: string) {
+      const value = values.get(relativePath);
+      if (!value) throw new Error("missing");
+      return value;
+    },
+  };
+  const result = await searchHubConcepts(reader, "sns alerts topic", { global: true, limit: 10 });
+  assert.equal(result.status, "ok");
+  const topic = result.status === "ok" ? result.matches.find((match) => match.identity === "resources/alerts-topic") : undefined;
+  assert.deepEqual(topic?.context?.filter((context) => context.kind === "relationship")
+    .map((context) => context.source).sort(), [
+    "components/email-subscriber", "components/publisher", "components/slack-subscriber",
+  ]);
+});
+
 test("[AB-LOCAL-HUB-009][AB-QUERY-011] query bounds and Repository freshness remain deterministic", async () => {
   assert.throws(() => normalizeHubConceptPath("../secret.md"), /Markdown file/);
   await assert.rejects(searchHubConcepts(reader, "x", { limit: 101 }), /1\.\.100/);

@@ -8,6 +8,11 @@ Agent chỉ ghi canonical relation khi xác định được cả hai endpoint v
 cho interaction. Dấu hiệu hợp lý nhưng chưa đủ được giữ thành relation candidate
 kèm Question; suy đoán không có evidence bị bỏ.
 
+Endpoint có thể là một `Resource` node (ví dụ shared SQS/SNS) nhưng chỉ sau khi
+node eligibility chứng minh stable identity và independent query/link value.
+Queue/topic declaration không tự mở quyền tạo node; transport Resource và
+message/event `Interface` không được gộp thành một endpoint duy nhất.
+
 ```text
 đủ endpoint identity + đủ interaction evidence → canonical relation
 có evidence nhưng thiếu một trong hai          → candidate + Question

@@ -12,6 +12,12 @@ chưa chắc, Agent giữ riêng và tạo Question.
 Crawler Worker ──publishes-to──→ Vehicle Data Queue ←──consumes── Recommender
 ```
 
+Một queue/topic cụ thể chỉ trở thành `Resource` node khi có identity ổn định,
+giá trị query/link độc lập và evidence về boundary hoặc usage. Nếu chỉ thấy
+Terraform declaration hoặc tên biến, nó vẫn là embedded knowledge/candidate;
+không tạo node hay edge để làm graph đầy hơn. Transport Resource và message
+contract `Interface` là hai lớp khác nhau.
+
 ## Agent ghi nhận quan hệ thế nào?
 
 - Một repository có thể khai báo phía quan hệ mà nó chứng minh được, không cần

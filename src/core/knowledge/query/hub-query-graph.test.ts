@@ -58,6 +58,7 @@ relationships:
 
   const graph = await loadHubGraph(reader, 256 * 1024);
   assert.deepEqual(graph.concepts.get("components/worker")?.tags, ["fulfillment", "queue"]);
+  assert.deepEqual(graph.concepts.get("components/worker")?.technology, []);
   assert.equal(graph.concepts.get("components/worker")?.sections[0]?.headingPath[0], "Worker");
   assert.deepEqual(graph.links.filter((link) => link.source === "notes/consumer"), [
     { source: "notes/consumer", target: "systems/orders" },

@@ -41,6 +41,12 @@ Projection giữ concept, relation, direction, provenance và open Question. Nó
 không lưu màu, tọa độ hoặc layout vào Hub. Relation candidate chưa được chấp
 nhận không trở thành edge.
 
+Node trên projection là concept đã vượt qua node-eligibility gate. Embedded
+knowledge vẫn được query trong parent nhưng không được vẽ thành node giả. Khi
+Resource như SQS/SNS được promote, UI có thể hiển thị transport node và các
+relation producer/consumer; message contract chỉ là node riêng nếu nó cũng có
+identity và query value độc lập.
+
 Một relation đã Published có thể nối sang Domain khác. View vẫn thuộc đúng một
 Domain: đầu bên ngoài chỉ hiện như boundary node và không bị hiểu thành repository
 thuộc nhiều Domain hoặc tự mở rộng cả Domain kia.
@@ -57,6 +63,7 @@ thuộc nhiều Domain hoặc tự mở rộng cả Domain kia.
 - Architecture có thể partial; Dependency cần edge thật; Sequence cần
   `flow_steps` thật.
 
-Qualification hiện tại dùng một Domain có tám repository, runtime relations và
-Flow steps thật. Cả ba loại diagram và static 2D site đều được tạo từ cùng một
-Published commit; thiếu topology ở Domain khác vẫn được báo rõ thay vì suy diễn.
+Qualification trước đây dùng một Domain có tám repository, runtime relations và
+Flow steps thật. Snapshot generated đó hiện đã được reset để chuẩn bị dữ liệu
+qualification mới; thiếu topology hoặc resource evidence vẫn được báo rõ thay
+vì suy diễn.

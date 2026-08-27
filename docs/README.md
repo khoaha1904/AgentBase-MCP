@@ -80,9 +80,10 @@ lifecycle. Every implementation session must follow the repository rule.
   macOS arm64 bundle remains an explicit company-environment release gate.
   The Codebase Memory Graph UI frontend is excluded. Capability 045 now owns an
   implemented Published projection, focused diagram and static Domain-site
-  workflow. Its eight-repository qualification Domain, source-backed Flows and
-  evidence-bound System-to-Interface consumption are Published; all three
-  diagrams and the static site pass real-data qualification.
+  workflow. Its prior eight-repository qualification Domain, source-backed Flows
+  and evidence-bound System-to-Interface consumption are historical evidence;
+  the generated snapshot was reset before capability 052's resource-node
+  qualification.
 
 Update current truth once in the narrowest high- or low-level document. Do not
 add handoff, roadmap, ADR or evidence-diary files that repeat it.

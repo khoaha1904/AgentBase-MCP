@@ -19,6 +19,23 @@ ${body}
 `;
 }
 
+function resourceDocument(): string {
+  return `---
+type: Resource
+title: Orders Queue
+description: Shared asynchronous transport.
+agentbase:
+  technology:
+    provider: aws
+    product: sqs
+    resourceType: aws_sqs_queue
+---
+# Orders Queue
+
+Shared transport.
+`;
+}
+
 function reader(commit: string, documents: ReadonlyMap<string, string>, counters = { lists: 0, reads: 0 }) {
   return {
     commit,
@@ -56,6 +73,20 @@ test("[AB-QUERY-002][AB-QUERY-015] BM25+ ranks fields and sections without prefi
   assert.deepEqual(projection.search("tiebreak").map((hit) => hit.conceptIdentity), [
     "components/a-tie", "components/b-tie",
   ]);
+});
+
+test("[AB-QUERY-019] standalone technology metadata is searchable without making embedded rows nodes", async () => {
+  resetHubSearchProjectionCache();
+  const documents = new Map([
+    ["resources/orders-queue.md", resourceDocument()],
+    ["components/worker.md", document("Worker", "Runtime worker.", "Embedded sqs knowledge remains here.")],
+  ]);
+  const projection = await loadHubSearchProjection(reader("m".repeat(40), documents), 256 * 1024);
+  assert.equal(projection.search("sqs")[0]?.conceptIdentity, "resources/orders-queue");
+  assert.deepEqual(projection.search("sqs").map((hit) => hit.conceptIdentity), [
+    "resources/orders-queue", "components/worker",
+  ]);
+  assert.equal(projection.search("sqs")[0]?.matchedFields.includes("typeTags"), true);
 });
 
 test("[AB-QUERY-004][AB-QUERY-013][SC-007] projection cache is lazy, commit-bound and atomically replaced", async () => {
