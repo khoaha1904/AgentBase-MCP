@@ -10,7 +10,7 @@ import type { ScopedSession } from "../../providers/codebase-memory/index.ts";
 import type { SourceSnapshot } from "../../providers/github-hub/index.ts";
 import { createInventoryItemId, createQuestionPlanId, createRepositorySourceResource, DiscoveryValidationError,
   validateDiscoverySeed } from "../../core/knowledge/index.ts";
-import { DiscoverySession, DISCOVERY_ARCHITECTURE_ASPECTS } from "./discovery-session.ts";
+import { DiscoverySession, DISCOVERY_ARCHITECTURE_ASPECTS, redactDiscoveryHint } from "./discovery-session.ts";
 import { callOkfSchemaTool } from "./okf-schema-tools.ts";
 
 const fixtureRoot = new URL("../../../fixtures/codebase-memory-v0.10.8/discovery/", import.meta.url);
@@ -44,7 +44,7 @@ test("[AB-MCP-019..023][AB-INGEST-017] armed Init derives one fixed bounded Seed
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   fs.mkdirSync(path.join(root, "src"));
   fs.writeFileSync(path.join(root, "README.md"), "# Job worker\n\nProcesses queued jobs.\n");
-  fs.writeFileSync(path.join(root, "src/handler.ts"), "export async function main() { return 'ok'; }\n");
+  fs.writeFileSync(path.join(root, "src/handler.ts"), 'const database_url = "postgres://admin:super-secret@db.example.test/app";\nexport async function main() { return "ok"; }\n');
   fs.writeFileSync(path.join(root, "Dockerfile"), "FROM scratch\n");
   fs.writeFileSync(path.join(root, "main.tf"), [
     "resource \"aws_lambda_function\" \"worker\" { handler = \"src/handler.main\" }",
@@ -85,7 +85,10 @@ test("[AB-MCP-019..023][AB-INGEST-017] armed Init derives one fixed bounded Seed
   assert.deepEqual(seed?.lanes.map((lane) => lane.status), ["covered", "covered", "covered", "covered", "covered"]);
   assert.deepEqual([...new Set(seed?.groups.map((group) => group.priority))].sort(), ["p0", "p1", "p2"]);
   assert.equal(seed?.groups.some((group) => group.priority === "p1" && group.kind === "flow-candidate"), true);
+  assert.ok(seed?.capture.limitations.some((value) => value.includes("boundaries were captured but not promoted")));
+  assert.ok(seed?.capture.limitations.some((value) => value.includes("layers were captured but not promoted")));
   assert.equal(JSON.stringify(seed).includes("secret.example.test"), false);
+  assert.equal(JSON.stringify(seed).includes("super-secret"), false);
   assert.equal(JSON.stringify(seed).includes("credentials.json"), false);
   assert.ok(seed);
   const nestedGroupIndex = seed.groups.findIndex((group) => group.sources.some((source) => source.path.includes("/")));
@@ -219,6 +222,14 @@ test("[AB-MCP-019..023][AB-INGEST-017] armed Init derives one fixed bounded Seed
     groups: Array.from({ length: 65 }, (_value, index) => ({ ...seed.groups[0]!,
       id: `discovery-group-${index.toString(16).padStart(24, "0")}` })) }),
   (error: unknown) => error instanceof DiscoveryValidationError && error.code === "DISCOVERY_OVERFLOW");
+});
+
+test("[AB-MCP-025] discovery hint redaction preserves structure without exposing credential values", () => {
+  const hint = redactDiscoveryHint('Authorization: Bearer super-secret token https://user:password@example.test/api');
+  assert.equal(hint.includes("super-secret"), false);
+  assert.equal(hint.includes("password"), false);
+  assert.match(hint, /Authorization: Bearer \[REDACTED\]/);
+  assert.match(hint, /https:\/\/user:\[REDACTED\]@example\.test/);
 });
 
 test("[AB-MCP-021][AB-MCP-023] malformed and P0-hiding diagnostics fail visibly", async (t) => {

@@ -1,7 +1,8 @@
 # 03.01 — Candidate discovery
 
-> Trạng thái: Bounded Agent candidate gates và Capability 046 broad discovery
-> coverage đã implement.
+> Trạng thái: Bounded Agent candidate gates, Capability 046 broad discovery
+> coverage và Capability 051 content-redaction/explicit limitation handling đã
+> implement.
 
 ## Discovery lanes và Seed
 
@@ -119,3 +120,8 @@ Không hard-code một pipeline concept riêng cho AWS/serverless/e-commerce. So
 detector/provider profile chỉ tạo evidence signal; Agent vẫn áp dụng hai gates
 provider-neutral. Ngược lại, Agent không được tự nới authority, schema hoặc vòng
 lặp vì “reasoning” thấy có ích.
+
+Capability 051 thêm hai guard trong cùng boundary: source-line hints được
+redact credential-like values trước khi vào Seed, và architecture sections đã
+capture nhưng không có exact source path phải được ghi thành limitation thay vì
+âm thầm biến mất hoặc tạo candidate không bounded.

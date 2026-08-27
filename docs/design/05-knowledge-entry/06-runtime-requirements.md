@@ -418,6 +418,10 @@ Normative OKF source is pinned to commit
   into its resolved parent. This normalization uses no graph/source reread and
   does not consume the Agent repair budget. A row that still cannot be resolved
   to a valid parent/evidence remains an integrity failure.
+- **AB-INGEST-021** — Discovery and authoring preserve bounded limitations when
+  provider output is partial, malformed or redacted. A high-value signal is
+  materialized, represented as a Question, or recorded with an explicit ignored
+  reason; it is never silently dropped to make a proposal appear complete.
 - **AB-SCHEMA-043** — Exact supported Terraform/Terragrunt observations are
   high-priority when readily available. Their omission is a coverage diagnostic,
   not an invalidity condition for an otherwise truthful partial proposal.

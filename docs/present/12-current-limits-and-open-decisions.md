@@ -8,6 +8,10 @@
 Phiên bản đầu ưu tiên Hub overview, Published-only query và provenance. Không
 cấu hình Remote Hub thì AgentBase chỉ dùng Code Graph/workspace Scan.
 
+MCP đã hoàn tất Capability 051 hardening trên domain Crawler: content
+redaction, query failure visibility, provider contract qualification và giới
+hạn ingest đo được. Semantic search vẫn là hướng mở rộng sau này.
+
 ## Giới hạn được chấp nhận trong phiên bản đầu
 
 - Không có backup/shared Local Draft; máy hỏng có thể làm mất draft chưa
@@ -50,6 +54,9 @@ mới; mirror/copy mơ hồ phải được người dùng xác nhận.
 - Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
 - Batch Refresh và mixed Init/Refresh.
 - Azure/GCP profile và semantic profile migration.
+
+Semantic/vector search chỉ được xem xét sau khi lexical MiniSearch và graph
+context có bộ đo relevance chứng minh chưa đủ; nó không phải fallback tự động.
 
 Rich deterministic PR summary, independent Init PR, same-Repository
 Init/Refresh stack và existing-PR reconciliation đã implement; chúng không còn

@@ -9,7 +9,8 @@ High-level decision:
 ## Phân rã dự kiến
 
 - [`01-runtime-requirements.md`](01-runtime-requirements.md) — current Local Hub,
-  query, setup, publication và synchronization `AB-*` requirements.
+  setup, publication và synchronization `AB-*` requirements. Query authority
+  lives in [`../10-query-routing/07-runtime-requirements.md`](../10-query-routing/07-runtime-requirements.md).
 - [`02-review-preview.md`](02-review-preview.md) — chỉnh item trước Finalize,
   atomic review/Accept và optional static HTML sau MVP.
 - [`03-dependency-validation.md`](03-dependency-validation.md) — hard structure

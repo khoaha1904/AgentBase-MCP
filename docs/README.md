@@ -33,6 +33,7 @@ Current requirement routes:
 - Installation: `docs/design/12-version-scope/02-installation-requirements.md`
 - Benchmark: `docs/design/12-version-scope/03-benchmark-requirements.md`
 - Published visualization: `docs/design/13-visualization/04-runtime-requirements.md`
+- Query: `docs/design/10-query-routing/07-runtime-requirements.md`
 - Product scope: `docs/present/00-product-scope-and-authority.md`
 - Architecture ownership: `docs/design/00-architecture.md`
 
@@ -45,9 +46,11 @@ Current requirement routes:
 5. Code and focused verification as evidence of implemented behavior.
 6. Completed capabilities and Git history as historical explanation.
 
-When implementation exposes a gap, follow the anti-dead-spec loop in
-`docs/design/README.md`: broad gaps return to high/low-level review before code;
-small gaps must be backfilled before benchmark, PR or capability completion.
+The mandatory high-level → low-level → implementation lifecycle and its
+anti-dead-spec gap loop are defined in the repository
+[`AGENTS.md`](../AGENTS.md). `docs/design/README.md` provides the low-level design
+organization and baseline/impact vocabulary; it does not create a second
+lifecycle. Every implementation session must follow the repository rule.
 
 ## Current checkpoint
 

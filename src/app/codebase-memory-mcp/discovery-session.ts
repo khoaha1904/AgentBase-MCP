@@ -132,19 +132,30 @@ function addMatchSignals(signals: CensusSignal[], relative: string, lines: reado
     const line = lines[index]!, number = index + 1;
     if (/resource\s+"(?:aws_lambda_function|aws_ecs_service|aws_instance|aws_autoscaling_group|azurerm_linux_function_app|azurerm_linux_virtual_machine|google_cloudfunctions_function)"/i.test(line)
       || /(?:^|[^a-z])(handler|main|bootstrap)\s*[=:]/i.test(line)) {
-      add("runtime-entrypoint", "runtime-entrypoint", "p0", "Evidenced runtime or entrypoint", number, line.trim().slice(0, 240));
+      add("runtime-entrypoint", "runtime-entrypoint", "p0", "Evidenced runtime or entrypoint", number, redactDiscoveryHint(line));
     }
     if (/resource\s+"(?:aws_apigatewayv2_route|aws_api_gateway_method|aws_lambda_event_source_mapping|aws_s3_bucket_notification|aws_sns_topic_subscription)"/i.test(line)
       || /\b(?:app|router)\.(?:get|post|put|patch|delete)\s*\(/i.test(line)
       || /\b(?:route|trigger|event_source)\b\s*[=:]/i.test(line)) {
-      add("interface-event-trigger", "interface-trigger", "p0", "Explicit interface, event or trigger", number, line.trim().slice(0, 240));
+      add("interface-event-trigger", "interface-trigger", "p0", "Explicit interface, event or trigger", number, redactDiscoveryHint(line));
     }
     if (/resource\s+"(?:aws_sqs_queue|aws_sns_topic|aws_dynamodb_table|aws_db_instance|aws_rds_cluster|aws_s3_bucket|azurerm_servicebus_queue|google_pubsub_topic)"/i.test(line)
       || /\b(?:queue_url|topic_arn|endpoint|base_url|database_url)\b\s*[=:]/i.test(line)
       || /https?:\/\/[A-Za-z0-9.-]+(?:[:/][^\s"']*)?/i.test(line)) {
-      add("integration-data-channel", "outbound-integration", "p0", "Explicit outbound dependency, data store or channel", number, line.trim().slice(0, 240));
+      add("integration-data-channel", "outbound-integration", "p0", "Explicit outbound dependency, data store or channel", number, redactDiscoveryHint(line));
     }
   }
+}
+
+export function redactDiscoveryHint(value: string): string {
+  let redacted = value.trim();
+  redacted = redacted.replace(/([A-Za-z][A-Za-z0-9+.-]*:\/\/[^\s/@"']+):[^\s/@"']+@/gi, "$1:[REDACTED]@");
+  redacted = redacted.replace(/\bAuthorization\b(\s*[:=]\s*)Bearer\s+[^\s,;]+/gi, "Authorization$1Bearer [REDACTED]");
+  redacted = redacted.replace(/\b(password|passwd|token|secret|api[_-]?key|access[_-]?key|client[_-]?secret|private[_-]?key)\b(\s*[:=]\s*)(["'`]?)([^\s,"'`}]+)\3/gi,
+    "$1$2$3[REDACTED]$3");
+  redacted = redacted.replace(/\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/g, "[REDACTED_AWS_KEY]");
+  redacted = redacted.replace(/\bgh[pousr]_[A-Za-z0-9_]{20,}\b/g, "[REDACTED_TOKEN]");
+  return redacted.slice(0, 240);
 }
 
 function census(root: string): Readonly<{ signals: readonly CensusSignal[]; truncated: boolean }> {
@@ -169,7 +180,7 @@ function architectureSignals(architecture: ArchitectureCapture, root: string): C
       if (!relative || isDeniedDiscoveryPath(relative)) continue;
       const absolute = path.join(root, relative);
       if (!absolute.startsWith(`${root}${path.sep}`) || !fs.statSync(absolute, { throwIfNoEntry: false })?.isFile()) continue;
-      signals.push({ lane, kind, priority, title, path: relative, line: 1, hint: row.slice(0, 240) });
+      signals.push({ lane, kind, priority, title, path: relative, line: 1, hint: redactDiscoveryHint(row) });
     }
   };
   addRows("entry_points", "runtime-entrypoint", "runtime-entrypoint", "p0", "Evidenced runtime or entrypoint");
@@ -224,6 +235,11 @@ function buildSeed(input: Readonly<{
   if (input.coverageUnavailable) limitations.push("Codebase Memory coverage metadata is unavailable or stale");
   if (input.censusTruncated) limitations.push("bounded source census reached its entry/file limit");
   if (input.coverageEntries.length) limitations.push(`${input.coverageEntries.length} recorded coverage gaps require source qualification`);
+  for (const section of ["boundaries", "layers", "hotspots", "clusters"] as const) {
+    if ((input.architecture.sections[section]?.length ?? 0) > 0) {
+      limitations.push(`Codebase Memory ${section} were captured but not promoted without exact source paths`);
+    }
+  }
   const flowSignals = input.signals.filter((signal) => signal.lane === "integration-data-channel" && signal.priority === "p0")
     .map((signal) => ({ ...signal, kind: "flow-candidate", priority: "p1" as const,
       title: "Cross-boundary Flow candidate" }));

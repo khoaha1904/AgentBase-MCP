@@ -51,14 +51,31 @@
         </div>
       </section>
       <aside class="details" aria-live="polite">
-        <p class="section-label">Selection</p>
+        <div class="details-heading">
+          <p class="section-label">Selection</p>
+          <button id="close-details" class="icon-button" type="button" aria-label="Close node details">×</button>
+        </div>
         <h2 id="detail-title">Choose a node</h2>
         <p id="detail-type" class="detail-type">Published concept details appear here.</p>
         <p id="detail-description" class="detail-description"></p>
+        <button id="view-document" class="primary-button" type="button" disabled>View document</button>
         <div id="detail-meta"></div>
       </aside>
     </section>
   </main>
+  <dialog id="document-dialog" aria-labelledby="document-title">
+    <form method="dialog" class="document-card">
+      <div class="details-heading">
+        <p class="section-label">Published document overview</p>
+        <button class="icon-button" type="submit" aria-label="Close document overview">×</button>
+      </div>
+      <h2 id="document-title">Document overview</h2>
+      <p id="document-type" class="detail-type"></p>
+      <p id="document-description" class="detail-description"></p>
+      <div id="document-meta"></div>
+      <p class="dialog-note">This is a bounded overview from the Published snapshot. Read the exact Markdown concept through MCP when full content is needed.</p>
+    </form>
+  </dialog>
   <script src="assets/cytoscape.min.js?build=__AGENTBASE_BUILD_KEY__"></script>
   <script type="module" src="assets/app.js?build=__AGENTBASE_BUILD_KEY__"></script>
 </body>

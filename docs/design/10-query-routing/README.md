@@ -1,8 +1,8 @@
 # 10 — Query routing
 
-> Trạng thái: Published-only Hub query và current-source composition được điều
-> phối bởi public skill `agentbase-query`; MCP vẫn deterministic. Remote file
-> reader là first post-phase query capability, ngoài MVP hiện tại.
+> Trạng thái: Published-only Hub query, MiniSearch retrieval, Repository-aware
+> Domain scope, bounded relation discovery và Capability 051 failure visibility/
+> qualification hardening đã implement; MCP vẫn deterministic.
 
 High-level decision:
 [Query từ Code Graph và Hub](../../present/10-querying-code-graph-and-hub.md)
@@ -21,3 +21,8 @@ High-level decision:
   positions, provenance, Question và Guidance mà không chọn truth winner.
 - [`05-observed-and-current-values.md`](05-observed-and-current-values.md) —
   snapshot-default stopping rule và current-source comparison outcomes.
+- [`06-hub-search-and-ranking.md`](06-hub-search-and-ranking.md) — OKF/Markdown
+  search-then-read, heading-aware sections, established lexical relevance,
+  Domain context, relation results và bounds.
+- [`07-runtime-requirements.md`](07-runtime-requirements.md) — current
+  `AB-QUERY-*` authority; query requirements không còn nằm dưới Review/Publish.

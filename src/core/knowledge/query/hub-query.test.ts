@@ -3,8 +3,12 @@ import test from "node:test";
 
 import { readHubFreshness } from "./hub-freshness.ts";
 import { normalizeHubConceptPath, readHubConcept, searchHubConcepts } from "./hub-query.ts";
+import { resetHubSearchProjectionCache } from "./hub-query-search-index.ts";
 
 function concept(type: string, title: string, description: string, body: string, relationships = "[]"): string {
+  const links = [...relationships.matchAll(/^\s+(?:source|target):\s+(\S+)$/gm)]
+    .map((match) => match[1]).filter((value): value is string => Boolean(value))
+    .map((target) => `[${target}](/${target}.md)`).join("\n");
   return `---
 title: ${title}
 description: ${description}
@@ -14,6 +18,7 @@ relationships: ${relationships}
 # ${title}
 
 ${body}
+${links}
 `;
 }
 
@@ -58,13 +63,45 @@ test("[AB-QUERY-002][AB-QUERY-004] search ranks metadata and scopes duplicate te
   const scoped = await searchHubConcepts(reader, "order", { domain: "domains/commerce", limit: 5 });
   assert.equal(scoped.status, "ok");
   assert.deepEqual(scoped.status === "ok" ? scoped.matches.map((match) => match.identity) : [], [
-    "components/orders-api", "systems/orders", "domains/commerce",
+    "components/orders-api", "resources/orders-queue", "systems/orders",
   ]);
   assert.equal(scoped.commit, reader.commit);
   const exact = await searchHubConcepts(reader, "components/orders-api");
   assert.equal(exact.status, "ok");
   assert.equal(exact.status === "ok" ? exact.matches[0]?.matchedBy : undefined, "identity");
   assert.equal((await readHubConcept(reader, "components/orders-api.md")).path, "components/orders-api.md");
+});
+
+test("[AB-QUERY-017] search exposes bounded oversized-document omissions", async () => {
+  resetHubSearchProjectionCache();
+  const values = new Map([
+    ["domains/compact.md", concept("Domain", "Compact", "Compact domain.", "Small body.")],
+    ["components/large.md", `${concept("Component", "Large", "Large component.", "Large body.")}${"x".repeat(512)}`],
+  ]);
+  const boundedReader = {
+    commit: "o".repeat(40),
+    async listMarkdownPaths() { return [...values.keys()]; },
+    async readMarkdown(relativePath: string) {
+      const value = values.get(relativePath);
+      if (!value) throw new Error("missing");
+      return value;
+    },
+  };
+  const result = await searchHubConcepts(boundedReader, "compact", { global: true, maximumDocumentBytes: 256 });
+  assert.equal(result.status, "ok");
+  assert.deepEqual(result.status === "ok" ? result.omissions : undefined, [
+    { path: "components/large.md", reason: "oversized" },
+  ]);
+});
+
+test("[AB-QUERY-017] exact read rejects malformed Published concept", async () => {
+  const invalidReader = {
+    commit: "r".repeat(40),
+    async readMarkdown() { return "# not an OKF concept\n"; },
+    async listMarkdownPaths() { return ["components/invalid.md"]; },
+  };
+  await assert.rejects(() => readHubConcept(invalidReader, "components/invalid.md"),
+    /Published Hub concept is invalid: components\/invalid\.md/);
 });
 
 test("[AB-QUERY-002][SC-002] ambiguous unscoped search asks for Domain while explicit global search remains bounded", async () => {
@@ -75,6 +112,156 @@ test("[AB-QUERY-002][SC-002] ambiguous unscoped search asks for Domain while exp
   const global = await searchHubConcepts(reader, "order", { global: true, limit: 1 });
   assert.equal(global.status, "ok");
   assert.equal(global.status === "ok" ? global.matches.length : 0, 1);
+});
+
+test("[AB-QUERY-002][AB-QUERY-015][SC-001/004] multi-term metadata and body search returns one heading-aware excerpt", async () => {
+  resetHubSearchProjectionCache();
+  const bodyGap = "\n".repeat(40);
+  const values = new Map([
+    ["domains/payments.md", concept("Domain", "Payments", "Money movement.", "Payments domain.")],
+    ["components/payment-worker.md", `---
+type: Component
+title: Payment Worker
+description: Handles settlement workflows.
+tags: [payments, ledger]
+relationships:
+  - kind: part-of
+    target: domains/payments
+    evidence: []
+---
+# Payment Worker
+
+[Payments](/domains/payments.md)
+
+## Settlement
+
+Writes a ledger settlement.${bodyGap}Payments remain traceable.
+
+## Retry
+
+Retries payments safely.
+`],
+  ]);
+  const focusedReader = {
+    commit: "c".repeat(40),
+    async listMarkdownPaths() { return [...values.keys()]; },
+    async readMarkdown(relativePath: string) {
+      const value = values.get(relativePath);
+      if (!value) throw new Error("missing");
+      return value;
+    },
+  };
+  const result = await searchHubConcepts(focusedReader, "ledger settlement", { domain: "domains/payments" });
+  assert.equal(result.status, "ok");
+  const match = result.status === "ok" ? result.matches[0] : undefined;
+  assert.equal(match?.identity, "components/payment-worker");
+  assert.deepEqual(match?.section?.headingPath, ["Payment Worker", "Settlement"]);
+  assert.equal(match?.section?.omittedMatches, 2);
+  assert.match(match?.excerpt ?? "", /settlement/i);
+  assert.equal((await searchHubConcepts(focusedReader, "Payment Worker")).status, "ok");
+});
+
+test("[AB-QUERY-004][SC-003] Domain scope includes members, Repository association and one boundary hop", async () => {
+  resetHubSearchProjectionCache();
+  const values = new Map([
+    ["domains/alpha.md", concept("Domain", "Alpha", "sharedterm alpha domain.", "Alpha knowledge.")],
+    ["domains/beta.md", concept("Domain", "Beta", "sharedterm beta domain.", "Beta knowledge.")],
+    ["repositories/alpha.md", concept("Repository", "Alpha Repo", "sharedterm alpha repository.", "Alpha source.", `
+  - kind: part-of
+    target: domains/alpha
+    evidence: []`)],
+    ["repositories/beta.md", concept("Repository", "Beta Repo", "sharedterm beta repository.", "Beta source.", `
+  - kind: part-of
+    target: domains/beta
+    evidence: []`)],
+    ["components/alpha-a.md", concept("Component", "Alpha A", "sharedterm alpha component.", "Alpha runtime.", `
+  - kind: implemented-in
+    target: components/alpha-b
+    evidence: []
+  - kind: implemented-in
+    target: repositories/alpha
+    evidence: []
+  - kind: publishes-to
+    target: resources/shared-boundary
+    evidence: []`)],
+    ["components/alpha-b.md", concept("Component", "Alpha B", "sharedterm cyclic component.", "Alpha helper.", `
+  - kind: declared-by
+    target: components/alpha-a
+    evidence: []`)],
+    ["components/beta.md", concept("Component", "Beta Component", "sharedterm unrelated component.", "Beta runtime.", `
+  - kind: implemented-in
+    target: repositories/beta
+    evidence: []`)],
+    ["resources/shared-boundary.md", concept("Resource", "Shared Boundary", "sharedterm direct endpoint.", "Boundary.", `
+  - kind: depends-on
+    target: resources/far-endpoint
+    evidence: []`)],
+    ["resources/far-endpoint.md", concept("Resource", "Far Endpoint", "sharedterm second hop.", "Too far.")],
+  ]);
+  const scopedReader = {
+    commit: "d".repeat(40),
+    async listMarkdownPaths() { return [...values.keys()]; },
+    async readMarkdown(relativePath: string) {
+      const value = values.get(relativePath);
+      if (!value) throw new Error("missing");
+      return value;
+    },
+  };
+
+  const result = await searchHubConcepts(scopedReader, "sharedterm", { domain: "domains/alpha" });
+  assert.equal(result.status, "ok");
+  const matches = result.status === "ok" ? result.matches : [];
+  assert.deepEqual([...matches.map((match) => match.identity)].sort(), [
+    "components/alpha-a", "components/alpha-b", "domains/alpha", "repositories/alpha",
+    "resources/shared-boundary",
+  ]);
+  assert.deepEqual(Object.fromEntries(matches.map((match) => [match.identity, match.scope?.role])), {
+    "components/alpha-a": "repository-associated",
+    "components/alpha-b": "repository-associated",
+    "domains/alpha": "member",
+    "repositories/alpha": "member",
+    "resources/shared-boundary": "boundary",
+  });
+  assert.equal(matches.some((match) => match.identity === "components/beta" || match.identity === "resources/far-endpoint"), false);
+});
+
+test("[AB-QUERY-016][AB-QUERY-018] Crawler qualification keeps representative concepts in top five", async () => {
+  resetHubSearchProjectionCache();
+  const crawlerDocuments = new Map([
+    ["domains/crawler.md", concept("Domain", "Crawler", "Vehicle data collection domain.", "Coordinates crawler services.")],
+    ["repositories/serverless-data-pipelines-demo.md", concept("Repository", "Serverless Data Pipelines Demo", "Crawler pipeline source repository.", "Runs a serverless crawler data pipeline.", `
+  - kind: part-of
+    target: domains/crawler
+    evidence: [repository-domain]`)],
+    ["components/glue-crawler-initiation.md", concept("Component", "Glue Crawler Initiation", "Starts the AWS Glue crawler.", "Initiates the crawler from the ingestion workflow.", `
+  - kind: implemented-in
+    target: repositories/serverless-data-pipelines-demo
+    evidence: [component-repository]`)],
+    ["flows/apistatemachine.md", concept("Flow", "API State Machine", "Coordinates crawler pipeline steps.", "The state machine invokes the crawler and downstream processing.", `
+  - kind: implemented-in
+    target: repositories/serverless-data-pipelines-demo
+    evidence: [flow-repository]`)],
+  ]);
+  const crawlerReader = {
+    commit: "q".repeat(40),
+    async listMarkdownPaths() { return [...crawlerDocuments.keys()]; },
+    async readMarkdown(relativePath: string) {
+      const value = crawlerDocuments.get(relativePath);
+      if (!value) throw new Error("missing");
+      return value;
+    },
+  };
+  const cases = [
+    ["glue crawler", "components/glue-crawler-initiation"],
+    ["state machine crawler pipeline", "flows/apistatemachine"],
+    ["serverless crawler repository", "repositories/serverless-data-pipelines-demo"],
+  ] as const;
+  const results = await Promise.all(cases.map(async ([query, expected]) => {
+    const result = await searchHubConcepts(crawlerReader, query, { domain: "domains/crawler", limit: 5 });
+    assert.equal(result.status, "ok");
+    return result.status === "ok" && result.matches.slice(0, 5).some((match) => match.identity === expected);
+  }));
+  assert.equal(results.filter(Boolean).length / results.length, 1, "Crawler top-five recall should be 100%");
 });
 
 test("[AB-LOCAL-HUB-009][AB-QUERY-011] query bounds and Repository freshness remain deterministic", async () => {

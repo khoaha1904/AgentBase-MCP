@@ -27,10 +27,13 @@ reproducible.
 ## First view
 
 - one Domain per site;
-- Domain, System and Repository nodes visible first;
-- other concepts expand lazily from the selected node;
+- every non-governance concept admitted by the Domain scope is visible first,
+  including Repository-associated concepts;
 - direct cross-Domain endpoints appear as non-expandable boundary nodes;
-- search, type/repository filters, 1–2 hop focus and a readable sidebar;
+- circular nodes use labels below the node; search, type/repository filters,
+  1–2 hop focus and a readable right-side selection drawer;
+- the drawer exposes overview, direct relation context and a text-only document
+  overview overlay;
 - deterministic 2D layout with readable labels, pan and zoom;
 - Flow-step edges hidden by default behind one explicit toggle;
 - open Question counts as badges, not default nodes;

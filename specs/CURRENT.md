@@ -1,7 +1,14 @@
 # Current capability
 
-Active capability: [`046-initial-ingest-discovery`](046-initial-ingest-discovery/spec.md) — implementation is qualified through the current valid-partial benchmark; exact Glue discovery remains the active improvement boundary.
-Most recent completed: [`048-readable-2d-domain-site`](048-readable-2d-domain-site/spec.md) — Retail and Crawler now publish readable 2D maps over the unchanged exact Published projection; the custom 3D presentation is removed.
+Active capability: None.
+Most recent completed: [`051-mcp-reliability-hardening`](051-mcp-reliability-hardening/spec.md) — MCP safety/failure visibility, bounded discovery qualification and deterministic Crawler query metrics are complete; the pinned Codebase Memory upgrade rehearsal remains explicitly owner-deferred.
+
+Capability 050 is complete: it reuses the exact Published projection, adds no
+Hub schema or runtime dependency, and keeps the static site offline.
+
+Capability 049 is complete: exact Published search/read authority remains
+unchanged, no Hub schema or durable index was added, and the deterministic
+1,000-concept qualification plus canonical repository gate pass.
 
 Capability 048 replaces only the generated Domain-site presentation. It removes
 the custom Three.js scene, retains the current projection and interactions, and

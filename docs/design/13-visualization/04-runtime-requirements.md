@@ -21,9 +21,10 @@
   no MCP or network source after generation. Browser resource URLs bind the
   exact generator version and Published commit so one rendered page never mixes
   files from different builds.
-- **AB-VIS-008** — Domain sites expose search, filters, 1–2 hop focus, node
-  details, lazy concept expansion and a default-off Flow-step toggle while
-  Questions remain badges by default.
+- **AB-VIS-008** — Domain sites expose all non-governance nodes admitted by the
+  Domain scope on first render, search, filters, 1–2 hop focus, a right-side
+  node-details drawer, text-only document overview, and a default-off Flow-step
+  toggle while Questions remain badges by default.
 - **AB-VIS-009** — AgentBase adds at most one goal-level visualization MCP tool,
   two public skills and one internal renderer skill; no raw traversal/layout
   tools, database, watcher, daemon or live server are added.

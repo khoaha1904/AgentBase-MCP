@@ -120,7 +120,10 @@ export function buildPublishedVisualizationProjection(
   const domain = concepts.get(options.domain);
   if (!domain || domain.document.type !== "Domain") throw new Error("visualization requires an exact Published Domain");
 
-  const primary = new Set([...concepts.keys()].filter((id) => graph.domains.get(id)?.includes(options.domain)));
+  const primary = new Set([...concepts.keys()].filter((id) => {
+    const role = graph.domainScopes.get(options.domain)?.get(id);
+    return role === "member" || role === "repository-associated";
+  }));
   primary.add(options.domain);
   const validation = validateOkfRelationships([...concepts].map(([identity, concept]) => ({
     identity, concept: concept.document,

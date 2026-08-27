@@ -1,8 +1,8 @@
 # 01 — MCP đọc một dự án như thế nào?
 
-> Trạng thái: Local Code Graph và Capability 046 broad discovery/selective OKF,
-> remote-default source isolation đã implement; released-skill qualification
-> còn pending.
+> Trạng thái: Local Code Graph, Capability 046 broad discovery/selective OKF và
+> Capability 051 reliability hardening đã implement; released-skill
+> qualification còn pending.
 
 ## Câu trả lời ngắn
 
@@ -90,6 +90,11 @@ Agent chỉ mở sâu file mà graph/census chỉ ra là quan trọng; generated
 build và secret-like paths bị loại, lockfile chỉ là dependency hint. Mỗi nhóm
 quan trọng phải được xử lý hoặc ghi limitation, nhưng không bắt buộc trở thành
 concept.
+
+Trước khi source line trở thành context cho Agent, MCP phải lọc nội dung nhạy
+cảm inline như token, password hoặc URL có credential. Path denylist và content
+redaction là hai lớp khác nhau: một file có tên hợp lệ vẫn không được đưa secret
+thô vào Discovery Seed.
 
 Query thường và normal change-first Refresh không chạy baseline này hoặc tạo
 Discovery Seed. Chúng vẫn dùng graph/source theo đúng phạm vi riêng.

@@ -1,6 +1,6 @@
 # AgentBase technical design
 
-Thư mục này phân rã 12 quyết định high-level trong
+Thư mục này phân rã 13 quyết định high-level trong
 [`docs/present`](../present/README.md) thành các thiết kế kỹ thuật có thể review
 và triển khai riêng.
 
@@ -10,7 +10,7 @@ không có một cây contracts song song.
 
 ## Cách tổ chức
 
-- Mỗi phần high-level tương ứng đúng một thư mục đánh số từ 01 đến 12.
+- Mỗi phần high-level tương ứng đúng một thư mục đánh số từ 01 đến 13.
 - `README.md` trong thư mục giữ phạm vi, liên kết high-level và mục lục thiết kế
   con.
 - Mỗi file con giải quyết một boundary kỹ thuật; không lặp lại product decision.
@@ -59,33 +59,13 @@ Chỉ sau khi owner chấp thuận mới sửa `docs/present` và tiếp tục t
 Không tự bẻ technical design để né high-level, cũng không mù quáng bắt code theo
 high-level khi tác động chưa được owner nhìn thấy.
 
-## Vòng lặp chống dead spec
+## Quy tắc lifecycle
 
-```text
-High-level → Low-level → Implementation
-     ↑            ↑             │
-     └──── gap lớn┴─────────────┘
-                  ↑ gap nhỏ phải backfill trước khi đóng slice
-```
-
-Khi implementation phát hiện assumption thiết kế không đúng:
-
-- **Gap nhỏ, cùng responsibility:** có thể sửa một nhóm nhỏ để giữ nhịp làm
-  việc, nhưng phải cập nhật low-level, high-level liên quan (nếu product outcome
-  đổi) và current requirements trước khi verify/đóng capability.
-- **Gap lớn:** dừng code. Gap được coi là lớn nếu đổi observable workflow,
-  authority/credential, data model/schema, migration/recovery, ownership giữa
-  subsystem, hoặc làm scope/impact khác đáng kể. Quay lại high-level để owner
-  chốt outcome, sau đó sửa low-level rồi mới tiếp tục implementation.
-- **Không được hợp thức hóa ngược:** test đang pass hoặc code đã chạy không tự
-  biến implementation thành design đúng. Code không được dùng để âm thầm ghi
-  đè quyết định high-level.
-- **Completion gate:** chỉ đóng slice khi high-level, low-level, current requirements,
-  code và verification mô tả cùng một behavior. Nếu cố ý deferred, cả hai level
-  phải ghi rõ boundary đó thay vì để tài liệu hứa rằng nó đã có.
-
-Một nhóm gap nhỏ chỉ được batch để giảm ngắt quãng, không được tích lũy vô hạn;
-checkpoint tự nhiên là trước benchmark mới, trước PR và trước capability commit.
+Lifecycle bắt buộc, phân loại gap và completion gate được định nghĩa tập trung ở
+[`AgentBase-MCP/AGENTS.md`](../../AGENTS.md). Tài liệu design này chỉ giữ
+baseline/impact và nội dung kỹ thuật của từng boundary; không tạo một phiên bản
+quy trình thứ hai. Mọi capability phải quay lại rule đó trước implementation,
+benchmark, PR và capability commit.
 
 ## Mục lục
 
@@ -116,7 +96,7 @@ checkpoint tự nhiên là trước benchmark mới, trước PR và trước ca
 | 07 | Shared Questions, exact Guidance và ordinary correction/removal proposal implemented |
 | 08 | Repository snapshot-first, AWS/SQS observations, local freshness report và Hub CI đã implement |
 | 09 | Single Init/Refresh, Batch Initial Ingest, Domain Enrichment, freshness và CI đã implement; Batch Refresh deferred |
-| 10 | Published-only snapshot-first query và optional local source composition implemented; remote read deferred |
+| 10 | Published-only snapshot-first query implemented; multi-term ranking, Repository-aware Domain scope và bounded relation results accepted for capability 049; remote read deferred |
 | 11 | Reviewable batch publication và exact same-Repository Init/Refresh stack implemented |
 | 12 | Terraform/Terragrunt MVP boundary implemented and verified; provider expansion deferred |
 | 13 | Shared Published projection, query diagrams and static Domain site implemented; model/domain qualification pending |

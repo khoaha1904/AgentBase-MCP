@@ -40,6 +40,53 @@ source identifiers in English unless the user asks otherwise.
   backfilled before the slice is considered complete. Never close a capability
   while code, high-level design, low-level design and current requirements disagree.
 
+## Mandatory change lifecycle
+
+The following lifecycle is mandatory for every product, architecture, runtime,
+schema, provider or workflow change. `AGENTS.md` is the canonical operating rule;
+other documents may explain a capability but must not redefine this sequence.
+
+### Before implementation
+
+1. **High-level decision** — update the affected `docs/present/` document first.
+   Record the user-visible outcome, scope and non-goals, failure/recovery,
+   compatibility or migration impact, and expected product trade-offs.
+2. **Low-level design** — update the affected `docs/design/` boundary next.
+   Record reusable baseline, changed ownership, data/tool contracts, bounds,
+   failure/recovery, security impact, verification evidence and stable `AB-*`
+   requirements. Query behavior belongs in numbered Query design (10), not in
+   an ad-hoc new query system.
+3. **Active capability** — create or update one numbered `specs/<id>/` artifact
+   and `specs/CURRENT.md` so implementation scope and acceptance evidence are
+   explicit. Historical capabilities are never silently rewritten.
+4. **Consistency gate** — compare high-level, low-level, active requirements and
+   the implementation baseline. Do not write runtime code until they describe
+   the same intended behavior and the owner has approved any material scope,
+   authority, security, migration or architecture decision.
+
+### During implementation
+
+- Implement the smallest independently verifiable slice behind accepted
+  requirements, with focused requirement-linked tests.
+- If implementation reveals a gap, stop at the current boundary and classify it:
+  - **Small gap:** same responsibility and no observable product/scope change.
+    Backfill the affected low-level requirement, and high-level text when the
+    product explanation changes, before the next slice, benchmark or PR.
+  - **Broad gap:** changes observable workflow, authority/credentials, security,
+    schema/data model, migration/recovery, ownership, lifecycle/concurrency or
+    scope/latency trade-offs. Stop implementation, return to high-level owner
+    review, then update low-level design before coding again.
+- Never use passing tests or existing code as permission to silently redefine a
+  high-level decision. A deferred behavior must be marked deferred at both
+  levels.
+
+### Completion gate
+
+A slice is complete only when high-level, low-level, active requirements, code,
+tests and verification describe the same behavior. Before PR/capability close,
+run focused checks and the repository gate, then record any remaining gap as an
+explicit deferred boundary rather than leaving it implicit.
+
 ## Architecture rules
 
 - Keep a modular monolith until measured evidence justifies distribution.

@@ -164,6 +164,10 @@ test("[AB-VIS-001..004][AB-VIS-011..014] projection is deterministic, directed a
 
   assert.equal(first.commit, reader.commit);
   assert.equal(serializePublishedVisualizationProjection(first), serializePublishedVisualizationProjection(second));
+  const eligible = [...graph.domainScopes.get(options.domain) ?? []]
+    .filter(([, role]) => role !== "boundary").map(([id]) => id);
+  assert.deepEqual(new Set(first.nodes.filter((node) => node.membership === "primary").map((node) => node.id)),
+    new Set(eligible));
   assert.deepEqual(displayEndpoints("triggered-by", "worker", "queue"),
     { source: "queue", target: "worker", directed: true });
   assert.deepEqual(displayEndpoints("part-of", "child", "parent"),
@@ -297,7 +301,7 @@ test("[AB-VIS-006..010][AB-VIS-012..014] static Domain site is reproducible, off
   assert.doesNotMatch(generatedText, /ghp_[A-Za-z0-9]{20,}|search_hub_okf|prepare_hub_visualization/);
   const generatedIndex = fs.readFileSync(path.join(first, "index.html"), "utf8");
   const generatedApp = fs.readFileSync(path.join(first, "assets/app.js"), "utf8");
-  const browserBuildKey = `2-${graph.commit}`;
+  const browserBuildKey = `3-${graph.commit}`;
   assert.match(generatedIndex, /Interactive 2D Domain knowledge map/);
   assert.equal(generatedIndex.includes(`assets/app.css?build=${browserBuildKey}`), true);
   assert.equal(generatedIndex.includes(`assets/cytoscape.min.js?build=${browserBuildKey}`), true);
@@ -307,6 +311,15 @@ test("[AB-VIS-006..010][AB-VIS-012..014] static Domain site is reproducible, off
   assert.match(generatedApp, /fetch\(`data\/domain\.json\$\{browserBuildQuery\}`\)/);
   assert.match(generatedApp, /name: "concentric"/);
   assert.match(generatedApp, /flowToggle\.checked/);
+  assert.match(generatedApp, /shape: "ellipse"/);
+  assert.match(generatedApp, /initialVisible = \(\) => new Set\(projection\.nodes\.map/);
+  assert.match(generatedIndex, /id="view-document"/);
+  assert.match(generatedIndex, /id="document-dialog"/);
+  assert.match(generatedApp, /documentDialog\.showModal\(\)/);
+  assert.match(generatedApp, /textContent/);
+  const generatedCss = fs.readFileSync(path.join(first, "assets/app.css"), "utf8");
+  assert.match(generatedCss, /\.details \{[^}]*display: none/);
+  assert.match(generatedCss, /\.details\.is-open \{ display: block; \}/);
   assert.equal(fs.existsSync(path.join(first, "assets/three.module.min.js")), false);
 
   assert.throws(() => buildStaticDomainSite(projection,

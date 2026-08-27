@@ -44,6 +44,7 @@
     "@modelcontextprotocol/client": "2.0.0",
     "@modelcontextprotocol/server": "2.0.0",
     "cytoscape": "3.34.2",
+    "minisearch": "7.2.0",
     "yaml": "2.9.0"
   },
   "allowScripts": {

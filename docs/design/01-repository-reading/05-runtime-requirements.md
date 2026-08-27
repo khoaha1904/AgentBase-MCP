@@ -191,7 +191,15 @@ fixture cost, so no incremental-speed or scale claim is accepted.
   mode-0700, marker-owned validated paths. Completion/cancel/invalidation cleans
   worktrees unless an exact resumable checkpoint owns them; bounded crash GC may
   remove only validated reconstructable state.
+- **AB-MCP-025** — Discovery source hints are content-redacted before they enter
+  a Seed or Agent-facing response. Credential-like values in otherwise admitted
+  files are not emitted verbatim; redaction is deterministic and preserves the
+  path/line evidence needed for review.
+- **AB-MCP-026** — Architecture sections captured by the fixed discovery
+  baseline are either promoted into bounded discovery groups or reported as
+  explicitly not promoted. Boundary/layer promotion cannot create an unbounded
+  source crawl, candidate list or model context.
 
 `AB-MCP-017` and `AB-MCP-018` are accepted product contracts. Capability 046
-adds approved `AB-MCP-019..024`; those additions are not shipped until its
-implementation and qualification complete.
+adds `AB-MCP-019..024`; Capability 051 adds `AB-MCP-025..026`. Each addition is
+shipped only with its implementation and qualification evidence.

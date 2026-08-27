@@ -56,7 +56,8 @@ liệu mơ hồ, không tự chọn một nguồn xung đột làm sự thật v
 13. [Visualize Published knowledge](13-visualizing-published-knowledge.md)
 
 Cả 12 phần nền tảng đã được review như một tổng thể. Phần 13 là capability
-presentation mới, giữ nguyên authority của các phần trước.
+presentation mới, giữ nguyên authority của các phần trước. Capability 051 đã
+hoàn tất reliability hardening; nó không đổi OKF schema hoặc query authority.
 
 ## Trạng thái đồng bộ — 2026-08-24
 
@@ -65,7 +66,7 @@ presentation mới, giữ nguyên authority của các phần trước.
 | 01–05 | Local Code Graph, catalog 7, OKF template, remote-profile Local Draft và Published-only query đã implement |
 | 06–08 | Relation/Question, snapshots, AWS/SQS Enrichment, freshness và Hub CI đã implement; profile khác deferred |
 | 09 | Single Initial Ingest/Refresh, Batch Initial Ingest, Domain Enrichment, freshness và CI đã implement; Batch Refresh deferred |
-| 10 | Hub search/read Published-only đã implement; ordinary freshness marks và remote source reader chưa có |
+| 10 | Hub search/read Published-only đã implement; multi-term/relation-aware query quality đã accepted cho capability 049; ordinary freshness marks và remote source reader chưa có |
 | 11 | Review, Accept, rich batch PR và exact same-Repository Init/Refresh PR stack đã có; MCP không merge hoặc rebase các Init độc lập |
 | 12 | MVP hiện hỗ trợ Terraform/Terragrunt; SAM/CloudFormation chưa hỗ trợ |
 | 13 | Published projection, query diagram và static Domain site đã implement; còn model/domain qualification |

@@ -267,11 +267,11 @@ var require_directives = __commonJS({
     };
     var escapeTagName = (tn) => tn.replace(/[!,[\]{}]/g, (ch) => escapeChars[ch]);
     var Directives = class _Directives {
-      constructor(yaml, tags) {
+      constructor(yaml, tags2) {
         this.docStart = null;
         this.docEnd = false;
         this.yaml = Object.assign({}, _Directives.defaultYaml, yaml);
-        this.tags = Object.assign({}, _Directives.defaultTags, tags);
+        this.tags = Object.assign({}, _Directives.defaultTags, tags2);
       }
       clone() {
         const copy = new _Directives(this.yaml, this.tags);
@@ -399,12 +399,12 @@ var require_directives = __commonJS({
         const tagEntries = Object.entries(this.tags);
         let tagNames;
         if (doc && tagEntries.length > 0 && identity.isNode(doc.contents)) {
-          const tags = {};
+          const tags2 = {};
           visit.visit(doc.contents, (_key, node) => {
             if (identity.isNode(node) && node.tag)
-              tags[node.tag] = true;
+              tags2[node.tag] = true;
           });
-          tagNames = Object.keys(tags);
+          tagNames = Object.keys(tags2);
         } else
           tagNames = [];
         for (const [handle, prefix] of tagEntries) {
@@ -767,15 +767,15 @@ var require_createNode = __commonJS({
     var identity = require_identity();
     var Scalar = require_Scalar();
     var defaultTagPrefix = "tag:yaml.org,2002:";
-    function findTagObject(value, tagName, tags) {
+    function findTagObject(value, tagName, tags2) {
       if (tagName) {
-        const match = tags.filter((t) => t.tag === tagName);
+        const match = tags2.filter((t) => t.tag === tagName);
         const tagObj = match.find((t) => !t.format) ?? match[0];
         if (!tagObj)
           throw new Error(`Tag ${tagName} not found`);
         return tagObj;
       }
-      return tags.find((t) => t.identify?.(value) && !t.format);
+      return tags2.find((t) => t.identify?.(value) && !t.format);
     }
     function createNode(value, tagName, ctx) {
       if (identity.isDocument(value))
@@ -1370,8 +1370,8 @@ ${indent}${start}${value}${end}`;
 ${indent}`);
       if (actualString) {
         const test = (tag) => tag.default && tag.tag !== "tag:yaml.org,2002:str" && tag.test?.test(str);
-        const { compat, tags } = ctx.doc.schema;
-        if (tags.some(test) || compat?.some(test))
+        const { compat, tags: tags2 } = ctx.doc.schema;
+        if (tags2.some(test) || compat?.some(test))
           return quotedString(value, ctx);
       }
       return implicitKey ? str : foldFlowLines.foldFlowLines(str, indent, foldFlowLines.FOLD_FLOW, getFoldOptions(ctx, false));
@@ -1463,9 +1463,9 @@ var require_stringify = __commonJS({
         options: opt
       };
     }
-    function getTagObject(tags, item) {
+    function getTagObject(tags2, item) {
       if (item.tag) {
-        const match = tags.filter((t) => t.tag === item.tag);
+        const match = tags2.filter((t) => t.tag === item.tag);
         if (match.length > 0)
           return match.find((t) => t.format === item.format) ?? match[0];
       }
@@ -1473,7 +1473,7 @@ var require_stringify = __commonJS({
       let obj;
       if (identity.isScalar(item)) {
         obj = item.value;
-        let match = tags.filter((t) => t.identify?.(obj));
+        let match = tags2.filter((t) => t.identify?.(obj));
         if (match.length > 1) {
           const testMatch = match.filter((t) => t.test);
           if (testMatch.length > 0)
@@ -1482,7 +1482,7 @@ var require_stringify = __commonJS({
         tagObj = match.find((t) => t.format === item.format) ?? match.find((t) => !t.format);
       } else {
         obj = item;
-        tagObj = tags.find((t) => t.nodeClass && obj instanceof t.nodeClass);
+        tagObj = tags2.find((t) => t.nodeClass && obj instanceof t.nodeClass);
       }
       if (!tagObj) {
         const name = obj?.constructor?.name ?? (obj === null ? "null" : typeof obj);
@@ -3248,10 +3248,10 @@ var require_tags = __commonJS({
       if (schemaTags && !customTags) {
         return addMergeTag && !schemaTags.includes(merge.merge) ? schemaTags.concat(merge.merge) : schemaTags.slice();
       }
-      let tags = schemaTags;
-      if (!tags) {
+      let tags2 = schemaTags;
+      if (!tags2) {
         if (Array.isArray(customTags))
-          tags = [];
+          tags2 = [];
         else {
           const keys = Array.from(schemas2.keys()).filter((key) => key !== "yaml11").map((key) => JSON.stringify(key)).join(", ");
           throw new Error(`Unknown schema "${schemaName}"; use one of ${keys} or define customTags array`);
@@ -3259,22 +3259,22 @@ var require_tags = __commonJS({
       }
       if (Array.isArray(customTags)) {
         for (const tag of customTags)
-          tags = tags.concat(tag);
+          tags2 = tags2.concat(tag);
       } else if (typeof customTags === "function") {
-        tags = customTags(tags.slice());
+        tags2 = customTags(tags2.slice());
       }
       if (addMergeTag)
-        tags = tags.concat(merge.merge);
-      return tags.reduce((tags2, tag) => {
+        tags2 = tags2.concat(merge.merge);
+      return tags2.reduce((tags3, tag) => {
         const tagObj = typeof tag === "string" ? tagsByName[tag] : tag;
         if (!tagObj) {
           const tagName = JSON.stringify(tag);
           const keys = Object.keys(tagsByName).map((key) => JSON.stringify(key)).join(", ");
           throw new Error(`Unknown custom tag ${tagName}; use one of ${keys}`);
         }
-        if (!tags2.includes(tagObj))
-          tags2.push(tagObj);
-        return tags2;
+        if (!tags3.includes(tagObj))
+          tags3.push(tagObj);
+        return tags3;
       }, []);
     }
     exports.coreKnownTags = coreKnownTags;
@@ -3290,14 +3290,14 @@ var require_Schema = __commonJS({
     var map = require_map();
     var seq = require_seq();
     var string = require_string();
-    var tags = require_tags();
+    var tags2 = require_tags();
     var sortMapEntriesByKey = (a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0;
     var Schema = class _Schema {
       constructor({ compat, customTags, merge, resolveKnownTags, schema, sortMapEntries, toStringDefaults }) {
-        this.compat = Array.isArray(compat) ? tags.getTags(compat, "compat") : compat ? tags.getTags(null, compat) : null;
+        this.compat = Array.isArray(compat) ? tags2.getTags(compat, "compat") : compat ? tags2.getTags(null, compat) : null;
         this.name = typeof schema === "string" && schema || "core";
-        this.knownTags = resolveKnownTags ? tags.coreKnownTags : {};
-        this.tags = tags.getTags(customTags, this.name, merge);
+        this.knownTags = resolveKnownTags ? tags2.coreKnownTags : {};
+        this.tags = tags2.getTags(customTags, this.name, merge);
         this.toStringOptions = toStringDefaults ?? null;
         Object.defineProperty(this, identity.MAP, { value: map.map });
         Object.defineProperty(this, identity.SCALAR, { value: string.string });
@@ -7849,6 +7849,9 @@ function parseReservedFrontmatter(documentPath, source) {
 }
 
 // src/core/knowledge/query/hub-query-graph.ts
+import path3 from "node:path";
+
+// src/core/knowledge/documents/okf-relationships.ts
 import path2 from "node:path";
 
 // src/core/knowledge/documents/relationship-vocabulary.ts
@@ -7872,21 +7875,210 @@ function isCanonicalRelationshipKind(value) {
   return CANONICAL_RELATIONSHIP_KINDS.includes(value);
 }
 
-// src/core/knowledge/query/hub-query-graph.ts
+// src/core/knowledge/documents/okf-relationships.ts
+var MAX_IDENTITY_BYTES = 256;
 function mapping2(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
 }
+function resolveOkfMarkdownLinkPaths(concept) {
+  const links = /* @__PURE__ */ new Set();
+  for (const match of concept.body.matchAll(/(?<!!)\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)) {
+    const raw = match[1]?.split("#")[0]?.split("?")[0];
+    if (!raw || !raw.endsWith(".md") || /^[a-z][a-z0-9+.-]*:/i.test(raw)) continue;
+    const resolved = raw.startsWith("/") ? path2.posix.normalize(raw.slice(1)) : path2.posix.normalize(path2.posix.join(path2.posix.dirname(concept.path), raw));
+    if (resolved !== ".." && !resolved.startsWith("../")) links.add(resolved);
+  }
+  return links;
+}
+function sourceIds(concept) {
+  if (!Array.isArray(concept.frontmatter.sources)) return /* @__PURE__ */ new Set();
+  return new Set(concept.frontmatter.sources.flatMap((value) => {
+    const id = mapping2(value)?.id;
+    return typeof id === "string" ? [id] : [];
+  }));
+}
+function evidenceIds(ownerPath, value, knownSources, required, failures) {
+  if (value === void 0 && !required) return [];
+  if (!Array.isArray(value) || !value.length || !value.every((item) => typeof item === "string" && item.length > 0)) {
+    failures.push(`${ownerPath}: evidence must be a non-empty source ID list`);
+    return [];
+  }
+  const ids = value;
+  if (new Set(ids).size !== ids.length) failures.push(`${ownerPath}: evidence source IDs must be unique`);
+  for (const id of ids) if (!knownSources.has(id)) failures.push(`${ownerPath}: evidence ${id} does not resolve to sources[].id`);
+  return ids;
+}
+function validateFlowSteps(identity, concept, targets, strict, failures) {
+  const value = concept.frontmatter.flow_steps;
+  if (value === void 0) return [];
+  if (!Array.isArray(value) || !value.length) {
+    failures.push(`${concept.path}: flow_steps must be a non-empty list`);
+    return [];
+  }
+  const links = resolveOkfMarkdownLinkPaths(concept);
+  const sources = sourceIds(concept);
+  const steps = [];
+  const orders = /* @__PURE__ */ new Set();
+  for (const raw of value) {
+    const step = mapping2(raw);
+    const order = step?.order;
+    const source = step?.source;
+    const action = step?.action;
+    const target = step?.target;
+    const mode = step?.mode;
+    if (!step || typeof order !== "number" || !Number.isSafeInteger(order) || order < 1 || typeof source !== "string" || typeof action !== "string" || typeof target !== "string" || typeof mode !== "string") {
+      failures.push(`${concept.path}: flow_steps entry requires order (positive integer), source, action, target and mode`);
+      continue;
+    }
+    if (orders.has(order)) failures.push(`${concept.path}: flow_steps order ${order} is duplicated`);
+    orders.add(order);
+    if (!FLOW_STEP_ACTIONS.includes(action)) failures.push(`${concept.path}: flow step action ${action} is not canonical`);
+    if (!FLOW_STEP_MODES.includes(mode)) failures.push(`${concept.path}: flow step mode ${mode} is invalid`);
+    for (const endpoint of [source, target]) {
+      const resolved = targets.get(endpoint);
+      if (!resolved) failures.push(`${concept.path}: flow step targets missing concept ${endpoint}`);
+      else if (!links.has(resolved.path)) failures.push(`${concept.path}: flow step endpoint ${endpoint} has no resolving Markdown link`);
+    }
+    const evidence = evidenceIds(`${concept.path}: flow step ${order}`, step.evidence, sources, strict, failures);
+    steps.push({ flow: identity, order, source, action, target, mode, evidence });
+  }
+  const expected = [...orders].sort((left, right) => left - right);
+  if (expected.some((order, index) => order !== index + 1)) failures.push(`${concept.path}: flow_steps order must be contiguous from 1`);
+  return steps.sort((left, right) => left.order - right.order);
+}
+function validateOkfRelationships(concepts, options = {}) {
+  const failures = [];
+  const warnings = [];
+  const relationships = [];
+  const flowSteps = [];
+  if (!concepts.length) return { relationships, flowSteps, failures: ["relationship validation requires at least one concept"], warnings };
+  const identities = /* @__PURE__ */ new Map();
+  const targets = /* @__PURE__ */ new Map();
+  const paths = /* @__PURE__ */ new Set();
+  for (const target of options.targets ?? []) {
+    if (!target.identity || Buffer.byteLength(target.identity) > MAX_IDENTITY_BYTES || targets.has(target.identity)) {
+      failures.push(`${target.path}: target identity must be unique and 1-${MAX_IDENTITY_BYTES} bytes`);
+      continue;
+    }
+    if (paths.has(target.path)) failures.push(`${target.path}: duplicate concept path`);
+    else paths.add(target.path);
+    targets.set(target.identity, target);
+  }
+  for (const { identity, concept } of concepts) {
+    if (!identity || Buffer.byteLength(identity) > MAX_IDENTITY_BYTES) {
+      failures.push(`${concept.path}: relationship identity must be 1-${MAX_IDENTITY_BYTES} bytes`);
+    } else if (identities.has(identity) || targets.has(identity)) failures.push(`${concept.path}: duplicate relationship identity ${identity}`);
+    else {
+      identities.set(identity, concept);
+      targets.set(identity, { identity, path: concept.path, type: concept.type });
+    }
+    if (paths.has(concept.path)) failures.push(`${concept.path}: duplicate concept path`);
+    else paths.add(concept.path);
+  }
+  for (const { identity, concept } of concepts) {
+    if (options.sourceIdentities && !options.sourceIdentities.has(identity)) continue;
+    const strict = options.strictSourceIdentities?.has(identity) ?? false;
+    const declared = concept.frontmatter.relationships;
+    if (declared !== void 0 && declared !== null && !Array.isArray(declared)) {
+      failures.push(`${concept.path}: relationships must be a list`);
+    } else if (Array.isArray(declared)) {
+      const links = resolveOkfMarkdownLinkPaths(concept);
+      const sources = sourceIds(concept);
+      for (const value of declared) {
+        const relationship = mapping2(value);
+        if (!relationship || typeof relationship.kind !== "string" || typeof relationship.target !== "string") {
+          failures.push(`${concept.path}: relationship declaration is malformed`);
+          continue;
+        }
+        const target = targets.get(relationship.target);
+        if (!target) {
+          failures.push(`${concept.path}: relationship ${relationship.kind} targets missing concept ${relationship.target}`);
+          continue;
+        }
+        if (!links.has(target.path)) {
+          failures.push(`${concept.path}: relationship ${relationship.kind} -> ${relationship.target} has no resolving Markdown link`);
+          continue;
+        }
+        const schema = getOkfConceptSchema(concept.type);
+        const evidence = evidenceIds(
+          `${concept.path}: relationship ${relationship.kind} -> ${relationship.target}`,
+          relationship.evidence,
+          sources,
+          strict && Boolean(schema),
+          failures
+        );
+        const supported = schema?.relationshipGuidance.some((guidance) => guidance.kind === relationship.kind && guidance.targetTypes.includes(target.type));
+        if (strict && schema && !isCanonicalRelationshipKind(relationship.kind)) {
+          failures.push(`${concept.path}: relationship ${relationship.kind} is not a canonical AgentBase predicate`);
+        } else if (schema && !supported) {
+          const message = `${concept.path}: relationship ${relationship.kind} -> ${relationship.target} is unjudged by ${concept.type} schema guidance`;
+          if (strict) failures.push(message);
+          else warnings.push(message);
+        }
+        relationships.push({ source: identity, kind: relationship.kind, target: relationship.target, evidence });
+      }
+    }
+    flowSteps.push(...validateFlowSteps(identity, concept, targets, strict, failures));
+  }
+  return { relationships, flowSteps, failures, warnings };
+}
+
+// src/core/knowledge/query/hub-markdown-sections.ts
+var DEFAULT_MAXIMUM_SECTIONS = 512;
+function sectionId(identity, ordinal) {
+  return `${identity}#section-${ordinal}`;
+}
+function splitHubMarkdownSections(conceptIdentity, body, maximumSections = DEFAULT_MAXIMUM_SECTIONS) {
+  if (!conceptIdentity.trim()) throw new Error("concept identity is required");
+  if (!Number.isSafeInteger(maximumSections) || maximumSections < 1) {
+    throw new Error("maximumSections must be a positive safe integer");
+  }
+  const sections = [];
+  const headings = [];
+  let lines = [], fenced = false;
+  const flush = () => {
+    const text2 = lines.join("\n").trim();
+    lines = [];
+    if (!text2) return;
+    if (sections.length === maximumSections) throw new Error("Markdown section limit exceeded");
+    const ordinal = sections.length;
+    sections.push({
+      id: sectionId(conceptIdentity, ordinal),
+      conceptIdentity,
+      ordinal,
+      headingPath: [...headings],
+      text: text2,
+      searchText: text2.replace(/\s+/g, " ").trim()
+    });
+  };
+  for (const line of body.replace(/\r\n?/g, "\n").split("\n")) {
+    if (/^\s*(?:```|~~~)/.test(line)) {
+      fenced = !fenced;
+      lines.push(line);
+      continue;
+    }
+    const heading = fenced ? void 0 : line.match(/^(#{1,6})[ \t]+(.+?)\s*#*\s*$/);
+    if (!heading?.[1] || !heading[2]) {
+      lines.push(line);
+      continue;
+    }
+    flush();
+    const level = heading[1].length;
+    headings.length = level - 1;
+    headings[level - 1] = heading[2].trim();
+  }
+  flush();
+  return sections;
+}
+
+// src/core/knowledge/query/hub-query-graph.ts
 function text(value) {
   return typeof value === "string" ? value.trim() : "";
 }
-function relationships(concept) {
-  if (!Array.isArray(concept.frontmatter.relationships)) return [];
-  return concept.frontmatter.relationships.flatMap((raw) => {
-    const entry = mapping2(raw);
-    const kind = text(entry?.kind), target = text(entry?.target);
-    const evidence = Array.isArray(entry?.evidence) ? entry.evidence.filter((item) => typeof item === "string") : [];
-    return kind && target && isCanonicalRelationshipKind(kind) ? [{ source: concept.conceptId, kind, target, evidence }] : [];
-  });
+function tags(concept) {
+  const value = concept.frontmatter.tags;
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.filter((item) => typeof item === "string").map((item) => item.trim()).filter(Boolean))].sort();
 }
 function deriveDomains(concepts, edges) {
   const parents = /* @__PURE__ */ new Map();
@@ -7913,33 +8105,111 @@ function deriveDomains(concepts, edges) {
   for (const identity of concepts.keys()) visit(identity);
   return result;
 }
+function deriveDomainScopes(concepts, domains, edges, flowSteps) {
+  const structural = /* @__PURE__ */ new Set(["part-of", "implemented-in", "declared-by"]);
+  const parents = /* @__PURE__ */ new Map();
+  for (const edge of edges) {
+    if (!structural.has(edge.kind) || !concepts.has(edge.target)) continue;
+    parents.set(edge.source, [...parents.get(edge.source) ?? [], edge.target]);
+  }
+  const repositories = (identity, trail = /* @__PURE__ */ new Set()) => {
+    if (trail.has(identity)) return [];
+    const concept = concepts.get(identity);
+    if (!concept) return [];
+    if (concept.document.type === "Repository") return [identity];
+    const next = new Set(trail).add(identity);
+    return [...new Set((parents.get(identity) ?? []).flatMap((parent) => repositories(parent, next)))].sort();
+  };
+  const result = /* @__PURE__ */ new Map();
+  const domainIds = [...concepts].filter(([, concept]) => concept.document.type === "Domain").map(([identity]) => identity).sort();
+  for (const domain of domainIds) {
+    const roles = /* @__PURE__ */ new Map();
+    for (const identity of concepts.keys()) {
+      if ((domains.get(identity) ?? []).includes(domain)) roles.set(identity, "member");
+    }
+    for (const identity of concepts.keys()) {
+      if (roles.has(identity)) continue;
+      if (repositories(identity).some((repository) => (domains.get(repository) ?? []).includes(domain))) {
+        roles.set(identity, "repository-associated");
+      }
+    }
+    const primary = new Set(roles.keys());
+    for (const edge of edges) {
+      if (primary.has(edge.source) && !roles.has(edge.target)) roles.set(edge.target, "boundary");
+      if (primary.has(edge.target) && !roles.has(edge.source)) roles.set(edge.source, "boundary");
+    }
+    for (const step of flowSteps) {
+      if (primary.has(step.flow)) {
+        if (!roles.has(step.source)) roles.set(step.source, "boundary");
+        if (!roles.has(step.target)) roles.set(step.target, "boundary");
+      }
+      if (primary.has(step.source) && !roles.has(step.target)) roles.set(step.target, "boundary");
+      if (primary.has(step.target) && !roles.has(step.source)) roles.set(step.source, "boundary");
+    }
+    result.set(domain, roles);
+  }
+  return result;
+}
 function normalizeHubConceptPath(value) {
-  if (value.includes("\0") || value.includes("\\") || path2.posix.isAbsolute(value)) throw new Error("Hub concept path must be normalized and relative");
-  const normalized = path2.posix.normalize(value);
-  if (normalized === "." || normalized.startsWith("../") || !normalized.endsWith(".md")) throw new Error("Hub concept path must identify one Markdown file");
+  if (value.includes("\0") || value.includes("\\") || path3.posix.isAbsolute(value)) {
+    throw new Error("Hub concept path must be normalized and relative");
+  }
+  const normalized = path3.posix.normalize(value);
+  if (normalized === "." || normalized.startsWith("../") || !normalized.endsWith(".md")) {
+    throw new Error("Hub concept path must identify one Markdown file");
+  }
   return normalized;
 }
 async function loadHubGraph(reader, maximumDocumentBytes) {
-  const concepts = /* @__PURE__ */ new Map(), paths = /* @__PURE__ */ new Map();
-  const edges = [];
+  const concepts = /* @__PURE__ */ new Map(), paths = /* @__PURE__ */ new Map(), omissions = [];
   const markdownPaths = [...await reader.listMarkdownPaths()].map(normalizeHubConceptPath).sort();
   for (const relativePath of markdownPaths) {
-    if (["index.md", "log.md"].includes(path2.posix.basename(relativePath))) continue;
+    if (["index.md", "log.md", "README.md"].includes(path3.posix.basename(relativePath))) continue;
     const content = await reader.readMarkdown(relativePath);
-    if (Buffer.byteLength(content) > maximumDocumentBytes) continue;
+    if (Buffer.byteLength(content) > maximumDocumentBytes) {
+      omissions.push({ path: relativePath, reason: "oversized" });
+      continue;
+    }
     try {
       const document = parseConceptDocument(relativePath, content);
       concepts.set(document.conceptId, {
         document,
         title: text(document.frontmatter.title) || document.body.match(/^#\s+(.+)$/m)?.[1]?.trim() || document.conceptId,
-        description: text(document.frontmatter.description)
+        description: text(document.frontmatter.description),
+        tags: tags(document),
+        sections: splitHubMarkdownSections(document.conceptId, document.body)
       });
       paths.set(document.path, document.conceptId);
-      edges.push(...relationships(document));
     } catch {
+      throw new Error(`Published Hub concept is invalid: ${relativePath}`);
     }
   }
-  return { commit: reader.commit, concepts, paths, markdownPaths, edges, domains: deriveDomains(concepts, edges) };
+  const validation = validateOkfRelationships([...concepts].map(([identity, concept]) => ({
+    identity,
+    concept: concept.document
+  })));
+  const edges = validation.relationships.filter((relationship) => isCanonicalRelationshipKind(relationship.kind)).map((relationship) => ({ ...relationship }));
+  const links = [];
+  for (const [source, concept] of concepts) {
+    for (const linkedPath of resolveOkfMarkdownLinkPaths(concept.document)) {
+      const target = paths.get(linkedPath);
+      if (target && target !== source) links.push({ source, target });
+    }
+  }
+  links.sort((left, right) => `${left.source}\0${left.target}`.localeCompare(`${right.source}\0${right.target}`));
+  const domains = deriveDomains(concepts, edges);
+  return {
+    commit: reader.commit,
+    concepts,
+    paths,
+    markdownPaths,
+    edges,
+    flowSteps: validation.flowSteps,
+    links,
+    omissions,
+    domains,
+    domainScopes: deriveDomainScopes(concepts, domains, edges, validation.flowSteps)
+  };
 }
 function summarizeHubConcept(graph, identity) {
   const value = graph.concepts.get(identity);
@@ -8013,14 +8283,14 @@ function normalizeRecord(record) {
 // src/core/knowledge/documents/okf-bundle.ts
 import { createHash } from "node:crypto";
 import fs from "node:fs";
-import path3 from "node:path";
+import path4 from "node:path";
 function bundleFiles(root) {
   if (!fs.existsSync(root)) return [];
   const files2 = [];
   const walk = (directory) => {
     for (const entry of fs.readdirSync(directory, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
-      const absolute = path3.join(directory, entry.name);
-      const relative = path3.relative(root, absolute).split(path3.sep).join("/");
+      const absolute = path4.join(directory, entry.name);
+      const relative = path4.relative(root, absolute).split(path4.sep).join("/");
       if (entry.isSymbolicLink()) throw new OkfValidationError("BUNDLE_SYMLINK", `${relative}: bundle symlinks are not allowed`);
       if (entry.isDirectory()) walk(absolute);
       else if (entry.isFile()) files2.push(relative);
@@ -8051,7 +8321,7 @@ function validateIndex(relative, source) {
     else {
       const navigation = line.match(/^\*\s+\[[^\]]+\]\(([^)]+)\)(?:\s+-\s+.+)?$/);
       if (navigation && headingSeen) {
-        const target = path3.posix.normalize(navigation[1]);
+        const target = path4.posix.normalize(navigation[1]);
         if (targets.has(target)) throw new OkfValidationError("INDEX_DUPLICATE", `${relative}: duplicate index target: ${target}`);
         targets.add(target);
         continue;
@@ -8092,14 +8362,14 @@ function resolveConceptLink(from, target) {
   if (target.startsWith("#") || /^[a-z][a-z0-9+.-]*:/i.test(target)) return void 0;
   const clean = target.split("#")[0]?.split("?")[0];
   if (!clean || !clean.endsWith(".md") && !clean.endsWith("/")) return void 0;
-  const resolved = clean.startsWith("/") ? path3.posix.normalize(clean.slice(1)) : path3.posix.normalize(path3.posix.join(path3.posix.dirname(from), clean));
+  const resolved = clean.startsWith("/") ? path4.posix.normalize(clean.slice(1)) : path4.posix.normalize(path4.posix.join(path4.posix.dirname(from), clean));
   if (resolved.startsWith("../") || resolved === "..") return `!unsafe:${target}`;
   return resolved.endsWith("/") ? `${resolved}index.md` : resolved;
 }
 function digestTree(root, files2) {
   const hash = createHash("sha256");
   for (const relative of files2) {
-    const bytes = fs.readFileSync(path3.join(root, ...relative.split("/")));
+    const bytes = fs.readFileSync(path4.join(root, ...relative.split("/")));
     hash.update(`${relative}\0${bytes.length}\0`);
     hash.update(bytes);
     hash.update("\0");
@@ -8107,14 +8377,14 @@ function digestTree(root, files2) {
   return `sha256:${hash.digest("hex")}`;
 }
 function loadOkfBundle(root, options = {}) {
-  const absoluteRoot = path3.resolve(root);
+  const absoluteRoot = path4.resolve(root);
   const files2 = bundleFiles(absoluteRoot);
   const concepts = /* @__PURE__ */ new Map();
   let okfVersion;
   for (const relative of files2.filter((file) => file.endsWith(".md"))) {
-    const source = utf8(fs.readFileSync(path3.join(absoluteRoot, ...relative.split("/"))), relative);
+    const source = utf8(fs.readFileSync(path4.join(absoluteRoot, ...relative.split("/"))), relative);
     if (relative === "README.md") continue;
-    const basename = path3.posix.basename(relative);
+    const basename = path4.posix.basename(relative);
     if (basename === "index.md") {
       const version = validateIndex(relative, source);
       if (relative === "index.md") okfVersion = version;
@@ -8144,155 +8414,6 @@ function loadOkfBundle(root, options = {}) {
     treeDigest: digestTree(absoluteRoot, files2)
   };
   return okfVersion === void 0 ? result : { ...result, okfVersion };
-}
-
-// src/core/knowledge/documents/okf-relationships.ts
-import path4 from "node:path";
-var MAX_IDENTITY_BYTES = 256;
-function mapping4(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
-}
-function linkedPaths(concept) {
-  const links = /* @__PURE__ */ new Set();
-  for (const match of concept.body.matchAll(/(?<!!)\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)) {
-    const raw = match[1]?.split("#")[0]?.split("?")[0];
-    if (!raw || !raw.endsWith(".md") || /^[a-z][a-z0-9+.-]*:/i.test(raw)) continue;
-    const resolved = raw.startsWith("/") ? path4.posix.normalize(raw.slice(1)) : path4.posix.normalize(path4.posix.join(path4.posix.dirname(concept.path), raw));
-    if (resolved !== ".." && !resolved.startsWith("../")) links.add(resolved);
-  }
-  return links;
-}
-function sourceIds(concept) {
-  if (!Array.isArray(concept.frontmatter.sources)) return /* @__PURE__ */ new Set();
-  return new Set(concept.frontmatter.sources.flatMap((value) => {
-    const id = mapping4(value)?.id;
-    return typeof id === "string" ? [id] : [];
-  }));
-}
-function evidenceIds(ownerPath, value, knownSources, required, failures) {
-  if (value === void 0 && !required) return [];
-  if (!Array.isArray(value) || !value.length || !value.every((item) => typeof item === "string" && item.length > 0)) {
-    failures.push(`${ownerPath}: evidence must be a non-empty source ID list`);
-    return [];
-  }
-  const ids = value;
-  if (new Set(ids).size !== ids.length) failures.push(`${ownerPath}: evidence source IDs must be unique`);
-  for (const id of ids) if (!knownSources.has(id)) failures.push(`${ownerPath}: evidence ${id} does not resolve to sources[].id`);
-  return ids;
-}
-function validateFlowSteps(identity, concept, targets, strict, failures) {
-  const value = concept.frontmatter.flow_steps;
-  if (value === void 0) return [];
-  if (!Array.isArray(value) || !value.length) {
-    failures.push(`${concept.path}: flow_steps must be a non-empty list`);
-    return [];
-  }
-  const links = linkedPaths(concept);
-  const sources = sourceIds(concept);
-  const steps = [];
-  const orders = /* @__PURE__ */ new Set();
-  for (const raw of value) {
-    const step = mapping4(raw);
-    const order = step?.order;
-    const source = step?.source;
-    const action = step?.action;
-    const target = step?.target;
-    const mode = step?.mode;
-    if (!step || typeof order !== "number" || !Number.isSafeInteger(order) || order < 1 || typeof source !== "string" || typeof action !== "string" || typeof target !== "string" || typeof mode !== "string") {
-      failures.push(`${concept.path}: flow_steps entry requires order (positive integer), source, action, target and mode`);
-      continue;
-    }
-    if (orders.has(order)) failures.push(`${concept.path}: flow_steps order ${order} is duplicated`);
-    orders.add(order);
-    if (!FLOW_STEP_ACTIONS.includes(action)) failures.push(`${concept.path}: flow step action ${action} is not canonical`);
-    if (!FLOW_STEP_MODES.includes(mode)) failures.push(`${concept.path}: flow step mode ${mode} is invalid`);
-    for (const endpoint of [source, target]) {
-      const resolved = targets.get(endpoint);
-      if (!resolved) failures.push(`${concept.path}: flow step targets missing concept ${endpoint}`);
-      else if (!links.has(resolved.path)) failures.push(`${concept.path}: flow step endpoint ${endpoint} has no resolving Markdown link`);
-    }
-    const evidence = evidenceIds(`${concept.path}: flow step ${order}`, step.evidence, sources, strict, failures);
-    steps.push({ flow: identity, order, source, action, target, mode, evidence });
-  }
-  const expected = [...orders].sort((left, right) => left - right);
-  if (expected.some((order, index) => order !== index + 1)) failures.push(`${concept.path}: flow_steps order must be contiguous from 1`);
-  return steps.sort((left, right) => left.order - right.order);
-}
-function validateOkfRelationships(concepts, options = {}) {
-  const failures = [];
-  const warnings = [];
-  const relationships2 = [];
-  const flowSteps = [];
-  if (!concepts.length) return { relationships: relationships2, flowSteps, failures: ["relationship validation requires at least one concept"], warnings };
-  const identities = /* @__PURE__ */ new Map();
-  const targets = /* @__PURE__ */ new Map();
-  const paths = /* @__PURE__ */ new Set();
-  for (const target of options.targets ?? []) {
-    if (!target.identity || Buffer.byteLength(target.identity) > MAX_IDENTITY_BYTES || targets.has(target.identity)) {
-      failures.push(`${target.path}: target identity must be unique and 1-${MAX_IDENTITY_BYTES} bytes`);
-      continue;
-    }
-    if (paths.has(target.path)) failures.push(`${target.path}: duplicate concept path`);
-    else paths.add(target.path);
-    targets.set(target.identity, target);
-  }
-  for (const { identity, concept } of concepts) {
-    if (!identity || Buffer.byteLength(identity) > MAX_IDENTITY_BYTES) {
-      failures.push(`${concept.path}: relationship identity must be 1-${MAX_IDENTITY_BYTES} bytes`);
-    } else if (identities.has(identity) || targets.has(identity)) failures.push(`${concept.path}: duplicate relationship identity ${identity}`);
-    else {
-      identities.set(identity, concept);
-      targets.set(identity, { identity, path: concept.path, type: concept.type });
-    }
-    if (paths.has(concept.path)) failures.push(`${concept.path}: duplicate concept path`);
-    else paths.add(concept.path);
-  }
-  for (const { identity, concept } of concepts) {
-    if (options.sourceIdentities && !options.sourceIdentities.has(identity)) continue;
-    const strict = options.strictSourceIdentities?.has(identity) ?? false;
-    const declared = concept.frontmatter.relationships;
-    if (declared !== void 0 && declared !== null && !Array.isArray(declared)) {
-      failures.push(`${concept.path}: relationships must be a list`);
-    } else if (Array.isArray(declared)) {
-      const links = linkedPaths(concept);
-      const sources = sourceIds(concept);
-      for (const value of declared) {
-        const relationship = mapping4(value);
-        if (!relationship || typeof relationship.kind !== "string" || typeof relationship.target !== "string") {
-          failures.push(`${concept.path}: relationship declaration is malformed`);
-          continue;
-        }
-        const target = targets.get(relationship.target);
-        if (!target) {
-          failures.push(`${concept.path}: relationship ${relationship.kind} targets missing concept ${relationship.target}`);
-          continue;
-        }
-        if (!links.has(target.path)) {
-          failures.push(`${concept.path}: relationship ${relationship.kind} -> ${relationship.target} has no resolving Markdown link`);
-          continue;
-        }
-        const schema = getOkfConceptSchema(concept.type);
-        const evidence = evidenceIds(
-          `${concept.path}: relationship ${relationship.kind} -> ${relationship.target}`,
-          relationship.evidence,
-          sources,
-          strict && Boolean(schema),
-          failures
-        );
-        const supported = schema?.relationshipGuidance.some((guidance) => guidance.kind === relationship.kind && guidance.targetTypes.includes(target.type));
-        if (strict && schema && !isCanonicalRelationshipKind(relationship.kind)) {
-          failures.push(`${concept.path}: relationship ${relationship.kind} is not a canonical AgentBase predicate`);
-        } else if (schema && !supported) {
-          const message = `${concept.path}: relationship ${relationship.kind} -> ${relationship.target} is unjudged by ${concept.type} schema guidance`;
-          if (strict) failures.push(message);
-          else warnings.push(message);
-        }
-        relationships2.push({ source: identity, kind: relationship.kind, target: relationship.target, evidence });
-      }
-    }
-    flowSteps.push(...validateFlowSteps(identity, concept, targets, strict, failures));
-  }
-  return { relationships: relationships2, flowSteps, failures, warnings };
 }
 
 // src/core/knowledge/visualization/predicate-descriptors.ts
@@ -8332,7 +8453,7 @@ var QUESTION_KEYS = [
   "state",
   "subject"
 ];
-function mapping5(value) {
+function mapping4(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
 }
 function exactKeys(value, expected) {
@@ -8358,7 +8479,7 @@ function referenceKey(reference) {
   ].join("\0");
 }
 function parseReference(value, prefix) {
-  const entry = mapping5(value);
+  const entry = mapping4(value);
   if (!entry || entry.reference_kind !== "owned-item" && entry.reference_kind !== "candidate-evidence") {
     throw new Error(`${prefix} reference kind is invalid`);
   }
@@ -8426,8 +8547,8 @@ function parseQuestionDocument(concept) {
   if (concept.type !== "Question" || !concept.path.startsWith("questions/") || concept.status !== "draft") {
     throw new Error(`${concept.path}: shared Question document identity is invalid`);
   }
-  const generated = mapping5(concept.frontmatter.generated), agentbase = mapping5(concept.frontmatter.agentbase);
-  const question = mapping5(agentbase?.question);
+  const generated = mapping4(concept.frontmatter.generated), agentbase = mapping4(concept.frontmatter.agentbase);
+  const question = mapping4(agentbase?.question);
   if (!question || !exactKeys(question, QUESTION_KEYS)) throw new Error(`${concept.path}: agentbase.question contains unknown or missing fields`);
   const id = question.id, revision = question.revision, state = question.state, kind = question.kind;
   const originSubject = question.origin_subject, originProperty = question.origin_property;
@@ -8474,18 +8595,18 @@ var WORD = /^[a-z][a-z0-9.-]{0,63}$/;
 var SCOPE_KEY = /^[a-z][a-z0-9_]{0,63}$/;
 var SOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 var SECRET = /(?:-----BEGIN [A-Z ]*PRIVATE KEY-----|\bAKIA[A-Z0-9]{16}\b|\bgh[pousr]_[A-Za-z0-9_]{20,}\b|[?&](?:X-Amz-Signature|token|secret)=)/i;
-function mapping6(value) {
+function mapping5(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
 }
 function exactKeys2(value, allowed) {
   return Object.keys(value).every((key) => allowed.includes(key));
 }
 function parseEntry(value, prefix) {
-  const entry = mapping6(value), failures = [];
+  const entry = mapping5(value), failures = [];
   if (!entry || !exactKeys2(entry, ["provider", "identity_type", "value", "service", "resource_type", "scope", "evidence", "observed_at"])) {
     return { failures: [`${prefix} contains unknown fields or is not a mapping`] };
   }
-  const scope = mapping6(entry.scope);
+  const scope = mapping5(entry.scope);
   if (typeof entry.provider !== "string" || !WORD.test(entry.provider)) failures.push(`${prefix} provider is invalid`);
   if (typeof entry.identity_type !== "string" || !WORD.test(entry.identity_type)) failures.push(`${prefix} identity_type is invalid`);
   if (typeof entry.service !== "string" || !WORD.test(entry.service)) failures.push(`${prefix} service is invalid`);
@@ -8512,7 +8633,7 @@ function externalIdentityKey(identity) {
   return JSON.stringify([identity.provider, identity.identityType, identity.value]);
 }
 function readExternalIdentities(concept) {
-  const raw = mapping6(concept.frontmatter.agentbase)?.external_identities;
+  const raw = mapping5(concept.frontmatter.agentbase)?.external_identities;
   if (raw === void 0) return [];
   if (!Array.isArray(raw) || raw.length > 64) throw new Error(`${concept.path}: agentbase.external_identities must be a list of at most 64 entries`);
   const identities = [], failures = [];
@@ -8556,7 +8677,7 @@ var SECTION_START = "<!-- agentbase:observed-values:start -->";
 var SECTION_END = "<!-- agentbase:observed-values:end -->";
 var OWNED_SECTION = /<!-- agentbase:observed-values:start -->[\s\S]*?<!-- agentbase:observed-values:end -->/g;
 var MANUAL_HEADING = /^## Observed values\s*$/m;
-function mapping7(value) {
+function mapping6(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
 }
 function exactKeys3(value, expected) {
@@ -8571,7 +8692,7 @@ function sourceMap(concept) {
   const result = /* @__PURE__ */ new Map();
   if (!Array.isArray(concept.frontmatter.sources)) return result;
   for (const value of concept.frontmatter.sources) {
-    const source = mapping7(value);
+    const source = mapping6(value);
     if (typeof source?.id === "string" && typeof source.resource === "string") result.set(source.id, source);
   }
   return result;
@@ -8615,7 +8736,7 @@ function providerStateFailures(observed, prefix) {
 }
 function providerSource(source, resource) {
   if (!/^provider-observation:\/\/aws\/[a-f0-9]{64}$/.test(resource)) return void 0;
-  const metadata = mapping7(mapping7(source.agentbase)?.provider_observation);
+  const metadata = mapping6(mapping6(source.agentbase)?.provider_observation);
   if (!metadata || !exactKeys3(metadata, ["authority", "evidence_digest", "location", "native_identity", "observed_at", "profile_family", "profile_version"]) || typeof metadata.profile_family !== "string" || typeof metadata.profile_version !== "number" || !Number.isSafeInteger(metadata.profile_version) || metadata.profile_version < 1 || typeof metadata.authority !== "string" || typeof metadata.location !== "string" || typeof metadata.native_identity !== "string" || typeof metadata.evidence_digest !== "string" || !DIGEST.test(metadata.evidence_digest) || !validObservedAt(metadata.observed_at)) return void 0;
   return {
     resource,
@@ -8628,7 +8749,7 @@ function providerSource(source, resource) {
   };
 }
 function parseValues(concept) {
-  const agentbase = mapping7(concept.frontmatter.agentbase);
+  const agentbase = mapping6(concept.frontmatter.agentbase);
   const raw = agentbase?.observed_values;
   if (raw === void 0) {
     const sections2 = [...concept.body.matchAll(OWNED_SECTION)];
@@ -8645,7 +8766,7 @@ function parseValues(concept) {
   const values = [], failures = [];
   for (const [index, rawValue] of raw.entries()) {
     const prefix = `${concept.path}: observed value ${index + 1}`;
-    const entry = mapping7(rawValue);
+    const entry = mapping6(rawValue);
     if (!entry || !exactKeys3(entry, ["id", "observed", "property", "role", "source_id", "subject", "value"])) {
       failures.push(`${prefix} contains unknown or missing fields`);
       continue;
@@ -8666,7 +8787,7 @@ function parseValues(concept) {
     else if (role !== "provider" && !repositorySource) failures.push(`${prefix} non-provider role requires a normalized repository source`);
     const safetyFailure = observedValueSafetyFailure(property, value);
     if (safetyFailure) failures.push(`${prefix} ${safetyFailure}`);
-    const observed = mapping7(entry.observed);
+    const observed = mapping6(entry.observed);
     failures.push(...role === "provider" ? providerStateFailures(observed, prefix) : stateFailures(observed, prefix));
     if (!failures.some((failure) => failure.startsWith(prefix)) && typeof resource === "string" && (repositorySource || runtimeSource)) {
       values.push({
@@ -8789,7 +8910,7 @@ import fs2 from "node:fs";
 import path5 from "node:path";
 var SUBJECT_ROOT2 = "(?:domains|systems|components|functions|interfaces|flows|resources|infrastructure|deployments|repositories|relationships|capabilities)";
 var SUBJECT3 = new RegExp(`^${SUBJECT_ROOT2}/[a-z0-9][a-z0-9./-]*$`);
-function mapping8(value) {
+function mapping7(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
 }
 function questionDocuments(root) {
@@ -8814,7 +8935,7 @@ function validateSharedQuestionBundle(root) {
       failures.push(`${question.id}: reference owner is missing: ${reference.owner}`);
       continue;
     }
-    const sources = new Set((Array.isArray(owner.frontmatter.sources) ? owner.frontmatter.sources : []).flatMap((value) => typeof mapping8(value)?.id === "string" ? [mapping8(value).id] : []));
+    const sources = new Set((Array.isArray(owner.frontmatter.sources) ? owner.frontmatter.sources : []).flatMap((value) => typeof mapping7(value)?.id === "string" ? [mapping7(value).id] : []));
     if (!sources.has(reference.sourceId)) failures.push(`${question.id}: reference source_id is unresolved: ${reference.sourceId}`);
     if (reference.itemKind === "observed-value" && !readObservedValues(owner).some((value) => value.id === reference.itemKey)) {
       failures.push(`${question.id}: observed-value item is unresolved: ${reference.itemKey}`);
@@ -8891,7 +9012,7 @@ var SECRET2 = /(?:-----BEGIN [A-Z ]*PRIVATE KEY-----|\b(?:AKIA|ASIA)[A-Z0-9]{16}
 var SECRET_ASSIGNMENT = /(?:^|[\s"'])(?:password|passwd|secret|token|credential|private[_-]?key|api[_-]?key|access[_-]?key)\s*[:=]\s*["']?[A-Za-z0-9/+_.=-]{16,}/im;
 var FORBIDDEN_PATH = /(?:^|\/)(?:\.env(?:\..*)?|credentials?|id_(?:rsa|dsa|ecdsa|ed25519)|[^/]+\.(?:pem|p12|pfx|key)|(?:graph|codegraph)\.(?:db|sqlite))$/i;
 var CI_SUPPORT_FILES = /* @__PURE__ */ new Set([HUB_CI_WORKFLOW_PATH, HUB_CI_VALIDATOR_PATH, HUB_CI_MANIFEST_PATH]);
-function mapping9(value) {
+function mapping8(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
 }
 function files(root) {
@@ -9023,7 +9144,7 @@ async function validateHubCi(hubRoot, now = () => /* @__PURE__ */ new Date(), op
   errors.push(...indexTargetFailures(root, relativeFiles));
   errors.push(...bundle.warnings);
   for (const concept of bundle.concepts.values()) {
-    const generated = mapping9(concept.frontmatter.generated);
+    const generated = mapping8(concept.frontmatter.generated);
     if (typeof generated?.by === "string" && generated.by.startsWith("agentbase/")) {
       errors.push(...validateAgentBaseDraft(concept));
     }
@@ -9038,11 +9159,11 @@ async function validateHubCi(hubRoot, now = () => /* @__PURE__ */ new Date(), op
     }
   }
   if (bundle.concepts.size) {
-    const relationships2 = validateOkfRelationships([...bundle.concepts].map(([identity, concept]) => ({ identity, concept })), {
+    const relationships = validateOkfRelationships([...bundle.concepts].map(([identity, concept]) => ({ identity, concept })), {
       strictSourceIdentities: new Set([...bundle.concepts].filter(([, concept]) => Boolean(getOkfConceptSchema(concept.type))).map(([identity]) => identity))
     });
-    errors.push(...relationships2.failures);
-    warnings.push(...relationships2.warnings);
+    errors.push(...relationships.failures);
+    warnings.push(...relationships.warnings);
   }
   errors.push(...validateBundleObservedValues(bundle.concepts.values()), ...validateBundleExternalIdentities(bundle.concepts.values()));
   const repositoryIds = /* @__PURE__ */ new Map();

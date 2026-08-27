@@ -1,7 +1,8 @@
 # 09 — Ingest và Refresh
 
-> Trạng thái: Initial Ingest/Refresh, Batch Initial Ingest và Capability 046
-> broad-discovery runtime đã implement; released-skill qualification còn pending.
+> Trạng thái: Initial Ingest/Refresh, Batch Initial Ingest, Capability 046
+> broad-discovery runtime và Capability 051 reliability hardening đã
+> implement; released-skill qualification còn pending.
 
 ## Câu trả lời ngắn
 
@@ -159,6 +160,11 @@ sau Finalize dùng publication reconciliation. P0 signal chưa
 xử lý do source/authority/adapter
 failure làm run `Incomplete`; thiếu P1/P2 có thể vẫn `Ready for review` cùng
 Question/limitation.
+
+Capability 051 bổ sung một quy tắc vận hành: discovery không được coi một lane
+hoặc document là đầy đủ khi provider output bị thiếu, malformed hoặc bị
+redact. Ingest vẫn bounded và selective; thông tin bị giới hạn phải xuất hiện
+như limitation/Question thay vì biến mất im lặng.
 
 ## Canonical repository
 

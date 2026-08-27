@@ -15,6 +15,7 @@ const DOCUMENT_ROUTES = [
   "docs/design/00-architecture.md",
   "docs/design/01-repository-reading/05-runtime-requirements.md",
   "docs/design/05-knowledge-entry/06-runtime-requirements.md",
+  "docs/design/10-query-routing/07-runtime-requirements.md",
   "docs/design/11-review-and-publish/01-runtime-requirements.md",
   "docs/design/12-version-scope/01-foundation-requirements.md",
   "docs/design/12-version-scope/02-installation-requirements.md",
@@ -26,14 +27,15 @@ const REQUIREMENT_GROUPS = [
   ["managed graph", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-MVP", 7), "SPEC-MVP-LIVING-MISSING", "SPEC-MVP-ID-MISSING"],
   ["graph lifecycle", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-GRAPH", 14), "SPEC-GRAPH-LIVING-MISSING", "SPEC-GRAPH-ID-MISSING"],
   ["graph freshness", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-GRAPH-REFRESH", 12), "SPEC-GRAPH-LIVING-MISSING", "SPEC-GRAPH-REFRESH-ID-MISSING"],
-  ["MCP surface", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-MCP", 14), "SPEC-GRAPH-LIVING-MISSING", "SPEC-MCP-ID-MISSING"],
+  ["MCP surface", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-MCP", 26), "SPEC-GRAPH-LIVING-MISSING", "SPEC-MCP-ID-MISSING"],
   ["OKF proposal", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-MVP", 16, 8), "SPEC-OKF-LIVING-MISSING", "SPEC-MVP-ID-MISSING"],
   ["observations", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-OBS", 7), "SPEC-OKF-LIVING-MISSING", "SPEC-OBS-ID-MISSING"],
   ["schema catalog", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-SCHEMA", 36), "SPEC-OKF-LIVING-MISSING", "SPEC-SCHEMA-ID-MISSING"],
   ["live claims", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-CLAIM", 5), "SPEC-OKF-LIVING-MISSING", "SPEC-CLAIM-ID-MISSING"],
-  ["initial ingest", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-INGEST", 11), "SPEC-OKF-LIVING-MISSING", "SPEC-INGEST-ID-MISSING"],
+  ["initial ingest", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-INGEST", 21), "SPEC-OKF-LIVING-MISSING", "SPEC-INGEST-ID-MISSING"],
   ["product", "docs/present/00-product-scope-and-authority.md", [...ids("AB-PRODUCT", 5), ...ids("AB-MIGRATION", 2)], "SPEC-PRODUCT-LIVING-MISSING", "SPEC-PRODUCT-ID-MISSING"],
-  ["local Hub", "docs/design/11-review-and-publish/01-runtime-requirements.md", [...ids("AB-LOCAL-HUB", 16), ...ids("AB-PUBLISH", 10), "AB-QUERY-001", ...ids("AB-HUB-SETUP", 17)], "SPEC-HUB-LIVING-MISSING", "SPEC-HUB-ID-MISSING"],
+  ["query", "docs/design/10-query-routing/07-runtime-requirements.md", ids("AB-QUERY", 18), "SPEC-QUERY-LIVING-MISSING", "SPEC-QUERY-ID-MISSING"],
+  ["local Hub", "docs/design/11-review-and-publish/01-runtime-requirements.md", [...ids("AB-LOCAL-HUB", 16), ...ids("AB-PUBLISH", 10), ...ids("AB-HUB-SETUP", 17)], "SPEC-HUB-LIVING-MISSING", "SPEC-HUB-ID-MISSING"],
   ["installation", "docs/design/12-version-scope/02-installation-requirements.md", ids("AB-INSTALL", 31), "SPEC-INSTALL-LIVING-MISSING", "SPEC-INSTALL-ID-MISSING"],
   ["benchmark", "docs/design/12-version-scope/03-benchmark-requirements.md", ids("AB-BENCH", 44), "SPEC-BENCH-LIVING-MISSING", "SPEC-BENCH-ID-MISSING"],
 ];
@@ -69,6 +71,16 @@ export function checkSpecifications(root) {
   if (!agentGuide) errors.push({ code: "SPEC-GUIDE-MISSING", message: "AGENTS.md is required" });
   else for (const route of ["docs/README.md", "specs/CURRENT.md"]) {
     if (!agentGuide.includes(route)) errors.push({ code: "SPEC-ROUTE-MISSING", message: `AGENTS.md does not route to ${route}` });
+  }
+  if (agentGuide) for (const marker of [
+    "## Mandatory change lifecycle",
+    "### Before implementation",
+    "### During implementation",
+    "### Completion gate",
+  ]) {
+    if (!agentGuide.includes(marker)) {
+      errors.push({ code: "SPEC-LIFECYCLE-MISSING", message: `AGENTS.md is missing the canonical lifecycle section: ${marker}` });
+    }
   }
 
   if (!docsIndex) errors.push({ code: "SPEC-DOCS-INDEX-MISSING", message: "docs/README.md is required" });

@@ -95,7 +95,8 @@ and returns visible recovery rather than hidden retry.
 - Exact production package dependencies are
   `@modelcontextprotocol/client@2.0.0`,
   `@modelcontextprotocol/server@2.0.0`, `yaml@2.9.0` and
-  `cytoscape@3.34.2`. Cytoscape.js is copied into explicit static Domain-site
+  `cytoscape@3.34.2`, plus `minisearch@7.2.0` for the transient Published-Hub
+  BM25+ projection. Cytoscape.js is copied into explicit static Domain-site
   output; it is not a live MCP UI runtime.
 - Codebase Memory `v0.10.8` is an attributed immutable source snapshot with one
   AgentBase-owned 12-language profile. A release maintainer explicitly builds

@@ -19,8 +19,9 @@ hoặc báo chưa đủ dữ liệu; Agent không tự nối các node cho đẹ
 
 `agentbase-domain-site` là workflow nặng và chỉ chạy khi người dùng yêu cầu rõ.
 Nó generate một static 2D knowledge map cho đúng một Domain từ đúng một
-Published Hub commit. Site có search, filter, focus theo lân cận, Flow toggle
-và sidebar đọc thông tin node.
+Published Hub commit. Site hiển thị ngay toàn bộ concept hợp lệ trong Domain
+scope, dùng node tròn có nhãn dưới, search/filter/focus/Flow toggle, drawer
+overview bên phải và document overview overlay cho node đang chọn.
 
 Kết quả là một build directory cố định. Người dùng review rồi có thể copy sang
 repo riêng như `Domain-Hub` và publish bằng GitHub Pages. Sau khi generate, site
@@ -49,6 +50,8 @@ thuộc nhiều Domain hoặc tự mở rộng cả Domain kia.
 - Chỉ đọc Published Hub; không trộn Local Draft.
 - Không thay thế search/query knowledge hoặc Code Graph.
 - Không tạo full-Hub UI hoặc giữ thêm một chế độ 3D.
+- Document overview chỉ là text-safe overview từ Published projection; muốn
+  đọc toàn bộ Markdown vẫn dùng `read_hub_okf_concept`.
 - Không watcher, daemon, live refresh hoặc auto-push Domain site.
 - Phải cảnh báo trước khi đưa knowledge nội bộ lên Pages/repo có visibility rộng.
 - Architecture có thể partial; Dependency cần edge thật; Sequence cần

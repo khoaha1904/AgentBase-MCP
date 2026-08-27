@@ -40,7 +40,7 @@ function mapping(value: OkfValue): Readonly<Record<string, OkfValue>> | undefine
     ? value as Readonly<Record<string, OkfValue>> : undefined;
 }
 
-function linkedPaths(concept: ConceptDocument): ReadonlySet<string> {
+export function resolveOkfMarkdownLinkPaths(concept: ConceptDocument): ReadonlySet<string> {
   const links = new Set<string>();
   for (const match of concept.body.matchAll(/(?<!!)\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)) {
     const raw = match[1]?.split("#")[0]?.split("?")[0];
@@ -92,7 +92,7 @@ function validateFlowSteps(
     failures.push(`${concept.path}: flow_steps must be a non-empty list`);
     return [];
   }
-  const links = linkedPaths(concept);
+  const links = resolveOkfMarkdownLinkPaths(concept);
   const sources = sourceIds(concept);
   const steps: ValidatedOkfFlowStep[] = [];
   const orders = new Set<number>();
@@ -165,7 +165,7 @@ export function validateOkfRelationships(
     if (declared !== undefined && declared !== null && !Array.isArray(declared)) {
       failures.push(`${concept.path}: relationships must be a list`);
     } else if (Array.isArray(declared)) {
-      const links = linkedPaths(concept);
+      const links = resolveOkfMarkdownLinkPaths(concept);
       const sources = sourceIds(concept);
       for (const value of declared) {
         const relationship = mapping(value);

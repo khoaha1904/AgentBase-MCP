@@ -1,6 +1,7 @@
 # 10 — Query từ Code Graph và Hub
 
-> Trạng thái: Published-only Hub query đã chốt cho MVP.
+> Trạng thái: Published-only Hub query, lexical query-quality capability 049 và
+> Capability 051 failure-visibility/qualification hardening đã implement.
 
 ## Câu trả lời ngắn
 
@@ -42,6 +43,42 @@ Search tìm concept; read trả toàn bộ Markdown gồm knowledge, relationshi
 snapshot, provenance và Question. MVP không cần tool traversal, observed-value
 hay freshness riêng. Agent có thể đọc link tiếp theo bằng search/read khi cần.
 
+## Hub là structured Markdown knowledge base
+
+OKF chuẩn hóa corpus — frontmatter, concept path, Markdown body, `index.md` và
+links — chứ không chuẩn hóa search engine. Query vì vậy theo pattern quen thuộc
+của Markdown KB: discover result có scope và snippet trước, rồi mới đọc exact
+full document. MCP giữ contract `search → read`; một established full-text
+engine chịu trách nhiệm lexical relevance thay vì AgentBase tự tạo query
+language hoặc scoring algorithm.
+
+Official `description` chính là one-line summary cho index, snippet và preview;
+không thêm field `summary` trùng nghĩa. Search dùng allowlist gồm identity/path,
+title, type, description, tags, Markdown headings/body, portable links và
+AgentBase accepted relation/Flow extension. Arbitrary YAML vẫn chỉ xuất hiện khi
+đọc exact document.
+
+Markdown body được project tạm theo heading hierarchy. Một concept có thể match
+nhiều section nhưng chỉ chiếm một result, kèm best heading path và bounded
+excerpt. Đây là retrieval state trong memory, không tạo chunk file, concept mới
+hoặc second knowledge store.
+
+Search được phép dùng portable links, canonical relationship và Flow step đã có
+để giúp Agent tìm producer, consumer, trigger hoặc endpoint liên quan. Nó không
+suy diễn relation mới, không tự type một OKF Markdown link và không thay thế
+exact Markdown read. Kết quả context giữ direction/evidence, có bound và cho
+biết phần bị omit.
+
+Domain scope là context để tìm knowledge, không phải thao tác viết lại Hub. Nó
+gồm concept có canonical `part-of`, concept gắn bằng structural relation với
+Repository thuộc Domain và direct external endpoint của một accepted relation.
+Nó dừng ở endpoint đó, không tự mở rộng Domain bên ngoài.
+
+Embedding, vector database, managed semantic search và durable index chỉ được
+cân nhắc khi qualification thực tế chứng minh lexical + structured scope chưa
+đủ. Static Domain Hub có thể đánh giá Pagefind riêng ở capability UI; browser
+index không trở thành authority của MCP query.
+
 ## Khi nguồn mâu thuẫn
 
 Agent trình bày các claim liên quan, provenance, Question và Maintainer Guidance
@@ -57,6 +94,16 @@ không che hoặc tự giải quyết conflict đã tồn tại.
 Quy tắc conflict canonical nằm ở
 [phần 07](07-conflicts-questions-and-maintainer-guidance.md); observed value nằm ở
 [phần 08](08-live-references-for-change-prone-values.md).
+
+Query phải phân biệt hai trường hợp:
+
+- Document vượt giới hạn kích thước: có thể bị omit theo bound, nhưng kết quả
+  phải nói rõ phần đã omit.
+- Published document malformed: search/read phải dừng với lỗi rõ ràng, không
+  trả một graph thiếu nhưng mang vẻ hoàn chỉnh.
+
+Đây là quy tắc minh bạch của query, không phải query language mới và không thêm
+field `summary` hoặc durable search index.
 
 ## Quyền đọc
 
