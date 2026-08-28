@@ -22,7 +22,7 @@ function fixture() {
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, content);
   };
-  return { root, write, cleanup: () => fs.rmSync(root, { recursive: true, force: true }) };
+  return { root, environment: { AGENTBASE_HOME: path.join(root, "agentbase") }, write, cleanup: () => fs.rmSync(root, { recursive: true, force: true }) };
 }
 
 function generatedConcept(type: string, title: string, body: string, sourcePath: string): string {
@@ -51,6 +51,7 @@ test("[AB-MVP-008..015] product flow prepares, authors and diffs a linked multi-
     const prepared = prepareRepositoryProposal(current.root, EVIDENCE_DIGEST, {
       proposalId: "proposal-product-000001",
       now: "2026-08-12T00:00:00.000Z",
+      environment: current.environment,
     });
     current.write(prepared.bundleRoot, "index.md", [
       "---",
@@ -90,15 +91,15 @@ test("[AB-MVP-008..015] product flow prepares, authors and diffs a linked multi-
       "src/workspace/policy.ts",
     ));
 
-    const validated = validateRepositoryProposal(current.root, prepared.metadata.proposalId);
+    const validated = validateRepositoryProposal(current.root, prepared.metadata.proposalId, current.environment);
     assert.equal(validated.state, "generated");
     assert.equal(validated.producerValidation?.passed, true);
-    const diff = diffRepositoryProposal(current.root, prepared.metadata.proposalId);
+    const diff = diffRepositoryProposal(current.root, prepared.metadata.proposalId, current.environment);
     assert.equal(diff.applicable, true);
     assert.equal(diff.entries.filter((entry) => entry.change === "created").length, 5);
     assert.equal(computeOkfTreeDigest(path.join(current.root, "okf")), before);
     assert.equal(fs.existsSync(path.join(current.root, "okf")), false);
-    const applied = applyRepositoryProposal(current.root, prepared.metadata.proposalId, "test:explicit-apply");
+    const applied = applyRepositoryProposal(current.root, prepared.metadata.proposalId, "test:explicit-apply", current.environment);
     assert.equal(applied.phase, "finalized");
     assert.equal(computeOkfTreeDigest(path.join(current.root, "okf")), diff.proposedTreeDigest);
   } finally {
@@ -117,11 +118,11 @@ test("[AB-MVP-009][AB-MVP-015] CLI routes prepare without applying current OKF",
       current.root,
       "--evidence-digest",
       EVIDENCE_DIGEST,
-    ], (value) => { output += value; }, (value) => { errors += value; });
+    ], (value) => { output += value; }, (value) => { errors += value; }, current.environment);
     assert.equal(code, 0, errors);
     const parsed = JSON.parse(output) as { metadata: { state: string }; bundleRoot: string };
     assert.equal(parsed.metadata.state, "prepared");
-    assert.equal(parsed.bundleRoot.startsWith(path.join(current.root, ".agentbase", "proposals")), true);
+    assert.match(parsed.bundleRoot, /state[\\/]repositories[\\/][a-f0-9]{24}[\\/]proposals[\\/]/);
     assert.equal(fs.existsSync(path.join(current.root, "okf")), false);
   } finally {
     current.cleanup();

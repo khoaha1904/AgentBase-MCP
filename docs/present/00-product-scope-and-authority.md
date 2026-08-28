@@ -144,6 +144,19 @@ baseline after preview/confirmation.
   collisions; canonical clones are created only from admitted commits/remotes.
 - **AB-MIGRATION-002** — Cutover and cleanup remain independent approvals and
   prove rollback before the next external step.
+- **AB-MIGRATION-003** — New local AgentBase data uses one owner-private root,
+  `AGENTBASE_HOME` when explicitly set or `~/.agentbase` by default. Its
+  `config`, `hubs`, `state`, `cache` and `tmp` children have fixed ownership.
+- **AB-MIGRATION-004** — Hub checkout/Draft/Published and recoverable workflow
+  state are durable under the root; provider/query caches are rebuildable and
+  temporary workspaces are disposable. No secret or raw graph enters Hub.
+- **AB-MIGRATION-005** — Existing XDG-era directories are compatibility input
+  only and are never deleted, moved or rewritten implicitly. A safe legacy
+  `/tmp` Hub runtime is copied once into durable `state/` when the new target is
+  absent; the source remains untouched and unsafe/colliding input fails closed.
+- **AB-MIGRATION-006** — A storage-root failure, collision or unsafe permission
+  fails closed before a Hub or provider mutation; isolated test/benchmark runs
+  may select `AGENTBASE_HOME` without touching the operator's root.
 
 ## Current non-goals
 

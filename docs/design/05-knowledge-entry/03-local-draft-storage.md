@@ -1,8 +1,28 @@
 # 05.03 — Local Draft storage and Published query boundary
 
-> Trạng thái: Technical design draft.
+> Trạng thái: Implemented baseline (capability 056).
 
 ## Không thêm storage layer
+
+The local storage root is not a second knowledge authority. New MCP runtime
+state uses one owner-private `AGENTBASE_HOME`/`~/.agentbase` root:
+
+```text
+~/.agentbase/
+  config/   Hub configuration and owner-private credentials
+  hubs/     durable Hub checkout, Draft `main` and Published ref
+  state/    proposals, sessions, transactions and enrichment checkpoints
+  cache/    rebuildable Code Graph/provider/query cache
+  tmp/      disposable checkout/workspace staging
+```
+
+The root is created with mode `0700`; files containing credentials use `0600`.
+Repository proposal bundles use `state/repositories/<stable-root-digest>/`; the
+source checkout may still contain a short-lived `.agentbase/okf.lock` and
+atomic switch backups during an apply. Legacy XDG directories remain readable
+and untouched. A safe legacy `/tmp/agentbase-<uid>/hub-runtime` is copied once
+to durable `state/hub-runtime` only when the new target is absent; collision or
+symlink input fails closed and the source is never deleted.
 
 Mỗi remote Hub profile có Git state riêng cho publication lifecycle:
 

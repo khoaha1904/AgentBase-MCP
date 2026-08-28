@@ -44,6 +44,7 @@ import {
 } from "./query.ts";
 import { prepareDiagramPacket } from "../visualization/diagram-packet.ts";
 import { buildStaticDomainSite } from "../visualization/domain-site.ts";
+import { agentBaseStorage, copyLegacyDirectory } from "../../local-storage/index.ts";
 import { readInReviewProposalIds, scanWorkspaceRepositories } from "./workspace-scan.ts";
 import { listPendingHubProposals } from "../review/pending.ts";
 import { publishPendingHubProposals } from "../publication/publish.ts";
@@ -63,8 +64,10 @@ import {
 import { initializeHub as executeHubInitialization, previewHubInitialization } from "../ci/upgrade.ts";
 
 export function defaultHubRuntimeStateRoot(): string {
+  const target = agentBaseStorage().hubRuntime;
+  if (process.env.AGENTBASE_HOME) return target;
   const owner = typeof process.getuid === "function" ? String(process.getuid()) : "portable";
-  return path.join(os.tmpdir(), `agentbase-${owner}`, "hub-runtime");
+  return copyLegacyDirectory(path.join(os.tmpdir(), `agentbase-${owner}`, "hub-runtime"), target);
 }
 
 function proposalRoot(stateRoot: string, proposalId: string): string {
@@ -199,7 +202,7 @@ export function createHubRuntimeActions(
     }
     const migration = migratePersistedHubConfiguration(environment);
     if (migration) {
-      removeHubProfileToken(migration.previousId, environment);
+      if (migration.previousId !== migration.currentId) removeHubProfileToken(migration.previousId, environment);
       const transactions = path.join(path.resolve(stateRoot), "transactions");
       if (fs.existsSync(transactions)) {
         for (const entry of fs.readdirSync(transactions, { withFileTypes: true }).slice(0, 64)) {

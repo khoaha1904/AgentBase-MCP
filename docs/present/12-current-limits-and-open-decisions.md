@@ -57,6 +57,16 @@ quality gate; hai mức còn lại được báo cáo riêng và chỉ đóng g�
 weighted diagnostic. Score không thay thế lifecycle/conformance hoặc human
 review.
 
+### Local AgentBase storage
+
+MCP dùng một root local duy nhất: `AGENTBASE_HOME` nếu operator chỉ định,
+ngược lại là `~/.agentbase`. Bên trong root, `config/` giữ cấu hình và
+credential, `hubs/` giữ checkout cùng Draft/Published, `state/` giữ proposal,
+session, transaction và enrichment cần khôi phục, `cache/` giữ Code Graph/query
+cache có thể dựng lại, còn `tmp/` chỉ giữ workspace ngắn hạn. Các thư mục XDG
+cũ vẫn được đọc và không bị xoá hoặc di chuyển ngầm. Hub runtime an toàn còn ở
+`/tmp` từ phiên bản cũ được copy một lần vào `state/`, giữ nguyên nguồn cũ.
+
 ## Phần còn deferred
 
 - Capability 044 trước hết chỉ migrate source/build của Codebase Memory và giữ

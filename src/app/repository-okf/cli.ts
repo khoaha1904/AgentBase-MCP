@@ -43,16 +43,17 @@ export async function executeOkfCli(
   args: readonly string[],
   writeOutput: Writer = (value) => process.stdout.write(value),
   writeError: Writer = (value) => process.stderr.write(value),
+  environment: NodeJS.ProcessEnv = process.env,
 ): Promise<number> {
   const [command, ...rest] = args;
   try {
     const values = flags(rest);
     const repository = path.resolve(required(values, "--repo"));
     let result: unknown;
-    if (command === "prepare") result = prepareRepositoryProposal(repository, evidenceDigest(values));
-    else if (command === "validate") result = validateRepositoryProposal(repository, required(values, "--proposal"));
-    else if (command === "diff") result = diffRepositoryProposal(repository, required(values, "--proposal"));
-    else if (command === "apply") result = applyRepositoryProposal(repository, required(values, "--proposal"), `cli:${process.pid}`);
+    if (command === "prepare") result = prepareRepositoryProposal(repository, evidenceDigest(values), { environment });
+    else if (command === "validate") result = validateRepositoryProposal(repository, required(values, "--proposal"), environment);
+    else if (command === "diff") result = diffRepositoryProposal(repository, required(values, "--proposal"), environment);
+    else if (command === "apply") result = applyRepositoryProposal(repository, required(values, "--proposal"), `cli:${process.pid}`, environment);
     else if (command === "recover") result = recoverRepositoryOkf(repository, `cli:${process.pid}`);
     else throw new Error("OKF command must be prepare, validate, diff, apply or recover");
     writeOutput(`${JSON.stringify(result, null, 2)}\n`);

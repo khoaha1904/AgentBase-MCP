@@ -632,3 +632,8 @@ instead of stopping after its validation repair. Shopping Cart additionally
 exposed missing SAM/CloudFormation detector coverage. These results are retained
 as failed evidence; AB-BENCH-043 and SC-005 are not accepted, and no Hub PR was
 created or rebuilt.
+
+- **AB-BENCH-087** — Benchmark agent runs set an isolated `AGENTBASE_HOME`
+  beneath their run workspace; benchmark setup never reads or writes the
+  operator's `~/.agentbase` storage, and the isolated root is removed with the
+  run workspace.

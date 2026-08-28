@@ -1,8 +1,8 @@
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 
 import { createHubIdentity, hubProfileId, type HubIdentity } from "../../../core/hub/index.ts";
+import { agentBaseStorage, copyLegacyDirectory, legacyAgentBaseStorage } from "../../local-storage/index.ts";
 
 const MAX_BYTES = 16 * 1024;
 
@@ -32,9 +32,12 @@ export type ActiveHubConfiguration = PersistedHubConfiguration & Readonly<{ hub?
 type PersistedHubPointer = Readonly<{ formatVersion: 1; activeHubId: string }>;
 
 function directory(environment: NodeJS.ProcessEnv): string {
-  const base = environment.XDG_CONFIG_HOME || environment.HOME || os.homedir();
-  if (!path.isAbsolute(base)) throw new Error("global Hub configuration base must be absolute");
-  return environment.XDG_CONFIG_HOME ? path.join(base, "agentbase-mcp") : path.join(base, ".config", "agentbase-mcp");
+  return path.join(agentBaseStorage(environment).config, "hub");
+}
+
+function readDirectories(environment: NodeJS.ProcessEnv): readonly string[] {
+  const legacy = legacyAgentBaseStorage(environment);
+  return legacy ? [directory(environment), path.join(legacy.config)] : [directory(environment)];
 }
 
 export function globalHubConfigurationPath(environment: NodeJS.ProcessEnv = process.env): string {
@@ -48,6 +51,10 @@ function profilesDirectory(environment: NodeJS.ProcessEnv): string {
 function profilePath(localHubId: string, environment: NodeJS.ProcessEnv): string {
   if (!/^[a-f0-9]{24}$/.test(localHubId)) throw new Error("Hub profile ID is invalid");
   return path.join(profilesDirectory(environment), `${localHubId}.json`);
+}
+
+function profilePaths(localHubId: string, environment: NodeJS.ProcessEnv): readonly string[] {
+  return readDirectories(environment).map((root) => path.join(root, "hubs", `${localHubId}.json`));
 }
 
 function owner(stat: fs.Stats): boolean {
@@ -182,8 +189,8 @@ export function readPersistedHubProfile(
   localHubId: string,
   environment: NodeJS.ProcessEnv = process.env,
 ): PersistedHubConfiguration | undefined {
-  const file = profilePath(localHubId, environment);
-  if (!pathEntryExists(file)) return undefined;
+  const file = profilePaths(localHubId, environment).find(pathEntryExists);
+  if (!file) return undefined;
   admitParent(path.dirname(file), false);
   const stat = fs.lstatSync(file);
   if (stat.isSymbolicLink() || !stat.isFile() || (stat.mode & 0o777) !== 0o600 || !owner(stat) || stat.size < 2 || stat.size > MAX_BYTES) {
@@ -217,8 +224,8 @@ export function activatePersistedHubConfiguration(
 }
 
 export function readPersistedHubConfiguration(environment: NodeJS.ProcessEnv = process.env): PersistedHubConfiguration | undefined {
-  const file = globalHubConfigurationPath(environment);
-  if (!pathEntryExists(file)) return undefined;
+  const file = readDirectories(environment).map((root) => path.join(root, "hub.json")).find(pathEntryExists);
+  if (!file) return undefined;
   admitParent(path.dirname(file), false);
   const stat = fs.lstatSync(file);
   if (stat.isSymbolicLink() || !stat.isFile() || (stat.mode & 0o777) !== 0o600 || !owner(stat) || stat.size < 2 || stat.size > MAX_BYTES) {
@@ -281,8 +288,10 @@ export type HubConfigurationMigration = Readonly<{ previousId: string; currentId
 export function migratePersistedHubConfiguration(
   environment: NodeJS.ProcessEnv = process.env,
 ): HubConfigurationMigration | undefined {
-  const file = globalHubConfigurationPath(environment);
-  if (!pathEntryExists(file)) return undefined;
+  const canonicalFile = globalHubConfigurationPath(environment);
+  const file = readDirectories(environment).map((root) => path.join(root, "hub.json")).find(pathEntryExists);
+  if (!file) return undefined;
+  const legacyStorage = file !== canonicalFile;
   const configuration = readPersistedHubConfiguration(environment);
   const descriptor = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
   let legacy = false;
@@ -294,18 +303,29 @@ export function migratePersistedHubConfiguration(
   const currentId = configuration.kind === "remote"
     ? hubProfileId(createHubIdentity(configuration.repository, configuration.targetBranch, configuration.host))
     : configuration.localHubId;
-  if (!legacy && currentId === configuration.localHubId) return undefined;
+  const oldStorage = legacyAgentBaseStorage(environment);
+  const oldHubRoot = oldStorage ? path.join(oldStorage.hubs, configuration.localHubId) : undefined;
+  const canonicalHubRoot = path.join(agentBaseStorage(environment).hubs, currentId);
+  if (legacyStorage && oldHubRoot && path.resolve(configuration.localRoot) === path.resolve(oldHubRoot)
+    && fs.existsSync(canonicalHubRoot)) throw new Error("canonical Hub checkout already exists before storage migration");
+  const migratedLocalRoot = legacyStorage && oldHubRoot && path.resolve(configuration.localRoot) === path.resolve(oldHubRoot)
+    ? copyLegacyDirectory(configuration.localRoot, canonicalHubRoot)
+    : configuration.localRoot;
+  if (legacyStorage && oldStorage) copyLegacyDirectory(path.join(oldStorage.state, "hub-bootstrap"),
+    path.join(agentBaseStorage(environment).state, "hub-bootstrap"));
+  if (!legacyStorage && !legacy && currentId === configuration.localHubId && migratedLocalRoot === configuration.localRoot) return undefined;
   return withActivationLock(environment, () => {
     const current = readPersistedHubConfiguration(environment);
     if (!current || current.localHubId !== configuration.localHubId) throw new Error("active Hub changed during migration");
-    const migrated = currentId === current.localHubId ? current : { ...current, localHubId: currentId };
-    const existing = readPersistedHubProfile(currentId, environment);
+    const migrated = { ...current, localHubId: currentId, localRoot: migratedLocalRoot };
+    const canonicalProfile = profilePath(currentId, environment);
+    const existing = pathEntryExists(canonicalProfile) ? readPersistedHubProfile(currentId, environment) : undefined;
     if (existing && JSON.stringify(existing) !== JSON.stringify(parse(migrated))) {
       throw new Error("canonical Hub profile already differs from the legacy profile");
     }
     writeAtomic(profilePath(currentId, environment), migrated);
-    writePointer(file, currentId);
-    if (current.localHubId !== currentId) fs.rmSync(profilePath(current.localHubId, environment), { force: true });
+    writePointer(canonicalFile, currentId);
+    if (!legacyStorage && current.localHubId !== currentId) fs.rmSync(profilePath(current.localHubId, environment), { force: true });
     return { previousId: current.localHubId, currentId };
   });
 }

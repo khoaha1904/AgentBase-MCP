@@ -30,6 +30,7 @@ src/providers/
   github-hub/                     bounded Git/worktree/GitHub transport
   aws-cli/                        released read-only AWS observation profiles
 src/app/
+  local-storage/                  one owner-private local storage root
   foundation-demo/                offline product demonstration
   codebase-memory-mcp/            filtered stdio MCP composition
   repository-okf/                 one-repository evidence workflow
@@ -89,6 +90,14 @@ Private state lives outside source checkouts where required, uses bounded exact
 paths and never enters normalized evidence. Mutations use atomic files, exact
 digests and serialized ownership. Failure preserves the previous admitted state
 and returns visible recovery rather than hidden retry.
+
+The application-local storage contract is one owner-private
+`AGENTBASE_HOME`/`~/.agentbase` root. `config/` contains Hub configuration and
+credentials, `hubs/` contains durable Hub checkouts, `state/` contains
+recoverable workflow state, `cache/` contains rebuildable provider/query data,
+and `tmp/` contains disposable local workspaces. XDG-era paths remain readable
+and untouched; a safe legacy `/tmp` Hub runtime is copied once into `state/`
+without deleting its source.
 
 ## Runtime boundaries
 

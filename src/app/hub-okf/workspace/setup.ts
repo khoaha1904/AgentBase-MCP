@@ -1,6 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 
 import { createHubIdentity, hubProfileId } from "../../../core/hub/index.ts";
@@ -16,6 +15,7 @@ import {
 } from "../configuration/configuration-file.ts";
 import { renderHubCiBundle } from "../ci/artifact.ts";
 import { HUB_README_PATH, renderHubReadme } from "./readme.ts";
+import { agentBaseStorage } from "../../local-storage/index.ts";
 
 export type SetupGit = (request: GitRequest) => Promise<GitOutput>;
 
@@ -37,9 +37,7 @@ export const HUB_BASE_TRAILERS = {
 } as const;
 
 function dataDirectory(environment: NodeJS.ProcessEnv): string {
-  const base = environment.XDG_DATA_HOME || (environment.HOME ? path.join(environment.HOME, ".local", "share") : path.join(os.homedir(), ".local", "share"));
-  if (!path.isAbsolute(base)) throw new Error("global AgentBase data base must be absolute");
-  return path.join(base, "agentbase-mcp", "hubs");
+  return agentBaseStorage(environment).hubs;
 }
 
 export function normalizeGitHubHubUrl(value: string): Readonly<{ host: string; repository: string; canonicalHttpsUrl: string }> {

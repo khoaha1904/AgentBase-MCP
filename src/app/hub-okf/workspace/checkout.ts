@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 
 import { assertHubRemote, type HubIdentity } from "../../../core/hub/index.ts";
 import { runGit, type GitRequest, type GitOutput } from "../../../providers/github-hub/index.ts";
+import { agentBaseStorage } from "../../local-storage/index.ts";
 
 export type HubCheckout = Readonly<{ root: string; baseCommit: string }>;
 export type GitRunner = (request: GitRequest) => Promise<GitOutput>;
@@ -17,8 +17,7 @@ function assertNoUrlRewrites(output: string): void {
 }
 
 function defaultStateRoot(): string {
-  const owner = typeof process.getuid === "function" ? String(process.getuid()) : "portable";
-  return path.join(os.tmpdir(), `agentbase-${owner}`, "hub");
+  return agentBaseStorage().hubCheckouts;
 }
 
 export async function checkoutHub(hub: HubIdentity, token: string, root = defaultStateRoot(), git: GitRunner = runGit): Promise<HubCheckout> {

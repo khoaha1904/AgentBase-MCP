@@ -1,6 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 
 import { createHubIdentity, hubProfileId } from "../../../core/hub/index.ts";
@@ -21,6 +20,7 @@ import { acquireHubMutationLock, releaseHubMutationLock, writeAtomicJson } from 
 import { HUB_PUBLISHED_REF } from "./local-hub.ts";
 import { HUB_README_PATH, renderHubReadme } from "./readme.ts";
 import { HUB_BASE_TRAILERS, normalizeGitHubHubUrl } from "./setup.ts";
+import { agentBaseStorage, legacyAgentBaseStorage } from "../../local-storage/index.ts";
 
 export type BootstrapGit = (request: GitRequest) => Promise<GitOutput>;
 
@@ -51,9 +51,7 @@ export type HubBootstrapReceipt = Readonly<{
 const ROOT_INDEX = "---\nokf_version: \"0.2\"\n---\n\n# AgentBase-Hub\n";
 
 function stateRoot(environment: NodeJS.ProcessEnv): string {
-  const base = environment.XDG_STATE_HOME || (environment.HOME ? path.join(environment.HOME, ".local", "state") : undefined);
-  if (!base || !path.isAbsolute(base)) throw new Error("global AgentBase state base must be absolute");
-  const target = path.join(base, "agentbase-mcp", "hub-bootstrap");
+  const target = path.join(agentBaseStorage(environment).state, "hub-bootstrap");
   fs.mkdirSync(target, { recursive: true, mode: 0o700 });
   const stat = fs.lstatSync(target);
   const owned = typeof process.getuid !== "function" || stat.uid === process.getuid();
@@ -64,9 +62,7 @@ function stateRoot(environment: NodeJS.ProcessEnv): string {
 }
 
 function dataRoot(environment: NodeJS.ProcessEnv): string {
-  const base = environment.XDG_DATA_HOME || (environment.HOME ? path.join(environment.HOME, ".local", "share") : path.join(os.homedir(), ".local", "share"));
-  if (!path.isAbsolute(base)) throw new Error("global AgentBase data base must be absolute");
-  const target = path.join(base, "agentbase-mcp", "hubs");
+  const target = agentBaseStorage(environment).hubs;
   fs.mkdirSync(target, { recursive: true, mode: 0o700 });
   fs.chmodSync(target, 0o700);
   const stat = fs.lstatSync(target);
@@ -81,8 +77,16 @@ function receiptPath(environment: NodeJS.ProcessEnv, remoteHubId: string): strin
   return path.join(stateRoot(environment), `${remoteHubId}.json`);
 }
 
+function receiptPaths(environment: NodeJS.ProcessEnv, remoteHubId: string): readonly string[] {
+  const legacy = legacyAgentBaseStorage(environment);
+  return legacy
+    ? [receiptPath(environment, remoteHubId), path.join(legacy.state, "hub-bootstrap", `${remoteHubId}.json`)]
+    : [receiptPath(environment, remoteHubId)];
+}
+
 function readReceipt(environment: NodeJS.ProcessEnv, remoteHubId: string): HubBootstrapReceipt | undefined {
-  const file = receiptPath(environment, remoteHubId);
+  const file = receiptPaths(environment, remoteHubId).find((candidate) => fs.existsSync(candidate));
+  if (!file) return undefined;
   let stat: fs.Stats;
   try { stat = fs.lstatSync(file); }
   catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined; throw error; }

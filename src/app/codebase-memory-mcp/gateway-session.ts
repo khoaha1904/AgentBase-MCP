@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 
 import { isCallToolResult, type CallToolResult } from "@modelcontextprotocol/server";
@@ -15,6 +14,7 @@ import {
 import { assertProviderManifest, isSafeToolName, SAFE_TOOL_NAMES, type SafeToolName } from "./tool-manifest.ts";
 import { controlledIndex } from "./tool-policy.ts";
 import { DiscoverySession } from "./discovery-session.ts";
+import { agentBaseStorage } from "../local-storage/index.ts";
 
 export type RawProviderFactory = (options: Readonly<{
   repositoryRoot: string;
@@ -39,8 +39,7 @@ function privateCache(stateRoot: string, repositoryRoot: string): string {
 }
 
 function defaultStateRoot(): string {
-  const owner = typeof process.getuid === "function" ? process.getuid() : "portable";
-  return path.join(os.tmpdir(), `agentbase-${owner}`);
+  return agentBaseStorage().cache;
 }
 
 function defaultProviderFactory(projectRoot: string): RawProviderFactory {

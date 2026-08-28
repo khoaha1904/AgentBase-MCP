@@ -11,6 +11,7 @@ import {
   type ProposalMetadata,
   type SwitchManifest,
 } from "../../../core/knowledge/index.ts";
+import { ensureAgentBaseDirectory, repositoryStateRoot } from "../../local-storage/index.ts";
 
 export type PreparedRepositoryProposal = Readonly<{
   proposalRoot: string;
@@ -29,11 +30,11 @@ function defaultProposalId(now: string): string {
   return `proposal-${time}-${randomUUID().replaceAll("-", "")}`;
 }
 
-function repositoryPaths(repositoryRoot: string, proposalId?: string) {
+function repositoryPaths(repositoryRoot: string, proposalId?: string, environment: NodeJS.ProcessEnv = process.env) {
   const root = fs.realpathSync(repositoryRoot);
-  const localState = path.join(root, ".agentbase");
+  const localState = repositoryStateRoot(root, environment);
   const proposals = path.join(localState, "proposals");
-  privateDirectory(localState);
+  ensureAgentBaseDirectory(localState);
   privateDirectory(proposals);
   const proposalRoot = proposalId === undefined ? undefined : path.join(proposals, proposalId);
   return { root, currentBundleRoot: path.join(root, "okf"), proposals, proposalRoot };
@@ -46,12 +47,12 @@ function requireProposalId(value: string): void {
 export function prepareRepositoryProposal(
   repositoryRoot: string,
   evidenceDigest: string,
-  options: Readonly<{ proposalId?: string; now?: string }> = {},
+  options: Readonly<{ proposalId?: string; now?: string; environment?: NodeJS.ProcessEnv }> = {},
 ): PreparedRepositoryProposal {
   const now = options.now ?? new Date().toISOString();
   const proposalId = options.proposalId ?? defaultProposalId(now);
   requireProposalId(proposalId);
-  const paths = repositoryPaths(repositoryRoot);
+  const paths = repositoryPaths(repositoryRoot, undefined, options.environment);
   const proposalRoot = path.join(paths.proposals, proposalId);
   const metadata = prepareBundleProposal({
     currentBundleRoot: paths.currentBundleRoot,
@@ -63,23 +64,23 @@ export function prepareRepositoryProposal(
   return { proposalRoot, bundleRoot: path.join(proposalRoot, "bundle"), metadata };
 }
 
-export function validateRepositoryProposal(repositoryRoot: string, proposalId: string): ProposalMetadata {
+export function validateRepositoryProposal(repositoryRoot: string, proposalId: string, environment: NodeJS.ProcessEnv = process.env): ProposalMetadata {
   requireProposalId(proposalId);
-  const paths = repositoryPaths(repositoryRoot, proposalId);
+  const paths = repositoryPaths(repositoryRoot, proposalId, environment);
   if (!paths.proposalRoot) throw new Error("proposal path is unavailable");
   return validateBundleProposal(paths.currentBundleRoot, paths.proposalRoot);
 }
 
-export function diffRepositoryProposal(repositoryRoot: string, proposalId: string): ProposalDiff {
+export function diffRepositoryProposal(repositoryRoot: string, proposalId: string, environment: NodeJS.ProcessEnv = process.env): ProposalDiff {
   requireProposalId(proposalId);
-  const paths = repositoryPaths(repositoryRoot, proposalId);
+  const paths = repositoryPaths(repositoryRoot, proposalId, environment);
   if (!paths.proposalRoot) throw new Error("proposal path is unavailable");
   return diffBundleProposal(paths.currentBundleRoot, paths.proposalRoot);
 }
 
-export function applyRepositoryProposal(repositoryRoot: string, proposalId: string, owner: string): SwitchManifest {
+export function applyRepositoryProposal(repositoryRoot: string, proposalId: string, owner: string, environment: NodeJS.ProcessEnv = process.env): SwitchManifest {
   requireProposalId(proposalId);
-  const paths = repositoryPaths(repositoryRoot, proposalId);
+  const paths = repositoryPaths(repositoryRoot, proposalId, environment);
   if (!paths.proposalRoot) throw new Error("proposal path is unavailable");
   return applyBundleProposal({ repositoryRoot: paths.root, proposalRoot: paths.proposalRoot, owner });
 }

@@ -1,7 +1,11 @@
 # Current capability
 
 Active capability: None.
-Most recent completed: [`055-benchmark-storage-normalization`](055-benchmark-storage-normalization/spec.md) —
+Most recent completed: [`056-local-storage-root`](056-local-storage-root/spec.md) —
+one owner-private local storage root for Hub, recoverable workflow state,
+rebuildable caches and isolated benchmark runs; legacy XDG data remains
+untouched and readable as compatibility input.
+Previous completed: [`055-benchmark-storage-normalization`](055-benchmark-storage-normalization/spec.md) —
 benchmark data ownership, source storage, priority scoring and temporary-state
 boundaries are normalized into a sibling `AgentBase-Benchmark` repository.
 Most recent completed: [`054-crawler-domain-qualification`](054-crawler-domain-qualification/spec.md) —

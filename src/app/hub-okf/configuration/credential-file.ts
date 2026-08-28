@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
+import { agentBaseStorage, legacyAgentBaseStorage } from "../../local-storage/index.ts";
 
 const TOKEN_KEY = "AGENTBASE_HUB_GITHUB_TOKEN";
 const MAX_CREDENTIAL_BYTES = 16 * 1024;
@@ -9,11 +9,12 @@ const MAX_CREDENTIAL_BYTES = 16 * 1024;
 export type CredentialWriteResult = "created" | "preserved" | "replaced";
 
 function credentialDirectory(environment: NodeJS.ProcessEnv): string {
-  const base = environment.XDG_CONFIG_HOME || environment.HOME || os.homedir();
-  if (!path.isAbsolute(base)) throw new Error("global credential base must be absolute");
-  return environment.XDG_CONFIG_HOME
-    ? path.join(base, "agentbase-mcp")
-    : path.join(base, ".config", "agentbase-mcp");
+  return path.join(agentBaseStorage(environment).config, "hub");
+}
+
+function credentialDirectories(environment: NodeJS.ProcessEnv): readonly string[] {
+  const legacy = legacyAgentBaseStorage(environment);
+  return legacy ? [credentialDirectory(environment), path.join(legacy.config)] : [credentialDirectory(environment)];
 }
 
 export function globalHubCredentialPath(environment: NodeJS.ProcessEnv = process.env): string {
@@ -93,10 +94,11 @@ function readCredentialFile(file: string): string {
 export function loadGlobalHubToken(environment: NodeJS.ProcessEnv = process.env): string | undefined {
   const ambient = environment[TOKEN_KEY];
   if (ambient) return ambient;
-  const file = globalHubCredentialPath(environment);
-  if (!lstatIfPresent(file)) return undefined;
-  admitDirectory(path.dirname(file), false);
-  return readCredentialFile(file);
+  for (const directory of credentialDirectories(environment)) {
+    const file = path.join(directory, "env");
+    if (lstatIfPresent(file)) { admitDirectory(directory, false); return readCredentialFile(file); }
+  }
+  return undefined;
 }
 
 export function loadHubProfileToken(localHubId: string, environment: NodeJS.ProcessEnv = process.env): string | undefined {
@@ -105,10 +107,13 @@ export function loadHubProfileToken(localHubId: string, environment: NodeJS.Proc
 
 /** Exact identity-bound credential. Use for every prospective Hub attachment. */
 export function loadExactHubProfileToken(localHubId: string, environment: NodeJS.ProcessEnv = process.env): string | undefined {
-  const file = hubProfileCredentialPath(localHubId, environment);
-  if (lstatIfPresent(file)) {
-    admitDirectory(path.dirname(file), false);
-    return readCredentialFile(file);
+  if (!/^[a-f0-9]{24}$/.test(localHubId)) throw new Error("Hub profile ID is invalid");
+  for (const directory of credentialDirectories(environment)) {
+    const file = path.join(directory, "credentials", `${localHubId}.env`);
+    if (lstatIfPresent(file)) {
+      admitDirectory(path.dirname(file), false);
+      return readCredentialFile(file);
+    }
   }
   return undefined;
 }
@@ -180,10 +185,12 @@ export function writeHubProfileToken(
 export function migrateHubProfileToken(localHubId: string, environment: NodeJS.ProcessEnv = process.env): void {
   const profile = hubProfileCredentialPath(localHubId, environment);
   if (lstatIfPresent(profile)) return;
-  // Only migrate the owner-private legacy file. Never bind an ambient process
+  // Only migrate owner-private stored files. Never bind an ambient process
   // token to a newly selected Hub identity.
-  const legacyFile = globalHubCredentialPath(environment);
-  const legacy = lstatIfPresent(legacyFile) ? (admitDirectory(path.dirname(legacyFile), false), readCredentialFile(legacyFile)) : undefined;
+  const directories = credentialDirectories(environment);
+  const legacyFile = directories.slice(1).map((directory) => path.join(directory, "credentials", `${localHubId}.env`)).find(lstatIfPresent)
+    ?? directories.map((directory) => path.join(directory, "env")).find(lstatIfPresent);
+  const legacy = legacyFile ? (admitDirectory(path.dirname(legacyFile), false), readCredentialFile(legacyFile)) : undefined;
   if (legacy) writeHubProfileToken(localHubId, legacy, environment);
 }
 

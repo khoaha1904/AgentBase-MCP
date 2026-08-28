@@ -320,7 +320,7 @@ function seedInitialIngestHub(runtimeRoot, token) {
   const baseCommit = gitSync(root, ["rev-parse", "HEAD"]);
   gitSync(root, ["remote", "add", "origin", hub.canonicalHttpsUrl]);
   gitSync(root, ["update-ref", "refs/agentbase/published", baseCommit]);
-  const environment = { ...process.env, HOME: path.join(runtimeRoot, "home"),
+  const environment = { ...process.env, HOME: path.join(runtimeRoot, "home"), AGENTBASE_HOME: path.join(runtimeRoot, "agentbase"),
     XDG_CONFIG_HOME: path.join(runtimeRoot, "config"), XDG_DATA_HOME: path.join(runtimeRoot, "data") };
   activatePersistedHubConfiguration({ formatVersion: 1, kind: "remote", localHubId, localRoot: root,
     baseCommit, catalogVersion: "7.0.0", host: hub.host, repository: hub.repository,
@@ -389,14 +389,13 @@ function seedRefreshHub(runtimeRoot, entry) {
   const configuration = {
     formatVersion: 1, kind: "local-only", localHubId, localRoot: root, baseCommit, catalogVersion: "7.0.0",
   };
-  const configDirectory = path.join(runtimeRoot, "config", "agentbase-mcp");
+  const configDirectory = path.join(runtimeRoot, "agentbase", "config", "hub");
   fs.mkdirSync(configDirectory, { recursive: true, mode: 0o700 });
   fs.writeFileSync(path.join(configDirectory, "hub.json"), `${JSON.stringify(configuration, null, 2)}\n`, { mode: 0o600 });
 }
 
 function materializeRefreshOutput(runtimeRoot, workspace) {
-  const owner = typeof process.getuid === "function" ? String(process.getuid()) : "portable";
-  const proposals = path.join(runtimeRoot, "tmp", `agentbase-${owner}`, "hub-runtime", "proposals");
+  const proposals = path.join(runtimeRoot, "agentbase", "state", "hub-runtime", "proposals");
   const entries = fs.existsSync(proposals) ? fs.readdirSync(proposals).filter((entry) => /^[a-f0-9]{24}$/.test(entry)) : [];
   if (entries.length !== 1) throw new Error(`Refresh must finalize exactly one proposal; observed ${entries.length}`);
   fs.cpSync(path.join(proposals, entries[0], "bundle"), path.join(workspace, "okf"), { recursive: true });
@@ -444,7 +443,7 @@ export function buildCodexArgs({ workspace, finalMessage, model, reasoningEffort
     "--config", `mcp_servers.agentbase.command=${toml(process.execPath)}`,
     "--config", `mcp_servers.agentbase.args=${toml([path.join(projectRoot, "src", "cli.ts"), "mcp"])}`,
     "--config", `mcp_servers.agentbase.cwd=${toml(projectRoot)}`,
-    ...(runtimeRoot ? ["--config", `mcp_servers.agentbase.env={HOME=${toml(path.join(runtimeRoot, "home"))},XDG_CONFIG_HOME=${toml(path.join(runtimeRoot, "config"))},XDG_DATA_HOME=${toml(path.join(runtimeRoot, "data"))},TMPDIR=${toml(path.join(runtimeRoot, "tmp"))}}`] : []),
+    ...(runtimeRoot ? ["--config", `mcp_servers.agentbase.env={HOME=${toml(path.join(runtimeRoot, "home"))},AGENTBASE_HOME=${toml(path.join(runtimeRoot, "agentbase"))},XDG_CONFIG_HOME=${toml(path.join(runtimeRoot, "config"))},XDG_DATA_HOME=${toml(path.join(runtimeRoot, "data"))},TMPDIR=${toml(path.join(runtimeRoot, "tmp"))}}`] : []),
     ...(enabledTools ? ["--config", `mcp_servers.agentbase.enabled_tools=${toml(enabledTools)}`] : []),
     "--config", "mcp_servers.agentbase.required=true",
     "--config", `mcp_servers.agentbase.default_tools_approval_mode=${toml("approve")}`,
@@ -732,6 +731,7 @@ export function runAgentRepository({
     env: {
       ...process.env,
       TMPDIR: runtimeTmp,
+      AGENTBASE_HOME: path.join(runtimeRoot, "agentbase"),
       XDG_CONFIG_HOME: path.join(runtimeRoot, "config"),
       XDG_DATA_HOME: path.join(runtimeRoot, "data"),
     },
@@ -807,8 +807,7 @@ export function runAgentRepository({
 }
 
 function batchProposalRoot(runtimeRoot) {
-  const owner = typeof process.getuid === "function" ? String(process.getuid()) : "portable";
-  const proposals = path.join(runtimeRoot, "tmp", `agentbase-${owner}`, "hub-runtime", "proposals");
+  const proposals = path.join(runtimeRoot, "agentbase", "state", "hub-runtime", "proposals");
   const entries = fs.existsSync(proposals)
     ? fs.readdirSync(proposals).filter((entry) => /^[a-f0-9]{24}$/.test(entry)) : [];
   if (entries.length !== 1) throw new Error(`Batch Init must finalize exactly one proposal; observed ${entries.length}`);
@@ -862,7 +861,7 @@ export function runAgentBatch({ manifest, repositories, root, executable = manif
     runtimeRoot, enabledTools: batchEnabledTools }), {
     cwd: projectRoot, input: prompt, encoding: "utf8", timeout: manifest.agent.timeoutMs,
     maxBuffer: 50 * 1024 * 1024,
-    env: { ...process.env, TMPDIR: runtimeTmp, XDG_CONFIG_HOME: path.join(runtimeRoot, "config"),
+    env: { ...process.env, TMPDIR: runtimeTmp, AGENTBASE_HOME: path.join(runtimeRoot, "agentbase"), XDG_CONFIG_HOME: path.join(runtimeRoot, "config"),
       XDG_DATA_HOME: path.join(runtimeRoot, "data") },
   });
   const portable = (value) => sources.reduce((text, item, index) => text.split(item.repository)

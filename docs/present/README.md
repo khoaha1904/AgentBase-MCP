@@ -68,7 +68,7 @@ hoàn tất reliability hardening; nó không đổi OKF schema hoặc query aut
 | 09 | Single Initial Ingest/Refresh, Batch Initial Ingest, Domain Enrichment, freshness và CI đã implement; Batch Refresh deferred |
 | 10 | Hub search/read Published-only đã implement; multi-term/relation-aware query quality đã accepted cho capability 049; ordinary freshness marks và remote source reader chưa có |
 | 11 | Review, Accept, rich batch PR và exact same-Repository Init/Refresh PR stack đã có; MCP không merge hoặc rebase các Init độc lập |
-| 12 | MVP hiện hỗ trợ Terraform/Terragrunt; SAM/CloudFormation chưa hỗ trợ. Benchmark data có repo sibling riêng; MCP chỉ giữ engine/scorer và fixture nhỏ |
+| 12 | MVP hiện hỗ trợ Terraform/Terragrunt; SAM/CloudFormation chưa hỗ trợ. Benchmark có repo sibling riêng; local MCP data dùng một root `~/.agentbase` |
 | 13 | Published projection, query diagram và static Domain site đã implement; còn model/domain qualification |
 
 Model policy hiện chỉ là policy qualification: benchmark Initial Ingest dùng

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
+import { agentBaseStorage } from "../../local-storage/index.ts";
 
 export type ProviderWorkspace = Readonly<{
   cacheRoot: string;
@@ -18,10 +18,7 @@ function privateDirectory(directory: string): void {
 }
 
 function defaultStateRoot(): string {
-  const owner = typeof process.getuid === "function"
-    ? String(process.getuid())
-    : createHash("sha256").update(os.homedir()).digest("hex").slice(0, 12);
-  return path.join(os.tmpdir(), `agentbase-${owner}`);
+  return agentBaseStorage().providerCache;
 }
 
 export function prepareProviderWorkspace(repositoryRoot: string, repositoryId: string, stateRoot = defaultStateRoot(), scope = "default"): ProviderWorkspace {

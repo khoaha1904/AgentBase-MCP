@@ -36,10 +36,12 @@ function write(base: string, relative: string, content: string): void {
 
 test("[AB-MVP-016..021] revision rebuild preserves guidance, persistent defer and recoverable draft deletion", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-rehearsal-"));
+  const environment = { AGENTBASE_HOME: path.join(root, "agentbase") };
   try {
     const first = prepareRepositoryProposal(root, EVIDENCE_A, {
       proposalId: "proposal-rehearsal-a-000001",
       now: "2026-08-12T00:00:00.000Z",
+      environment,
     });
     write(first.bundleRoot, "index.md", index([
       ["Repository", "repository.md"],
@@ -49,8 +51,8 @@ test("[AB-MVP-016..021] revision rebuild preserves guidance, persistent defer an
     write(first.bundleRoot, "repository.md", generated("Software Repository", "Repository", "See the [inspection flow](flows/inspection.md)."));
     write(first.bundleRoot, "flows/inspection.md", generated("Software Flow", "Inspection", "The flow has an [open question](../questions/policy-owner.md)."));
     write(first.bundleRoot, "questions/policy-owner.md", generated("Open Question", "Policy owner", "Which maintainer owns this policy?"));
-    validateRepositoryProposal(root, first.metadata.proposalId);
-    applyRepositoryProposal(root, first.metadata.proposalId, "test:revision-a");
+    validateRepositoryProposal(root, first.metadata.proposalId, environment);
+    applyRepositoryProposal(root, first.metadata.proposalId, "test:revision-a", environment);
 
     const guidance = [
       "---",
@@ -81,6 +83,7 @@ test("[AB-MVP-016..021] revision rebuild preserves guidance, persistent defer an
     const second = prepareRepositoryProposal(root, EVIDENCE_B, {
       proposalId: "proposal-rehearsal-b-000001",
       now: "2026-08-12T02:00:00.000Z",
+      environment,
     });
     fs.rmSync(path.join(second.bundleRoot, "questions", "policy-owner.md"));
     write(second.bundleRoot, "index.md", index([
@@ -89,12 +92,12 @@ test("[AB-MVP-016..021] revision rebuild preserves guidance, persistent defer an
       ["Guidance", "guidance/policy-owner.md"],
     ]));
     write(second.bundleRoot, "flows/inspection.md", generated("Software Flow", "Inspection", "The flow crosses catalog and workspace boundaries."));
-    const validated = validateRepositoryProposal(root, second.metadata.proposalId);
+    const validated = validateRepositoryProposal(root, second.metadata.proposalId, environment);
     assert.equal(validated.state, "generated");
     const directives = readMaintainerDirectives(loadOkfBundle(second.bundleRoot));
     assert.equal(directives.deferredSubjects.has("questions/policy-owner"), true);
     assert.equal(fs.readFileSync(path.join(second.bundleRoot, "guidance", "policy-owner.md"), "utf8"), guidance);
-    const diff = diffRepositoryProposal(root, second.metadata.proposalId);
+    const diff = diffRepositoryProposal(root, second.metadata.proposalId, environment);
     assert.equal(diff.entries.find((entry) => entry.path === "questions/policy-owner.md")?.change, "deleted-agentbase-draft");
     assert.equal(diff.entries.find((entry) => entry.path === "guidance/policy-owner.md")?.change, "preserved");
 
@@ -114,15 +117,16 @@ test("[AB-MVP-016..021] revision rebuild preserves guidance, persistent defer an
     const stale = prepareRepositoryProposal(root, EVIDENCE_B, {
       proposalId: "proposal-rehearsal-stale-000001",
       now: "2026-08-12T03:00:00.000Z",
+      environment,
     });
-    validateRepositoryProposal(root, stale.metadata.proposalId);
+    validateRepositoryProposal(root, stale.metadata.proposalId, environment);
     fs.appendFileSync(path.join(root, "okf", "guidance", "policy-owner.md"), "\nMaintainer update.\n");
     const lock = path.join(root, ".agentbase", "okf.lock");
     fs.mkdirSync(lock);
     fs.writeFileSync(path.join(lock, "owner.json"), JSON.stringify({ owner: "other-agent" }));
-    assert.throws(() => applyRepositoryProposal(root, stale.metadata.proposalId, "test:competing"), /other-agent/);
+    assert.throws(() => applyRepositoryProposal(root, stale.metadata.proposalId, "test:competing", environment), /other-agent/);
     fs.rmSync(lock, { recursive: true, force: true });
-    assert.throws(() => applyRepositoryProposal(root, stale.metadata.proposalId, "test:stale"), /stale/);
+    assert.throws(() => applyRepositoryProposal(root, stale.metadata.proposalId, "test:stale", environment), /stale/);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
