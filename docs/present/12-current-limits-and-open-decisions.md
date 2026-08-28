@@ -39,6 +39,24 @@ Không còn điểm mở. Canonical repository dùng Repository ID ổn định:
 move hoặc clone cùng lineage vẫn là repository cũ; fork độc lập là repository
 mới; mirror/copy mơ hồ phải được người dùng xác nhận.
 
+### Benchmark và local temporary storage
+
+Benchmark data có một ownership boundary riêng tại sibling repository
+`AgentBase-Benchmark`. Repo này giữ source checkout được pin, prompt bất biến,
+suite/expectation và result theo thời gian. AgentBase-MCP chỉ giữ benchmark
+engine/scorer và fixture nhỏ phục vụ product verification.
+
+Các workspace tạm của benchmark, Code Graph và Hub lifecycle luôn nằm trong OS
+temporary directory hoặc state root đã được workflow sở hữu, có prefix rõ và bị
+dọn sau run. Không có dữ liệu benchmark lâu dài trong `tmp/`; chỉ `results/`
+trong `AgentBase-Benchmark` là evidence được giữ lại. `npm run demo` và
+`npm run verify` không phụ thuộc Benchmark checkout hay model-backed run.
+
+Expected probe dùng ba mức `critical`, `important`, `optional`. Critical là
+quality gate; hai mức còn lại được báo cáo riêng và chỉ đóng góp secondary
+weighted diagnostic. Score không thay thế lifecycle/conformance hoặc human
+review.
+
 ## Phần còn deferred
 
 - Capability 044 trước hết chỉ migrate source/build của Codebase Memory và giữ

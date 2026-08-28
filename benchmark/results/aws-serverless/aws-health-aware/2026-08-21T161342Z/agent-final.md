@@ -1,1 +1,0 @@
-Incomplete: `get_okf_authoring_schemas` rejected the bounded request because the promoted Resource lacked qualifying semantic promotion evidence. Per workflow requirements, I stopped without preparing or writing an OKF artifact.

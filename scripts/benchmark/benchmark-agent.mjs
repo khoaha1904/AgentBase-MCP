@@ -15,8 +15,8 @@ import { writeHubProfileToken } from "../../src/app/hub-okf/configuration/creden
 import { renderHubCiBundle } from "../../src/app/hub-okf/ci/artifact.ts";
 import { renderHubReadme } from "../../src/app/hub-okf/workspace/readme.ts";
 import { PRODUCT_SKILL_NAMES } from "../installation/product-skills.mjs";
+import { benchmarkRoot, projectRoot } from "./benchmark-paths.mjs";
 
-const projectRoot = path.resolve(import.meta.dirname, "../..");
 const requiredTools = ["index_repository", "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept"];
 const v3RequiredTools = [...requiredTools, "validate_okf_relationships"];
 const v4RequiredTools = ["index_repository", "get_okf_authoring_schemas", "validate_okf_bundle"];
@@ -671,7 +671,7 @@ export function runAgentRepository({
   const promptVersion = arm === "direct"
     ? (manifest.directPromptVersion ?? "okf-author-direct-v1")
     : manifest.promptVersion;
-  const template = fs.readFileSync(path.join(projectRoot, "benchmark", "prompts", `${promptVersion}.md`), "utf8");
+  const template = fs.readFileSync(path.join(benchmarkRoot(), "prompts", `${promptVersion}.md`), "utf8");
   const prompt = renderAgentPrompt(template, {
     SOURCE_ROOT: sourceRepository,
     OUTPUT_ROOT: workspace,
@@ -835,7 +835,7 @@ export function runAgentBatch({ manifest, repositories, root, executable = manif
     return { entry: manifest.repositories[index], repository, source,
       repositoryId: benchmarkProvenanceRepositoryId(source, "okf-author-v15") };
   });
-  const template = fs.readFileSync(path.join(projectRoot, "benchmark", "prompts", `${manifest.promptVersion}.md`), "utf8");
+  const template = fs.readFileSync(path.join(benchmarkRoot(), "prompts", `${manifest.promptVersion}.md`), "utf8");
   const domain = `${manifest.confirmedDomain.title} (${manifest.confirmedDomain.identity}); evidence ${manifest.confirmedDomain.evidenceResource}`;
   const values = { OUTPUT_ROOT: workspace, CATALOG_VERSION: manifest.catalogVersion, CONFIRMED_DOMAIN: domain };
   const portableValues = { ...values, OUTPUT_ROOT: "<OUTPUT_ROOT>" };

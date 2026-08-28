@@ -10,6 +10,7 @@ import {
   summarizeAgentEvents, validateBatchLifecycle, validateFinalChangeCoverage, validateRefreshKnowledge,
   validateReceiptDiscoveryLifecycle, validateRefreshLifecycle, validateSkillInitialIngestLifecycle, validateV13Lifecycle,
 } from "./benchmark-agent.mjs";
+import { benchmarkPath, benchmarkRoot } from "./benchmark-paths.mjs";
 
 const repositoryId = "repository-example-aaaaaaaaaaaa";
 
@@ -101,6 +102,23 @@ test("[AB-BENCH-004][AB-BENCH-005] semantic scorer keeps quality metrics separat
   assert.equal(missingSystem.authoringAssessment.status, "reviewable");
 });
 
+test("[AB-BENCH-084][AB-BENCH-085] priority tiers gate critical probes", () => {
+  const worker = concept("components/worker.md", "Function", "primary-worker", {}, ["main.tf"]);
+  const result = scoreSemanticBenchmark({
+    concepts: [{ key: "missing-domain", identityTerms: ["domain"], type: "Domain", requiredMetadata: [], requiredSourcePaths: [], priority: "critical" },
+      { key: "primary-worker", type: "Function", requiredMetadata: [], requiredSourcePaths: [], priority: "important" },
+      { key: "optional-note", identityTerms: ["never-present"], type: "Component", requiredMetadata: [], requiredSourcePaths: [], priority: "optional" }],
+    relationships: [],
+  }, { concepts: new Map([[worker.conceptId, worker]]), warnings: [] }, repositoryId);
+  assert.deepEqual(result.priority.tiers.critical, { matched: 0, total: 1, score: 0, possible: 3 });
+  assert.deepEqual(result.priority.tiers.important, { matched: 1, total: 1, score: 2, possible: 2 });
+  assert.deepEqual(result.priority.tiers.optional, { matched: 0, total: 1, score: 0, possible: 1 });
+  assert.equal(result.priority.qualityStatus, "needs_revision");
+  assert.equal(result.priority.weightedPercent, 33);
+  assert.equal(result.initialIngestAcceptance, "valid_partial");
+  assert.throws(() => benchmarkPath("..", "outside"), /escapes root/);
+});
+
 test("[AB-BENCH-045] embedded infrastructure is scored through its useful parent", () => {
   const expectation = {
     version: 15, requiredConcepts: [], relationships: [],
@@ -122,7 +140,7 @@ test("[AB-BENCH-045] embedded infrastructure is scored through its useful parent
 });
 
 test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraform-only", () => {
-  const root = path.resolve(import.meta.dirname, "..", "..", "benchmark", "repos", "aws-serverless");
+  const root = path.join(benchmarkRoot(), "suites", "legacy", "aws-serverless");
   const manifest = JSON.parse(fs.readFileSync(path.join(root, "manifest.json"), "utf8"));
   assert.equal(manifest.version, 15);
   assert.equal(manifest.catalogVersion, "7.0.0");
@@ -151,7 +169,7 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
   ].map((tool) => [tool, 1]));
   lifecycleTools.get_okf_authoring_schemas = 2;
   assert.deepEqual(validateV13Lifecycle(lifecycleTools, corrected.attempts), []);
-  const ecsRoot = path.resolve(import.meta.dirname, "..", "..", "benchmark", "repos", "aws-ecs-fullstack");
+  const ecsRoot = path.join(benchmarkRoot(), "suites", "legacy", "aws-ecs-fullstack");
   const ecs = JSON.parse(fs.readFileSync(path.join(ecsRoot, "manifest.json"), "utf8"));
   assert.equal(ecs.agent.model, "gpt-5.6-sol");
   assert.equal(ecs.repositories[0].kind, "terraform-ecs-fullstack");
@@ -160,7 +178,7 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
   assert.ok(ecsExpected.requiredConcepts.some((item) => item.key === "vue-client-component"));
   assert.ok(ecsExpected.requiredConcepts.some((item) => item.key === "node-server-component"));
   assert.ok(ecsExpected.embeddedKnowledge.some((item) => item.key === "server-health-contract"));
-  const ecsRefreshRoot = path.resolve(import.meta.dirname, "..", "..", "benchmark", "repos", "aws-ecs-fullstack-refresh");
+  const ecsRefreshRoot = path.join(benchmarkRoot(), "suites", "legacy", "aws-ecs-fullstack-refresh");
   const ecsRefresh = JSON.parse(fs.readFileSync(path.join(ecsRefreshRoot, "manifest.json"), "utf8"));
   assert.equal(ecsRefresh.agent.model, "gpt-5.6-terra");
   assert.equal(ecsRefresh.promptVersion, "okf-refresh-v3");
@@ -173,7 +191,7 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
     includes: ["GET /health", "Infrastructure/main.tf"],
     excludes: ["GET /status"],
   });
-  const refreshRoot = path.resolve(import.meta.dirname, "..", "..", "benchmark", "repos", "aws-serverless-refresh");
+  const refreshRoot = path.join(benchmarkRoot(), "suites", "legacy", "aws-serverless-refresh");
   const refresh = JSON.parse(fs.readFileSync(path.join(refreshRoot, "manifest.json"), "utf8"));
   assert.equal(refresh.version, 2);
   assert.equal(refresh.promptVersion, "okf-refresh-v2");
@@ -199,7 +217,7 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
     "validate_okf_changes", "finalize_hub_okf_proposal", "inspect_hub_okf_proposal",
   ].map((tool) => [tool, 1]));
   assert.deepEqual(validateRefreshLifecycle(refreshTools), []);
-  const batchRoot = path.resolve(import.meta.dirname, "..", "..", "benchmark", "repos", "aws-cloud-operations-batch");
+  const batchRoot = path.join(benchmarkRoot(), "suites", "legacy", "aws-cloud-operations-batch");
   const batch = JSON.parse(fs.readFileSync(path.join(batchRoot, "manifest.json"), "utf8"));
   assert.equal(batch.workflow, "batch-initial-ingest");
   assert.equal(batch.agent.model, "gpt-5.6-sol");
@@ -216,7 +234,7 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
   assert.deepEqual(validateBatchLifecycle(batchTools, 2), []);
   batchTools.accept_hub_okf_proposal = 1;
   assert.match(validateBatchLifecycle(batchTools, 2).at(-1), /forbidden Batch Init/);
-  const diverseRoot = path.resolve(import.meta.dirname, "..", "..", "benchmark", "repos", "aws-terraform-diverse");
+  const diverseRoot = path.join(benchmarkRoot(), "suites", "legacy", "aws-terraform-diverse");
   const diverse = JSON.parse(fs.readFileSync(path.join(diverseRoot, "manifest.json"), "utf8"));
   assert.equal(diverse.catalogVersion, "7.0.0");
   assert.equal(diverse.promptVersion, "okf-author-v17");
@@ -276,7 +294,7 @@ test("[AB-BENCH-046] released-skill trace proves source-to-Seed-to-Receipt hando
   );
   assert.deepEqual(regression.changes.elapsedMs, -10);
   assert.match(regression.regressions[0], /acceptance declined/);
-  const qualificationRoot = path.resolve(import.meta.dirname, "..", "..", "benchmark", "repos", "initial-ingest-discovery-v1");
+  const qualificationRoot = path.join(benchmarkRoot(), "suites", "legacy", "initial-ingest-discovery-v1");
   const qualification = JSON.parse(fs.readFileSync(path.join(qualificationRoot, "manifest.json"), "utf8"));
   const qualificationExpectation = JSON.parse(fs.readFileSync(path.join(qualificationRoot, "expectation.json"), "utf8"));
   assert.equal(qualification.promptVersion, "okf-author-v22");

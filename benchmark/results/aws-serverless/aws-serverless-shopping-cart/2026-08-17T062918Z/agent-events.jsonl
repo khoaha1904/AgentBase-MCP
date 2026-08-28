@@ -1,4 +1,0 @@
-{"type":"thread.started","thread_id":"01a00e69-08b6-73c0-8dcb-f27c0cb5aa5e"}
-{"type":"turn.started"}
-{"type":"error","message":"Your access token could not be refreshed because your refresh token was revoked. Please log out and sign in again."}
-{"type":"turn.failed","error":{"message":"Your access token could not be refreshed because your refresh token was revoked. Please log out and sign in again."}}

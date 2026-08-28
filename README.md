@@ -70,9 +70,15 @@ GitHub repository. A Hub is not required for installation or Code Graph use.
 Run an explicit model-backed OKF benchmark and finalize it deterministically:
 
 ```bash
-npm run benchmark:okf -- run aws-serverless aws-health-aware
-npm run benchmark:okf -- finalize aws-serverless <UTC-run-id> aws-health-aware
+AGENTBASE_BENCHMARK_ROOT=../AgentBase-Benchmark \
+  npm run benchmark:okf -- run crawler-initial-ingest serverless-data-pipelines-demo
+AGENTBASE_BENCHMARK_ROOT=../AgentBase-Benchmark \
+  npm run benchmark:okf -- finalize crawler-initial-ingest <UTC-run-id> serverless-data-pipelines-demo
 ```
+
+Benchmark source repositories, prompts, expectations and durable results live
+in the sibling `AgentBase-Benchmark` repository. The runner and scorer remain
+here; `npm run demo` and `npm run verify` do not require a benchmark checkout.
 
 Real provider, GitHub and model operations remain opt-in. `npm run verify` is
 offline and uses fakes, captured responses, disposable Git and fake GitHub HTTP.

@@ -1,3 +1,0 @@
-2026-08-22T04:54:36.977980Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in <RUNTIME_ROOT>/tmp/agentbase-1000/hub-runtime/sessions/hub-session-0af508678b9318c578c5e46d/bundle/systems/aws-health-aware.md:
-The AHA alert processor is the independently deployed Lambda workload for AWS
-Health Aware. On invocation it obtains an AWS Health client and chooses the

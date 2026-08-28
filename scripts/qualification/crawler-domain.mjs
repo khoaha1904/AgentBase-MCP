@@ -21,7 +21,10 @@ import { createMockAwsSqsRunner } from "../../src/app/hub-okf/test-support/mock-
 import { prepareDomainEnrichment, runDomainEnrichment } from "../../src/app/hub-okf/enrichment/index.ts";
 
 const AGENTBASE_ROOT = path.resolve(import.meta.dirname, "../../..");
-const FIXTURE_ROOT = path.join(AGENTBASE_ROOT, "fixtures/source-repos");
+const BENCHMARK_ROOT = path.resolve(
+  process.env.AGENTBASE_BENCHMARK_ROOT ?? path.join(AGENTBASE_ROOT, "AgentBase-Benchmark"),
+);
+const FIXTURE_ROOT = path.join(BENCHMARK_ROOT, "repositories/crawler");
 const PIPELINE = path.join(FIXTURE_ROOT, "serverless-data-pipelines-demo");
 const PUBLISHER = path.join(FIXTURE_ROOT, "crawler-publisher");
 const WORKER = path.join(FIXTURE_ROOT, "crawler-worker");

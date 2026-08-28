@@ -333,6 +333,38 @@ benchmarks.
   with the same fixture, Sol model and sequential gate. It must restore a
   missing embedded row before Finalize validation; a replica remains conditional
   on one valid first proposal without a clear blocker.
+- **AB-BENCH-080** — Benchmark data has one canonical sibling repository,
+  `AgentBase-Benchmark`. It owns pinned source checkouts/registry, immutable
+  prompts, suite manifests/expectations and timestamped results. AgentBase-MCP
+  owns only the benchmark engine/scorer and small deterministic product
+  fixtures; no runtime MCP path depends on the benchmark checkout.
+- **AB-BENCH-081** — A benchmark command resolves one explicit benchmark root
+  from `--root` or `AGENTBASE_BENCHMARK_ROOT`; the default is the sibling
+  checkout. Suite, prompt, expectation and result paths resolve beneath that
+  root and cannot escape it. `npm run demo`, `npm run verify` and ordinary MCP
+  startup do not require model-backed benchmark data.
+- **AB-BENCH-082** — Repository registry entries pin domain, source kind,
+  checkout path and exact clean Git revision. Public checkouts use source URL
+  plus commit; local-only fixtures are explicitly marked and must still pass
+  the same clean/revision checks. Missing, dirty or drifted repositories fail
+  preflight before a model process starts.
+- **AB-BENCH-083** — Historical prompts, manifests, expectations and results
+  are moved without rewriting their bytes and are read-only evidence. Active
+  suites are explicit; an archived or missing-source suite cannot be selected
+  accidentally by the default qualification command.
+- **AB-BENCH-084** — Each expected concept, relationship or embedded-knowledge
+  probe declares `critical`, `important` or `optional` priority. Reports show
+  per-tier matched/total coverage and a secondary weighted diagnostic
+  (`critical=3`, `important=2`, `optional=1`). Missing critical probes make
+  quality `needs_revision`; optional coverage cannot compensate for them.
+- **AB-BENCH-085** — Priority scoring remains separate from lifecycle,
+  conformance, source-provenance integrity and owner review. A run may have a
+  high weighted diagnostic while remaining invalid or requiring revision.
+- **AB-BENCH-086** — Durable benchmark evidence is written only below the
+  Benchmark repository `results/` tree. Per-run workspaces, runtime state and
+  provider/graph caches use owned OS temporary directories or explicit ignored
+  local state, are cleaned after completion and never become expected data or
+  Hub knowledge.
 
 ## Context A/B interpretation
 

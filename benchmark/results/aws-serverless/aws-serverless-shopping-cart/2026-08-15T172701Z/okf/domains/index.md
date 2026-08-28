@@ -1,3 +1,0 @@
-# Domains
-
-* [Commerce](commerce.md)

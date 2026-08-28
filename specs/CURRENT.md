@@ -1,6 +1,9 @@
 # Current capability
 
 Active capability: None.
+Most recent completed: [`055-benchmark-storage-normalization`](055-benchmark-storage-normalization/spec.md) —
+benchmark data ownership, source storage, priority scoring and temporary-state
+boundaries are normalized into a sibling `AgentBase-Benchmark` repository.
 Most recent completed: [`054-crawler-domain-qualification`](054-crawler-domain-qualification/spec.md) —
 three-repository Crawler qualification dataset and source-backed
 Resource/query/UI path are verified; real provider/model qualification remains

@@ -6,6 +6,8 @@ import path from "node:path";
 import { performance } from "node:perf_hooks";
 import { pathToFileURL } from "node:url";
 
+import { benchmarkPath, benchmarkRoot, projectRoot, setBenchmarkRoot } from "./benchmark-paths.mjs";
+
 import {
   computeOkfTreeDigest,
   getOkfConceptSchema,
@@ -24,7 +26,6 @@ import {
   resetHubSearchProjectionCache,
 } from "../../src/core/knowledge/query/hub-query-search-index.ts";
 
-const projectRoot = path.resolve(import.meta.dirname, "../..");
 const runIdPattern = /^\d{4}-\d{2}-\d{2}T\d{6}Z$/;
 const authoringGoal = "okf-v0.2-semantic-authoring-v1";
 const assessmentLimitations = [
@@ -41,14 +42,23 @@ function writeJson(file, value) {
 }
 
 export function manifestFor(suite) {
-  const root = path.join(projectRoot, "benchmark", "repos", suite);
-  const file = path.join(root, "manifest.json");
+  const suitesRoot = benchmarkPath("suites");
+  const candidates = fs.existsSync(suitesRoot)
+    ? fs.readdirSync(suitesRoot, { withFileTypes: true }).flatMap((domain) => {
+      if (!domain.isDirectory()) return [];
+      const candidate = path.join(suitesRoot, domain.name, suite, "manifest.json");
+      return fs.existsSync(candidate) ? [path.dirname(candidate)] : [];
+    }) : [];
+  const legacyRoot = benchmarkPath("suites", "legacy", suite);
+  if (fs.existsSync(path.join(legacyRoot, "manifest.json"))) candidates.push(legacyRoot);
+  const selectedRoot = candidates[0];
+  const file = selectedRoot ? path.join(selectedRoot, "manifest.json") : "";
   if (!fs.existsSync(file)) throw new Error(`unknown benchmark suite: ${suite}`);
   const manifest = readJson(file);
   if (manifest.suite !== suite || !Array.isArray(manifest.repositories) || !manifest.repositories.length) {
     throw new Error(`invalid benchmark manifest: ${file}`);
   }
-  return { ...manifest, root };
+  return { ...manifest, root: selectedRoot };
 }
 
 function git(repository, args) {
@@ -57,8 +67,26 @@ function git(repository, args) {
   return result.stdout.trim();
 }
 
+function registryEntry(id, relative, commit) {
+  const file = benchmarkPath("repositories.lock.json");
+  if (!fs.existsSync(file)) throw new Error(`benchmark repository registry is missing: ${file}`);
+  const registry = readJson(file);
+  const entry = registry.repositories?.find((item) => item.id === id && item.path === relative);
+  if (!entry) throw new Error(`${id}: repository is not admitted by repositories.lock.json`);
+  if (entry.commit !== commit) throw new Error(`${id}: manifest commit does not match repository registry`);
+  return entry;
+}
+
 export function fixtureFor(entry) {
-  const repository = path.resolve(projectRoot, entry.path);
+  const legacyMatch = typeof entry.path === "string"
+    ? entry.path.match(/^\.\.\/fixtures\/source-repos\/(.+)$/) : null;
+  const relative = legacyMatch
+    ? (legacyMatch[1] === "serverless-data-pipelines-demo"
+      ? "repositories/crawler/serverless-data-pipelines-demo"
+      : `repositories/legacy/${legacyMatch[1]}`)
+    : entry.path;
+  registryEntry(entry.id, relative, entry.commit);
+  const repository = benchmarkPath(relative);
   if (!fs.existsSync(repository)) throw new Error(`${entry.id}: fixture is missing at ${entry.path}`);
   const commit = git(repository, ["rev-parse", "HEAD"]);
   if (commit !== entry.commit) throw new Error(`${entry.id}: expected ${entry.commit}, found ${commit}`);
@@ -73,7 +101,7 @@ export function utcRunId() {
 
 export function resultRoot(suite, repository, runId) {
   if (!runIdPattern.test(runId)) throw new Error(`invalid UTC run ID: ${runId}`);
-  return path.join(projectRoot, "benchmark", "results", suite, repository, runId);
+  return benchmarkPath("results", suite, repository, runId);
 }
 
 function fileDigest(file) {
@@ -399,8 +427,9 @@ function assessObservedValues(expectations, concepts) {
 }
 
 function assessEmbeddedKnowledge(expectations, concepts, repositoryId) {
-  if (!Array.isArray(expectations) || !expectations.length) return { matched: 0, required: 0, findings: [] };
+  if (!Array.isArray(expectations) || !expectations.length) return { matched: 0, required: 0, matchedKeys: [], findings: [] };
   let matched = 0;
+  const matchedKeys = [];
   const findings = [];
   for (const expected of expectations) {
     const terms = (expected.requiredTerms ?? []).map((term) => String(term).toLowerCase());
@@ -413,10 +442,45 @@ function assessEmbeddedKnowledge(expectations, concepts, repositoryId) {
       return terms.every((term) => text.includes(term))
         && paths.every((required) => evidence.includes(required));
     });
-    if (found) matched += 1;
+    if (found) {
+      matched += 1;
+      matchedKeys.push(expected.key);
+    }
     else findings.push(`${expected.key}: embedded knowledge is missing from an allowed parent with exact evidence`);
   }
-  return { matched, required: expectations.length, findings };
+  return { matched, required: expectations.length, matchedKeys, findings };
+}
+
+const PRIORITY_WEIGHTS = { critical: 3, important: 2, optional: 1 };
+
+function priorityOf(item) {
+  return Object.hasOwn(PRIORITY_WEIGHTS, item?.priority) ? item.priority : "important";
+}
+
+function priorityMetrics(probes) {
+  const tiers = Object.fromEntries(Object.keys(PRIORITY_WEIGHTS).map((priority) => [priority, {
+    matched: 0, total: 0, score: 0, possible: 0,
+  }]));
+  for (const probe of probes) {
+    const priority = priorityOf(probe);
+    const tier = tiers[priority];
+    tier.total += 1;
+    tier.possible += PRIORITY_WEIGHTS[priority];
+    if (probe.matched) {
+      tier.matched += 1;
+      tier.score += PRIORITY_WEIGHTS[priority];
+    }
+  }
+  const weightedScore = Object.values(tiers).reduce((sum, tier) => sum + tier.score, 0);
+  const weightedPossible = Object.values(tiers).reduce((sum, tier) => sum + tier.possible, 0);
+  return {
+    tiers,
+    weightedScore,
+    weightedPossible,
+    weightedPercent: weightedPossible ? Math.round((weightedScore / weightedPossible) * 100) : null,
+    qualityStatus: tiers.critical.total > 0 && tiers.critical.matched < tiers.critical.total
+      ? "needs_revision" : "pass",
+  };
 }
 
 export function assessLiveResolutionCases(cases) {
@@ -542,6 +606,17 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
   const conflictVisibility = assessConflictVisibility(expectation.conflicts, bundle.concepts, repositoryId);
   const observedValues = assessObservedValues(expectation.observedValues, bundle.concepts);
   const embeddedKnowledge = assessEmbeddedKnowledge(expectation.embeddedKnowledge, bundle.concepts, repositoryId);
+  const priority = priorityMetrics([
+    ...requiredConcepts.map((item) => ({ priority: item.priority, matched: assignments.has(item.key) })),
+    ...(expectation.relationships ?? []).map((item) => ({
+      priority: item.priority,
+      matched: confirmedRelationships.includes(`${item.from}|${item.kind}|${item.to}`),
+    })),
+    ...(expectation.embeddedKnowledge ?? []).map((item) => ({
+      priority: item.priority,
+      matched: embeddedKnowledge.matchedKeys.includes(item.key),
+    })),
+  ]);
   const ratios = {
     referenceConceptCoverage: ratio(matchedKeys.length, expected.size),
     recognizedSchemaAgreement: ratio(confirmedConcepts.length, matchedKeys.length),
@@ -564,6 +639,7 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
     conflictVisibilityPercent: ratios.conflictVisibility.percent,
     observedValueCoveragePercent: ratios.observedValueCoverage.percent,
     embeddedKnowledgeCoveragePercent: ratios.embeddedKnowledgeCoverage.percent,
+    priority,
     ratios,
     classifications: {
       concepts: {
@@ -649,6 +725,11 @@ function reportFor(entry, run, metrics) {
     + `- Source-conflict visibility: ${measured(metrics.conflictVisibilityPercent, metrics.ratios.conflictVisibility)}\n`
     + `- Observed-value coverage: ${measured(metrics.observedValueCoveragePercent, metrics.ratios.observedValueCoverage)}\n`
     + `- Embedded-knowledge coverage: ${measured(metrics.embeddedKnowledgeCoveragePercent, metrics.ratios.embeddedKnowledgeCoverage)}\n`
+    + `- Priority quality: ${metrics.priority?.qualityStatus ?? "unavailable"} `
+      + `(${metrics.priority?.weightedScore ?? 0}/${metrics.priority?.weightedPossible ?? 0}; `
+      + `critical ${metrics.priority?.tiers?.critical?.matched ?? 0}/${metrics.priority?.tiers?.critical?.total ?? 0}, `
+      + `important ${metrics.priority?.tiers?.important?.matched ?? 0}/${metrics.priority?.tiers?.important?.total ?? 0}, `
+      + `optional ${metrics.priority?.tiers?.optional?.matched ?? 0}/${metrics.priority?.tiers?.optional?.total ?? 0})\n`
     + `- Unjudged concepts / relationships: ${metrics.classifications.concepts.unjudged.length} / ${metrics.classifications.relationships.unjudged.length}\n`
     + `- Missing reference concepts / relationships: ${metrics.classifications.concepts.missingReference.length} / ${metrics.classifications.relationships.missingReference.length}\n`
     + (metrics.classifications.concepts.unjudged.length
@@ -1101,7 +1182,7 @@ function compare(suite, pairId, repository) {
 }
 
 function usage() {
-  process.stderr.write("Usage: npm run benchmark:okf\n"
+  process.stderr.write("Usage: npm run benchmark:okf -- [--root <AgentBase-Benchmark>] <command>\n"
     + "       npm run benchmark:okf -- run <suite> [repository] [UTC-run-id]\n"
     + "       npm run benchmark:okf -- finalize <suite> <UTC-run-id> [repository]\n"
     + "       npm run benchmark:okf -- pair <suite> <repository> [UTC-pair-id]\n"
@@ -1190,7 +1271,15 @@ Handles deterministic ledger signal${String(ordinal).padStart(4, "0")} for quali
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
-  const [command, suite, first, second, ...extra] = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  if (args[0] === "--root") {
+    if (!args[1]) usage();
+    else {
+      setBenchmarkRoot(args[1]);
+      args.splice(0, 2);
+    }
+  }
+  const [command, suite, first, second, ...extra] = args;
   try {
     if (!command) await queryQuality();
     else if (extra.length || !suite) usage();
