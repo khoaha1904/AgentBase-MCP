@@ -94,3 +94,7 @@
   searchable through its parent. Promoted Resource concepts return as independent
   results with their accepted relation context; embedded rows never become
   synthetic search identities.
+- **AB-QUERY-020** — Crawler qualification proves a source-backed SQS Resource
+  is independently discoverable by lexical search and retains bounded directed
+  producer/consumer relation context; a mock provider ARN is never required for
+  query eligibility and never enters the Published search corpus.

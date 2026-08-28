@@ -41,3 +41,11 @@
   failure tiếp tục sequential siblings sau confirmed-clean cleanup. Uncertain
   cleanup/process/shared Hub/source authority failure dừng Batch. Finalize chỉ
   mở khi mọi confirmed member complete hoặc membership được explicit revise.
+- **AB-BATCH-014** — Qualification dataset giữ ba repository fixture độc lập
+  và được kiểm tra cùng Batch Initial Ingest E2E lifecycle; topology fixture
+  materialization vẫn giữ source evidence riêng theo member và không coi mock
+  provider output là canonical Hub truth.
+- **AB-BATCH-015** — Qualification phải kiểm tra cùng một chuỗi Published
+  projection, resource/relation query, static Domain-site build và proposal
+  safety; mỗi bước báo counts/limitation deterministic và không thêm production
+  dependency, model call hay provider scan.

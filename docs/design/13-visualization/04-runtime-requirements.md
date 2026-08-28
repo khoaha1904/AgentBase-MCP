@@ -45,3 +45,7 @@
   node-eligibility gate. A promoted provider-neutral Resource (such as shared SQS
   or SNS) is a normal node; embedded resource rows and unresolved candidates are
   not synthetic nodes and remain visible only through parent/query context.
+- **AB-VIS-016** — Crawler qualification site is generated only from the exact
+  Published qualification projection after source-backed resource/relation
+  checks; its receipt records deterministic node/edge counts and the snapshot
+  remains disposable review output, not a second knowledge authority.

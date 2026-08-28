@@ -1,6 +1,10 @@
 # Current capability
 
 Active capability: None.
+Most recent completed: [`054-crawler-domain-qualification`](054-crawler-domain-qualification/spec.md) —
+three-repository Crawler qualification dataset and source-backed
+Resource/query/UI path are verified; real provider/model qualification remains
+deferred.
 Most recent completed: [`053-mock-domain-enrichment-qualification`](053-mock-domain-enrichment-qualification/spec.md) —
 fixture-only mock Domain Enrichment qualification is complete; mock observations
 remain outside canonical Hub publication.

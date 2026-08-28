@@ -65,5 +65,9 @@ thuộc nhiều Domain hoặc tự mở rộng cả Domain kia.
 
 Qualification trước đây dùng một Domain có tám repository, runtime relations và
 Flow steps thật. Snapshot generated đó hiện đã được reset để chuẩn bị dữ liệu
-qualification mới; thiếu topology hoặc resource evidence vẫn được báo rõ thay
-vì suy diễn.
+qualification mới. Capability 054 dùng một dataset qualification ba
+repository có publisher/worker và SQS Resource source-backed, rồi generate lại
+snapshot `domain-hub/crawler` chỉ sau khi ingest/query/projection đã được kiểm
+tra. Snapshot này là static Published fixture để review UI, không phải nguồn
+authority mới; thiếu topology hoặc resource evidence vẫn được báo rõ thay vì
+suy diễn.

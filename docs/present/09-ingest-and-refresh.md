@@ -126,6 +126,25 @@ tiếp. Nó tạo một Local Draft chung, sau đó đi qua review, PR và merge
 knowledge change khác. Provider calls chỉ nhắm vào candidate liên quan; không
 scan mù toàn account hoặc mọi region.
 
+## Qualification Domain Crawler
+
+Trước khi dùng dữ liệu thật để mở rộng Crawler, AgentBase có một qualification
+dataset ba repository: pipeline hiện có và hai repository fixture nhỏ mô phỏng
+publisher/worker dùng chung một SQS queue. Dataset này chỉ là dữ liệu kiểm thử
+tạm thời, không phải canonical Hub và không ghi provider identity giả.
+
+Qualification dùng cùng Published projection, query, Domain site và mock Domain
+Enrichment boundaries production; Batch Initial Ingest lifecycle của ba member
+được giữ ở E2E deterministic hiện có, còn harness này materialize một Published
+fixture source-backed từ đúng các commit đó để đo topology/resource coverage.
+Mock provider chỉ trả kết quả CLI xác định để kiểm tra identity matching, retry
+và proposal safety; nó không biến giả thuyết thành Published fact. SNS và các
+provider khác vẫn ngoài phạm vi slice này.
+
+Success được đo bằng source-backed node/resource/relation coverage, query hit,
+HTML build receipt và việc canonical Hub không bị mutate. Nếu thiếu evidence,
+report phải ghi rõ limitation thay vì suy diễn topology.
+
 ## OKF Freshness
 
 Freshness là warning về tuổi của repository/source contribution, không phải
