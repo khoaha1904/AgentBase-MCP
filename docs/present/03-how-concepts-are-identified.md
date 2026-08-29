@@ -1,95 +1,100 @@
-# 03 — MCP nhận diện concept trong repository thế nào?
+# 03 — How MCP identifies concepts in a repository
 
-> Trạng thái: Catalog 7 và Capability 046 Discovery Seed/Inventory coverage đã
-> implement; released-skill qualification còn pending.
+> Status: Catalog 7 and Capability 046 Discovery Seed/Inventory coverage are
+> implemented; released-skill qualification remains pending.
 
-## Câu trả lời ngắn
+## Short answer
 
-Agent dùng Code Graph để tìm thành phần quan trọng, đọc source để kiểm chứng,
-rồi đề xuất các concept có ích cho việc hiểu và query hệ thống.
+The agent uses the Code Graph to find important components, reads source to
+verify them, then proposes useful concepts for understanding and querying the system.
 
 ```text
-Skill Ingest
+Ingest skill
      ↓
-Code Graph tìm đúng khu vực
+Code Graph finds the right area
      ↓
-Source cung cấp bằng chứng
+Source provides evidence
      ↓
-Agent đề xuất concept + schema + relation
+Agent proposes concept + schema + relation
      ↓
-Local Draft để người dùng review
+Local Draft for user review
 ```
 
-Code Graph là bản đồ tìm kiếm, không phải danh sách concept để sao chép vào Hub.
-Initial Ingest vì vậy **discover rộng nhưng publish chọn lọc**: MCP phải nhìn
-thấy các nhóm tín hiệu quan trọng trước, còn OKF chỉ giữ knowledge có ích.
+The Code Graph is a search map, not a list of concepts to copy into the Hub.
+Initial Ingest therefore **discovers broadly but publishes selectively**: MCP
+must see important signal groups first, while OKF keeps only useful knowledge.
 
-## Schema và concept khác nhau thế nào?
+## How are schema and concept different?
 
-- **Schema** là khuôn vai trò dùng chung do MCP cung cấp, như System, Component,
-  Function hoặc Interface.
-- **Concept** là thực thể cụ thể được phát hiện và lưu trong Hub, như Crawler
-  API hoặc Vehicle Data Queue.
+- **Schema** is a shared role definition supplied by MCP, such as System,
+  Component, Function or Interface.
+- **Concept** is a concrete entity discovered and stored in the Hub, such as a
+  Crawler API or Vehicle Data Queue.
 
-Một repository có thể đóng góp nhiều concept; nhiều concept có thể dùng cùng
-một schema. Không có một danh sách concept cố định để chỉ match vào.
+A repository may contribute many concepts, and many concepts may use one schema.
+There is no fixed concept list that everything must match.
 
-## Khi nào tạo concept?
+## When is a concept created?
 
-Một thành phần được đề xuất thành concept riêng khi nó:
+A component is proposed as its own concept when it:
 
-- có danh tính riêng; và
-- có giá trị để query hoặc liên kết trực tiếp.
+- has an independent identity; and
+- has direct query or relationship value.
 
-Hub ưu tiên ranh giới có giá trị query/navigation. Cloud resource nội bộ thường
-là embedded knowledge trong concept cha, không tự động thành một file concept.
-Khi Agent đã chọn embedded với parent và evidence hợp lệ, việc MCP chưa nhận ra
-provider/product chỉ tạo limitation; nó không được làm knowledge biến mất.
+The Hub favors boundaries with navigation and query value. An internal cloud
+resource is normally embedded knowledge in its parent concept, not automatically
+its own concept document. When the agent selects an embedded resource with a
+valid parent and evidence, MCP's failure to recognize its provider/product only
+creates a limitation; it must not make the knowledge disappear.
 
-Một discovery group không đạt hai gate không biến mất âm thầm. Agent chọn đúng
-một outcome: `materialized`, `question` hoặc `ignored` kèm bounded reason.
-Candidate đã xác định concept hay embedded nên Inventory không khai lại. MCP đối
-chiếu các outcome này với machine-derived Discovery Seed;
-không đặt quota concept và không yêu cầu mọi route/resource thành file.
-MCP tự xác định lane và mức P0/P1/P2 từ tín hiệu máy; Agent chỉ diễn giải ý nghĩa
-và chọn cách biểu diễn, nên không thể tự tuyên bố “đã kiểm tra đủ”. Một group có
-một outcome nhưng có thể tạo nhiều output nếu source thực sự cần.
+A discovery group that fails either gate does not disappear silently. The agent
+chooses exactly one outcome: `materialized`, `question` or `ignored`, with a
+bounded reason. A candidate already identified as a concept or embedded item is
+not rediscovered by Inventory. MCP compares these outcomes with the machine-
+derived Discovery Seed; it sets no concept quota and does not require every
+route/resource to become a document.
 
-| Thứ được tìm thấy | Cách biểu diễn |
+MCP determines the lane and P0/P1/P2 level from machine signals. The agent
+interprets meaning and chooses representation, so it cannot claim “checked
+everything” without evidence. One group has one outcome, but it may produce
+multiple outputs when the source genuinely requires them.
+
+| Discovered item | Representation |
 |---|---|
-| System, workload, API hoặc shared resource có ranh giới riêng | Concept |
-| SQS, table, bucket, host nội bộ | Embedded knowledge trong concept cha |
+| System, workload, API or shared resource with its own boundary | Concept |
+| SQS, table, bucket, internal host | Embedded knowledge in its parent concept |
 | AWS, EC2, Lambda, runtime | Technology metadata |
-| Service gọi API hoặc publish message | Relation |
+| Service calling an API or publishing a message | Relation |
 | File, class, helper function | Evidence/reference |
-| TTL, timeout dễ thay đổi | [Observed snapshot](08-live-references-for-change-prone-values.md) khi có query value |
+| TTL or timeout likely to change | [Observed snapshot](08-live-references-for-change-prone-values.md) when queried |
 
-## Đối chiếu và xử lý phần chưa rõ
+## Matching and handling uncertainty
 
-Trước khi tạo mới, Agent đối chiếu với Published Hub local đã đồng bộ và concept
-trong proposal hiện tại. Ordinary discovery không search những Local Draft khác.
+Before creating a new item, the agent compares it with the synchronized Published
+Hub and concepts in the current proposal. Ordinary discovery does not search
+other Local Drafts.
 
-Một source trực tiếp có thể đủ để đề xuất concept; không có số lượng nguồn tối
-thiểu cố định. README hoặc ADR có thể là bằng chứng chính cho business rule và
-decision, nhưng nội dung tương lai hoặc mơ hồ chỉ tạo candidate/Question.
+One direct source may be enough to propose a concept; there is no fixed minimum
+source count. A README or ADR may be primary evidence for a business rule or
+decision, but future-looking or ambiguous content creates a candidate/Question.
 
-Candidate có danh tính rõ nhưng chưa chắc có giá trị query chỉ xuất hiện trong
-review. Người dùng có thể promote thành concept, giữ thành Question hoặc bỏ.
-Khi nguồn xung đột, Agent không đoán; policy đầy đủ nằm ở
-[phần 07](07-conflicts-questions-and-maintainer-guidance.md).
+A candidate with a clear identity but uncertain query value appears in review.
+The user may promote it, keep it as a Question or drop it. When sources conflict,
+the agent does not guess; the full policy is in
+[section 07](07-conflicts-questions-and-maintainer-guidance.md).
 
-AI quyết định embedded/Question/bỏ qua bằng hai gate trên và phải nêu được lý do
-từ evidence. P0 chỉ được bỏ qua bằng nhóm lý do hữu hạn MCP kiểm được. “Bỏ qua”
-chỉ có nghĩa không đưa candidate đó vào OKF của run hiện tại; nó không tạo ignore
-registry và Refresh sau vẫn có thể phát hiện lại.
+The agent chooses embedded/Question/ignored through the two gates and must state
+the evidence-based reason. P0 can be ignored only for a bounded set of reasons
+MCP can check. “Ignored” means only that the candidate was not included in this
+run's OKF; it creates no ignore registry and Refresh may discover it again.
 
-## Trạng thái implementation
+## Implementation status
 
-- Candidate cần identity ổn định, query/link value và exact evidence; không dùng
-  confidence score giả chính xác.
-- Initial Ingest hiện tạo sparse proposal và cho phép knowledge bổ sung dần.
-- Capability 046 thêm compact discovery groups, five-lane Inventory Receipt và
-  coverage validation để một sparse proposal không bỏ sót tín hiệu quan trọng
-  mà không giải thích.
-- Candidate chỉ sống trong proposal workflow; MVP không cần registry hoặc UI
-  review riêng. Cross-repository promotion thuộc Domain Enrichment.
+- A candidate needs stable identity, query/link value and exact evidence; it does
+  not use a falsely precise confidence score.
+- Initial Ingest creates a sparse proposal and allows knowledge to grow incrementally.
+- Capability 046 adds compact discovery groups, a five-lane Inventory Receipt and
+  coverage validation so a sparse proposal cannot omit important signals without
+  explanation.
+- Candidates live only in the proposal workflow; the MVP needs no separate
+  registry or review UI. Cross-repository promotion belongs to Domain Enrichment.

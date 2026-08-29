@@ -3,7 +3,7 @@
 - [x] T001 Inventory Vietnamese text across AgentBase-owned artifacts.
 - [x] T002 Define repository language, conversation behavior and exclusions.
 - [x] T003 Record translation-only invariants and recovery.
-- [ ] T004 Translate `docs/present/README.md` and pages 01–04.
+- [x] T004 Translate `docs/present/README.md` and pages 01–04.
 - [ ] T005 Translate `docs/present` pages 05–09.
 - [ ] T006 Translate `docs/present` pages 10–14.
 - [ ] T007 Translate `docs/design/README.md` and areas 01–03.

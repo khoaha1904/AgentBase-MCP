@@ -1,86 +1,91 @@
-# 04 — MCP lựa chọn schema cho concept thế nào?
+# 04 — How MCP selects a concept schema
 
-> Trạng thái: Catalog 7 và AWS Terraform/Terragrunt guidance đã implement.
+> Status: Catalog 7 and AWS Terraform/Terragrunt guidance are implemented.
 
-## Câu trả lời ngắn
+## Short answer
 
-Schema mô tả một ranh giới knowledge hữu ích. Provider/product chỉ là metadata;
-resource nội bộ thường được nhúng trong concept cha.
+A schema describes a useful knowledge boundary. Provider/product is metadata;
+an internal resource is normally embedded in its parent concept.
 
-Catalog 7 có tám role cho Initial Ingest:
+Catalog 7 has eight Initial Ingest roles:
 
 `Repository`, `Domain`, `System`, `Component`, `Function`, `Interface`, `Flow`
-và `Resource`.
+and `Resource`.
 
-`Function` phù hợp với một Lambda có runtime boundary riêng. SQS, SNS, table,
-bucket, load balancer hoặc host thường nằm trong `Embedded Knowledge` của
-Function/Component/System. Chỉ promote thành `Interface` hoặc `Resource` khi có
-shared contract, ownership, lifecycle hay operational value độc lập.
+`Function` fits a Lambda with its own runtime boundary. SQS, SNS, tables,
+buckets, load balancers or internal hosts usually belong in the `Embedded
+Knowledge` of a Function/Component/System. Promote one to `Interface` or
+`Resource` only when it has a shared contract, ownership, lifecycle or
+independent operational value.
 
-Một resource đủ điều kiện sẽ là một `Resource` node, không phải một schema
-AWS-specific. Node policy này provider-neutral: AWS SQS, GCP Pub/Sub hay Azure
-Service Bus đều dùng cùng role `Resource`; provider/product/resource type chỉ là
-technology metadata.
+An eligible resource becomes a `Resource` node, not an AWS-specific schema. This
+node policy is provider-neutral: AWS SQS, GCP Pub/Sub and Azure Service Bus all
+use the `Resource` role; provider/product/resource type remains technology metadata.
 
-## Agent ánh xạ công nghệ thế nào?
+## How does the agent map technology?
 
-- **Cloud Provider Profile** hiểu resource của AWS, Azure hoặc GCP.
-- **Detector Profile** hiểu cách source khai báo resource, ví dụ Terraform.
-- **Repository evidence** chứng minh dự án thực sự dùng resource đó.
-- **Tài liệu chính thức** chỉ giúp Agent hiểu field và behavior; nó không chứng
-  minh repository đang dùng công nghệ đó.
+- **Cloud Provider Profile** understands AWS, Azure or GCP resources.
+- **Detector Profile** understands how source declares a resource, for example Terraform.
+- **Repository evidence** proves the project actually uses that resource.
+- **Official documentation** helps the agent understand fields and behavior; it
+  does not prove that the repository uses the technology.
 
 ```text
 aws_lambda_function → Function concept + AWS/Lambda metadata
-aws_sqs_queue       → Resource node nếu shared/independently operated
-aws_sns_topic       → Resource node nếu có fan-out hoặc cross-boundary usage
-aws_dynamodb_table  → Resource node nếu có independent data boundary
+aws_sqs_queue       → Resource node if shared/independently operated
+aws_sns_topic       → Resource node if fan-out or cross-boundary usage exists
+aws_dynamodb_table  → Resource node if it has an independent data boundary
 ```
 
-Declaration hoặc technology detection một mình vẫn chỉ tạo embedded knowledge.
-Resource promotion cần stable identity, independent query/link value và evidence
-về ownership/lifecycle/usage. Chi tiết gate và outcome nằm ở
-[node eligibility](../design/04-schema-selection/06-node-eligibility-and-provider-coverage.md).
+A declaration or technology detection alone still creates only embedded
+knowledge. Resource promotion needs stable identity, independent query/link
+value and evidence of ownership/lifecycle/usage. The detailed gate and outcome
+are in [node eligibility](../design/04-schema-selection/06-node-eligibility-and-provider-coverage.md).
 
-Người dùng gọi một skill Ingest chung; Agent tự chọn profile phù hợp. Khi cần
-kiểm tra resource thật, người dùng login CLI và cho phép Provider Verification
-read-only. MCP không login hoặc lưu credential.
+The user calls one common Ingest skill; the agent selects the matching profile.
+When a real resource check is needed, the user logs in to the CLI and permits
+read-only Provider Verification. MCP does not log in or store credentials.
 
-## Một concept, một schema
+## One concept, one schema
 
-Một workload dùng một Queue không bắt buộc tạo hai concept. Queue chỉ có file
-riêng khi nó vượt qua promotion gate; nếu không, parent vẫn giữ role, technology
-và exact sources của Queue trong bảng embedded knowledge.
+A workload using one queue does not automatically need two concepts. The queue
+gets its own document only when it passes the promotion gate; otherwise the
+parent keeps the queue's role, technology and exact sources in its embedded
+knowledge table.
 
-Một service-level `System` có thể `consumes` một `Interface` khi source chứng
-minh runtime call/subscription. AgentBase không bắt tạo thêm `Component` trùng
-tên chỉ để biểu diễn dependency. Quan hệ này vẫn cần exact evidence và link;
-không được suy ra từ việc hai concept cùng nằm trong một Domain.
+A service-level `System` may `consumes` an `Interface` when source proves a
+runtime call or subscription. AgentBase does not create a duplicate `Component`
+just to represent a dependency. This relation still needs exact evidence and a
+link; it cannot be inferred merely because two concepts are in one Domain.
 
-Nếu bằng chứng chưa đủ cho schema cụ thể, Agent dùng schema chung hơn kèm
-limitation. Nếu vẫn không chắc, Agent giữ Question thay vì đoán.
+If evidence is insufficient for a specific schema, the agent uses a more
+general schema with a limitation. If it is still uncertain, it keeps a Question
+instead of guessing.
 
-## Phạm vi hiện tại
+## Current scope
 
-- Mỗi concept có đúng một schema provider-neutral.
-- AWS Profile v2 và Terraform-family Detector v1 đã có; Terraform và Terragrunt
-  được nhận diện, SAM/CloudFormation/YAML chưa hỗ trợ trong MVP.
-- Catalog, Cloud Provider Profile và Detector Profile có version độc lập. Đổi
-  mapping AWS/Terraform không tự làm thay đổi schema catalog hoặc buộc toàn Hub
-  Refresh.
-- Profile upgrade chỉ thêm mapping hoặc documentation không cần migration. Nếu
-  sửa mapping đã tạo Published knowledge, MCP tạo một Hub Migration Draft cho
-  toàn bộ concept bị ảnh hưởng; maintainer review và merge một migration PR.
-- Migration thiếu evidence không tự reclassify concept. Nó giữ knowledge hiện
-  tại và tạo Question để Refresh hoặc Domain Enrichment xử lý.
-- Catalog `7.0.0` đã clean-cutover từ thiết kế catalog 6 phức tạp hơn. Type cũ
-  vẫn readable theo open-world compatibility nhưng AgentBase không author mới.
-- AgentBase không author type đã retired; foreign unknown OKF types vẫn được đọc
-  và bảo toàn theo open-world compatibility.
-- AWS profile hiện có mapping cho Lambda, SQS, SNS, EventBridge, S3, RDS,
-  DynamoDB và EC2/VM hosting evidence. Node promotion được rollout theo nhóm
-  messaging trước, rồi data resources; không promote mọi resource declaration.
-- Azure/GCP profile, semantic profile migration và provider verification vẫn là
-  phần mở rộng sau MVP. Khi thêm provider, giữ nguyên catalog/identity/relation
-  contract và chỉ bổ sung profile, parser, evidence adapter cùng conformance
-  fixtures; không tạo schema hoặc predicate theo provider.
+- Each concept has exactly one provider-neutral schema.
+- AWS Profile v2 and Terraform-family Detector v1 are implemented; Terraform
+  and Terragrunt are recognized, while SAM/CloudFormation/YAML are not supported
+  in the MVP.
+- Catalog, Cloud Provider Profile and Detector Profile have independent versions.
+  Changing AWS/Terraform mapping does not automatically change the catalog schema
+  or require a full Hub Refresh.
+- A profile upgrade that only adds mapping or documentation needs no migration.
+  If it changes mapping that produced Published knowledge, MCP creates a Hub
+  Migration Draft for all affected concepts; a maintainer reviews and merges one
+  migration PR.
+- Missing evidence during migration does not silently reclassify a concept. The
+  current knowledge remains and a Question is created for Refresh or Enrichment.
+- Catalog `7.0.0` cleanly cut over from the more complex catalog 6 design. Old
+  types remain readable through open-world compatibility, but AgentBase does not
+  author new ones.
+- AgentBase does not author retired types; unknown foreign OKF types remain
+  readable and preserved through open-world compatibility.
+- The AWS profile currently maps Lambda, SQS, SNS, EventBridge, S3, RDS,
+  DynamoDB and EC2/VM hosting evidence. Node promotion rolls out across messaging
+  first, then data resources; not every resource declaration is promoted.
+- Azure/GCP profiles, semantic profile migration and provider verification remain
+  post-MVP expansion. A new provider keeps the catalog/identity/relation contract
+  and adds only a profile, parser, evidence adapter and conformance fixtures; it
+  does not create provider-specific schemas or predicates.
