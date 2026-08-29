@@ -1,88 +1,95 @@
 # 01.01 — Skill orchestration
 
-> Trạng thái: Baseline orchestration và Capability 046 Init-stage receipt
-> handoff đã implement; released-skill qualification còn pending.
+> Status: Baseline orchestration and Capability 046 Init-stage receipt handoff
+> are implemented; released-skill qualification remains pending.
 
-## Quyết định
+## Decision
 
-`agentbase-query`, Ingest và Refresh là các public workflow entrypoint. Agent
-chạy skill và quyết định bước điều tra tiếp theo; MCP cung cấp bounded tools và
-dữ liệu, không tự diễn giải repository hoặc tự chọn concept.
+`agentbase-query`, Ingest and Refresh are the public workflow entry points. The
+Agent runs the skill and decides the next investigation step; MCP supplies
+bounded tools and data and does not interpret the repository or select concepts
+automatically.
 
 ```text
 Public workflow skill
         ↓
-Agent điều phối từng bước
+Agent coordinates each step
         ↓
-MCP: graph, search, trace, snippet và evidence
+MCP: graph, search, trace, snippet and evidence
         ↓
-Agent áp dụng concept/schema rules
+Agent applies concept/schema rules
 ```
 
-## Trách nhiệm
+## Responsibilities
 
 ### Skill
 
-- dùng Published Hub trước cho câu hỏi overview/Domain;
-- chỉ gọi Code Graph khi câu hỏi thật sự cần source local;
-- quy định thứ tự và điều kiện chuyển bước;
-- yêu cầu domain confirmation trước authoring;
-- gọi workflow Code Graph khi cần cấu trúc hoặc implementation evidence;
-- chuyển bounded evidence sang concept discovery và OKF authoring;
-- dừng trước Accept/Publish nếu chưa có authorization tương ứng.
+- use the Published Hub first for overview/Domain questions;
+- call Code Graph only when the question genuinely needs local source;
+- define step order and transition conditions;
+- require Domain confirmation before authoring;
+- invoke the Code Graph workflow when structure or implementation evidence is
+  needed;
+- pass bounded evidence into concept discovery and OKF authoring;
+- stop before Accept/Publish without the corresponding authorization.
 
 ### Agent
 
-- chọn câu hỏi graph tiếp theo dựa trên kết quả vừa nhận;
-- phân biệt signal, candidate và evidence;
-- quay lại exact source trước khi tạo knowledge claim;
-- giữ limitation hoặc Question khi evidence chưa đủ.
+- choose the next graph question from the latest result;
+- distinguish signals, candidates and evidence;
+- return to exact source before creating a knowledge claim;
+- retain a limitation or Question when evidence is insufficient.
 
 ### MCP
 
-- bind một repository root được phép;
-- quản lý provider lifecycle và freshness;
-- trả graph result, source snippet, validation và Hub operations có giới hạn;
-- tạo compact machine Discovery Seed và validate coverage/disposition; không
-  diễn giải semantic meaning thay Agent;
-- không tự quyết định Domain, concept, schema hoặc truth.
+- bind one permitted repository root;
+- manage provider lifecycle and freshness;
+- return bounded graph results, source snippets, validation and Hub operations;
+- create a compact machine Discovery Seed and validate coverage/disposition,
+  without interpreting semantic meaning for the Agent;
+- never decide Domain, concept, schema or truth automatically.
 
-## Chọn repository trong workspace
+## Select a repository in the workspace
 
-Một thư mục cha chứa nhiều Git repository chỉ là routing scope. Skill chọn
-repository theo thứ tự đơn giản sau:
+A parent directory containing multiple Git repositories is only a routing
+scope. The skill selects a repository in this simple order:
 
-1. path hoặc repository được người dùng nêu rõ;
-2. Git root chứa working directory hiện tại;
-3. repository duy nhất mà Hub xác định và host đã biết có checkout trong
-   workspace được người dùng mở;
-4. nếu vẫn còn nhiều lựa chọn, hỏi người dùng.
+1. a path or repository explicitly named by the user;
+2. the Git root containing the current working directory;
+3. the only repository identified by the Hub for which the host knows a
+   checkout exists in the user-opened workspace;
+4. if multiple choices remain, ask the user.
 
-Agent không tự quét các thư mục tùy ý trên máy. Một câu hỏi cần source từ nhiều
-repository được xử lý tuần tự, đóng session hiện tại trước khi bind repo tiếp
-theo. Không tạo combined graph.
+The Agent does not scan arbitrary machine directories. A question needing
+source from multiple repositories is processed sequentially, closing the
+current session before binding the next repository. It does not create a
+combined graph.
 
-## Tái sử dụng skill hiện tại
+## Reuse current skills
 
-Public skill điều phối hai workflow nội bộ hiện có thay vì copy chúng:
+The public skill coordinates two existing internal workflows rather than
+copying them:
 
-- `use-codebase-memory` cho map, search, trace và source retrieval;
-- `agentbase-okf` cho authoring, validation và review boundary.
+- `use-codebase-memory` for map, search, trace and source retrieval;
+- `agentbase-okf` for authoring, validation and the review boundary.
 
-Public `agentbase-ingest` vẫn là entrypoint duy nhất. Nó bắt đầu Preflight,
-Discover, Investigate, Author, Validate; không thêm prompt người dùng hoặc public
-scanner skill/tool. Chỉ Domain, repository identity hoặc scope/authority
-ambiguity được hỏi blocking; uncertainty khác trở thành Question/limitation.
+Public `agentbase-ingest` remains the only entry point. It starts Preflight,
+Discover, Investigate, Author and Validate without adding a user-written prompt
+or public scanner skill/tool. Only Domain, repository identity or
+scope/authority ambiguity is blocking; other uncertainty becomes a
+Question/limitation.
 
-Các rule chi tiết vẫn có một owner. Umbrella skill chỉ định tuyến và truyền kết
-quả giữa hai workflow; không import nội dung bằng cách sao chép nguyên skill.
+Detailed rules retain one owner. The umbrella skill only routes and passes
+results between the two workflows; it does not import content by copying an
+entire skill.
 
 ## Non-goals
 
-- Không thêm prompt người dùng phải tự viết.
-- Không để MCP chạy một fixed autonomous scan và tự tạo concept. Machine Seed
-  chỉ capture/group structural signals; Agent vẫn điều tra và disposition.
-- Không ingest raw graph vào Hub.
-- Không clone repository remote cho ordinary query. Hub Init được phép tạo
-  detached worktree/cache từ exact authorized remote default commit.
-- Không gộp Accept hoặc Publish vào quyền Ingest/Refresh mặc định.
+- Do not add a prompt that the user must write manually.
+- Do not let MCP run a fixed autonomous scan and create concepts. Machine Seed
+  only captures/groups structural signals; the Agent still investigates and
+  assigns dispositions.
+- Do not ingest a raw graph into the Hub.
+- Do not clone a remote repository for ordinary query. Hub Init may create a
+  detached worktree/cache for the exact authorized remote default commit.
+- Do not combine Accept or Publish with default Ingest/Refresh authorization.

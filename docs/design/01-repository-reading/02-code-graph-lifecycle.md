@@ -1,59 +1,62 @@
 # 01.02 — Code Graph lifecycle
 
-> Trạng thái: Local managed graph lifecycle và lazy host routing implemented.
+> Status: Local managed graph lifecycle and lazy host routing are implemented.
 
-## Quyết định
+## Decision
 
-Code Graph có process/session tạm thời và cache local có thể tái sử dụng. Graph
-không phải Hub knowledge và không được publish. Một Git root là một graph unit:
-monorepo dùng một graph, còn các Git repository độc lập không dùng chung graph.
+Code Graph has a temporary process/session and reusable local cache. The graph
+is not Hub knowledge and is never published. One Git root is one graph unit: a
+monorepo uses one graph, while independent Git repositories do not share one.
 
 ```text
-bắt đầu workflow cần exact source
+start workflow that needs exact source
         ↓
-kiểm tra repository identity + source state + engine identity
+check repository identity + source state + engine identity
         ↓
 fresh → reuse cache        changed/forced → refresh graph
         ↓
-nhiều bounded queries trong cùng repository run
+multiple bounded queries in the same repository run
         ↓
-đóng process/session; giữ cache và freshness receipt
+close process/session; retain cache and freshness receipt
 ```
 
-## Identity và freshness
+## Identity and freshness
 
-- Mỗi repository/provider workspace có namespace local riêng.
-- Freshness dựa trên repository identity, commit hoặc dirty digest, graph engine
-  identity và cache namespace.
-- Source không đổi thì reuse graph; source đổi, receipt không hợp lệ hoặc owner
-  yêu cầu refresh thì index lại.
-- Reuse chỉ bỏ qua indexing. Query và source-integrity checks vẫn chạy.
+- Each repository/provider workspace has its own local namespace.
+- Freshness is based on repository identity, commit or dirty digest, graph
+  engine identity and cache namespace.
+- Reuse the graph when source is unchanged; re-index when source changes, the
+  receipt is invalid or the owner requests refresh.
+- Reuse skips indexing only. Query and source-integrity checks still run.
 
 ## Lifetime
 
-- Việc mở workspace hoặc query Published Hub không tự tạo graph.
-- Một repository evidence round bind đúng một admitted source root/revision;
-  Hub Init có thể dùng detached remote-default worktree đã được Preflight chọn.
-- Agent được query nhiều lần trong round; nếu workflow cần repo khác, session cũ
-  phải đóng sạch trước khi bind repo tiếp theo.
-- Provider process/session phải đóng ở success, failure và cancellation.
-- Cache và freshness receipt được giữ ngoài authored source để lần sau reuse.
-- Cache mất hoặc hỏng chỉ làm graph phải rebuild; không làm mất Hub knowledge.
+- Opening a workspace or querying the Published Hub does not create a graph.
+- One repository evidence round binds exactly one admitted source root/revision;
+  Hub Init may use the detached remote-default worktree selected by Preflight.
+- The Agent may query repeatedly in a round; if another repository is needed,
+  the old session must close cleanly before binding the next one.
+- Provider process/session must close on success, failure and cancellation.
+- Cache and freshness receipts remain outside authored source for later reuse.
+- Missing or corrupt cache only requires rebuilding the graph; it does not lose
+  Hub knowledge.
 
 ## Boundary
 
-- Không watcher hoặc daemon mặc định.
-- Không prebuild mọi graph trong workspace và không gộp nhiều graph.
-- Không copy raw graph, provider cache hoặc freshness receipt vào Local Draft/Hub.
-- Không clone remote repository cho ordinary query/arbitrary discovery. Exact
-  remote-default materialization của Hub Init là bounded workflow input, không
-  background clone authority.
-- Không reuse graph giữa hai repository identity chỉ vì source trông giống nhau.
-- Failed refresh không được giả vờ cache mới là fresh; caller nhận failure rõ và
-  có thể retry explicit.
+- No default watcher or daemon.
+- Do not prebuild every graph in a workspace or combine multiple graphs.
+- Do not copy a raw graph, provider cache or freshness receipt into a Local
+  Draft/Hub.
+- Do not clone a remote repository for ordinary query/arbitrary discovery.
+  Exact remote-default materialization for Hub Init is a bounded workflow input,
+  not background clone authority.
+- Do not reuse a graph across two repository identities merely because their
+  source looks similar.
+- A failed refresh must not mark a new cache as fresh; the caller receives a
+  clear failure and may retry explicitly.
 
 ## Baseline reuse
 
-Thiết kế giữ nguyên owned provider workspace, graph freshness receipt và
-cleanup contract hiện tại. Low-level implementation chỉ cần để umbrella skill
-định tuyến đúng lifecycle; không cần một cache manager mới.
+The design preserves the current owned provider workspace, graph freshness
+receipt and cleanup contract. Low-level implementation only needs the umbrella
+skill to route into the correct lifecycle; it does not need a new cache manager.

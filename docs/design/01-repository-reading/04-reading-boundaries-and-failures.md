@@ -1,78 +1,84 @@
 # 01.04 — Reading boundaries and failures
 
-> Trạng thái: Baseline, Capability 046 remote-default Init isolation và bounded
-> discovery census đã implement.
+> Status: Baseline, Capability 046 remote-default Init isolation and bounded
+> discovery census are implemented.
 
 ## Reading authority
 
-- Một Git monorepo bind một graph ở Git root; project con là scope/path bên
-  trong graph đó.
-- Thư mục cha chứa nhiều Git repository độc lập chỉ là routing scope, không phải
-  repository root hoặc graph identity.
-- Một evidence round bind đúng một admitted source root và exact revision.
-- Ordinary query/source work dùng repository local đã được chọn. Hub Init bind
-  remote default commit ở Preflight; current checkout chỉ reuse khi clean và
-  exact-match, còn lại dùng detached worktree/cache tạm mà không checkout/stash
-  workspace người dùng.
-- Source read phải ở trong admitted root; không follow path/symlink thoát ra ngoài.
-- Không tự clone remote repository hoặc mở rộng từ repo sang cả workspace.
-- Không tự recursive scan máy/workspace để tìm repository ngoài phạm vi người
-  dùng đã mở hoặc chỉ định.
-- Explicit `agentbase-scan` được phép inventory bounded Git roots bên trong đúng
-  workspace người dùng chọn. Nó dừng tại mỗi Git root, không đọc sâu source và
-  không index Code Graph; đây không phải background/arbitrary scan.
-- Multi-repository command truyền danh sách root rõ ràng và xử lý mỗi root như
-  một unit riêng; phần 09 sở hữu batch orchestration.
+- One Git monorepo binds one graph at its Git root; a child project is a
+  scope/path inside that graph.
+- A parent directory containing independent Git repositories is a routing scope,
+  not a repository root or graph identity.
+- One evidence round binds exactly one admitted source root and exact revision.
+- Ordinary query/source work uses the selected local repository. Hub Init binds
+  the remote default commit during Preflight; it reuses the current checkout
+  only when clean and exactly matching, otherwise it uses a detached temporary
+  worktree/cache without checking out or stashing the user's workspace.
+- Source reads must remain inside the admitted root and must not follow an
+  escaping path/symlink.
+- Do not auto-clone a remote repository or expand one repository into the entire
+  workspace.
+- Do not recursively scan the machine/workspace for repositories outside the
+  user-opened or explicitly selected scope.
+- Explicit `agentbase-scan` may inventory bounded Git roots within exactly the
+  user-selected workspace. It stops at each Git root, does not deeply read
+  source and does not index a Code Graph; this is not a background/arbitrary
+  scan.
+- A multi-repository command passes an explicit root list and handles each root
+  as a separate unit; section 09 owns batch orchestration.
 
 ## Bounded discovery census
 
-Capability 046 Discover kiểm kê root README, primary manifests, API specs,
-Terraform/Terragrunt, Docker/deploy, CI/runtime config và graph-derived entrypoint,
-route/event/trigger, boundary, integration/data/channel groups. `docs/` chỉ được
-inspect index/filename/heading trước rồi đọc sâu tài liệu liên quan; generated,
-vendor và build output bị loại, lockfile chỉ là hint. Seed giữ compact groups,
-counts và bounded source samples thay vì raw graph/source inventory.
+Capability 046 Discover inventories the root README, primary manifests, API
+specifications, Terraform/Terragrunt, Docker/deploy, CI/runtime configuration and
+graph-derived entry-point, route/event/trigger, boundary and
+integration/data/channel groups. For `docs/`, it first inspects indexes,
+filenames and headings, then reads only related documents deeply; generated,
+vendor and build output are excluded, and lockfiles are hints only. Seed retains
+compact groups, counts and bounded source samples instead of raw graph/source
+inventory.
 
 ## Partial fallback
 
-Graph là discovery accelerator, không phải điều kiện duy nhất để exact source
-trở thành evidence:
+Graph is a discovery accelerator, not the only way exact source becomes
+evidence:
 
-- graph thiếu coverage một vùng thì Agent dùng bounded source search/read ở vùng
-  đó;
-- file hoặc language không được provider hỗ trợ có thể dùng docs/config/source
-  trực tiếp;
-- mọi fallback claim vẫn cần exact source reference;
-- proposal ghi rõ coverage limitation và tạo Question khi phần thiếu có thể làm
-  thay đổi knowledge quan trọng.
+- when graph coverage is missing for one area, the Agent uses bounded source
+  search/read in that area;
+- an unsupported file or language may use docs/config/source directly;
+- every fallback claim still needs an exact source reference;
+- the proposal records the coverage limitation and creates a Question when the
+  missing portion may change important knowledge.
 
-Partial result không được mô tả như full repository coverage. Missing graph row
-không chứng minh một concept/relation không tồn tại.
+A partial result must not be described as complete repository coverage. A
+missing graph row does not prove that a concept/relation does not exist.
 
 ## Failure outcomes
 
-### Tiếp tục với partial Draft
+### Continue with a partial Draft
 
-- graph query bị truncate hoặc một vùng unsupported;
-- một candidate không resolve được nhưng candidate khác có exact evidence;
-- source search fallback cung cấp bounded evidence;
-- failure chỉ làm giảm completeness, không phá source integrity.
+- a graph query is truncated or one area is unsupported;
+- one candidate cannot resolve while another has exact evidence;
+- source-search fallback supplies bounded evidence;
+- the failure reduces completeness without breaking source integrity.
 
-### Dừng repository run
+### Stop the repository run
 
-- repository/source authority không hợp lệ;
-- Hub Init không resolve/access được exact remote default branch;
-- source thay đổi trong lúc evidence round đang chạy;
-- provider cleanup không xác định được;
-- không còn exact evidence đáng tin nào để tạo useful Draft;
-- evidence/proposal state không thể validate hoặc recovery an toàn.
+- repository/source authority is invalid;
+- Hub Init cannot resolve/access the exact remote default branch;
+- source changes during the evidence round;
+- provider cleanup is uncertain;
+- no reliable exact evidence remains for a useful Draft;
+- evidence/proposal state cannot be validated or recovered safely.
 
-Batch run không rollback Draft hoàn chỉnh của repository khác. Repository lỗi có
-failure report riêng và có thể retry; phần 09 quyết định checkpoint/idempotency.
+A batch run does not roll back a completed Draft from another repository. A
+failed repository gets its own failure report and can be retried; section 09
+decides checkpointing/idempotency.
 
 ## Baseline impact
 
-Boundary, mutation detection và cleanup hiện tại được giữ nguyên. Graph round
-trả partial cùng limitations khi evidence provider hỗ trợ một phần; integrity,
-source mutation và runtime/cleanup failure vẫn dừng run. Không cần provider
-rewrite hoặc một recovery framework riêng.
+The current boundary, mutation detection and cleanup remain. A graph round
+returns a partial result with limitations when the evidence provider supports
+only part of the source; integrity, source mutation and runtime/cleanup failures
+still stop the run. No provider rewrite or separate recovery framework is
+needed.

@@ -1,11 +1,11 @@
 # 01.03 — Source evidence resolution
 
-> Trạng thái: Exact local source/reference boundary implemented.
+> Status: The exact local source/reference boundary is implemented.
 
-## Quyết định
+## Decision
 
-Code Graph tìm candidate; exact source mới hỗ trợ claim. Hub lưu knowledge,
-bounded provenance và reference, không lưu source hoặc graph thứ hai.
+Code Graph finds candidates; exact source supports claims. The Hub stores
+knowledge, bounded provenance and references, not source or a second graph.
 
 ```text
 graph candidate
@@ -17,43 +17,45 @@ knowledge claim + source reference
 optional small observed snapshot
 ```
 
-## Evidence bắt buộc
+## Required evidence
 
-Attributed claim phải trỏ được về repository identity, source revision và
-relative file path; line span là optional evidence hint. Graph summary không có exact
-source chỉ là discovery signal; nó không đủ để trở thành claim.
+An attributed claim must resolve to repository identity, source revision and a
+relative file path; a line span is an optional evidence hint. A graph summary
+without exact source is only a discovery signal and cannot become a claim.
 
-Không resolve được exact source thì Agent giữ limitation, candidate hoặc
-Question. Agent không copy raw snippet vào Hub để bù cho reference yếu.
+When exact source cannot be resolved, the Agent retains a limitation, candidate
+or Question. It does not copy a raw snippet into the Hub to compensate for a
+weak reference.
 
-## Snapshot nhỏ
+## Small snapshots
 
-Snapshot là tùy chọn để Markdown vẫn hữu ích khi con người đọc trực tiếp:
+A snapshot is optional and keeps Markdown useful when read directly by a person:
 
-- giá trị hiện trực tiếp trong code/config/docs có thể được ghi ngay;
-- chỉ giữ scalar hoặc identifier nhỏ có knowledge value;
-- luôn kèm source revision và observed time;
-- wording phải là `observed`, không tuyên bố đó là current value;
-- không snapshot secret, raw source, config dump, provider response hoặc graph.
+- a value visible directly in code/config/docs can be recorded immediately;
+- retain only a small scalar or identifier with knowledge value;
+- always include the source revision and observed time;
+- wording must say `observed`, not claim it is the current value;
+- never snapshot a secret, raw source, config dump, provider response or graph.
 
-Tên resource, ARN, region hoặc account ID có thể là identity/metadata hữu ích,
-nhưng chỉ ghi khi source hoặc provider evidence xác minh được.
+A resource name, ARN, region or account ID may be useful identity/metadata, but
+is recorded only when source or provider evidence verifies it.
 
 ## Provider evidence
 
-Ingest/Refresh không gọi provider CLI chỉ để lấp dữ liệu còn thiếu. Nếu tên,
-ARN hoặc non-sensitive value cần AWS/Azure CLI mới lấy được, Ingest giữ
-reference/candidate hoặc Question và tiếp tục.
+Ingest/Refresh does not call a provider CLI merely to fill missing data. If a
+name, ARN or non-sensitive value requires AWS/Azure CLI, Ingest retains a
+reference/candidate or Question and continues.
 
-Domain Enrichment sau nhiều repository mới:
+After multiple repositories exist, Domain Enrichment:
 
-1. dùng provider skill sau khi user tự login CLI;
-2. resolve bounded candidates của cả batch;
-3. bổ sung observed snapshot, identity hoặc relation evidence;
-4. đưa mọi thay đổi vào Domain Enrichment Draft để review/publish riêng.
+1. uses a provider skill after the user logs into the CLI;
+2. resolves bounded candidates for the batch;
+3. adds observed snapshots, identity or relation evidence;
+4. puts every change into a separate Domain Enrichment Draft for
+   review/publication.
 
 ## Baseline gap
 
-Current runtime đã hỗ trợ optional bounded snapshot nhưng còn mang semantic live
-target. Phần 08 clean-cutover sang file-level observed values; không mở quyền lưu
-arbitrary source content.
+The current runtime supports optional bounded snapshots but still carries live-
+target semantics. Section 08 cleanly cuts over to file-level observed values; it
+does not grant permission to store arbitrary source content.
