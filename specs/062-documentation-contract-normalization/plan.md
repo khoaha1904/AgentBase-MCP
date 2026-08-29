@@ -24,9 +24,10 @@ Existing completed specs and links are valuable history and must not be rewritte
 - Add baseline/landed references only to new or actively changed specs.
 - Fix the current-authority wording in `docs/design/README.md`.
 
-## Phase 3 — optional directory migration
+## Phase 3 — optional directory migration (deferred)
 
-Only if Phase 2 still leaves recurring confusion:
+The Phase 2 mapping removed the ambiguity without moving files. Keep this phase
+deferred until a later pilot proves the old names still cause operational errors:
 
 - Map `present` product pages to `product/` and numbered capability pages to
   `capabilities/` before moving anything.

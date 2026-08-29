@@ -8,6 +8,6 @@
 - [x] T006 Audit and map existing numbered docs without moving them.
 - [x] T007 Correct current-authority wording in `docs/design/README.md`.
 - [x] T008 Add baseline/landed metadata to the next actively changed spec.
-- [ ] T009 Decide whether directory rename remains necessary after the mapping pilot.
+- [x] T009 Decide whether directory rename remains necessary after the mapping pilot (deferred; mapping is sufficient).
 - [ ] T010 Apply provider-neutral contract review before the next provider-expansion capability.
 - [x] T011 Run full verification and record the landed snapshot.

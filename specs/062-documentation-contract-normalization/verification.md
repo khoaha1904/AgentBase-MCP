@@ -1,10 +1,12 @@
 # Verification: documentation contract normalization
 
-## Phase 1 result
+## Result
 
-The current-path governance slice is complete. It changes documentation and
+The governance and mapping slices are complete. They change documentation and
 agent workflow only; no runtime behavior, tool contract, provider, credential
-or storage path changed.
+or storage path changed. Directory rename is explicitly deferred because the
+semantic mapping is clear and no broken-link or operational problem requires
+the migration yet.
 
 ## Baseline and landed snapshot
 
@@ -30,8 +32,10 @@ or storage path changed.
   this slice.
 - Existing numbered areas are mapped without moving or rewriting historical
   files. Spec 062 records current references plus baseline SHAs.
+- The optional directory rename was reviewed and deferred after mapping.
 
 ## Remaining work
 
-Phase 2 must map existing numbered documents and correct the current-authority
-wording in `docs/design/README.md` before any optional directory rename.
+Provider-neutral contract review remains the next capability-specific gate;
+directory rename is revisited only if the provider-expansion pilot exposes
+recurring path confusion.

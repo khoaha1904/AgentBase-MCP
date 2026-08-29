@@ -1,7 +1,7 @@
 # Feature Specification: documentation contract normalization
 
-**Status**: In progress. Phase 1 defines current documentation authority,
-impact review and historical SDD reference rules without moving existing files.
+**Status**: Complete. The governance and mapping slices are implemented;
+directory rename remains an explicit deferred decision.
 
 ## Objective
 

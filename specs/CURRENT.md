@@ -1,11 +1,11 @@
 # Current capability
 
-Active capability: [`062-documentation-contract-normalization`](062-documentation-contract-normalization/spec.md)
+Active capability: None.
 
-Phase 1 defines documentation authority and migration-safe historical
-references. It changes no runtime behavior and deliberately keeps existing
-`docs/present/`, `docs/design/` and completed specs in place.
-
+Capability 062 documentation contract normalization is complete. It defines
+current-vs-historical authority, impact review, baseline Git references and the
+semantic mapping of existing docs without moving old paths. Directory rename is
+deferred until a later pilot demonstrates a concrete need.
 
 Most recent completed: [`061-mcp-modernization`](061-mcp-modernization/spec.md) —
 MCP `2026-07-28` is implemented for era-negotiating stdio and reusable
