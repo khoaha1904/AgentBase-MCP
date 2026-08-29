@@ -1,6 +1,7 @@
 # Feature Specification: MCP modern protocol readiness
 
-**Status**: Phases 1–4 implemented; remote authorization remains deferred.
+**Status**: Complete. Modern stdio/HTTP protocol support is implemented; remote
+authorization remains a deployment-specific deferred capability.
 
 ## Objective
 

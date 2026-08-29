@@ -120,6 +120,9 @@ The reusable Streamable HTTP adapter uses `createMcpHandler` with per-request
 server construction and stateless legacy fallback. Opening a production port,
 OAuth/OIDC authorization and the Tasks extension are deferred until a concrete
 remote deployment requires them. Legacy HTTP+SSE is not a new design target.
+The stdio launcher uses the SDK `serveStdio` factory so one connection is
+pinned to its negotiated modern or legacy era without duplicating tool
+registration.
 
 - Exact production package dependencies are
   `@modelcontextprotocol/client@2.0.0`,

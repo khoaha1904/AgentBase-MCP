@@ -1,10 +1,13 @@
 # Current capability
 
-Active capability: [`061-mcp-modernization`](061-mcp-modernization/spec.md) —
-standardize the MCP protocol policy on the official 2026-07-28 revision while
-preserving legacy stdio compatibility; modern HTTP/auth remain deferred.
+Active capability: None.
 
-Most recent completed: [`060-end-to-end-ait-qualification`](060-end-to-end-ait-qualification/spec.md) —
+Most recent completed: [`061-mcp-modernization`](061-mcp-modernization/spec.md) —
+MCP `2026-07-28` is implemented for era-negotiating stdio and reusable
+stateless Streamable HTTP, with legacy compatibility, JSON Schema 2020-12 and
+additive structured results. Remote OAuth and Tasks remain demand-driven.
+
+Previous completed: [`060-end-to-end-ait-qualification`](060-end-to-end-ait-qualification/spec.md) —
 qualify the complete Feature → US → Tasks lifecycle with and without AgentBase;
 the first real pair is retained at owner-review gate.
 
