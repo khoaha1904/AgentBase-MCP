@@ -54,6 +54,80 @@ anti-dead-spec gap loop are defined in the repository
 organization and baseline/impact vocabulary; it does not create a second
 lifecycle. Every implementation session must follow the repository rule.
 
+## Documentation contract
+
+AgentBase uses four decision levels plus validation evidence:
+
+```text
+Product Contract       WHAT
+        ↓
+Architecture Contract  SYSTEM HOW
+        ↓
+Capability Contract    BEHAVIOR / BOUNDARY
+        ↓
+Implementation Contract CODE HOW
+        ↓
+Validation Evidence    TEST / VERIFY
+```
+
+The current paths map to those levels as follows:
+
+| Level | Current location | Responsibility |
+|---|---|---|
+| Product Contract | `docs/present/` | Product outcome, scope, authority, workflows and non-goals |
+| Architecture Contract | `docs/design/00-architecture.md` | System boundaries, ownership, data/state flow, runtime shape and architectural trade-offs |
+| Capability Contract | `docs/design/<area>/` | Capability behavior, contracts, bounds, failure/recovery and `AB-*` requirements |
+| Implementation Contract | Affected capability design or spec plan | Concrete modules, libraries, interfaces and coding/migration decisions for one accepted change |
+| Validation Evidence | Tests, verification reports and `npm run verify` output | Evidence that implementation matches accepted contracts |
+
+`docs/design/00-architecture.md` may mention implementation baseline as
+evidence, but architectural decisions remain separate from file-, class- and
+package-level implementation choices. A separate global implementation tree is
+not required unless repeated cross-capability decisions justify it.
+
+## Change impact gate
+
+Every change is classified before implementation. Read only the levels that can
+be affected, then check upward before accepting a lower-level decision:
+
+| Change shape | Required review |
+|---|---|
+| Internal implementation with unchanged behavior | Affected capability and implementation contract |
+| Tool, workflow or user outcome change | Product, architecture and affected capability |
+| Boundary, ownership, state or data-flow change | Architecture and affected capability |
+| Schema, provider, security, credential, migration or recovery change | Product, architecture and affected capability |
+| Package, module pattern or file-structure change only | Implementation contract |
+| Tests or documentation with no contract change | Affected artifact only |
+
+If a lower-level change reveals an upstream gap, stop and route the decision to
+the owner of that upstream contract. Passing tests do not authorize silently
+changing product scope or architecture.
+
+## Current versus historical references
+
+`docs/` is mutable current truth. `specs/<id>/` is an immutable Spec Kit/SDD
+change package containing the delta, plan, tasks and verification for one
+capability change; it does not replace or duplicate all current docs.
+
+New specs should keep both kinds of reference:
+
+```yaml
+current_refs:
+  - docs/present/00-product-scope-and-authority.md
+baseline:
+  - path: docs/present/00-product-scope-and-authority.md
+    commit: <git-sha-before-implementation>
+```
+
+`current_refs` is for navigation and may change when current docs evolve.
+`baseline` preserves the exact historical input and must use a Git commit SHA.
+Completed specs are not rewritten when current docs change. A later behavior
+change creates a new spec with `supersedes` or `amends`; its `verification.md`
+may record the landed/source-snapshot commit after completion.
+
+During a future directory rename, update current links atomically and keep an
+old-path README redirect or mapping. Do not bulk-edit historical spec content.
+
 ## Current checkpoint
 
 - Catalog 7 Initial Ingest, single-repository Refresh, Batch Initial Ingest and

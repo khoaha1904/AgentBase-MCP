@@ -46,6 +46,13 @@ The following lifecycle is mandatory for every product, architecture, runtime,
 schema, provider or workflow change. `AGENTS.md` is the canonical operating rule;
 other documents may explain a capability but must not redefine this sequence.
 
+Before starting, classify the change with the
+[documentation contract and change impact gate](docs/README.md#documentation-contract).
+Review only the affected levels, but always check upward when a lower-level
+decision could change behavior, scope, ownership, boundary, schema, security,
+migration, recovery or lifecycle. Do not treat passing tests as permission to
+silently redefine an upstream contract.
+
 ### Before implementation
 
 1. **High-level decision** — update the affected `docs/present/` document first.
