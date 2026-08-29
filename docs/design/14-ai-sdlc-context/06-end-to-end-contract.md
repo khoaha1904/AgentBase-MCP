@@ -1,15 +1,15 @@
 # 14.06 — End-to-end benchmark contract
 
-## Input và tool boundary
+## Input and tool boundary
 
-Input là Feature `feature:readiness-health-contract` cùng Epic/Bug context và
+Input is Feature `feature:readiness-health-contract` with Epic/Bug context and
 source revision `98ee8e693a5ebc4b14f3dfe731bdc786637c1eb4`. Existing
-`us:health-endpoint` không được gọi.
+`us:health-endpoint` is not called.
 
-Without arm chỉ được gọi tracker read tools. With arm được gọi thêm
+The without arm may call only tracker read tools. The with arm may also call
 `search_hub_okf`, `read_hub_okf_concept` và tám read/index Code Graph tools,
-index đúng một local root. Shell, mutation, cross-repository index, source
-escape và budget breach làm arm incomplete.
+and index exactly one local root. Shell, mutation, cross-repository index,
+source escape and budget breach make an arm incomplete.
 
 ## Output
 
@@ -35,13 +35,14 @@ tool trace; direct arm may cite tracker IDs only and cannot cite source facts.
   source-specific task boundaries and test/verification acceptance.
 - Optional: documentation or rollout detail only when evidence supports it.
 
-## Evidence hiện tại
+## Current evidence
 
-Pair `2026-08-29T05-45-00Z` đã chạy đủ hai arm và comparison là `needs_review`:
-full AgentBase giữ critical quality, thêm source-specific task boundary và
-compatibility outcome. Một lần so sánh ban đầu bị incomplete vì isolated Hub
-chưa được seed và path line-span chưa normalize; runner đã sửa, không sửa raw
-evidence. Owner vẫn phải đọc output trước khi chấp nhận.
+Pair `2026-08-29T05-45-00Z` ran both arms and comparison is `needs_review`:
+full AgentBase preserves critical quality and adds source-specific task boundary
+and compatibility outcome. An earlier comparison was incomplete because the
+isolated Hub was unseeded and path line spans were not normalized; the runner was
+fixed without changing raw evidence. The owner must still inspect output before
+acceptance.
 
 ## Deferred
 
