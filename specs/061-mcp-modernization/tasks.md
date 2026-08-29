@@ -13,6 +13,7 @@
 - [x] T011 Extract benchmark storage/admission from the oversized runner.
 - [x] T012 Verify benchmark scoring and public imports remain compatible.
 - [x] T013 Verify modern discovery and legacy stateless initialization on HTTP.
+- [x] T014 Extract reusable agent command/prompt portability from benchmark execution.
 
 ## Result
 
