@@ -1,11 +1,11 @@
 # 12 — Version scope
 
-> Trạng thái: MVP capability boundary implemented and audited offline.
+> Status: MVP capability boundary implemented and audited offline.
 
 High-level decision:
-[Giới hạn và phạm vi phiên bản đầu](../../present/12-current-limits-and-open-decisions.md)
+[Current limits and first-version scope](../../present/12-current-limits-and-open-decisions.md)
 
-## Phân rã dự kiến
+## Planned decomposition
 
 - [`01-foundation-requirements.md`](01-foundation-requirements.md) — repository
   engineering and verification requirements.
@@ -13,19 +13,20 @@ High-level decision:
   credential and client registration requirements.
 - [`03-benchmark-requirements.md`](03-benchmark-requirements.md) — opt-in agent
   benchmark requirements and retained evidence.
-- [`04-v1-capability-boundaries.md`](04-v1-capability-boundaries.md) — phạm vi
-  bắt buộc và release gap của phiên bản đầu.
-- [`05-accepted-limitations.md`](05-accepted-limitations.md) — giới hạn và
-  failure modes được chấp nhận.
+- [`04-v1-capability-boundaries.md`](04-v1-capability-boundaries.md) — required
+  first-version scope and release gaps.
+- [`05-accepted-limitations.md`](05-accepted-limitations.md) — accepted limits
+  and failure modes.
 - [`06-cross-cutting-constraints.md`](06-cross-cutting-constraints.md) —
-  local-first, provenance và no-auto-publish.
-- [`07-deferred-capabilities.md`](07-deferred-capabilities.md) — capability chỉ
-  thêm sau MVP khi có nhu cầu thật.
+  local-first, provenance and no-auto-publish.
+- [`07-deferred-capabilities.md`](07-deferred-capabilities.md) — capabilities
+  added after MVP only when a real need appears.
 - [`08-cli-runtime-requirements.md`](08-cli-runtime-requirements.md) — public
   `abs` grammar, shared-token connect, compatibility and verification boundary.
 
-Không tạo decision register riêng; current decisions đã nằm ở đúng high/low-level
-owner và một registry nữa sẽ thành dead-spec duplicate.
+Do not create a separate decision register; current decisions already belong to
+their high/low-level owners, and another registry would become a dead-spec
+duplicate.
 
 ## Current MVP boundary
 

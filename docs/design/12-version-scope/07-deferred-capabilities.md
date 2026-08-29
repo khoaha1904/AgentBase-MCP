@@ -44,5 +44,5 @@ dependencies or alternative authorities.
 
 Deferred does not mean scaffolding now. MVP adds no empty adapter, database,
 daemon, scheduler, generic resolver, feature flag or compatibility layer for
-these capabilities. Mỗi capability quay lại SDD khi có concrete user flow và
-evidence cần nó.
+these capabilities. Each capability returns to SDD when a concrete user flow and
+supporting evidence require it.

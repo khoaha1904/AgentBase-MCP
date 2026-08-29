@@ -17,6 +17,6 @@
 - Review is structured text/diff; no generated HTML graph UI.
 - Accepted private proposal artifacts are retained; no cleanup scheduler.
 
-Các giới hạn này phải degrade visibly hoặc preserve knowledge. Chúng không cho
-phép Agent đoán, tự publish, ẩn conflict hay biến incomplete coverage thành hard
-failure.
+These limitations must degrade visibly or preserve knowledge. They do not permit
+the Agent to guess, publish automatically, hide conflicts or turn incomplete
+coverage into hard failure.
