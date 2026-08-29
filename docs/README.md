@@ -1,5 +1,17 @@
 # AgentBase-MCP documentation
 
+## Repository language
+
+English is the canonical language for every AgentBase-owned repository
+artifact: documentation, specifications, source text, comments, tests and
+commit messages. Agents communicate with users in the language used by the
+user, but user conversation does not change the repository language.
+
+Third-party vendor snapshots, generated output and immutable external evidence
+retain their original bytes and are excluded from translation. A translation
+must preserve requirements, identifiers, links, code examples and observable
+runtime behavior.
+
 All product documentation lives in this repository and has two levels:
 
 ```text

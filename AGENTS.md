@@ -15,8 +15,10 @@ the affected product decision, architecture map or design/requirements route.
 Do not preload every document or completed capability.
 
 The latest user request and live repository state outrank stale planning prose.
-Communicate with the user in Vietnamese. Keep repository documentation and
-source identifiers in English unless the user asks otherwise.
+Communicate with the user in the language they use. Keep every AgentBase-owned
+repository artifact in English, including documentation, specs, source text,
+comments, test descriptions and commit messages. Do not translate third-party
+vendor snapshots, generated output or immutable external evidence.
 
 ## Development workflow
 
