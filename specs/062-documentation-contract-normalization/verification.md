@@ -10,6 +10,7 @@ or storage path changed.
 
 - Baseline before this slice: `e9d04dd`
 - Landed commits: `5bb1365`, `7e6bf77`
+- Mapping/reference follow-up: current commit after this verification update
 - Existing completed specs and `docs/present/` / `docs/design/` paths were not
   moved, deleted or rewritten.
 
@@ -28,6 +29,8 @@ or storage path changed.
   docs/AGENTS workflow.
 - AB-DOC-006 is recorded as a future migration rule; no rename was attempted in
   this slice.
+- Existing numbered areas are mapped without moving or rewriting historical
+  files. Spec 062 records current references plus baseline SHAs.
 
 ## Remaining work
 

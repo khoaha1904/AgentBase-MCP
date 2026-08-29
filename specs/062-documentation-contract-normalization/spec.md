@@ -10,6 +10,19 @@ packages explicit enough that a lower-level implementation change cannot silentl
 drift from its Product or Architecture Contract, while preserving old paths and
 historical content.
 
+## References
+
+```yaml
+current_refs:
+  - docs/README.md
+  - AGENTS.md
+baseline:
+  - path: docs/README.md
+    commit: e9d04dd
+  - path: AGENTS.md
+    commit: e9d04dd
+```
+
 ## Scope
 
 - Define Product, Architecture, Capability, Implementation and Validation roles.

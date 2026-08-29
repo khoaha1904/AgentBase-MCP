@@ -80,6 +80,33 @@ The current paths map to those levels as follows:
 | Implementation Contract | Affected capability design or spec plan | Concrete modules, libraries, interfaces and coding/migration decisions for one accepted change |
 | Validation Evidence | Tests, verification reports and `npm run verify` output | Evidence that implementation matches accepted contracts |
 
+The numbered areas currently map like this; the mapping is semantic and does
+not require moving files:
+
+| Current area | Product-level overview | Capability/low-level contract |
+|---|---|---|
+| Scope and authority | `docs/present/00-product-scope-and-authority.md` | `docs/design/12-version-scope/` cross-cutting requirements |
+| Repository reading | `docs/present/01-how-mcp-reads-a-repository.md` | `docs/design/01-repository-reading/` |
+| Hub/Domain/Repository model | `docs/present/02-hub-domains-and-repositories.md` | `docs/design/02-hub-domain-repository-model/` |
+| Concept discovery | `docs/present/03-how-concepts-are-identified.md` | `docs/design/03-concept-discovery/` |
+| Schema selection | `docs/present/04-how-concept-schemas-are-selected.md` | `docs/design/04-schema-selection/` |
+| Knowledge entry | `docs/present/05-how-repository-knowledge-enters-the-hub.md` | `docs/design/05-knowledge-entry/` |
+| Cross-repository relations | `docs/present/06-cross-repository-and-cross-domain-relationships.md` | `docs/design/06-cross-repository-relations/` |
+| Questions and guidance | `docs/present/07-conflicts-questions-and-maintainer-guidance.md` | `docs/design/07-conflicts-and-questions/` |
+| Observed values | `docs/present/08-live-references-for-change-prone-values.md` | `docs/design/08-live-references/` |
+| Ingest and Refresh | `docs/present/09-ingest-and-refresh.md` | `docs/design/09-ingest-and-refresh/` |
+| Query routing | `docs/present/10-querying-code-graph-and-hub.md` | `docs/design/10-query-routing/` |
+| Review and Publish | `docs/present/11-review-accept-and-publish.md` | `docs/design/11-review-and-publish/` |
+| Version scope and limits | `docs/present/12-current-limits-and-open-decisions.md` | `docs/design/12-version-scope/` |
+| Visualization | `docs/present/13-visualizing-published-knowledge.md` | `docs/design/13-visualization/` |
+| AI SDLC context | `docs/present/14-context-for-ai-sdlc-workflows.md` | `docs/design/14-ai-sdlc-context/` |
+
+The `docs/present/` numbered pages are capability overviews, not all-purpose
+product policy. Product-wide scope and authority remain in `00` and shared
+limits; numbered capability pages explain the user-facing purpose of each
+area. The optional future rename can therefore split `product/` from
+`capabilities/` by this map instead of guessing from filenames.
+
 `docs/design/00-architecture.md` may mention implementation baseline as
 evidence, but architectural decisions remain separate from file-, class- and
 package-level implementation choices. A separate global implementation tree is
