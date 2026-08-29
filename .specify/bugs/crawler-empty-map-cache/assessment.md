@@ -8,7 +8,7 @@
 
 ## Report
 
-> crawler đang không có hình ảnh gì cả
+> the crawler is not showing any images
 
 ## Symptom
 

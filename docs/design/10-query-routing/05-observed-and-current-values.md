@@ -1,26 +1,26 @@
 # 10.05 — Observed snapshots and current values
 
-> Trạng thái: Snapshot-in-concept và current-source composition được
-> `agentbase-query` điều phối ở host flow.
+> Status: Snapshot-in-concept and current-source composition are orchestrated by
+> `agentbase-query` in the host flow.
 
 ## Outcome
 
-Value query luôn snapshot-default khi Hub có observation phù hợp. Snapshot là
-câu trả lời hoàn chỉnh nếu đã đủ user intent. Current source chỉ được đọc thêm
-cho explicit current/compare request hoặc khi task thực sự cần exact code; nó
-không overwrite Hub, không trở thành accepted knowledge và không cần một live
-resolver.
+A value query is always snapshot-default when the Hub has a matching observation.
+The snapshot is a complete answer when it satisfies user intent. Current source
+is read only for an explicit current/compare request or when the task genuinely
+needs exact code; it does not overwrite the Hub, become accepted knowledge or
+require a live resolver.
 
 ## User intents
 
 | Intent | Query behavior |
 |---|---|
-| Known/observed value | Trả relevant snapshots + age/provenance; không probe source. |
-| Current value | Trả snapshot trước, sau đó thử authorized current-source read. |
-| Compare/history | Trả Published snapshots; Local Draft comparison belongs to proposal review. |
-| Why values differ | Trả conflict positions, sources, Question và Guidance; không chọn winner. |
+| Known/observed value | Return relevant snapshots and age/provenance; do not probe source. |
+| Current value | Return the snapshot first, then attempt an authorized current-source read. |
+| Compare/history | Return Published snapshots; Local Draft comparison belongs to proposal review. |
+| Why values differ | Return conflict positions, sources, Question and Guidance; do not select a winner. |
 
-Agent không hỏi user chọn “snapshot mode” hay “source mode”.
+The Agent does not ask the user to choose “snapshot mode” or “source mode.”
 
 ## Snapshot-default pipeline
 
@@ -38,22 +38,22 @@ normal graph/search/snippet or bounded file read
 present current result separately; never write back
 ```
 
-Nếu concept có nhiều sources/roles cho cùng property, pipeline giữ tất cả
-relevant snapshots. Nó không chọn entry mới nhất hoặc configuration role làm
-truth trước khi source read.
+If a concept has multiple sources/roles for the same property, the pipeline
+retains all relevant snapshots. It does not select the newest entry or the
+configuration role as truth before a source read.
 
 ## Source-read budget
 
-Không cần quota manager hay counter. Budget là một stopping rule đơn giản:
+No quota manager or counter is needed. The budget is a simple stopping rule:
 
-- snapshot đủ trả lời thì dừng;
-- đọc source khi user yêu cầu current/exact code, task implementation cần nó,
-  hoặc thiếu source sẽ khiến câu trả lời không thể hoàn thành an toàn;
-- không đọc source chỉ vì snapshot đã cũ, source có sẵn, đang có conflict hay có
-  thể thu thập thêm dữ liệu.
+- stop when the snapshot answers sufficiently;
+- read source when the user requests current state/exact code, implementation
+  work needs it, or the absence of source prevents safe completion of the answer;
+- do not read source merely because the snapshot is old, source is available, a
+  conflict exists or more data could be collected.
 
-Nhờ vậy query thông thường không tạo thêm transient position/conflict. Conflict
-đã tồn tại trong Hub vẫn được trả đầy đủ.
+As a result, an ordinary query does not create another transient position/conflict.
+A conflict already present in the Hub is still returned in full.
 
 ## Comparison outcomes
 

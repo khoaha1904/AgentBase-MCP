@@ -1,130 +1,134 @@
 # 07.06 — Batch Question resolution
 
-> Trạng thái: Ba tier đã implement cho Domain Enrichment AWS/SQS; inference rộng hơn deferred.
+> Status: All three tiers are implemented for AWS/SQS Domain Enrichment; broader inference is deferred.
 
-## Quyết định ngắn
+## Decision summary
 
-Domain Enrichment tự rà soát evidence trước, rồi phân Question thành ba mức:
+Domain Enrichment reviews evidence first, then classifies each Question into one
+of three tiers:
 
 ```text
-deterministically verified → tự propose resolution, chỉ show kết quả
-strong but non-authoritative → hỏi user với recommended option
-insufficient evidence → hỏi trực tiếp, kèm context/example hoặc defer
+deterministically verified → propose a resolution automatically and show only the result
+strong but non-authoritative → ask the user with a recommended option
+insufficient evidence → ask directly with context/an example, or defer
 ```
 
-Tự động ở đây chỉ tạo Enrichment Draft để review. Nó không tự Accept, Publish
-hoặc biến recommendation thành truth.
+Automation here only creates an Enrichment Draft for review. It does not Accept
+or Publish automatically, or turn a recommendation into truth.
 
 ## Tier 1 — Automatically verified
 
-Dùng khi deterministic checks đủ chứng minh outcome, ví dụ:
+Use this tier when deterministic checks are sufficient to prove the outcome, for
+example:
 
-- exact provider identity/account/region match qua released read-only operation;
-- exact Terraform input/output/remote-state chain resolve cùng target;
-- exact source revision chứng minh relation/config change;
-- candidate được chứng minh là false/not-the-same resource.
+- an exact provider identity/account/region match through a released read-only operation;
+- an exact Terraform input/output/remote-state chain resolves to the same target;
+- an exact source revision proves a relation/configuration change;
+- a candidate is proven false or not to represent the same resource.
 
-Agent không hỏi lại một câu mà MCP đã xác minh deterministic. Batch summary chỉ
-show proposed result, evidence, operation/profile version và limitation. User
-vẫn review toàn draft trước Accept.
+The Agent does not ask a Question that MCP has already verified deterministically.
+The batch summary shows only the proposed result, evidence, operation/profile
+version and limitations. The user still reviews the entire draft before Accept.
 
-Provider identity chỉ xác minh “cùng resource”; canonical relation vẫn cần
-interaction evidence theo 06.01.
+Provider identity only verifies that resources are the same; a canonical relation
+still requires interaction evidence under 06.01.
 
-Tier 1 chỉ áp dụng cho factual Question có released deterministic verification
-criterion. Product/policy, ownership, concept merge, intended semantics và
-maintainer authority luôn cần Tier 2 hoặc Tier 3 dù technical evidence mạnh.
+Tier 1 applies only to factual Questions with released deterministic verification
+criteria. Product/policy decisions, ownership, concept merges, intended semantics
+and maintainer authority always require Tier 2 or Tier 3, even when the technical
+evidence is strong.
 
 ## Tier 2 — Recommended confirmation
 
-Dùng khi evidence nghiêng rõ về một lựa chọn nhưng quyết định vẫn mang tính
-semantic, ownership hoặc maintainer authority.
+Use this tier when the evidence clearly favors one option but the decision still
+concerns semantics, ownership or maintainer authority.
 
-Prompt phải show:
+The prompt must show:
 
-- Question ngắn gọn;
-- evidence chính và điều còn thiếu;
-- 2–3 concrete options nếu có;
-- một option `Recommended` cùng lý do;
-- lựa chọn defer/keep Open.
+- a concise Question;
+- the main evidence and what is still missing;
+- two or three concrete options, when available;
+- one `Recommended` option with a reason;
+- an option to defer or keep the Question Open.
 
-Ví dụ:
+Example:
 
 ```text
-Hai concepts có vẻ là cùng Vehicle Events interface.
-Recommended: merge vào interfaces/vehicle-events
-Lý do: cùng Queue ARN và cùng contract; tên repository khác nhau.
-Khác: giữ riêng / cần thêm evidence.
+The two concepts appear to represent the same Vehicle Events interface.
+Recommended: merge into interfaces/vehicle-events
+Reason: they have the same Queue ARN and contract; only the repository names differ.
+Other: keep separate / more evidence needed.
 ```
 
-Recommendation chỉ tồn tại trong review interaction cho tới khi user chọn. Nó
-không được persist như accepted human evidence trước confirmation.
+The recommendation exists only within the review interaction until the user makes
+a selection. It is not persisted as accepted human evidence before confirmation.
 
 ## Tier 3 — Direct maintainer input
 
-Dùng khi source/provider không có đáp án đáng tin hoặc câu hỏi là product/policy
-decision. Agent hỏi trực tiếp và cung cấp:
+Use this tier when the source/provider has no reliable answer or the Question is a
+product/policy decision. The Agent asks directly and provides:
 
-- context/evidence đang có;
-- chính xác điều gì chưa biết;
-- example answer hoặc expected format;
-- plausible options nếu chúng thực sự có evidence;
-- `defer` khi user chưa muốn trả lời.
+- the available context/evidence;
+- exactly what remains unknown;
+- an example answer or expected format;
+- plausible options when evidence genuinely supports them;
+- `defer` when the user does not want to answer yet.
 
-Agent không tạo fake alternatives hoặc gắn `Recommended` nếu evidence không đủ.
-Question chưa được trả lời tiếp tục `Open` và không làm batch fail.
+The Agent does not invent alternatives or mark one `Recommended` when evidence is
+insufficient. An unanswered Question remains `Open` and does not fail the batch.
 
 ## Bounded re-investigation
 
-Trước khi hỏi user, Agent có một bounded recheck pass:
+Before asking the user, the Agent performs one bounded recheck pass:
 
 - reread selected Published Hub evidence/references;
 - compare selected repositories/candidates;
-- reread authorized source file khi workflow có quyền;
-- gọi released provider verification cho exact candidate;
-- không clone repo, build cross-repository graph, scan account hoặc lặp reasoning
-  tới khi ép ra answer.
+- reread an authorized source file when the workflow has access;
+- invoke released provider verification for the exact candidate;
+- do not clone repositories, build a cross-repository graph, scan an account or
+  repeat reasoning until it forces an answer.
 
-Nếu recheck chuyển Question sang Tier 1, Agent show result thay vì hỏi. Nếu vẫn
-mơ hồ, nó chuyển Tier 2/3 với limitation rõ.
+If the recheck moves a Question to Tier 1, the Agent shows the result instead of
+asking. If ambiguity remains, it moves to Tier 2 or Tier 3 with clear limitations.
 
 ## Batch interaction
 
-Domain Enrichment chạy automatic verification trước, sau đó trình một bounded
-decision packet thay vì ngắt giữa từng candidate:
+Domain Enrichment runs automatic verification first, then presents one bounded
+decision packet instead of interrupting between candidates:
 
-1. auto-verified outcomes để user scan;
-2. recommended confirmations cần chọn;
-3. direct Questions cần answer/defer;
-4. omitted count nếu packet vượt bound.
+1. automatically verified outcomes for the user to scan;
+2. recommended confirmations requiring a selection;
+3. direct Questions requiring an answer or deferral;
+4. an omitted count if the packet exceeds its bound.
 
-Mỗi answer bind exact Question ID/revision và explicit `human:*` identity.
-Selected answers, automatic evidence changes và Questions còn Open cùng đi vào
-một Enrichment proposal.
+Each answer binds the exact Question ID/revision and an explicit `human:*`
+identity. Selected answers, automatic evidence changes and Questions that remain
+Open all enter one Enrichment proposal.
 
-## Partial success và failure
+## Partial success and failure
 
-- User không cần clear hết Questions để finalize truthful partial draft.
-- Defer/permission denied/insufficient evidence là `unresolved`, không phải run
-  failure.
-- Stale revision, invalid answer, evidence integrity hoặc provider protocol
-  failure giữ run Incomplete cho affected selected item.
-- User có thể retry item lỗi hoặc reconfirm membership để bỏ nó; hệ thống không
-  tự drop.
-- Một accepted Enrichment proposal không split thành nhiều PR.
+- The user does not need to clear every Question to finalize a truthful partial draft.
+- Deferral, permission denial and insufficient evidence are `unresolved`, not run failures.
+- A stale revision, invalid answer, evidence-integrity failure or provider-protocol
+  failure keeps the run Incomplete for the affected selected item.
+- The user can retry a failed item or reconfirm membership to omit it; the system
+  does not drop it automatically.
+- An accepted Enrichment proposal is not split across multiple pull requests.
 
-## Provenance và state transition
+## Provenance and state transitions
 
-- Tier 1 resolution trỏ provider/source evidence, không tạo Maintainer Guidance.
-- Tier 2/3 answer tạo scoped Maintainer Guidance và Question update atomically.
-- Refresh/Enrichment chỉ propose `Needs Review` khi exact typed references chứng
-  minh evidence mới mâu thuẫn accepted Guidance; validator kiểm tra references
-  và Accept mới đổi state. Stale age, mất quyền hoặc source tạm unavailable không
-  tự tạo transition.
-- Recommended option chưa được chọn không xuất hiện như human evidence.
+- A Tier 1 resolution points to provider/source evidence and does not create
+  Maintainer Guidance.
+- A Tier 2 or Tier 3 answer creates scoped Maintainer Guidance and updates the
+  Question atomically.
+- Refresh/Enrichment proposes `Needs Review` only when exact typed references prove
+  that new evidence conflicts with accepted Guidance; the validator checks the
+  references, and only Accept changes the state. Staleness, loss of access or a
+  temporarily unavailable source does not trigger a transition automatically.
+- An unselected recommended option does not appear as human evidence.
 
-## Reuse và impact
+## Reuse and impact
 
-Reuse Domain Enrichment manifest/checkpoints ở 06.03, provider verification ở
-06.04 và shared Question/Guidance proposal ở 07.02–03. Không thêm chat session
-database, background resolver hoặc autonomous retry loop.
+Reuse the Domain Enrichment manifest/checkpoints from 06.03, provider verification
+from 06.04 and shared Question/Guidance proposals from 07.02–03. Do not add a chat
+session database, background resolver or autonomous retry loop.

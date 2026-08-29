@@ -1,62 +1,62 @@
 # 09.02 — Refresh and change detection
 
-> Trạng thái: Single-repository Refresh implemented và qualified.
+> Status: Single-repository Refresh is implemented and qualified.
 
 ## Default Refresh focus
 
-Refresh không full-scan repo và cũng không chỉ nhìn changed files:
+Refresh neither scans the full repository nor looks only at changed files:
 
-1. **Changed:** source paths/symbols đã đổi từ observed revision;
-2. **Known gaps:** Questions, limitations, broken/aging references và ambiguous
-   matches liên quan repository;
-3. **Small discovery pass:** bounded architecture overview để tìm important
-   candidate từng bị miss.
+1. **Changed:** source paths/symbols changed since the observed revision;
+2. **Known gaps:** Questions, limitations, broken/aging references and ambiguous
+   matches related to the repository;
+3. **Small discovery pass:** a bounded architecture overview to find important
+   candidates previously missed.
 
-Priority theo thứ tự trên. Discovery pass dùng graph cache khi fresh và không mở
-unbounded source scan.
+Priority follows that order. The discovery pass uses the graph cache when fresh
+and does not open an unbounded source scan.
 
 ## Build-up semantics
 
-- Partial but valid knowledge được bổ sung qua nhiều Refresh.
-- Source không đổi vẫn có thể tạo proposal mới nếu known gap hoặc discovery pass
-  tìm được useful evidenced knowledge.
-- Không có useful change là successful no-op, không phải failure.
-- Missing concept ở một lần discovery không chứng minh concept cũ đã biến mất.
-  Exact Git/source diff có thể tạo evidence-backed removal candidate, nhưng
-  không tự materialize deletion ngoài proposal review.
+- Partial but valid knowledge is expanded across multiple Refresh runs.
+- Unchanged source can still create a new proposal when a known gap or discovery
+  pass finds useful evidenced knowledge.
+- No useful change is a successful no-op, not a failure.
+- A concept missing from one discovery does not prove that an old concept
+  disappeared. An exact Git/source diff can create an evidence-backed removal
+  candidate but does not materialize deletion outside proposal review.
 
 ## Explicit full refresh
 
-User có thể yêu cầu full refresh để rerun broad discovery, ví dụ sau skill/profile
-upgrade hoặc khi repository knowledge rõ ràng thiếu. Full ở đây là broad bounded
-investigation, không có nghĩa đọc mọi file hoặc bắt completeness 100%.
+The user can request a full refresh to rerun broad discovery, for example after a
+skill/profile upgrade or when repository knowledge is clearly incomplete. Full
+means a broad bounded investigation, not reading every file or requiring 100% completeness.
 
-Full refresh vẫn giữ source authority, candidate gates, one guidance call,
-validation và one-repair budget như normal Refresh.
+A full refresh retains source authority, candidate gates, one guidance call,
+validation and the one-repair budget from normal Refresh.
 
-Đây là approved future **Full Discovery Refresh**, chưa được Capability 046
-implement. Capability 046 chỉ đưa exact remote-default SourceSnapshot authority
-vào normal Refresh và broad discovery vào new Init; nó không silently re-init
-Published repository. Qualification Hub có thể intentionally reset/re-ingest
-disposable data để đo Init mới.
+This is the approved future **Full Discovery Refresh**, not implemented by
+Capability 046. Capability 046 only brings exact remote-default SourceSnapshot
+authority into normal Refresh and broad discovery into new Init; it does not
+silently reinitialize a Published repository. A qualification Hub can
+intentionally reset/reingest disposable data to measure the new Init.
 
 ## Reconciliation
 
-Refresh chỉ thay contribution của current repository và giữ foreign-source
-evidence/protected bytes. Changed source có thể thêm/update evidence. Absence
-không evidence chỉ tạo finding/Question; exact deletion/rename/history evidence
-đi qua reconciliation rules ở phần 09.06.
+Refresh changes only the current repository's contribution and retains foreign-source
+evidence/protected bytes. Changed source can add/update evidence. Absence without
+evidence creates only a finding/Question; exact deletion/rename/history evidence
+passes through the reconciliation rules in Section 09.06.
 
 ## Freshness output
 
-Successful Refresh cập nhật observed revision/time cho repository contribution
-được xử lý. Query trình bày age/revision; nó không tự kích hoạt Refresh. Partial
-coverage không được ghi thành full-repository freshness guarantee.
+A successful Refresh updates the observed revision/time for the processed
+repository contribution. Query presents age/revision; it does not trigger Refresh
+automatically. Partial coverage is not recorded as a full-repository freshness guarantee.
 
 ## Qualification note
 
-Refresh V2/V3 bắt buộc đọc exact Git diff của mọi changed path trước gaps và
-discovery. Hai Terra runs trên ECS fixture cùng cập nhật `/status` → `/health`
-ở server route + Terraform target groups, chỉ đổi Interface knowledge và
-Repository observation. README cũ vẫn ghi `/status` được giữ thành limitation,
-không bị model tự chọn một nguồn rồi xóa conflict.
+Refresh V2/V3 must read the exact Git diff of every changed path before gaps and
+discovery. Two Terra runs on the ECS fixture both update `/status` to `/health`
+in the server route and Terraform target groups, changing only Interface knowledge
+and the Repository observation. The old README still stating `/status` is
+retained as a limitation; the model does not choose one source and erase the conflict.

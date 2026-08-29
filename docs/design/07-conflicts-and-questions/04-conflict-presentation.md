@@ -1,102 +1,104 @@
 # 07.04 — Conflict presentation
 
-> Trạng thái: Technical design đã chốt; query composition thuộc phần 10 chưa implement.
+> Status: The technical design is settled; query composition in Section 10 is not yet implemented.
 
-## Quyết định ngắn
+## Decision summary
 
-Conflict là một successful knowledge result có uncertainty, không phải ingest/
-query failure. MCP trình bày các positions, provenance, Guidance và Question;
-không tự tạo `final_value`.
+A conflict is a successful knowledge result with uncertainty, not an ingest or
+query failure. MCP presents the positions, provenance, Guidance and Question; it
+does not invent a `final_value`.
 
 ## Human-readable response
 
-Default response cho một conflict cần ngắn và trực tiếp:
+The default response for a conflict should be concise and direct:
 
 ```text
-⚠ TTL hiện có nhiều nguồn:
-- 7 ngày — repository config, observed at commit abc…
-- 30 ngày — repository documentation, observed at commit def…
-- Maintainer Guidance: 7 ngày — human:khoa, reviewed 2026-08-22
-Question: Needs Review — guidance đang mâu thuẫn evidence mới.
+⚠ TTL currently has multiple sources:
+- 7 days — repository configuration, observed at commit abc…
+- 30 days — repository documentation, observed at commit def…
+- Maintainer Guidance: 7 days — human:khoa, reviewed 2026-08-22
+Question: Needs Review — guidance conflicts with new evidence.
 ```
 
-Người dùng vẫn thấy Guidance rõ ràng nhưng MCP không nói “TTL chắc chắn là 7
-ngày”. Với observed value, snapshot/current-source/permission state
-được trình bày theo phần 08.
+The user still sees Guidance clearly, but MCP does not claim that “TTL is
+definitely 7 days.” For an observed value, snapshot/current-source/permission
+state is presented under Section 08.
 
 ## Structured response semantics
 
-Phần 07 yêu cầu query layer cung cấp bounded groups:
+Section 07 requires the query layer to provide bounded groups:
 
-- subject/property hoặc relation/identity candidate;
+- subject/property or relation/identity candidate;
 - distinct positions/observations;
-- source role, reference, revision/time và freshness marker;
-- applicable active/contested Maintainer Guidance;
+- source role, reference, revision/time and freshness marker;
+- applicable active or contested Maintainer Guidance;
 - linked Question ID/state;
-- limitations và omitted counts.
+- limitations and omitted counts.
 
-Exact MCP response schema thuộc phần 10. Conflict không đổi normal query thành
-tool error; response vẫn thành công cùng explicit uncertainty marker.
+The exact MCP response schema belongs to Section 10. A conflict does not turn a
+normal query into a tool error; the response succeeds with an explicit uncertainty marker.
 
-## Khi nào coi là conflict
+## When to treat something as a conflict
 
-- structured observations cùng subject/property có normalized values khác nhau;
-- canonical relation/identity candidates cạnh tranh nhau với evidence;
-- evidence mới contradics active Guidance;
-- explicit Question đã ghi nhận semantic conflict không thể normalize an toàn.
+- structured observations for the same subject/property have different normalized values;
+- canonical relation/identity candidates compete with supporting evidence;
+- new evidence contradicts active Guidance;
+- an explicit Question records a semantic conflict that cannot be normalized safely.
 
-MCP không chạy NLP toàn Hub để đoán prose nào mâu thuẫn. Prose conflict chỉ trở
-thành governed conflict khi proposal/Question giữ exact evidence và bounded
-summary.
+MCP does not run NLP across the entire Hub to guess which prose conflicts. A
+prose conflict becomes a governed conflict only when a proposal/Question retains
+exact evidence and a bounded summary.
 
-Trong repository discovery, source roles không bị ép thành một winner: code,
-config, API spec và IaC có thể mô tả implemented/desired technical state; README
-và docs có thể mô tả intent hoặc contract cũ. Material conflict ảnh hưởng
-behavior, ownership, relation hoặc operations tạo grouped Question. Khác biệt
-nhỏ có thể ở lại dưới dạng attributed claims/snapshots mà không block Init.
+During repository discovery, source roles are not forced into a single winner:
+code, configuration, API specifications and IaC can describe implemented or
+desired technical state; README files and documentation can describe intent or
+an older contract. A material conflict affecting behavior, ownership, relations
+or operations creates a grouped Question. Minor differences can remain as
+attributed claims/snapshots without blocking Init.
 
-## Ordering, không phải ranking truth
+## Ordering, not truth ranking
 
-Presentation order deterministic để dễ đọc:
+Presentation order is deterministic for readability:
 
-1. active/contested Maintainer Guidance, được label rõ là human guidance;
+1. active or contested Maintainer Guidance, clearly labeled as human guidance;
 2. observed implementation/config/provider positions; current-source evidence
-   chỉ xuất hiện khi user đã explicitly yêu cầu current read;
-3. documentation và other source-backed positions;
-4. Question/limitations/history links.
+   appears only when the user explicitly requests a current read;
+3. documentation and other source-backed positions;
+4. Question, limitation and history links.
 
-Thứ tự này không phải trust score. Recency, source role hoặc human attribution
-không âm thầm loại position khác. Duplicate normalized observations có thể group
-và liệt kê nhiều provenance sources.
+This order is not a trust score. Recency, source role or human attribution does
+not silently discard another position. Duplicate normalized observations can be
+grouped while listing multiple provenance sources.
 
 ## Context boundaries
 
-- Query chỉ hiện conflicts liên quan trực tiếp answer/traversal hiện tại.
-- Không dump mọi Question của Domain/Hub vào một response.
-- Bounded omitted count cho biết còn sources/positions chưa hiện.
-- Explicit Question query có thể mở full current state và linked evidence.
-- Resolved Question vẫn hiện mọi competing position còn current cùng accepted
-  resolution. Reviewed correction/removal đưa old bytes về Git history.
+- Query shows only conflicts directly relevant to the current answer/traversal.
+- Do not dump every Domain or Hub Question into one response.
+- A bounded omitted count indicates additional sources/positions not shown.
+- An explicit Question query can open the full current state and linked evidence.
+- A Resolved Question still shows every competing position that remains current
+  alongside the accepted resolution. Reviewed correction/removal moves old bytes
+  into Git history.
 
-## Hub documents và PR review
+## Hub documents and pull-request review
 
-- Question Markdown giữ short positions/evidence summary để con người đọc Hub.
-- Concept có thể link Question nhưng không copy toàn bộ conflict history.
-- PR summary nhóm Questions, conflicts, limitations và Guidance changes trước
-  khi reviewer mở raw Markdown diff.
-- Open Question được publish bình thường nếu proposal truthful và valid.
+- Question Markdown retains a short positions/evidence summary for human Hub readers.
+- A Concept can link to a Question but does not copy the entire conflict history.
+- The pull-request summary groups Questions, conflicts, limitations and Guidance
+  changes before the reviewer opens the raw Markdown diff.
+- An Open Question is published normally when the proposal is truthful and valid.
 
 ## Failure/degraded cases
 
-- Source không còn quyền đọc: giữ Hub position/snapshot và ghi unavailable.
-- Reference stale/broken: giữ position cùng marker, không xóa.
-- Too many positions: deterministic bound + omitted count, không chọn vài nguồn
-  theo model preference.
-- Question/cache index hỏng: rebuild từ exact Hub commit; không trả private cache
-  như authority.
+- Source access is lost: retain the Hub position/snapshot and mark it unavailable.
+- Reference is stale/broken: retain the position with a marker; do not delete it.
+- Too many positions: use a deterministic bound and omitted count; do not select
+  a subset of sources according to model preference.
+- A Question/cache index is corrupt: rebuild it from the exact Hub commit; do not
+  return the private cache as authority.
 
 ## Baseline impact
 
-Tái sử dụng Hub query summaries, evidence references, Question/Guidance Markdown
-và freshness metadata. Không thêm scorer, confidence engine hoặc persistent
-conflict index; query có thể derive bounded presentation từ exact Hub commit.
+Reuse Hub query summaries, evidence references, Question/Guidance Markdown and
+freshness metadata. Do not add a scorer, confidence engine or persistent conflict
+index; query can derive a bounded presentation from the exact Hub commit.

@@ -1,35 +1,35 @@
 # 11.09 — Profile migration publication changes
 
-> Trạng thái: Designed boundary; deferred until Published knowledge needs migration.
+> Status: The boundary is designed and deferred until Published knowledge needs migration.
 
 ## Outcome
 
-Một semantic detector/provider-profile change không tự rewrite Published Hub.
-MCP impact scan tạo một Migration Draft để owner review và một migration PR.
+A semantic detector/provider-profile change does not rewrite the Published Hub
+automatically. An MCP impact scan creates a Migration Draft for owner review and
+a migration pull request.
 
 ## When migration is required
 
-- Documentation hoặc additive mapping không đổi meaning đã Published: không
-  migration.
-- Mapping change có thể đổi schema/disposition/technology interpretation của
-  Published knowledge: migration bắt buộc.
-- Catalog/profile chưa từng tạo Published knowledge: clean cutover được phép;
-  không dựng converter chỉ cho historical local artifacts.
+- Documentation or additive mapping that does not change Published meaning: no migration.
+- A mapping change that can alter schema/disposition/technology interpretation
+  of Published knowledge: migration is required.
+- A catalog/profile that never produced Published knowledge: a clean cutover is
+  allowed; do not build a converter solely for historical local artifacts.
 
 ## Migration unit
 
 - exact Published base, old/new catalog-detector-profile versions;
-- bounded affected concept identities và source/evidence references;
-- Added/Updated/Removed changes cùng Questions/Limitations;
+- bounded affected concept identities and source/evidence references;
+- Added/Updated/Removed changes with Questions/Limitations;
 - one atomic Migration Draft → review → Accept → one PR to `main`.
 
-Thiếu evidence không tự reclassify hoặc xóa concept. Giữ current knowledge và
-tạo Question cho Refresh/Domain Enrichment. Migration không scan/rewrite foreign
-open-world OKF types không thuộc AgentBase profile authority.
+Missing evidence does not reclassify or delete a concept automatically. Retain
+current knowledge and create a Question for Refresh/Domain Enrichment. Migration
+does not scan/rewrite foreign open-world OKF types outside AgentBase profile authority.
 
 ## Deferred implementation impact
 
-MVP Catalog 7 chưa có Published predecessor cần migrate. Không implement impact
-scanner, converter, dual-read/write hoặc migration command trước khi một real
-profile upgrade tạo nhu cầu. Khi đó đây là separate Full Feature vì có thể sửa
-nhiều Published concepts và cần recovery/compatibility review.
+MVP Catalog 7 has no Published predecessor requiring migration. Do not implement
+an impact scanner, converter, dual read/write or migration command before a real
+profile upgrade creates the need. At that point this is a separate Full Feature
+because it may modify many Published concepts and requires recovery/compatibility review.

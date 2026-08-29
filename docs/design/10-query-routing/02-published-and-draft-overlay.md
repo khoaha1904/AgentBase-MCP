@@ -1,6 +1,6 @@
 # 10.02 — Published-only query boundary
 
-> Trạng thái: Capability 038 supersedes the unimplemented overlay design.
+> Status: Capability 038 supersedes the unimplemented overlay design.
 
 ## Outcome
 

@@ -1,39 +1,40 @@
 # 09 — Baseline and impact checkpoint
 
-> Trạng thái: Single-repository, Batch Initial Ingest, AWS/SQS Enrichment and
-> freshness CI và bounded workspace Scan implemented.
+> Status: Single-repository and Batch Initial Ingest, AWS/SQS Enrichment,
+> freshness CI and bounded workspace Scan are implemented.
 
-## Baseline hiện tại
+## Current baseline
 
-- Repository graph round quản lý source identity, freshness, evidence và cleanup.
-- Hub prepare tạo private authoring session từ exact active Hub head.
-- Agent authoring workspace giữ base/bundle riêng và continuity có bounds.
-- Finalize validate, lock và materialize immutable proposal.
-- Inspect, Accept, pending commits, PR publication và recovery đã tách riêng.
-- Refresh bảo vệ protected bytes và evidence của repository khác.
+- The Repository graph round manages source identity, freshness, evidence and cleanup.
+- Hub prepare creates a private authoring session from the exact active Hub head.
+- The Agent authoring workspace keeps a separate base/bundle and bounded continuity.
+- Finalize validates, locks and materializes an immutable proposal.
+- Inspect, Accept, pending commits, pull-request publication and recovery are separated.
+- Refresh protects protected bytes and evidence from other repositories.
 
-Nguồn baseline:
+Baseline sources:
 
 - [Repository graph/evidence](../../../src/app/repository-okf/README.md)
 - [Hub authoring session](../../../src/app/hub-okf/authoring/authoring-session.ts)
 - [Refresh reconciliation](../../../src/app/hub-okf/authoring/refresh.ts)
 - [Hub MCP boundary](../../../src/app/hub-okf/mcp/mcp-tools.ts)
 
-## Gap đã đóng
+## Closed gaps
 
-`agentbase-ingest` và `agentbase-refresh` đã nối graph reading, evidence-bearing
-guidance, prepared skeletons, changed-document validation, finalize và inspect.
-Evidence digest cho proposal mới được derive từ validated guidance + exact
-source state thay vì opaque caller input.
+`agentbase-ingest` and `agentbase-refresh` connect graph reading, evidence-bearing
+guidance, prepared skeletons, changed-document validation, finalize and inspect.
+The evidence digest for a new proposal is derived from validated guidance and
+exact source state instead of opaque caller input.
 
-## Gap còn lại
+## Remaining gaps
 
-Public `agentbase-scan` đã implement theo bounded Published-only contract. Batch
-Refresh và mixed Init/Refresh được giữ ngoài MVP; Batch Initial Ingest
-checkpoint/retry và Hub CI freshness projection đã implement.
+Public `agentbase-scan` is implemented under a bounded Published-only contract.
+Batch Refresh and mixed Init/Refresh remain outside the MVP; Batch Initial Ingest
+checkpoint/retry and the Hub CI freshness projection are implemented.
 
-## Kết quả
+## Result
 
-Implementation giữ deterministic graph, proposal, validation, Git publication
-và recovery boundaries. Phần còn lại tiếp tục là các vertical slice độc lập;
-không mở lại single-repository flow thành một orchestration framework chung.
+The implementation preserves deterministic graph, proposal, validation, Git
+publication and recovery boundaries. The remaining work continues as independent
+vertical slices; it does not reopen the single-repository flow as a general
+orchestration framework.

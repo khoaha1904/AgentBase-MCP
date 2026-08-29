@@ -1,7 +1,7 @@
 # 08.03 — Freshness and broken sources
 
-> Trạng thái: Repository warning projection và read-only Hub CI implemented;
-> ordinary answer presentation thuộc Part 10.
+> Status: Repository warning projection and read-only Hub CI are implemented;
+> ordinary answer presentation belongs to Part 10.
 
 ## Freshness
 

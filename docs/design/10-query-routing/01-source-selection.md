@@ -1,81 +1,83 @@
 # 10.01 — Source selection
 
-> Trạng thái: Implemented qua public skill `agentbase-query`; MCP không có
-> reasoning router hoặc combined-answer tool.
+> Status: Implemented through the public `agentbase-query` skill; MCP has no
+> reasoning router or combined-answer tool.
 
 ## Outcome
 
-Agent hiểu ý câu hỏi và gọi đúng query primitive. MCP không tự phân loại câu
-hỏi, không tạo một combined-answer tool và không chạy Code Graph cho một câu hỏi
-chỉ cần Hub knowledge.
+The Agent understands the question's intent and invokes the correct query
+primitive. MCP does not classify questions automatically, create a combined-answer
+tool or run the Code Graph for a question that needs only Hub knowledge.
 
 ## Routing table
 
 | User intent | Start with | Add the other source when |
 |---|---|---|
-| Domain, system, purpose, ownership, known behavior | Hub search/read | User cần đối chiếu implementation hiện tại. |
-| Cross-repository hoặc cross-domain relation | Hub search/read links | Cần code detail của một repository đang local và authorized. |
-| Symbol, caller/callee, execution path, impact, exact implementation | Current repository Code Graph | Cần business intent, accepted constraint hoặc relation ngoài repo. |
-| “Vì sao” một implementation tồn tại | Hub | Cần kiểm tra code hiện tại có còn khớp knowledge hay không. |
-| “Giá trị đã biết là gì?” | Hub concept snapshot | Không tự thêm source read. |
-| “Giá trị hiện tại là gì?” | Hub concept snapshot | Sau khi trình bày snapshot + provenance, đọc exact authorized local source bằng normal graph/file tool để xác minh current value. |
+| Domain, system, purpose, ownership, known behavior | Hub search/read | The user needs to compare the current implementation. |
+| Cross-repository or cross-domain relation | Hub search/read links | Code detail is needed from a local, authorized repository. |
+| Symbol, caller/callee, execution path, impact, exact implementation | Current repository Code Graph | Business intent, an accepted constraint or a relation outside the repository is needed. |
+| “Why” an implementation exists | Hub | The current code must be checked against the knowledge. |
+| “What is the known value?” | Hub concept snapshot | Do not add a source read automatically. |
+| “What is the current value?” | Hub concept snapshot | After presenting the snapshot and provenance, read exact authorized local source through a normal graph/file tool to verify the current value. |
 
-Đây là priority khởi đầu, không phải exclusivity. Agent chỉ gọi nguồn thứ hai
-khi phần còn thiếu của câu trả lời thực sự cần nó.
+This is a starting priority, not exclusivity. The Agent invokes the second source
+only when the missing part of the answer genuinely requires it.
 
 ## Snapshot-default stopping rule
 
-Snapshot/Hub là câu trả lời mặc định, không chỉ là bước đầu của một pipeline.
-Nếu nó đã trả lời đủ user intent thì Agent dừng, dù source đang local,
-authorized hoặc dễ đọc.
+The snapshot/Hub is the default answer, not merely the first stage of a pipeline.
+If it sufficiently answers user intent, the Agent stops even when source is local,
+authorized or easy to read.
 
-Source chỉ được thêm khi ít nhất một điều kiện đúng:
+Source is added only when at least one condition holds:
 
-1. user yêu cầu rõ giá trị hiện tại, verify source hoặc exact code;
-2. task implementation, change, debug hoặc impact analysis cần code chính xác;
-3. Hub/snapshot không đủ để hoàn thành yêu cầu an toàn và có một exact
+1. the user explicitly requests the current value, source verification or exact code;
+2. implementation, change, debugging or impact-analysis work requires exact code;
+3. the Hub/snapshot is insufficient to complete the request safely and an exact
    authorized source route.
 
-Tuổi snapshot, source availability, conflict/Question sẵn có hoặc mong muốn làm
-dữ liệu “đầy đủ hơn” không phải trigger. Query không đọc source chỉ để phá hòa
-giữa các claim.
+Snapshot age, source availability, an existing conflict/Question or a desire to
+make data “more complete” is not a trigger. Query does not read source merely to
+break a tie between claims.
 
 ## Hub route
 
-1. Dùng `search_hub_okf` để tìm concept theo Domain/type scope.
-2. Dùng `read_hub_okf_concept` cho knowledge và provenance đầy đủ.
-3. Khi cần relation, đọc Markdown links trong concept và tiếp tục bằng hai tool
-   trên. Snapshot và Question cũng nằm trong exact concept Markdown.
+1. Use `search_hub_okf` to find a concept by Domain/type scope.
+2. Use `read_hub_okf_concept` for complete knowledge and provenance.
+3. When a relation is needed, read Markdown links in the concept and continue
+   with those two tools. Snapshots and Questions also reside in exact concept Markdown.
 
-Hai action này chỉ đọc exact Published commit đã synchronize về local. Local
-Draft được inspect/review riêng; không có remote profile thì Hub query unavailable.
+These two actions read only the exact Published commit synchronized locally.
+Local Draft is inspected/reviewed separately; without a remote profile, Hub query
+is unavailable.
 
-Search ambiguity chỉ hỏi lại Domain/repository khi lựa chọn đó làm thay đổi
-đáng kể kết quả. Không bắt user chọn “Hub mode” hay biết tên tool.
+Search ambiguity asks for a Domain/repository only when that choice materially
+changes the result. Do not require the user to select “Hub mode” or know tool names.
 
-Với câu hỏi về value, routing luôn snapshot-default khi concept có observed
-value. Snapshot cho Agent câu trả lời và exact provenance; nếu đã đủ thì không
-có source read tiếp theo. Chỉ khi Hub không có snapshot phù hợp mới đi thẳng
-normal source tools cho một explicit current-value request; query không tự tạo
-snapshot.
+For a value question, routing is always snapshot-default when the concept has an
+observed value. The snapshot gives the Agent an answer and exact provenance; if
+that is sufficient, no source read follows. Only when the Hub lacks a suitable
+snapshot does an explicit current-value request go directly to normal source
+tools; query does not create a snapshot automatically.
 
 ## Code Graph route
 
-1. Chọn đúng một explicit local repository root; không scan workspace cha.
-2. Reuse internal support skill `use-codebase-memory`: index/reuse freshness,
-   tìm structure/symbol/path, rồi đọc exact snippet.
-3. Một MCP connection chỉ bind một repository tại một thời điểm. Muốn đọc local
-   repository khác thì gọi controlled `index_repository` với exact root; gateway
-   đóng sạch session cũ rồi bind session mới. Không ghép graph của nhiều repo.
-4. Không tự clone remote repository. Hub relation/reference không tự cấp quyền
-   source và không tự kích hoạt indexing.
+1. Select exactly one explicit local repository root; do not scan its parent workspace.
+2. Reuse the internal support skill `use-codebase-memory`: index/reuse freshness,
+   find the structure/symbol/path, then read the exact snippet.
+3. One MCP connection binds only one repository at a time. To read another local
+   repository, invoke controlled `index_repository` with the exact root; the
+   gateway cleanly closes the old session and binds a new one. Do not combine
+   graphs from multiple repositories.
+4. Do not clone a remote repository automatically. A Hub relation/reference does
+   not grant source access or trigger indexing automatically.
 
-Direct text/source search chỉ là fallback cho vùng graph không hỗ trợ hoặc để
-verify exact text sau graph discovery.
+Direct text/source search is only a fallback for graph-unsupported areas or for
+verifying exact text after graph discovery.
 
 ## Combined route
 
-Combined query là orchestration của Agent, không phải joined storage:
+A combined query is Agent orchestration, not joined storage:
 
 ```text
 Hub concept + exact Hub commit
@@ -85,23 +87,23 @@ authorized local Code Graph/source
 one answer with the two provenances kept separate
 ```
 
-Agent không copy raw graph rows vào Hub và không mô tả source result như
-Published knowledge. Nếu Hub và source khác nhau, response chuyển sang Part
-10.04 conflict presentation; query không tự Refresh hoặc write-back.
+The Agent does not copy raw graph rows into the Hub or describe a source result
+as Published knowledge. If the Hub and source differ, the response follows the
+Part 10.04 conflict presentation; query does not Refresh or write back automatically.
 
 ## Failure and degradation
 
-- Hub unavailable/unconfigured: code question vẫn có thể dùng current local
-  repository; shared-knowledge question nói rõ Hub chưa có.
-- Graph unavailable/stale: trả phần Hub biết và nói implementation chưa được
-  verify; chỉ re-index khi current-source question thực sự cần nó.
-- Referenced repository không local/authorized: trả Hub knowledge/snapshot;
-  không clone, dùng ambient credential hoặc đoán code.
-- Không nguồn nào đủ: hỏi một clarification ngắn về Domain/repository hoặc nói
-  rõ evidence còn thiếu.
+- Hub unavailable/unconfigured: a code question can still use the current local
+  repository; a shared-knowledge question states that the Hub is unavailable.
+- Graph unavailable/stale: return what the Hub knows and state that implementation
+  is unverified; reindex only when a current-source question genuinely requires it.
+- Referenced repository not local/authorized: return Hub knowledge/snapshot; do
+  not clone, use ambient credentials or guess at code.
+- No source is sufficient: ask one short clarification about the Domain/repository
+  or state what evidence is missing.
 
-Read failure không tạo Question, proposal hay Refresh tự động. Những action đó
-luôn là workflow review riêng.
+A read failure does not create a Question, proposal or Refresh automatically.
+Those actions always use a separate reviewed workflow.
 
 ## Requirement mapping
 

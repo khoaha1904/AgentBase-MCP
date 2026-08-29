@@ -1,90 +1,91 @@
 # 10.04 — Conflict-aware responses
 
-> Trạng thái: Published Question/Guidance và conflict presentation được public
-> skill `agentbase-query` điều phối qua current query primitives.
+> Status: Published Question/Guidance and conflict presentation are orchestrated
+> by the public `agentbase-query` skill through current query primitives.
 
 ## Outcome
 
-Conflict là một successful knowledge result có uncertainty. Query trả các
-positions, provenance, applicable Maintainer Guidance và Question; không tạo
-`final_value`, trust score hoặc tự chọn nguồn thắng.
+A conflict is a successful knowledge result with uncertainty. Query returns the
+positions, provenance, applicable Maintainer Guidance and Question; it does not
+create a `final_value`, trust score or select a winning source automatically.
 
 ## What becomes a conflict group
 
-Query group theo exact governed subject + property hoặc natural
-relation/identity candidate key. Nó tạo conflict group khi:
+Query groups by exact governed subject and property or a natural relation/identity
+candidate key. It creates a conflict group when:
 
-- observed values có cùng subject/property nhưng khác exact typed scalar;
-- governed relation/resource identity candidates cạnh tranh nhau;
-- evidence mới mâu thuẫn active Maintainer Guidance;
-- shared Question đã ghi nhận một bounded semantic conflict.
+- observed values have the same subject/property but different exact typed scalars;
+- governed relation/resource identity candidates compete;
+- new evidence conflicts with active Maintainer Guidance;
+- a Shared Question records a bounded semantic conflict.
 
-`7`, `"7"` và `"7 days"` không tự normalize thành một value. MCP không chạy NLP
-toàn Hub, convert unit hoặc suy prose conflict. Prose chỉ tham gia khi Question
-đã giữ bounded summary + exact evidence.
+`7`, `"7"` and `"7 days"` are not automatically normalized into one value. MCP
+does not run NLP across the entire Hub, convert units or infer prose conflicts.
+Prose participates only when a Question retains a bounded summary and exact evidence.
 
 ## Position model
 
-Mỗi position giữ:
+Each position retains:
 
-- subject/property hoặc candidate identity;
+- subject/property or candidate identity;
 - exact value/relation/identity statement;
-- knowledge kind và source role;
-- source reference, source/Hub revision, observed time/age khi có;
-- Published Hub hoặc transient current-source position và exact attribution.
+- knowledge kind and source role;
+- source reference, source/Hub revision and observed time/age when available;
+- Published Hub or transient current-source position and exact attribution.
 
-Positions có exact typed value/statement giống nhau có thể group để giảm lặp,
-nhưng mọi source/provenance vẫn còn. Positions khác nhau không overwrite,
-average hoặc collapse theo recency, source role, human attribution hay
-publication state.
+Positions with the same exact typed value/statement can be grouped to reduce
+repetition, but every source/provenance remains. Different positions are not
+overwritten, averaged or collapsed based on recency, source role, human
+attribution or publication state.
 
 ## Guidance and Questions
 
-- Active Maintainer Guidance được hiển thị như attributed human direction, kèm
-  exact scope và Question revision; nó không phải absolute truth.
-- `Needs Review` Guidance được label `contested` và giữ evidence mới cạnh nó.
-- `Open`/`Needs Review` Question hiện rõ action còn thiếu.
-- `Resolved` Question vẫn có thể đi cùng competing current positions; resolved
-  chỉ nghĩa hiện không chờ maintainer action tại revision đó.
-- Conflict chưa có Question được label `untracked conflict`; query không tự tạo
-  Question/proposal.
-- Question có missing evidence nhưng chưa có answer vẫn là useful knowledge;
-  query không tạo placeholder position.
+- Active Maintainer Guidance is shown as attributed human direction with exact
+  scope and Question revision; it is not absolute truth.
+- `Needs Review` Guidance is labeled `contested` and keeps new evidence beside it.
+- An `Open`/`Needs Review` Question clearly shows the missing action.
+- A `Resolved` Question can still accompany competing current positions; resolved
+  only means no maintainer action is pending at that revision.
+- A conflict without a Question is labeled `untracked conflict`; query does not
+  create a Question/proposal automatically.
+- A Question with missing evidence but no answer remains useful knowledge; query
+  does not create a placeholder position.
 
-Exact Question-scoped Guidance được label rõ là human direction. Quyết định rộng
-hơn nằm trong evidenced Domain/System knowledge, không qua broad Guidance scope
-engine.
+Exact Question-scoped Guidance is clearly labeled as human direction. A broader
+decision resides in evidenced Domain/System knowledge, not in a broad Guidance
+scope engine.
 
 ## Snapshot-default and current source
 
-Với volatile value:
+For a volatile value:
 
-1. đưa mọi relevant Hub snapshots vào positions trước;
-2. chỉ nếu user explicitly hỏi current hoặc task thật sự cần exact code, thêm
-   current-source result như một position riêng với current source state/access;
-3. nếu current source khác snapshot/Guidance, giữ tất cả và mark conflict;
-4. source unavailable giữ snapshot + reason, không loại position cũ.
+1. add every relevant Hub snapshot to positions first;
+2. only when the user explicitly asks for current state or the task genuinely
+   needs exact code, add the current-source result as a separate position with
+   current source state/access;
+3. if current source differs from the snapshot/Guidance, retain all and mark a conflict;
+4. when source is unavailable, retain the snapshot and reason without discarding the old position.
 
-Current read không mutate observation, Question hoặc Guidance. Một Refresh hay
-resolution sau đó vẫn phải tạo Local Draft và qua review.
+A current read does not mutate an observation, Question or Guidance. A later
+Refresh or resolution must still create a Local Draft and pass review.
 
-Age, conflict, Question hoặc source availability không tự kích hoạt current
-read. Query cũng không đọc source chỉ để chọn một position thắng.
+Age, conflict, a Question or source availability does not trigger a current read
+automatically. Query also does not read source merely to select a winning position.
 
 ## Human-readable default
 
-Response ngắn trước, detail/provenance sau:
+The response presents a short answer first, then detail/provenance:
 
 ```text
-⚠ TTL hiện có nhiều nguồn:
-- 7 ngày — configuration snapshot, repo commit abc…, observed 5 days ago
-- 30 ngày — documentation snapshot, repo commit def…, observed 12 days ago
-- Maintainer Guidance: 7 ngày — human:khoa, subject/property scope
-Question: Needs Review — evidence mới đang mâu thuẫn Guidance
+⚠ TTL currently has multiple sources:
+- 7 days — configuration snapshot, repository commit abc…, observed 5 days ago
+- 30 days — documentation snapshot, repository commit def…, observed 12 days ago
+- Maintainer Guidance: 7 days — human:khoa, subject/property scope
+Question: Needs Review — new evidence conflicts with Guidance
 ```
 
-Agent có thể nói “Guidance hiện hướng dẫn dùng 7 ngày”, nhưng không được nói
-“TTL chắc chắn là 7 ngày”.
+The Agent can say “Guidance currently directs use of 7 days,” but cannot say
+“TTL is definitely 7 days.”
 
 ## Structured composition
 

@@ -1,55 +1,56 @@
 # 10.06 — Hub Markdown retrieval
 
-> Trạng thái: Implemented in capability 049; deterministic qualification passes.
+> Status: Implemented in capability 049; deterministic qualification passes.
 
 ## Outcome
 
-`search_hub_okf` query một structured Markdown knowledge base theo flow đã được
-dùng rộng rãi: discovery có scope và bound, trả best section/snippet, sau đó
-`read_hub_okf_concept` mới hydrate full document. OKF quyết định corpus shape;
-MCP quyết định tool contract; full-text library quyết định lexical relevance.
-AgentBase không tạo query language hoặc scoring algorithm mới.
+`search_hub_okf` queries a structured Markdown knowledge base using a widely
+adopted flow: scoped and bounded discovery returns the best section/snippet,
+then `read_hub_okf_concept` hydrates the full document. OKF determines corpus
+shape; MCP determines the tool contract; the full-text library determines lexical
+relevance. AgentBase does not create a new query language or scoring algorithm.
 
 Research authority:
 [capability 049 Phase 0](../../../specs/049-hub-query-quality/research.md).
 
 ## Upstream contracts reused
 
-- OKF `description` là one-line summary chính thức cho `index.md`, snippet và
-  preview; `tags` là cross-cutting categorization; structured Markdown hỗ trợ
-  agent retrieval; `index.md` là progressive disclosure.
-- Google local Markdown-KB sample dùng `list → search content → read file`.
-- Google Knowledge Catalog MCP dùng bounded `search_entries`, rồi
-  `lookup_context`/`lookup_entry` để lấy rich content.
-- MCP chuẩn hóa resources/tools và bounds, không chuẩn hóa document relevance.
-- Markdown retrieval libraries giữ heading hierarchy khi chia section.
+- OKF `description` is the official one-line summary for `index.md`, snippets and
+  previews; `tags` provide cross-cutting categorization; structured Markdown
+  supports Agent retrieval; `index.md` provides progressive disclosure.
+- Google's local Markdown-KB sample uses `list → search content → read file`.
+- Google Knowledge Catalog MCP uses bounded `search_entries`, followed by
+  `lookup_context`/`lookup_entry` to retrieve rich content.
+- MCP standardizes resources/tools and bounds, not document relevance.
+- Markdown retrieval libraries preserve heading hierarchy when splitting sections.
 
-Vì vậy không thêm `summary`, không nhét toàn bộ Hub vào một MCP result và không
-coi browser/static-site index là query authority.
+Therefore, do not add `summary`, put the entire Hub into one MCP result or treat
+a browser/static-site index as query authority.
 
 ## Public retrieval contract
 
-Public surface vẫn chỉ có hai knowledge primitives:
+The public surface still has only two knowledge primitives:
 
-1. `search_hub_okf(query, domain?, types?, global?, limit?)` cho discovery;
-2. `read_hub_okf_concept(path)` cho exact full Markdown.
+1. `search_hub_okf(query, domain?, types?, global?, limit?)` for discovery;
+2. `read_hub_okf_concept(path)` for exact full Markdown.
 
-Domain/type/global là typed MCP arguments hiện có. Capability 049 không parse
-một mini-Lucene syntax từ `query`; free text vẫn là free text. Exact identity,
-path hoặc title được kiểm tra trước lexical search vì chúng là stable addresses,
-không phải relevance weights.
+Domain/type/global are existing typed MCP arguments. Capability 049 does not
+parse mini-Lucene syntax from `query`; free text remains free text. Exact identity,
+path or title is checked before lexical search because these are stable addresses,
+not relevance weights.
 
-Search trả basic concept information, exact Published commit, best matching
-section/snippet và bounded context. Caller chọn result trước khi read full file.
+Search returns basic concept information, the exact Published commit, the best
+matching section/snippet and bounded context. The caller selects a result before
+reading the full file.
 
 ## Transient search projection
 
-Một exact synchronized Published commit được project in memory thành hai unit:
+One exact synchronized Published commit is projected in memory into two units:
 
 ### Concept record
 
-- identity và Markdown path;
-- title, type, description và tags;
+- identity and Markdown path;
+- title, type, description and tags;
 - portable outbound Markdown-link targets;
 - AgentBase accepted canonical relation/Flow context;
 - Domain eligibility evidence.
@@ -61,11 +62,11 @@ Một exact synchronized Published commit được project in memory thành hai 
 - section text preserving enough original whitespace for excerpts;
 - deterministic ordinal within the document.
 
-Frontmatter boundary hoặc body before the first heading may form the document
+The frontmatter boundary or body before the first heading may form the document
 root section. Empty sections are omitted. Sections are request-local retrieval
 records, not new OKF concepts, files or persistent chunks.
 
-At current scale, section boundaries follow Markdown headings only. Blind fixed
+At the current scale, section boundaries follow Markdown headings only. Blind fixed
 character/token chunks and overlap are deferred until an oversized-section
 qualification demonstrates a recall or response-bound problem.
 

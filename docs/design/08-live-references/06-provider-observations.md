@@ -1,6 +1,6 @@
 # 08.06 — Provider observations
 
-> Trạng thái: Normalized AWS/SQS provider observations đã implement; ordinary query vẫn snapshot-only.
+> Status: Normalized AWS/SQS provider observations are implemented; ordinary query remains snapshot-only.
 
 Provider CLI values enter Hub only through confirmed Domain Enrichment and the
 bounded verification profiles in Part 06.04. Initial Ingest, Refresh and normal

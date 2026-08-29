@@ -1,24 +1,24 @@
-# 07 — Conflicts, Questions và Guidance
+# 07 — Conflicts, Questions and Guidance
 
-> Trạng thái: Shared Question/exact Guidance và AWS/SQS three-tier enrichment đã implement; broader conflict composition deferred.
+> Status: Shared Questions/exact Guidance and three-tier AWS/SQS enrichment are implemented; broader conflict composition is deferred.
 
 High-level decision:
-[Dữ liệu xung đột, Questions và Maintainer Guidance](../../present/07-conflicts-questions-and-maintainer-guidance.md)
+[Conflicting data, Questions and Maintainer Guidance](../../present/07-conflicts-questions-and-maintainer-guidance.md)
 
-## Phân rã dự kiến
+## Planned breakdown
 
 - [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — current claim/
-  Question/guidance baseline, shared-state gap và impact checkpoint.
+  Question/guidance baseline, shared-state gap and impact checkpoint.
 - [`01-claim-and-provenance-model.md`](01-claim-and-provenance-model.md) —
-  natural knowledge identities, nhiều nguồn và conflict provenance.
+  natural knowledge identities, multiple sources and conflict provenance.
 - [`02-question-lifecycle.md`](02-question-lifecycle.md) — shared Question
-  documents cùng Open, Resolved và Needs Review lifecycle.
+  documents with the Open, Resolved and Needs Review lifecycle.
 - [`03-maintainer-guidance.md`](03-maintainer-guidance.md) — human evidence,
-  exact Question scope và Guidance revision rules.
+  exact Question scope and Guidance revision rules.
 - [`04-conflict-presentation.md`](04-conflict-presentation.md) — bounded
-  positions, provenance, Guidance và Question trong Hub/query/PR.
+  positions, provenance, Guidance and Questions in the Hub/query/pull request.
 - [`05-correction-and-removal.md`](05-correction-and-removal.md) — reviewed
-  correction/removal với PR evidence và Git history, không item tombstone.
+  correction/removal with pull-request evidence and Git history, without item tombstones.
 - [`06-batch-question-resolution.md`](06-batch-question-resolution.md) —
-  automatic verification, recommended confirmation và direct maintainer input
-  trong một Domain Enrichment draft.
+  automatic verification, recommended confirmation and direct maintainer input
+  in one Domain Enrichment draft.

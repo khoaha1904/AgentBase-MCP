@@ -1,42 +1,42 @@
 # 09.08 — OKF Freshness
 
-> Trạng thái: Observation metadata, value age, Repository report and warning-only CI implemented.
+> Status: Observation metadata, value age, the Repository report and warning-only CI are implemented.
 
 ## Boundary
 
-OKF Freshness mô tả repository/source contribution được quan sát bao lâu và tại
-revision nào. Nó độc lập với Code Graph cache freshness và không phán quyết
-knowledge đúng/sai.
+OKF Freshness describes how long ago a repository/source contribution was
+observed and at which revision. It is independent of Code Graph cache freshness
+and does not judge whether knowledge is correct.
 
 ## Source contribution metadata
 
-Successful Ingest/Refresh giữ tối thiểu:
+A successful Ingest/Refresh retains at least:
 
 - canonical Repository ID;
-- observed source revision hoặc dirty digest;
+- observed source revision or dirty digest;
 - observed/refreshed time;
-- partial/known limitations của run.
+- partial/known limitations from the run.
 
-Concept có nhiều repository sources trình bày freshness theo contribution, không
-gán một timestamp giả cho toàn concept.
+A concept with multiple repository sources presents freshness per contribution
+and does not assign one artificial timestamp to the entire concept.
 
 ## MCP query presentation
 
-Query thêm derived information cạnh result, không rewrite Markdown:
+Query adds derived information beside the result without rewriting Markdown:
 
 ```text
 observed 47 days ago at revision abc123
 ```
 
-Ordinary snapshot query không probe source và trả `not-checked`. Nếu một
-explicit current-source/Refresh operation đã có authorized source state, response
-có thể bổ sung:
+Ordinary snapshot query does not probe the source and returns `not-checked`. If
+an explicit current-source/Refresh operation already has authorized source state,
+the response may add:
 
 - exact source match: observed revision still matches current source;
 - source advanced: refresh may be useful;
-- repository mismatch/unavailable: freshness comparison unknown, vẫn hiển thị age.
+- repository mismatch/unavailable: freshness comparison unknown; still show age.
 
-Không có action tự động, không ẩn result và không hạ publication state.
+There is no automatic action, result hiding or publication-state downgrade.
 
 ## Scheduled CI summary
 
@@ -53,13 +53,13 @@ A future capability may persist a derived output, for example:
 reports/okf-freshness.md
 ```
 
-Report list Repository ID/title, last observed time, age, revision và known
-limitations, sort oldest/unknown để maintainer xem. Version đầu không cần stale
-threshold; luôn hiển thị exact age thay vì tự gán nhãn tùy ý.
+The report lists Repository ID/title, last observed time, age, revision and known
+limitations, sorted oldest/unknown for maintainer review. The first version needs
+no stale threshold; it always shows exact age instead of assigning an arbitrary label.
 
-Report không phải source of truth và có thể rebuild. GitHub Actions summary/
-artifact là output đơn giản nhất. Nếu persist file vào Hub Git thì CI tạo PR;
-không push thẳng `main` và không kích hoạt Refresh.
+The report is not a source of truth and can be rebuilt. A GitHub Actions summary/
+artifact is the simplest output. If the file is persisted to Hub Git, CI creates
+a pull request; it does not push directly to `main` or trigger Refresh.
 
 ## Remaining gap
 

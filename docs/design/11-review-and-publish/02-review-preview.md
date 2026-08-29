@@ -1,13 +1,14 @@
 # 11.02 — Review preview
 
-> Trạng thái: Structured inspection including atomic Batch Initial Ingest
-> implemented; optional visual review deferred.
+> Status: Structured inspection, including atomic Batch Initial Ingest, is
+> implemented; optional visual review is deferred.
 
 ## Outcome
 
-Review cho người dùng hiểu proposal sẽ thay đổi gì trước Local Accept và trước
-PR. Selection diễn ra khi authoring draft còn editable; một proposal đã Finalize
-là một atomic review unit và chỉ được Accept toàn bộ hoặc trả lại để sửa.
+Review lets the user understand what a proposal will change before Local Accept
+and before a pull request. Selection occurs while the authoring draft is still
+editable; a Finalized proposal is an atomic review unit and can only be Accepted
+in full or returned for editing.
 
 ## MVP flow
 
@@ -23,51 +24,50 @@ immutable Local Draft commit
 PR preview/body + exact Git diff
 ```
 
-Preview nhóm `Added`, `Updated`, `Removed` và `Questions/Limitations`. Initial
-Ingest còn hiển thị Repository/Domain/revision, five-lane coverage, embedded
-groups, relations/Flows và ignored counts/reasons; raw Seed/Inventory/graph
-không vào review/PR. Mỗi entry
-giữ path, change kind, allowed state, reason khi có, bounded before/after bytes
-và digest. Destructive entry phải giữ correction/removal reason/evidence;
-preview không tự suy diễn lý do từ Git diff.
+Preview groups `Added`, `Updated`, `Removed` and `Questions/Limitations`. Initial
+Ingest also shows Repository/Domain/revision, five-lane coverage, embedded groups,
+relations/Flows and ignored counts/reasons; raw Seed/Inventory/graph data does
+not enter review or the pull request. Each entry retains its path, change kind,
+allowed state, reason when available, bounded before/after bytes and digest. A
+destructive entry must retain its correction/removal reason/evidence; preview
+does not infer the reason from the Git diff.
 
 ## Atomic selection rule
 
-- Concept, relation, Question, evidence và navigation có thể được chỉnh trước
-  Finalize.
-- Finalize kiểm tra lại toàn bundle, relation targets, protected bytes,
-  Question references và navigation invariants.
-- Sau Finalize không có per-item checkbox làm thay đổi bundle đã khóa.
-- Review không đạt thì quay lại authoring và Finalize lại; Accept yêu cầu exact
-  proposal diff digest và tree digest đã review.
-- Publication có thể chọn proposal commits dependency-safe, nhưng không cắt
-  item bên trong một accepted proposal.
+- Concepts, relations, Questions, evidence and navigation can be edited before Finalize.
+- Finalize rechecks the entire bundle, relation targets, protected bytes,
+  Question references and navigation invariants.
+- After Finalize, no per-item checkbox can change the locked bundle.
+- If review fails, return to authoring and Finalize again; Accept requires the
+  exact reviewed proposal diff digest and tree digest.
+- Publication can select dependency-safe proposal commits but cannot split items
+  inside an accepted proposal.
 
-Quy tắc này tránh phải tạo một selection engine thứ hai có nhiệm vụ tự sửa
-relation/index/Question khi user bỏ một item.
+This rule avoids creating a second selection engine that automatically repairs a
+relation/index/Question when the user removes an item.
 
 ## Optional visual review after MVP
 
-Có thể sinh một static local HTML từ immutable inspection data để hiển thị:
+A static local HTML file can be generated from immutable inspection data to show:
 
-- summary và các nhóm thay đổi;
-- concept cards với before/after;
-- relation graph và affected neighbors;
-- Questions, limitations và evidence/provenance;
+- a summary and change groups;
+- concept cards with before/after content;
+- a relation graph and affected neighbors;
+- Questions, limitations and evidence/provenance;
 - exact proposal/tree/diff identity.
 
-HTML là derived view, không phải Hub state hay review authority. Phiên bản đầu
-nếu triển khai chỉ cần generate file và mở bằng browser; không cần persistent
-server, database, login hoặc write API. Interactive editing/selection chỉ được
-xem xét sau khi static view chứng minh có ích, và mọi thay đổi vẫn phải quay về
-authoring rồi Finalize lại.
+HTML is a derived view, not Hub state or review authority. If implemented, the
+first version only needs to generate a file and open it in a browser; it needs no
+persistent server, database, login or write API. Interactive editing/selection is
+considered only after the static view proves useful, and every change must still
+return to authoring and be Finalized again.
 
 ## Failure boundaries
 
-- Truncated content phải ghi rõ và giữ digest; không trình bày như full diff.
-- Invalid/non-applicable inspection không được Accept.
-- Proposal bytes/base thay đổi sau inspection làm Accept fail closed.
-- Preview không đọc source, probe credential, Refresh, Accept hay Publish.
+- Truncated content must be marked clearly and retain its digest; do not present it as a full diff.
+- An invalid/non-applicable inspection cannot be Accepted.
+- Proposal bytes/base changing after inspection makes Accept fail closed.
+- Preview does not read source, probe credentials, Refresh, Accept or Publish.
 
 ## Knowledge activity summaries
 
@@ -81,6 +81,6 @@ diff remain the complete audit history.
 
 ## Current implementation gap
 
-Structured inspection, grouped changes, bounded content và exact-digest Accept
-đã có. Host workflow cần diễn đạt rõ bước return-to-authoring khi review không
-đạt. Static HTML/graph review chưa thuộc MVP và chưa cần runtime capability.
+Structured inspection, grouped changes, bounded content and exact-digest Accept
+exist. The host workflow must clearly express the return-to-authoring step when
+review fails. Static HTML/graph review is outside the MVP and needs no runtime capability yet.

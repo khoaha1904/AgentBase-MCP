@@ -1,58 +1,61 @@
 # 09.04 — Repository identity
 
-> Trạng thái: Canonical identity/aliases implemented cho qualified path; edge cases còn lại.
+> Status: Canonical identity/aliases are implemented for the qualified path; edge cases remain.
 
-## Mục tiêu
+## Goal
 
-Repository đổi tên, chuyển organization, đổi remote alias hoặc checkout ở path
-khác vẫn được nhận là repository cũ và chạy Refresh.
+A repository that is renamed, transferred to another organization, given a new
+remote alias or checked out at a different path is still recognized as the same
+repository and runs Refresh.
 
 ## Canonical identity
 
-Initial Ingest gán một AgentBase Repository ID đúng một lần và lưu nó trong
-Repository concept của Hub. Source references, proposals và contributions dùng
-ID này về sau.
+Initial Ingest assigns an AgentBase Repository ID exactly once and stores it in
+the Hub's Repository concept. Source references, proposals and contributions use
+this ID thereafter.
 
 ```text
 repository-vehicle-crawler-a1b2c3d4e5f6
 ```
 
-ID không được tính lại từ current folder name hoặc current origin URL mỗi run.
+The ID is not recalculated from the current folder name or origin URL on each run.
 
 ## Identity hints
 
-Checkout discovery trả hints để tìm canonical Repository concept:
+Checkout discovery returns hints for finding the canonical Repository concept:
 
 - normalized current remote URLs;
 - display/repository names;
 - Git root commit/lineage hints;
-- optional immutable forge/provider repository ID khi đã có evidence;
-- known aliases đã lưu trong Hub.
+- an optional immutable forge/provider repository ID when evidence is available;
+- known aliases stored in the Hub.
 
-Remote URL, name và root commit là evidence/aliases, không phải canonical ID.
-Root commit một mình không phân biệt chắc repository với fork.
+Remote URL, name and root commit are evidence/aliases, not the canonical ID. A
+root commit alone cannot reliably distinguish a repository from a fork.
 
 ## Resolution
 
-1. Search active Hub Repository concepts bằng strong hints/aliases.
-2. Exact strong match: reuse canonical ID và chọn Refresh.
-3. Ambiguous fork/mirror/copy lineage: hỏi user trước khi chọn mode.
-4. No match: Initial Ingest tạo ID mới.
+1. Search active Hub Repository concepts using strong hints/aliases.
+2. Exact strong match: reuse the canonical ID and select Refresh.
+3. Ambiguous fork/mirror/copy lineage: ask the user before selecting a mode.
+4. No match: Initial Ingest creates a new ID.
 
-Rename/organization transfer chỉ bổ sung alias/evidence. Fork độc lập tạo ID mới
-và có thể giữ `forked-from`; mirror dùng cùng ID chỉ khi lineage được xác nhận.
+A rename/organization transfer only adds alias/evidence. An independent fork gets
+a new ID and may retain `forked-from`; a mirror uses the same ID only when lineage
+is confirmed.
 
 ## Duplicate Initial Ingest
 
-Không thêm remote claim/lock. Nếu hai Initial Ingest trùng xảy ra, proposal
-được publish trước giữ canonical identity. Owner hủy proposal còn lại, pull Hub
-và rerun contribution bằng Refresh như high-level đã chốt.
+Do not add a remote claim/lock. If two duplicate Initial Ingest runs occur, the
+proposal published first retains the canonical identity. The owner cancels the
+other proposal, pulls the Hub and reruns its contribution with Refresh as the
+high-level design establishes.
 
 ## Implementation delta
 
-Initial Ingest hiện derive một durable Repository ID từ admitted identity hints
-và lưu remotes/root commits làm aliases; Refresh nhận canonical ID từ Hub
-Repository concept và cập nhật `observed_source`. Ambiguous fork/mirror/provider
-identity recovery đầy đủ vẫn chưa được qualification như một workflow riêng.
+Initial Ingest currently derives a durable Repository ID from admitted identity
+hints and stores remotes/root commits as aliases; Refresh obtains the canonical
+ID from the Hub Repository concept and updates `observed_source`. Full ambiguous
+fork/mirror/provider identity recovery has not yet been qualified as a separate workflow.
 
-Không có remote claim/lock cho duplicate Initial Ingest như owner đã chốt.
+There is no remote claim/lock for duplicate Initial Ingest, as decided by the owner.

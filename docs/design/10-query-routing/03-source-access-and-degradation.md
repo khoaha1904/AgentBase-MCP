@@ -1,118 +1,119 @@
 # 10.03 — Source access and degradation
 
-> Trạng thái: Local degradation contract accepted; remote reader is the first
+> Status: The local degradation contract is accepted; the remote reader is the first
 > post-phase query capability and is outside MVP only.
 
 ## Outcome
 
-Hub knowledge và snapshot luôn đọc độc lập với source permission. Source
-authority chỉ được kiểm tra cho explicit current-value/code request hoặc khi
-task implementation/debug/impact thật sự cần code. Source không đọc được thì
-câu trả lời degrade về Hub/snapshot thay vì fail toàn bộ hoặc đoán.
+Hub knowledge and snapshots are always read independently of source permission.
+Source authority is checked only for an explicit current-value/code request or
+when implementation/debugging/impact work genuinely requires code. If source
+cannot be read, the answer degrades to the Hub/snapshot instead of failing
+entirely or guessing.
 
 ## Separate trust boundaries
 
-- **Hub access**: có quyền vào Hub thì đọc được toàn Hub; không có Domain,
-  concept hoặc field ACL riêng.
-- **Local source access**: user đã chọn một exact local/workspace repository root
-  cho current MCP connection.
-- **Remote source access**: post-MVP bounded MCP action dùng active
+- **Hub access**: Hub access permits reading the entire Hub; there is no separate
+  Domain, concept or field ACL.
+- **Local source access**: the user selected an exact local/workspace repository
+  root for the current MCP connection.
+- **Remote source access**: a post-MVP bounded MCP action uses the active
   MCP-managed GitHub.com/GitHub Enterprise token;
-  calling agent không nhận token và không dùng `gh`/ambient credential.
-- **Provider access**: không thuộc normal query route; provider CLI observations
-  chỉ chạy trong explicit Domain Enrichment workflow.
+  the calling Agent does not receive the token or use `gh`/ambient credentials.
+- **Provider access**: does not belong to the normal query route; provider CLI
+  observations run only in an explicit Domain Enrichment workflow.
 
-Hub relation hoặc `repository://` reference xác định source identity/path nhưng
-không tự cấp quyền source.
+A Hub relation or `repository://` reference identifies source identity/path but
+does not grant source access automatically.
 
 ## Snapshot-default access flow
 
-Với câu hỏi về value:
+For a value question:
 
-1. đọc Hub observed snapshot và giữ exact layer/source/time/age;
-2. nếu snapshot đủ trả lời user intent, dừng ở snapshot;
-3. nếu user hỏi current value, kiểm tra current repository binding;
-4. chỉ khi repository ID match mới dùng normal graph/file tools;
-5. trình bày current result riêng với snapshot; không write-back.
+1. read the Hub observed snapshot and retain the exact layer/source/time/age;
+2. if the snapshot sufficiently answers user intent, stop at the snapshot;
+3. if the user asks for the current value, check the current repository binding;
+4. use normal graph/file tools only when the repository ID matches;
+5. present the current result separately from the snapshot; do not write back.
 
-Snapshot cũ, conflict/Question hiện hữu, hoặc việc local source đang available
-không tự kích hoạt bước 3. Đây là semantic stopping rule của Agent, không phải
-một quota hay bộ đếm source-read trong MCP.
+An old snapshot, an existing conflict/Question or available local source does
+not trigger step 3 automatically. This is an Agent semantic stopping rule, not a
+quota or source-read counter in MCP.
 
-Không có snapshot phù hợp không cấm một explicit authorized source read, nhưng
-query không tự tạo snapshot hoặc proposal.
+The absence of a suitable snapshot does not forbid an explicit authorized source
+read, but query does not create a snapshot or proposal automatically.
 
 ## Access and resolution states
 
-Source access và value resolution là hai thứ khác nhau:
+Source access and value resolution are separate:
 
 | State | Meaning |
 |---|---|
-| `not-checked` | Snapshot-only query; chưa probe source/credential. |
-| `available` | Exact repository binding/path đã authorize cho read này. |
-| `unavailable` | Repository không local, binding mismatch, path missing hoặc graph/file read không dùng được. |
-| `unauthorized` | Future remote action đã thử MCP credential và provider trả permission denial. |
+| `not-checked` | Snapshot-only query; source/credentials were not probed. |
+| `available` | The exact repository binding/path is authorized for this read. |
+| `unavailable` | Repository is not local, the binding mismatches, the path is missing or graph/file reading is unavailable. |
+| `unauthorized` | A future remote action tried an MCP credential and the provider denied permission. |
 
-Khi access `available`, current resolution vẫn có thể là `resolved`,
-`ambiguous`, `missing` hoặc `redacted`. Có quyền đọc file không chứng minh Agent
-đã map đúng property vào một value.
+When access is `available`, current resolution can still be `resolved`,
+`ambiguous`, `missing` or `redacted`. Permission to read a file does not prove
+that the Agent mapped the property to the correct value.
 
-Response giữ một bounded reason như `repository-not-local`, `binding-mismatch`,
-`path-missing`, `graph-unavailable`, `permission-denied` hoặc `unsafe-value` để
-người dùng biết vì sao current verification không hoàn tất. Nó không expose
-local absolute path, token hoặc provider response body.
+The response retains a bounded reason such as `repository-not-local`,
+`binding-mismatch`, `path-missing`, `graph-unavailable`, `permission-denied` or
+`unsafe-value` so the user knows why current verification did not complete. It
+does not expose a local absolute path, token or provider response body.
 
 ## Local and workspace repositories
 
-- Một connection bind đúng một explicit repository root.
-- Reference Repository ID phải match admitted identity của binding trước khi
-  dùng relative path.
-- Relative path phải nằm trong root; không follow symlink/path escape.
-- Repository khác trong workspace chỉ được đọc sau khi user/host đã xác định
-  exact root và reconnect vào nó. Không scan workspace parent hoặc build một
-  cross-repository graph.
-- Missing referenced path degrade thành `path-missing`; không chạy broad
-  moved-symbol recovery hoặc đoán file thay thế.
+- One connection binds exactly one explicit repository root.
+- A referenced Repository ID must match the binding's admitted identity before
+  using the relative path.
+- A relative path must remain inside the root; do not follow a symlink/path escape.
+- Another repository in the workspace is read only after the user/host identifies
+  its exact root and reconnects to it. Do not scan the parent workspace or build
+  a cross-repository graph.
+- A missing referenced path degrades to `path-missing`; do not run broad
+  moved-symbol recovery or guess a replacement file.
 
-Graph thiếu coverage có thể dùng bounded direct source fallback trong cùng
-authorized root. Nếu freshness thực sự cần cho current question, Agent có thể
-explicitly re-index; ordinary Hub/snapshot query không index.
+A graph with insufficient coverage can use a bounded direct-source fallback in
+the same authorized root. If freshness is genuinely needed for the current
+question, the Agent can explicitly reindex; ordinary Hub/snapshot query does not index.
 
 ## Remote references
 
-Remote file reading is deferred from MVP but prioritized immediately after this
-phase. Khi chưa có action đó:
+Remote file reading is deferred from the MVP but prioritized immediately after
+this phase. Until that action exists:
 
-- khác repository không local → `unavailable/repository-not-local`;
-- trả Hub knowledge và snapshot nếu có;
-- giữ remote/file reference để người dùng tự điều tra hoặc authorize workflow
-  khác;
-- không clone repository, gọi GitHub trực tiếp hoặc mượn publication transport
-  như một hidden reader.
+- another non-local repository → `unavailable/repository-not-local`;
+- return Hub knowledge and a snapshot when available;
+- retain the remote/file reference for the user to investigate or authorize
+  another workflow;
+- do not clone a repository, call GitHub directly or repurpose publication
+  transport as a hidden reader.
 
-Remote reader capability dùng exact canonical Repository identity, bounded
-file/revision reference và shared owner-private Hub token. Token chỉ ở MCP server, không
-đưa cho Agent; GitHub.com và GitHub Enterprise khác base API nhưng dùng cùng
-product contract. Nó không clone repo, dùng `gh`, scan repo hoặc biến local path
-thành shared authority.
+The remote-reader capability uses an exact canonical Repository identity, bounded
+file/revision reference and shared owner-private Hub token. The token remains only
+on the MCP server and is not given to the Agent; GitHub.com and GitHub Enterprise
+have different base APIs but use the same product contract. It does not clone a
+repository, use `gh`, scan a repository or turn a local path into shared authority.
 
-Remote default branch/head phù hợp cho explicit current-source request; exact
-historical revision phù hợp để kiểm tra provenance. Transport, branch
-resolution và response bounds sẽ được chốt trong capability đó, không nhồi vào
-MVP query implementation.
+The remote default branch/head is suitable for an explicit current-source request;
+an exact historical revision is suitable for checking provenance. Transport,
+branch resolution and response bounds will be defined in that capability, not
+packed into the MVP query implementation.
 
 ## Integrity and safety failures
 
-- Source thay đổi giữa current reads: trả indeterminate/unavailable; không ghép
-  bytes từ hai revisions.
-- Unsafe value: redact current candidate, giữ safe Hub knowledge/siblings.
-- Secret-bearing path: không đọc để resolve value.
-- Hub layer invalid không được thay bằng source result mang nhãn Hub knowledge.
-- Source failure không tự tạo Question, Refresh, Enrichment hoặc publication.
+- Source changes between current reads: return indeterminate/unavailable; do not
+  combine bytes from two revisions.
+- Unsafe value: redact the current candidate and retain safe Hub knowledge/siblings.
+- Secret-bearing path: do not read it to resolve a value.
+- An invalid Hub layer cannot be replaced with a source result labeled Hub knowledge.
+- Source failure does not create a Question, Refresh, Enrichment or publication automatically.
 
 ## Minimal implementation impact
 
-Local flow chủ yếu là host-skill wiring trên current tools. Runtime change chỉ
-cần khi response cần structured degradation metadata. Remote source access là
-broad separate capability; no dependency, cache hoặc reader abstraction được
-thêm trước khi capability đó được owner duyệt.
+The local flow is primarily host-skill wiring over current tools. Runtime change
+is needed only when the response requires structured degradation metadata. Remote
+source access is a broad separate capability; no dependency, cache or reader
+abstraction is added before the owner approves that capability.

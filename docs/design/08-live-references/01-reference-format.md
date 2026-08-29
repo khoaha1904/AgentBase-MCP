@@ -1,33 +1,33 @@
 # 08.01 — File source and observed-value format
 
-> Trạng thái: Repository reference và observed-value contract đã implement.
+> Status: The Repository reference and observed-value contract are implemented.
 
-## Quyết định ngắn
+## Decision summary
 
-Observed value trỏ tới một admitted Repository-file hoặc provider-observation
-source, không trỏ executable symbol/function. Nhiều values có thể dùng chung
-một `sources[].id`; current-source reread chỉ áp dụng Repository-file variant.
+An observed value points to an admitted Repository-file or provider-observation
+source, not an executable symbol/function. Multiple values can share one
+`sources[].id`; current-source rereading applies only to the Repository-file variant.
 
 ## File source
 
-Canonical repository source có hai dạng:
+A canonical repository source has two forms:
 
 ```text
 repository://<repository-id>/<encoded-relative-path>
 repository://<repository-id>/<encoded-relative-path>#L<start>-L<end>
 ```
 
-- Repository ID và path là authority/provenance.
-- Line span optional và chỉ là evidence hint tại observed revision.
-- Absolute path, remote URL, checkout/cache location và credential bị cấm.
-- Path normalize beneath canonical Repository root.
-- File move chỉ làm current lookup trả `current-path-unavailable`; provenance tại
-  observed revision vẫn valid. Refresh/human có thể repair reference nhưng MCP
-  không tìm symbol để tự rewrite path.
+- Repository ID and path provide authority/provenance.
+- A line span is optional and only an evidence hint at the observed revision.
+- Absolute paths, remote URLs, checkout/cache locations and credentials are forbidden.
+- The path is normalized beneath the canonical Repository root.
+- A file move only makes current lookup return `current-path-unavailable`;
+  provenance at the observed revision remains valid. Refresh or a human can
+  repair the reference, but MCP does not search for a symbol to rewrite the path.
 
-Một broad file reference được dùng khi nhiều values nằm cùng file. Exact line
-span vẫn nên dùng khi nó có sẵn và giúp reviewer, nhưng không bắt buộc chỉ để
-snapshot một value dễ hiểu.
+A broad file reference is used when multiple values reside in the same file. An
+exact line span should still be used when available and helpful to the reviewer,
+but is not required merely to snapshot an understandable value.
 
 Observed-value sources are a closed discriminated union by URI scheme:
 
@@ -60,28 +60,29 @@ agentbase:
         at: 2026-08-22T08:00:00Z
 ```
 
-Contract giữ stable bundle-unique ID, normalized subject/property, role
+The contract retains a stable bundle-unique ID, normalized subject/property, role
 `documentation|implementation|configuration|provider`, one scalar/single-line value,
-source ID và exact observed source state/time. Không có `target.kind`, target
-name, resolver instruction hoặc `current: true`.
+source ID and exact observed source state/time. There is no `target.kind`, target
+name, resolver instruction or `current: true`.
 
-Value giữ bounds/sensitive filter hiện tại: non-empty, one line, tối đa 256 UTF-8
-bytes, finite number/boolean/string only. Một concept tối đa 64 observed values;
-completeness không phải mục tiêu.
+A value retains the current bounds/sensitive filter: non-empty, one line, at most
+256 UTF-8 bytes and only a finite number, boolean or string. A concept has at most
+64 observed values; completeness is not the goal.
 
-Entry phải nằm trong concept mà nó mô tả và `subject` phải bằng canonical
-identity của concept đó. Cross-concept values không được đặt hộ trong một file
-khác; shared source không có nghĩa shared owner.
+An entry must reside in the concept it describes, and `subject` must equal that
+concept's canonical identity. Cross-concept values cannot be stored on another
+concept's behalf; a shared source does not imply a shared owner.
 
-MCP tạo ID mới theo `AB-OBS-<24hex>`, với hex là prefix SHA-256 của canonical
-JSON tuple `agentbase-observation-v1`, owning concept identity, subject,
-property, role và stable source scope. Repository scope là Repository identity +
-normalized path. Provider scope là provider + profile family + authority +
-location + native identity; evidence digest, time and profile version không thuộc
-scope. Refresh/Enrichment trước tiên match existing stream theo owning concept +
-subject + property + role + stable source scope; nếu match thì phải giữ ID.
-Reviewed file-move repair đổi source path nhưng giữ ID. Một semantic stream mới
-mới được cấp ID mới; model không tự đặt ID để né matching.
+MCP creates a new ID as `AB-OBS-<24hex>`, where the hex is a SHA-256 prefix of
+the canonical JSON tuple containing `agentbase-observation-v1`, owning concept
+identity, subject, property, role and stable source scope. Repository scope is
+Repository identity plus normalized path. Provider scope is provider plus profile
+family, authority, location and native identity; evidence digest, time and profile
+version are not part of the scope. Refresh/Enrichment first matches an existing
+stream by owning concept, subject, property, role and stable source scope; a match
+must retain its ID. A reviewed file-move repair changes the source path but keeps
+the ID. Only a new semantic stream receives a new ID; the model cannot assign an
+ID to evade matching.
 
 Repository source-state invariants:
 
@@ -118,14 +119,14 @@ IDs. They identify positions by `subject + property + role + source_id`; MCP
 resolves those natural references to normalized observed-value IDs before it
 locks the proposal.
 
-## Identity và multiple observations
+## Identity and multiple observations
 
-- Stable ID identifies one source-attributed observation stream, không phải
-  universal property truth.
-- Hai sources cho cùng subject/property giữ hai entries và có thể conflict theo
-  phần 07.
-- Refresh updates exact attributable entry with new value/revision/time; absence
-  không xóa it.
+- A stable ID identifies one source-attributed observation stream, not universal
+  property truth.
+- Two sources for the same subject/property retain two entries and may conflict
+  under Section 07.
+- Refresh updates the exact attributable entry with a new value/revision/time;
+  absence does not delete it.
 - Same source file can support many entries without duplicating `sources[]`.
 - Provider-native resource identity stays in 06.02 metadata; only a small useful
   provider value belongs here.

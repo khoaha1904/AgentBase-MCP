@@ -1,58 +1,60 @@
 # 11.06 — Verification and cleanup
 
-> Trạng thái: Transaction cleanup implemented; accepted-artifact cleanup deferred.
+> Status: Transaction cleanup is implemented; accepted-artifact cleanup is deferred.
 
 ## Outcome
 
-Reuse các gate hiện có; không tạo một verification workflow hoặc garbage
-collector riêng cho MVP.
+Reuse existing gates; do not create a separate verification workflow or garbage
+collector for the MVP.
 
 ## Verification gates
 
-1. **Finalize** kiểm tra exact authored bundle, schema, links, relations,
-   Questions, ownership, correction/removal intent và proposal diff.
-2. **Accept** kiểm tra exact tree/diff digest, base commit và immutable reviewed
-   bytes trước khi tạo Local Draft commit.
-3. **Publish/Sync** kiểm tra exact remote/base/branch/proposal identity và clean
-   candidate trước khi push hoặc advance local `main`.
+1. **Finalize** checks the exact authored bundle, schema, links, relations,
+   Questions, ownership, correction/removal intent and proposal diff.
+2. **Accept** checks the exact tree/diff digest, base commit and immutable reviewed
+   bytes before creating a Local Draft commit.
+3. **Publish/Sync** checks the exact remote/base/branch/proposal identity and clean
+   candidate before pushing or advancing local `main`.
 
-Các gate này không đọc lại source chỉ để làm proposal “chắc hơn”. Missing
-knowledge vẫn là Question/Limitation; source verification thuộc Refresh hoặc
-Domain Enrichment riêng.
+These gates do not reread source merely to make a proposal “more certain.”
+Missing knowledge remains a Question/Limitation; source verification belongs to
+a separate Refresh or Domain Enrichment workflow.
 
-Human verification/guidance nếu cần phải đi qua một reviewed proposal. Review
-UI hoặc PR action không sửa trực tiếp `verified`, Question hay knowledge bytes.
+Human verification/guidance must pass through a reviewed proposal when needed.
+A review UI or pull-request action does not directly modify `verified`, Question
+or knowledge bytes.
 
 ## Cleanup now
 
-- Successful authoring normalization/staging, isolated worktree và completed
-  transaction directory được dọn ngay.
-- Failure cần recovery giữ bounded transaction evidence; recovery xong mới dọn.
-- Source checkout, valid Code Graph cache, accepted Local Draft commits và Hub
-  remote không bao giờ bị cleanup workflow sửa/xóa.
-- Cleanup failure được báo; không giả vờ transaction đã biến mất.
+- Successful authoring normalization/staging, isolated worktrees and completed
+  transaction directories are cleaned immediately.
+- A failure requiring recovery retains bounded transaction evidence; cleanup
+  occurs after recovery completes.
+- Source checkouts, valid Code Graph caches, accepted Local Draft commits and the
+  Hub remote are never modified/deleted by the cleanup workflow.
+- Cleanup failure is reported; do not pretend the transaction disappeared.
 
 ## Accepted proposal artifacts
 
-MVP giữ private proposal bundle, inspection và receipts cho retry/PR summary.
-Question đã nằm trong reviewed Hub tree; không còn attachment hoặc private rebuild
-authority. Chưa có automatic retention, scheduled cleanup hoặc manual delete tool.
+The MVP retains the private proposal bundle, inspection and receipts for retry/
+pull-request summaries. A Question already resides in the reviewed Hub tree;
+there is no attachment or private rebuild authority. There is no automatic
+retention, scheduled cleanup or manual delete tool.
 
-Nếu disk usage thực tế chứng minh cần, có thể thêm một bounded cleanup cho
-proposal đã được recognized Published: xóa large rebuildable
-bundle/inspection, giữ minimal Git/proposal identity nếu còn cần audit. Chỉ thêm
-khi disk usage thực tế chứng minh cần.
+If actual disk usage proves it necessary, add bounded cleanup for a proposal
+recognized as Published: delete a large rebuildable bundle/inspection while
+retaining minimal Git/proposal identity when still needed for audit. Add this
+only when actual disk usage proves the need.
 
 ## Cancellation
 
-- Cancel authoring/Incomplete run chỉ được xóa private unaccepted staging của
-  exact run sau khi user yêu cầu.
-- Không cancel bằng cách reset Local Draft, drop accepted commit hoặc close PR.
-- Proposal đã Accept muốn thay đổi phải tạo proposal mới; cleanup không phải
-  lifecycle mutation.
+- Canceling authoring/an Incomplete run can delete only private unaccepted staging
+  for the exact run after the user requests it.
+- Do not cancel by resetting Local Draft, dropping an accepted commit or closing a pull request.
+- Changing an Accepted Proposal requires a new proposal; cleanup is not a lifecycle mutation.
 
 ## No additional MVP machinery
 
-Không daemon, TTL, retention policy, status database, cleanup scheduler hay
-source re-verifier. Existing deterministic gates và immediate temporary cleanup
-là đủ cho MVP.
+No daemon, TTL, retention policy, status database, cleanup scheduler or source
+re-verifier. Existing deterministic gates and immediate temporary cleanup are
+sufficient for the MVP.

@@ -1,97 +1,101 @@
 # 11.04 — Git and PR workflow
 
-> Trạng thái: Implemented for knowledge publication and dedicated Hub Initialization PRs.
+> Status: Implemented for knowledge publication and dedicated Hub Initialization pull requests.
 
 ## Outcome
 
-MCP biến explicit accepted proposal IDs thành dependency-safe Hub PRs bằng
-dedicated Hub token. Local accepted ancestry chỉ là storage order; publication
-base được tính theo Repository dependency và exact Published target branch.
+MCP turns explicit accepted proposal IDs into dependency-safe Hub pull requests
+using the dedicated Hub token. Local accepted ancestry is only storage order;
+the publication base is calculated from Repository dependencies and the exact
+Published target branch.
 
 ## Entry contract
 
-- User/Agent gọi `submit_hub_okf_proposals` với non-empty exact proposal IDs.
-- Proposal phải là accepted Local Draft trong admitted pending ancestry.
-- MCP fetch/admit exact remote repository, configured target branch, proposal commit/digest và
-  existing branch/PR identity trước mutation.
-- Calling Agent không nhận token và không được thay bằng `gh`, ambient Git
-  credential hoặc publisher khác.
+- The user/Agent invokes `submit_hub_okf_proposals` with non-empty exact proposal IDs.
+- The Proposal must be an accepted Local Draft in admitted pending ancestry.
+- MCP fetches/admits the exact remote repository, configured target branch,
+  proposal commit/digest and existing branch/pull-request identity before mutation.
+- The calling Agent does not receive the token and cannot substitute `gh`, an
+  ambient Git credential or another publisher.
 
 ## Publication units
 
 ### Independent Repository Init
 
-Mỗi Init của Repository khác nhau replay exact proposal contribution trên cùng
-Published target, dùng branch và PR riêng:
+Each Init for a different Repository replays the exact proposal contribution on
+the same Published target using a separate branch and pull request:
 
 ```text
 main ── PR Init A
   └── PR Init B
 ```
 
-Hai PR có thể cùng mở dù chưa merge. Local commit order A → B không làm B phụ
-thuộc A và bytes của A không được leak vào PR B.
+Both pull requests can be open before either merges. Local commit order A → B
+does not make B depend on A, and A's bytes do not leak into pull request B.
 
 ### Same-Repository Init/Refresh
 
-Proposal cùng Repository tạo exact stack:
+Proposals for the same Repository create an exact stack:
 
 ```text
 main ← Init branch ← Refresh branch ← next Refresh branch
 ```
 
-Mỗi PR chỉ chứa delta của proposal đó. Khi predecessor đã merge, MCP retarget
-proposal kế tiếp về `main` trong explicit reconciliation; PR identity được giữ.
+Each pull request contains only that proposal's delta. When its predecessor
+merges, MCP retargets the next proposal to `main` during explicit reconciliation;
+pull-request identity is preserved.
 
 ### Empty-remote bootstrap
 
-Explicit bootstrap là ngoại lệ direct-write duy nhất. Nó tạo target branch của
-một exact empty user-created remote với complete released README + root
-`index.md` + CI baseline, không replay knowledge proposal. Sau admission, mọi
-Init/Refresh/Batch/Enrichment knowledge đều dùng normal PR units. Existing Hub
-support repair dùng Initialization PR, không direct write.
+Explicit bootstrap is the only direct-write exception. It creates the target
+branch of an exactly empty user-created remote with the complete released README,
+root `index.md` and CI baseline, without replaying a knowledge proposal. After
+admission, all Init/Refresh/Batch/Enrichment knowledge uses normal pull-request
+units. Existing Hub support repair uses an Initialization pull request, not a direct write.
 
 ## Exact replay and shared indexes
 
-MCP không push local `main` nguyên khối. Nó replay exact accepted proposal patch
-trên publication base của unit, vì local tree có thể chứa draft của repository
-khác.
+MCP does not push local `main` wholesale. It replays the exact accepted proposal
+patch on the unit's publication base because the local tree may contain another
+repository's draft.
 
 Local accepted ancestry always uses internal `main`; remote publication targets
 the exact branch stored by the active Hub profile. No workflow substitutes the
 literal branch `main` for that configured target.
 
-Append-only shared `index.md` chỉ mang navigation lines do proposal chọn thêm.
-Khi Published target đã thêm navigation tương thích, MCP có thể union các exact
-unique append-only lines với cùng heading. Conflict khác, heading drift hoặc
-non-navigation bytes phải dừng trước push; MCP không đoán merge result.
+An append-only shared `index.md` contains only navigation lines selected by the
+proposal. When the Published target already added compatible navigation, MCP can
+union exact unique append-only lines under the same heading. Another conflict,
+heading drift or non-navigation bytes must stop before push; MCP does not guess
+the merge result.
 
 ## Branch and PR behavior
 
-- Branch identity derive deterministic từ proposal/publication identity.
-- Retry reuse exact matching branch và open PR; multiple/mismatched candidates
-  fail closed.
-- New PR body derive từ immutable accepted proposal, inspection và Git metadata:
+- Branch identity is derived deterministically from proposal/publication identity.
+- Retry reuses the exact matching branch and open pull request;
+  multiple/mismatched candidates fail closed.
+- A new pull-request body is derived from the immutable accepted proposal,
+  inspection and Git metadata:
   Purpose, Scope, Changes, Uncertainty, Evidence/Validation, Reviewer Action.
-- Missing optional inspection detail được ghi `unavailable`; model không viết
-  narrative mới lúc publish.
-- MCP có thể push/update chính branch do nó quản lý và retarget base khi
-  predecessor đã Published.
-- MCP không force-push, merge, approve, close PR, delete branch hoặc sửa repository
-  settings.
+- Missing optional inspection detail is recorded as `unavailable`; the model does
+  not write a new narrative during publication.
+- MCP can push/update only the branch it manages and retarget its base when the
+  predecessor is Published.
+- MCP does not force-push, merge, approve, close a pull request, delete a branch
+  or modify repository settings.
 
 ## Reconciliation when Published target advances
 
-1. fetch exact configured remote target;
-2. recognize proposals đã merge bằng proposal/patch identity;
-3. xử lý remaining branches tuần tự;
-4. merge new admitted base vào isolated branch candidate;
-5. auto-resolve chỉ safe append-only index conflicts;
-6. validate candidate rồi mới update cùng remote branch/PR;
-7. conflict khác dừng trước push và giữ local/open PR state.
+1. fetch the exact configured remote target;
+2. recognize merged proposals by proposal/patch identity;
+3. process remaining branches sequentially;
+4. merge the new admitted base into an isolated branch candidate;
+5. auto-resolve only safe append-only index conflicts;
+6. validate the candidate before updating the same remote branch/pull request;
+7. another conflict stops before push and retains local/open pull-request state.
 
-Không chạy song song vì tuần tự đơn giản hơn, giữ base rõ và tránh tự tạo
-conflict coordination.
+Do not run in parallel because sequential processing is simpler, keeps the base
+clear and avoids creating conflict coordination.
 
 The phrase Published base means the dedicated last-successfully-admitted ref,
 not `origin/<target>`. Fetch updates a private candidate ref. Only a validated
@@ -100,11 +104,12 @@ Published ref and every Local Draft unchanged.
 
 ## Failure and retry
 
-- Failure trước branch push không tạo PR.
-- Multi-unit submit có thể hoàn thành vài independent PR rồi dừng; receipt giữ
-  completed units và retry tiếp phần còn lại, không rollback PR đã tạo.
-- Network/permission failure giữ Local Draft và yêu cầu retry/credential repair.
-- Existing remote branch/PR drift không bị overwrite.
+- A failure before branch push creates no pull request.
+- A multi-unit submission can complete several independent pull requests and then
+  stop; the receipt retains completed units and retry continues the remainder
+  without rolling back created pull requests.
+- A network/permission failure retains Local Draft and requires retry/credential repair.
+- Existing remote branch/pull-request drift is not overwritten.
 - MCP never mutates the configured remote target directly after bootstrap;
   maintainer merge remains the publication gate.
 
@@ -124,7 +129,7 @@ bytes directly only because no target branch exists for a PR.
 
 ## Current implementation gap
 
-Core workflow và deterministic PR summary đã implement. Batch Ingest và Domain
-Enrichment publication units vẫn phụ thuộc capability tương ứng. Visual HTML
-review và explicit lifecycle presentation thuộc các phần 11.02/11.05, không làm
-Git transport phức tạp hơn.
+The core workflow and deterministic pull-request summary are implemented. Batch
+Ingest and Domain Enrichment publication units still depend on their corresponding
+capabilities. Visual HTML review and explicit lifecycle presentation belong to
+Sections 11.02 and 11.05 and do not make Git transport more complex.

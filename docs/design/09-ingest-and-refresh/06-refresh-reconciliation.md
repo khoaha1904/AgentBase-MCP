@@ -1,36 +1,38 @@
 # 09.06 — Refresh reconciliation and removal
 
-> Trạng thái: Core single-repository reconciliation implemented.
+> Status: Core single-repository reconciliation is implemented.
 
 ## Change evidence
 
-Refresh so last observed source revision với current source. Removal candidate
-có thể dùng:
+Refresh compares the last observed source revision with current source. A removal
+candidate can use:
 
 - exact Git deletion/rename diff;
-- source symbol/config/resource declaration đã mất tại current revision;
-- replacement identity và continuity evidence;
+- a source symbol/configuration/resource declaration missing at the current revision;
+- replacement identity and continuity evidence;
 - explicit maintainer guidance.
 
-Graph/search không tìm thấy hoặc partial coverage không đủ làm removal evidence.
-Rename/move có continuity thì update reference/identity hint, không xóa concept.
+Failure to find something through graph/search and partial coverage are
+insufficient removal evidence. A rename/move with continuity updates the
+reference/identity hint and does not delete the concept.
 
 ## Outcomes
 
-- Source removed nhưng concept còn foreign-source evidence: gỡ/update current
-  repository contribution; không xóa shared concept.
-- Concept/knowledge đã được thay hoặc xác nhận sai: propose ordinary correction
-  hoặc removal với exact reason/evidence; Git giữ history.
-- AgentBase-owned concept chỉ có current-repo evidence, source bị xóa rõ và không
-  còn history/query value: có thể propose file/navigation deletion.
-- Evidence chưa đủ: preserve current knowledge + Question/limitation.
+- Source removed but the concept retains foreign-source evidence: remove/update
+  the current repository contribution; do not delete the shared concept.
+- Concept/knowledge was replaced or confirmed wrong: propose an ordinary
+  correction or removal with an exact reason/evidence; Git retains history.
+- An AgentBase-owned concept has only current-repository evidence, its source is
+  clearly removed and it has no remaining history/query value: file/navigation
+  deletion can be proposed.
+- Evidence is insufficient: preserve current knowledge and add a Question/limitation.
 
-Không outcome nào tự apply. Proposal validation bảo vệ foreign sources,
-protected bytes và relationship targets.
+No outcome applies automatically. Proposal validation protects foreign sources,
+protected bytes and relationship targets.
 
 ## Review/PR presentation
 
-Proposal inspection và PR summary phải group tối thiểu:
+Proposal inspection and the pull-request summary must group at least:
 
 ```text
 Added
@@ -39,13 +41,13 @@ Removed
 Questions / Limitations
 ```
 
-Mỗi destructive change hiển thị concept/path, reason, source revision/diff
-evidence, affected relations/navigation và replacement nếu có. Reviewer xem
-Markdown/Git diff nhưng không phải tự suy ra lý do từ deleted bytes.
+Each destructive change shows the concept/path, reason, source revision/diff
+evidence, affected relations/navigation and any replacement. The reviewer sees
+the Markdown/Git diff but does not have to infer the reason from deleted bytes.
 
 ## Implementation delta
 
-Omission/elapsed time không authorize deletion. Destructive changes dùng exact
-correction/removal intent cùng evidence; foreign/protected content được giữ.
-Inspection group Added, Updated, Removed và Questions/Limitations. Rich PR body
-trình bày các group này thuộc phần 11.
+Omission or elapsed time does not authorize deletion. Destructive changes use
+exact correction/removal intent with evidence; foreign/protected content is
+retained. Inspection groups Added, Updated, Removed and Questions/Limitations.
+The rich pull-request body presenting these groups belongs to Section 11.

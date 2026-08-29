@@ -1,16 +1,17 @@
 # 09.03 — Batch processing
 
-> Trạng thái: Batch Initial Ingest implemented offline; Batch Refresh deferred.
+> Status: Batch Initial Ingest is implemented offline; Batch Refresh is deferred.
 
-## Input và confirmation
+## Input and confirmation
 
-Batch command nhận explicit repository roots và một proposed Domain. Skill đọc
-bounded README/docs của từng repo, cảnh báo outlier và hỏi xác nhận Domain một
-lần cho batch thay vì lặp lại cùng câu hỏi.
+The Batch command receives explicit repository roots and a proposed Domain. The
+skill reads bounded README/documentation from each repository, warns about
+outliers and asks for Domain confirmation once per batch instead of repeating
+the same question.
 
 ## Execution
 
-Repository được xử lý tuần tự:
+Repositories are processed sequentially:
 
 ```text
 preflight batch
@@ -20,14 +21,14 @@ preflight batch
   → batch review output
 ```
 
-- Mỗi repo có source identity, graph namespace, candidates, evidence và outcome
-  riêng.
-- Agent context không trộn raw source/graph của nhiều repo.
-- Repository failure không rollback completed repository staging.
-- Recoverable member-local failure tiếp tục sang sibling sau khi cleanup được
-  xác nhận; uncertain cleanup/process/shared authority failure dừng cả Batch.
-- Cross-repository discovery/provider verification không chạy trong batch
-  Ingest; Domain Enrichment làm sau.
+- Each repository has its own source identity, graph namespace, candidates,
+  evidence and outcome.
+- Agent context does not mix raw source/graph data from multiple repositories.
+- A repository failure does not roll back completed repository staging.
+- A recoverable member-local failure proceeds to the next sibling after cleanup
+  is confirmed; uncertain cleanup, process or shared-authority failure stops the Batch.
+- Cross-repository discovery/provider verification does not run during batch
+  Ingest; Domain Enrichment runs afterward.
 
 Capability 046 Preflight resolves each member's exact remote default commit on
 the active Hub host before Discover. A clean exact-matching checkout may be
@@ -36,17 +37,17 @@ detached worktree. Batch never checkout/stash/restore user worktrees or use SSH/
 ambient Git credentials. Each member builds/reuses a graph only after source
 selection and owns its own Seed/Receipt.
 
-## Vì sao chưa parallel
+## Why processing is not parallel
 
-Parallel graph/Agent runs tăng process/account load và tạo thêm Hub base/rebase
-coordination. Version đầu ưu tiên deterministic ordering và recovery. Chỉ cân
-nhắc parallel discovery sau khi benchmark chứng minh sequential là bottleneck;
-authoring/finalization vẫn phải serialize.
+Parallel graph/Agent runs increase process/account load and add Hub base/rebase
+coordination. The first version prioritizes deterministic ordering and recovery.
+Consider parallel discovery only after a benchmark proves sequential processing
+is a bottleneck; authoring/finalization must still be serialized.
 
 ## Atomic batch output
 
-User xác nhận membership trước khi chạy. Một batch tạo đúng một mutable
-workspace, một atomic proposal, một Accept và một PR:
+The user confirms membership before execution. One batch creates exactly one
+mutable workspace, one atomic proposal, one Accept and one pull request:
 
 ```text
 confirmed repos 1, 2, 3
@@ -56,24 +57,24 @@ one batch workspace
 one proposal → one Accept → one PR
 ```
 
-- Membership có thể sửa ở preview trước khi execution/finalization; sau khi
-  confirmed run bắt đầu, thay membership cần explicit cancellation/restart hoặc
-  failure decision.
-- Muốn repo 1+3 publish riêng và giữ repo 2 thì tạo Batch A `[1,3]` và Batch B
-  `[2]` từ đầu.
-- Knowledge items vẫn giữ repository-specific evidence/ownership bên trong
-  batch; atomic chỉ là publication boundary.
+- Membership can be edited in preview before execution/finalization; after the
+  confirmed run starts, changing membership requires explicit cancellation/restart
+  or a failure decision.
+- To publish repositories 1 and 3 separately from repository 2, create Batch A
+  `[1,3]` and Batch B `[2]` from the start.
+- Knowledge items retain repository-specific evidence/ownership inside the
+  batch; atomicity applies only to the publication boundary.
 
 ## Failure membership
 
-Repository failure làm batch Incomplete; completed repository staging được giữ
-và later siblings có thể vẫn hoàn thành.
-User retry repository lỗi hoặc xác nhận loại nó và finalize một batch membership
-mới. Khi loại một repo khỏi draft đã có, AI bỏ attributable contributions, sửa
-hard dangling dependencies hoặc hỏi user nếu meaning mơ hồ, rồi MCP Finalize
-deterministic trên toàn membership còn lại. Hệ thống không âm thầm bỏ repo và
-không publish partial membership.
+A repository failure makes the batch Incomplete; completed repository staging is
+retained and later siblings may still complete. The user retries the failed
+repository or confirms its removal and finalizes a new batch membership. When a
+repository is removed from an existing draft, AI removes attributable contributions,
+repairs hard dangling dependencies or asks the user when meaning is ambiguous;
+MCP then performs deterministic Finalize over the remaining membership. The
+system does not silently drop a repository or publish partial membership.
 
-Batch không split sau Accept, không reorder item thành nhiều PR và không
-auto-Accept. Thiết kế này giữ proposal/change set làm publication unit như phần
-05/11 đã chốt.
+A Batch is not split after Accept, does not reorder items into multiple pull
+requests and does not auto-Accept. This design retains the proposal/change set as
+the publication unit established in Sections 05 and 11.

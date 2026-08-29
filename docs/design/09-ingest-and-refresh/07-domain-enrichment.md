@@ -1,29 +1,29 @@
 # 09.07 — Domain Enrichment
 
-> Trạng thái: AWS/SQS MVP đã implement offline; chưa chạy real AWS qualification.
+> Status: The AWS/SQS MVP is implemented offline; real AWS qualification has not run.
 
-Qualification-only mock provider path thuộc capability 053 và đã implement. Nó
-dùng temporary Published fixture và dừng ở proposal/inspection; không thay thế
-real AWS qualification hoặc làm thay đổi Domain Enrichment authority.
+The qualification-only mock provider path belongs to capability 053 and is
+implemented. It uses a temporary Published fixture and stops at proposal/inspection;
+it neither replaces real AWS qualification nor changes Domain Enrichment authority.
 
-## Entry và authority
+## Entry and authority
 
-User chọn một Domain, explicit Published repositories/candidates và báo provider
-CLI đã login. Skill xác nhận batch membership/scope; MCP không login, giữ
-credential hoặc scan account để tự tìm việc.
+The user selects a Domain and explicit Published repositories/candidates, then
+states that the provider CLI is logged in. The skill confirms batch membership/scope;
+MCP does not log in, retain credentials or scan an account to find work automatically.
 
 ## Input
 
-Domain Enrichment bắt đầu từ knowledge đã merge vào Published Hub `main`:
+Domain Enrichment starts from knowledge merged into Published Hub `main`:
 
-- Repository concepts và source/provider references tại exact Published commit;
-- Questions/limitations cần external verification;
-- resource identity và relation candidates;
-- provider/account/region hints đã có evidence.
+- Repository concepts and source/provider references at the exact Published commit;
+- Questions/limitations requiring external verification;
+- resource identity and relation candidates;
+- evidence-backed provider/account/region hints.
 
-Local Draft và repository còn ở open Init/Refresh PR chưa merge không phải
-Enrichment input. Repo không local vẫn dùng Published Hub knowledge/reference;
-workflow không clone repo và không dựng Code Graph cho remote-only sources.
+Local Draft and repositories still in unmerged Init/Refresh pull requests are not
+Enrichment input. A non-local repository still uses Published Hub knowledge/reference;
+the workflow does not clone it or build a Code Graph for remote-only sources.
 
 ## Execution
 
@@ -39,28 +39,28 @@ identity/relation/question reconciliation
 one Domain Enrichment Draft → one Accept → one PR
 ```
 
-Provider calls phải target resource/candidate cụ thể; không list/scan mù mọi
-account, region hoặc service. Name/ARN/account/region/non-sensitive observed
-value chỉ được bổ sung với provider provenance và observed time.
+Provider calls must target a specific resource/candidate; they do not blindly
+list/scan every account, region or service. A name, ARN, account, region or
+non-sensitive observed value is added only with provider provenance and observation time.
 
 ## Outcomes
 
-- xác nhận hoặc từ chối resource identity match;
+- confirm or reject a resource identity match;
 - add cross-repository/cross-Domain relation evidence;
-- giữ duplicate identity thành candidate/Question; merge/alias concept deferred;
-- resolve hoặc update governed Questions;
-- giữ limitation khi permission/resource evidence chưa đủ.
+- retain a duplicate identity as a candidate/Question; concept merge/alias is deferred;
+- resolve or update governed Questions;
+- retain a limitation when permission/resource evidence is insufficient.
 
 ## Batch/failure
 
-Domain Enrichment dùng atomic membership, sequential execution và per-member/
-candidate checkpoints như Batch Ingest. Một batch tạo một proposal/PR, không
-split sau Accept. Failure không publish partial membership; user retry hoặc xác
-nhận membership mới.
+Domain Enrichment uses atomic membership, sequential execution and per-member/
+candidate checkpoints like Batch Ingest. One batch creates one proposal/pull
+request and is not split after Accept. A failure does not publish partial
+membership; the user retries or confirms new membership.
 
 ## Non-goals
 
-- Không Refresh repository code.
-- Không tự Accept/Publish.
-- Không persist provider response dump hoặc secret.
-- Không biến external observation thành timeless current truth.
+- Do not Refresh repository code.
+- Do not Accept/Publish automatically.
+- Do not persist provider response dumps or secrets.
+- Do not turn an external observation into timeless current truth.

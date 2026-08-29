@@ -1,6 +1,6 @@
 # 08.05 — Sensitive-value filtering
 
-> Trạng thái: Repository authoring/publication guard và query redaction đã implement.
+> Status: Repository authoring/publication guards and query redaction are implemented.
 
 ## One shared guard
 

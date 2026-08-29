@@ -1,96 +1,97 @@
 # 07.03 — Maintainer Guidance
 
-> Trạng thái: Exact subject-property transaction đã implement; broad scope deferred.
+> Status: The exact subject-property transaction is implemented; broad scope is deferred.
 
-## Quyết định ngắn
+## Decision summary
 
-Maintainer Guidance là attributed human knowledge, không phải absolute truth.
-Trong MVP nó chỉ áp dụng cho exact Question subject/property.
+Maintainer Guidance is attributed human knowledge, not absolute truth. In the
+MVP it applies only to the exact Question subject/property.
 
-## Khi nào tạo Guidance
+## When to create Guidance
 
-- Human trả lời một Question hoặc đưa ra explicit project decision.
-- Answer bind exact Question ID/revision và `human:<identity>`.
-- Provider/source evidence có thể resolve Question mà không tạo Maintainer
-  Guidance; MCP không giả provider observation thành câu trả lời của con người.
-- Model suggestion không trở thành Guidance cho tới khi human xác nhận.
+- A human answers a Question or makes an explicit project decision.
+- The answer binds the exact Question ID/revision and `human:<identity>`.
+- Provider/source evidence can resolve a Question without creating Maintainer
+  Guidance; MCP does not misrepresent a provider observation as a human answer.
+- A model suggestion does not become Guidance until a human confirms it.
 
-Guidance là Markdown knowledge dưới `guidance/`, đi qua proposal, review, Accept
-và Publish như concept/Question khác.
+Guidance is Markdown knowledge under `guidance/` and passes through proposal,
+review, Accept and Publish like other concepts and Questions.
 
 ## Scope
 
-| Scope | Áp dụng | Authority |
+| Scope | Applies to | Authority |
 |---|---|---|
-| `subject-property` | Exact concept/relation candidate và property đang hỏi | Default. |
-| `repository` | Một canonical Repository ID | Không dùng trong MVP. |
-| `domain` | Một canonical Domain ID | Không dùng trong MVP. |
-| `hub` | Toàn Hub authority | Không dùng trong MVP. |
+| `subject-property` | Exact concept/relation candidate and property being asked about | Default. |
+| `repository` | One canonical Repository ID | Not used in the MVP. |
+| `domain` | One canonical Domain ID | Not used in the MVP. |
+| `hub` | All Hub authority | Not used in the MVP. |
 
-Không suy rộng từ wording như “thường”, “chắc là” hoặc từ việc nhiều
-repositories đang dùng cùng một value. AI không tự nâng exact answer thành
-Domain/Hub policy.
+Do not generalize from wording such as “usually” or “probably,” or from multiple
+repositories using the same value. AI does not promote an exact answer into
+Domain-wide or Hub-wide policy automatically.
 
-Quyết định rộng hơn được ghi bằng update có evidence vào Repository, Domain hoặc
-System concept liên quan qua Proposal bình thường. MCP không tạo broad Guidance
-scope engine.
+A broader decision is recorded as an evidence-backed update to the relevant
+Repository, Domain or System concept through a normal Proposal. MCP does not
+create a broad Guidance scope engine.
 
 ## Guidance document
 
-Một Guidance revision giữ:
+A Guidance revision retains:
 
-- stable Question ID/revision và human identity;
+- stable Question ID/revision and human identity;
 - normalized scope kind/target;
-- answer/decision ngắn gọn;
-- evidence/reason do maintainer cung cấp nếu có;
-- creation time và link trở lại Question.
+- a concise answer/decision;
+- evidence/reason supplied by the maintainer, when available;
+- creation time and a link back to the Question.
 
-Path hiện tại `guidance/<question-id>-r<revision>.md` được tái sử dụng. Question
-trỏ tới active Guidance; older revisions vẫn đọc được cho history nhưng query
-mặc định không trình bày chúng như current guidance.
+The existing `guidance/<question-id>-r<revision>.md` path is reused. The Question
+points to active Guidance; older revisions remain readable as history, but query
+does not present them as current guidance by default.
 
-## Conflict với evidence mới
+## Conflict with new evidence
 
-- Evidence cùng hướng bổ sung provenance, không tạo bản Guidance giống hệt.
-- Evidence mới mâu thuẫn chuyển Question sang `Needs Review`; active Guidance
-  vẫn tồn tại nhưng được trình bày là contested.
-- Human review có thể giữ Guidance, tạo revision thay thế hoặc thu hồi nó.
-- Chỉ accepted revision mới đưa Question về `Resolved`.
+- Supporting evidence adds provenance and does not create an identical Guidance document.
+- New conflicting evidence moves the Question to `Needs Review`; active Guidance
+  remains but is presented as contested.
+- Human review can retain the Guidance, create a replacement revision or withdraw it.
+- Only an accepted revision returns the Question to `Resolved`.
 
-Guidance không tự biến thành truth winner. Evidence mâu thuẫn tạo/giữ Question
-thay vì engine âm thầm chọn một.
+Guidance does not automatically become the winning truth. Conflicting evidence
+creates or retains a Question instead of letting the engine silently pick a winner.
 
 ## Volatile values
 
-Human có thể xác nhận một observed value, nhưng Guidance phải ghi rõ đó là user
-evidence tại thời điểm/revision nào. Với value dễ stale, dùng observed snapshot
-và file source theo phần 08; không biến số user nói thành timeless config
-truth.
+A human can confirm an observed value, but Guidance must state that it is user
+evidence and identify its time/revision. For a value prone to staleness, use an
+observed snapshot and file source under Section 08; do not turn a user-provided
+number into timeless configuration truth.
 
 ## Atomic answer transaction
 
-Answer proposal phải atomically:
+An answer proposal must atomically:
 
 1. create new Guidance revision;
-2. update Question state và active Guidance link;
-3. include any related knowledge/relation update selected for cùng resolution.
+2. update the Question state and active Guidance link;
+3. include any related knowledge/relation update selected for the same resolution.
 
-Nếu proposal chưa Accept thì Published Question/Guidance không đổi. Stale
-Question revision, invalid scope hoặc conflicting Hub base dừng trước mutation.
+If the proposal has not been Accepted, Published Question/Guidance remains
+unchanged. A stale Question revision, invalid scope or conflicting Hub base stops
+the operation before mutation.
 
-## Security và access
+## Security and access
 
-- Hub permission model hiện coi người đọc Hub được đọc toàn bộ Guidance.
-- Không thêm per-project ACL hoặc redact theo Domain.
-- Answer/Guidance không được chứa secret, credential hoặc signed URL.
-- Trust boundary tái sử dụng obvious-secret detection của observed snapshots trước
-  khi proposal được tạo; PR review vẫn là sensitivity gate cuối. Không xây DLP
-  engine riêng.
-- Human attribution là audit identity, không phải chữ ký mật mã hay permission
-  escalation.
+- The current Hub permission model allows Hub readers to read all Guidance.
+- Do not add per-project ACLs or Domain-based redaction.
+- An Answer/Guidance must not contain a secret, credential or signed URL.
+- The trust boundary reuses the obvious-secret detection for observed snapshots
+  before creating a proposal; pull-request review remains the final sensitivity
+  gate. Do not build a separate DLP engine.
+- Human attribution is an audit identity, not a cryptographic signature or
+  permission escalation.
 
 ## Baseline impact
 
-Reuse current Guidance renderer/path, explicit `human:*` attribution và proposal
-lifecycle. Exact scope và atomic Question update không cần policy engine hoặc
-rules database; Git giữ prior revision history.
+Reuse the current Guidance renderer/path, explicit `human:*` attribution and
+proposal lifecycle. Exact scope and atomic Question updates need no policy engine
+or rules database; Git retains prior revision history.

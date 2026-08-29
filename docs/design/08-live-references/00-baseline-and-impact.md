@@ -1,60 +1,62 @@
 # 08.00 — Baseline and impact
 
-> Trạng thái: Repository snapshot-first runtime đã implement và verify offline.
+> Status: The repository snapshot-first runtime is implemented and verified offline.
 
 ## Outcome
 
-Hub giữ một số observed values nhỏ cùng file-level provenance để người và MCP
-đọc được ngay. Khi user cần current value, Agent dùng normal MCP source reading
-trên repository đã authorize; AgentBase không sở hữu symbol/config resolver hoặc
-live-value state machine riêng.
+The Hub retains a small number of observed values with file-level provenance for
+immediate human and MCP reading. When the user needs a current value, the Agent
+uses normal MCP source reading on an authorized repository; AgentBase does not
+own a separate symbol/configuration resolver or live-value state machine.
 
-## Runtime hiện tại
+## Current runtime
 
-- `agentbase.observed_values` giữ subject/property/role, useful scalar, repository
-  source và exact source state/time. Finalize sinh stable ID và owned Markdown
-  table; model/host không tự hash ID hoặc tự ghi source state.
-- Repository evidence URI đã giữ canonical Repository ID, normalized relative
-  path và optional exact line evidence.
-- `read_hub_okf_concept` đọc exact Published Markdown gồm snapshot và
-  provenance; không bind hoặc probe repository.
-- Refresh reconcile theo item: omission preserves, current Repository chỉ sửa
-  contribution của nó, foreign observations phải giữ nguyên và exact reviewed
-  correction/removal owns deletion.
-- Shared obvious-secret guard chặn authoring/publication/Hub CI. Exact Published
-  Markdown read không tạo một field-level transformation layer riêng.
-- Normal Code Graph/search/snippet tools đã đọc authorized local source; không
-  cần một resolver/cache/parser mới.
-- Repository observed-source metadata và phần 09 đã định nghĩa exact age/revision
-  warning, không dùng threshold làm truth.
-- Phần 06 đã chốt provider observation; phần 07 đã chốt shared Question.
+- `agentbase.observed_values` retains subject/property/role, a useful scalar,
+  repository source and exact source state/time. Finalize generates the stable ID
+  and owned Markdown table; the model/host does not hash IDs or record source
+  state itself.
+- A Repository evidence URI retains the canonical Repository ID, normalized
+  relative path and optional exact line evidence.
+- `read_hub_okf_concept` reads exact Published Markdown containing the snapshot
+  and provenance; it does not bind or probe a repository.
+- Refresh reconciles per item: omission preserves an item, the current Repository
+  modifies only its contribution, foreign observations must remain unchanged and
+  exact reviewed correction/removal owns deletion.
+- A shared obvious-secret guard blocks authoring/publication/Hub CI. Exact
+  Published Markdown reads do not create a separate field-level transformation layer.
+- Normal Code Graph/search/snippet tools already read authorized local source; no
+  new resolver/cache/parser is needed.
+- Repository observed-source metadata and Section 09 define exact age/revision
+  warnings without using a threshold as truth.
+- Section 06 defines provider observations; Section 07 defines Shared Questions.
 
-## Clean cutover đã thực hiện
+## Completed clean cutover
 
-Legacy `agentbase.live_claims` model từng mang semantic target để host resolve
-current source. Runtime đã bỏ contract và action đó, không dual-read/dual-write:
+The legacy `agentbase.live_claims` model carried a semantic target for the host to
+resolve against current source. The runtime removed that contract and action,
+with no dual read or dual write:
 
-- snapshot là primary shared value;
+- the snapshot is the primary shared value;
 - one file source may support multiple values;
-- line range chỉ là optional evidence hint;
-- current-value lookup dùng ordinary MCP file/graph reading khi explicitly asked;
-- historical-integrity failure có thể đề xuất shared Question; một moved current
-  path chỉ degrade lookup và không chạy moved-symbol recovery.
+- a line range is only an optional evidence hint;
+- current-value lookup uses ordinary MCP file/graph reading when explicitly requested;
+- a historical-integrity failure may propose a Shared Question; a moved current
+  path only degrades lookup and does not run moved-symbol recovery.
 
-Không có Published concept theo contract cũ nên không cần migration layer.
+No Published concept uses the old contract, so no migration layer is needed.
 
-## Capability còn deferred
+## Deferred capabilities
 
-1. Remote repository file read qua MCP-managed token là post-MVP priority.
-2. Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
-3. Ordinary answer wording/mark cho snapshot age thuộc Part 10; Hub CI freshness
-   projection đã implement warning-only.
+1. Remote repository file reads through an MCP-managed token are a post-MVP priority.
+2. Provider profiles beyond the current bounded AWS/SQS Domain Enrichment.
+3. Ordinary answer wording/markers for snapshot age belong to Part 10; the Hub CI
+   freshness projection is implemented as warning-only.
 
 ## Impact checkpoint
 
-| Boundary | Impact | Lý do |
+| Boundary | Impact | Reason |
 |---|---|---|
-| Observed-value/file-source contract | Contained clean cutover | Xóa semantic locator fields và reuse existing snapshot/source validation. |
+| Observed-value/file-source contract | Contained clean cutover | Removes semantic locator fields and reuses existing snapshot/source validation. |
 | Snapshot query/freshness | Implemented foundation | Read exact Published bytes; CI derives age/revision separately. |
 | Explicit local current-source read | Reuse | Existing graph/search/snippet tools; no live resolver. |
 | Historical integrity + shared Question | Contained after Part 07 | Dedicated proposal; current-path move only degrades lookup. |
@@ -62,14 +64,14 @@ Không có Published concept theo contract cũ nên không cần migration layer
 | Sensitive-value filtering | Broad safety boundary | Shared guard across authoring/query/publication. |
 | Provider observations | Broad but already scoped | Domain Enrichment only, reuse 06.04. |
 
-Tổng thể đây là simplification: xóa một concept/runtime responsibility thay vì
-thêm subsystem. Không cần symbol registry, source mirror, watcher, TTL scheduler
-hoặc background resolver.
+Overall, this is a simplification: remove a concept/runtime responsibility rather
+than add a subsystem. No symbol registry, source mirror, watcher, TTL scheduler
+or background resolver is needed.
 
 ## Dependency boundaries
 
-- Exact local source reading thuộc phần 01.
-- Shared Question/conflict semantics thuộc phần 07.
-- Freshness và Domain Enrichment orchestration thuộc phần 09.
-- Snapshot/current-source response composition thuộc phần 10.
-- GitHub/provider credentials thuộc phần 06/11.
+- Exact local source reading belongs to Section 01.
+- Shared Question/conflict semantics belong to Section 07.
+- Freshness and Domain Enrichment orchestration belong to Section 09.
+- Snapshot/current-source response composition belongs to Section 10.
+- GitHub/provider credentials belong to Sections 06 and 11.

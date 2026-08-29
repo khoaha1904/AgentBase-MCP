@@ -1,42 +1,40 @@
 # 11.03 — Dependency validation
 
-> Trạng thái: Core structural validation implemented; Batch membership workflow designed.
+> Status: Core structural validation is implemented; the Batch membership workflow is designed.
 
 ## Outcome
 
-Finalize chặn một proposal có cấu trúc gãy nhưng không đòi knowledge phải đầy
-đủ. AI sửa editable draft và quyết định khi nào cần hỏi user; MCP Finalize chỉ
-chạy deterministic validation trên exact bytes/evidence đã cung cấp.
+Finalize blocks a structurally broken proposal but does not require complete
+knowledge. AI edits the editable draft and decides when to ask the user; MCP
+Finalize runs only deterministic validation over the exact supplied bytes/evidence.
 
 ## Hard dependencies
 
-Thiếu một hard dependency làm Finalize fail:
+A missing hard dependency makes Finalize fail:
 
-- relation target hoặc Flow endpoint không tồn tại trong Published baseline hay
-  final draft;
-- Markdown link bắt buộc không resolve tới target tương ứng;
-- Question/evidence reference unknown, ambiguous hoặc ngoài proposal authority;
-- removal để lại direct relation, Flow step, Question reference hoặc governed
-  navigation bị dangling;
-- index trỏ tới file không tồn tại, duplicate target hoặc sửa protected lines;
-- proposal sửa protected bytes, vượt source ownership hoặc có correction/removal
-  intent thiếu reason/evidence/replacement bắt buộc.
+- a relation target or Flow endpoint does not exist in the Published baseline or final draft;
+- a required Markdown link does not resolve to its corresponding target;
+- a Question/evidence reference is unknown, ambiguous or outside proposal authority;
+- removal leaves a direct relation, Flow step, Question reference or governed navigation dangling;
+- an index points to a missing file, duplicates a target or modifies protected lines;
+- a proposal modifies protected bytes, exceeds source ownership or has
+  correction/removal intent missing a required reason/evidence/replacement.
 
-MCP trả exact bounded failures. Nó không tự thêm lại item, tự xóa relation, tạo
-Question hay sửa bundle để validation pass.
+MCP returns exact bounded failures. It does not re-add an item, delete a relation,
+create a Question or modify the bundle to pass validation automatically.
 
 ## Incomplete knowledge is allowed
 
-Những điều sau không phải hard dependency khi cấu trúc vẫn hợp lệ:
+The following are not hard dependencies while the structure remains valid:
 
-- cross-repository relation chưa được xác nhận;
-- provider/account/region/ARN chưa được quan sát;
-- source coverage partial hoặc optional detail unavailable;
-- conflict, Open Question hoặc Limitation còn tồn tại;
-- chưa có đủ evidence để tạo một optional concept/relation.
+- an unconfirmed cross-repository relation;
+- an unobserved provider/account/region/ARN;
+- partial source coverage or unavailable optional detail;
+- a remaining conflict, Open Question or Limitation;
+- insufficient evidence to create an optional concept/relation.
 
-Chúng được giữ thành attributed Question/Limitation hoặc đơn giản là chưa được
-author. Finalize không biến completeness thành gate.
+They are retained as an attributed Question/Limitation or simply remain
+unauthored. Finalize does not turn completeness into a gate.
 
 ## AI and MCP responsibilities
 
@@ -50,45 +48,46 @@ AI repairs mechanical issues or asks one bounded owner question
 MCP Finalize runs again
 ```
 
-- AI tự sửa lỗi máy móc có một kết quả rõ: dangling index, relation vừa bỏ cùng
-  target, Question reference cần bỏ theo item bị loại.
-- AI hỏi user khi nhiều kết quả nghiệp vụ đều hợp lệ: relation cần giữ như
-  external dependency hay bỏ, repo có thật sự rời batch/scope, hoặc evidence
-  cạnh tranh làm thay đổi meaning.
-- Nếu chưa cần quyết định để proposal hợp lệ, AI giữ Question/Limitation thay vì
-  ngắt flow chỉ để làm dữ liệu đầy đủ hơn.
-- Finalize không gọi model, không tự reasoning và không tự retry.
+- AI repairs a mechanical error with one clear outcome: a dangling index, a
+  relation removed with its target or a Question reference that must be removed
+  with an omitted item.
+- AI asks the user when multiple business outcomes are valid: whether to retain a
+  relation as an external dependency, whether a repository really leaves the
+  batch/scope or whether competing evidence changes meaning.
+- If no decision is required for a valid proposal, AI retains a Question/Limitation
+  instead of interrupting the flow merely to make data more complete.
+- Finalize does not invoke a model, reason automatically or retry automatically.
 
 ## Removing one repository from a batch
 
-Trước execution, user sửa confirmed membership tự do. Sau khi draft đã có:
+Before execution, the user can freely edit confirmed membership. After the draft exists:
 
-1. user xác nhận loại repository khỏi batch;
-2. AI bỏ contributions thuộc repository đó khỏi editable workspace;
-3. relation/Flow/Question/index còn lại được kiểm tra với Published baseline và
-   final batch membership;
-4. mechanical dangling references được sửa; ambiguous business dependency mới
-   hỏi user;
-5. MCP Finalize lại toàn bundle;
-6. chỉ final atomic membership mới trở thành proposal, Accept và PR.
+1. the user confirms removing a repository from the batch;
+2. AI removes that repository's contributions from the editable workspace;
+3. remaining relation/Flow/Question/index entries are checked against the
+   Published baseline and final batch membership;
+4. mechanical dangling references are repaired; only ambiguous business dependencies ask the user;
+5. MCP Finalizes the entire bundle again;
+6. only the final atomic membership becomes a proposal, Accept and pull request.
 
-Nếu concept target đã Published, relation có thể giữ với provenance đúng. Nếu
-target chỉ tồn tại trong repository bị loại, relation phải bỏ hoặc batch phải
-giữ repository; không được tạo placeholder concept để qua gate.
+If the target concept is already Published, the relation can remain with correct
+provenance. If the target exists only in the removed repository, the relation
+must be removed or the batch must retain the repository; a placeholder concept
+cannot be created to pass the gate.
 
 ## Publication dependency
 
-Finalize dependency là dependency nội dung bên trong proposal. Trước PR, MCP
-kiểm tra thêm publication dependency giữa accepted proposals:
+A Finalize dependency is a content dependency inside the proposal. Before a pull
+request, MCP also checks publication dependencies between accepted proposals:
 
-- independent Repository Init bắt đầu từ Published `main`;
-- Refresh phụ thuộc proposal trước của cùng Repository;
-- Local Draft storage order không tạo dependency giữa repository khác nhau;
-- selected proposal không được cắt thành item subset lúc Publish.
+- independent Repository Init starts from Published `main`;
+- Refresh depends on the previous proposal for the same Repository;
+- Local Draft storage order does not create dependencies between different repositories;
+- a selected proposal cannot be split into an item subset during Publish.
 
 ## Current implementation gap
 
-Single-repository proposal đã validate relationship/Flow targets, links,
-Question evidence, protected bytes, additive indexes và removal intent. Batch
-Ingest cùng bước AI-guided membership removal chưa implement; không cần thêm
-dependency graph database hoặc solver khi triển khai.
+Single-repository proposals already validate relationship/Flow targets, links,
+Question evidence, protected bytes, additive indexes and removal intent. Batch
+Ingest and AI-guided membership removal are not yet implemented; their
+implementation needs no dependency-graph database or solver.

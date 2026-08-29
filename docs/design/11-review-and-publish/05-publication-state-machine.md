@@ -1,36 +1,37 @@
 # 11.05 — Publication state
 
-> Trạng thái: Core Git/PR recognition implemented; no separate state store required.
+> Status: Core Git/pull-request recognition is implemented; no separate state store is required.
 
 ## Outcome
 
-Publication status được suy ra từ Git và matching PR, không lưu một state machine
-thứ hai dễ stale.
+Publication status is derived from Git and a matching pull request rather than
+stored in a second state machine prone to staleness.
 
 ```text
-accepted commit còn sau remoteBase     → Local Draft
+accepted commit remains after remoteBase     → Local Draft
 + matching open PR                     → In Review
-proposal identity có trong remote target branch → Published
+proposal identity exists in remote target branch → Published
 ```
 
 ## Rules
 
-- **Local Draft**: accepted proposal vẫn nằm trong pending ancestry sau admitted
-  Published base.
-- **In Review**: Local Draft có exact matching open PR branch/base/head. Đây là
-  derived display state, không thay thế Local Draft và không ghi vào Hub.
-- **Published**: chỉ khi Synchronize nhận diện proposal trong fetched remote
-  target branch bằng commit, proposal/diff trailer hoặc stable patch identity.
-- PR closed nhưng chưa merge: proposal vẫn là Local Draft và có thể được sửa/
-  publish lại qua workflow review; MCP không tự reopen hoặc tạo PR khác âm thầm.
-- GitHub unavailable: publication review state là `unknown`; Local Draft không
-  mất và receipt cũ không được trình bày như current PR truth.
+- **Local Draft**: the accepted proposal remains in pending ancestry after the
+  admitted Published base.
+- **In Review**: Local Draft has an exactly matching open pull-request branch/base/head.
+  This is a derived display state; it does not replace Local Draft or write to the Hub.
+- **Published**: only when Synchronize recognizes the proposal in the fetched
+  remote target branch through a commit, proposal/diff trailer or stable patch identity.
+- Pull request closed without merge: the proposal remains a Local Draft and can
+  be edited/republished through the review workflow; MCP does not reopen it or
+  silently create another pull request.
+- GitHub unavailable: publication review state is `unknown`; Local Draft is not
+  lost, and an old receipt is not presented as current pull-request truth.
 
-Publication receipt và transaction phase chỉ phục vụ retry/recovery. Chúng
-không quyết định knowledge đã Published hay chưa.
-Một legacy transaction thiếu profile ID/prior Published có thể bind lại vào
-active profile chỉ khi exact Main/Published/candidate state vẫn khớp; khác biệt
-dừng để con người kiểm tra, không tự đoán.
+The publication receipt and transaction phase serve only retry/recovery. They do
+not determine whether knowledge is Published. A legacy transaction missing a
+profile ID/prior Published state can rebind to the active profile only when the
+exact Main/Published/candidate state still matches; a difference stops for human
+inspection rather than being guessed.
 
 ## Transitions
 
@@ -42,12 +43,13 @@ dừng để con người kiểm tra, không tự đoán.
 | Maintainer merges and MCP synchronizes | Published |
 | Network/permission failure | prior Git-backed state remains |
 
-MCP không tự merge, approve, close, reopen, delete branch hoặc đổi trạng thái
-để “sửa” lifecycle.
+MCP does not automatically merge, approve, close, reopen, delete a branch or
+change state to “fix” the lifecycle.
 
 ## Minimal implementation impact
 
-Không thêm database, status file, polling daemon hay background watcher. Khi cần
-hiển thị `In Review`, explicit publication/status flow đọc matching PR; ordinary
-Hub query không gọi GitHub. Current pending ancestry, publication receipts và
-synchronization recognition đã cung cấp phần nền cần thiết.
+Do not add a database, status file, polling daemon or background watcher. When
+`In Review` must be displayed, the explicit publication/status flow reads the
+matching pull request; ordinary Hub query does not call GitHub. Current pending
+ancestry, publication receipts and synchronization recognition provide the
+required foundation.

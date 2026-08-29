@@ -1,68 +1,72 @@
 # 07.00 — Baseline and impact
 
-> Trạng thái: Shared Question và AWS/SQS three-tier enrichment đã implement;
+> Status: Shared Questions and three-tier AWS/SQS enrichment are implemented;
 > per-item lifecycle states removed from MVP.
 
 ## Outcome
 
-Phần 07 cho phép nhiều source-backed claims cùng tồn tại, giữ uncertainty thành
-Question và biến câu trả lời của maintainer thành scoped evidence/guidance thay
-vì một global truth. Conflict không chặn Ingest và có thể được xử lý theo batch
-trong Domain Enrichment.
+Section 07 allows multiple source-backed claims to coexist, preserves uncertainty
+as Questions and turns maintainer answers into scoped evidence/guidance instead
+of global truth. A conflict does not block Ingest and can be resolved in batches
+through Domain Enrichment.
 
-## Baseline có thể tái sử dụng
+## Reusable baseline
 
-- Concept documents đã giữ source IDs/provenance và canonical relations giữ
-  evidence IDs.
-- Current `agentbase.live_claims` định danh volatile observations; phần 08 đã
-  supersede nó bằng snapshot-first `agentbase.observed_values`.
-- Proposal Finalize render bounded Question declarations thành ordinary Hub
-  Markdown và index trước inspection/digest; không còn Question sidecar.
-- Question ID derive từ immutable origin tuple, không chứa Hub/machine identity;
-  exact revision check ngăn trả lời một Question đã đổi dưới chân user.
-- `answer_hub_question` yêu cầu explicit `human:*`, tạo đúng một Maintainer
-  Guidance proposal và không sửa accepted Hub bytes trực tiếp.
-- Refresh đã có explicit removal/correction intent và review grouping; current
-  runtime `supersede/retract` state đã được loại bỏ theo current contract.
-- Hub query đã đọc canonical claims/relations tại exact commit nhưng chưa compose
-  conflict-aware answer đầy đủ.
+- Concept documents already retain source IDs/provenance, and canonical relations
+  retain evidence IDs.
+- The current `agentbase.live_claims` identifies volatile observations; Section 08
+  has superseded it with snapshot-first `agentbase.observed_values`.
+- Proposal Finalize renders bounded Question declarations as ordinary Hub Markdown
+  and an index before inspection/digest; there is no Question sidecar.
+- A Question ID is derived from an immutable origin tuple and contains no Hub or
+  machine identity; an exact revision check prevents answering a Question that
+  changed underneath the user.
+- `answer_hub_question` requires an explicit `human:*`, creates exactly one
+  Maintainer Guidance proposal and does not modify accepted Hub bytes directly.
+- Refresh already has explicit removal/correction intent and review grouping; the
+  runtime `supersede/retract` state has been removed under the current contract.
+- Hub query already reads canonical claims/relations at an exact commit but does
+  not yet compose a complete conflict-aware answer.
 
-## Gap còn deferred
+## Deferred gaps
 
-1. Runtime chấp nhận explicit `needs-review`, nhưng chưa tự infer nó từ evidence
-   mới mâu thuẫn Guidance.
-2. Baseline Ingest/Refresh hiện tạo Question từ observed-value references.
-   Capability 046 Initial Ingest reuse chính SharedQuestion renderer và thêm
-   private Receipt-bound QuestionPlan cho missing-evidence/relation/identity
-   candidate có exact source revision; nó không tạo Question system thứ hai.
-3. Maintainer Guidance hiện bind exact subject/property; chưa có reviewed
-   Domain/Hub-wide scope hoặc provider evidence resolution.
-4. Conflict-aware query composition và batch Question resolution chưa có.
-5. Conflict-aware query composition đầy đủ thuộc phần 10.
+1. The runtime accepts explicit `needs-review` but does not yet infer it from new
+   evidence that conflicts with Guidance.
+2. Baseline Ingest/Refresh currently creates Questions from observed-value
+   references. Capability 046 Initial Ingest reuses the same SharedQuestion
+   renderer and adds a private, Receipt-bound QuestionPlan for missing-evidence,
+   relation or identity candidates with an exact source revision; it does not
+   create a second Question system.
+3. Maintainer Guidance currently binds an exact subject/property; there is no
+   reviewed Domain-wide or Hub-wide scope or provider-evidence resolution yet.
+4. Conflict-aware query composition and batch Question resolution are not yet available.
+5. Complete conflict-aware query composition belongs to Section 10.
 
 ## Impact checkpoint
 
-| Boundary | Impact | Lý do |
+| Boundary | Impact | Reason |
 |---|---|---|
-| Claim/provenance model | Contained nếu tái sử dụng natural knowledge identities | Không nên tạo universal claim database hoặc ID cho mọi paragraph. |
-| Shared Published Questions | Broad change | Cần Hub representation, query và synchronization thay cho machine-only truth. |
-| Needs Review lifecycle | Contained after shared model | Thêm transition dựa trên new evidence/guidance revision. |
-| Maintainer Guidance scope | Contained change | Reuse current proposal/document path và explicit human authority. |
-| Conflict presentation | Contained after model | Chủ yếu query/read composition, không cần scorer. |
-| Exact correction/removal | Contained change | Proposal/PR nêu reason/evidence; Git giữ history, không thêm tombstone state. |
-| Batch Question resolution | Broad change | Dùng Domain Enrichment multi-repository proposal/checkpoints ở phần 06/09. |
+| Claim/provenance model | Contained if natural knowledge identities are reused | Do not create a universal claim database or an ID for every paragraph. |
+| Shared Published Questions | Broad change | Requires Hub representation, query and synchronization instead of machine-only truth. |
+| Needs Review lifecycle | Contained after shared model | Adds a transition based on new evidence or a Guidance revision. |
+| Maintainer Guidance scope | Contained change | Reuses the current proposal/document path and explicit human authority. |
+| Conflict presentation | Contained after model | Primarily query/read composition; no scorer is needed. |
+| Exact correction/removal | Contained change | The proposal/pull request states the reason/evidence; Git retains history without a tombstone state. |
+| Batch Question resolution | Broad change | Uses the Domain Enrichment multi-repository proposal/checkpoints from Sections 06 and 09. |
 
-Không cần rewrite OKF concepts, Git-backed Hub hoặc proposal lifecycle. Phần 08
-clean-cutover live-reference model cũ thành observed snapshots; phần 07 chỉ dùng
-stable observed-value identity và provenance, không sở hữu resolver. Question trong unaccepted proposal là work-in-progress; sau
-Accept nó là shared Hub knowledge. Private index/cache không có authority.
+There is no need to rewrite OKF concepts, the Git-backed Hub or the proposal
+lifecycle. Section 08 makes a clean cutover from the old live-reference model to
+observed snapshots; Section 07 only uses stable observed-value identity and
+provenance and does not own the resolver. A Question in an unaccepted proposal
+is work in progress; after Accept it is shared Hub knowledge. A private index or
+cache has no authority.
 
 ## Dependency boundaries
 
-- Relation/identity candidates đến từ phần 06.
-- Observed snapshots và current-source response boundary thuộc phần 08.
-- Domain Enrichment orchestration thuộc phần 09.
-- Conflict-aware response thuộc phần 10.
-- Review/PR publication thuộc phần 11.
+- Relation/identity candidates come from Section 06.
+- Observed snapshots and the current-source response boundary belong to Section 08.
+- Domain Enrichment orchestration belongs to Section 09.
+- Conflict-aware responses belong to Section 10.
+- Review/pull-request publication belongs to Section 11.
 
-Phần 07 định nghĩa governance contract; không lặp lại các workflow đó.
+Section 07 defines the governance contract; it does not repeat those workflows.

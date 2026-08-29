@@ -1,49 +1,50 @@
 # 09.10 — Workspace scan and workflow routing
 
-> Trạng thái: Implemented MVP contract.
+> Status: The MVP contract is implemented.
 
-## Mục đích
+## Purpose
 
-`agentbase-scan` là public read-only workflow giúp người dùng chọn bước tiếp theo.
-Nó không phải Ingest, Refresh, mixed batch hoặc Code Graph discovery.
+`agentbase-scan` is a public read-only workflow that helps the user choose the
+next step. It is not Ingest, Refresh, a mixed batch or Code Graph discovery.
 
 ## Boundaries
 
-- Nhận một explicit workspace root đã được người dùng chọn.
-- Inventory tối đa 32 unique Git roots bên trong boundary, bỏ private/internal
-  Git directories và dừng descend khi đã tìm thấy một repository root.
-- Không scan home/machine, follow symlink ra ngoài, đọc source sâu, README/docs,
-  dựng/reuse graph hoặc tạo Proposal.
-- Không có Remote Hub thì chỉ trả local repository inventory và `Hub unavailable`.
+- Accept one explicit workspace root selected by the user.
+- Inventory at most 32 unique Git roots inside the boundary, exclude private/internal
+  Git directories and stop descending after finding a repository root.
+- Do not scan the home directory/machine, follow symlinks outside the boundary,
+  read source deeply or read README/documentation, build/reuse a graph or create a Proposal.
+- Without a Remote Hub, return only local repository inventory and `Hub unavailable`.
 
 ## Classification
 
-Với active remote profile, Scan dùng exact synchronized Published Hub và Git
-metadata nhẹ để trả per repository:
+With an active remote profile, Scan uses the exact synchronized Published Hub and
+lightweight Git metadata to return, per repository:
 
-- display/path và strong identity hints;
-- `not-in-hub`, `published-unchanged`, `published-source-advanced` hoặc
+- display/path and strong identity hints;
+- `not-in-hub`, `published-unchanged`, `published-source-advanced` or
   `init-local-draft`, `init-in-review`, `refresh-local-draft`,
-  `refresh-in-review` hoặc `ambiguous`;
-- Published last-observed time/revision khi có;
-- suggested `ingest`, `refresh`, `none` hoặc `confirm`.
+  `refresh-in-review` or `ambiguous`;
+- Published last-observed time/revision when available;
+- suggested `ingest`, `refresh`, `none` or `confirm`.
 
-Tên folder đứng riêng không xác nhận identity. Ambiguous fork/mirror/copy không
-được tự phân loại thành Init hoặc Refresh.
+A folder name alone does not confirm identity. An ambiguous fork/mirror/copy is
+not automatically classified as Init or Refresh.
 
-Scan/status được đọc profile-local proposal/PR metadata chỉ để tránh đề xuất
-Init/Refresh trùng và đưa ra `review`, `submit`, `wait` hoặc `reconcile`. Draft
-bytes không tham gia Hub matching hoặc ordinary query.
+Scan/status reads profile-local proposal/pull-request metadata only to avoid
+duplicate Init/Refresh suggestions and offer `review`, `submit`, `wait` or
+`reconcile`. Draft bytes do not participate in Hub matching or ordinary query.
 
 ## User selection
 
-Scan chỉ trình bày options và chờ user. Một repo mới route tới single Initial
-Ingest; nhiều repo mới có thể route tới Batch Initial Ingest. Published repo
-được chọn chạy single Refresh tuần tự. User có thể chọn subset bất kỳ.
+Scan only presents options and waits for the user. One new repository routes to
+single Initial Ingest; multiple new repositories can route to Batch Initial
+Ingest. Selected Published repositories run single Refresh sequentially. The user
+can choose any subset.
 
-MVP không thêm Batch Refresh hoặc một atomic mixed Init/Refresh manifest. Scan
-đơn giản hóa lựa chọn nhưng không thay authority, confirmation, Proposal,
-Accept hoặc Publish của workflow đích.
+The MVP does not add Batch Refresh or an atomic mixed Init/Refresh manifest. Scan
+simplifies selection but does not replace the authority, confirmation, Proposal,
+Accept or Publish of the target workflow.
 
 ## Runtime requirements
 

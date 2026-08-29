@@ -1,24 +1,25 @@
 # 11.07 — Failure, recovery and permissions
 
-> Trạng thái: Publication and Hub Initialization authority/recovery implemented.
+> Status: Publication and Hub Initialization authority/recovery are implemented.
 
 ## Outcome
 
-Failure giữ Local Draft và trả exact recovery point. Chỉ MCP publication actions
-dùng dedicated Hub token; không có quyền hay retry system thứ hai.
+A failure retains Local Draft and returns the exact recovery point. Only MCP
+publication actions use the dedicated Hub token; there is no second permission
+or retry system.
 
 ## Permission boundary
 
-- Hub query, authoring, Finalize, Inspect và Accept chạy local, không cần token.
-- Attach/bootstrap/submit/synchronize và explicit Hub Initialization preview/initialize là các
-  action duy nhất được dùng Hub token.
-- Token nằm trong owner-private MCP configuration, không vào tool arguments,
-  Git URL, Hub, receipt, error hoặc model context.
-- MCP publication authority gồm bounded proposal-branch push, PR
-  create/adopt/update và fetch, plus exact-empty one-time baseline bootstrap. Nó
-  không gồm merge, approve, close, force-push, branch delete hay repository
-  settings.
-- Source/provider credentials là authority khác và không được mượn để publish.
+- Hub query, authoring, Finalize, Inspect and Accept run locally without a token.
+- Attach/bootstrap/submit/synchronize and explicit Hub Initialization
+  preview/initialize are the only actions allowed to use the Hub token.
+- The token resides in owner-private MCP configuration and never enters tool
+  arguments, a Git URL, the Hub, a receipt, an error or model context.
+- MCP publication authority includes bounded proposal-branch push, pull-request
+  creation/adoption/update and fetch, plus an exact-empty one-time baseline bootstrap.
+  It does not include merge, approve, close, force-push, branch deletion or
+  repository settings.
+- Source/provider credentials are separate authority and cannot be borrowed for publication.
 
 ## Failure classes
 

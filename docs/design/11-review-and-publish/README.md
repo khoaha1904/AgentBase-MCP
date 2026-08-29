@@ -1,39 +1,39 @@
-# 11 — Review và Publish
+# 11 — Review and Publish
 
-> Trạng thái: Independent Init PR, same-Repository Init/Refresh stack, atomic
-> Batch Initial Ingest PR và existing-PR reconciliation implemented.
+> Status: Independent Init pull requests, same-Repository Init/Refresh stacks,
+> atomic Batch Initial Ingest pull requests and existing-PR reconciliation are implemented.
 
 High-level decision:
-[Review và Publish](../../present/11-review-accept-and-publish.md)
+[Review and Publish](../../present/11-review-accept-and-publish.md)
 
-## Phân rã dự kiến
+## Planned breakdown
 
 - [`01-runtime-requirements.md`](01-runtime-requirements.md) — current Local Hub,
-  setup, publication và synchronization `AB-*` requirements. Query authority
+  setup, publication and synchronization `AB-*` requirements. Query authority
   lives in [`../10-query-routing/07-runtime-requirements.md`](../10-query-routing/07-runtime-requirements.md).
-- [`02-review-preview.md`](02-review-preview.md) — chỉnh item trước Finalize,
-  atomic review/Accept và optional static HTML sau MVP.
+- [`02-review-preview.md`](02-review-preview.md) — editing items before Finalize,
+  atomic review/Accept and optional static HTML after the MVP.
 - [`03-dependency-validation.md`](03-dependency-validation.md) — hard structure
-  gates, allowed incompleteness và AI/MCP responsibilities.
+  gates, allowed incompleteness and AI/MCP responsibilities.
 - [`04-git-and-pr-workflow.md`](04-git-and-pr-workflow.md) — exact replay,
-  independent Init PR, same-Repository stack và reconciliation.
-- [`05-publication-state-machine.md`](05-publication-state-machine.md) — trạng
-  thái suy ra từ Git/matching PR, không có state store thứ hai.
-- [`06-verification-and-cleanup.md`](06-verification-and-cleanup.md) — reuse ba
-  validation gate và chỉ dọn temporary state an toàn trong MVP.
-- [`07-failure-recovery-and-permissions.md`](07-failure-recovery-and-permissions.md) — retry, partial outcome và Git authority.
-- [`08-domain-enrichment-changes.md`](08-domain-enrichment-changes.md) — một dependency-safe Draft/PR chứa updates
-  của nhiều repository trong cùng Domain.
-- [`09-profile-migration-changes.md`](09-profile-migration-changes.md) — impact scan, Migration Draft và một Hub PR
-  cho semantic profile upgrade.
+  independent Init pull requests, same-Repository stacks and reconciliation.
+- [`05-publication-state-machine.md`](05-publication-state-machine.md) — state
+  derived from Git/matching pull requests, without a second state store.
+- [`06-verification-and-cleanup.md`](06-verification-and-cleanup.md) — reusing
+  three validation gates and cleaning only safe temporary state in the MVP.
+- [`07-failure-recovery-and-permissions.md`](07-failure-recovery-and-permissions.md) — retry, partial outcomes and Git authority.
+- [`08-domain-enrichment-changes.md`](08-domain-enrichment-changes.md) — a dependency-safe Draft/pull request containing updates
+  from multiple repositories in the same Domain.
+- [`09-profile-migration-changes.md`](09-profile-migration-changes.md) — an impact scan, Migration Draft and one Hub pull request
+  for a semantic profile upgrade.
 
-## Cross-section decision từ Refresh
+## Cross-section decision from Refresh
 
-PR review phải group `Added`, `Updated`, `Removed` và `Questions/Limitations`.
-Destructive changes hiển thị reason, source revision/
-diff evidence, affected relations và replacement; Git diff một mình không đủ
-giải thích vì sao Agent đề xuất xóa. Technical shape chi tiết sẽ được breakout
-khi phần 11 được review.
+Pull-request review must group `Added`, `Updated`, `Removed` and
+`Questions/Limitations`. Destructive changes show the reason, source revision/
+diff evidence, affected relations and replacement; a Git diff alone is
+insufficient to explain why the Agent proposes deletion. The detailed technical
+shape will be broken out when Section 11 is reviewed.
 
 ## PR review template requirement
 
@@ -54,8 +54,8 @@ invent a model narrative or include credentials/local paths.
 
 ## Stacked Init/Refresh requirement
 
-`submit_hub_okf_proposals` mở các publication unit dependency-safe theo từng
-Repository. Eligible same-Repository chains support:
+`submit_hub_okf_proposals` opens dependency-safe publication units per Repository.
+Eligible same-Repository chains support:
 
 ```text
 Init branch ──PR──→ main

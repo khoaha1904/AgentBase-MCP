@@ -1,32 +1,33 @@
 # 08.02 — Observed snapshots
 
-> Trạng thái: Repository observed snapshots đã implement.
+> Status: Repository observed snapshots are implemented.
 
 ## Outcome
 
-Concept giữ vài values nhỏ có ích để người đọc Hub hiểu ngay, nhưng không biến
-Hub thành bản sao config/source. `agentbase.observed_values` là authority duy
-nhất; phần Markdown chỉ là view được renderer tạo từ cùng dữ liệu.
+A Concept retains a few small, useful values for immediate understanding by Hub
+readers, without turning the Hub into a copy of configuration/source.
+`agentbase.observed_values` is the only authority; the Markdown section is only a
+view rendered from the same data.
 
 ## Authoring boundary
 
-Một value chỉ được snapshot khi đồng thời:
+A value is snapshotted only when all of the following hold:
 
-- non-sensitive và qua shared sensitive-value guard;
-- scalar/single-line, nằm trong bounds của phần 08.01;
-- có query hoặc review value rõ ràng;
-- attributable tới một admitted Repository/provider source và exact
+- it is non-sensitive and passes the shared sensitive-value guard;
+- it is scalar/single-line and within the bounds from Section 08.01;
+- it has clear query or review value;
+- it is attributable to an admitted Repository/provider source and exact
   source-kind-specific observation state;
-- giúp hiểu operation, integration hoặc behavior quan trọng của concept.
+- it helps explain an important operation, integration or behavior of the concept.
 
-Không snapshot để đủ coverage, không copy toàn bộ config/provider response và
-không tạo placeholder khi value thiếu. Direct source evidence có thể được ghi
-trong Ingest/Refresh; provider-derived values chỉ vào proposal của Domain
-Enrichment đã confirm.
+Do not snapshot for coverage, copy an entire configuration/provider response or
+create a placeholder for a missing value. Direct source evidence can be recorded
+during Ingest/Refresh; provider-derived values enter only a confirmed Domain
+Enrichment proposal.
 
 ## Human-readable view
 
-Nếu concept có observed values, renderer tạo một section ngắn:
+If a concept has observed values, the renderer creates a short section:
 
 ```markdown
 <!-- agentbase:observed-values:start -->
@@ -38,10 +39,10 @@ Nếu concept có observed values, renderer tạo một section ngắn:
 <!-- agentbase:observed-values:end -->
 ```
 
-Table không phải authority thứ hai: renderer derive nó từ structured entries,
-validator reject manual drift và Refresh regenerate only this owned section.
-Value vẫn phải label `Observed`; table không dùng từ `current`. Source có thể là
-một shared file reference cho nhiều rows. Renderer displays normalized property
+The table is not a second authority: the renderer derives it from structured
+entries, the validator rejects manual drift and Refresh regenerates only this
+owned section. A value must remain labeled `Observed`; the table does not use the
+word `current`. A source can be a shared file reference for multiple rows. Renderer displays normalized property
 and literal scalar; it does not invent labels, units or formatting.
 
 The two comments delimit one renderer-owned section. When structured entries
@@ -55,10 +56,10 @@ example above is presentation-only.
 
 ## Refresh behavior
 
-- Exact matched stream giữ ID và được update value/source state/time qua reviewed
-  Refresh proposal.
-- Missing evidence preserves prior snapshot and may add a limitation; absence
-  không tự xóa hoặc đổi status.
+- An exactly matched stream retains its ID and receives value/source state/time
+  updates through a reviewed Refresh proposal.
+- Missing evidence preserves the prior snapshot and may add a limitation;
+  absence does not automatically delete it or change its status.
 - Different sources for one subject/property remain separate entries and follow
   Part 07 conflict presentation.
 - File move is an explicit source repair that keeps the stream ID.

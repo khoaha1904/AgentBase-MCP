@@ -1,6 +1,6 @@
 # 08.04 — Snapshot query and current-source reads
 
-> Trạng thái: Snapshot query đã implement; explicit current-source read tiếp tục dùng normal authorized tools.
+> Status: Snapshot query is implemented; explicit current-source reads continue to use normal authorized tools.
 
 ## Snapshot read
 

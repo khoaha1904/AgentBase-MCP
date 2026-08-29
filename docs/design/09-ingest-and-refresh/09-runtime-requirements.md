@@ -1,51 +1,53 @@
 # 09.09 — Batch Initial Ingest runtime requirements
 
-> Trạng thái: Baseline Batch Initial Ingest và Capability 046 per-member
-> SourceSnapshot/Seed/Receipt additions đã implement offline.
+> Status: Baseline Batch Initial Ingest and Capability 046 per-member
+> SourceSnapshot/Seed/Receipt additions are implemented offline.
 
-- **AB-BATCH-001** — Một batch bind exact Hub base, một confirmed Domain và
-  2..32 explicit unique local repository roots; không scan workspace để tìm repo.
+- **AB-BATCH-001** — A batch binds an exact Hub base, one confirmed Domain and
+  2..32 explicit unique local repository roots; it does not scan a workspace for repositories.
   Roots establish selection/identity, while analysis binds the exact accessible
   remote default-branch commit selected during member Preflight.
-- **AB-BATCH-002** — Preflight trả matrix per-repository gồm canonical identity,
-  bounded README/docs paths, proposed Domain và warnings. Mọi row phải được
-  confirm rõ trước authoring.
-- **AB-BATCH-003** — Chỉ canonical Repository mới được Init. Existing Repository
-  phải chuyển sang Refresh; duplicate/nested/ambiguous roots fail closed. Current
-  checkout chỉ được analyze khi clean và exact-match remote default commit; mọi
-  trạng thái khác dùng detached worktree/cache, không mutate user workspace.
-- **AB-BATCH-004** — Members chạy tuần tự theo manifest order và giữ source,
-  graph/evidence, Questions, limitations và staging riêng.
-- **AB-BATCH-005** — Truthful sparse member là success. Completeness,
-  cross-repository inference và provider verification không phải batch gate.
-- **AB-BATCH-006** — Finalize compose exact completed member diffs lên một base.
-  Chỉ shared append-only indexes và navigation của confirmed Domain được dựng
-  deterministic; mọi authored overlap khác bị reject. Kết quả là một atomic
+- **AB-BATCH-002** — Preflight returns a per-repository matrix containing canonical
+  identity, bounded README/documentation paths, the proposed Domain and warnings.
+  Every row must be explicitly confirmed before authoring.
+- **AB-BATCH-003** — Only a canonical Repository can be Initialized. An existing
+  Repository must switch to Refresh; duplicate, nested or ambiguous roots fail
+  closed. The current checkout is analyzed only when clean and an exact match for
+  the remote default commit; every other state uses a detached worktree/cache and
+  does not mutate the user workspace.
+- **AB-BATCH-004** — Members run sequentially in manifest order and retain separate
+  source, graph/evidence, Questions, limitations and staging.
+- **AB-BATCH-005** — A truthful sparse member is a success. Completeness,
+  cross-repository inference and provider verification are not batch gates.
+- **AB-BATCH-006** — Finalize composes exact completed member diffs onto one base.
+  Only shared append-only indexes and navigation for the confirmed Domain are
+  built deterministically; every other authored overlap is rejected. The result is an atomic
   `batch-new` proposal.
-- **AB-BATCH-007** — Member failure giữ batch Incomplete. Explicit retry reuse
-  sibling chỉ khi source/base/input/staging vẫn exact; không hidden retry hoặc
-  duplicate append.
-- **AB-BATCH-008** — Membership revision tạo immutable manifest revision mới,
-  reuse exact checkpoints và để full-bundle validation chặn dangling knowledge.
-- **AB-BATCH-009** — Inspect, Accept, pending reconstruction và publication giữ
-  toàn batch như một unit với mọi Repository ID; PR độc lập target `main`, không
-  split hoặc merge bởi MCP.
-- **AB-BATCH-010** — Single-repository Ingest/Refresh và Domain Enrichment không
-  đổi. MCP không thêm database, daemon, parallel runner, dependency hoặc model.
-- **AB-BATCH-011** — `agentbase-scan` không build graph. Mỗi member tạo/reuse
-  graph sau source selection và có isolated Discovery Seed, Inventory Receipt,
-  staging và coverage result; evidence của member này không cover member khác.
-- **AB-BATCH-012** — Không resolve/access được exact remote default source làm
-  member Incomplete; workflow không fallback sang feature/dirty checkout.
-- **AB-BATCH-013** — Recoverable member-local semantic/materialization/provider
-  failure tiếp tục sequential siblings sau confirmed-clean cleanup. Uncertain
-  cleanup/process/shared Hub/source authority failure dừng Batch. Finalize chỉ
-  mở khi mọi confirmed member complete hoặc membership được explicit revise.
-- **AB-BATCH-014** — Qualification dataset giữ ba repository fixture độc lập
-  và được kiểm tra cùng Batch Initial Ingest E2E lifecycle; topology fixture
-  materialization vẫn giữ source evidence riêng theo member và không coi mock
-  provider output là canonical Hub truth.
-- **AB-BATCH-015** — Qualification phải kiểm tra cùng một chuỗi Published
-  projection, resource/relation query, static Domain-site build và proposal
-  safety; mỗi bước báo counts/limitation deterministic và không thêm production
-  dependency, model call hay provider scan.
+- **AB-BATCH-007** — A member failure keeps the batch Incomplete. An explicit retry
+  reuses a sibling only while source/base/input/staging remain exact; there is no
+  hidden retry or duplicate append.
+- **AB-BATCH-008** — A membership revision creates a new immutable manifest
+  revision, reuses exact checkpoints and lets full-bundle validation block dangling knowledge.
+- **AB-BATCH-009** — Inspect, Accept, pending reconstruction and publication keep
+  the entire batch as one unit with every Repository ID; an independent pull
+  request targets `main` and is not split or merged by MCP.
+- **AB-BATCH-010** — Single-repository Ingest/Refresh and Domain Enrichment do not
+  change. MCP adds no database, daemon, parallel runner, dependency or model.
+- **AB-BATCH-011** — `agentbase-scan` does not build a graph. Each member creates
+  or reuses a graph after source selection and has an isolated Discovery Seed,
+  Inventory Receipt, staging and coverage result; one member's evidence does not
+  cover another member.
+- **AB-BATCH-012** — Failure to resolve/access the exact remote default source
+  makes the member Incomplete; the workflow does not fall back to a feature or dirty checkout.
+- **AB-BATCH-013** — A recoverable member-local semantic/materialization/provider
+  failure proceeds to sequential siblings after confirmed-clean cleanup. Uncertain
+  cleanup, process or shared Hub/source authority failure stops the Batch. Finalize
+  opens only when every confirmed member is complete or membership is explicitly revised.
+- **AB-BATCH-014** — The qualification dataset retains three independent repository
+  fixtures and is tested through the Batch Initial Ingest E2E lifecycle; topology
+  fixture materialization retains per-member source evidence and does not treat
+  mock provider output as canonical Hub truth.
+- **AB-BATCH-015** — Qualification must test one chain of Published projection,
+  resource/relation query, static Domain-site build and proposal safety; every step
+  reports deterministic counts/limitations without adding a production dependency,
+  model call or provider scan.
