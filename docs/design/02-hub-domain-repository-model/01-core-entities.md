@@ -1,24 +1,25 @@
 # 02.01 — Core entities and ownership
 
-> Trạng thái: Core Hub/Domain/Repository ownership implemented.
+> Status: Core Hub/Domain/Repository ownership is implemented.
 
 ## Entity model
 
-| Entity | Canonical identity | Ý nghĩa |
+| Entity | Canonical identity | Meaning |
 |---|---|---|
-| Hub | admitted local/remote Hub identity | một knowledge graph dùng chung |
-| Domain | `domains/<slug>` | business boundary được owner xác nhận |
-| Repository | `repositories/<slug>` | source repository và development contract |
-| System | `systems/<slug>` | capability do software/infrastructure phối hợp |
-| Component/interface/resource | role-oriented canonical path | knowledge unit độc lập |
+| Hub | admitted local/remote Hub identity | one shared knowledge graph |
+| Domain | `domains/<slug>` | owner-confirmed business boundary |
+| Repository | `repositories/<slug>` | source repository and development contract |
+| System | `systems/<slug>` | capability coordinated by software/infrastructure |
+| Component/interface/resource | role-oriented canonical path | independent knowledge unit |
 
-Source `repository-...` ID và Repository concept path là hai identity khác nhau.
-Repository concept đại diện source bằng `repository://<repository-id>/...`
-evidence; continuity theo source ID phải resolve về đúng một Repository concept.
+The source `repository-...` ID and Repository concept path are different
+identities. A Repository concept represents source with
+`repository://<repository-id>/...` evidence; continuity by source ID must resolve
+to exactly one Repository concept.
 
 ## Primary Domain
 
-Repository concept giữ đúng một evidenced relation:
+The Repository concept keeps exactly one evidenced relation:
 
 ```yaml
 relationships:
@@ -27,22 +28,24 @@ relationships:
     evidence: [owner-domain]
 ```
 
-`owner-domain` trỏ tới deterministic `agentbase://owner-guidance/domains/...`.
-Không thêm `primaryDomain` registry, sidecar hoặc duplicate Repository theo
-Domain.
+`owner-domain` points to deterministic
+`agentbase://owner-guidance/domains/...`. Do not add a `primaryDomain` registry,
+sidecar or duplicate Repository per Domain.
 
-System vẫn có `part-of → Domain` riêng. Component/resource lấy Domain qua chuỗi
-`part-of`; `implemented-in → Repository` biểu diễn source ownership nhưng không
-truyền Domain membership.
+A System has its own `part-of → Domain`. A component/resource gets its Domain
+through that chain; `implemented-in → Repository` expresses source ownership but
+does not transmit Domain membership.
 
 ## Validation delta
 
-- Repository schema cho phép đúng một `part-of` target type Domain.
-- Confirmed-Domain finalization yêu cầu Repository concept hiện diện, cite current
-  source và có matching owner-evidenced edge.
-- System được tạo trong proposal vẫn cần Domain relation khi evidence hỗ trợ.
-- Existing mutable AgentBase Repository chưa có edge được bổ sung bằng Refresh,
-  không bulk migrate.
-- Human-authored/verified Repository không được rewrite. Missing/mismatched
-  assignment chặn proposal và yêu cầu explicit maintainer-reviewed correction;
-  không tạo shadow Repository để né protected-content rule.
+- Repository schema permits exactly one `part-of` target of type Domain.
+- Confirmed-Domain finalization requires the Repository concept, current-source
+  citation and a matching owner-evidenced edge.
+- A System created in a proposal still needs a Domain relation when evidence
+  supports it.
+- An existing mutable AgentBase Repository without an edge is filled by Refresh,
+  not bulk migration.
+- A human-authored/verified Repository is not rewritten. Missing or mismatched
+  assignment blocks the proposal and requires an explicit maintainer-reviewed
+  correction; do not create a shadow Repository to bypass protected-content
+  rules.

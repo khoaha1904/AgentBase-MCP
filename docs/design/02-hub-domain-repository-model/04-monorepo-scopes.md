@@ -1,12 +1,12 @@
 # 02.04 — Monorepo and source scopes
 
-> Trạng thái: Owner-approved boundary; subproject-scope runtime deferred.
+> Status: Owner-approved boundary; subproject-scope runtime is deferred.
 
 ## Identity
 
-Git worktree root là Repository identity boundary. Chọn một subfolder không tạo
-Repository ID hoặc Repository concept mới; source-state normalization hiện tại
-tiếp tục đưa nó về Git root.
+The Git worktree root is the Repository identity boundary. Selecting a subfolder
+does not create a Repository ID or Repository concept; current source-state
+normalization continues to resolve it to the Git root.
 
 ```text
 company-repo                 Repository / Primary Domain: Crawler
@@ -14,24 +14,26 @@ company-repo                 Repository / Primary Domain: Crawler
 └── jobs/importer            evidence/query scope
 ```
 
-Mọi scope kế thừa primary Domain của repository. Scope chỉ giới hạn discovery,
-Code Graph query và source references; evidence URI vẫn dùng cùng Repository ID
-với relative path đầy đủ.
+Every scope inherits the repository's primary Domain. A scope only limits
+discovery, Code Graph queries and source references; the evidence URI still uses
+the same Repository ID with the complete relative path.
 
 ## Independent repositories in one workspace
 
-Một parent folder như `crawler-repos/` không phải Repository nếu các child là
-những Git repositories độc lập. Mỗi child có Repository ID và Domain assignment
-riêng; parent chỉ là routing/batch/workspace grouping, không tạo Hub concept.
-Nhiều child có thể cùng một Domain, nhưng assignment vẫn được xác nhận từ bằng
-chứng của từng repository chứ không suy ra chỉ từ tên parent.
+A parent folder such as `crawler-repos/` is not a Repository when its children
+are independent Git repositories. Each child has its own Repository ID and
+Domain assignment; the parent is only routing/batch/workspace grouping and does
+not create a Hub concept. Several children may share one Domain, but each
+assignment is confirmed from that repository's evidence rather than inferred
+from the parent name.
 
 ## Unsupported in version one
 
-- Repository ID riêng cho arbitrary subfolder.
-- Một Git repository có nhiều primary Domains.
-- Tự split monorepo thành synthetic repositories.
+- A separate Repository ID for an arbitrary subfolder.
+- Multiple primary Domains in one Git repository.
+- Automatically splitting a monorepo into synthetic repositories.
 
-Nếu preflight yêu cầu một subproject Domain khác primary Domain, skill cảnh báo
-unsupported assignment. Concept/relation xuyên Domain vẫn được biểu diễn theo
-phần 06; nó không tạo subproject Repository identity.
+If preflight requests a subproject Domain different from the primary Domain,
+the skill warns that the assignment is unsupported. Cross-Domain
+concepts/relations remain represented under section 06; they do not create a
+subproject Repository identity.

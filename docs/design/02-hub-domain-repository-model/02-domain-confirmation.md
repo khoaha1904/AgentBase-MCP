@@ -1,6 +1,7 @@
 # 02.02 — Domain confirmation preflight
 
-> Trạng thái: Single-repository và Batch Initial Ingest confirmation implemented.
+> Status: Single-repository and Batch Initial Ingest confirmation are
+> implemented.
 
 ## Workflow
 
@@ -16,39 +17,42 @@ explicit repository root
 
 ## Bounded documentation
 
-Host skill đọc theo thứ tự:
+The host skill reads in this order:
 
 1. root `README*`;
-2. root `docs/README*` hoặc `docs/index*`;
-3. overview/domain/architecture documents được root README link trực tiếp.
+2. root `docs/README*` or `docs/index*`;
+3. overview/domain/architecture documents directly linked by the root README.
 
-Giới hạn cụ thể về số file/byte thuộc implementation plan, nhưng skill không
-recursive-scan toàn bộ docs và không cần Code Graph chỉ để xác nhận Domain.
+Exact file/byte limits belong to the implementation plan, but the skill does
+not recursively scan all docs or need Code Graph merely to confirm a Domain.
 
 ## Candidate result
 
-Preflight trả:
+Preflight returns:
 
-- repository identity và existing primary Domain nếu có;
+- repository identity and any existing primary Domain;
 - proposed exact Domain identity/title;
-- match kind: existing, new hoặc ambiguous/near-name;
-- source paths/excerpts dùng để đề xuất;
-- warning khi user input và repository evidence không cùng hướng.
+- match kind: existing, new or ambiguous/near-name;
+- source paths/excerpts used for the proposal;
+- a warning when user input and repository evidence diverge.
 
-AI không tự xác nhận. User input cũng không được tin mù quáng: mismatch phải được
-hiển thị, nhưng owner là người quyết định cuối.
+The AI does not confirm automatically. User input is not trusted blindly:
+mismatches are shown, but the owner makes the final decision.
 
-Tên của parent folder có thể là một hint trình bày, không phải Domain evidence.
-Khi parent chứa nhiều Git repository, bounded documentation vẫn được kiểm tra
-riêng cho từng repo.
+The parent-folder name may be a presentation hint, not Domain evidence. When a
+parent contains multiple Git repositories, bounded documentation is checked
+separately for each repository.
 
-## New, Refresh và correction
+## New, Refresh and correction
 
-- Initial Ingest tạo/reuse Domain và Repository assignment sau xác nhận.
-- Refresh mặc định dùng assignment hiện có và vẫn hiển thị preflight summary.
-- Domain khác existing assignment dừng ordinary Refresh. Một explicit correction
-  proposal thay relation, giữ owner evidence và Git history; không đổi âm thầm.
-- Nếu Repository concept được bảo vệ, Agent chỉ báo exact mismatch; maintainer
-  phải thực hiện reviewed Hub correction trước khi Refresh tiếp tục.
-- Exact identity/title được truyền vào existing `confirmed_domain`; runtime không
-  tự chạy model hoặc classification service.
+- Initial Ingest creates/reuses the Domain and Repository assignment after
+  confirmation.
+- Refresh uses the existing assignment by default and still displays a preflight
+  summary.
+- A different Domain from the existing assignment stops ordinary Refresh. An
+  explicit correction proposal changes the relation while preserving owner
+  evidence and Git history; it does not change silently.
+- If the Repository concept is protected, the Agent reports the exact mismatch;
+  a maintainer must perform a reviewed Hub correction before Refresh continues.
+- Exact identity/title is passed into existing `confirmed_domain`; runtime does
+  not run a model or classification service automatically.

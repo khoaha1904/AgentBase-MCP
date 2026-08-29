@@ -1,33 +1,35 @@
 # 02.05 — Cross-Domain navigation
 
-> Trạng thái: Owner-approved boundary; enrichment of missing relations deferred.
+> Status: Owner-approved boundary; enrichment of missing relations is deferred.
 
 ## Membership versus relation
 
-Chỉ `part-of` truyền Domain membership trong query graph. Các relation như
-`publishes-to`, `consumes`, `depends-on` hoặc `implemented-in` nối knowledge
-nhưng không đổi primary Domain của Repository.
+Only `part-of` transmits Domain membership in the query graph. Relations such as
+`publishes-to`, `consumes`, `depends-on` or `implemented-in` connect knowledge but
+do not change a Repository's primary Domain.
 
 ```text
 Crawler Repository ──part-of──→ Crawler Domain
 Crawler Worker ──publishes-to──→ Shared Queue ←──consumes── Recommender
 ```
 
-Shared Queue chỉ có một canonical concept. Domain-scoped query tìm nó qua System/
-component paths và cross-domain traversal; không copy Queue vào mỗi Domain.
+Shared Queue has one canonical concept. A Domain-scoped query finds it through
+System/component paths and cross-Domain traversal; it does not copy Queue into
+each Domain.
 
 ## Navigation rules
 
-- Root index link bounded Domain/System/Repository entrypoints.
-- Domain links Systems và critical flows, không chứa repository tree copy.
-- Repository concept giữ source-specific purpose/build/entrypoints và links tới
-  canonical Systems/components qua normal relations.
-- Inbound navigation được query-time derive; không persist inverse duplicate.
-- Integration Contract chỉ thành concept riêng khi có identity/ownership/mapping/
-  lifecycle hoặc query value độc lập.
+- The root index links bounded Domain/System/Repository entry points.
+- A Domain links Systems and critical flows; it does not contain a copy of the
+  repository tree.
+- A Repository concept keeps source-specific purpose/build/entry points and
+  links to canonical Systems/components through normal relations.
+- Inbound navigation is derived at query time; do not persist an inverse copy.
+- An Integration Contract becomes a separate concept only when it has
+  independent identity, ownership, mapping, lifecycle or query value.
 
 ## Reuse
 
-Giữ canonical relationship vocabulary, `deriveDomains`, inbound traversal và
-role-oriented paths hiện tại. Phần 02 chỉ bổ sung Repository primary-Domain edge;
-matching shared resources thuộc phần 06.
+Keep the current canonical relationship vocabulary, `deriveDomains`, inbound
+traversal and role-oriented paths. Section 02 only adds the Repository
+primary-Domain edge; shared-resource matching belongs to section 06.

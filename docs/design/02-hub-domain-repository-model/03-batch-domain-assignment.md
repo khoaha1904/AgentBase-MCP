@@ -1,14 +1,15 @@
 # 02.03 — Batch Domain assignment
 
-> Trạng thái: Batch Initial Ingest assignment implemented offline; Batch Refresh deferred.
+> Status: Batch Initial Ingest assignment is implemented offline; Batch Refresh
+> is deferred.
 
 ## Scope
 
-Batch chỉ nhận repository roots do người dùng chỉ định trong workspace. Nó không
-recursive-scan workspace/home để tự tìm repository.
+Batch accepts only repository roots specified by the user in the workspace. It
+does not recursively scan the workspace/home to find repositories.
 
-Host skill chạy Domain preflight cho từng repository trước full Ingest và tạo
-một confirmation matrix:
+The host skill runs Domain preflight for each repository before full Ingest and
+creates a confirmation matrix:
 
 | Repository | Existing | Proposed | Evidence | Warning |
 |---|---|---|---|---|
@@ -18,19 +19,20 @@ một confirmation matrix:
 
 ## Confirmation
 
-- User có thể khai báo một Domain chung cho cả batch.
-- Skill vẫn kiểm tra từng repository và không che repository bất thường.
-- User sửa Domain hoặc loại repository trước khi xác nhận matrix.
-- Không repository nào bắt đầu full Ingest khi matrix còn unresolved row.
+- The user may declare one shared Domain for the whole batch.
+- The skill still checks each repository and does not hide an unusual one.
+- The user edits the Domain or removes a repository before confirming the matrix.
+- No repository starts full Ingest while the matrix has an unresolved row.
 
-Sau confirmation, từng repository chạy tuần tự và có checkpoint riêng. Failure
-của một repository không xóa checkpoint hoàn chỉnh của repository khác, nhưng
-batch vẫn `Incomplete`: chưa có atomic proposal để Accept, Publish hoặc query
-như Published knowledge. Retry hoặc membership revision phải hoàn tất rồi mới
-finalize lại toàn batch.
+After confirmation, repositories run sequentially with an individual checkpoint.
+A repository failure does not delete another repository's completed checkpoint,
+but the batch remains `Incomplete`: no atomic proposal is available for Accept,
+Publish or Published-knowledge query. Retry or a membership revision must finish
+before the entire batch is finalized again.
 
 ## Runtime shape
 
-Batch Initial Ingest dùng bounded MCP tools cho preflight, manifest, member run,
-finalize và inspection. Host skill giữ workflow dễ hiểu cho người dùng; durable
-reviewable knowledge chỉ xuất hiện ở atomic proposal sau finalize.
+Batch Initial Ingest uses bounded MCP tools for preflight, manifest, member run,
+finalize and inspection. The host skill keeps the workflow understandable for
+the user; durable reviewable knowledge appears only in the atomic proposal after
+finalize.

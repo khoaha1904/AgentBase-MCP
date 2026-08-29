@@ -1,29 +1,30 @@
-# 02 — Hub, Domain và Repository model
+# 02 — Hub, Domain and Repository model
 
-> Trạng thái: Domain/Repository và Batch Initial Ingest implemented;
-> subproject-scope automation trong monorepo deferred.
+> Status: Domain/Repository and Batch Initial Ingest are implemented;
+> subproject-scope automation in a monorepo is deferred.
 
 High-level decision:
-[Hub, Domain và Repository được tổ chức thế nào?](../../present/02-hub-domains-and-repositories.md)
+[How are Hub, Domain and Repository organized?](../../present/02-hub-domains-and-repositories.md)
 
-## Phân rã dự kiến
+## Planned decomposition
 
-- [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — Domain baseline và
-  quyết định một Git repository có một primary Domain.
-- [`01-core-entities.md`](01-core-entities.md) — Hub, Domain, Repository và
-  ranh giới ownership.
-- [`02-domain-confirmation.md`](02-domain-confirmation.md) — đọc README/docs,
-  đề xuất, cảnh báo và xác nhận Domain.
-- [`03-batch-domain-assignment.md`](03-batch-domain-assignment.md) — gán Domain
-  cho batch và xử lý repository bất thường.
-- [`04-monorepo-scopes.md`](04-monorepo-scopes.md) — Git-root identity và
+- [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — Domain baseline and
+  the one-primary-Domain-per-Git-repository decision.
+- [`01-core-entities.md`](01-core-entities.md) — Hub, Domain, Repository and
+  ownership boundaries.
+- [`02-domain-confirmation.md`](02-domain-confirmation.md) — read README/docs,
+  propose, warn and confirm a Domain.
+- [`03-batch-domain-assignment.md`](03-batch-domain-assignment.md) — assign a
+  Domain to a batch and handle unusual repositories.
+- [`04-monorepo-scopes.md`](04-monorepo-scopes.md) — Git-root identity and
   subproject evidence scope.
-- [`05-cross-domain-navigation.md`](05-cross-domain-navigation.md) — liên kết
-  sang Domain khác mà không đổi repository ownership.
+- [`05-cross-domain-navigation.md`](05-cross-domain-navigation.md) — link to
+  another Domain without changing repository ownership.
 
-## Implementation delta hiện tại
+## Current implementation delta
 
-Repository primary Domain, owner confirmation, `part-of` validation và explicit
-Batch Initial Ingest đã implement. Parent multi-repo chỉ là grouping/routing
-scope. Phần còn deferred là tự động dùng monorepo subproject làm bounded source
-scope; không thêm registry, database hoặc subproject identity.
+Repository primary Domain, owner confirmation, `part-of` validation and explicit
+Batch Initial Ingest are implemented. A parent containing multiple repositories
+is only grouping/routing scope. The remaining deferred work is automatic use of
+a monorepo subproject as a bounded source scope; it adds no registry, database
+or subproject identity.

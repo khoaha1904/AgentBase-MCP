@@ -1,28 +1,31 @@
 # 02 — Baseline and impact checkpoint
 
-> Trạng thái: Current Domain/Repository baseline implemented; owner reconfirmed
-> one-repository-one-Domain and workspace grouping boundary.
+> Status: The current Domain/Repository baseline is implemented; the owner
+> reconfirmed the one-repository-one-Domain and workspace-grouping boundary.
 
-## High-level hiện tại
+## Current high-level decision
 
-- Mỗi repository có đúng một Domain chính.
-- Relation xuyên Domain không làm repository thuộc thêm Domain.
-- Mọi subproject trong monorepo kế thừa Domain đó.
-- Parent folder chứa nhiều repository độc lập chỉ là routing/batch scope.
+- Each repository has exactly one primary Domain.
+- A cross-Domain relation does not place a repository in another Domain.
+- Every subproject in a monorepo inherits that Domain.
+- A parent folder containing independent repositories is only routing/batch
+  scope.
 
-## Baseline hiện tại
+## Current baseline
 
-AgentBase đã có:
+AgentBase has:
 
-- canonical Domain concept `domains/<slug>`;
-- optional `confirmed_domain` gồm exact identity/title;
-- deterministic owner-guidance evidence cho xác nhận của người dùng;
-- validation bắt Repository và current-source System có `part-of → Domain`;
-- query tự suy ra Domain scope qua chuỗi `part-of`;
-- Repository concept và stable source repository ID độc lập với System/Domain;
-- single-repository và Batch Initial Ingest Domain confirmation.
+- the canonical `domains/<slug>` Domain concept;
+- optional `confirmed_domain` with exact identity/title;
+- deterministic owner-guidance evidence for user confirmation;
+- validation requiring a Repository and current-source System to have
+  `part-of → Domain`;
+- query-time Domain scope derived through the `part-of` chain;
+- a Repository concept and stable source-repository ID independent of
+  System/Domain;
+- single-repository and Batch Initial Ingest Domain confirmation.
 
-Nguồn baseline:
+Baseline sources:
 
 - [Confirmed Domain validation](../../../src/core/knowledge/governance/confirmed-domain.ts)
 - [Schema catalog](../../../src/core/knowledge/schemas/catalog.ts)
@@ -31,55 +34,57 @@ Nguồn baseline:
 - [Domain-scoped query graph](../../../src/core/knowledge/query/hub-query-graph.ts)
 - [Repository source identity](../../../src/app/repository-okf/evidence/source-state.ts)
 
-## Gap hiện tại
+## Current gap
 
-Core primary-Domain relation, validation và explicit Batch Initial Ingest đã
-implement. Subfolder trong monorepo vẫn normalize về Git root đúng theo product
-contract. Phần còn deferred là host automation dùng subproject như một bounded
-query/evidence scope; nó không cần Repository ID hoặc Domain riêng.
+The core primary-Domain relation, validation and explicit Batch Initial Ingest
+are implemented. A monorepo subfolder still normalizes to its Git root as
+defined by the product contract. The remaining deferred work is host automation
+that uses a subproject as a bounded query/evidence scope; it does not need a
+separate Repository ID or Domain.
 
-## Phần tái sử dụng được
+## Reusable parts
 
-- Domain identity, owner guidance, System `part-of` validation và query scoping.
-- Repository concept/source identity và entity-centered graph.
-- Existing Hub search có thể liệt kê/match Domain trước khi prepare.
-- Host skill có thể đọc bounded README/docs và điều phối batch; không cần model
-  SDK hoặc một Domain-classification service trong runtime.
+- Domain identity, owner guidance, System `part-of` validation and query scope.
+- Repository concept/source identity and entity-centered graph.
+- Existing Hub search to list/match a Domain before prepare.
+- Host skill can read bounded README/docs and coordinate a batch; no model SDK
+  or Domain-classification service is needed in runtime.
 
-## Contract hiện tại
+## Current contract
 
-1. Giữ đúng quyết định một repository có một primary Domain.
-2. Lưu assignment bằng evidenced `Repository part-of → Domain` relation; không
-   tạo metadata registry hoặc side database mới.
-3. Lần đầu Ingest yêu cầu owner confirmation. Refresh phải khớp assignment đã
-   Published/Local Draft; mismatch chỉ cảnh báo và dừng để người dùng sửa.
-4. Host skill đọc bounded root README/docs, search Domain hiện có, trình bày
-   candidate/mismatch và chỉ gọi prepare sau xác nhận.
-5. Batch dùng cùng preflight cho từng repository rồi xác nhận một matrix và
-   chạy qua bounded Batch Initial Ingest tools hiện có.
-6. Mọi subproject trong một Git repository **kế thừa primary Domain của
-   repository**. Subproject chỉ là evidence/query scope, không có Repository ID
-   hoặc Domain assignment riêng.
-7. Concept/relation vẫn có thể nối sang Domain khác; điều đó không đổi primary
-   Domain của repository.
+1. Keep the decision that one repository has one primary Domain.
+2. Store assignment as an evidenced `Repository part-of → Domain` relation; do
+   not create a metadata registry or side database.
+3. Initial Ingest requires owner confirmation. Refresh must match the
+   Published/Local Draft assignment; a mismatch warns and stops for user repair.
+4. The host skill reads bounded root README/docs, searches existing Domains,
+   presents candidates/mismatches and calls prepare only after confirmation.
+5. Batch uses the same preflight for each repository, confirms one matrix and
+   runs the existing bounded Batch Initial Ingest tools.
+6. Every subproject in one Git repository **inherits the repository's primary
+   Domain**. A subproject is only an evidence/query scope and has no Repository
+   ID or Domain assignment of its own.
+7. Concepts/relations may still point into another Domain; this does not change
+   the repository's primary Domain.
 
-Repository `part-of` giúp domain query hiện tại tái sử dụng graph derivation.
-Existing Repository concept chưa có edge được bổ sung dần bằng Refresh; không
-bulk-migrate Hub. Nếu concept được bảo vệ/human-authored, Agent không tự sửa;
-nó báo maintainer thực hiện explicit reviewed correction và không tạo bản sao.
+The Repository `part-of` relation lets current Domain query reuse graph
+derivation. An existing Repository concept without an edge is added gradually by
+Refresh; the Hub is not bulk-migrated. If a concept is protected or
+human-authored, the Agent does not edit it automatically; it reports that a
+maintainer must perform an explicit reviewed correction and creates no copy.
 
 ## Impact
 
-Quyết định hiện tại không yêu cầu runtime model mới. Primary Domain, validation
-và batch đã có. Chỉ subproject-scope automation còn là contained host-skill
-change nếu usage evidence chứng minh cần bổ sung. Cho subproject có
-Domain/Repository identity riêng vẫn là broad change và ngoài scope.
+The current decision needs no new runtime model. Primary Domain, validation and
+batch already exist. Only subproject-scope automation remains a contained
+host-skill change if usage evidence proves it needed. Giving a subproject its own
+Domain/Repository identity would be a broad out-of-scope change.
 
-## Quyết định đã chốt
+## Decided
 
-Mọi subproject trong một Git repository kế thừa đúng một primary Domain.
-Subproject chỉ là evidence/query scope; multi-domain Repository identity riêng
-không thuộc phiên bản đầu. Cross-domain concept/relation vẫn được phép và không
-đổi primary Domain của repository.
+Every subproject in a Git repository inherits exactly one primary Domain. A
+subproject is only an evidence/query scope; multi-Domain Repository identity is
+not part of the first version. Cross-Domain concepts/relations remain allowed
+and do not change the repository's primary Domain.
 
-Impact sau quyết định: **Contained change**.
+Impact after the decision: **Contained change**.
