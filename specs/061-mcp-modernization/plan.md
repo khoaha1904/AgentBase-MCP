@@ -44,6 +44,12 @@ Benchmark suite discovery, repository admission and result-path ownership moved
 out of the scoring/runner file into `benchmark-okf-storage.mjs`. Public exports
 remain compatible; scoring and command behavior are unchanged.
 
+## Phase 5 (complete)
+
+The independent Hub query-quality qualification moved out of the benchmark
+runner. It keeps the 1,000-concept/100-query deterministic gate and report shape
+while reducing the runner below 1,000 lines.
+
 ## Risks and recovery
 
 The phase does not change public tool names, storage, credentials or transport

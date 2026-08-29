@@ -17,6 +17,7 @@
 - [x] T015 Preserve modern related notifications through automatic JSON/SSE response selection.
 - [x] T016 Serve stdio through the SDK era-negotiating factory entrypoint.
 - [x] T017 Return additive structured content for stable object tool results.
+- [x] T018 Extract query-quality qualification from the benchmark runner.
 
 ## Result
 
