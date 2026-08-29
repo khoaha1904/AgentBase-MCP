@@ -1,6 +1,6 @@
 # 12.04 — MVP capability boundary
 
-> Trạng thái: MVP boundary implemented and audited offline.
+> Status: MVP boundary implemented and audited offline.
 
 ## Required and implemented
 
