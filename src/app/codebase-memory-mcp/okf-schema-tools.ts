@@ -172,7 +172,13 @@ export const OKF_SCHEMA_TOOLS = [
 ] as const;
 
 function result(value: unknown, isError = false): CallToolResult {
-  return { content: [{ type: "text", text: JSON.stringify(value) }], ...(isError ? { isError: true } : {}) };
+  const structuredContent = value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown> : undefined;
+  return {
+    content: [{ type: "text", text: JSON.stringify(value) }],
+    ...(structuredContent === undefined ? {} : { structuredContent }),
+    ...(isError ? { isError: true } : {}),
+  };
 }
 
 function guidanceRequest(args: Readonly<Record<string, unknown>>): OkfAuthoringGuidanceRequest {

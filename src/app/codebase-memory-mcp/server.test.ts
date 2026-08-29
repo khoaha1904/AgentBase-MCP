@@ -94,6 +94,10 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
       status: "ready", mode: "diagram", domain: "domains/commerce",
       diagramType: "architecture", conceptIds: ["systems/orders"],
     });
+    assert.deepEqual(visualization.structuredContent, {
+      status: "ready", mode: "diagram", domain: "domains/commerce",
+      diagramType: "architecture", conceptIds: ["systems/orders"],
+    });
     const site = await client.callTool({ name: "prepare_hub_visualization", arguments: {
       mode: "domain-site", domain: "domains/commerce", output_directory: "/tmp/domain-site",
       visibility_acknowledged: true,

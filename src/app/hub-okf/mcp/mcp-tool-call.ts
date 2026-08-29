@@ -9,7 +9,13 @@ import type { HubRemovalDeclaration } from "../../../core/knowledge/index.ts";
 import type { EnrichmentAnswer, EnrichmentCandidateInput } from "../enrichment/index.ts";
 
 function result(value: unknown, isError = false): CallToolResult {
-  return { content: [{ type: "text", text: JSON.stringify(value) }], ...(isError ? { isError: true } : {}) };
+  const structuredContent = value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown> : undefined;
+  return {
+    content: [{ type: "text", text: JSON.stringify(value) }],
+    ...(structuredContent === undefined ? {} : { structuredContent }),
+    ...(isError ? { isError: true } : {}),
+  };
 }
 
 function required(args: Readonly<Record<string, unknown>>, key: string): string {
