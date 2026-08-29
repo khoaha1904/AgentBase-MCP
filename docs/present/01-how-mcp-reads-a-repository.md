@@ -1,120 +1,124 @@
-# 01 — MCP đọc một dự án như thế nào?
+# 01 — How MCP reads a repository
 
-> Trạng thái: Local Code Graph, Capability 046 broad discovery/selective OKF và
-> Capability 051 reliability hardening đã implement; released-skill
-> qualification còn pending.
+> Status: Local Code Graph, Capability 046 broad discovery/selective OKF and
+> Capability 051 reliability hardening are implemented; released-skill
+> qualification remains pending.
 
-## Câu trả lời ngắn
+## Short answer
 
-MCP dùng Code Graph để tạo một bản đồ của repository, sau đó đọc chính xác
-những đoạn code và tài liệu cần thiết để làm bằng chứng.
+MCP uses a Code Graph to build a repository map, then reads only the exact code
+and documentation needed as evidence.
 
 ```text
-Người dùng gọi skill ingest/refresh
+User calls an ingest/refresh skill
              ↓
-Preflight bind exact repository/source snapshot
+Preflight binds an exact repository/source snapshot
              ↓
-Discover lập/reuse graph rồi MCP chạy một baseline cố định
+Discover builds or reuses the graph, then MCP runs a fixed baseline
              ↓
-Code Graph tìm file, function, dependency và luồng gọi
+Code Graph finds files, functions, dependencies and call paths
              ↓
-MCP gom tín hiệu thành bounded discovery groups
+MCP groups signals into bounded discovery groups
              ↓
-Agent điều tra nhóm quan trọng và đọc nguồn gốc làm bằng chứng
+Agent investigates important groups and reads source as evidence
 ```
 
-## Tại sao cần Code Graph?
+## Why use a Code Graph?
 
-Một repository có thể có hàng nghìn file. Đưa toàn bộ chúng vào AI trong một
-lần vừa tốn kém vừa khiến AI khó tập trung vào phần quan trọng.
+A repository may contain thousands of files. Sending all of them to AI at once
+is expensive and makes it harder to focus on what matters.
 
-Code Graph hoạt động giống bản đồ hoặc mục lục. Nó cho biết:
+The Code Graph works like a map or index. It shows:
 
-- repository có những file và thành phần nào;
-- function hoặc module nào gọi nhau;
-- thành phần nào phụ thuộc thành phần nào;
-- một luồng xử lý có thể đi qua những đâu.
+- which files and components the repository contains;
+- which functions or modules call one another;
+- which components depend on which others; and
+- where a processing flow may travel.
 
-Agent dùng bản đồ này để thu hẹp phạm vi. Ví dụ, khi cần tìm phần thu thập dữ
-liệu performance, graph có thể dẫn agent tới một Lambda, event đầu vào và nơi
-lưu kết quả. Agent sau đó đọc chính xác những nguồn đó để xác nhận.
+The agent uses this map to narrow the scope. For example, when it needs to find
+performance data collection, the graph may lead it to a Lambda, its input event
+and the result store. The agent then reads exactly those sources to confirm the
+finding.
 
-## Bản đồ không phải bằng chứng cuối cùng
+## The map is not the final evidence
 
-- **Code Graph** giúp tìm đúng chỗ.
-- **Code, Terraform, config và tài liệu gốc** cung cấp bằng chứng.
-- **Agent** điều tra và diễn giải bằng chứng theo skill.
-- **MCP** cung cấp các công cụ đọc, tìm kiếm và kiểm tra có giới hạn.
+- **Code Graph** helps find the right place.
+- **Code, Terraform, configuration and original documentation** provide evidence.
+- **The agent** investigates and interprets evidence according to the skill.
+- **MCP** provides bounded tools for reading, searching and checking.
 
-MCP không chép toàn bộ Code Graph vào Hub. Graph là dữ liệu riêng, tạm thời và
-có thể dựng lại. Chỉ kiến thức hữu ích, có nguồn và đã qua kiểm tra mới được đề
-xuất để đưa vào Hub.
+MCP does not copy the entire Code Graph into the Hub. The graph is private,
+temporary and rebuildable. Only useful, sourced and reviewed knowledge is
+proposed for the Hub.
 
-Code Graph chỉ được dùng cho repository đã có local hoặc nằm trong workspace.
-MCP không tự clone repository remote để dựng graph khi người dùng query.
+The Code Graph is used only for a repository that is local or inside the
+workspace. MCP does not automatically clone a remote repository to build a
+graph during a query.
 
-Hub authoring là ngoại lệ có authority rõ: Preflight dùng token của active Hub
-để lấy exact remote default-branch commit từ cùng GitHub/GHE host vào cache riêng
-của AgentBase. Đây không phải query-time clone và không thay đổi checkout, refs
-hay credential của repository người dùng.
+Hub authoring is an explicit-authority exception: Preflight uses the active
+Hub's token to fetch the exact remote default-branch commit from the same
+GitHub/GHE host into an AgentBase-private cache. This is not a query-time clone
+and does not change the user's checkout, refs or credentials.
 
-## Khi workspace có nhiều repository
+## When a workspace contains multiple repositories
 
-Mỗi Git repository vẫn có Code Graph riêng. Thư mục cha chỉ là phạm vi giúp
-Agent chọn repository cần đọc, không trở thành một graph lớn.
+Each Git repository still has its own Code Graph. A parent directory is only a
+scope that helps the agent choose a repository; it does not become one large graph.
 
-- Nếu thư mục đang mở là một Git monorepo, toàn bộ Git root dùng một graph;
-  các project con chỉ là những scope/path bên trong graph đó.
-- Nếu thư mục đang mở chứa nhiều Git repository độc lập, Agent chọn đúng repo
-  theo yêu cầu rõ ràng, repo chứa working directory hiện tại, hoặc mapping local
-  duy nhất đã biết từ Hub.
-- Nếu có nhiều repo đều hợp lý, Agent hỏi lại thay vì tự đoán.
-- Câu hỏi overview/domain dùng Published Hub trước và không cần dựng graph.
-- Câu hỏi cần source của nhiều repo đọc từng repo tuần tự; không gộp graph và
-  không tự quét toàn workspace.
+- If the open directory is a Git monorepo, the whole Git root uses one graph;
+  child projects are scopes/paths inside that graph.
+- If the open directory contains several independent Git repositories, the
+  agent chooses the requested repository, the repository containing the current
+  working directory, or a unique known local Hub mapping.
+- If several repositories are equally plausible, the agent asks instead of guessing.
+- Overview/domain questions use the Published Hub first and do not build a graph.
+- Questions requiring source from multiple repositories read each repository
+  sequentially; they do not merge graphs or scan the entire workspace.
 
-Ngoại lệ là khi người dùng gọi explicit `agentbase-scan`: workflow này chỉ tìm
-Git roots trong workspace đã chọn để lập inventory, có bounds rõ và không dựng
-Code Graph hay đọc source sâu.
+The exception is an explicit `agentbase-scan` call: that workflow only finds Git
+roots in the selected workspace to build a bounded inventory. It does not build
+a Code Graph or read deep source.
 
-## MCP đọc sâu tới đâu?
+## How deep does MCP read?
 
-Trong Initial Ingest/Batch Init, sau khi index exact Preflight source, MCP tự
-chạy một baseline cố định gồm index diagnostics,
-architecture aspects và file census an toàn; không phụ thuộc Agent nhớ gọi đủ
-tool. Kết quả index giữ nguyên dữ liệu graph và kèm một Seed summary nhỏ để Agent
-thấy các group ID cần xử lý. Discover kiểm kê rộng các nhóm có tín hiệu cao: root README, runtime/package
-manifest, entrypoint, interface/route/event/trigger, integration/data/channel,
-Terraform/Terragrunt, deploy và CI. Nó không crawl toàn bộ source hay `docs/`.
-Agent chỉ mở sâu file mà graph/census chỉ ra là quan trọng; generated/vendor/
-build và secret-like paths bị loại, lockfile chỉ là dependency hint. Mỗi nhóm
-quan trọng phải được xử lý hoặc ghi limitation, nhưng không bắt buộc trở thành
-concept.
+During Initial Ingest/Batch Init, after indexing the exact Preflight source, MCP
+automatically runs a fixed baseline containing index diagnostics, architecture
+aspects and a safe file census; it does not depend on the agent remembering to
+call every tool. The index preserves graph data and adds a small Seed summary so
+the agent can see the group IDs to process. Discover broadly inventories
+high-signal groups: root README, runtime/package manifest, entrypoint,
+interface/route/event/trigger, integration/data/channel, Terraform/Terragrunt,
+deployment and CI. It does not crawl all source or `docs/`.
 
-Trước khi source line trở thành context cho Agent, MCP phải lọc nội dung nhạy
-cảm inline như token, password hoặc URL có credential. Path denylist và content
-redaction là hai lớp khác nhau: một file có tên hợp lệ vẫn không được đưa secret
-thô vào Discovery Seed.
+The agent opens deeply only the files identified as important by the graph or
+census; generated/vendor/build and secret-like paths are excluded, while a
+lockfile is only a dependency hint. Every important group must be processed or
+recorded as a limitation, but it need not become a concept.
 
-Query thường và normal change-first Refresh không chạy baseline này hoặc tạo
-Discovery Seed. Chúng vẫn dùng graph/source theo đúng phạm vi riêng.
+Before a source line becomes agent context, MCP filters inline sensitive content
+such as tokens, passwords or credential-bearing URLs. A path denylist and
+content redaction are separate layers: a file with an allowed name still must
+not expose a raw secret in the Discovery Seed.
 
-## Khi nào graph được tạo?
+Ordinary queries and normal change-first Refresh do not run this baseline or
+create a Discovery Seed. They still use the graph/source within their own bounds.
 
-Graph được tạo hoặc reuse theo kiểu lazy: chỉ khi một workflow thật sự cần đọc
-source chính xác của repository đã chọn. Việc mở thư mục cha hoặc chỉ query Hub
-không làm MCP prebuild graph.
+## When is a graph created?
 
-Trong Ingest, graph được tạo hoặc reuse ở bước Discover sau khi Preflight đã
-chọn exact source. Nếu current checkout clean và trùng remote default commit,
-MCP dùng nó; nếu feature/dirty/khác commit, MCP dùng detached worktree tạm. Trong
-Refresh, cache chỉ được reuse khi repository identity, source revision, engine
-và namespace khớp; nếu source đã đổi thì index lại. Process được đóng sau run,
-còn cache local có thể giữ lại. Không có watcher, daemon hoặc background
-indexing mặc định.
+Graphs are created or reused lazily: only when a workflow truly needs exact
+source reading for the selected repository. Opening a parent directory or
+querying the Hub alone does not prebuild a graph.
 
-## Một câu để trình bày
+In Ingest, the graph is created or reused during Discover after Preflight selects
+the exact source. If the current checkout is clean and matches the remote default
+commit, MCP uses it; if it is a feature/dirty/different commit, MCP uses a
+temporary detached worktree. In Refresh, a cache is reused only when repository
+identity, source revision, engine and namespace match; otherwise it re-indexes.
+The process closes after the run while the local cache may remain. There is no
+watcher, daemon or background indexing by default.
 
-> AgentBase-MCP không đọc mù toàn bộ dự án. Nó dùng Code Graph như một bản đồ để
-> tìm đúng phần cần xem, rồi quay lại code và tài liệu gốc để xác minh trước khi
-> tạo kiến thức cho Hub.
+## One-sentence explanation
+
+> AgentBase-MCP does not blindly read the entire project. It uses the Code Graph
+> as a map to find what matters, then returns to the original code and documents
+> to verify it before creating Hub knowledge.

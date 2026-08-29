@@ -1,31 +1,31 @@
-# AgentBase — thiết kế sản phẩm high-level
+# AgentBase — high-level product design
 
-Đây là bản trình bày hướng sản phẩm. Low-level design và implementation có thể
-đi sau từng phần; trạng thái đồng bộ bên dưới giúp phân biệt điều đã chạy được
-với định hướng chưa implement.
+This directory presents product direction. Low-level design and implementation
+follow each area; the synchronization status below distinguishes implemented
+behavior from direction that is not yet implemented.
 
-## AgentBase giải quyết việc gì?
+## What problem does AgentBase solve?
 
-Kiến thức về một hệ thống thường nằm rải rác trong code, hạ tầng, config và tài
-liệu của nhiều repository. AgentBase giúp AI tìm, kiểm chứng và nối các kiến
-thức đó thành một bản đồ dùng chung có nguồn rõ ràng.
+Knowledge about a system is often scattered across code, infrastructure,
+configuration and documentation in many repositories. AgentBase helps AI find,
+verify and connect that knowledge into a shared map with clear sources.
 
 ```text
-Source local/workspace ──→ Code Graph + MCP ──→ Local Draft
-                                                    ↓ review + PR
-                                              Published Hub
+Local/workspace source ──→ Code Graph + MCP ──→ Local Draft
+                                                     ↓ review + PR
+                                               Published Hub
 ```
 
-- **Source và Code Graph** trả lời chi tiết implementation hiện tại.
-- **MCP và các skill** điều tra, kiểm chứng, tạo draft và query Published knowledge.
-- **Hub** giữ overview: hệ thống có gì, vì sao, liên kết thế nào và tìm chi tiết
-  ở đâu. Hub không sao chép toàn bộ repository.
+- **Source and Code Graph** answer detailed questions about current implementation.
+- **MCP and skills** investigate, verify, create drafts and query Published knowledge.
+- **Hub** keeps the overview: what the system contains, why it exists, how it
+  connects and where to find detail. The Hub does not copy the entire repository.
 
 ## Command surface
 
-Người dùng không cần biết OKF authoring internals hay toàn bộ MCP lifecycle.
-CLI chính thức của AgentBase là `abs`; `abs --help` chỉ hiển thị các thao tác
-owner ngắn gọn. MVP giữ ba lệnh public:
+Users do not need to know OKF authoring internals or the full MCP lifecycle.
+AgentBase's official CLI is `abs`; `abs --help` exposes only a small owner
+surface. The MVP keeps three public commands:
 
 ```text
 abs status
@@ -33,73 +33,75 @@ abs hub connect --url <repository-url> --branch <branch>
 abs hub sync
 ```
 
-`mcp` là launcher kỹ thuật cho client registration. Ingest, Refresh, Batch,
-Enrichment, Accept, Publish, Question review và các bước OKF chi tiết do skill
-và MCP điều phối, không trở thành một danh sách CLI public dài. Benchmark,
-validator và workflow runner là developer/internal commands.
+`mcp` is a technical launcher for client registration. Ingest, Refresh, Batch,
+Enrichment, Accept, Publish, Question review and detailed OKF steps are
+orchestrated by skills and MCP; they do not become a long public CLI list.
+Benchmark, validator and workflow runners are developer/internal commands.
 
-Luồng chính là: **Ingest lần đầu → review Local Draft → Publish qua PR →
-Refresh khi source đổi**. Mọi kết luận giữ provenance; AI không tự merge dữ
-liệu mơ hồ, không tự chọn một nguồn xung đột làm sự thật và không tự publish.
+The main flow is: **Initial Ingest → review Local Draft → Publish through a PR
+→ Refresh when source changes**. Every conclusion keeps provenance; AI does not
+automatically merge ambiguous data, choose one conflicting source as truth or
+publish without explicit authorization.
 
-## Thuật ngữ chính
+## Core terminology
 
-- **MCP/skill:** công cụ và quy trình để Agent đọc, kiểm tra và cập nhật knowledge.
-- **Domain:** nhóm nghiệp vụ như Crawler hoặc Recommendation.
-- **Concept:** một thực thể cụ thể trong Hub, như service, API hoặc queue.
-- **Schema:** khuôn vai trò chung mà MCP dùng để mô tả concept.
-- **Relation:** quan hệ giữa hai concept.
-- **Claim:** một nhận định; **evidence/provenance** là bằng chứng và nguồn của nó.
-- **Question:** điều chưa rõ cần theo dõi hoặc xác nhận.
-- **Local Draft / Published:** kiến thức chỉ có local / đã merge vào Hub chung.
-- **Maintainer Guidance:** hướng dẫn có phạm vi do người dùng cung cấp.
-- **PR:** đề nghị thay đổi để maintainer review và merge vào Hub chung.
+- **MCP/skill:** tools and procedures for an agent to read, verify and update knowledge.
+- **Domain:** a business group such as Crawler or Recommendation.
+- **Concept:** a concrete Hub entity such as a service, API or queue.
+- **Schema:** a reusable role definition MCP uses to describe a concept.
+- **Relation:** a relationship between two concepts.
+- **Claim:** an assertion; **evidence/provenance** is its supporting source.
+- **Question:** an unresolved item to track or confirm.
+- **Local Draft / Published:** knowledge local to the workflow / merged into the shared Hub.
+- **Maintainer Guidance:** scoped guidance supplied by a user.
+- **PR:** a proposed change for a maintainer to review and merge into the shared Hub.
 
-## Các phần trình bày
+## Product sections
 
-0. [Product scope và authority](00-product-scope-and-authority.md)
-1. [MCP đọc một repository như thế nào?](01-how-mcp-reads-a-repository.md)
-2. [Hub, Domain và Repository được tổ chức thế nào?](02-hub-domains-and-repositories.md)
-3. [MCP nhận diện concept trong repository thế nào?](03-how-concepts-are-identified.md)
-4. [MCP lựa chọn schema cho concept thế nào?](04-how-concept-schemas-are-selected.md)
-5. [Kiến thức từ repository được đưa vào Hub thế nào?](05-how-repository-knowledge-enters-the-hub.md)
-6. [Quan hệ giữa nhiều repository và nhiều Domain](06-cross-repository-and-cross-domain-relationships.md)
-7. [Dữ liệu xung đột, Questions và Maintainer Guidance](07-conflicts-questions-and-maintainer-guidance.md)
-8. [Observed snapshots và source references](08-live-references-for-change-prone-values.md)
-9. [Ingest và Refresh](09-ingest-and-refresh.md)
-10. [Query từ Code Graph và Hub](10-querying-code-graph-and-hub.md)
-11. [Review và Publish](11-review-accept-and-publish.md)
-12. [Giới hạn và phạm vi của phiên bản đầu](12-current-limits-and-open-decisions.md)
-13. [Visualize Published knowledge](13-visualizing-published-knowledge.md)
-14. [Cung cấp context cho AI workflows trong SDLC](14-context-for-ai-sdlc-workflows.md)
+0. [Product scope and authority](00-product-scope-and-authority.md)
+1. [How MCP reads a repository](01-how-mcp-reads-a-repository.md)
+2. [How Hub, Domain and Repository are organized](02-hub-domains-and-repositories.md)
+3. [How MCP identifies concepts in a repository](03-how-concepts-are-identified.md)
+4. [How MCP selects a concept schema](04-how-concept-schemas-are-selected.md)
+5. [How repository knowledge enters the Hub](05-how-repository-knowledge-enters-the-hub.md)
+6. [Cross-repository and cross-domain relationships](06-cross-repository-and-cross-domain-relationships.md)
+7. [Conflicts, Questions and Maintainer Guidance](07-conflicts-questions-and-maintainer-guidance.md)
+8. [Observed snapshots and source references](08-live-references-for-change-prone-values.md)
+9. [Ingest and Refresh](09-ingest-and-refresh.md)
+10. [Querying Code Graph and Hub](10-querying-code-graph-and-hub.md)
+11. [Review and Publish](11-review-accept-and-publish.md)
+12. [Version-one limits and scope](12-current-limits-and-open-decisions.md)
+13. [Visualizing Published knowledge](13-visualizing-published-knowledge.md)
+14. [Context for AI workflows in the SDLC](14-context-for-ai-sdlc-workflows.md)
 
-Cả 12 phần nền tảng đã được review như một tổng thể. Phần 13 là capability
-presentation mới, giữ nguyên authority của các phần trước. Capability 051 đã
-hoàn tất reliability hardening; nó không đổi OKF schema hoặc query authority.
-Phần 14 mở hướng sử dụng AgentBase như context layer cho workflow bên ngoài;
-Feature Discovery là qualification đầu tiên và chưa có implementation mới.
+All twelve foundation sections were reviewed as one whole. Section 13 is a
+new capability presentation and preserves the authority of earlier sections.
+Capability 051 completed reliability hardening without changing OKF schema or
+query authority. Section 14 opens AgentBase as a context layer for external
+workflows; Feature Discovery is its first qualification and has no new
+implementation yet.
 
-## Trạng thái đồng bộ — 2026-08-29
+## Synchronization status — 2026-08-29
 
-| Phần | Implementation hiện tại |
+| Area | Current implementation |
 |---|---|
-| 01–05 | Local Code Graph, catalog 7, OKF template, remote-profile Local Draft và Published-only query đã implement |
-| 06–08 | Relation/Question, snapshots, AWS/SQS Enrichment, freshness và Hub CI đã implement; profile khác deferred |
-| 09 | Single Initial Ingest/Refresh, Batch Initial Ingest, Domain Enrichment, freshness và CI đã implement; Batch Refresh deferred |
-| 10 | Hub search/read Published-only đã implement; multi-term/relation-aware query quality đã accepted cho capability 049; ordinary freshness marks và remote source reader chưa có |
-| 11 | Review, Accept, rich batch PR và exact same-Repository Init/Refresh PR stack đã có; MCP không merge hoặc rebase các Init độc lập |
-| 12 | MVP hiện hỗ trợ Terraform/Terragrunt; SAM/CloudFormation chưa hỗ trợ. Benchmark có repo sibling riêng; local MCP data dùng một root `~/.agentbase` |
-| 13 | Published projection, query diagram và static Domain site đã implement; còn model/domain qualification |
-| 14 | Context-layer direction và on-demand Hub Discovery A/B đã thiết kế; integration skill và model evidence chưa implement |
+| 01–05 | Local Code Graph, catalog 7, OKF template, remote-profile Local Draft and Published-only query are implemented |
+| 06–08 | Relations/Questions, snapshots, AWS/SQS Enrichment, freshness and Hub CI are implemented; other profiles are deferred |
+| 09 | Single Initial Ingest/Refresh, Batch Initial Ingest, Domain Enrichment, freshness and CI are implemented; Batch Refresh is deferred |
+| 10 | Published-only Hub search/read is implemented; multi-term/relation-aware query quality is accepted for capability 049; ordinary freshness marks and remote source reader are not implemented |
+| 11 | Review, Accept, rich batch PR and exact same-Repository Init/Refresh PR stack are implemented; MCP does not merge or rebase independent Init proposals |
+| 12 | The MVP supports Terraform/Terragrunt; SAM/CloudFormation are not supported. Benchmark data has a sibling repository; local MCP data uses one `~/.agentbase` root |
+| 13 | Published projection, query diagrams and static Domain site are implemented; model/domain qualification remains |
+| 14 | Context-layer direction and on-demand Hub Discovery A/B are designed; integration skill and model evidence are not implemented |
 
-MCP protocol modernization (capability 061) đã implement MCP `2026-07-28` cho
-stdio có negotiation và Streamable HTTP stateless, vẫn giữ compatibility với
-`2025-11-25`; OAuth remote và Tasks vẫn là capability theo nhu cầu triển khai.
+MCP protocol modernization (capability 061) implements MCP `2026-07-28` for
+negotiated stdio and stateless Streamable HTTP while retaining `2025-11-25`
+compatibility; remote OAuth and Tasks remain deployment-driven capabilities.
 
-Model policy hiện chỉ là policy qualification: benchmark Initial Ingest dùng
-Sol, Refresh dùng Terra. Nó chưa phải hard-coded runtime rule của MCP.
+Model policy is currently a qualification policy only: Initial Ingest
+benchmarks use Sol and Refresh uses Terra. It is not a hard-coded MCP runtime rule.
 
-Khi implementation làm lộ một gap lớn, dự án quay lại high-level và low-level
-để review trước khi code tiếp. Gap nhỏ có thể gom theo một slice, nhưng phải
-backfill tài liệu trước benchmark/PR/commit hoàn tất; code chạy được không phải
-lý do để high-level và low-level bị bỏ lại phía sau.
+When implementation reveals a broad gap, the project returns to high-level and
+low-level review before continuing. A small gap may be grouped into the same
+slice, but the documentation must be backfilled before benchmark/PR/commit
+completion; working code is not a reason to leave the levels inconsistent.
