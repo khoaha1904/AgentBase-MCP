@@ -1,13 +1,13 @@
 # 06.08 — Mock provider qualification
 
-> Trạng thái: implemented trong capability 053; không có production mock mode.
+> Status: Implemented in capability 053; there is no production mock mode.
 
-## Mục đích
+## Purpose
 
-Mock qualification kiểm chứng Domain Enrichment khi topology cần test chưa có
-AWS account hoặc Published Domain đủ rộng. Nó kiểm tra candidate manifest,
-provider adapter, reconciliation, Question outcome và proposal lifecycle; nó
-không thay thế real-provider qualification.
+Mock qualification verifies Domain Enrichment when a topology needed for testing
+has no AWS account or sufficiently broad Published Domain. It tests candidate
+manifest, provider adapter, reconciliation, Question outcomes and proposal
+lifecycle; it does not replace real-provider qualification.
 
 ## Boundary
 
@@ -23,60 +23,56 @@ deterministic mock AWS CLI response
 existing SQS adapter → reconciliation → Enrichment proposal
 ```
 
-- Harness được gọi trực tiếp trong test/qualification script, không mở thêm
-  public MCP tool hoặc `--mock` production flag.
-- Mock process runner phải nhận đúng argv mà `AwsCliAdapter` phát hành và trả
-  shape tương ứng với `--version`, STS caller identity, get-queue-url và
-  get-queue-attributes.
-- Fixture values dùng account/region/name/ARN deterministic và dễ nhận biết là
-  test data. Không gọi network, không đọc credential và không scan account.
-- Candidate hypothesis ghi source evidence IDs, owning repository, predicate,
-  confidence và limitation. Tên/ARN được mock không biến hypothesis thành fact.
+- The harness is called directly by test/qualification scripts; it exposes no
+  public MCP tool or production `--mock` flag.
+- The mock process runner receives the exact argv released by `AwsCliAdapter` and
+  returns matching shapes for `--version`, STS caller identity, get-queue-url
+  and get-queue-attributes.
+- Fixture account/region/name/ARN are deterministic, recognizable test values.
+  It makes no network calls, reads no credentials and scans no account.
+- A candidate hypothesis records source evidence IDs, owning repository,
+  predicate, confidence and limitation. Mock names/ARNs never turn it into fact.
 
 ## Fixture contract
 
-Một fixture tối thiểu có:
+A minimum fixture has:
 
-1. một Domain đã Published trong temporary Hub;
-2. ít nhất hai Repository thuộc Domain;
-3. source concepts/Questions có identity và interaction evidence hợp lệ;
-4. một hoặc nhiều shared queue candidates với cùng name/account/region;
-5. response map cho confirmed, expected-ARN mismatch, unavailable/denied và
+1. one Published Domain in a temporary Hub;
+2. at least two Repositories in that Domain;
+3. source concepts/Questions with valid identity and interaction evidence;
+4. one or more shared queue candidates with equal name/account/region;
+5. response maps for confirmed, expected-ARN mismatch, unavailable/denied and
    retryable failure;
-6. expected proposal assertions: external identity, canonical relation,
-   Question state và unchanged Published base.
+6. expected proposal assertions: external identity, canonical relation, Question
+   state and unchanged Published base.
 
-Fixture Crawler-shaped có thể dùng các concept `crawler-events`,
-`crawler-results` và `crawler-review` đã xuất hiện trong offline E2E; nó không
-được nhầm là dữ liệu thật của Crawler Domain.
+A Crawler-shaped fixture may use `crawler-events`, `crawler-results` and
+`crawler-review` concepts from offline E2E; it must not be mistaken for real
+Crawler Domain data.
 
 ## Candidate investigation
 
-Investigation chỉ là bước bounded trước khi tạo fixture:
+Investigation is only a bounded pre-fixture step: read selected
+Published/source references, group matching/related queue/endpoint names,
+compare producer/consumer evidence and record confidence. An uncertain candidate
+goes to a Question rather than creating a Resource/edge automatically.
 
-- đọc Published/source references đã chọn;
-- gom các tên queue/endpoint trùng hoặc liên quan;
-- đối chiếu producer/consumer evidence và gán confidence;
-- đưa candidate chưa chắc vào Question thay vì tự tạo Resource/edge.
+Do not build a generic cross-repository inference engine, list a provider
+account, infer a real ARN from a name or automatically Accept/Publish.
 
-Không xây generic cross-repository inference engine, không list provider account,
-không suy ra ARN thật từ tên và không tự Accept/Publish.
+## Safety, recovery and verification
 
-## Safety and recovery
+Mock state stays in a temporary test root or separate qualification artifact.
+When the fixture is wrong, recreating it does not affect the canonical Hub. The
+harness stops at proposal/inspection in temporary state and does not call Accept
+or Publish. Production MCP retains no mock mode, so mock observation cannot
+enter the canonical publication path.
 
-Mock state nằm trong temporary test root hoặc qualification artifact riêng. Nếu
-fixture sai, xóa/recreate artifact không ảnh hưởng canonical Hub. Mock harness
-chỉ chạy tới proposal/inspection trong temporary state; nó không gọi Accept hoặc
-Publish. Production MCP tools tiếp tục không có mock mode, nên mock observation
-không đi vào canonical publication path.
+The capability proves that the same adapter/reconciliation path handles:
 
-## Verification
-
-Capability phải chứng minh cùng một adapter/reconciliation path xử lý:
-
-- confirmed shared queue và nhiều source repositories;
-- rejected identity khi ARN không khớp expected value;
+- confirmed shared queue across source repositories;
+- rejected identity when ARN mismatches expected value;
 - unresolved access/not-found limitation;
-- retryable failure rồi retry thành công;
-- proposal có relation/identity/Question changes nhưng Published fixture trước
-  Accept không đổi.
+- retryable failure followed by successful retry;
+- proposal relation/identity/Question changes while the Published fixture before
+  Accept remains unchanged.

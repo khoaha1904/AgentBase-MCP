@@ -1,12 +1,13 @@
 # 06.04 — Provider verification
 
-> Trạng thái: AWS CLI v2 + STS/SQS profiles và host skill đã implement offline.
+> Status: AWS CLI v2 plus STS/SQS profiles and host skill are implemented
+> offline.
 
-## Quyết định ngắn
+## Short decision
 
-User tự login provider CLI trong terminal. Skill xác nhận scope và gọi bounded
-MCP verification operations; MCP không nhận hoặc chạy arbitrary CLI command do
-Agent tạo.
+The user logs into a provider CLI in the terminal. The skill confirms scope and
+calls bounded MCP verification operations; MCP does not accept or run arbitrary
+CLI commands created by the Agent.
 
 ```text
 user login CLI
@@ -16,122 +17,87 @@ user login CLI
   → Domain Enrichment candidate outcome
 ```
 
-CLI verification chỉ bổ sung evidence khi source/Hub chưa đủ. Nó không phải bước
-bắt buộc của mọi relation.
-
-Qualification có thể inject một mock process runner ở test boundary để trả về
-output deterministic theo đúng argv/response contract của profile. Đây là
-harness nội bộ, không phải provider session giả cho MCP production; mock output
-không chứng minh resource tồn tại và không được publish như AWS evidence.
+CLI verification adds evidence only when source/Hub is insufficient. It is not
+required for every relation. Qualification may inject a deterministic mock
+process runner at the test boundary; it is internal harness, not a fake provider
+session for production, and mock output is never published as AWS evidence.
 
 ## Authority boundary
 
-- User chịu trách nhiệm login và nói MCP có thể dùng session hiện tại.
-- MCP dùng standard CLI credential resolution đã có; tool arguments không nhận
-  access key, secret, session token hoặc credential file content.
-- MCP không login, refresh credential, đổi profile/config hoặc persist
-  credential.
-- Nếu login cập nhật state mà MCP process hiện tại không nhìn thấy, workflow yêu
-  cầu reconnect/restart rõ ràng; không yêu cầu user đưa secret vào prompt.
-- Mỗi run bind một explicit provider profile, expected account/authority và
-  region/location khi resource là regional.
+- The user owns login and authorizes MCP to use the current session.
+- MCP uses standard CLI credential resolution; tool arguments never accept keys,
+  secrets, session tokens or credential-file content.
+- MCP does not log in, refresh credentials, change profile/config or persist
+  credentials.
+- If current MCP cannot see new login state, explicitly reconnect/restart; never
+  ask the user for secrets in a prompt.
+- Every run binds an explicit provider profile, expected account/authority and
+  regional location where applicable.
 
-AWS adapter có thể dùng `sts get-caller-identity` để xác nhận active account.
-Account mismatch dừng verification trước resource call. CLI default region chỉ
-là runtime setting; nó không thay thế confirmed/evidenced candidate region.
+The AWS adapter may call `sts get-caller-identity` to confirm active account. An
+account mismatch stops before a resource call. CLI default region is runtime
+setting, not a replacement for confirmed/evidenced candidate region.
 
 ## Released verification profiles
 
-Mỗi supported operation nằm trong một versioned provider profile do MCP phát
-hành. Profile định nghĩa:
+Each supported operation belongs to an MCP-released versioned provider profile.
+The profile defines supported CLI/version range, exact allowed operation and
+argv fields, required native identity/scope, read-only/bounded status, retained
+JSON fields, normalization/identity/secret rules, and timeout/output/pagination
+behavior.
 
-- supported CLI family/version range;
-- exact service operation và argv fields MCP được phép dựng;
-- required native identity and scope inputs;
-- operation có thật sự bounded/read-only hay không;
-- JSON response fields được phép giữ;
-- normalization, identity consistency và secret filtering rules;
-- timeout, output-size và pagination behavior.
+The Agent selects a semantic goal such as “verify this known queue”; it cannot
+pass command strings, executable paths, arbitrary flags, JMESPath, or output
+paths. MCP spawns the CLI directly with argv, disables pager/auto-prompt and
+does not use a shell.
 
-Agent chọn semantic goal như “verify this known queue”, không truyền command
-string, executable path, arbitrary flags, JMESPath query hoặc output path. MCP
-spawn CLI trực tiếp bằng argv, tắt pager/auto-prompt và không qua shell.
+`list`/`scan` operations are forbidden by default. An operation named `list` is
+allowed only when its released profile proves the server-side request is bounded
+by exact candidate identity and does not enumerate account-wide data.
 
-Các operation dạng `list`/`scan` mặc định bị cấm. Chỉ cho phép một API có tên
-`list` khi released profile chứng minh server-side request được bound bằng exact
-candidate identity và không enumerate account-wide data.
+## Guidance and current AWS slice
 
-## Versioned guidance skill
+The provider-verification skill uses bounded MCP preflight to read CLI
+identity/version, guides out-of-MCP login, presents account/region/candidates for
+confirmation, calls released operations and passes normalized observations into
+Domain Enrichment. It uses profile/docs shipped with MCP, not model memory to
+invent commands. Unsupported CLI versions return a limitation.
 
-Provider-verification skill:
+MVP releases only `sts get-caller-identity` and resolving a URL plus allowlisted
+attributes for one exact SQS queue name + account + region. Lambda, SNS, compute
+and other providers are not released. It never lists all queues/functions/topics,
+uses Resource Explorer/tag scan, or tries multiple accounts/regions.
 
-1. đọc CLI identity/version qua bounded MCP preflight;
-2. hướng dẫn user login ngoài MCP nếu session chưa sẵn sàng;
-3. trình account/region/candidates để user xác nhận;
-4. gọi released operations và giải thích degraded outcomes;
-5. chuyển normalized observations vào Domain Enrichment.
+## Normalized observations and failures
 
-Skill dựa trên profile/docs được ship cùng MCP cho supported CLI version, không
-dựa vào model memory để sáng tạo command. Nó có thể liên kết official remote
-provider documentation để người dùng tham khảo, nhưng runtime correctness không
-phụ thuộc việc fetch web docs. CLI version ngoài supported range trả limitation
-và yêu cầu update profile/product; Agent không tự thử command gần giống.
-
-## Bounded AWS examples
-
-Operations đã release trong MVP:
-
-- `sts get-caller-identity` — xác nhận account/session authority;
-- resolve URL rồi đọc allowlisted attributes của một exact SQS queue name +
-  account + region.
-
-Lambda, SNS, compute và mọi provider khác chưa release.
-
-Không dùng “list all queues/functions/topics”, Resource Explorer, tag scan hoặc
-thử tuần tự nhiều accounts/regions để tìm match.
-
-## Normalized observation
-
-MCP không đưa raw provider response vào Hub. Successful call trả một bounded
-observation gồm:
-
-- provider/profile/operation version;
-- confirmed account/authority và region/location;
-- exact candidate/native identity;
-- allowlisted non-sensitive identity/relation fields;
-- observation timestamp;
-- verification outcome và limitations.
-
-Domain Enrichment chuyển observation thành source-backed identity/relation/
-Question changes. Raw stdout/stderr, local profile path và credential context
-không trở thành OKF evidence.
-
-## Failure outcomes
+MCP returns a bounded observation—provider/profile/operation version, confirmed
+authority/location, exact candidate/native identity, allowlisted non-sensitive
+fields, time, outcome and limitations—not raw provider response. Domain
+Enrichment converts it into source-backed identity/relation/Question changes.
+Raw stdout/stderr, profile paths and credential context never become OKF evidence.
 
 | Failure | Outcome |
 |---|---|
-| CLI missing/unsupported | Candidate `unresolved`; hướng dẫn setup/version. |
-| Not logged in/expired session | `unresolved`; user login rồi retry. |
-| Account mismatch | Dừng candidate trước resource call. |
-| Region missing/mismatch | `unresolved`; không thử regions khác. |
-| Access denied/not found | Giữ provenance và limitation; không suy ra resource không tồn tại toàn cục. |
-| Network/throttle/timeout | Attempt failed/retryable; không đổi knowledge. |
-| Malformed/oversized output | Hard verification failure; không giữ partial raw data. |
+| CLI missing/unsupported | `unresolved`; guide setup/version. |
+| Not logged in/expired session | `unresolved`; user logs in then retries. |
+| Account mismatch | Stop candidate before resource call. |
+| Region missing/mismatch | `unresolved`; do not try other regions. |
+| Access denied/not found | Retain provenance/limitation; do not infer global absence. |
+| Network/throttle/timeout | Failed/retryable attempt; do not change knowledge. |
+| Malformed/oversized output | Hard verification failure; retain no partial raw data. |
 
-Không có hidden retry loop. User-triggered retry là attempt mới với visible
-reason; successful checkpoints của candidates khác vẫn được giữ theo 06.03.
+There is no hidden retry loop. User-triggered retry is a new attempt with a
+visible reason; successful checkpoints from other candidates remain under 06.03.
 
-## Safety
+## Safety and baseline impact
 
-- Không chạy mutating API, shell, plugin installer hoặc arbitrary executable.
-- Không bật CLI debug vì có thể lộ credential/request detail.
-- Secret-like values bị loại trước normalized observation và proposal.
-- Provider verification không Accept, Publish hoặc thay đổi cloud resource.
-- MCP Hub token chỉ dùng GitHub Hub/repository actions; provider CLI dùng session
-  mà user đã login và hai authority không được trộn.
+- Do not run mutating APIs, shell, plugin installers or arbitrary executables.
+- Do not enable CLI debug because it can expose credential/request details.
+- Filter secret-like values before normalized observation and proposal.
+- Verification never Accepts, Publishes or changes cloud resources.
+- MCP Hub token is only for GitHub Hub/repository actions; provider CLI uses the
+  user-login session and the authorities never mix.
 
-## Baseline impact
-
-Slice hiện tại đi Full Feature route và giữ đúng boundary: fixed argv, bounded
-output/timeout, không shell, không credential input và không generic cloud runner.
-Real AWS smoke cần owner duyệt riêng sau offline gate.
+The current slice follows the Full Feature route: fixed argv, bounded output and
+timeout, no shell, no credential input and no generic cloud runner. Real AWS
+smoke remains separately owner-approved after the offline gate.
