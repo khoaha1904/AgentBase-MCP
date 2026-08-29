@@ -8,11 +8,11 @@ does. The projection never reads the active proposal tree.
 
 ## Node admission
 
-Projection chỉ nhận concept đã Published và vượt node-eligibility gate. Embedded
-knowledge, governance documents và unresolved candidates không phải nodes; chúng
-chỉ xuất hiện qua parent overview/query hoặc omissions. `Resource` nodes dùng
-role provider-neutral và có thể đại diện queue/topic khi identity, query/link
-value và boundary evidence đầy đủ.
+Projection admits only Published concepts that pass the node-eligibility gate.
+Embedded knowledge, governance documents and unresolved candidates are not
+nodes; they appear only through parent overview/query or omissions. `Resource`
+nodes use a provider-neutral role and may represent a queue/topic when identity,
+query/link value and boundary evidence are sufficient.
 
 ## Output
 
@@ -50,17 +50,17 @@ The descriptor registry is the only presentation-direction owner.
 Every `flow_steps` entry renders its recorded `source → target`; the Agent may
 not reverse or invent it.
 
-Service-level runtime dependency uses the same accepted predicate authority:
-an evidenced `System consumes Interface` relation is a directed runtime edge.
-Flow steps remain sequence authority and are not silently converted into a
-different dependency predicate.
+Service-level runtime dependency uses the same accepted predicate authority: an
+evidenced `System consumes Interface` relation is a directed runtime edge. Flow
+steps remain sequence authority and are not silently converted into a different
+dependency predicate.
 
 ## Determinism and bounds
 
-IDs derive from existing concept IDs and declared endpoints. Same commit,
-Domain and request produce byte-equivalent ordered JSON/YAML. Query packets are
-bounded to an explicit selection; Domain snapshots include the complete
-Published Domain within configured document/node/edge limits. Exceeding a bound
-returns an actionable failure rather than truncating topology silently.
+IDs derive from existing concept IDs and declared endpoints. Same commit, Domain
+and request produce byte-equivalent ordered JSON/YAML. Query packets are bounded
+to an explicit selection; Domain snapshots include the complete Published Domain
+within configured document/node/edge limits. Exceeding a bound returns an
+actionable failure rather than silently truncating topology.
 
 Layout, colors and x/y/z coordinates are presentation state and never enter OKF.
