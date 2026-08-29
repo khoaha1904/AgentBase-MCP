@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
 const ids = (prefix, count, start = 1) => Array.from(
@@ -56,14 +57,36 @@ const ACTIVE_NAMING_RULES = [
   { code: "SPEC-LEGACY-HUB-IDENTITY", pattern: /AGENTBASE_HUB_REPOSITORY[^\n]*knowledger-hub/i, message: "Hub examples must use an admitted AgentBase-Hub identity" },
   { code: "SPEC-TEMP-SUBJECT", pattern: /repositories\/agentbase-next[^\n]*(?:default|generated|subject)/i, message: "a rebuild worktree must not become a generated subject" },
 ];
+const LANGUAGE_EXCLUSIONS = ["assets/hub-ci/", "fixtures/", "vendor/"];
+const VIETNAMESE_TEXT = /[\u0102\u0103\u0110\u0111\u01A0\u01A1\u01AF\u01B0\u1EA0-\u1EF9]|\b(?:c\u00f3|c\u1ee7a|\u0111\u01b0\u1ee3c|kh\u00f4ng|m\u1ed9t|nh\u1eefng|ph\u1ea3i|tr\u006fng|v\u00e0|v\u1edbi)\b/iu;
 
 function read(root, relative) {
   const file = path.join(root, relative);
   return fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null;
 }
 
+export function checkRepositoryLanguageEntries(entries) {
+  return entries.flatMap(({ relative, source }) => {
+    if (LANGUAGE_EXCLUSIONS.some((prefix) => relative.startsWith(prefix)) || source.includes("\0")) return [];
+    const match = VIETNAMESE_TEXT.exec(source);
+    if (!match) return [];
+    const line = source.slice(0, match.index).split("\n").length;
+    return [{ code: "SPEC-NON-ENGLISH", message: `${relative}:${line} contains Vietnamese text` }];
+  });
+}
+
+function checkRepositoryLanguage(root) {
+  const files = execFileSync("git", ["ls-files", "-z"], { cwd: root, encoding: "utf8" })
+    .split("\0")
+    .filter(Boolean);
+  return checkRepositoryLanguageEntries(files.map((relative) => ({
+    relative,
+    source: fs.readFileSync(path.join(root, relative), "utf8"),
+  })));
+}
+
 export function checkSpecifications(root) {
-  const errors = [];
+  const errors = checkRepositoryLanguage(root);
   const agentGuide = read(root, "AGENTS.md");
   const docsIndex = read(root, "docs/README.md");
   const current = read(root, "specs/CURRENT.md");

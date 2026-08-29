@@ -1,7 +1,7 @@
 # Feature Specification: English repository language
 
-**Status**: In progress. Repository policy and translation inventory are the
-first slice; current documentation will be translated in bounded area batches.
+**Status**: Complete. AgentBase-owned artifacts are in English and the canonical
+repository gate rejects Vietnamese text outside explicit exclusions.
 
 ## Objective
 

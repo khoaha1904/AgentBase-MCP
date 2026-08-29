@@ -1,10 +1,11 @@
 # Current capability
 
-Active capability: [`063-english-repository-language`](063-english-repository-language/spec.md)
+Active capability: None.
 
-The migration translates AgentBase-owned artifacts to English without changing
-runtime behavior. User conversation follows the user's language; vendor,
-generated and immutable external evidence retain their original bytes.
+Most recent completed: [`063-english-repository-language`](063-english-repository-language/spec.md) —
+AgentBase-owned artifacts are standardized on English without runtime changes;
+the canonical repository gate rejects Vietnamese text outside explicit vendor,
+generated and immutable-fixture exclusions.
 
 Capability 062 documentation contract normalization is complete. It defines
 current-vs-historical authority, impact review, baseline Git references and the
