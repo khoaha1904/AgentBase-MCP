@@ -23,6 +23,47 @@ export function createRunRegression(currentRun, currentMetrics, previous) {
   return { status: "compared", previousRunId: previous.runId, changes, regressions };
 }
 
+export function reportFor(entry, run, metrics) {
+  const agent = run.agent ? `${run.agent.model} via ${run.agent.actualVersion}` : "unavailable";
+  const catalogPrompt = run.catalogVersion && run.promptVersion ? `${run.catalogVersion} / ${run.promptVersion}` : "unavailable";
+  const discovery = run.discoveryQualification
+    ? `${run.discoveryQualification.status}; ${run.discoveryQualification.representativeChecks?.length ?? 0} representative checks`
+    : "not applicable";
+  const regression = metrics.regression?.status === "compared"
+    ? `Compared with ${metrics.regression.previousRunId}; ${metrics.regression.regressions.length
+      ? `regressions: ${metrics.regression.regressions.join("; ")}` : "no new hard regression"}`
+    : "No prior accepted run in this suite";
+  const list = (items) => items.length ? items.map((item) => `- ${item}`).join("\n") : "- None";
+  const defects = `\n## Defect boundaries\n\n### OKF\n\n${list(metrics.authoringAssessment.hardFailures)}\n\n`
+    + `### MCP/runtime\n\n${list(run.failures ?? [])}\n\n### Benchmark\n\n- None\n`;
+  const header = `# ${entry.id} — agent OKF benchmark\n\n- Agent: ${agent}\n- Catalog/prompt: ${catalogPrompt}\n`
+    + `- Agent outcome: ${run.outcome}\n- OKF validation: ${metrics.validation.passed ? "passed" : "failed"}\n`
+    + `- Authoring assessment: ${metrics.authoringAssessment.status}\n- Owner review: ${metrics.ownerReview.status}\n`
+    + `- Initial Ingest acceptance: ${metrics.initialIngestAcceptance}\n- Discovery qualification: ${discovery}\n- Regression: ${regression}\n`;
+  if (run.outcome !== "succeeded") return header
+    + `- Semantic metrics: not scored because the ${run.arm ?? "mcp"} arm lifecycle failed\n`
+    + `\n## Hard failures\n\n${list(metrics.authoringAssessment.hardFailures)}\n${defects}`
+    + `\n## Limitations\n\n${list(metrics.authoringAssessment.limitations)}\n`;
+  const measured = (value, ratio) => `${value === null ? "n/a" : `${value}%`} (${ratio.matched}/${ratio.total})`;
+  return header
+    + `- Reference concept coverage: ${measured(metrics.referenceConceptCoveragePercent, metrics.ratios.referenceConceptCoverage)}\n`
+    + `- Recognized schema agreement: ${measured(metrics.recognizedSchemaAgreementPercent, metrics.ratios.recognizedSchemaAgreement)}\n`
+    + `- Metadata completeness: ${measured(metrics.metadataCompletenessPercent, metrics.ratios.metadataCompleteness)}\n`
+    + `- Provenance coverage: ${measured(metrics.provenanceCoveragePercent, metrics.ratios.provenanceCoverage)}\n`
+    + `- Reference relationship coverage: ${measured(metrics.referenceRelationshipCoveragePercent, metrics.ratios.referenceRelationshipCoverage)}\n`
+    + `- Source-conflict visibility: ${measured(metrics.conflictVisibilityPercent, metrics.ratios.conflictVisibility)}\n`
+    + `- Observed-value coverage: ${measured(metrics.observedValueCoveragePercent, metrics.ratios.observedValueCoverage)}\n`
+    + `- Embedded-knowledge coverage: ${measured(metrics.embeddedKnowledgeCoveragePercent, metrics.ratios.embeddedKnowledgeCoverage)}\n`
+    + `- Priority quality: ${metrics.priority?.qualityStatus ?? "unavailable"} (${metrics.priority?.weightedScore ?? 0}/${metrics.priority?.weightedPossible ?? 0}; critical ${metrics.priority?.tiers?.critical?.matched ?? 0}/${metrics.priority?.tiers?.critical?.total ?? 0}, important ${metrics.priority?.tiers?.important?.matched ?? 0}/${metrics.priority?.tiers?.important?.total ?? 0}, optional ${metrics.priority?.tiers?.optional?.matched ?? 0}/${metrics.priority?.tiers?.optional?.total ?? 0})\n`
+    + `- Unjudged concepts / relationships: ${metrics.classifications.concepts.unjudged.length} / ${metrics.classifications.relationships.unjudged.length}\n`
+    + `- Missing reference concepts / relationships: ${metrics.classifications.concepts.missingReference.length} / ${metrics.classifications.relationships.missingReference.length}\n`
+    + (metrics.classifications.concepts.unjudged.length ? `\n## Unjudged concepts\n\n${list(metrics.classifications.concepts.unjudged)}\n` : "")
+    + (metrics.classifications.relationships.unjudged.length ? `\n## Unjudged relationships\n\n${list(metrics.classifications.relationships.unjudged)}\n` : "")
+    + (metrics.authoringAssessment.hardFailures.length ? `\n## Hard failures\n\n${list(metrics.authoringAssessment.hardFailures)}\n` : "")
+    + (metrics.ownerReview.findings.length ? `\n## Owner-review findings\n\n${list(metrics.ownerReview.findings)}\n` : "")
+    + defects + `\n## Limitations\n\n${list(metrics.authoringAssessment.limitations)}\n`;
+}
+
 function efficiencyFor(run) {
   if (!run) return null;
   return {

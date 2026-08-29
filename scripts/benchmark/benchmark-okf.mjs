@@ -8,7 +8,7 @@ import { pathToFileURL } from "node:url";
 import { benchmarkPath, benchmarkRoot, projectRoot, setBenchmarkRoot } from "./benchmark-paths.mjs";
 import { fixtureFor, manifestFor, resultRoot, utcRunId } from "./benchmark-okf-storage.mjs";
 export { fixtureFor, manifestFor, resultRoot, utcRunId } from "./benchmark-okf-storage.mjs";
-import { createPairComparison, createRunRegression } from "./benchmark-reporting.mjs";
+import { createPairComparison, createRunRegression, reportFor } from "./benchmark-reporting.mjs";
 export { createPairComparison, createRunRegression } from "./benchmark-reporting.mjs";
 
 import {
@@ -612,75 +612,6 @@ export function scoreSemanticBenchmark(expectation, bundle, repositoryId, reposi
     authoringAssessment,
     initialIngestAcceptance: classifyInitialIngest(authoringAssessment, ownerReview),
   };
-}
-
-function reportFor(entry, run, metrics) {
-  const agent = run.agent ? `${run.agent.model} via ${run.agent.actualVersion}` : "unavailable";
-  const catalogPrompt = run.catalogVersion && run.promptVersion
-    ? `${run.catalogVersion} / ${run.promptVersion}` : "unavailable";
-  const discovery = run.discoveryQualification
-    ? `${run.discoveryQualification.status}; ${run.discoveryQualification.representativeChecks?.length ?? 0} representative checks`
-    : "not applicable";
-  const regression = metrics.regression?.status === "compared"
-    ? `Compared with ${metrics.regression.previousRunId}; ${metrics.regression.regressions.length
-      ? `regressions: ${metrics.regression.regressions.join("; ")}` : "no new hard regression"}`
-    : "No prior accepted run in this suite";
-  const defectSections = `\n## Defect boundaries\n\n`
-    + `### OKF\n\n${metrics.authoringAssessment.hardFailures.length
-      ? metrics.authoringAssessment.hardFailures.map((item) => `- ${item}`).join("\n") : "- None"}\n\n`
-    + `### MCP/runtime\n\n${run.failures?.length ? run.failures.map((item) => `- ${item}`).join("\n") : "- None"}\n\n`
-    + "### Benchmark\n\n- None\n";
-  if (run.outcome !== "succeeded") {
-    return `# ${entry.id} — agent OKF benchmark\n\n`
-      + `- Agent: ${agent}\n`
-      + `- Catalog/prompt: ${catalogPrompt}\n`
-      + `- Agent outcome: failed\n- OKF validation: failed\n`
-      + `- Authoring assessment: invalid\n`
-      + `- Owner review: needs_revision\n`
-      + `- Initial Ingest acceptance: invalid\n`
-      + `- Discovery qualification: ${discovery}\n`
-      + `- Regression: ${regression}\n`
-      + `- Semantic metrics: not scored because the ${run.arm ?? "mcp"} arm lifecycle failed\n`
-      + `\n## Hard failures\n\n${metrics.authoringAssessment.hardFailures.map((item) => `- ${item}`).join("\n")}\n`
-      + defectSections
-      + `\n## Limitations\n\n${metrics.authoringAssessment.limitations.map((item) => `- ${item}`).join("\n")}\n`;
-  }
-  const measured = (value, ratio) => `${value === null ? "n/a" : `${value}%`} (${ratio.matched}/${ratio.total})`;
-  return `# ${entry.id} — agent OKF benchmark\n\n`
-    + `- Agent: ${agent}\n`
-    + `- Catalog/prompt: ${catalogPrompt}\n`
-    + `- Agent outcome: ${run.outcome}\n`
-    + `- OKF validation: ${metrics.validation.passed ? "passed" : "failed"}\n`
-    + `- Authoring assessment: ${metrics.authoringAssessment.status}\n`
-    + `- Owner review: ${metrics.ownerReview.status}\n`
-    + `- Initial Ingest acceptance: ${metrics.initialIngestAcceptance}\n`
-    + `- Discovery qualification: ${discovery}\n`
-    + `- Regression: ${regression}\n`
-    + `- Reference concept coverage: ${measured(metrics.referenceConceptCoveragePercent, metrics.ratios.referenceConceptCoverage)}\n`
-    + `- Recognized schema agreement: ${measured(metrics.recognizedSchemaAgreementPercent, metrics.ratios.recognizedSchemaAgreement)}\n`
-    + `- Metadata completeness: ${measured(metrics.metadataCompletenessPercent, metrics.ratios.metadataCompleteness)}\n`
-    + `- Provenance coverage: ${measured(metrics.provenanceCoveragePercent, metrics.ratios.provenanceCoverage)}\n`
-    + `- Reference relationship coverage: ${measured(metrics.referenceRelationshipCoveragePercent, metrics.ratios.referenceRelationshipCoverage)}\n`
-    + `- Source-conflict visibility: ${measured(metrics.conflictVisibilityPercent, metrics.ratios.conflictVisibility)}\n`
-    + `- Observed-value coverage: ${measured(metrics.observedValueCoveragePercent, metrics.ratios.observedValueCoverage)}\n`
-    + `- Embedded-knowledge coverage: ${measured(metrics.embeddedKnowledgeCoveragePercent, metrics.ratios.embeddedKnowledgeCoverage)}\n`
-    + `- Priority quality: ${metrics.priority?.qualityStatus ?? "unavailable"} `
-      + `(${metrics.priority?.weightedScore ?? 0}/${metrics.priority?.weightedPossible ?? 0}; `
-      + `critical ${metrics.priority?.tiers?.critical?.matched ?? 0}/${metrics.priority?.tiers?.critical?.total ?? 0}, `
-      + `important ${metrics.priority?.tiers?.important?.matched ?? 0}/${metrics.priority?.tiers?.important?.total ?? 0}, `
-      + `optional ${metrics.priority?.tiers?.optional?.matched ?? 0}/${metrics.priority?.tiers?.optional?.total ?? 0})\n`
-    + `- Unjudged concepts / relationships: ${metrics.classifications.concepts.unjudged.length} / ${metrics.classifications.relationships.unjudged.length}\n`
-    + `- Missing reference concepts / relationships: ${metrics.classifications.concepts.missingReference.length} / ${metrics.classifications.relationships.missingReference.length}\n`
-    + (metrics.classifications.concepts.unjudged.length
-      ? `\n## Unjudged concepts\n\n${metrics.classifications.concepts.unjudged.map((item) => `- ${item}`).join("\n")}\n` : "")
-    + (metrics.classifications.relationships.unjudged.length
-      ? `\n## Unjudged relationships\n\n${metrics.classifications.relationships.unjudged.map((item) => `- ${item}`).join("\n")}\n` : "")
-    + (metrics.authoringAssessment.hardFailures.length
-      ? `\n## Hard failures\n\n${metrics.authoringAssessment.hardFailures.map((item) => `- ${item}`).join("\n")}\n` : "")
-    + (metrics.ownerReview.findings.length
-      ? `\n## Owner-review findings\n\n${metrics.ownerReview.findings.map((item) => `- ${item}`).join("\n")}\n` : "")
-    + defectSections
-    + `\n## Limitations\n\n${metrics.authoringAssessment.limitations.map((item) => `- ${item}`).join("\n")}\n`;
 }
 
 function previousAcceptedRun(root) {
