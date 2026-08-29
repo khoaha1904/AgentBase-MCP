@@ -3,20 +3,20 @@
 ## Input
 
 One immutable scenario contains User Story `us:health-endpoint`, tracker root,
-source repository `amazon-ecs-fullstack` tại commit
-`98ee8e693a5ebc4b14f3dfe731bdc786637c1eb4`, prompt version, model và limits.
+source repository `amazon-ecs-fullstack` at commit
+`98ee8e693a5ebc4b14f3dfe731bdc786637c1eb4`, prompt version, model and limits.
 
 ## Arms
 
-`task-planning-only` chỉ dùng tracker MCP và workspace rỗng.
-`task-planning-plus-agentbase` dùng cùng tracker MCP, một AgentBase MCP với
+`task-planning-only` uses only tracker MCP and an empty workspace.
+`task-planning-plus-agentbase` uses the same tracker MCP, one AgentBase MCP with
 `index_repository`, `get_architecture`, `search_graph`, `trace_path`,
-`get_code_snippet`, `search_code`, `index_status`, `check_index_coverage` và
-local source checkout được copy vào disposable workspace.
+`get_code_snippet`, `search_code`, `index_status`, `check_index_coverage` and a
+local source checkout copied into a disposable workspace.
 
-Agent phải index đúng một absolute root, sau đó dùng bounded graph queries. Raw
-shell/file reads, tool ngoài allowlist, path escape, source mutation và quá
-giới hạn đều làm arm incomplete.
+The Agent must index exactly one absolute root, then use bounded graph queries.
+Raw shell/file reads, tools outside the allowlist, path escape, source mutation
+and limit breaches make the arm incomplete.
 
 ## Output schema
 

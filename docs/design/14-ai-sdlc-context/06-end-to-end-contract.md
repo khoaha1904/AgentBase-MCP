@@ -7,7 +7,7 @@ source revision `98ee8e693a5ebc4b14f3dfe731bdc786637c1eb4`. Existing
 `us:health-endpoint` is not called.
 
 The without arm may call only tracker read tools. The with arm may also call
-`search_hub_okf`, `read_hub_okf_concept` và tám read/index Code Graph tools,
+`search_hub_okf`, `read_hub_okf_concept` and eight read/index Code Graph tools,
 and index exactly one local root. Shell, mutation, cross-repository index,
 source escape and budget breach make an arm incomplete.
 

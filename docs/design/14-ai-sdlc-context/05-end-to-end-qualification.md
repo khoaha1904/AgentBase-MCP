@@ -14,28 +14,29 @@ Measure the difference of the compact `Feature → US → Tasks` lifecycle betwe
 This is aggregate measurement after isolated Phase 1 and Phase 2 tests. It does
 not replace them: the result is broader but harder to attribute per phase.
 
-## Boundary và impact
+## Boundary and impact
 
-- Một model run tạo cả normalized US và task plan; không dùng US được tạo ở arm
-  kia.
-- Existing tracker US không được đọc, để đo việc Feature có chuyển thành US hay
-  không. Output chỉ là benchmark draft, không tự publish.
-- Full arm vẫn chỉ bind một source repo và dùng các MCP tool hiện có; không thêm
-  context packet, skill, schema, query engine hoặc storage.
-- Ingest/Hub/public `abs` không đổi. Chạy full arm tốn thêm thời gian index và
-  model tokens; scope fixture vẫn AWS/Terraform, không phải cam kết universal.
+- One model run creates both normalized US and task plan; it does not use a US
+  created by the other arm.
+- Existing tracker US is not read, to measure whether Feature becomes US. Output
+  is benchmark draft only and does not publish automatically.
+- The full arm binds one source repo and uses existing MCP tools; it adds no
+  context packet, skill, schema, query engine or storage.
+- Ingest/Hub/public `abs` are unchanged. The full arm consumes index time and
+  model tokens; fixture scope remains AWS/Terraform, not a universal promise.
 
 ## Gate
 
-Hai arm có cùng Feature, tracker artifacts được phép đọc, prompt, model và
-output schema. Full arm phải giữ evidence/limitation. Pass chỉ khi không giảm
-critical US/task quality và có ít nhất một important improvement; real run cần
-owner review.
+Both arms have the same Feature, permitted tracker artifacts, prompt, model and
+output schema. The full arm retains evidence/limitations. It passes only with no
+critical US/task-quality regression and at least one important improvement; a
+real run needs owner review.
 
-## Kết quả đầu tiên
+## First result
 
-Với fixture ECS/Terraform, hai arm giữ cùng hai critical outcomes. Full arm thêm
-hai important outcomes: boundary source cụ thể và quyết định compatibility cho
-`/status`; không có unsupported claim. Nó dùng một Hub search, bốn Hub reads và
-21 graph calls trong bound 24. Đây là tín hiệu end-to-end tốt hơn baseline,
-nhưng chưa phải bằng chứng universal hay quyết định productization.
+With the ECS/Terraform fixture, both arms retain the same two critical outcomes.
+The full arm adds two important outcomes: a source-specific boundary and the
+`/status` compatibility decision, with no unsupported claim. It uses one Hub
+search, four Hub reads and 21 graph calls within the limit of 24. This is a
+better end-to-end signal than baseline, not universal evidence or a
+productization decision.
