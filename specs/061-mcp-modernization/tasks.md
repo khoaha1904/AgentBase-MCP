@@ -15,6 +15,7 @@
 - [x] T013 Verify modern discovery and legacy stateless initialization on HTTP.
 - [x] T014 Extract reusable agent command/prompt portability from benchmark execution.
 - [x] T015 Preserve modern related notifications through automatic JSON/SSE response selection.
+- [x] T016 Serve stdio through the SDK era-negotiating factory entrypoint.
 
 ## Result
 

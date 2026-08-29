@@ -1,7 +1,7 @@
 import path from "node:path";
 
 import { fromJsonSchema, McpServer, type CallToolResult, type Transport } from "@modelcontextprotocol/server";
-import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
+import { serveStdio, StdioServerTransport, type StdioServerHandle } from "@modelcontextprotocol/server/stdio";
 
 import {
   callHubOkfTool, createHubRuntimeActions, defaultHubRuntimeStateRoot, HUB_OKF_TOOLS,
@@ -78,8 +78,9 @@ export function createAgentBaseMcpServer(options: GatewaySessionOptions & Readon
   };
 }
 
-export async function serveCodebaseMemoryMcp(projectRoot = path.resolve(import.meta.dirname, "../../..")): Promise<AgentBaseMcpServer> {
-  const current = createAgentBaseMcpServer({ projectRoot });
-  await current.connect(new StdioServerTransport(process.stdin, process.stdout, { maxBufferSize: 4_000_000 }));
-  return current;
+export function serveCodebaseMemoryMcp(
+  projectRoot = path.resolve(import.meta.dirname, "../../.."),
+  transport: Transport = new StdioServerTransport(process.stdin, process.stdout, { maxBufferSize: 4_000_000 }),
+): StdioServerHandle {
+  return serveStdio(() => createAgentBaseMcpServer({ projectRoot }).server, { legacy: "serve", transport });
 }
