@@ -1,37 +1,38 @@
 # 05.02 — Hub overview boundary
 
-> Trạng thái: Technical design draft.
+> Status: Technical design draft.
 
-## Hub nhận gì?
+## What enters the Hub?
 
-- Concept có identity và giá trị query độc lập.
-- Claim, relation, decision, Question và limitation quan trọng.
-- Bounded provenance cùng reference đủ để quay lại source.
-- Snapshot scalar nhỏ, hữu ích cho người đọc, khi có exact provenance và được
-  ghi rõ là observed value thay vì current truth.
-- Navigation cần để tìm concept theo Domain/System/Repository.
+- A concept with identity and independent query value.
+- Important claims, relations, decisions, Questions and limitations.
+- Bounded provenance with enough reference to return to source.
+- A small scalar snapshot useful to a reader when exact provenance exists and it
+  is clearly marked as observed rather than current truth.
+- Navigation needed to find a concept by Domain/System/Repository.
 
-## Source giữ gì?
+## What remains in source?
 
-- Function, class, handler và implementation flow nhỏ.
-- Config field hoặc scalar không có giá trị knowledge độc lập.
-- Raw Code Graph rows, provider cache và absolute checkout paths.
-- Secret, credential và dữ liệu nhạy cảm.
-- Raw source snippet, config dump và provider response chỉ để tránh tìm lại.
+- Functions, classes, handlers and small implementation flows.
+- Config fields or scalars without independent knowledge value.
+- Raw Code Graph rows, provider caches and absolute checkout paths.
+- Secrets, credentials and sensitive data.
+- Raw source snippets, config dumps and provider responses that only avoid a
+  future reread.
 
 ## Enforcement
 
-Boundary này chủ yếu được enforce bởi authoring skill, schema guidance và changed-
-set validation hiện tại; MCP không cần một ontology/parser thứ hai để đoán mọi
-chi tiết source.
+The authoring skill, schema guidance and current changed-set validation enforce
+this boundary; MCP does not need a second ontology/parser to guess every source
+detail.
 
-Proposal phải sparse: chỉ tạo concept khi có identity và query value. Chi tiết
-không được promote vẫn có thể xuất hiện dưới dạng source evidence/reference.
-Missing evidence tạo limitation hoặc Question, không tạo placeholder fact.
+Proposals remain sparse: create a concept only with identity and query value.
+Details not promoted may still appear as source evidence/reference. Missing
+evidence creates a limitation or Question, not a placeholder fact.
 
 ## Ownership
 
-- `agentbase-okf` skill: authoring policy và sparsity.
+- `agentbase-okf` skill: authoring policy and sparsity.
 - `core/knowledge`: OKF/schema/relationship validation.
-- `app/hub-okf`: exact proposal lifecycle và protected-content boundary.
-- Phần 03/04 quyết định discovery/schema; phần 05 chỉ quyết định storage boundary.
+- `app/hub-okf`: exact proposal lifecycle and protected-content boundary.
+- Sections 03/04 decide discovery/schema; section 05 decides storage boundary.

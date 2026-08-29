@@ -1,38 +1,40 @@
 # 05.01 — Knowledge item and proposal identities
 
-> Trạng thái: Technical design draft.
+> Status: Technical design draft.
 
-## Quyết định
+## Decision
 
-AgentBase không tạo một universal `KnowledgeItem` record hoặc database mới.
-Mỗi loại knowledge giữ identity tự nhiên trong OKF/Hub, còn proposal commit là
-đơn vị review và publication.
+AgentBase does not create a universal `KnowledgeItem` record or new database.
+Each knowledge type keeps its natural OKF/Hub identity; the proposal commit is
+the review and publication unit.
 
-| Nội dung | Identity kỹ thuật | Publication |
+| Content | Technical identity | Publication |
 |---|---|---|
-| Concept | normalized OKF path không có `.md` | proposal thay đổi file đó |
-| Claim có cấu trúc | stable claim ID trong concept | proposal thay đổi concept |
-| Relation | source concept + predicate + target identity | proposal chứa edge |
+| Concept | normalized OKF path without `.md` | proposal changes that file |
+| Structured claim | stable claim ID in the concept | proposal changes the concept |
+| Relation | source concept + predicate + target identity | proposal contains the edge |
 | Question | stable ID + `questions/<id>.md` | proposal changes shared document |
-| Evidence | source ID trong concept + repository URI | proposal chứa evidence |
-| Navigation index | exact path/line dependency | proposal chứa navigation change |
+| Evidence | source ID in concept + repository URI | proposal contains evidence |
+| Navigation index | exact path/line dependency | proposal contains navigation change |
 | Proposal/change set | proposal ID + accepted Git commit + diff digest | publication unit |
 
-Prose không có identity riêng chỉ để hỗ trợ item-level state. Nó thuộc concept
-document chứa nó. Không thêm ID cho mọi paragraph hoặc YAML field.
+Prose has no identity merely to support item-level state; it belongs to its
+concept document. Do not add IDs to every paragraph or YAML field.
 
 ## Invariants
 
-- Một proposal bind exact base, source repository, evidence digest, tree/diff
-  digest và schema catalog.
-- Người dùng chọn/bỏ item trước Accept; final validation khóa exact reviewed tree.
-- Accept tạo đúng một immutable commit trên local Hub `main`.
-- Một item có thể mang provenance/semantic identity riêng mà không có publication
-  state riêng.
-- Question lifecycle độc lập publication lifecycle; chi tiết thuộc phần 07.
+- A proposal binds exact base, source repository, evidence digest, tree/diff
+  digest and schema catalog.
+- The user selects/removes items before Accept; final validation locks the exact
+  reviewed tree.
+- Accept creates exactly one immutable commit on the local Hub `main`.
+- An item may carry provenance/semantic identity without its own publication
+  state.
+- The Question lifecycle is independent of publication; see section 07.
 
 ## Baseline reuse
 
-Giữ `ProposalMetadata`, `LocalProposal`, commit trailers, OKF concept path và
-stable observed-value ID. Question document clean cutover thuộc phần 07; publication unit
-vẫn là proposal commit và không cần một parallel database.
+Keep `ProposalMetadata`, `LocalProposal`, commit trailers, OKF concept paths and
+stable observed-value IDs. The Question-document clean cutover belongs to
+section 07; publication remains the proposal commit and needs no parallel
+database.

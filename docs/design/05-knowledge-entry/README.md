@@ -1,32 +1,32 @@
 # 05 — Knowledge entry
 
-> Trạng thái: Proposal/template, Published-only query, remote-required OKF
-> authority và exact profile isolation đã implement.
+> Status: Proposal/template, Published-only query, remote-required OKF
+> authority and exact profile isolation are implemented.
 
 High-level decision:
-[Kiến thức từ repository vào Hub thế nào?](../../present/05-how-repository-knowledge-enters-the-hub.md)
+[How does repository knowledge enter the Hub?](../../present/05-how-repository-knowledge-enters-the-hub.md)
 
-## Phân rã dự kiến
+## Planned decomposition
 
-- [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — baseline, gap và
-  quyết định giữ proposal/change set làm publication unit.
-- [`01-knowledge-item-model.md`](01-knowledge-item-model.md) — identity của
-  concept, claim, relation, Question, evidence và proposal.
-- [`02-overview-boundary.md`](02-overview-boundary.md) — knowledge nào vào Hub,
-  chi tiết nào ở source.
-- [`03-local-draft-storage.md`](03-local-draft-storage.md) — mapping Local Draft,
-  In Review và Published lên Git hiện tại.
-- [`04-source-references.md`](04-source-references.md) — reference từ knowledge
-  item về source.
+- [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — baseline, gap and
+  the decision to keep proposal/change set as publication unit.
+- [`01-knowledge-item-model.md`](01-knowledge-item-model.md) — identities of
+  concepts, claims, relations, Questions, evidence and proposals.
+- [`02-overview-boundary.md`](02-overview-boundary.md) — what enters the Hub and
+  what remains in source.
+- [`03-local-draft-storage.md`](03-local-draft-storage.md) — map Local Draft,
+  In Review and Published onto the current Git lifecycle.
+- [`04-source-references.md`](04-source-references.md) — references from
+  knowledge items back to source.
 - [`05-layer-reconciliation.md`](05-layer-reconciliation.md) — synchronize,
-  nhận diện proposal đã Published và giữ pending work.
+  recognize Published proposals and retain pending work.
 - [`06-runtime-requirements.md`](06-runtime-requirements.md) — current OKF,
-  schema, live-claim và Initial Ingest `AB-*` requirements.
+  schema, live-claim and Initial Ingest `AB-*` requirements.
 
 ## Implementation delta
 
-Git-backed proposal, exact Markdown skeleton/template, Local Draft commit,
-inspection và publication receipt đã có; không thêm database hoặc raw graph
-store. Ordinary query is Published-only. Không có remote config thì chỉ Code
-Graph hoạt động; mỗi normalized remote URL + branch giữ Published/Draft state
-riêng.
+Git-backed proposals, exact Markdown skeleton/template, Local Draft commits,
+inspection and publication receipts exist; there is no database or raw graph
+store. Ordinary query is Published-only. Without remote configuration, only
+Code Graph works; each normalized remote URL + branch keeps separate
+Published/Draft state.
