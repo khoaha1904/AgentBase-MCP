@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "description": "AgentBase-MCP for local Code Graph access and governed AgentBase-Hub OKF knowledge",
+  "bin": {
+    "abs": "./src/cli.ts"
+  },
   "type": "module",
   "engines": {
     "node": ">=24.12 <25"
@@ -29,6 +32,9 @@
     "integration:codebase-memory": "node src/cli.ts codebase-memory:integration",
     "benchmark:codebase-memory": "node src/cli.ts codebase-memory:benchmark",
     "benchmark:okf": "node scripts/benchmark/benchmark-okf.mjs",
+    "benchmark:context": "node scripts/benchmark/benchmark-context.mjs",
+    "benchmark:task": "node scripts/benchmark/benchmark-task.mjs",
+    "benchmark:e2e": "node scripts/benchmark/benchmark-e2e.mjs",
     "check": "npm run spec:check && npm run check:upstream-foundations && npm run check:codebase-memory-bundle && npm run check:hub-validator && npm run typecheck && npm run depcruise && npm run knip && npm run gitleaks && npm test",
     "verify": "npm run check && git diff --check"
   },

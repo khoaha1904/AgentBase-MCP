@@ -18,6 +18,8 @@
 - rich deterministic PR summary, independent Init PRs, same-Repository stacks,
   retry/reconciliation and synchronization;
 - no automatic Accept, Publish or merge.
+- one small public `abs` CLI surface (`status`, `hub connect`, `hub sync`);
+  lifecycle runners and OKF internals remain hidden skill/MCP/developer routes.
 
 ## Release gate
 

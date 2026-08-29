@@ -1,6 +1,23 @@
 # Current capability
 
-Active capability: None.
+Active capability: [`060-end-to-end-ait-qualification`](060-end-to-end-ait-qualification/spec.md) —
+qualify the complete Feature → US → Tasks lifecycle with and without AgentBase;
+the first real pair is retained at owner-review gate.
+
+Most recent completed: [`059-task-planning-context-qualification`](059-task-planning-context-qualification/spec.md) —
+bounded local Code Graph/source task-planning benchmark and deterministic
+validator are implemented; clean real qualification remains a separate gate.
+
+Most recent completed: [`058-feature-discovery-context-qualification`](058-feature-discovery-context-qualification/spec.md) —
+the on-demand Hub Feature Discovery A/B harness and three current-data pairs are
+retained; real comparisons remain at the explicit owner-review gate.
+
+Most recent completed: [`057-hub-profile-connect`](057-hub-profile-connect/spec.md) —
+the owner CLI is normalized under `abs` with only `status`, `hub connect` and
+`hub sync`; connect accepts/reuses one owner-private shared token and
+atomically connects or switches the active Hub. Focused tests and the full
+repository verification gate pass.
+
 Most recent completed: [`056-local-storage-root`](056-local-storage-root/spec.md) —
 one owner-private local storage root for Hub, recoverable workflow state,
 rebuildable caches and isolated benchmark runs; legacy XDG data remains

@@ -133,7 +133,7 @@ function remoteFailure(error: unknown, token: string): Error {
   const message = (error instanceof Error ? error.message : "remote Hub action failed").split(token).join("[REDACTED]");
   if (/(?:status 401|status 403|exited with status)/i.test(message)) {
     return new Error(
-      "GitHub access is insufficient; update this Hub profile token with repository read, Contents write and Pull requests write access, then retry",
+      "GitHub access is insufficient; update the shared Hub token with repository read, Contents write and Pull requests write access, then retry",
     );
   }
   return new Error(message);
@@ -317,7 +317,7 @@ export function createHubRuntimeActions(
             }).slice(0, 16).map((entry) => entry.name)
           : [];
       } catch { recoveryInventoryError = true; }
-      let remote: Record<string, unknown> = { state: "unavailable", detail: "Hub profile credential is missing" };
+      let remote: Record<string, unknown> = { state: "unavailable", detail: "Shared Hub credential is missing" };
       let openPrCount: Readonly<{ count: number; truncated: boolean }> | "unavailable" = "unavailable";
       let credential: "ready" | "missing" | "invalid" = configuration.token ? "ready" : "missing";
       if (configuration.token) {

@@ -21,6 +21,23 @@ Source local/workspace ──→ Code Graph + MCP ──→ Local Draft
 - **Hub** giữ overview: hệ thống có gì, vì sao, liên kết thế nào và tìm chi tiết
   ở đâu. Hub không sao chép toàn bộ repository.
 
+## Command surface
+
+Người dùng không cần biết OKF authoring internals hay toàn bộ MCP lifecycle.
+CLI chính thức của AgentBase là `abs`; `abs --help` chỉ hiển thị các thao tác
+owner ngắn gọn. MVP giữ ba lệnh public:
+
+```text
+abs status
+abs hub connect --url <repository-url> --branch <branch>
+abs hub sync
+```
+
+`mcp` là launcher kỹ thuật cho client registration. Ingest, Refresh, Batch,
+Enrichment, Accept, Publish, Question review và các bước OKF chi tiết do skill
+và MCP điều phối, không trở thành một danh sách CLI public dài. Benchmark,
+validator và workflow runner là developer/internal commands.
+
 Luồng chính là: **Ingest lần đầu → review Local Draft → Publish qua PR →
 Refresh khi source đổi**. Mọi kết luận giữ provenance; AI không tự merge dữ
 liệu mơ hồ, không tự chọn một nguồn xung đột làm sự thật và không tự publish.
@@ -54,10 +71,13 @@ liệu mơ hồ, không tự chọn một nguồn xung đột làm sự thật v
 11. [Review và Publish](11-review-accept-and-publish.md)
 12. [Giới hạn và phạm vi của phiên bản đầu](12-current-limits-and-open-decisions.md)
 13. [Visualize Published knowledge](13-visualizing-published-knowledge.md)
+14. [Cung cấp context cho AI workflows trong SDLC](14-context-for-ai-sdlc-workflows.md)
 
 Cả 12 phần nền tảng đã được review như một tổng thể. Phần 13 là capability
 presentation mới, giữ nguyên authority của các phần trước. Capability 051 đã
 hoàn tất reliability hardening; nó không đổi OKF schema hoặc query authority.
+Phần 14 mở hướng sử dụng AgentBase như context layer cho workflow bên ngoài;
+Feature Discovery là qualification đầu tiên và chưa có implementation mới.
 
 ## Trạng thái đồng bộ — 2026-08-24
 
@@ -70,6 +90,7 @@ hoàn tất reliability hardening; nó không đổi OKF schema hoặc query aut
 | 11 | Review, Accept, rich batch PR và exact same-Repository Init/Refresh PR stack đã có; MCP không merge hoặc rebase các Init độc lập |
 | 12 | MVP hiện hỗ trợ Terraform/Terragrunt; SAM/CloudFormation chưa hỗ trợ. Benchmark có repo sibling riêng; local MCP data dùng một root `~/.agentbase` |
 | 13 | Published projection, query diagram và static Domain site đã implement; còn model/domain qualification |
+| 14 | Context-layer direction và on-demand Hub Discovery A/B đã thiết kế; integration skill và model evidence chưa implement |
 
 Model policy hiện chỉ là policy qualification: benchmark Initial Ingest dùng
 Sol, Refresh dùng Terra. Nó chưa phải hard-coded runtime rule của MCP.

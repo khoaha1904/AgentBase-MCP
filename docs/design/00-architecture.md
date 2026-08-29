@@ -13,7 +13,7 @@ layout are the ownership map; dependency-cruiser enforces cycles, direction and
 cross-capability public-entrypoint use without a second ownership registry.
 
 ```text
-src/cli.ts                         composition root
+src/cli.ts                         composition root and `abs` CLI dispatcher
 src/core/
   code-intelligence/              neutral map/query contracts
   observations/                   normalized evidence and identity
@@ -58,6 +58,13 @@ scripts/
 Product skill sources live under `.agents/skills/<goal>/`; its `README.md`
 separates nine public user-goal workflows and three internal supporting workflows
 from development-only Spec Kit skills.
+
+The terminal CLI has one public name, `abs`. Its public help exposes only
+`status`, `hub connect` and `hub sync`; `mcp` remains a technical launcher used
+by client registration. Repository proposal, OKF authoring, Hub review/PR,
+validator and benchmark commands remain internal/developer routes and are not
+presented as a second public product surface. `OKF` names the shared format,
+not the executable.
 Interactive installation copies only the explicit product allowlist into each
 selected client's user scope. Do not create empty skill scaffolds before the
 workflow exists.
@@ -154,12 +161,15 @@ without deleting its source.
   source-native Terraform/Terragrunt observations and AWS Profile v2 maps
   supported products to generic roles;
   provider/product/source-tool remain metadata and evidence.
-- GitHub access is owned by explicit MCP workflows and MCP-managed credentials;
-  a calling agent never substitutes `gh`, personal tokens or ambient Git
-  credentials. The current implementation confines access to attach, bootstrap,
-  publication and synchronization. A future bounded remote-reference reader
-  must use the same authority boundary rather than giving the agent direct
-  repository access. Local knowledge work requires no network.
+- GitHub access is owned by explicit Hub workflows and one owner-private shared
+  Hub credential. The owner-invoked terminal connect workflow admits or reuses
+  that credential through masked input before calling the ordinary attach
+  boundary; MCP tools never accept token arguments, invoke `gh` or use ambient
+  Git credentials. Attach, bootstrap, publication and synchronization continue
+  to use only the admitted shared credential. A future bounded
+  remote-reference reader must use the same authority boundary rather than
+  giving the agent direct repository access. Local knowledge work requires no
+  network.
 - Benchmark model execution is an opt-in external Codex process in an isolated
   result workspace; AgentBase contains no model SDK or credential storage.
 

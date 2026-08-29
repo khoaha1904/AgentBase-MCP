@@ -102,7 +102,7 @@ export function loadGlobalHubToken(environment: NodeJS.ProcessEnv = process.env)
 }
 
 export function loadHubProfileToken(localHubId: string, environment: NodeJS.ProcessEnv = process.env): string | undefined {
-  return loadExactHubProfileToken(localHubId, environment);
+  return loadGlobalHubToken(environment) ?? loadExactHubProfileToken(localHubId, environment);
 }
 
 /** Exact identity-bound credential. Use for every prospective Hub attachment. */
@@ -153,6 +153,14 @@ export function writeGlobalHubToken(
     throw error;
   }
   return existed ? "replaced" : "created";
+}
+
+export function removeGlobalHubToken(environment: NodeJS.ProcessEnv = process.env): void {
+  const file = globalHubCredentialPath(environment);
+  if (lstatIfPresent(file)) {
+    admitFile(file);
+    fs.rmSync(file);
+  }
 }
 
 export function writeHubProfileToken(

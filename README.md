@@ -28,8 +28,8 @@ Interactive installation can register the current checkout as user-global
 AgentBase product skills for every selected client. Repository-development
 `speckit-*` skills are never installed. An exact rerun is a no-op; a conflicting
 same-name MCP entry or skill fails before replacement. Hub token input is not
-part of installation; a Hub profile stores its token later through the
-masked terminal helper outside Git. Non-interactive installation prepares
+part of installation; the owner enters one shared token later through the
+masked `abs hub connect` prompt outside Git. Non-interactive installation prepares
 dependencies and activates the bundled native Code Graph provider but performs
 no skill or client mutation. npm dependencies use only the configured HTTPS registry;
 public registry fallback is rejected.
@@ -62,10 +62,18 @@ npm run integration:codebase-memory -- /absolute/repository symbolName
 npm run integration:codebase-memory -- /absolute/repository symbolName --refresh
 ```
 
-Use `node src/cli.ts okf ...` for repository proposals and
-`node src/cli.ts okf hub ...` for lazy Hub setup, local acceptance, query,
-publication and synchronization. AgentBase-MCP never merges a PR or creates a
-GitHub repository. A Hub is not required for installation or Code Graph use.
+The owner-facing terminal surface is intentionally small:
+
+```bash
+abs status
+abs hub connect --url https://github.com/OWNER/HUB.git --branch main
+abs hub sync
+```
+
+Detailed proposal, acceptance, query, publication and recovery lifecycle is
+invoked by the installed skills/MCP or by developer-only compatibility routes;
+it is not dumped into `abs --help`. AgentBase-MCP never merges a PR or creates
+a GitHub repository. A Hub is not required for installation or Code Graph use.
 
 Run an explicit model-backed OKF benchmark and finalize it deterministically:
 

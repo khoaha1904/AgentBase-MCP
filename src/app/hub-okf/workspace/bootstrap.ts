@@ -15,7 +15,7 @@ import {
   type PersistedHubConfiguration,
   type PersistedRemoteHubConfiguration,
 } from "../configuration/configuration-file.ts";
-import { loadExactHubProfileToken } from "../configuration/credential-file.ts";
+import { loadHubProfileToken } from "../configuration/credential-file.ts";
 import { acquireHubMutationLock, releaseHubMutationLock, writeAtomicJson } from "../review/proposal-state.ts";
 import { HUB_PUBLISHED_REF } from "./local-hub.ts";
 import { HUB_README_PATH, renderHubReadme } from "./readme.ts";
@@ -227,8 +227,8 @@ export async function previewHubBootstrap(
 ): Promise<HubBootstrapPreview> {
   const normalized = normalizeGitHubHubUrl(repositoryUrl);
   const remoteHubId = hubProfileId(createHubIdentity(normalized.repository, targetBranch, normalized.host));
-  const token = loadExactHubProfileToken(remoteHubId, environment);
-  if (!token) throw new Error("Hub bootstrap requires the owner-private target Hub profile token");
+  const token = loadHubProfileToken(remoteHubId, environment);
+  if (!token) throw new Error("Hub bootstrap requires the owner-private shared Hub token");
   const configuration = readPersistedHubConfiguration(environment);
   let receipt = readReceipt(environment, remoteHubId);
   if (receipt?.phase === "completed") throw new Error("Hub bootstrap is already complete; use normal Hub workflows");
@@ -256,7 +256,7 @@ export async function previewHubBootstrap(
 function permissionFailure(error: unknown, token: string): Error {
   const message = (error instanceof Error ? error.message : "Hub bootstrap failed").split(token).join("[REDACTED]");
   if (/status (?:401|403)/i.test(message)) {
-    return new Error("GitHub access is insufficient; update this Hub profile token with repository read and Contents write access, then retry");
+    return new Error("GitHub access is insufficient; update the shared Hub token with repository read and Contents write access, then retry");
   }
   return new Error(message);
 }
@@ -267,8 +267,8 @@ export async function executeHubBootstrap(
 ): Promise<HubBootstrapReceipt> {
   const git = options.git ?? runGit;
   const preview = await previewHubBootstrap(repositoryUrl, targetBranch, environment, git);
-  const token = loadExactHubProfileToken(preview.remoteHubId, environment);
-  if (!token) throw new Error("Hub bootstrap requires the owner-private target Hub profile token");
+  const token = loadHubProfileToken(preview.remoteHubId, environment);
+  if (!token) throw new Error("Hub bootstrap requires the owner-private shared Hub token");
   let receipt = readReceipt(environment, preview.remoteHubId);
   if (!receipt) throw new Error("prepared Hub bootstrap receipt is absent");
   const pinnedConfiguration = readPersistedHubConfiguration(environment);

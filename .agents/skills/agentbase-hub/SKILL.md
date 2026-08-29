@@ -18,14 +18,13 @@ only the action explicitly requested after status establishes its preconditions.
 - An unconfigured installation is valid and Code Graph stays available. Hub
   query, Ingest, Refresh and OKF Draft work wait until a remote Hub is active.
 - Connect an existing remote only after the user supplies its credential-free
-  HTTPS repository URL and exact target branch. Have the user run the following
-  masked terminal command with the exact identity; never request or pass the
-  token through chat or an MCP tool. Resolve the AgentBase-MCP root from this
-  skill's own path and give the user this absolute, cwd-independent command:
-
-  `node /ABSOLUTE/AGENTBASE_MCP_ROOT/scripts/installation/configure-hub-token.mjs --repository-url https://HOST/OWNER/REPOSITORY.git --target-branch BRANCH`
-- After the terminal command succeeds, call `configure_hub` with the same
-  credential-free repository URL and target branch.
+  HTTPS repository URL and exact target branch. The owner-facing terminal flow
+  is one command: `abs hub connect --url https://HOST/OWNER/REPOSITORY.git
+  --branch BRANCH`. The command asks for a token in a masked terminal prompt;
+  an empty prompt reuses the existing shared owner-private token. Never request
+  or pass a token through chat or an MCP tool.
+- The legacy masked token helper and `okf hub configure` route are internal
+  compatibility paths only; do not present them as the normal user workflow.
 - GitHub.com and GitHub Enterprise Server use the same connect flow. Do not add
   an API URL: MCP derives it from the repository host.
 - One Hub profile is active. Connecting a different host/repository/branch

@@ -1,6 +1,6 @@
 # AgentBase technical design
 
-Thư mục này phân rã 13 quyết định high-level trong
+Thư mục này phân rã 14 quyết định high-level trong
 [`docs/present`](../present/README.md) thành các thiết kế kỹ thuật có thể review
 và triển khai riêng.
 
@@ -10,7 +10,7 @@ không có một cây contracts song song.
 
 ## Cách tổ chức
 
-- Mỗi phần high-level tương ứng đúng một thư mục đánh số từ 01 đến 13.
+- Mỗi phần high-level tương ứng đúng một thư mục đánh số từ 01 đến 14.
 - `README.md` trong thư mục giữ phạm vi, liên kết high-level và mục lục thiết kế
   con.
 - Mỗi file con giải quyết một boundary kỹ thuật; không lặp lại product decision.
@@ -82,6 +82,7 @@ benchmark, PR và capability commit.
 11. [Review và Publish](11-review-and-publish/README.md)
 12. [Version scope](12-version-scope/README.md)
 13. [Published visualization](13-visualization/README.md)
+14. [Context for AI SDLC workflows](14-ai-sdlc-context/README.md)
 
 ## Implementation trace — 2026-08-24
 
@@ -98,8 +99,9 @@ benchmark, PR và capability commit.
 | 09 | Single Init/Refresh, Batch Initial Ingest, Domain Enrichment, freshness và CI đã implement; Batch Refresh deferred |
 | 10 | Published-only snapshot-first query implemented; multi-term ranking, Repository-aware Domain scope và bounded relation results accepted for capability 049; remote read deferred |
 | 11 | Reviewable batch publication và exact same-Repository Init/Refresh stack implemented |
-| 12 | Terraform/Terragrunt MVP boundary implemented and verified; provider expansion deferred |
+| 12 | Terraform/Terragrunt MVP boundary and the small `abs` CLI/shared-token connect implemented and verified; provider expansion deferred |
 | 13 | Shared Published projection, query diagrams and static Domain site implemented; model/domain qualification pending |
+| 14 | On-demand Hub Feature Discovery A/B designed; integration skill and model qualification pending |
 
 Current runtime authority nằm ở `docs/design`, code và active spec. Design trong
 thư mục này giải thích shape/trade-off và phải được cập nhật

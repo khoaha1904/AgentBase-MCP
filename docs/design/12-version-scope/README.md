@@ -21,6 +21,8 @@ High-level decision:
   local-first, provenance và no-auto-publish.
 - [`07-deferred-capabilities.md`](07-deferred-capabilities.md) — capability chỉ
   thêm sau MVP khi có nhu cầu thật.
+- [`08-cli-runtime-requirements.md`](08-cli-runtime-requirements.md) — public
+  `abs` grammar, shared-token connect, compatibility and verification boundary.
 
 Không tạo decision register riêng; current decisions đã nằm ở đúng high/low-level
 owner và một registry nữa sẽ thành dead-spec duplicate.
@@ -41,3 +43,5 @@ owner và một registry nữa sẽ thành dead-spec duplicate.
 - No remote profile means Code Graph/Scan only; every remote URL+branch profile
   isolates Published, Draft and credential state. Exact-empty bootstrap writes
   README + root index + CI baseline directly once; later changes use PRs.
+- Public terminal surface is the small `abs` command (`status`, `hub connect`,
+  `hub sync`); OKF is the shared format name, not a user-facing command group.

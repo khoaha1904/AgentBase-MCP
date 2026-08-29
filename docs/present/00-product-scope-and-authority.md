@@ -11,6 +11,13 @@ AgentBase has two products:
   Knowledge Format Markdown. It contains no graph engine, MCP runtime or hidden
   operational database.
 
+Other AI workflows may consume AgentBase through its installed skills and MCP
+tools. AgentBase supplies bounded system context and evidence; it does not own
+the caller's planning, discovery, delivery or approval workflow. The first
+product qualification target is Hub-only feature discovery for BA/PO/DM, with
+no source checkout prerequisite. Developer task planning may add selective local
+Code Graph/source investigation after Hub context identifies the relevant scope.
+
 ## Durable team knowledge boundary
 
 AgentBase is a Git-native knowledge publishing system for a team, not a general
@@ -39,6 +46,29 @@ products, but keeps a different result and authority model:
 - AgentBase does not attempt to retain every code fact, development event or
   external-workflow record in a hidden canonical graph.
 
+## AgentBase CLI boundary
+
+The CLI is the small owner control surface, not a second API for every MCP
+workflow. Its product name is `abs`; OKF remains the shared knowledge-format
+standard. The public MVP intentionally exposes only:
+
+```text
+abs status                         read local AgentBase state
+abs hub connect --url ... --branch ...  select/validate one Hub
+abs hub sync                       explicitly pull the active Hub
+```
+
+Ingest, Refresh, Enrichment, Query, Questions, Accept, Publish, benchmark and
+recovery are selected by product skills/MCP or developer verification. The
+technical `mcp` launcher and legacy `okf` routes remain hidden compatibility
+paths so client registration and existing automation are not broken.
+
+Hub connection asks for one owner-private token through a masked terminal
+prompt. A blank prompt reuses the existing shared token; a new token is staged
+and committed only after the destination validates. The CLI never creates a
+token, logs into a provider or sends a token through chat, arguments, Hub files
+or MCP input. Connect and sync remain separate authority boundaries.
+
 A user can investigate source through a disposable local graph, turn bounded
 evidence into a reviewed OKF proposal, accept it as Local Draft and later
 publish selected pending commits through a pull request. Ordinary Hub query
@@ -46,10 +76,15 @@ reads only synchronized Published knowledge.
 
 Installation selects no Hub and Code Graph never requires one. OKF authoring and
 Hub query require an explicitly configured remote profile identified by exact
-GitHub host, repository and target branch; its token remains owner-private.
-Each identity keeps independent Published/Draft state, while one profile is
-active. Changing the active Hub never merges or copies knowledge between
-profiles.
+GitHub host, repository and target branch; one shared Hub token remains
+owner-private and is reused across those profiles. Each identity keeps
+independent Published/Draft state, while one profile is active. Changing the
+active Hub never merges or copies knowledge between profiles.
+
+All Hub profiles are product-level peers. Labels such as production, staging or
+test are environment conventions chosen by an owner or development team; they
+are not persisted AgentBase roles and do not change query, ingest or publication
+semantics.
 
 For enterprise installation, AgentBase owns pinned, attributed source snapshots
 for its Code Graph engine and future diagram foundation. Release maintainers
@@ -140,6 +175,11 @@ baseline after preview/confirmation.
 - **AB-PRODUCT-005** — Remote renames, remote rewrites, launcher cutover,
   directory cleanup and shared-history rewriting each require separate owner
   authorization and an exact rollback point.
+- **AB-PRODUCT-006** — The user-facing AgentBase command name is `abs`; OKF is
+  a knowledge-format standard, not a CLI namespace. `abs --help` exposes only
+  a small set of owner operations. MCP tools, product skills and developer
+  runners remain separate internal interfaces and are not dumped into public
+  command help.
 - **AB-MIGRATION-001** — Migration preflight records exact source state and
   collisions; canonical clones are created only from admitted commits/remotes.
 - **AB-MIGRATION-002** — Cutover and cleanup remain independent approvals and
@@ -162,6 +202,9 @@ baseline after preview/confirmation.
 
 - A second graph model, shared raw graphs, background watchers or a daemon.
 - A general-purpose living context graph or complete SDLC event store.
+- Ownership of another tool's Feature, Issue, Requirement, User Story or Task
+  lifecycle.
+- A hard-coded integration with one tracker, discovery skill or company process.
 - Automatic OKF generation from ordinary coding or indexing.
 - Automatic publication, merge or GitHub repository creation.
 - A complete universal ontology or one file/directory per schema.

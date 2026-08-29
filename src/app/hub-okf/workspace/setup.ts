@@ -5,7 +5,7 @@ import path from "node:path";
 import { createHubIdentity, hubProfileId } from "../../../core/hub/index.ts";
 import { AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, loadOkfBundle } from "../../../core/knowledge/index.ts";
 import { runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
-import { loadExactHubProfileToken } from "../configuration/credential-file.ts";
+import { loadHubProfileToken } from "../configuration/credential-file.ts";
 import {
   activatePersistedHubConfiguration,
   readPersistedHubProfile,
@@ -95,7 +95,7 @@ function setupFailure(error: unknown, token: string): Error {
   const message = error instanceof Error ? error.message : "Hub attachment failed";
   const redacted = token ? message.split(token).join("[REDACTED]") : message;
   if (/(?:status 401|status 403|exited with status)/i.test(redacted)) {
-    return new Error("GitHub access is insufficient; update this Hub profile token with repository read access, then retry");
+    return new Error("GitHub access is insufficient; update the shared Hub token with repository read access, then retry");
   }
   return new Error(redacted);
 }
@@ -111,8 +111,8 @@ export async function attachExistingHub(
   if (!targetBranch) throw new Error("existing Hub attachment requires an exact target branch");
   const hub = createHubIdentity(normalized.repository, targetBranch, normalized.host);
   const localHubId = hubProfileId(hub);
-  const token = loadExactHubProfileToken(localHubId, environment);
-  if (!token) throw new Error("existing Hub attachment requires an owner-private Hub profile token");
+  const token = loadHubProfileToken(localHubId, environment);
+  if (!token) throw new Error("existing Hub attachment requires an owner-private shared Hub token");
   const existing = readPersistedHubProfile(localHubId, environment);
   if (existing) {
     if (existing.kind !== "remote" || existing.host !== normalized.host || existing.repository !== normalized.repository

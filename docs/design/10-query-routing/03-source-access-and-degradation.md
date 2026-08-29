@@ -91,7 +91,7 @@ phase. Khi chưa có action đó:
   như một hidden reader.
 
 Remote reader capability dùng exact canonical Repository identity, bounded
-file/revision reference và active profile token. Token chỉ ở MCP server, không
+file/revision reference và shared owner-private Hub token. Token chỉ ở MCP server, không
 đưa cho Agent; GitHub.com và GitHub Enterprise khác base API nhưng dùng cùng
 product contract. Nó không clone repo, dùng `gh`, scan repo hoặc biến local path
 thành shared authority.

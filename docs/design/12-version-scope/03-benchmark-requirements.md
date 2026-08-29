@@ -1,4 +1,13 @@
-# Agent-driven OKF benchmark requirements
+# Benchmark requirements
+
+This file owns the shared benchmark execution and evidence boundary. The
+historical requirements below qualify OKF authoring. The proposed Feature
+Discovery context comparison is governed by
+[`AB-CONTEXT-*`](../14-ai-sdlc-context/02-runtime-requirements.md) and reuses
+the same opt-in, isolated, pinned-input and durable-result principles without
+changing OKF-authoring semantics or the public `abs` CLI.
+
+## Agent-driven OKF authoring
 
 The benchmark measures whether a real explicit host coding agent can use
 AgentBase MCP graph/schema tools to investigate pinned repositories and author

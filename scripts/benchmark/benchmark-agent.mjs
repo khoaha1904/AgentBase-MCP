@@ -432,13 +432,14 @@ export function portableAgentText(value, { repository, workspace, runtimeRoot })
     .split(os.homedir()).join("<HOME>");
 }
 
-export function buildCodexArgs({ workspace, finalMessage, model, reasoningEffort, arm = "mcp", runtimeRoot, enabledTools }) {
+export function buildCodexArgs({ workspace, finalMessage, model, reasoningEffort, arm = "mcp", runtimeRoot, enabledTools, trackerRoot, disableShell = arm === "direct" }) {
   if (!["mcp", "direct"].includes(arm)) throw new Error(`unknown benchmark arm: ${arm}`);
   const args = [
     "--ask-for-approval", "never", "exec", "--ephemeral", "--json", "--ignore-user-config", "--skip-git-repo-check", "--sandbox", "workspace-write",
     "--model", model, "--cd", workspace, "--output-last-message", finalMessage,
     "--config", `model_reasoning_effort=${toml(reasoningEffort)}`,
   ];
+  if (disableShell) args.push("--disable", "shell_tool");
   if (arm === "mcp") args.push(
     "--config", `mcp_servers.agentbase.command=${toml(process.execPath)}`,
     "--config", `mcp_servers.agentbase.args=${toml([path.join(projectRoot, "src", "cli.ts"), "mcp"])}`,
@@ -449,6 +450,16 @@ export function buildCodexArgs({ workspace, finalMessage, model, reasoningEffort
     "--config", `mcp_servers.agentbase.default_tools_approval_mode=${toml("approve")}`,
     "--config", "mcp_servers.agentbase.startup_timeout_sec=30",
     "--config", "mcp_servers.agentbase.tool_timeout_sec=180",
+  );
+  if (trackerRoot) args.push(
+    "--config", `mcp_servers.tracker.command=${toml(process.execPath)}`,
+    "--config", `mcp_servers.tracker.args=${toml([path.join(projectRoot, "scripts", "benchmark", "tracker-fixture-mcp.mjs"), trackerRoot])}`,
+    "--config", `mcp_servers.tracker.cwd=${toml(projectRoot)}`,
+    "--config", "mcp_servers.tracker.required=true",
+    "--config", `mcp_servers.tracker.enabled_tools=${toml(["search_tracker", "get_tracker_artifact", "list_tracker_relations"])}`,
+    "--config", `mcp_servers.tracker.default_tools_approval_mode=${toml("approve")}`,
+    "--config", "mcp_servers.tracker.startup_timeout_sec=10",
+    "--config", "mcp_servers.tracker.tool_timeout_sec=30",
   );
   args.push("-");
   return args;

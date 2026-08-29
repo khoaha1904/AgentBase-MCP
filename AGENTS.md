@@ -113,3 +113,29 @@ dependency changes; do not weaken a rule without explicit owner approval.
 - Never share raw local graph databases through Git or OKF storage.
 - Missing evidence in a later ingest never implicitly deletes accepted
   knowledge.
+
+## Development Hub convention
+
+AgentBase product semantics do not define primary, secondary, production or
+test Hub roles. Hub profiles are peers, exactly one is active, and the user may
+connect or switch them. Switching never copies or merges knowledge.
+
+This workspace has a development-only convention:
+
+- `khoaha1904/AgentBase-Hub` contains real owner data and must not receive MCP
+  fixtures, mock enrichment or qualification output.
+- `khoaha1904/hub-3` is the current disposable development Hub for Crawler
+  ingest, enrichment, query, visualization and benchmark qualification.
+- Before any development action that can read or mutate Hub data, run `abs
+  status`. When the task is testing MCP behavior, connect to `hub-3` through
+  `abs hub connect` and reuse the existing shared token; do not manually clone
+  an anonymous remote or invent a second credential path.
+- Do not reset, reseed or copy `AgentBase-Hub` into `hub-3` without an explicit
+  owner request. Inspect the existing Published revision, repository coverage,
+  OKF validation and embedded CI first so useful fixture data is not destroyed.
+- `domain-hub` and GitHub Pages are generated presentation output. Page
+  visibility does not imply that either Hub repository is public.
+
+These names are workspace fixtures only. Never expose this convention as a
+general AgentBase product hierarchy or assume another user's Hub has the same
+role.

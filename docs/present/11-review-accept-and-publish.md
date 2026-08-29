@@ -137,10 +137,31 @@ không sao chép source/Code Graph, tóm tắt layout, PR lifecycle và CI. Nó 
 liệt kê toàn bộ concept hay thay thế `index.md` làm knowledge navigation.
 
 Remote Hub identity gồm exact GitHub host, repository và target branch. Mỗi
-identity có local checkout/credential riêng; chỉ một identity active tại một
-thời điểm. GitHub.com dùng public API, GitHub Enterprise dùng API chuẩn trên
-chính enterprise host. Đổi active Hub không replay hay merge Local Draft giữa
-hai Hub.
+identity có local checkout/configuration riêng; một token Hub owner-private
+được dùng chung; chỉ một identity active tại một thời điểm. GitHub.com dùng
+public API, GitHub Enterprise dùng API chuẩn trên chính enterprise host. Đổi
+active Hub không replay hay merge Local Draft giữa hai Hub.
+
+## Connect hoặc switch Hub
+
+Người dùng dùng `abs hub connect --url <repository-url> --branch <branch>` với
+credential-free repository URL và exact branch. Command hỏi token bằng prompt
+ẩn; nhập token mới để thay thế token dùng chung, hoặc để trống để tái sử dụng
+token cũ. Sau đó command kiểm tra remote/OKF rồi mới atomically đổi active
+profile. Người dùng không phải gọi một credential helper nội bộ rồi quay lại
+gọi MCP lần hai.
+
+`abs status` chỉ đọc trạng thái; `abs hub sync` là pull explicit. Các bước
+prepare/finalize/accept/submit/recover vẫn là workflow nội bộ của skill/MCP và
+không nằm trong public `abs --help`.
+
+Token không đi qua chat/tool arguments, không được in ra và chỉ được lưu
+owner-private trong credential dùng chung. Nếu token thiếu quyền hoặc Hub không
+hợp lệ, Hub đang active và token cũ được giữ nguyên; token thay thế của một
+failure được báo bình thường sẽ được rollback. Nếu process bị kill/mất điện
+đúng sau khi token mới được stage, chỉ trạng thái riêng tư có thể còn lại;
+active Hub vẫn không đổi. Connect không tự synchronize, copy Local Draft hoặc
+trộn knowledge giữa hai Hub.
 
 Status luôn ưu tiên báo được local state, sau đó mới best-effort kiểm tra remote
 head và số PR mở nhắm vào target branch. Mất mạng, thiếu quyền, pending lỗi hoặc

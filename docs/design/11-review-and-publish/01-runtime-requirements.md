@@ -25,7 +25,7 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-LOCAL-HUB-006** — Submit publishes one non-empty dependency-safe selection
   as deterministic per-Repository publication units and opens/recovers their PRs.
 - **AB-LOCAL-HUB-007** — Only explicit attach, bootstrap, submit, synchronize and
-  Hub Initialization actions may use the active profile token. Normal operation never writes the remote target branch, merges,
+  Hub Initialization actions may use the shared owner-private Hub token. Normal operation never writes the remote target branch, merges,
   approves, force-pushes, deletes branches, changes settings or overrides target.
 - **AB-LOCAL-HUB-008** — Synchronization fetches the exact configured remote target, recognizes
   published identity, rebases remaining commits in an isolated candidate and
@@ -263,9 +263,9 @@ queries and ordinary coding never create Hub state, commits or publication.
   by that intent and never rewrites a changed target.
 - **AB-HUB-SETUP-014** — After the remote target is fetched/admitted, configuration
   becomes `remote` and later work uses normal PR publication/synchronization.
-- **AB-HUB-SETUP-015** — The exact identity-bound profile token never enters tool arguments, Git URLs,
-  repositories, configuration, receipts or errors. Missing permissions preserve
-  local work and request credential repair.
+- **AB-HUB-SETUP-015** — The shared owner-private Hub token never enters tool
+  arguments, Git URLs, repositories, configuration metadata, receipts or errors.
+  Missing permissions preserve local work and request credential repair.
 - **AB-HUB-SETUP-016** — Configuration/receipts are owner-private, non-symlink,
   atomic and share the serialized Hub mutation boundary.
 - **AB-HUB-SETUP-017** — Offline verification covers no-Hub graph/scan use,
@@ -276,14 +276,16 @@ queries and ordinary coding never create Hub state, commits or publication.
   Graph and workspace inventory never create Hub authority.
 - **AB-HUB-SETUP-023** — A remote profile is identified by normalized HTTPS
   GitHub host, repository and exact target branch. Each identity owns isolated
-  local checkout, configuration and credential state; exactly one profile is
-  active. Activation never merges, replays or copies knowledge from another
-  profile, and an inactive profile remains reusable.
+  local checkout and configuration; exactly one profile is active. One
+  owner-private shared Hub token is reused across profiles, while activation
+  never merges, replays or copies knowledge from another profile.
 - **AB-HUB-SETUP-024** — Remote connection accepts credential-free repository
   URL plus target branch. Token entry occurs only through an owner-private
-  terminal flow and is never a model/tool argument. GitHub.com uses its public
-  API; another admitted HTTPS GitHub host uses the standard Enterprise API on
-  that host. Clone, API, PR URL and permission checks bind the same host.
+  masked terminal flow; blank input reuses the shared token and non-empty input
+  stages a replacement. The token is never a model/tool argument. GitHub.com
+  uses its public API; another admitted HTTPS GitHub host uses the standard
+  Enterprise API on that host. Clone, API, PR URL and permission checks bind the
+  same host.
 - **AB-HUB-SETUP-025** — Internal accepted ancestry may stay on local `main`
   while every remote read/write, pull request, initialization and CI target uses
   the configured branch. A profile change is staged and validated before one
@@ -295,8 +297,8 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-HUB-SETUP-027** — Status is byte-for-byte read-only. Legacy profile,
   credential and transaction migration runs only before an explicit mutation;
   it canonicalizes host/repository/branch identity without moving the checkout
-  or losing drafts. Active remote actions read only the exact profile token;
-  the legacy global credential is a one-time migration source, never fallback.
+  or losing drafts. Active remote actions read the shared owner-private Hub token;
+  no GitHub CLI or ambient credential fallback is used.
 - **AB-HUB-SETUP-028** — Bootstrap holds mutation and activation ownership,
   rechecks remote emptiness and active intent before its sole direct target write,
   then admits the canonical profile and Published baseline atomically/recoverably.
@@ -307,3 +309,19 @@ queries and ordinary coding never create Hub state, commits or publication.
   This integrity subset does not require support-CI files or treat freshness as
   a gate. Recovery binds exact Main/Published state and may take over only the
   matching dead-process lock; legacy transactions remain idempotent.
+- **AB-HUB-SETUP-030** — One explicit owner-terminal Hub connect command accepts
+  only a credential-free GitHub HTTPS repository URL and exact target branch,
+  prompts for an optional masked shared token, reuses the prior token when the
+  prompt is blank, and invokes the ordinary validated attach/activation
+  boundary. Token bytes never enter chat, MCP/tool inputs, process arguments,
+  output, errors, repositories or Git configuration. MCP tools never obtain a
+  token or gain ambient credential fallback.
+- **AB-HUB-SETUP-031** — Connect activates the destination profile only after
+  token admission, remote access and exact Hub validation all succeed. A
+  missing token, denied or malformed token, unavailable branch, invalid Hub or
+  interrupted attach preserves the previously active profile and shared token;
+  a reported failure restores any replacement staged by that attempt. An
+  uncatchable process termination may leave only owner-private staged state, but
+  never activates the destination. Connect does not synchronize, copy/replay
+  Local Draft, or merge knowledge across profiles; the packaged Hub-control
+  skill directs connect/switch requests through this single terminal flow.

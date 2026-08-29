@@ -64,3 +64,21 @@ override these requirements after completion.
 - **AB-FND-022** — Dependency-cruiser, its parser and Knip are exact lockfile-
   backed development dependencies. The reviewed native gitleaks version remains
   an explicit environment prerequisite, not a production dependency.
+
+## AgentBase CLI surface
+
+- **AB-CLI-001** — The user-facing executable name is `abs`; `abs --help` uses
+  AgentBase terminology and never presents `okf` as a command namespace.
+- **AB-CLI-002** — Public CLI contains only `status`, `hub connect` and
+  `hub sync` in this MVP. Each command maps to one owner-visible bounded
+  workflow and has secret-free output and errors.
+- **AB-CLI-003** — `mcp` remains a technical stdio launcher for registered
+  clients but is not advertised as an ordinary user workflow.
+- **AB-CLI-004** — Ingest, Refresh, Batch, Domain Enrichment, Query, Accept,
+  Publish, Question review, validator and benchmark actions remain skill/MCP or
+  developer/internal routes; they are not duplicated as public CLI commands.
+- **AB-CLI-005** — Internal routes may retain compatibility during migration,
+  but public help, README examples and product skills reference only the
+  canonical `abs` surface.
+- **AB-CLI-006** — CLI naming changes do not alter MCP tool names, Hub data,
+  local storage identity, Published/Draft state or authorization boundaries.

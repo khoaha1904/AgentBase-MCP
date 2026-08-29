@@ -31,8 +31,10 @@ Current requirement routes:
 - Batch Initial Ingest: `docs/design/09-ingest-and-refresh/09-runtime-requirements.md`
 - Local Hub and publication: `docs/design/11-review-and-publish/01-runtime-requirements.md`
 - Installation: `docs/design/12-version-scope/02-installation-requirements.md`
+- CLI: `docs/design/12-version-scope/08-cli-runtime-requirements.md`
 - Benchmark: `docs/design/12-version-scope/03-benchmark-requirements.md`
 - Published visualization: `docs/design/13-visualization/04-runtime-requirements.md`
+- AI SDLC context: `docs/design/14-ai-sdlc-context/02-runtime-requirements.md`
 - Query: `docs/design/10-query-routing/07-runtime-requirements.md`
 - Product scope: `docs/present/00-product-scope-and-authority.md`
 - Architecture ownership: `docs/design/00-architecture.md`
