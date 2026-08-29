@@ -10,10 +10,12 @@
 - [x] T008 Verify a sessionless modern HTTP tools/list exchange.
 - [x] T009 Declare JSON Schema 2020-12 for every advertised tool input.
 - [x] T010 Verify legacy and modern tool catalogs preserve their contracts.
+- [x] T011 Extract benchmark storage/admission from the oversized runner.
+- [x] T012 Verify benchmark scoring and public imports remain compatible.
 
 ## Result
 
-Phases 1–2 are complete. The server keeps legacy stdio compatibility while
+Phases 1–4 are complete. The server keeps legacy stdio compatibility while
 advertising the modern protocol contract through one low-level policy boundary,
 and the reusable HTTP adapter serves sessionless modern requests. Remote auth
 and Tasks remain explicit follow-up phases.
