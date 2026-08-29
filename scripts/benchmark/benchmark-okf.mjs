@@ -10,12 +10,11 @@ import { fixtureFor, manifestFor, resultRoot, utcRunId } from "./benchmark-okf-s
 export { fixtureFor, manifestFor, resultRoot, utcRunId } from "./benchmark-okf-storage.mjs";
 import { createPairComparison, createRunRegression, reportFor } from "./benchmark-reporting.mjs";
 export { createPairComparison, createRunRegression } from "./benchmark-reporting.mjs";
+import { loadScorableBundle } from "./benchmark-okf-bundle.mjs";
+export { loadScorableBundle } from "./benchmark-okf-bundle.mjs";
 
 import {
-  computeOkfTreeDigest,
   getOkfConceptSchema,
-  loadOkfBundle,
-  parseConceptDocument,
   readObservedValues,
   validateAgentBaseDraft,
   validateBundleObservedValues,
@@ -672,35 +671,6 @@ function invalidMetrics(suite, repository, runId, error) {
     authoringAssessment,
     initialIngestAcceptance: "invalid",
   };
-}
-
-export function loadScorableBundle(root) {
-  try {
-    return loadOkfBundle(root, { requireAgentBaseRootIndex: true });
-  } catch (error) {
-    const failures = [`OKF conformance failed: ${error instanceof Error ? error.message : "unknown error"}`];
-    const concepts = new Map();
-    const files = [];
-    const walk = (directory) => {
-      for (const entry of fs.readdirSync(directory, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
-        const absolute = path.join(directory, entry.name);
-        const relative = path.relative(root, absolute).split(path.sep).join("/");
-        if (entry.isDirectory()) walk(absolute);
-        else if (entry.isFile()) files.push(relative);
-      }
-    };
-    walk(root);
-    for (const relative of files.filter((file) => file.endsWith(".md")
-      && !["index.md", "log.md", "README.md"].includes(path.posix.basename(file)))) {
-      try {
-        const concept = parseConceptDocument(relative, fs.readFileSync(path.join(root, ...relative.split("/")), "utf8"));
-        concepts.set(concept.conceptId, concept);
-      } catch (conceptError) {
-        failures.push(`${relative}: ${conceptError instanceof Error ? conceptError.message : "concept could not be parsed"}`);
-      }
-    }
-    return { root, concepts, files, warnings: failures, treeDigest: computeOkfTreeDigest(root) };
-  }
 }
 
 function finalizeArmRoot({ manifest, entry, root, runId }) {
