@@ -1,6 +1,6 @@
 # Feature Specification: MCP modern protocol readiness
 
-**Status**: Phases 1–2 implemented; remote authorization remains deferred.
+**Status**: Phases 1–4 implemented; remote authorization remains deferred.
 
 ## Objective
 

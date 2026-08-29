@@ -18,4 +18,5 @@
 Phases 1–4 are complete. The server keeps legacy stdio compatibility while
 advertising the modern protocol contract through one low-level policy boundary,
 and the reusable HTTP adapter serves sessionless modern requests. Remote auth
-and Tasks remain explicit follow-up phases.
+and Tasks remain explicit follow-up phases. Output schemas wait for stable
+per-tool result contracts rather than claiming one generic JSON shape.
