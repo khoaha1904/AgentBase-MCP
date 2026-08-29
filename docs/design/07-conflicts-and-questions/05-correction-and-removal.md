@@ -1,21 +1,21 @@
 # 07.05 — Correction and removal
 
-> Trạng thái: Implemented MVP contract.
+> Status: Implemented MVP contract.
 
-## Quyết định
+## Decision
 
-MVP không có per-item `superseded`/`retracted` state hoặc tombstone. Khi exact
-evidence hoặc maintainer direction đủ rõ, Refresh/Enrichment có thể tạo Proposal
-sửa hoặc xóa knowledge do AgentBase sở hữu.
+MVP has no per-item `superseded`/`retracted` state or tombstone. When exact
+evidence or maintainer direction is sufficient, Refresh/Enrichment may create a
+Proposal that corrects or removes AgentBase-owned knowledge.
 
-Proposal preview và PR phải nêu:
+Proposal preview and PR must state:
 
-- exact concept/knowledge bị sửa hoặc xóa;
-- reason và evidence;
-- replacement/link liên quan nếu có;
-- Question/relation bị ảnh hưởng.
+- exact concept/knowledge corrected or removed;
+- reason and evidence;
+- relevant replacement/link when present;
+- affected Questions/relations.
 
-Conflict đơn thuần, evidence vắng mặt trong một lần Refresh hoặc source tạm mất
-quyền không đủ để xóa. Protected/human-authored/foreign knowledge giữ existing
-ownership rules. Git history là audit/restore mechanism; rollback dùng reviewed
-revert/correction thay vì một lifecycle database.
+Conflict alone, absent evidence in one Refresh, or temporarily unavailable source
+permission is insufficient for removal. Protected/human-authored/foreign
+knowledge retains existing ownership rules. Git history is audit/restore; rollback
+uses a reviewed revert/correction rather than a lifecycle database.
