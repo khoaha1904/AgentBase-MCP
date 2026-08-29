@@ -1,6 +1,10 @@
 # Current capability
 
-Active capability: [`060-end-to-end-ait-qualification`](060-end-to-end-ait-qualification/spec.md) —
+Active capability: [`061-mcp-modernization`](061-mcp-modernization/spec.md) —
+standardize the MCP protocol policy on the official 2026-07-28 revision while
+preserving legacy stdio compatibility; modern HTTP/auth remain deferred.
+
+Most recent completed: [`060-end-to-end-ait-qualification`](060-end-to-end-ait-qualification/spec.md) —
 qualify the complete Feature → US → Tasks lifecycle with and without AgentBase;
 the first real pair is retained at owner-review gate.
 

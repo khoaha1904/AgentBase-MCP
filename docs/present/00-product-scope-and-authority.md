@@ -134,6 +134,14 @@ AgentBase targets Google OKF v0.2 at pinned source commit
 An OKF bundle is linked Markdown with YAML frontmatter, bundle-relative concept
 IDs and reserved index/log rules. Conformance does not prove semantic truth.
 
+## MCP protocol direction
+
+AgentBase-MCP follows the official MCP `2026-07-28` direction while retaining
+legacy `2025-11-25` compatibility for existing stdio clients. The current
+stdio product surface remains unchanged. Modern Streamable HTTP, stateless
+remote serving and OAuth hardening are opt-in follow-up capabilities; they do
+not change local tool authority or Hub publication rules.
+
 AgentBase catalog 7.0 supplies a small provider-neutral authoring core.
 Versioned Terraform-family detection and AWS mapping profiles attach technology
 metadata without deciding that every cloud resource deserves a concept.

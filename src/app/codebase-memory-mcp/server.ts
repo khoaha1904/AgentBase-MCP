@@ -11,6 +11,7 @@ import { DiscoverySession } from "./discovery-session.ts";
 import { GatewaySession, type GatewaySessionOptions } from "./gateway-session.ts";
 import { SAFE_TOOLS } from "./tool-manifest.ts";
 import { callOkfSchemaTool, OKF_SCHEMA_TOOLS, type OkfSchemaToolName } from "./okf-schema-tools.ts";
+import { AGENTBASE_MCP_SERVER_OPTIONS } from "./protocol-policy.ts";
 
 export type AgentBaseMcpServer = Readonly<{
   server: McpServer;
@@ -32,7 +33,7 @@ export function createAgentBaseMcpServer(options: GatewaySessionOptions & Readon
     discoveryReceiptResolver: (id) => discovery.resolveReceipt(id),
     discoveryReceiptRebaser: (id, publishedBase) => discovery.rebaseReceipt(id, publishedBase),
   });
-  const server = new McpServer({ name: "agentbase-codebase-memory", version: "0.0.0" });
+  const server = new McpServer({ name: "agentbase-codebase-memory", version: "0.0.0" }, AGENTBASE_MCP_SERVER_OPTIONS);
   for (const tool of HUB_OKF_TOOLS) {
     server.registerTool(tool.name, { description: tool.description, inputSchema: fromJsonSchema(tool.inputSchema) },
       async (argumentsValue): Promise<CallToolResult> => {

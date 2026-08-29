@@ -108,6 +108,18 @@ without deleting its source.
 
 ## Runtime boundaries
 
+### MCP protocol boundary (current)
+
+The high-level AgentBase MCP factory owns tool registration and business
+actions. A low-level protocol policy owns the supported MCP versions and
+transport-era defaults. Legacy `2025-11-25` remains accepted for stdio
+interoperability and modern `2026-07-28` is advertised for future transports.
+Business modules do not import transport internals or perform negotiation.
+
+Modern Streamable HTTP (`createMcpHandler`), stateless remote handling,
+OAuth/OIDC authorization and the Tasks extension are deferred until a concrete
+remote deployment requires them. Legacy HTTP+SSE is not a new design target.
+
 - Exact production package dependencies are
   `@modelcontextprotocol/client@2.0.0`,
   `@modelcontextprotocol/server@2.0.0`, `yaml@2.9.0` and
