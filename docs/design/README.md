@@ -84,7 +84,7 @@ benchmark, PR và capability commit.
 13. [Published visualization](13-visualization/README.md)
 14. [Context for AI SDLC workflows](14-ai-sdlc-context/README.md)
 
-## Implementation trace — 2026-08-24
+## Implementation trace — 2026-08-29
 
 | Phần | Trạng thái low-level |
 |---|---|
@@ -102,6 +102,11 @@ benchmark, PR và capability commit.
 | 12 | Terraform/Terragrunt MVP boundary and the small `abs` CLI/shared-token connect implemented and verified; provider expansion deferred |
 | 13 | Shared Published projection, query diagrams and static Domain site implemented; model/domain qualification pending |
 | 14 | On-demand Hub Feature Discovery A/B designed; integration skill and model qualification pending |
+
+MCP protocol modernization (capability 061) is implemented in the protocol
+boundary: modern `2026-07-28` stdio negotiation, stateless Streamable HTTP,
+legacy `2025-11-25` compatibility, JSON Schema 2020-12 tool inputs and additive
+structured results. Remote OAuth and Tasks remain demand-driven.
 
 Current runtime authority nằm ở `docs/design`, code và active spec. Design trong
 thư mục này giải thích shape/trade-off và phải được cập nhật

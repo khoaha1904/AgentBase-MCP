@@ -79,7 +79,7 @@ hoàn tất reliability hardening; nó không đổi OKF schema hoặc query aut
 Phần 14 mở hướng sử dụng AgentBase như context layer cho workflow bên ngoài;
 Feature Discovery là qualification đầu tiên và chưa có implementation mới.
 
-## Trạng thái đồng bộ — 2026-08-24
+## Trạng thái đồng bộ — 2026-08-29
 
 | Phần | Implementation hiện tại |
 |---|---|
@@ -91,6 +91,10 @@ Feature Discovery là qualification đầu tiên và chưa có implementation m�
 | 12 | MVP hiện hỗ trợ Terraform/Terragrunt; SAM/CloudFormation chưa hỗ trợ. Benchmark có repo sibling riêng; local MCP data dùng một root `~/.agentbase` |
 | 13 | Published projection, query diagram và static Domain site đã implement; còn model/domain qualification |
 | 14 | Context-layer direction và on-demand Hub Discovery A/B đã thiết kế; integration skill và model evidence chưa implement |
+
+MCP protocol modernization (capability 061) đã implement MCP `2026-07-28` cho
+stdio có negotiation và Streamable HTTP stateless, vẫn giữ compatibility với
+`2025-11-25`; OAuth remote và Tasks vẫn là capability theo nhu cầu triển khai.
 
 Model policy hiện chỉ là policy qualification: benchmark Initial Ingest dùng
 Sol, Refresh dùng Terra. Nó chưa phải hard-coded runtime rule của MCP.
