@@ -1,17 +1,18 @@
 # 05 — Baseline and impact checkpoint
 
-> Trạng thái: Owner đã chấp nhận proposal/change set làm publication unit và
-> Published-only remote-profile query boundary.
+> Status: The owner accepted the proposal/change set as the publication unit and
+> the Published-only remote-profile query boundary.
 
-## High-level trước impact checkpoint
+## High-level before the impact checkpoint
 
-High-level mô tả publication status ở mức từng knowledge item: concept, claim,
-relation, Question hoặc evidence update. Người dùng có thể tích lũy Local Draft,
-chọn từng item trước PR và chỉ dọn item thực sự Published.
+The high level originally described publication status per knowledge item:
+concept, claim, relation, Question or evidence update. Users could accumulate a
+Local Draft, select individual items before a PR and clean up only items that
+were actually Published.
 
-## Baseline hiện tại
+## Current baseline
 
-Baseline lịch sử đã có một lifecycle Git hoàn chỉnh:
+The historical baseline already had a complete Git lifecycle:
 
 ```text
 reviewed proposal
@@ -23,17 +24,17 @@ one contiguous prefix → one PR     ← remote publication
 recognized commits are removed from pending ancestry
 ```
 
-- `accept` commit toàn bộ reviewed proposal thành đúng một commit và fast-forward
-  local `main`.
-- Baseline cũ từng query `activeHead`, gồm remote knowledge và pending local;
-  behavior này đã bị thay bởi Published-only query.
-- `remoteBase..activeHead` là chuỗi proposal pending có thứ tự.
-- Publish chỉ nhận một prefix liên tục của chuỗi này để giữ dependency và tránh
-  rewrite/reorder history.
-- Proposal ID, source repository, evidence/diff digest và commit identity đã có;
-  accept/sync dùng lock, candidate worktree và recovery an toàn.
+- `accept` commits the entire reviewed proposal as exactly one commit and
+  fast-forwards local `main`.
+- The old baseline queried `activeHead`, including remote knowledge and pending
+  local changes; this was replaced by Published-only query.
+- `remoteBase..activeHead` is the ordered pending proposal chain.
+- Publish accepts only a contiguous prefix to preserve dependencies and avoid
+  rewriting/reordering history.
+- Proposal ID, source repository, evidence/diff digest and commit identity exist;
+  accept/sync use locks, candidate worktrees and safe recovery.
 
-Nguồn baseline:
+Baseline sources:
 
 - [Hub requirements](../11-review-and-publish/01-runtime-requirements.md)
 - [Atomic local accept](../../../src/app/hub-okf/review/accept.ts)
@@ -42,64 +43,68 @@ Nguồn baseline:
 - [Batch publication](../../../src/app/hub-okf/publication/publish.ts)
 - [Synchronization](../../../src/app/hub-okf/publication/synchronize.ts)
 
-## Phần tái sử dụng được
+## Reusable parts
 
-- Git state tiếp tục giữ Published anchor và Local Draft ancestry tách biệt;
-  không cần database hoặc một Hub tạm thứ hai.
-- `remoteBase` và pending ancestry đã phân biệt Published với unaccepted local
-  proposal commits trong từng remote profile.
-- Proposal commit là đơn vị atomic, có identity/provenance và recovery tốt.
-- Một PR đã có thể gom nhiều proposal từ nhiều repository.
+- Git state continues to keep the Published anchor and Local Draft ancestry
+  separate; no database or second temporary Hub is needed.
+- `remoteBase` and pending ancestry already distinguish Published from
+  unaccepted local proposal commits in each remote profile.
+- A proposal commit is atomic, carries identity/provenance and has good recovery.
+- One PR can already group proposals from multiple repositories.
 
-## Boundary đã chốt
+## Decided boundary
 
-Publication vẫn ở mức **proposal commit**, không phải từng item bên trong
-Markdown:
+Publication remains at **proposal commit** level, not each item inside Markdown:
 
-- concept path có identity, nhưng prose/evidence update không phải item độc lập;
-- claim và một số relation có ID riêng nhưng không có publication state riêng;
-- ordinary query chỉ đọc exact synchronized Published anchor;
-- một proposal đã accept là immutable trong pending history;
-- publication không thể bỏ proposal ở giữa hoặc chọn một relation/claim nằm bên
-  trong một accepted commit.
+- a concept path has identity, but a prose/evidence update is not an independent
+  item;
+- claims and some relations have IDs but no separate publication state;
+- ordinary query reads only the exact synchronized Published anchor;
+- an accepted proposal is immutable in pending history;
+- publication cannot skip a proposal in the middle or select a relation/claim
+  inside an accepted commit.
 
-Mỗi normalized remote URL + branch có Published clone và Draft workspace riêng.
-Chưa config remote thì không có Hub/OKF authority; chỉ Code Graph hoạt động.
+Each normalized remote URL + branch has its own Published clone and Draft
+workspace. Without a remote configuration there is no Hub/OKF authority; only
+Code Graph operates.
 
-## Đánh giá impact
+## Impact assessment
 
-- Giữ Git/proposal commit làm publication unit: **Contained change**.
-- Giữ Published/Local Draft/In Review cho proposal review; ordinary query chỉ
-  Published: **Contained change**.
-- Giữ nguyên item-level selection/status sau khi local accept: **Broad change**
-  qua OKF identity, accept, pending, query, publish và synchronize.
-- Đây chưa phải near rewrite vì Git lifecycle vẫn tái sử dụng được, nhưng sẽ thay
-  đáng kể phần Hub đang ổn định và đã có recovery tests.
+- Keeping Git/proposal commit as publication unit: **Contained change**.
+- Keeping Published/Local Draft/In Review for proposal review while ordinary
+  query reads Published only: **Contained change**.
+- Keeping item-level selection/status after local Accept: **Broad change** across
+  OKF identity, accept, pending, query, publish and synchronize.
+- This is not a near rewrite because the Git lifecycle remains reusable, but it
+  would significantly replace the stable Hub area with existing recovery tests.
 
-## Đề xuất tối thiểu
+## Minimal proposal
 
-Điều chỉnh high-level để **reviewed proposal/change set** là publication unit:
+Adjust the high level so a **reviewed proposal/change set** is the publication
+unit:
 
-1. Người dùng chọn/bỏ từng knowledge item trong proposal trước khi local accept.
-2. Accept tạo một immutable Local Draft commit để inspect/publish; ordinary
-   query chỉ thấy nó sau merge và synchronize.
-3. Một PR gom nhiều pending proposal liên tiếp từ nhiều repository.
-4. Query đọc exact remote base; proposal review ghi rõ commit đang local/in review.
-5. Sau merge, synchronize nhận diện proposal đã Published và giữ proposal còn lại.
+1. The user selects/removes individual knowledge items before local Accept.
+2. Accept creates one immutable Local Draft commit for inspection/publication;
+   ordinary query sees it only after merge and synchronization.
+3. One PR groups consecutive pending proposals from multiple repositories.
+4. Query reads the exact remote base; proposal review states whether a commit is
+   local or in review.
+5. After merge, synchronize recognizes Published proposals and retains the rest.
 
-Với hướng này, item vẫn có identity/provenance để query và conflict, nhưng trạng
-thái publication thuộc proposal chứa thay đổi đó. Nếu một file chứa cả remote và
-local edits, Agent nói concept có pending local changes thay vì giả vờ mọi field
-có state độc lập.
+With this direction, items still carry identity/provenance for query and
+conflict, but publication state belongs to the containing proposal. If a file
+contains both remote and local edits, the Agent says the concept has pending
+local changes instead of pretending every field has independent state.
 
-## Quyết định đã chốt
+## Decided
 
-Proposal/change set là publication unit. Item-level selection diễn ra trước
-local Accept. Sau Accept, proposal commit bất biến và đi qua Local Draft, In
-Review rồi Published như một đơn vị. High-level phần 05 và 11 đã được cập nhật.
+The proposal/change set is the publication unit. Item selection happens before
+local Accept. After Accept, the immutable proposal commit passes through Local
+Draft, In Review and Published as one unit. High-level sections 05 and 11 were
+updated accordingly.
 
-Ordinary query chỉ đọc Published state của active remote profile. Không có
-remote config thì không tồn tại Hub authority cạnh tranh và chỉ Code Graph được
-dùng.
+Ordinary query reads only Published state from the active remote profile. Without
+remote configuration there is no competing Hub authority and only Code Graph is
+used.
 
-Impact sau quyết định: **Contained change**, không còn broad Hub redesign.
+Impact after the decision: **Contained change**; no broad Hub redesign remains.
