@@ -116,7 +116,8 @@ transport-era defaults. Legacy `2025-11-25` remains accepted for stdio
 interoperability and modern `2026-07-28` is advertised for future transports.
 Business modules do not import transport internals or perform negotiation.
 
-Modern Streamable HTTP (`createMcpHandler`), stateless remote handling,
+The reusable Streamable HTTP adapter uses `createMcpHandler` with per-request
+server construction and stateless legacy fallback. Opening a production port,
 OAuth/OIDC authorization and the Tasks extension are deferred until a concrete
 remote deployment requires them. Legacy HTTP+SSE is not a new design target.
 

@@ -1,6 +1,6 @@
 # Feature Specification: MCP modern protocol readiness
 
-**Status**: Phase 1 implemented; modern HTTP serving and remote authorization remain deferred.
+**Status**: Phases 1–2 implemented; remote authorization remains deferred.
 
 ## Objective
 
@@ -21,10 +21,12 @@ stdio clients.
 - **AB-MCPMOD-005**: Modern Streamable HTTP, stateless deployment, OAuth
   hardening and Tasks are separate follow-up slices and are not silently
   enabled by the stdio migration.
+- **AB-MCPMOD-006**: A reusable web-standard Streamable HTTP handler serves
+  modern requests without a protocol session and keeps legacy requests on the
+  SDK stateless compatibility leg.
 
 ## Success criteria
 
-The server factory has one low-level protocol configuration boundary, focused
-tests prove the supported-version contract and all existing tests plus
-`npm run verify` pass.
-
+The server factory has one low-level protocol configuration boundary, a
+reusable HTTP handler serves a modern `tools/list` request without a session,
+and all existing tests plus `npm run verify` pass.

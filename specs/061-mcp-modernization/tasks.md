@@ -6,9 +6,12 @@
 - [x] T004 Add requirement-linked tests for supported versions and cache hints.
 - [x] T005 Run focused tests and `npm run verify`.
 - [x] T006 Record deferred modern HTTP/auth/tasks work in current documentation.
+- [x] T007 Add the stateless modern Streamable HTTP adapter.
+- [x] T008 Verify a sessionless modern HTTP tools/list exchange.
 
 ## Result
 
-Phase 1 is complete. The server keeps legacy stdio compatibility while
-advertising the modern protocol contract through one low-level policy boundary.
-Remote HTTP, auth and Tasks remain explicit follow-up phases.
+Phases 1–2 are complete. The server keeps legacy stdio compatibility while
+advertising the modern protocol contract through one low-level policy boundary,
+and the reusable HTTP adapter serves sessionless modern requests. Remote auth
+and Tasks remain explicit follow-up phases.
