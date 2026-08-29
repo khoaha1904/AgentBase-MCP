@@ -1,47 +1,47 @@
 # 03.03 — Evidence roles and provenance
 
-> Trạng thái: Evidence ownership/provenance validation implemented.
+> Status: Evidence ownership/provenance validation is implemented.
 
-## Nguyên tắc
+## Principles
 
-Evidence không có một confidence score chung. Mỗi source role chỉ hỗ trợ một
-loại claim; wording của claim không được mạnh hơn điều nguồn chứng minh.
+Evidence has no shared confidence score. Each source role supports a bounded
+claim type; claim wording must not be stronger than what the source proves.
 
 | Source role | Claim ceiling |
 |---|---|
-| implementation code | source có behavior/integration được chỉ ra |
-| IaC/config declaration | repository khai báo desired resource/configuration |
-| README/ADR/docs | documented purpose, contract, decision hoặc future intent |
-| provider observation | resource/value được quan sát tại account/region/time |
-| maintainer guidance | owner-provided classification/answer tại attribution |
+| implementation code | source shows the stated behavior/integration |
+| IaC/config declaration | repository declares the desired resource/configuration |
+| README/ADR/docs | documented purpose, contract, decision or future intent |
+| provider observation | resource/value observed in account/region/time |
+| maintainer guidance | owner-provided classification/answer at attribution |
 
 ## Rules
 
-- Một exact source có thể đủ; không áp minimum source count.
-- Code dùng provider client không chứng minh deployed resource tồn tại.
-- Terraform/IaC declaration không chứng minh apply thành công hoặc runtime state.
-- Provider CLI observation không tự chứng minh source ownership hoặc design intent.
-- README/ADR có thể là primary evidence cho purpose/decision, nhưng future hoặc
-  ambiguous language không được viết thành implemented behavior.
-- Maintainer guidance coexist với source claims; nó không xóa hoặc biến thành
-  objective runtime truth.
+- One exact source may be sufficient; do not impose a minimum source count.
+- Code using a provider client does not prove a deployed resource exists.
+- A Terraform/IaC declaration does not prove an apply succeeded or runtime state.
+- A provider CLI observation does not prove source ownership or design intent.
+- README/ADR may be primary evidence for purpose/decision, but future or
+  ambiguous wording is not implemented behavior.
+- Maintainer guidance coexists with source claims; it does not erase them or
+  become objective runtime truth.
 
 ## Provenance
 
-Mỗi attributed claim/relation giữ source ID, exact reference và source revision
-đã quan sát; Refresh không được gắn revision mới lên retained evidence cũ nếu
-chưa đọc/xác nhận lại source đó. Provider
-observation còn bind provider/account/region, observed time và resource identity.
-Observed snapshot tuân theo phần 01/08 và không được trình bày như current truth.
+Every attributed claim/relation keeps source ID, exact reference and observed
+source revision. Refresh must not stamp a new revision onto retained evidence
+without rereading/reconfirming that source. A provider observation also binds
+provider/account/region, observed time and resource identity. Observed snapshots
+follow sections 01/08 and are not presented as current truth.
 
 ## Uncertainty
 
-Không dùng `72% confidence`. Ghi limitation cụ thể:
+Do not use `72% confidence`. Record a concrete limitation:
 
 - implementation found, deployment not verified;
 - declaration found, runtime state unknown;
 - documentation describes future intent;
 - identity match remains ambiguous.
 
-Ambiguity ảnh hưởng query value hoặc canonical identity thì tạo Question; thiếu
-chi tiết không quan trọng chỉ giữ limitation.
+Ambiguity affecting query value or canonical identity creates a Question; a
+non-critical missing detail remains a limitation.

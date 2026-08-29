@@ -1,34 +1,35 @@
 # 03 — Concept discovery
 
-> Trạng thái: Candidate/guidance foundation và Capability 046 Discovery
-> Seed/Inventory coverage đã implement.
+> Status: Candidate/guidance foundation and Capability 046 Discovery
+> Seed/Inventory coverage are implemented.
 
 High-level decision:
-[MCP nhận diện concept thế nào?](../../present/03-how-concepts-are-identified.md)
+[How are concepts identified?](../../present/03-how-concepts-are-identified.md)
 
-## Phân rã
+## Decomposition
 
-- [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — current signal/
-  schema baseline, gap và impact.
-- [`01-candidate-discovery.md`](01-candidate-discovery.md) — tín hiệu tạo
-  candidate từ graph và source.
-- [`02-concept-qualification.md`](02-concept-qualification.md) — identity và
-  query value để thành concept.
-- [`03-evidence-and-provenance.md`](03-evidence-and-provenance.md) — bằng
-  chứng, nguồn và giới hạn claim.
-- [`04-existing-concept-matching.md`](04-existing-concept-matching.md) — đối
-  chiếu Published Hub và Local Draft.
-- [`05-candidate-review.md`](05-candidate-review.md) — promote, giữ Question
-  hoặc bỏ candidate.
+- [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — current
+  signal/schema baseline, gap and impact.
+- [`01-candidate-discovery.md`](01-candidate-discovery.md) — create candidates
+  from graph and source signals.
+- [`02-concept-qualification.md`](02-concept-qualification.md) — identity and
+  query value required for a concept.
+- [`03-evidence-and-provenance.md`](03-evidence-and-provenance.md) — evidence,
+  sources and claim limits.
+- [`04-existing-concept-matching.md`](04-existing-concept-matching.md) — compare
+  Published Hub and Local Draft.
+- [`05-candidate-review.md`](05-candidate-review.md) — promote, keep a Question
+  or discard a candidate.
 
-## Implementation delta hiện tại
+## Current implementation delta
 
-Initial Ingest guidance hiện yêu cầu identity basis, query/link value,
-standalone/embedded disposition và exact owned observations. Không có numeric
-confidence engine, candidate database hoặc unrelated-Draft search. Outcomes
-được review trong proposal hiện tại; cross-repository matching sâu thuộc Domain
-Enrichment.
+Initial Ingest guidance requires an identity basis, query/link value,
+standalone/embedded disposition and exact owned observations. There is no
+numeric confidence engine, candidate database or unrelated-Draft search.
+Outcomes are reviewed in the current proposal; deep cross-repository matching
+belongs to Domain Enrichment.
 
-Runtime kiểm tra coverage trước schema selection: important discovery group
-phải map sang concept, embedded, Question hoặc ignored reason. Đây là private
-session/receipt contract, không phải candidate registry, UI hay public tool mới.
+Runtime checks coverage before schema selection: every important discovery group
+must map to a concept, embedded item, Question or ignored reason. This is a
+private session/Receipt contract, not a candidate registry, UI or new public
+tool.

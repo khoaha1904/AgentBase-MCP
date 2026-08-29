@@ -1,127 +1,132 @@
 # 03.01 — Candidate discovery
 
-> Trạng thái: Bounded Agent candidate gates, Capability 046 broad discovery
-> coverage và Capability 051 content-redaction/explicit limitation handling đã
-> implement.
+> Status: Bounded Agent candidate gates, Capability 046 broad-discovery
+> coverage and Capability 051 content-redaction/explicit-limitation handling
+> are implemented.
 
-## Discovery lanes và Seed
+## Discovery lanes and Seed
 
-Discover chạy năm lane: repository identity/product; runtime/entrypoint;
-interface/route/event/trigger; dependency/integration/data/channel; và deploy/
-operations. Sau index, MCP tự chạy fixed provider baseline và bounded safe file
-census để tạo private per-connection Discovery Seed. Raw graph nodes được compact
-thành session-stable evidence groups; repeated low-value rows giữ count và source
-samples. Agent không tự khai lane status, priority hoặc absence.
+Discover runs five lanes: repository identity/product; runtime/entrypoint;
+interface/route/event/trigger; dependency/integration/data/channel; and
+deploy/operations. After indexing, MCP runs a fixed provider baseline and a
+bounded safe-file census to create a private per-connection Discovery Seed. Raw
+graph nodes are compacted into session-stable evidence groups; repeated low-value
+rows keep counts and source samples. The Agent does not invent lane status,
+priority or absence.
 
-Investigate gửi một Inventory. Mỗi important Seed group phải map sang đúng
-one outcome: `materialized`, `question` hoặc `ignored`. Một materialized group
-có thể trỏ tới nhiều candidate; candidate đã khai concept/embedded và parent nên
-Inventory không khai lại. Coverage group không split/merge trong MVP; mỗi item
-có một origin group nhưng nhiều group có thể cùng đóng góp vào một candidate.
-Guidance thành công
-freeze compact Inventory Receipt; raw graph/
-source không vào Receipt hoặc Hub.
+Investigate submits one Inventory. Each important Seed group maps to exactly one
+outcome: `materialized`, `question` or `ignored`. A materialized group may point
+to several candidates; a candidate already declares concept/embedded and parent,
+so Inventory does not declare them again. Coverage groups are not split/merged
+in the MVP; each item has one origin group, while multiple groups may contribute
+to one candidate. Successful guidance freezes a compact Inventory Receipt; raw
+graph/source does not enter the Receipt or Hub.
 
-Agent không tạo Inventory item ID, QuestionPlan ID, output parent hoặc
-candidate-level evidence list lần hai. MCP derive các field đó từ active Seed và
-cùng guidance request. Seed group source list chỉ là bounded samples để hiểu và
-review group; nó không được dùng như một exhaustive repository-evidence
-allowlist. Caller-correctable defects được trả thành một bounded diagnostic set
-trong cùng `INVALID_ARGUMENT`, tránh buộc Agent khám phá từng lỗi tuần tự.
+The Agent does not create Inventory item IDs, QuestionPlan IDs, output parents or
+a second candidate-level evidence list. MCP derives those fields from the active
+Seed and the same guidance request. A Seed group's source list is bounded sample
+material for understanding and review, not an exhaustive repository-evidence
+allowlist. Caller-correctable defects return as one bounded diagnostic set in
+the same `INVALID_ARGUMENT`, rather than forcing the Agent to discover errors
+one at a time.
 
-Materialized embedded candidate được bind vào parent bằng candidate-owned exact
-evidence. Human-readable label trong table/prose có thể được Agent cải thiện;
-Finalize không dùng exact identity-hint substring làm materialization gate.
-Nếu exact evidence không còn trong parent, MCP append lại canonical embedded row
-từ frozen Receipt trước validation; raw graph không được dùng lại.
+An explicitly `embedded` candidate is bound to its parent by candidate-owned
+exact evidence and does not depend on a provider profile. The Agent may improve
+the human-readable label in a table/prose; Finalize does not use an exact
+identity-hint substring as the materialization gate. If exact evidence disappears
+from the parent, MCP appends the canonical embedded row from the frozen Receipt
+before validation; raw graph is not reused.
 
-`get_okf_authoring_schemas` validates the submitted Inventory against the active Seed
+`get_okf_authoring_schemas` validates submitted Inventory against the active Seed
 and returns `discovery_receipt_id`. New-mode `prepare_hub_okf` consumes that
-exact ID instead of trusting a re-sent mutable guidance payload. Before Prepare
-the receipt is immutable connection state; Prepare atomically creates one
-private authoring session. Exact retry returns the same session; mismatched use
-fails.
+exact ID rather than trusting a resent mutable guidance payload. Before Prepare,
+the Receipt is immutable connection state; Prepare atomically creates one
+private authoring session. An exact retry returns the same session; mismatched
+use fails.
 
-Question outcome tạo private QuestionPlan dùng existing SharedQuestion kind.
-Agent chọn `candidate_key + evidence_id` đã có trong cùng guidance request; MCP
-tự derive exact normalized source resource và SourceSnapshot revision trước khi
-freeze candidate-evidence reference vào Receipt. Agent không tự tạo
-`repository://` URI hoặc revision. Không bind được subject/evidence thì giữ
-limitation, không tạo Question mồ côi.
+A Question outcome creates a private QuestionPlan using the existing
+SharedQuestion kind. The Agent selects a `candidate_key + evidence_id` already
+present in the same guidance request; MCP derives the exact normalized source
+resource and SourceSnapshot revision before freezing the candidate-evidence
+reference into the Receipt. The Agent does not create a `repository://` URI or
+revision. If subject/evidence cannot be bound, retain a limitation and do not
+create an orphan Question.
 
 ## Candidate sources
 
-Agent tạo candidate từ evidence đã đọc, không từ tên đoán mò:
+The Agent creates candidates from read evidence, not guesses from names:
 
-- root README/docs/ADR cho declared purpose, boundary hoặc decision;
-- architecture/entrypoint/package boundary từ graph rồi exact source;
-- infrastructure/resource declaration có logical identity;
-- API, event, queue hoặc data contract có integration value;
-- existing Hub concept và relation cần source mới bổ sung.
+- root README/docs/ADR for declared purpose, boundary or decision;
+- architecture/entrypoint/package boundaries from graph and exact source;
+- infrastructure/resource declarations with logical identity;
+- an API, event, queue or data contract with integration value;
+- an existing Hub concept/relation requiring new source evidence.
 
-Graph node, file, function, cloud keyword hoặc import chỉ là discovery signal.
-Chúng không tự động trở thành concept.
+A graph node, file, function, cloud keyword or import is only a discovery signal;
+none becomes a concept automatically.
 
-Explicit `embedded` disposition không phụ thuộc provider profile. Nếu technology
-mapping không có, guidance vẫn trả embedded với provider-neutral metadata và
-limitation; `unsupported` chỉ áp dụng cho standalone promotion/schema không đủ
-bằng chứng hoặc không được catalog hỗ trợ.
+An explicit `embedded` disposition is provider-independent. When no technology
+mapping exists, guidance still returns embedded with provider-neutral metadata and
+a limitation; `unsupported` applies only to standalone promotion/schema without
+sufficient evidence or catalog support.
 
-## Hai qualification gates
+## Two qualification gates
 
-Mỗi candidate phải trả lời:
+Every candidate answers:
 
-1. **Identity:** có thể chỉ ra đây là thực thể nào một cách ổn định không?
-2. **Query/link value:** người dùng có lý do độc lập để tìm nó hoặc liên kết
-   concept khác tới nó không?
+1. **Identity:** Can we point to this entity stably?
+2. **Query/link value:** Does a user have an independent reason to find it or
+   link another concept to it?
 
-Có cả hai gate thì candidate được đưa sang schema selection. Thiếu một gate thì
-Agent tìm thêm bounded evidence; vẫn chưa rõ và có ảnh hưởng thì giữ Question,
-còn không có independent value thì bỏ khỏi run hiện tại. Việc bỏ không được lưu
-thành suppression rule; Refresh sau có thể đánh giá lại bằng evidence mới.
+With both gates, the candidate moves to schema selection. Missing a gate triggers
+bounded evidence gathering; if it remains unclear and matters, keep a Question,
+otherwise omit it from this run when there is no independent value. Omission is
+not stored as a suppression rule; a later Refresh can reassess it with new
+evidence.
 
-## Candidate record tối thiểu
+## Minimum candidate record
 
-Candidate trong workflow cần mang:
+A workflow candidate carries:
 
-- proposed role/name và identity hint;
-- source IDs hỗ trợ;
-- signal rút ra từ từng source;
-- lý do có query/link value;
-- missing evidence hoặc ambiguity còn lại.
+- proposed role/name and identity hint;
+- supporting source IDs;
+- the signal extracted from each source;
+- why it has query/link value;
+- remaining missing evidence or ambiguity.
 
-Không có numeric score hoặc confidence percentage. Completeness/limitation mô
-tả phần thiếu cụ thể thay vì một con số trông chính xác giả.
+There is no numeric score or confidence percentage. Completeness/limitation
+describes the specific missing part instead of a falsely precise number.
 
 ## Guards
 
-- Free-form signal không source không được mở quyền author schema.
-- Một source trực tiếp có thể đủ; không đặt minimum source count giả tạo.
-- Future intent hoặc docs mơ hồ không được trình bày như implemented state.
-- Candidate không được tạo chỉ để làm Hub chi tiết hơn.
-- Route, entrypoint, runtime root, API spec, IaC/deploy group, explicit service
-  boundary, channel và datastore không được biến mất trước khi có outcome.
-- P0 classification do MCP cố định; P0 ignored chỉ nhận `duplicate-covered` trỏ
-  tới một non-ignored item sẽ materialize. Generated/out-of-scope phải được xếp
-  dưới P0 lúc tạo Seed, không dùng làm lý do pass P0.
-- Explicit outbound/trigger/datastore boundary có thể tạo một P1 Flow candidate
-  và một representative trace; không tạo process graph.
-- CRUD handler, helper, test, generated/vendor row và lockfile-only dependency
-  được group/ignore; important không đồng nghĩa standalone concept.
+- A source-free signal cannot authorize an authoring schema.
+- One direct source may be sufficient; do not invent a minimum source count.
+- Future intent or vague docs are not presented as implemented state.
+- Do not create a candidate merely to make the Hub more detailed.
+- A route, entrypoint, runtime root, API spec, IaC/deploy group, explicit service
+  boundary, channel or datastore cannot disappear before an outcome is recorded.
+- MCP fixes P0 classification. A P0 ignored item accepts only
+  `duplicate-covered` pointing to a non-ignored item that will materialize.
+  Generated/out-of-scope items are placed below P0 when the Seed is created and
+  cannot be used as a P0 pass reason.
+- An explicit outbound/trigger/datastore boundary may create one P1 Flow
+  candidate and representative trace; it does not create a process graph.
+- CRUD handlers, helpers, tests, generated/vendor rows and lockfile-only
+  dependencies may be grouped/ignored; important does not mean standalone.
 
 ## Deterministic/AI balance
 
-Workflow deterministic giữ repository authority, graph/source bounds, candidate
-shape, identity checks, schema catalog, validation và retry budget. Agent chỉ
-đảm nhiệm semantic interpretation: source đang mô tả boundary gì, candidate nào
-có query value và ambiguity nào cần Question.
+The deterministic workflow owns repository authority, graph/source bounds,
+candidate shape, identity checks, schema catalog, validation and retry budget.
+The Agent owns semantic interpretation: what boundary the source describes, which
+candidate has query value and which ambiguity needs a Question.
 
-Không hard-code một pipeline concept riêng cho AWS/serverless/e-commerce. Source
-detector/provider profile chỉ tạo evidence signal; Agent vẫn áp dụng hai gates
-provider-neutral. Ngược lại, Agent không được tự nới authority, schema hoặc vòng
-lặp vì “reasoning” thấy có ích.
+Do not hard-code a concept pipeline for AWS/serverless/e-commerce. Source
+detectors/provider profiles create evidence signals; the Agent still applies the
+two provider-neutral gates. Conversely, the Agent may not expand authority,
+schemas or loops because its reasoning finds that useful.
 
-Capability 051 thêm hai guard trong cùng boundary: source-line hints được
-redact credential-like values trước khi vào Seed, và architecture sections đã
-capture nhưng không có exact source path phải được ghi thành limitation thay vì
-âm thầm biến mất hoặc tạo candidate không bounded.
+Capability 051 adds two guards in the same boundary: source-line hints redact
+credential-like values before entering the Seed, and captured architecture
+sections without an exact source path become a limitation rather than silently
+disappearing or creating an unbounded candidate.

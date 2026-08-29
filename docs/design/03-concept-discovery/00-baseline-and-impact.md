@@ -1,36 +1,39 @@
 # 03 — Baseline and impact checkpoint
 
-> Trạng thái: Đã chốt hai qualification gates và không numeric scoring.
+> Status: Two qualification gates are decided; no numeric scoring is used.
 
-## Baseline đã implement
+## Implemented baseline
 
-- Authoring skill đã yêu cầu concept có stable identity và independent query,
-  contract, lifecycle, ownership hoặc graph value.
-- Initial Ingest truyền evidence-bearing candidates/observations; free-form
-  signals chỉ còn là legacy/fine-grained aid ngoài preparation path mới.
-- Hub prepare chỉ cho concept mới dùng selected schema và yêu cầu repository
+- The authoring skill requires a concept to have stable identity and
+  independent query, contract, lifecycle, ownership or graph value.
+- Initial Ingest passes evidence-bearing candidates/observations; free-form
+  signals remain only as legacy/fine-grained aids outside the new preparation
+  path.
+- Hub prepare allows a new concept only with a selected schema and a repository
   source reference.
-- Schema/concept/relationship validators chạy sau khi Agent đã viết Markdown.
-- Published Hub local và current proposal được dùng để tìm concept hiện có;
-  unrelated Local Draft không thuộc ordinary discovery query.
+- Schema, concept and relationship validators run after the Agent writes
+  Markdown.
+- The local Published Hub and current proposal find existing concepts; unrelated
+  Local Drafts are outside ordinary discovery query.
 
-Nguồn baseline:
+Baseline sources:
 
 - [Concept authoring rules](../../../.agents/skills/agentbase-okf/references/concepts.md)
 - [Schema selector](../../../src/core/knowledge/schemas/catalog.ts)
 - [Hub proposal preparation](../../../src/app/hub-okf/authoring/prepare.ts)
 
-## Gap còn lại
+## Remaining gap
 
-Runtime đã có candidate contract và ownership validation. Không có persistent
-candidate registry hoặc review UI theo chủ ý; Agent vẫn là reasoning layer
-trong bounded skill workflow.
+Runtime has the candidate contract and ownership validation. There is
+intentionally no persistent candidate registry or review UI; the Agent remains
+the reasoning layer in a bounded skill workflow.
 
-## Kết quả implementation
+## Implementation result
 
-Lightweight evidence-bearing boundary đã được thêm qua skill, MCP input và
-validation mà không tạo model runtime hay scoring subsystem.
+A lightweight evidence-bearing boundary was added through skill, MCP input and
+validation without a model runtime or scoring subsystem.
 
-Xây deterministic discovery/scoring engine để tự hiểu mọi language/provider sẽ
-là **Broad change/Near rewrite** và không cần thiết: Agent đã là reasoning layer,
-MCP nên giữ bounded tools và deterministic guards.
+Building a deterministic discovery/scoring engine that understands every
+language/provider would be a **Broad change/Near rewrite** and is unnecessary:
+the Agent is already the reasoning layer, while MCP should keep bounded tools
+and deterministic guards.

@@ -1,46 +1,49 @@
 # 03.02 — Concept qualification and identity
 
-> Trạng thái: Identity/query-value qualification implemented.
+> Status: Identity/query-value qualification is implemented.
 
 ## Qualification
 
-Candidate chỉ thành concept khi có cả stable identity và independent query/link
-value. Schema role, source file hoặc technology keyword không thay hai gate này.
+A candidate becomes a concept only with both stable identity and independent
+query/link value. A schema role, source file or technology keyword cannot replace
+either gate.
 
 ## Identity precedence
 
-Khi đối chiếu một candidate:
+When matching a candidate:
 
-1. exact canonical concept identity đã được source/provenance xác nhận;
-2. provider/source-native identity mạnh như Terraform address, API method+path,
-   ARN hoặc provider+account+region+resource type+resource ID;
-3. repository-scoped logical identity có stable contract/source anchor;
-4. display name hoặc semantic similarity chỉ tạo match candidate, không xác
-   nhận same entity.
+1. exact canonical concept identity confirmed by source/provenance;
+2. strong provider/source-native identity such as a Terraform address, API
+   method+path, ARN or provider+account+region+resource type+resource ID;
+3. repository-scoped logical identity with a stable contract/source anchor;
+4. display name or semantic similarity creates only a candidate match and does
+   not confirm the same entity.
 
-Không có strong identity thì Agent không auto-merge. Nó có thể giữ separate
-candidate/Question để Domain Enrichment xác minh sau.
+Without strong identity, the Agent does not auto-merge. It may keep a separate
+candidate/Question for later Domain Enrichment verification.
 
-## Canonical path và technical identity
+## Canonical path and technical identity
 
-Hub path là logical human-readable identity, ví dụ:
+The Hub path is a logical human-readable identity, for example:
 
 ```text
 resources/vehicle-events-queue
 ```
 
-ARN, Terraform address, provider account/region hoặc API route là attributed
-metadata/reference dùng cho matching. Chúng không thay canonical path và không
-tạo provider-specific directory tree.
+ARN, Terraform address, provider account/region or API route are attributed
+metadata/references used for matching. They do not replace the canonical path or
+create a provider-specific directory tree.
 
-Một logical resource có thể có nhiều deployment identities theo environment hoặc
-region; phần 06 sở hữu reconciliation/multi-region model, không giải quyết bằng
-cách nhồi mọi ARN vào canonical path.
+A logical resource may have multiple deployment identities by environment or
+region; section 06 owns reconciliation/multi-region modeling and does not solve
+it by stuffing every ARN into the canonical path.
 
 ## Guards
 
-- Cùng tên không có nghĩa cùng concept.
-- Rename không tự tạo concept mới khi strong identity/continuity còn giữ được.
-- Hai strong identities khác nhau không auto-merge vì prose trông giống nhau.
-- Existing Published concept được enrich khi match chắc; protected content không
-  bị rewrite chỉ vì candidate mới có metadata chi tiết hơn.
+- The same name does not mean the same concept.
+- A rename does not create a new concept automatically when strong identity/
+  continuity remains.
+- Two different strong identities are not auto-merged because their prose looks
+  similar.
+- An existing Published concept is enriched on a confident match; protected
+  content is not rewritten merely because a new candidate has richer metadata.

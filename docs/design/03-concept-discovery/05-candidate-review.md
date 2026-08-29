@@ -1,11 +1,11 @@
 # 03.05 — Candidate review
 
-> Trạng thái: Candidate state intentionally transient; dedicated review UI
-> không thuộc MVP.
+> Status: Candidate state is intentionally transient; a dedicated review UI is
+> outside the MVP.
 
 ## Lifecycle
 
-Candidate chỉ tồn tại trong Ingest/Refresh proposal preparation và review:
+Candidates exist only during Ingest/Refresh proposal preparation and review:
 
 ```text
 candidate
@@ -14,22 +14,23 @@ candidate
   └─ no independent value  → discard
 ```
 
-Candidate không phải OKF concept type, publication item hoặc Hub entity. Không
-có candidate database, Published Candidate hay candidate migration.
+A candidate is not an OKF concept type, publication item or Hub entity. There is
+no candidate database, Published Candidate or candidate migration.
 
 ## Review outcome
 
-- Promote chỉ tạo knowledge item đã qua schema/evidence validation.
-- Question giữ đúng ambiguity, candidate references và next verification action.
-- Discard không để lại Hub content; diagnostics của run có thể đếm hoặc tóm tắt
-  lý do bỏ nhưng không publish raw candidate inventory.
-- Discard của một run không tạo ignore/suppression record; source mới hoặc
-  Refresh sau có thể đưa candidate trở lại.
-- Nếu review chưa hoàn tất, candidate nằm trong mutable proposal workspace;
-  Accept chỉ nhận các outcome đã materialize thành valid knowledge items.
+- Promote creates only a knowledge item that passed schema/evidence validation.
+- Question retains the exact ambiguity, candidate references and next
+  verification action.
+- Discard leaves no Hub content; run diagnostics may count or summarize discard
+  reasons but do not publish raw candidate inventory.
+- Discarding in one run does not create an ignore/suppression record; new source
+  or a later Refresh may bring the candidate back.
+- Until review completes, the candidate stays in the mutable proposal workspace;
+  Accept includes only outcomes materialized as valid knowledge items.
 
 ## Recovery
 
-Interrupted run có thể rebuild candidate từ source/graph. Không cần phục hồi
-candidate như durable business data. Chỉ proposal outcome đã validate mới cần
-exact recovery theo Hub lifecycle.
+An interrupted run can rebuild candidates from source/graph. Candidates do not
+need recovery as durable business data. Only validated proposal outcomes require
+exact recovery under the Hub lifecycle.
