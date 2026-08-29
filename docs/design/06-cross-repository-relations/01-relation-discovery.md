@@ -1,128 +1,137 @@
 # 06.01 — Relation discovery
 
-> Trạng thái: Canonical relation/candidate boundary và bounded AWS/SQS Domain Enrichment đã implement; broader inference deferred.
+> Status: Canonical relation/candidate boundary and bounded AWS/SQS Domain
+> Enrichment are implemented; broader inference is deferred.
 
-## Quyết định ngắn
+## Short decision
 
-Agent chỉ ghi canonical relation khi xác định được cả hai endpoint và có evidence
-cho interaction. Dấu hiệu hợp lý nhưng chưa đủ được giữ thành relation candidate
-kèm Question; suy đoán không có evidence bị bỏ.
+The Agent records a canonical relation only when it identifies both endpoints
+and has interaction evidence. Reasonable but insufficient signals stay as a
+relation candidate with a Question; unsupported inference is discarded.
 
-Endpoint có thể là một `Resource` node (ví dụ shared SQS/SNS) nhưng chỉ sau khi
-node eligibility chứng minh stable identity và independent query/link value.
-Queue/topic declaration không tự mở quyền tạo node; transport Resource và
-message/event `Interface` không được gộp thành một endpoint duy nhất.
+An endpoint may be a `Resource` node (for example shared SQS/SNS) only after
+node eligibility proves stable identity and independent query/link value. A
+queue/topic declaration does not automatically authorize a node; a transport
+Resource and message/event `Interface` are not combined into one endpoint.
 
 ```text
-đủ endpoint identity + đủ interaction evidence → canonical relation
-có evidence nhưng thiếu một trong hai          → candidate + Question
-chỉ suy đoán                                    → không lưu
+sufficient endpoint identity + interaction evidence → canonical relation
+evidence exists but either is missing                → candidate + Question
+inference only                                       → do not store
 ```
 
-Không tạo placeholder concept hoặc dangling edge chỉ để graph trông đầy đủ.
+Do not create placeholder concepts or dangling edges merely to make the graph
+look complete.
 
-## Hai lớp bằng chứng độc lập
+## Two independent evidence layers
 
 ### 1. Endpoint identity
 
-Identity trả lời: **hai nguồn có đang nói về cùng một endpoint/resource không?**
+Identity answers: **are two sources referring to the same endpoint/resource?**
 
-Theo thứ tự mạnh đến yếu:
+From strongest to weakest:
 
-1. exact provider identity, ví dụ AWS ARN;
-2. provider resource ID cùng scope cần thiết như account, region và service;
-3. deterministic source chain như Terraform module input/output, remote-state
-   output hoặc exact deploy reference;
-4. endpoint/config reference có thể kiểm tra thêm;
-5. display name, variable name hoặc resource name đứng riêng.
+1. exact provider identity, for example an AWS ARN;
+2. provider resource ID with required scope such as account, region and service;
+3. deterministic source chain such as Terraform module input/output,
+   remote-state output or exact deploy reference;
+4. endpoint/config reference that can be verified further;
+5. display name, variable name or standalone resource name.
 
-Ba nhóm đầu có thể support một strong match khi scope không mâu thuẫn. Hai nhóm
-cuối chỉ tạo candidate. Exact rule cho portable external identity thuộc phần
-`02-resource-identity-matching.md`.
+The first three groups can support a strong match when scopes do not conflict.
+The last two create candidates only. Exact portable external-identity rules are
+in `02-resource-identity-matching.md`.
 
 ### 2. Interaction evidence
 
-Interaction trả lời: **source làm gì với target?** Ví dụ `publishes-to`,
-`consumes`, `depends-on` hoặc `reads-from`.
+Interaction answers: **what does source do with the target?** For example,
+`publishes-to`, `consumes`, `depends-on` or `reads-from`.
 
-Evidence có thể đến từ code, Terraform/Terragrunt, repository documentation,
-configuration hoặc một bounded provider observation. ARN chỉ xác nhận endpoint;
-nó không tự chứng minh Lambda publish, Service consume hay API gọi nhau.
+Evidence may come from code, Terraform/Terragrunt, repository documentation,
+configuration or a bounded provider observation. An ARN confirms an endpoint;
+it does not prove that a Lambda publishes, a Service consumes or two APIs call
+each other.
 
-Canonical relation cần source IDs thuộc concept sở hữu edge, đúng với validator
-hiện tại. Nguồn chỉ mô tả identity mà không mô tả interaction không được dùng để
-suy ra predicate.
+A canonical relation needs source IDs owned by the concept that owns the edge,
+as required by the current validator. A source that describes identity only
+cannot infer a predicate.
 
-## Behavior trong Ingest
+## Ingest behavior
 
-Initial Ingest và Refresh chỉ điều tra repository đang được authorize:
+Initial Ingest and Refresh investigate only the authorized repository:
 
-- target đã có trong Published Hub/current proposal và strong match: có thể
-  ghi relation ngay;
-- current repository đủ evidence để promote một independently useful target
-  concept trong cùng proposal: có thể tạo target và relation cùng lúc;
-- interaction có evidence nhưng target chưa resolve chắc chắn: giữ candidate +
-  Question;
-- target có vẻ giống chỉ vì tên/prose: không auto-match;
-- không có interaction evidence: không tạo relation candidate chỉ từ suy đoán.
+- target exists in Published Hub/current proposal with a strong match: record a
+  relation immediately;
+- the current repository has enough evidence to promote an independently useful
+  target concept in the same proposal: create target and relation together;
+- interaction is evidenced but the target is not confidently resolved: retain a
+  candidate + Question;
+- target appears similar only by name/prose: do not auto-match;
+- no interaction evidence: do not create a relation candidate from inference.
 
-Unrelated Local Draft không thuộc matching scope. Batch Ingest vẫn là nhiều lần
-Ingest cô lập chạy tuần tự. Nó không reconcile
-candidates giữa các members và không trở thành Domain Enrichment ngầm.
+Unrelated Local Drafts are outside matching scope. Batch Ingest remains multiple
+isolated sequential Ingest runs. It does not reconcile member candidates or
+silently become Domain Enrichment.
 
 ## Candidate contract
 
-Phần 06 chỉ yêu cầu một unresolved candidate giữ đủ ý nghĩa để xử lý sau:
+Section 06 requires an unresolved candidate to retain enough meaning for later
+handling:
 
-- source concept identity;
+- source-concept identity;
 - proposed canonical predicate;
-- target hints đã quan sát, không tự chuẩn hóa thành canonical identity;
-- source evidence cho interaction và từng identity hint;
-- repository/source revision đã quan sát;
-- reason chưa thể tạo canonical relation.
+- observed target hints, not normalized automatically into canonical identity;
+- source evidence for interaction and each identity hint;
+- observed repository/source revision;
+- why a canonical relation cannot yet be created.
 
-Question lifecycle, serialized shape và conflict presentation thuộc phần 07.
-Candidate không được load như graph edge và không ảnh hưởng Domain membership.
+Question lifecycle, serialized shape and conflict presentation belong to section
+07. A candidate is not loaded as a graph edge and does not affect Domain
+membership.
 
-## Behavior trong Domain Enrichment
+## Domain Enrichment behavior
 
-Domain Enrichment đọc bounded candidates từ các repositories đã được người dùng
-chọn. Nó có thể:
+Domain Enrichment reads bounded candidates from repositories selected by the
+user. It may:
 
-1. đối chiếu Published knowledge và evidence từ hai phía;
-2. dùng deterministic IaC/config chain khi đã đủ;
-3. sau khi người dùng tự login, gọi provider CLI read-only cho đúng candidate;
-4. tạo canonical relation proposal khi endpoint và interaction đều đủ;
-5. đóng, cập nhật hoặc giữ Question khi kết quả sai, mâu thuẫn hoặc vẫn thiếu.
+1. compare Published knowledge and evidence from both sides;
+2. use a deterministic IaC/config chain when sufficient;
+3. after the user logs in, call the provider CLI read-only for exactly the
+   candidate;
+4. create a canonical-relation proposal when endpoint and interaction are
+   sufficient;
+5. close, update or retain the Question when the result is false, conflicting or
+   still incomplete.
 
-Provider CLI là evidence bổ sung, không phải bước bắt buộc. MCP không scan toàn
-account/region và verification không tự Accept hoặc Publish.
+Provider CLI is supplementary evidence, not a required step. MCP does not scan
+an entire account/region, and verification does not Accept or Publish
+automatically.
 
-## Reuse và thay đổi tối thiểu
+## Reuse and minimum change
 
-- Giữ canonical predicates, relation identity, evidence IDs, target/link
-  validation và inbound traversal hiện tại.
-- Canonical edge tiếp tục nằm trong `relationships` của source concept.
-- Không thêm relation database, unresolved graph node hoặc inverse edge.
-- Runtime mới về sau chỉ cần tạo/read candidates qua Question contract và promote
-  candidate thành proposal edge sau khi validation thành công.
+- Keep current canonical predicates, relation identity, evidence IDs, target/link
+  validation and inbound traversal.
+- A canonical edge remains in the source concept's `relationships`.
+- Do not add a relation database, unresolved graph node or inverse edge.
+- Future runtime only needs to create/read candidates through the Question
+  contract and promote a candidate to a proposal edge after validation passes.
 
-## Failure và recovery
+## Failure and recovery
 
-- Target ambiguous hoặc provider permission thiếu: giữ Question với limitation;
-  không downgrade thành một match theo tên.
-- Identity match nhưng interaction chưa được chứng minh: có thể giữ identity
-  candidate, không tạo relation.
-- Interaction rõ nhưng target chưa xác định: giữ relation candidate, không tạo
+- An ambiguous target or missing provider permission retains a Question with a
+  limitation; do not downgrade to a name match.
+- An identity match without proven interaction may retain an identity candidate,
+  not a relation.
+- Clear interaction with an unknown target retains a relation candidate, not a
   dangling edge.
-- Provider observation mâu thuẫn source: giữ cả provenance và chuyển conflict
-  sang phần 07; không chọn nguồn thắng trong phần 06.
+- A provider observation conflicting with source retains both provenance entries
+  and moves conflict to section 07; section 06 does not choose a winning source.
 
-## Ví dụ chấp nhận
+## Accepted examples
 
 | Evidence | Outcome |
 |---|---|
-| Cùng Queue ARN và Terraform/code chứng minh Function publish vào queue | Canonical `publishes-to` relation. |
-| Cùng Queue ARN nhưng không có evidence Function sử dụng queue | Chỉ identity match; không có relation. |
-| `EVENT_QUEUE_URL` và `crawler_queue` có vẻ liên quan nhưng chưa resolve | Candidate + Question. |
-| Chỉ giống từ khóa `queue` trong hai repository | Không lưu relation. |
+| Same Queue ARN and Terraform/code proves a Function publishes to the queue | Canonical `publishes-to` relation. |
+| Same Queue ARN but no evidence that the Function uses the queue | Identity match only; no relation. |
+| `EVENT_QUEUE_URL` and `crawler_queue` appear related but remain unresolved | Candidate + Question. |
+| Only the keyword `queue` is similar in two repositories | No stored relation. |

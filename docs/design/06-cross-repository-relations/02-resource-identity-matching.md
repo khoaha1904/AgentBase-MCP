@@ -1,12 +1,13 @@
 # 06.02 — External resource identity and matching
 
-> Trạng thái: Provider-neutral envelope và AWS/SQS validation đã implement; provider khác deferred.
+> Status: Provider-neutral envelope and AWS/SQS validation are implemented;
+> other providers are deferred.
 
-## Quyết định ngắn
+## Short decision
 
-Concept giữ provider-neutral role. Identity thật do platform cấp được lưu như
-optional external identity metadata; Terraform address chỉ là source evidence,
-không được giả thành deployed identity.
+A concept keeps a provider-neutral role. Platform-issued real identity is stored
+as optional external-identity metadata; a Terraform address is source evidence,
+not a claimed deployed identity.
 
 ```text
 Concept: Interface / Function / Component / Resource
@@ -14,26 +15,26 @@ External identity: AWS ARN, Azure resource ID, ...
 Source declaration: repository path + Terraform address/evidence
 ```
 
-Ba lớp này không thay thế lẫn nhau. AWS metadata không tạo schema `SQS`, `EC2`
-hay `Lambda` riêng.
+These three layers do not replace one another. AWS metadata does not create a
+separate `SQS`, `EC2` or `Lambda` schema.
 
 ## Portable envelope
 
-External identities thuộc concept tại `agentbase.external_identities[]`. Common
-contract gồm:
+External identities belong to a concept at `agentbase.external_identities[]`. The
+common contract is:
 
-| Field | Ý nghĩa |
+| Field | Meaning |
 |---|---|
-| `provider` | Provider namespace, ví dụ `aws`, `azure`, `gcp`. |
-| `identity_type` | Loại native locator do provider profile hiểu, ví dụ `arn`. |
+| `provider` | Provider namespace, for example `aws`, `azure`, `gcp`. |
+| `identity_type` | Native locator type understood by a provider profile, for example `arn`. |
 | `value` | Exact normalized provider-issued identity. |
-| `service` | Provider service, chỉ là technology metadata. |
-| `resource_type` | Provider-native resource type, không phải Concept Schema. |
-| `scope` | Bounded string metadata cần để định danh, ví dụ account/region. |
-| `evidence` | Non-empty source IDs chứng minh identity này. |
-| `observed_at` | Thời điểm observation khi nguồn là provider runtime. |
+| `service` | Provider service; technology metadata only. |
+| `resource_type` | Provider-native resource type, not Concept Schema. |
+| `scope` | Bounded string metadata needed for identification, for example account/region. |
+| `evidence` | Non-empty source IDs proving this identity. |
+| `observed_at` | Observation time when source is provider runtime. |
 
-Ví dụ để minh họa shape, không phải schema riêng cho AWS:
+Example illustrates shape, not an AWS-specific schema:
 
 ```yaml
 agentbase:
@@ -50,80 +51,82 @@ agentbase:
       observed_at: 2026-08-22T08:00:00Z
 ```
 
-Core chỉ sở hữu bounded envelope, provenance và duplicate safety. Provider
-profile sở hữu parsing, normalization, required scope keys và consistency giữa
-`value` với `scope`. Unknown provider identity vẫn readable nhưng không được
-AgentBase dùng để auto-match khi thiếu released profile.
+Core owns the bounded envelope, provenance and duplicate safety. A provider
+profile owns parsing, normalization, required scope keys and consistency between
+`value` and `scope`. Unknown provider identities remain readable but AgentBase
+does not use them to auto-match without a released profile.
 
 ## Matching key
 
-- Với globally unique native ID như exact ARN: key là normalized
-  `provider + identity_type + value`; parsed scope phải khớp metadata.
-- Với provider ID chỉ unique trong một scope: key còn bao gồm mọi scope field mà
-  released provider profile yêu cầu.
-- Hai entries có cùng strong key là identity match candidate mạnh, không phải
-  lệnh auto-merge concepts.
-- Cùng display name, variable name, endpoint label hoặc resource name mà thiếu
-  complete scope không phải strong key.
-- Không tự match deployments thuộc hai providers khác nhau chỉ vì chúng có cùng
-  role hoặc tên.
+- For a globally unique native ID such as an exact ARN, the key is normalized
+  `provider + identity_type + value`; parsed scope must match metadata.
+- For a provider ID unique only in a scope, the key also includes every scope
+  field required by the released provider profile.
+- Two entries with the same strong key are a strong identity-match candidate,
+  not an instruction to auto-merge concepts.
+- Equal display name, variable name, endpoint label or resource name without
+  complete scope is not a strong key.
+- Do not auto-match deployments in different providers merely because role or
+  name is equal.
 
-Một strong identity match chỉ trả lời “cùng resource”. Canonical relation vẫn
-cần interaction evidence theo phần 06.01. Hai Published concepts cùng giữ một
-strong key tạo Question/merge candidate; MVP không merge hoặc redirect và
-validator không âm thầm chọn concept thắng.
+A strong identity match answers only “same resource.” A canonical relation still
+needs interaction evidence under 06.01. Two Published concepts with the same
+strong key create a Question/merge candidate; MVP does not merge or redirect and
+the validator does not silently select a winner.
 
-## Account và region
+## Account and region
 
-Account/project/subscription và region/location không phải secret. Chúng được
-lưu khi cần cho identity, review và bounded provider lookup.
+Account/project/subscription and region/location are not secrets. Store them
+when needed for identity, review and bounded provider lookup.
 
 Scope precedence:
 
-1. parse từ provider-native identity;
-2. exact IaC/provider configuration có evidence;
+1. parse from provider-native identity;
+2. exact IaC/provider configuration with evidence;
 3. owner-confirmed Domain Enrichment input;
 4. bounded provider observation.
 
-CLI default profile/region đứng riêng không được coi là knowledge truth. Nếu
-resource type cần region nhưng candidate chưa xác định region, verification trả
-về unresolved Question thay vì thử lần lượt nhiều regions. Global provider
-resource dùng explicit profile rule; không gán tùy tiện một region mặc định.
+A CLI default profile/region is separate and not knowledge truth. If a resource
+type needs region but the candidate lacks it, verification returns an unresolved
+Question rather than trying several regions. A global provider resource uses an
+explicit profile rule; do not arbitrarily assign a default region.
 
-## IaC resource chưa deploy
+## Undeployed IaC resource
 
-Một Terraform/Terragrunt resource chưa có provider-issued ID vẫn có thể tạo
-concept dựa trên code nếu nó vượt qua concept qualification. Nó giữ:
+A Terraform/Terragrunt resource without a provider-issued ID may still create a
+concept from code when it passes concept qualification. It retains:
 
 - normal `repository://` source references;
-- source-native address hoặc module/input/output chain trong candidate evidence;
-- provider/service/resource-type technology metadata khi detector chứng minh.
+- source-native address or module/input/output chain in candidate evidence;
+- provider/service/resource-type technology metadata when proven by detector.
 
-Nó không có `external_identities` entry cho tới khi native identity được quan
-sát. Domain Enrichment có thể thêm identity sau bằng một proposal; không cần đổi
-concept ID hoặc schema.
+It has no `external_identities` entry until native identity is observed. Domain
+Enrichment may add identity later through a proposal without changing concept ID
+or schema.
 
-## Nhiều identities trên một concept
+## Multiple identities on one concept
 
-Một concept có thể có nhiều entries khi nó đại diện một logical capability với
-nhiều deployments, regions hoặc provider-native aliases. Mỗi entry cần evidence
-riêng. Entries cũ không còn đúng không được giữ như current alias; correction/
-history thuộc phần 06.05 và Git history.
+One concept may have multiple entries when it represents a logical capability
+with multiple deployments, regions or provider-native aliases. Every entry needs
+its own evidence. Old entries that are no longer true are not kept as current
+aliases; correction/history belongs to 06.05 and Git history.
 
-Quy tắc quyết định khi nào nhiều deployments vẫn là một concept thuộc phần
-06.06. External identity không tự quyết định concept granularity.
+Section 06.06 decides when multiple deployments remain one concept. External
+identity does not decide concept granularity automatically.
 
-## Security và giới hạn
+## Security and limits
 
-- Cho phép provider resource IDs, account/project/subscription IDs, region và
-  non-sensitive resource names mà người có quyền Hub được phép đọc.
-- Không lưu credential, token, signed URL, connection string hoặc provider
-  response dump.
-- Secret-like identity value bị từ chối tại trust boundary.
-- Provider lookup chỉ target exact candidate; metadata này không cấp quyền scan.
+- Allow provider resource IDs, account/project/subscription IDs, regions and
+  non-sensitive resource names that Hub readers may access.
+- Do not store credentials, tokens, signed URLs, connection strings or provider
+  response dumps.
+- Reject secret-like identity values at the trust boundary.
+- Provider lookup targets only the exact candidate; metadata does not grant scan
+  authority.
 
 ## Baseline impact
 
-AWS/SQS slice đã implement portable metadata validation, provider normalization
-và Hub-wide duplicate rejection mà không thêm database, Concept Schema hoặc
-migration bắt buộc. Duplicate Published concept merge/redirect là post-MVP.
+The AWS/SQS slice implements portable metadata validation, provider
+normalization and Hub-wide duplicate rejection without adding a database,
+Concept Schema or mandatory migration. Duplicate Published-concept merge/redirect
+remains post-MVP.
