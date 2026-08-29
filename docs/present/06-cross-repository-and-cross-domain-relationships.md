@@ -1,86 +1,91 @@
-# 06 — Quan hệ giữa nhiều repository và nhiều Domain
+# 06 — Cross-repository and cross-domain relationships
 
-> Trạng thái: High-level đã chốt; exact AWS/SQS Domain Enrichment và mock
-> qualification harness đã implement offline.
+> Status: High-level direction is settled; exact AWS/SQS Domain Enrichment and
+> the mock qualification harness are implemented offline.
 
-## Câu trả lời ngắn
+## Short answer
 
-Relation có thể nối concept trong cùng repository, khác repository hoặc khác
-Domain. Hub chỉ gom hai đầu mối thành một concept khi có identity đủ mạnh; nếu
-chưa chắc, Agent giữ riêng và tạo Question.
+A relation may connect concepts in one repository, different repositories or
+different Domains. The Hub combines endpoints into one concept only when
+identity is strong enough; otherwise the agent keeps them separate and creates a Question.
 
 ```text
 Crawler Worker ──publishes-to──→ Vehicle Data Queue ←──consumes── Recommender
 ```
 
-Một queue/topic cụ thể chỉ trở thành `Resource` node khi có identity ổn định,
-giá trị query/link độc lập và evidence về boundary hoặc usage. Nếu chỉ thấy
-Terraform declaration hoặc tên biến, nó vẫn là embedded knowledge/candidate;
-không tạo node hay edge để làm graph đầy hơn. Transport Resource và message
-contract `Interface` là hai lớp khác nhau.
+A specific queue/topic becomes a `Resource` node only when it has stable
+identity, independent query/link value and evidence of a boundary or actual use.
+A Terraform declaration or variable name alone remains embedded knowledge or a
+candidate; it does not create a node or edge merely to make the graph look fuller.
+Transport Resource and message-contract `Interface` are separate layers.
 
-## Agent ghi nhận quan hệ thế nào?
+## How does the agent record relations?
 
-- Một repository có thể khai báo phía quan hệ mà nó chứng minh được, không cần
-  chờ repository bên kia được Ingest.
-- Agent không tự suy ra consumer, producer hoặc đầu relation chưa thấy.
-- Nếu hai nguồn mô tả khác nhau, Hub giữ cả hai claim với provenance và tạo
-  Question; không chọn một phía làm sự thật.
-- Ingest ưu tiên relation trong repository đang đọc. Relation xuyên repository
-  chỉ được ghi ngay khi source hiện tại có evidence trực tiếp về đầu bên kia;
-  Ingest không dừng để điều tra toàn Domain.
-- Sau khi nhiều repository của một Domain đã Published, Domain Enrichment có thể
-  đối chiếu chúng theo batch, xác minh provider và bổ sung relation còn thiếu.
+- A repository may declare the side of a relation it can prove; it need not wait
+  for the other repository to be Ingested.
+- The agent does not infer an unseen consumer, producer or relation endpoint.
+- If two sources differ, the Hub keeps both claims with provenance and creates a
+  Question; it does not choose one side as truth.
+- Ingest prioritizes relations in the repository being read. A cross-repository
+  relation is recorded immediately only when the current source directly proves
+  the other endpoint; Ingest does not stop to investigate the entire Domain.
+- After multiple repositories in a Domain are Published, Domain Enrichment may
+  compare them in a batch, verify the provider and add missing relations.
 
-Refresh và reconciliation thuộc lifecycle ở
-[phần 09](09-ingest-and-refresh.md); conflict thuộc
-[phần 07](07-conflicts-questions-and-maintainer-guidance.md).
+Refresh and reconciliation belong to the lifecycle in
+[section 09](09-ingest-and-refresh.md); conflicts belong to
+[section 07](07-conflicts-questions-and-maintainer-guidance.md).
 
-## Khi nào hai đầu mối là cùng một resource?
+## When are two endpoints the same resource?
 
-Identity mạnh như ARN hoặc provider resource ID cho phép Agent đề xuất
-reconcile. Chỉ giống display name, tên biến hoặc resource name thì chưa đủ.
+Strong identity such as an ARN or provider resource ID lets the agent propose
+reconciliation. A matching display name, variable name or resource name is not enough.
 
-Khi chưa có identity mạnh, config reference, contract, infrastructure
-input/output và endpoint chỉ tạo match candidate. Trong Domain Enrichment,
-người dùng có thể cấp một CLI session đã login để Provider Verification kiểm
-tra read-only; MCP không login, lưu credential hoặc scan toàn bộ account/region.
+Without strong identity, a configuration reference, contract, infrastructure
+input/output or endpoint creates only a match candidate. During Domain
+Enrichment, the user may provide a logged-in CLI session so Provider
+Verification can check read-only; MCP does not log in, store credentials or
+scan an entire account/region.
 
-Nếu một Published concept đã là canonical và candidate mới chỉ bổ sung evidence,
-Domain Enrichment có thể enrich concept đó qua proposal. Duplicate trong cùng
-proposal có thể được gom trước Accept.
+If a Published concept is canonical and a new candidate adds evidence, Domain
+Enrichment may enrich that concept through a proposal. Duplicates in one proposal
+may be grouped before Accept.
 
-Nếu hai concept đều đã Published, MVP giữ cả hai và tạo Question/merge
-candidate. Nó không tự merge, xóa hoặc tạo redirect; migration đó để sau MVP.
+If both concepts are already Published, the MVP keeps both and creates a
+Question/merge candidate. It does not automatically merge, delete or create a
+redirect; that migration is post-MVP.
 
-Một lần Domain Enrichment có thể xử lý nhiều repository, Questions và relation
-candidate của cùng Domain. Kết quả được gom thành một publication change để
-review; verification thành công không tự sửa Published knowledge.
+One Domain Enrichment run may process multiple repositories, Questions and
+relation candidates in the same Domain. Results are grouped into one publication
+change for review; successful verification never directly edits Published knowledge.
 
-## Mock qualification của Domain Enrichment
+## Domain Enrichment mock qualification
 
-Khi cần kiểm chứng topology nhưng chưa có AWS account hoặc Published Domain đủ
-rộng, qualification harness có thể dùng một temporary Published fixture. Agent
-điều tra source/evidence hiện có, ghi các liên kết liên repo thành candidate
-hypothesis có confidence, rồi gắn queue name/account/region và ARN deterministic
-trong fixture. Mock CLI trả về đúng shape của released SQS read-only profile để
-chạy cùng reconciliation/proposal path.
+When topology needs validation but no AWS account or sufficiently broad Published
+Domain is available, the qualification harness may use a temporary Published
+fixture. The agent investigates existing source/evidence, records cross-repository
+links as candidate hypotheses with confidence, then attaches deterministic queue
+name/account/region and ARN values in the fixture. A mock CLI returns the exact
+shape of the released read-only SQS profile so the same reconciliation/proposal
+path runs.
 
-Mock chỉ chứng minh workflow và các outcome (`confirmed`, `rejected`,
-`unresolved`, `failed`); nó không chứng minh resource tồn tại trong AWS. Mock
-observation phải bị giới hạn trong test/qualification state, không được trở thành
-provider truth hoặc được publish vào Hub thật. Candidate generator tổng quát,
-account scan và tự động suy luận quan hệ không nằm trong capability này.
+The mock proves workflow and outcomes (`confirmed`, `rejected`, `unresolved`,
+`failed`); it does not prove that a resource exists in AWS. Mock observations are
+limited to test/qualification state and must not become provider truth or be
+published to the real Hub. A general candidate generator, account scan and
+automatic relation inference are outside this capability.
 
-Cùng một logical resource ở nhiều region mặc định vẫn là một concept với nhiều
-deployment reference. Chỉ tách khi từng deployment có vai trò, lifecycle hoặc
-giá trị query độc lập.
+The same logical resource in multiple regions is one concept with multiple
+deployment references by default. Split it only when each deployment has an
+independent role, lifecycle or query value.
 
-## Identity và giới hạn MVP
+## Identity and MVP limits
 
-Concept ID ổn định và tách khỏi display name. External identity dùng envelope
-provider-neutral; AWS/SQS là verification profile đầu tiên. Account và region
-được xác nhận explicit khi identity cần scope đó, không thử nhiều region.
+Concept IDs are stable and separate from display names. External identity uses a
+provider-neutral envelope; AWS/SQS is the first verification profile. Account and
+region are explicitly confirmed when identity needs that scope; the system does
+not try multiple regions.
 
-Merge/redirect hai Published concepts là post-MVP. Question giữ evidence để một
-migration được thiết kế và review sau mà không mất dấu duplicate.
+Merging or redirecting two Published concepts is post-MVP. A Question retains
+evidence so a later migration can be designed and reviewed without losing track
+of the duplicate.
