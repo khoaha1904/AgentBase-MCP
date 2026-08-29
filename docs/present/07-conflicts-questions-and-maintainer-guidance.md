@@ -1,84 +1,81 @@
-# 07 — Dữ liệu xung đột, Questions và Maintainer Guidance
+# 07 — Conflicts, Questions and Maintainer Guidance
 
-> Trạng thái: Governance foundation và AWS/SQS batch Question resolution đã implement.
+> Status: Governance foundations and AWS/SQS batch Question resolution are implemented.
 
-## Câu trả lời ngắn
+## Short answer
 
-Hub cho phép nhiều claim mâu thuẫn cùng tồn tại nếu mỗi claim giữ đúng nguồn.
-Question ghi điều chưa rõ; câu trả lời của người dùng là evidence có phạm vi,
-không phải sự thật tuyệt đối.
+The Hub allows conflicting claims to coexist when each claim keeps its source.
+A Question records what is unresolved; a user's answer is scoped evidence, not
+absolute truth.
 
-Question cũng là shared Hub knowledge. Trước Accept nó nằm trong proposal; sau
-Accept nó vẫn là Local Draft chỉ dành cho review. Chỉ sau khi PR merge và máy
-khác synchronize Published Hub thì Question mới xuất hiện trong ordinary query.
-Private machine ledger nếu có chỉ là cache dựng lại được, không phải authority.
+Questions are shared Hub knowledge. Before Accept, a Question is in the proposal;
+after Accept it remains a Local Draft for review. Only after the PR is merged and
+another machine synchronizes the Published Hub does the Question appear in ordinary query.
+Any private machine ledger is rebuildable cache, not authority.
 
-## Xung đột được giữ thế nào?
+## How are conflicts preserved?
 
-- Nhiều nguồn cùng hỗ trợ một claim được giữ làm provenance.
-- Nhiều claim mâu thuẫn được trình bày song song; Hub không tự chọn theo độ mới
-  hoặc trạng thái Published.
-- Source role được giữ rõ: code/config/API spec/IaC mô tả implementation hoặc
-  desired technical state; README/docs có thể mô tả intent hay contract cũ.
-  Không có luật chung “code luôn thắng docs”.
-- Nguồn quá mơ hồ để tạo claim được giữ cùng candidate/Question.
-- Question và limitation chưa giải quyết vẫn có thể publish nếu ghi rõ điều chưa
-  biết và nguồn liên quan.
+- Multiple sources supporting one claim are retained as provenance.
+- Conflicting claims are shown in parallel; the Hub does not choose by recency or
+  Published status.
+- Source role remains explicit: code/config/API spec/IaC describes implementation
+  or desired technical state; README/docs may describe intent or an older contract.
+  There is no universal “code always wins docs” rule.
+- A source too ambiguous for a claim is kept with its candidate/Question.
+- Unresolved Questions and limitations may still be Published when the unknown and
+  related source are explicit.
 
-Mâu thuẫn ảnh hưởng behavior, ownership, relation hoặc vận hành được gom thành
-Question. Khác biệt nhỏ có thể được giữ trực tiếp dưới dạng các snapshot/claim
-có nguồn mà không ngắt Initial Ingest.
+Conflicts affecting behavior, ownership, relations or operations are grouped as
+Questions. Small differences may remain as sourced snapshots/claims without
+interrupting Initial Ingest.
 
-## Vòng đời của Question
+## Question lifecycle
 
 ```text
-Open ──người dùng xử lý──→ Resolved
-                             │ evidence mới mâu thuẫn
-                             ↓
-                         Needs Review
-                             │ người dùng xử lý lại
-                             └──────────────→ Resolved
+Open ──user handles it──→ Resolved
+                            │ new conflicting evidence
+                            ↓
+                        Needs Review
+                            │ user handles it again
+                            └──────────────→ Resolved
 ```
 
-- `Open`: đang chờ câu trả lời hoặc điều tra.
-- `Resolved`: hiện không còn chờ câu trả lời; không có nghĩa một claim đã thành
-  sự thật tuyệt đối.
-- `Needs Review`: guidance cũ gặp evidence mới mâu thuẫn.
+- `Open`: waiting for an answer or investigation.
+- `Resolved`: no longer waiting; this does not mean a claim is absolute truth.
+- `Needs Review`: older guidance conflicts with new evidence.
 
-Sau khi người dùng đánh giá evidence và cập nhật guidance nếu cần, Question từ
-`Needs Review` trở lại `Resolved`.
+After the user evaluates evidence and updates guidance if needed, a Question in
+`Needs Review` returns to `Resolved`.
 
-Trạng thái Question độc lập với trạng thái xuất bản. Ví dụ, một Question
-`Resolved` vẫn có thể chỉ là Local Draft; một Question `Open` vẫn có thể đã
-Published.
+Question state is independent from publication state. A `Resolved` Question may
+still be a Local Draft, and an `Open` Question may already be Published.
 
 ## Maintainer Guidance
 
-Câu trả lời của người dùng được lưu thành user evidence hoặc Maintainer
-Guidance, không xóa nguồn cũ. Trong MVP, Guidance chỉ áp dụng cho exact
-Question/subject đang hỏi. Một quyết định rộng hơn được viết thành update của
-Domain/System concept qua Proposal bình thường, không dùng scope engine riêng.
+A user's answer is stored as user evidence or Maintainer Guidance; it does not
+delete old sources. In the MVP, Guidance applies only to the exact Question or
+subject being asked. A broader decision is written as a normal Domain/System
+concept update through a Proposal, not through a separate scope engine.
 
-Evidence mới cùng hướng được bổ sung vào provenance. Evidence mới mâu thuẫn đưa
-Question về `Needs Review`, đồng thời vẫn giữ guidance và lịch sử cũ.
+New evidence aligned with existing guidance is added to provenance. Conflicting
+evidence moves the Question to `Needs Review` while retaining old guidance and history.
 
-Questions không cần chặn từng lần Ingest. Domain Enrichment có thể gom Questions
-của nhiều repository trong cùng Domain, lấy thêm provider evidence và cho người
-dùng xử lý theo batch. Mọi câu trả lời, state transition và relation phát sinh
-vẫn tạo Local Draft mới trước khi publish.
+Questions do not block every Ingest. Domain Enrichment may group Questions from
+multiple repositories in one Domain, gather provider evidence and let the user
+handle them in a batch. Every answer, state transition and resulting relation
+still creates a new Local Draft before publication.
 
-Domain Enrichment tự xác minh trước. Kết quả deterministic chỉ cần show cùng
-evidence; trường hợp có lựa chọn hợp lý nhưng chưa đủ authority được hỏi với một
-recommended option; trường hợp chưa có đáp án đáng tin được hỏi trực tiếp cùng
-context/example và có thể defer. Recommendation chưa được người dùng chọn không
-trở thành Maintainer Guidance.
+Domain Enrichment verifies first. Deterministic results only need to show their
+evidence; a reasonable but unauthorized choice is presented with a recommended
+option; no trustworthy answer is asked directly with context/example and may be
+deferred. An unselected recommendation never becomes Maintainer Guidance.
 
-## Knowledge đã sai hoặc lỗi thời
+## Incorrect or stale knowledge
 
-MVP không thêm trạng thái `superseded/retracted`. Khi evidence hoặc maintainer
-đã xác nhận rõ, Refresh tạo Proposal sửa hoặc xóa exact knowledge/concept cũ.
-Preview và PR phải nêu thứ bị xóa, lý do và evidence; Git giữ lịch sử và cho phép
-revert.
+The MVP has no `superseded/retracted` state. When evidence or a maintainer clearly
+confirms a correction, Refresh creates a Proposal to edit or remove the exact old
+knowledge/concept. Preview and PR state what is removed, why and with which
+evidence; Git preserves history and permits revert.
 
-Chỉ có hai nguồn mâu thuẫn thì chưa đủ để tự xóa một phía. Hub vẫn giữ cả hai
-positions cùng provenance và Question cho tới khi có căn cứ thay đổi rõ ràng.
+Two conflicting sources alone are not enough to delete one side. The Hub keeps
+both positions with provenance and a Question until there is clear grounds for change.

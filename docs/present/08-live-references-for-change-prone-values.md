@@ -1,66 +1,69 @@
-# 08 — Observed snapshots và source references
+# 08 — Observed snapshots and source references
 
-> Trạng thái: Snapshot-first, AWS/SQS observation, local freshness report và read-only Hub CI đã implement.
+> Status: Snapshot-first behavior, AWS/SQS observation, local freshness reporting
+> and read-only Hub CI are implemented.
 
-## Câu trả lời ngắn
+## Short answer
 
-Hub lưu một số giá trị nhỏ, hữu ích dưới dạng **đã quan sát**, kèm source file,
-revision và thời điểm. AgentBase không xây live-reference engine tới từng symbol,
-function hoặc config field.
+The Hub stores a few small, useful values as **observed**, with their source
+file, revision and observation time. AgentBase does not build a live-reference
+engine for every symbol, function or configuration field.
 
 ```text
 Observed values:
-- TTL: 7 ngày
+- TTL: 7 days
 - Batch size: 100
 
 Source: crawler-api / config/queue.ts
 Observed: commit abc123 / 2026-08-22
 ```
 
-Một file reference có thể làm provenance cho nhiều observed values. Hub không
-snapshot toàn bộ config, source hoặc provider response.
+One file reference may provide provenance for several observed values. The Hub
+does not snapshot all configuration, source or provider responses.
 
-## Khi query
+## During a query
 
-- Query bình thường trả snapshot cùng revision/time và freshness warning.
-- Hub freshness trả danh sách Repository warning-only, ưu tiên unknown rồi cũ nhất;
-  không gọi source và không tự Refresh.
-- Nếu user hỏi **giá trị hiện tại** và source có local/workspace, Agent dùng MCP
-  đọc file/code graph bình thường; không gọi một symbol resolver riêng.
-- Source repository khác chỉ được đọc qua bounded MCP repository access bằng
-  MCP-managed token. Agent không tự dùng `gh` hoặc credential riêng.
-- Không có quyền/source unavailable: trả observed snapshot và nói rõ không xác
-  minh được current value.
-- File reference hỏng: giữ snapshot; Refresh hoặc maintainer có thể đề xuất một
-  shared Question qua proposal để review.
+- A normal query returns the snapshot with revision/time and a freshness warning.
+- Hub freshness returns warning-only Repository entries, prioritizing unknown and
+  then oldest; it does not call source or trigger Refresh.
+- If the user asks for the **current value** and source is local/workspace, the
+  agent reads the file/Code Graph through normal MCP; it does not call a separate
+  symbol resolver.
+- Another source repository is read only through bounded MCP repository access with
+  an MCP-managed token. The agent does not use `gh` or a separate credential.
+- Without access or when source is unavailable, return the observed snapshot and
+  state that the current value could not be verified.
+- A broken file reference keeps the snapshot; Refresh or a maintainer may propose
+  a shared Question through a reviewable proposal.
 
-Snapshot không được diễn đạt như current truth. Exact age/revision được hiển thị;
-không cần một TTL threshold engine hay tự động Refresh.
+A snapshot must not be described as current truth. Exact age/revision is shown;
+there is no TTL-threshold engine or automatic Refresh.
 
-## Khi nào lưu snapshot?
+## When is a snapshot stored?
 
-- Giá trị nhỏ, non-sensitive, dễ đọc và hữu ích khi con người/query xem Hub.
-- Giá trị hiện trực tiếp trong code/config/docs có thể được Ingest/Refresh ghi.
-- Canonical ARN/name/account/region nằm ở external identity metadata khi provider
-  evidence xác minh, không duplicate thành snapshots. Chỉ operational scalar
-  nhỏ mới dùng observed value; provider CLI thuộc Domain Enrichment.
-- Thiếu detail nhỏ không có query value thì bỏ, không snapshot cho đủ coverage.
+- The value is small, non-sensitive, readable and useful in Hub/query views.
+- The value is directly present in code/config/docs that Ingest/Refresh can record.
+- Canonical ARN/name/account/region belong in external identity metadata when
+  provider evidence verifies them, not duplicated as snapshots. Only small
+  operational scalars use observed values; provider CLI belongs to Domain Enrichment.
+- A small detail with no query value is omitted rather than snapshotted for coverage.
 
-## Quyền và dữ liệu nhạy cảm
+## Authorization and sensitive data
 
-Hub là một trust boundary chung: ai đọc được Hub thì đọc được mọi snapshot.
-Credential, token, secret, signed URL, connection string và dữ liệu nhạy cảm
-tương đương tuyệt đối không được snapshot hoặc publish.
+The Hub is a shared trust boundary: anyone who can read it can read every snapshot.
+Credentials, tokens, secrets, signed URLs, connection strings and equivalent
+sensitive data must never be snapshotted or Published.
 
-Reference có thể nói config sử dụng một secret hoặc Parameter Store path, nhưng
-không lưu/resolve secret value. Giá trị bị loại không làm các knowledge item an
-toàn khác fail. Secret đã Published phải bị ngừng trả, gỡ qua reviewed proposal
-và rotate ngoài AgentBase khi cần; MVP không xây incident-management system.
+A reference may say that configuration uses a secret or Parameter Store path, but
+it must not store or resolve the secret value. Excluding one value must not fail
+other safe knowledge items. A Published secret must stop being returned, be
+removed through a reviewed proposal and be rotated outside AgentBase when needed;
+the MVP does not build incident management.
 
 ## Boundary
 
-- Source reference là provenance/file navigation, không phải executable locator.
-- Snapshot là observed knowledge, không phải source thứ hai.
-- Đọc current source là normal MCP source-reading action theo nhu cầu.
-- Provider lookup chỉ chạy trong confirmed Domain Enrichment, không trong Ingest
-  hoặc ordinary Hub query.
+- A source reference is provenance/file navigation, not an executable locator.
+- A snapshot is observed knowledge, not a second source of truth.
+- Reading current source is a normal MCP source-reading action when needed.
+- Provider lookup runs only inside confirmed Domain Enrichment, never in Ingest or
+  ordinary Hub query.
