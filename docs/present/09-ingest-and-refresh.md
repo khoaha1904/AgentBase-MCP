@@ -1,26 +1,26 @@
-# 09 — Ingest và Refresh
+# 09 — Ingest and Refresh
 
-> Trạng thái: Initial Ingest/Refresh, Batch Initial Ingest, Capability 046
-> broad-discovery runtime và Capability 051 reliability hardening đã
-> implement; released-skill qualification còn pending.
+> Status: Initial Ingest/Refresh, Batch Initial Ingest, Capability 046
+> broad-discovery runtime and Capability 051 reliability hardening are
+> implemented; released-skill qualification remains pending.
 
-## Câu trả lời ngắn
+## Short answer
 
 ```text
-Initial Ingest → tạo knowledge ban đầu thành Local Draft
-Refresh        → so sánh source với knowledge đã có
-               → tạo Local Draft update
+Initial Ingest → creates initial knowledge as a Local Draft
+Refresh        → compares the source with existing knowledge
+               → creates a Local Draft update
 ```
 
-`Initial Ingest` là lần Ingest đầu tiên của một canonical repository. Từ đó về
-sau repository chỉ dùng Refresh. Hai workflow cần một Remote Hub profile active;
-chưa config Hub thì AgentBase chỉ dùng Code Graph.
+`Initial Ingest` is the first ingest of a canonical repository. From then on,
+the repository uses Refresh. Both workflows require an active Remote Hub
+profile; without a configured Hub, AgentBase uses Code Graph only.
 
-## Scan workspace trước khi chọn workflow
+## Scan the workspace before choosing a workflow
 
-`agentbase-scan` inventory bounded Git repositories trong workspace người dùng
-chọn mà không dựng Code Graph. Nó đối chiếu strong repository identity với
-Published Hub và hiển thị ngắn:
+`agentbase-scan` inventories bounded Git repositories in the workspace selected
+by the user without building a Code Graph. It compares strong repository
+identity with the Published Hub and displays a short summary:
 
 | State | Suggested action |
 |---|---|
@@ -31,174 +31,192 @@ Published Hub và hiển thị ngắn:
 | Init/Refresh open PR | Wait or reconcile |
 | Ambiguous fork/mirror/identity | Confirm |
 
-Kết quả kèm last-observed date/revision, rồi chờ người dùng chọn tất cả hoặc một
-subset. Scan không tự chạy suggestion. Nhiều repo mới đi vào Batch Initial
-Ingest; repo đã Published chạy single Refresh tuần tự. Không có remote Hub thì
-Scan chỉ liệt kê local repos và báo Hub classification unavailable.
+The result includes the last-observed date/revision, then waits for the user to
+select all repositories or a subset. Scan does not run suggestions
+automatically. Multiple new repositories enter Batch Initial Ingest; published
+repositories run a single Refresh sequentially. Without a Remote Hub, Scan
+only lists local repositories and reports that Hub classification is
+unavailable.
 
 ## Initial Ingest
 
-- Đọc repository lần đầu để tìm concept, relation và evidence.
-- Chỉ hỏi các owner decision tối thiểu như Domain; không yêu cầu provider login
-  hoặc dừng để điều tra repository khác.
-- Batch Ingest vẫn cô lập discovery theo repository và tạo concept, relation
-  nội bộ, limitation và Question tự động.
-- Match chưa chắc chắn chỉ tạo candidate/Question, không tự merge hoặc tự tạo
-  relation xuyên repository.
-- Discover kiểm tra năm lane: identity, runtime, interface/event, integration/
-  data/channel và deploy/operations. Tín hiệu quan trọng phải được xử lý thành
-  `materialized`, Question hoặc ignored có lý do. Concept hay embedded là thuộc
-  tính của candidate được chọn, không phải một quyết định lặp lại ở Seed group.
-- Completeness toàn repository và số lượng concept không phải success gate.
-  Proposal vẫn selective, nhưng không được sparse bằng cách bỏ qua tín hiệu có
-  giá trị cao mà không ghi nhận.
-- MCP chuẩn bị embedded knowledge trong parent. Agent có thể viết lại nhãn/prose
-  cho dễ đọc; Finalize xác nhận nó còn tồn tại bằng exact Receipt evidence, không
-  bắt câu chữ phải giống nguyên identity hint. Nếu Agent làm mất cả row,
-  Finalize phục hồi row chuẩn từ Receipt thay vì dùng repair budget.
+- Read the repository for the first time to find concepts, relations and
+  evidence.
+- Ask only for the minimum owner decisions, such as Domain; do not require
+  provider login or stop to investigate another repository.
+- Batch Ingest still isolates discovery per repository and automatically creates
+  concepts, internal relations, limitations and Questions.
+- Uncertain matches create only candidates/Questions; they do not auto-merge or
+  auto-create cross-repository relations.
+- Discover checks five lanes: identity, runtime, interface/event,
+  integration/data/channel and deploy/operations. Important signals must be
+  handled as `materialized`, a Question or an ignored item with a reason.
+  Concept versus embedded is a property of the selected candidate, not a
+  repeated decision in the Seed group.
+- Repository-wide completeness and concept count are not success gates.
+  Proposals remain selective, but high-value signals must not be omitted
+  without being recorded.
+- MCP prepares embedded knowledge in the parent. The Agent may rewrite labels
+  or prose for readability; Finalize confirms that it still exists with exact
+  Receipt evidence and does not require the wording to match the original
+  identity hint. If the Agent removes the entire row, Finalize restores the
+  canonical row from the Receipt instead of using the repair budget.
 
-Preflight của Hub Init bind exact remote default-branch commit trước Discover.
-Checkout hiện tại chỉ được reuse khi clean và trùng exact commit đó; nếu repo
-đang ở feature branch, dirty hoặc khác commit, MCP dùng detached worktree/cache
-tạm của AgentBase ngoài source repo và không checkout/stash/sửa workspace. Mọi
-Hub-bound Init/Batch/Refresh dùng token Hub trên cùng host qua HTTPS; không dùng
-SSH hay ambient Git credential. Scan không build graph. Không có
-active Remote Hub thì AgentBase chỉ Scan và dùng source/Code Graph, không tạo
-OKF Draft.
+Hub Init preflight binds the exact remote default-branch commit before Discover.
+The current checkout is reused only when it is clean and matches that exact
+commit; if the repository is on a feature branch, dirty or at a different
+commit, MCP uses a detached temporary AgentBase worktree/cache outside the
+source repository and does not checkout, stash or modify the workspace. Every
+Hub-bound Init/Batch/Refresh uses the Hub token on the same host over HTTPS; it
+does not use SSH or ambient Git credentials. Scan does not build a graph.
+Without an active Remote Hub, AgentBase only scans and uses source/Code Graph;
+it does not create an OKF Draft.
 
-Mỗi canonical repository chỉ Initial Ingest một lần. Không có remote lock vì
-rủi ro hai máy cùng làm việc này rất thấp. Nếu bị trùng, bản publish trước giữ
-vai trò canonical; bản còn lại bị hủy, pull Hub rồi tạo lại thay đổi bằng
-Refresh.
+Each canonical repository is Initial Ingested only once. There is no remote
+lock because the risk of two machines doing this simultaneously is very low. If
+duplication occurs, the first published version remains canonical; the other
+version is cancelled, pulls the Hub and recreates its changes through Refresh.
 
 ## Refresh
 
-- Bắt đầu từ knowledge/evidence đã có để tìm phần mới, thay đổi hoặc không còn
-  thấy trong source.
-- Chỉ cập nhật contribution của repository đang đọc; không xóa evidence của
-  repository khác.
-- Không tự xóa knowledge cũ chỉ vì một lần discovery không thấy. Git/source diff
-  có thể hỗ trợ một explicit correction/removal proposal, nhưng PR phải
-  trình bày reason/evidence để reviewer quyết định.
-- Refresh một repository reconcile với Published Hub và exact pending proposal/
-  publication chain của chính repository đó khi workflow cho phép; unrelated
-  Local Draft không vào ordinary matching. Repository khác không cần có trên máy.
-- Mọi kết quả vẫn là Local Draft và đi qua publication lifecycle ở
-  [phần 11](11-review-accept-and-publish.md).
+- Start from existing knowledge/evidence to find parts that are new, changed or
+  no longer visible in the source.
+- Update only the contribution of the repository being read; do not delete
+  evidence from another repository.
+- Do not automatically delete old knowledge merely because one discovery pass
+  cannot find it. Git/source diff may support an explicit correction/removal
+  proposal, but the PR must present the reason/evidence for reviewer decision.
+- Refresh reconciles one repository with the Published Hub and that repository's
+  exact pending proposal/publication chain when the workflow permits it;
+  unrelated Local Drafts are excluded from ordinary matching. The other
+  repository does not need to be present on the machine.
+- Every result remains a Local Draft and goes through the publication lifecycle
+  in [section 11](11-review-accept-and-publish.md).
 
-Refresh không rebuild Hub, không tự publish và không coi “không tìm thấy” là
-bằng chứng chắc chắn rằng knowledge đã sai. Correction/removal theo quy tắc ở
-[phần 07](07-conflicts-questions-and-maintainer-guidance.md).
+Refresh does not rebuild the Hub, publish automatically or treat “not found” as
+conclusive evidence that knowledge is wrong. Correction/removal follows the
+rules in [section 07](07-conflicts-questions-and-maintainer-guidance.md).
 
-## Trạng thái qualification hiện tại
+## Current qualification status
 
-- Initial Ingest dùng bounded five-stage lifecycle, catalog 7 skeleton/template
-  và dừng ở inspectable proposal. Benchmark ECS full-stack bằng Sol tạo 7
-  concept hữu ích mà không promote mọi AWS resource.
-- Capability 046 giữ nguyên lifecycle/catalog nhưng chuyển từ candidate-only
-  validation sang `Discovery Seed → Inventory Receipt → OKF`, đồng thời benchmark
-  released skill theo tier tín hiệu thay vì exact concept inventory.
-- Khi một Question cần source evidence, AI chỉ chọn candidate và evidence đã
-  gửi trong cùng Inventory. MCP tự bind repository URI và exact revision vào
-  Receipt; AI không tự ghép provenance string.
-- Inventory chỉ giữ quyết định có ý nghĩa: origin group, candidate outputs,
-  Question hoặc ignored reason. MCP tự sinh item/QuestionPlan ID, parent mapping
-  và internal references; bounded Seed source samples phục vụ review chứ không
-  phải allowlist đầy đủ của repository evidence.
-- Refresh dùng exact commit diff trước known gaps/discovery, giữ foreign evidence
-  và dừng ở proposal. Hai run Terra liên tiếp cập nhật nhất quán health contract
-  từ `/status` sang `/health` ở code + Terraform.
-- Đây là model policy của benchmark, không phải MCP tự chọn hoặc bắt buộc model
-  trong production.
+- Initial Ingest uses a bounded five-stage lifecycle, a catalog of 7
+  skeletons/templates and stops at an inspectable proposal. The Sol ECS
+  full-stack benchmark creates 7 useful concepts without promoting every AWS
+  resource.
+- Capability 046 keeps the lifecycle/catalog but moves from candidate-only
+  validation to `Discovery Seed → Inventory Receipt → OKF`, and qualifies the
+  released skill by signal tier instead of an exact concept inventory.
+- When a Question needs source evidence, the AI selects only candidates and
+  evidence submitted in the same Inventory. MCP binds the repository URI and
+  exact revision to the Receipt; the AI does not assemble a provenance string.
+- Inventory retains only meaningful decisions: origin group, candidate outputs,
+  a Question or an ignored reason. MCP generates item/QuestionPlan IDs, parent
+  mappings and internal references; bounded Seed source samples support review
+  and are not a complete allowlist of repository evidence.
+- Refresh uses the exact commit diff before known gaps/discovery, preserves
+  foreign evidence and stops at a proposal. Two consecutive Terra runs update
+  the health contract consistently from `/status` to `/health` in code and
+  Terraform.
+- This is the benchmark's policy model, not a model that MCP selects or
+  requires in production.
 
 ## Domain Enrichment
 
-Sau khi nhiều repository của một Domain đã Published, người dùng có thể chạy
-một workflow batch riêng để:
+After multiple repositories in a Domain have been Published, the user can run a
+separate batch workflow to:
 
-- đọc knowledge và Questions của các repository đã chọn;
-- xác minh bounded resource candidates qua provider CLI đã login;
-- reconcile identity và bổ sung cross-repository relations;
-- trả lời hoặc đưa Questions về trạng thái phù hợp.
+- read knowledge and Questions from selected repositories;
+- verify bounded resource candidates through a provider CLI that is already
+  logged in;
+- reconcile identity and add cross-repository relations;
+- answer Questions or move them to the appropriate state.
 
-Workflow này không phải Ingest hoặc Refresh và không sửa Published Hub trực
-tiếp. Nó tạo một Local Draft chung, sau đó đi qua review, PR và merge như mọi
-knowledge change khác. Provider calls chỉ nhắm vào candidate liên quan; không
-scan mù toàn account hoặc mọi region.
+This workflow is not Ingest or Refresh and does not edit the Published Hub
+directly. It creates a shared Local Draft, then goes through review, PR and
+merge like every other knowledge change. Provider calls target only related
+candidates; they do not blindly scan the whole account or every region.
 
 ## Qualification Domain Crawler
 
-Trước khi dùng dữ liệu thật để mở rộng Crawler, AgentBase có một qualification
-dataset ba repository: pipeline hiện có và hai repository fixture nhỏ mô phỏng
-publisher/worker dùng chung một SQS queue. Dataset này chỉ là dữ liệu kiểm thử
-tạm thời, không phải canonical Hub và không ghi provider identity giả.
+Before using real data to expand the Crawler, AgentBase has a three-repository
+qualification dataset: the existing pipeline and two small fixture repositories
+that model a publisher/worker pair sharing an SQS queue. This dataset is
+temporary test data, not the canonical Hub, and does not record fake provider
+identity.
 
-Qualification dùng cùng Published projection, query, Domain site và mock Domain
-Enrichment boundaries production; Batch Initial Ingest lifecycle của ba member
-được giữ ở E2E deterministic hiện có, còn harness này materialize một Published
-fixture source-backed từ đúng các commit đó để đo topology/resource coverage.
-Mock provider chỉ trả kết quả CLI xác định để kiểm tra identity matching, retry
-và proposal safety; nó không biến giả thuyết thành Published fact. SNS và các
-provider khác vẫn ngoài phạm vi slice này.
+Qualification uses the same Published projection, query, Domain site and mock
+Domain Enrichment boundaries as production; the three members' Batch Initial
+Ingest lifecycle is kept in the existing deterministic E2E, while this harness
+materializes a source-backed Published fixture from those exact commits to
+measure topology/resource coverage. The mock provider returns deterministic CLI
+results to test identity matching, retry and proposal safety; it does not turn
+hypotheses into Published facts. SNS and other providers remain outside this
+slice.
 
-Success được đo bằng source-backed node/resource/relation coverage, query hit,
-HTML build receipt và việc canonical Hub không bị mutate. Nếu thiếu evidence,
-report phải ghi rõ limitation thay vì suy diễn topology.
+Success is measured by source-backed node/resource/relation coverage, query
+hits, the HTML build receipt and the fact that the canonical Hub is not mutated.
+If evidence is missing, the report must state the limitation instead of
+inferring topology.
 
 ## OKF Freshness
 
-Freshness là warning về tuổi của repository/source contribution, không phải
-phán quyết knowledge sai và không liên quan tới graph-cache freshness.
+Freshness is a warning about the age of a repository/source contribution, not a
+judgment that knowledge is wrong and not graph-cache freshness.
 
-- MCP query có thể hiển thị source revision, thời điểm observed và age.
-- Khi current local source đã advance, MCP cảnh báo knowledge được quan sát ở
-  revision cũ.
-- Local MCP/CLI và scheduled Hub CI dùng cùng derived Repository freshness report.
-- Warning không tự Refresh, không ẩn/xóa knowledge và không chặn Publish.
-- Report không phải source of truth; nếu lưu vào Hub Git thì đi qua PR, không
-  push thẳng `main`.
+- MCP query may display the source revision, observed time and age.
+- When the current local source has advanced, MCP warns that knowledge was
+  observed at an older revision.
+- Local MCP/CLI and scheduled Hub CI use the same derived Repository freshness
+  report.
+- The warning does not trigger Refresh, hide/delete knowledge or block Publish.
+- The report is not a source of truth; if stored in the Hub Git repository, it
+  goes through a PR and does not push directly to `main`.
 
-## Khi một lần chạy thất bại
+## When a run fails
 
-Failure được cô lập theo repository. Trong batch, checkpoint của repository đã
-hoàn thành vẫn được giữ để retry, nhưng toàn batch còn `Incomplete`: chưa có
-atomic proposal để query, Accept hoặc Publish.
+Failure is isolated per repository. In a batch, the checkpoint for a completed
+repository is retained for retry, but the overall batch remains `Incomplete`:
+there is no atomic proposal available for query, Accept or Publish.
 
-Lỗi riêng của một member không dừng các member sau nếu cleanup đã được xác nhận
-an toàn. Lỗi authority chung, process hoặc cleanup không chắc chắn sẽ dừng cả
-batch. Finalize chỉ mở khi mọi member hoàn thành hoặc người dùng sửa membership.
+A member-specific error does not stop later members once cleanup is confirmed
+safe. A shared authority, process or uncertain-cleanup error stops the entire
+batch. Finalize opens only after every member completes or the user repairs the
+membership.
 
-Người dùng có thể retry hoặc bỏ lần chạy lỗi. Retry cập nhật đúng draft cũ,
-không tạo concept/relation trùng; khi thành công, MCP chạy lại reconciliation
-cần thiết.
+The user can retry or abandon a failed run. Retry updates the same old draft and
+does not create duplicate concepts/relations; after success, MCP reruns the
+necessary reconciliation.
 
-Với Init, Hub base đổi trước Finalize thì MCP rematch, cấp Receipt/session mới
-nhưng reuse Seed/Inventory cùng source. Normal Refresh không có Receipt; nó chỉ
-chạy lại prepare/guidance trên base mới. Không index lại nếu source không đổi;
-sau Finalize dùng publication reconciliation. P0 signal chưa
-xử lý do source/authority/adapter
-failure làm run `Incomplete`; thiếu P1/P2 có thể vẫn `Ready for review` cùng
-Question/limitation.
+For Init, if the Hub base changes before Finalize, MCP rematches, issues a new
+Receipt/session and reuses the Seed/Inventory from the same source. Normal
+Refresh has no Receipt; it reruns prepare/guidance on the new base. It does not
+re-index when the source is unchanged; after Finalize it uses publication
+reconciliation. A P0 signal that was not processed because of a
+source/authority/adapter failure leaves the run `Incomplete`; missing P1/P2
+signals may still be `Ready for review` with a Question/limitation.
 
-Capability 051 bổ sung một quy tắc vận hành: discovery không được coi một lane
-hoặc document là đầy đủ khi provider output bị thiếu, malformed hoặc bị
-redact. Ingest vẫn bounded và selective; thông tin bị giới hạn phải xuất hiện
-như limitation/Question thay vì biến mất im lặng.
+Capability 051 adds an operational rule: discovery must not treat a lane or
+document as complete when provider output is missing, malformed or redacted.
+Ingest remains bounded and selective; restricted information must appear as a
+limitation/Question rather than silently disappearing.
 
 ## Canonical repository
 
-Initial Ingest tạo một `Repository ID` ổn định trong Hub. Tên folder và remote
-URL không phải identity chính; chúng được giữ làm aliases/evidence.
+Initial Ingest creates a stable `Repository ID` in the Hub. The folder name and
+remote URL are not the primary identity; they are retained as aliases/evidence.
 
-- Rename, chuyển organization hoặc clone cùng repository ở workspace khác vẫn
-  dùng Repository ID cũ và chạy Refresh khi xác minh được lineage/provider ID.
-- Fork phát triển độc lập là repository mới và có thể giữ relation `forked-from`.
-- Mirror hoặc copy có lineage mơ hồ phải hỏi người dùng trước khi chọn Initial
-  Ingest hay Refresh.
+- Renaming, moving an organization or cloning the same repository into another
+  workspace still uses the old Repository ID and runs Refresh when
+  lineage/provider ID is verified.
+- An independently developed fork is a new repository and may keep a
+  `forked-from` relation.
+- A mirror or copy with ambiguous lineage must ask the user before choosing
+  Initial Ingest or Refresh.
 
-## Chưa implement
+## Not implemented yet
 
-- Batch Refresh hoặc batch trộn Init/Refresh.
-- Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
-- Persisted freshness report và ordinary-query freshness marks; local report và CI đã có.
-- Full repository-identity recovery cho mọi rename/fork/mirror edge case.
+- Batch Refresh or a batch mixing Init/Refresh.
+- Provider profiles beyond the current bounded AWS/SQS Domain Enrichment.
+- Persisted freshness reports and ordinary-query freshness marks; the local
+  report and CI already exist.
+- Full repository-identity recovery for every rename/fork/mirror edge case.
