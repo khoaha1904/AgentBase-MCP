@@ -1,19 +1,18 @@
 # 14.05 — End-to-end A/B qualification
 
-> Trạng thái: runner đã implement; real pair `2026-08-29T05-45-00Z` đạt
-> deterministic `needs_review`, owner review còn pending.
+> Status: Runner is implemented; real pair `2026-08-29T05-45-00Z` reached
+> deterministic `needs_review` and owner review remains pending.
 
-## Mục tiêu
+## Goal
 
-Đo chênh lệch của toàn bộ lifecycle nhỏ `Feature → US → Tasks` giữa:
+Measure the difference of the compact `Feature → US → Tasks` lifecycle between:
 
-- **without AgentBase**: chỉ Feature và tracker context;
-- **with AgentBase**: cùng input, nhưng được query Published Hub và local Code
-  Graph/source khi cần.
+- **without AgentBase**: Feature and tracker context only;
+- **with AgentBase**: same input, with Published Hub and local Code Graph/source
+  query when needed.
 
-Đây là phép đo tổng thể sau các phép thử cô lập Phase 1 và Phase 2. Nó không
-thay thế các phép thử đó: kết quả lớn hơn nhưng khó quy attribution cho từng
-phase.
+This is aggregate measurement after isolated Phase 1 and Phase 2 tests. It does
+not replace them: the result is broader but harder to attribute per phase.
 
 ## Boundary và impact
 

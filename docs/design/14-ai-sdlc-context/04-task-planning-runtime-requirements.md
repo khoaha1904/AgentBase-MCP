@@ -2,7 +2,7 @@
 
 ## Input
 
-Một immutable scenario gồm User Story `us:health-endpoint`, tracker root,
+One immutable scenario contains User Story `us:health-endpoint`, tracker root,
 source repository `amazon-ecs-fullstack` tại commit
 `98ee8e693a5ebc4b14f3dfe731bdc786637c1eb4`, prompt version, model và limits.
 
@@ -50,13 +50,14 @@ The comparison passes only when assisted is no worse on critical probes and adds
 at least one important probe. A real model result is `needs_review` until owner
 inspection.
 
-## Evidence hiện tại
+## Current evidence
 
-Run `2026-08-29T05-02-00Z` trả đủ hai task plans. Assisted xác định exact
-backend, Terraform và ECS boundaries tốt hơn direct, nhưng run vẫn `incomplete`:
-ban đầu dùng 13 graph calls so với budget 12; sau khi recompute với budget 16,
-một reference tới `Infrastructure/Modules/ECS/Service/main.tf` không xuất hiện
-trong retained trace. Đây là lỗi traceability của output, không được che giấu.
-Budget đã được sửa thành 16 sau khi review. Run `2026-08-29T05-10-00Z` tuân thủ
-budget nhưng model quota kết thúc trước final JSON. Cả hai được giữ nguyên; cần
-một pair mới để qualification sạch.
+Run `2026-08-29T05-02-00Z` returned both task plans. Assisted identified exact
+backend, Terraform and ECS boundaries better than direct, but remained
+`incomplete`: it initially used 13 graph calls against budget 12; after
+recomputing with budget 16, a reference to
+`Infrastructure/Modules/ECS/Service/main.tf` was absent from the retained trace.
+This output traceability failure is not hidden. The budget was changed to 16
+after review. Run `2026-08-29T05-10-00Z` respected the budget but model quota
+ended before final JSON. Both are retained; a new pair is needed for clean
+qualification.
