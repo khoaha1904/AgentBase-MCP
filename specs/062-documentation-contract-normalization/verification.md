@@ -9,7 +9,7 @@ or storage path changed.
 ## Baseline and landed snapshot
 
 - Baseline before this slice: `e9d04dd`
-- Landed commit: recorded by Git after this verification file is committed
+- Landed commit: `5bb1365`
 - Existing completed specs and `docs/present/` / `docs/design/` paths were not
   moved, deleted or rewritten.
 

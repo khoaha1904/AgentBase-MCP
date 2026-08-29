@@ -108,8 +108,10 @@ boundary: modern `2026-07-28` stdio negotiation, stateless Streamable HTTP,
 legacy `2025-11-25` compatibility, JSON Schema 2020-12 tool inputs and additive
 structured results. Remote OAuth and Tasks remain demand-driven.
 
-Current runtime authority nằm ở `docs/design`, code và active spec. Design trong
-thư mục này giải thích shape/trade-off và phải được cập nhật
+Current runtime authority nằm ở `docs/`; `docs/design` giữ system/capability
+contracts, còn code và tests là evidence. Active spec chỉ giữ change intent
+trong lúc capability đang được triển khai. Design trong thư mục này giải thích
+shape/trade-off và phải được cập nhật
 khi implementation làm một assumption cũ không còn đúng.
 
 ## Thứ tự thiết kế ban đầu
