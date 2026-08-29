@@ -6,7 +6,7 @@
 - [x] T004 Translate `docs/present/README.md` and pages 01–04.
 - [x] T005 Translate `docs/present` pages 05–08.
 - [x] T006 Translate `docs/present/09-ingest-and-refresh.md`.
-- [ ] T007 Translate `docs/present` pages 10–14.
+- [x] T007 Translate `docs/present` pages 10–14.
 - [ ] T008 Translate `docs/design/README.md` and areas 01–03.
 - [ ] T009 Translate `docs/design` areas 04–06.
 - [ ] T010 Translate `docs/design` areas 07–09.

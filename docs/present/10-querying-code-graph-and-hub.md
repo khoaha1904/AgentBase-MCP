@@ -1,121 +1,130 @@
-# 10 — Query từ Code Graph và Hub
+# 10 — Querying the Code Graph and Hub
 
-> Trạng thái: Published-only Hub query, lexical query-quality capability 049 và
-> Capability 051 failure-visibility/qualification hardening đã implement.
+> Status: Published-only Hub query, lexical query-quality capability 049 and
+> Capability 051 failure-visibility/qualification hardening are implemented.
 
-## Câu trả lời ngắn
+## Short answer
 
-Agent tự chọn Hub, source/Code Graph hoặc kết hợp cả hai. Người dùng không cần
-chọn chế độ query.
+The Agent chooses Hub, source/Code Graph or a combination. The user does not
+need to choose a query mode.
 
-Query dùng **snapshot-default**: nếu Hub/snapshot đã đủ trả lời câu hỏi thì dừng
-ở đó. Source không phải bước xác minh mặc định, kể cả khi source đang có sẵn.
+Query uses **snapshot-default**: when the Hub/snapshot is sufficient to answer
+the question, it stops there. Source is not the default verification step, even
+when it is already available.
 
-| Câu hỏi | Nguồn ưu tiên |
+| Question | Preferred source |
 |---|---|
-| Có gì, vì sao, liên kết thế nào, tìm ở đâu? | Hub |
-| Code hiện tại implement chính xác thế nào? | Source + Code Graph |
-| Liên hệ overview với implementation | Kết hợp cả hai |
+| What exists, why, how is it connected, where can I find it? | Hub |
+| How exactly does the current code implement it? | Source + Code Graph |
+| Connect overview with implementation | Both |
 
-## Khi nào dùng source?
+## When to use source
 
-Chỉ đọc source khi người dùng yêu cầu giá trị/code hiện tại, công việc
-implementation/debug/impact thật sự cần code chính xác, hoặc Hub không đủ để
-hoàn thành yêu cầu một cách an toàn. Snapshot cũ, đang có Question/conflict,
-hoặc source đang available không tự kích hoạt source read.
+Read source only when the user asks for a current value/code, when
+implementation/debug/real impact work requires exact code, or when the Hub is
+insufficient to complete the request safely. An old snapshot, an open
+Question/conflict or source being available does not automatically trigger a
+source read.
 
-Code Graph chỉ dùng cho repository đã có local hoặc trong workspace. Với remote
-repository, Agent chỉ đọc file theo reference khi credential do MCP quản lý có
-quyền; MCP không tự clone repository. Agent không được tự gọi `gh`, dùng token
-cá nhân/ambient credential hoặc một remote reader khác để vượt qua MCP.
+Code Graph is used only for repositories that are local or in the workspace.
+For a remote repository, the Agent reads a file by reference only when an
+MCP-managed credential has permission; MCP does not clone the repository
+automatically. The Agent must not call `gh`, use a personal/ambient credential
+or another remote reader to bypass MCP.
 
-Nếu thiếu quyền source, Agent trả phần Hub biết, kèm snapshot nếu có, và nói rõ
-không thể xác minh implementation hoặc giá trị hiện tại. Agent không đoán.
+If source access is unavailable, the Agent returns the Hub-known portion,
+including a snapshot when present, and states that it cannot verify the
+implementation or current value. The Agent does not guess.
 
-## Published và Local Draft
+## Published and Local Draft
 
-Hub search/read chỉ dùng exact Published commit đã synchronize về local. Local
-Draft chỉ xuất hiện trong inspect/review/PR, không tham gia câu trả lời thông
-thường. Khi chưa cấu hình remote Hub, Hub query và OKF authoring đều unavailable;
-Code Graph vẫn dùng được độc lập.
+Hub search/read uses only the exact Published commit synchronized locally.
+Local Draft appears only during inspect/review/PR and does not participate in
+ordinary answers. When a Remote Hub is not configured, Hub query and OKF
+authoring are unavailable; Code Graph remains independently usable.
 
-Search tìm concept; read trả toàn bộ Markdown gồm knowledge, relationship links,
-snapshot, provenance và Question. MVP không cần tool traversal, observed-value
-hay freshness riêng. Agent có thể đọc link tiếp theo bằng search/read khi cần.
+Search finds a concept; read returns the complete Markdown document, including
+knowledge, relationship links, snapshot, provenance and Questions. The MVP does
+not need separate traversal, observed-value or freshness tools. The Agent can
+follow another link with search/read when needed.
 
-## Hub là structured Markdown knowledge base
+## Hub is a structured Markdown knowledge base
 
-OKF chuẩn hóa corpus — frontmatter, concept path, Markdown body, `index.md` và
-links — chứ không chuẩn hóa search engine. Query vì vậy theo pattern quen thuộc
-của Markdown KB: discover result có scope và snippet trước, rồi mới đọc exact
-full document. MCP giữ contract `search → read`; một established full-text
-engine chịu trách nhiệm lexical relevance thay vì AgentBase tự tạo query
-language hoặc scoring algorithm.
+OKF standardizes the corpus—frontmatter, concept paths, Markdown bodies,
+`index.md` and links—not the search engine. Query therefore follows a familiar
+Markdown-KB pattern: discover a scoped result and snippet first, then read the
+exact full document. MCP keeps the `search → read` contract; an established
+full-text engine handles lexical relevance instead of AgentBase inventing a
+query language or scoring algorithm.
 
-Official `description` chính là one-line summary cho index, snippet và preview;
-không thêm field `summary` trùng nghĩa. Search dùng allowlist gồm identity/path,
-title, type, description, tags, Markdown headings/body, portable links và
-AgentBase accepted relation/Flow extension. Arbitrary YAML vẫn chỉ xuất hiện khi
-đọc exact document.
+The official `description` is the one-line summary for the index, snippet and
+preview; there is no duplicate `summary` field. Search uses an allowlist of
+identity/path, title, type, description, tags, Markdown headings/body, portable
+links and AgentBase-accepted relation/Flow extensions. Arbitrary YAML appears
+only when an exact document is read.
 
-Markdown body được project tạm theo heading hierarchy. Một concept có thể match
-nhiều section nhưng chỉ chiếm một result, kèm best heading path và bounded
-excerpt. Đây là retrieval state trong memory, không tạo chunk file, concept mới
-hoặc second knowledge store.
+Markdown bodies are projected temporarily by heading hierarchy. A concept can
+match several sections but occupies one result, with the best heading path and
+a bounded excerpt. This is in-memory retrieval state; it does not create chunk
+files, new concepts or a second knowledge store.
 
-Search được phép dùng portable links, canonical relationship và Flow step đã có
-để giúp Agent tìm producer, consumer, trigger hoặc endpoint liên quan. Nó không
-suy diễn relation mới, không tự type một OKF Markdown link và không thay thế
-exact Markdown read. Kết quả context giữ direction/evidence, có bound và cho
-biết phần bị omit.
+Search may use existing portable links, canonical relationships and Flow steps
+to help the Agent find a related producer, consumer, trigger or endpoint. It
+does not infer a new relation, type an OKF Markdown link automatically or
+replace an exact Markdown read. Returned context preserves direction/evidence,
+is bounded and states what was omitted.
 
-Domain scope là context để tìm knowledge, không phải thao tác viết lại Hub. Nó
-gồm concept có canonical `part-of`, concept gắn bằng structural relation với
-Repository thuộc Domain và direct external endpoint của một accepted relation.
-Nó dừng ở endpoint đó, không tự mở rộng Domain bên ngoài.
+Domain scope is context for finding knowledge, not an operation that rewrites
+the Hub. It includes concepts with canonical `part-of`, concepts structurally
+related to a Repository in the Domain and the direct external endpoint of an
+accepted relation. It stops at that endpoint and does not expand the Domain
+further automatically.
 
-Embedding, vector database, managed semantic search và durable index chỉ được
-cân nhắc khi qualification thực tế chứng minh lexical + structured scope chưa
-đủ. Static Domain Hub có thể đánh giá Pagefind riêng ở capability UI; browser
-index không trở thành authority của MCP query.
+Embedding, vector databases, managed semantic search and durable indexes are
+considered only when real qualification shows that lexical search plus
+structured scope is insufficient. The static Domain Hub may evaluate Pagefind
+separately as a UI capability; a browser index does not become the authority
+for MCP query.
 
-## Khi nguồn mâu thuẫn
+## When sources conflict
 
-Agent trình bày các claim liên quan, provenance, Question và Maintainer Guidance
-đúng scope; guidance ở `Needs Review` phải kèm cảnh báo. Observed snapshot được
-trình bày cùng tuổi dữ liệu và source reference, không xóa claim lịch sử. Khi
-người dùng hỏi giá trị hiện tại và có quyền source, Agent đọc source bằng luồng
-MCP thông thường thay vì dựa vào một live-reference resolver riêng.
+The Agent presents related claims, provenance, Questions and Maintainer Guidance
+within the correct scope; guidance in `Needs Review` includes a warning. An
+observed snapshot is shown with its data age and source reference, without
+deleting historical claims. When the user asks for a current value and has
+source access, the Agent reads source through the normal MCP flow instead of a
+separate live-reference resolver.
 
-Conflict đã lưu trong Hub vẫn phải được trình bày. Quy tắc snapshot-default chỉ
-tránh tạo thêm một vị trí tạm thời từ source khi câu trả lời hiện có đã đủ; nó
-không che hoặc tự giải quyết conflict đã tồn tại.
+A conflict stored in the Hub must still be presented. Snapshot-default only
+avoids creating another temporary source position when the existing answer is
+sufficient; it does not hide or auto-resolve an existing conflict.
 
-Quy tắc conflict canonical nằm ở
-[phần 07](07-conflicts-questions-and-maintainer-guidance.md); observed value nằm ở
-[phần 08](08-live-references-for-change-prone-values.md).
+The canonical conflict rules are in
+[section 07](07-conflicts-questions-and-maintainer-guidance.md); observed values
+are in [section 08](08-live-references-for-change-prone-values.md).
 
-Query phải phân biệt hai trường hợp:
+Query must distinguish two cases:
 
-- Document vượt giới hạn kích thước: có thể bị omit theo bound, nhưng kết quả
-  phải nói rõ phần đã omit.
-- Published document malformed: search/read phải dừng với lỗi rõ ràng, không
-  trả một graph thiếu nhưng mang vẻ hoàn chỉnh.
+- An oversized document may be omitted under the bound, but the result must say
+  which part was omitted.
+- A malformed Published document makes search/read stop with a clear error; it
+  must not return an apparently complete but incomplete graph.
 
-Đây là quy tắc minh bạch của query, không phải query language mới và không thêm
-field `summary` hoặc durable search index.
+This is query transparency, not a new query language and not an additional
+`summary` field or durable search index.
 
-## Quyền đọc
+## Read access
 
-Hub là một trust boundary chung: có quyền Hub thì đọc được toàn bộ Published
-knowledge, không có ACL riêng theo Domain, concept hoặc field. Quyền đọc source
-vẫn phụ thuộc repository/provider tương ứng.
+The Hub is one shared trust boundary: Hub access grants read access to all
+Published knowledge; there are no separate ACLs by Domain, concept or field.
+Source-read access still depends on the corresponding repository/provider.
 
-Đây là authority contract cho remote-repository query. Remote file reader được
-đưa khỏi MVP nhưng là query capability ưu tiên ngay sau phase này: nó sẽ dùng
-active MCP-managed GitHub/GitHub Enterprise token và exact repository/file/
-revision reference, không phụ thuộc path local của từng máy.
+This is the authority contract for remote-repository query. A remote file reader
+was removed from the MVP but is the next query capability after this phase: it
+will use the active MCP-managed GitHub/GitHub Enterprise token and an exact
+repository/file/revision reference, independent of each machine's local path.
 
-Cho tới khi capability đó được release, khác repo chỉ dùng được khi source đã có
-local/workspace hoặc Hub có knowledge/snapshot/reference. Agent không dùng `gh`,
-ambient credential hoặc tự clone để lách giới hạn.
+Until that capability is released, another repository can be used only when its
+source is local/in the workspace or the Hub has the knowledge,
+snapshot/reference. The Agent must not use `gh`, ambient credentials or an
+automatic clone to bypass the limit.

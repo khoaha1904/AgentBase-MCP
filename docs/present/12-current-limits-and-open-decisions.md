@@ -1,91 +1,97 @@
-# 12 — Giới hạn và phạm vi của phiên bản đầu
+# 12 — Current Limits and First-Version Scope
 
-> Trạng thái: MVP boundary đã chốt, implement và audit offline sau khi đồng bộ
-> đủ 12 phần.
+> Status: The MVP boundary is decided, implemented and audited offline after
+> all 12 sections were synchronized.
 
-## Câu trả lời ngắn
+## Short answer
 
-Phiên bản đầu ưu tiên Hub overview, Published-only query và provenance. Không
-cấu hình Remote Hub thì AgentBase chỉ dùng Code Graph/workspace Scan.
+The first version prioritizes Hub overview, Published-only query and
+provenance. Without a Remote Hub, AgentBase uses Code Graph/workspace Scan only.
 
-MCP đã hoàn tất Capability 051 hardening trên domain Crawler: content
-redaction, query failure visibility, provider contract qualification và giới
-hạn ingest đo được. Semantic search vẫn là hướng mở rộng sau này.
+AgentBase has completed Capability 051 hardening on the Domain Crawler:
+content redaction, query failure visibility, provider-contract qualification and
+measurable ingest limits. Semantic search remains a future extension.
 
-## Giới hạn được chấp nhận trong phiên bản đầu
+## Accepted first-version limits
 
-- Không có backup/shared Local Draft; máy hỏng có thể làm mất draft chưa
-  publish.
-- Reconciliation giảm relation bị bỏ sót nhưng không bảo đảm tìm hết khi các
-  repository thiếu identity chung.
-- Refresh một repository không đọc lại repository khác.
-- Không có remote lock cho Initial Ingest; nếu trùng, bản đến sau bị hủy và tạo
-  lại bằng Refresh.
-- Không có remote auto-clone hoặc provider account/region scan toàn cục.
-- Không có fine-grained ACL trong Hub; có quyền Hub thì đọc được toàn bộ
-  Published knowledge.
-- Structured IaC MVP hỗ trợ Terraform/Terragrunt; SAM/CloudFormation chưa hỗ trợ.
-- Hub query chỉ đọc synchronized Published knowledge; Local Draft thuộc review.
-- Question runtime dùng shared Hub documents; private state chỉ là cache có thể
-  rebuild, không phải authority.
-- Installer không hỏi Hub/token. `agentbase-hub` config URL, target branch và
-  token sau; mỗi profile giữ Published/Draft state riêng.
-- Một remote hoàn toàn rỗng được explicit Bootstrap thẳng target branch đúng một
-  lần với `index.md`, README và CI. Sau đó mọi knowledge đều qua PR.
+- There is no backup/shared Local Draft; a machine failure can lose an
+  unpublished draft.
+- Reconciliation reduces missed relations but cannot guarantee discovery when
+  repositories lack a shared identity.
+- Refresh of one repository does not reread another repository.
+- There is no remote lock for Initial Ingest; a duplicate is cancelled and
+  recreated through Refresh.
+- There is no remote auto-clone or global provider-account/region scan.
+- The Hub has no fine-grained ACL; Hub access reads all Published knowledge.
+- Structured IaC MVP supports Terraform/Terragrunt; SAM/CloudFormation is not
+  supported yet.
+- Hub query reads synchronized Published knowledge only; Local Draft is for
+  review.
+- Question runtime uses shared Hub documents; private state is rebuildable
+  cache, not authority.
+- The installer does not ask for Hub/token. `agentbase-hub` configures URL,
+  target branch and token later; each profile keeps separate Published/Draft
+  state.
+- A completely empty remote is explicitly Bootstrapped directly to the target
+  branch once with `index.md`, README and CI. All knowledge thereafter goes
+  through a PR.
 
-## Quyết định high-level
+## High-level decisions
 
-Không còn điểm mở. Canonical repository dùng Repository ID ổn định: rename,
-move hoặc clone cùng lineage vẫn là repository cũ; fork độc lập là repository
-mới; mirror/copy mơ hồ phải được người dùng xác nhận.
+There are no open points. A canonical repository uses a stable Repository ID:
+rename, move or clone with the same lineage remains the old repository; an
+independent fork is a new repository; an ambiguous mirror/copy requires user
+confirmation.
 
-### Benchmark và local temporary storage
+### Benchmark and local temporary storage
 
-Benchmark data có một ownership boundary riêng tại sibling repository
-`AgentBase-Benchmark`. Repo này giữ source checkout được pin, prompt bất biến,
-suite/expectation và result theo thời gian. AgentBase-MCP chỉ giữ benchmark
-engine/scorer và fixture nhỏ phục vụ product verification.
+Benchmark data has its own ownership boundary in the sibling repository
+`AgentBase-Benchmark`. That repository keeps pinned source checkouts, immutable
+prompts, suites/expectations and time-series results. AgentBase-MCP keeps only
+the benchmark engine/scorer and small fixtures needed for product verification.
 
-Các workspace tạm của benchmark, Code Graph và Hub lifecycle luôn nằm trong OS
-temporary directory hoặc state root đã được workflow sở hữu, có prefix rõ và bị
-dọn sau run. Không có dữ liệu benchmark lâu dài trong `tmp/`; chỉ `results/`
-trong `AgentBase-Benchmark` là evidence được giữ lại. `npm run demo` và
-`npm run verify` không phụ thuộc Benchmark checkout hay model-backed run.
+Temporary benchmark, Code Graph and Hub-lifecycle workspaces always live in the
+OS temporary directory or a workflow-owned state root, with a clear prefix and
+cleanup after the run. No durable benchmark data lives in `tmp/`; only
+`results/` in `AgentBase-Benchmark` is retained as evidence. `npm run demo` and
+`npm run verify` do not depend on a Benchmark checkout or a model-backed run.
 
-Expected probe dùng ba mức `critical`, `important`, `optional`. Critical là
-quality gate; hai mức còn lại được báo cáo riêng và chỉ đóng góp secondary
-weighted diagnostic. Score không thay thế lifecycle/conformance hoặc human
-review.
+Expected probes use three levels: `critical`, `important` and `optional`.
+Critical is the quality gate; the other two are reported separately and only
+contribute a secondary weighted diagnostic. Scores do not replace lifecycle,
+conformance or human review.
 
 ### Local AgentBase storage
 
-MCP dùng một root local duy nhất: `AGENTBASE_HOME` nếu operator chỉ định,
-ngược lại là `~/.agentbase`. Bên trong root, `config/` giữ cấu hình và
-credential, `hubs/` giữ checkout cùng Draft/Published, `state/` giữ proposal,
-session, transaction và enrichment cần khôi phục, `cache/` giữ Code Graph/query
-cache có thể dựng lại, còn `tmp/` chỉ giữ workspace ngắn hạn. Các thư mục XDG
-cũ vẫn được đọc và không bị xoá hoặc di chuyển ngầm. Hub runtime an toàn còn ở
-`/tmp` từ phiên bản cũ được copy một lần vào `state/`, giữ nguyên nguồn cũ.
+MCP uses one local root: `AGENTBASE_HOME` when explicitly set by the operator,
+otherwise `~/.agentbase`. Within that root, `config/` stores configuration and
+credentials, `hubs/` stores checkouts with Draft/Published state, `state/` stores
+recoverable proposals, sessions, transactions and enrichment, `cache/` stores
+rebuildable Code Graph/query cache, and `tmp/` stores only short-lived
+workspaces. Old XDG directories remain readable and are not silently deleted or
+moved. A safe Hub runtime still in `/tmp` from an older version is copied once
+into `state/`, preserving the old source.
 
-## Phần còn deferred
+## Deferred
 
-- Capability 044 trước hết chỉ migrate source/build của Codebase Memory và giữ
-  diagram-design ở trạng thái chưa kích hoạt; không thêm UI hoặc tool mới.
-- Source/build đã được xác minh trên Linux x64; macOS arm64 trong môi trường công
-  ty vẫn là gate bắt buộc trước khi capability 044 được đóng.
-- Remote repository reader có giới hạn, dùng token MCP cho GitHub/GitHub
-  Enterprise và không clone/build graph cho repo remote.
-- Published Hub graph là view local, read-only, dựng lại được từ OKF đã publish;
-  không phải database hay nguồn sự thật thứ hai.
-- Diagram theo query dùng diagram-design để tạo HTML/SVG local từ phần knowledge
-  người dùng chọn; diagram không tự trở thành Hub knowledge.
-- Provider profiles ngoài bounded AWS/SQS Domain Enrichment hiện tại.
-- Batch Refresh và mixed Init/Refresh.
-- Azure/GCP profile và semantic profile migration.
+- Capability 044 first migrates Codebase Memory source/build and leaves
+  diagram-design inactive; it adds no UI or new tool.
+- Source/build is verified on Linux x64; macOS arm64 in the company environment
+  remains a required gate before Capability 044 can close.
+- A remote repository reader is bounded, uses an MCP token for
+  GitHub/GitHub Enterprise and does not clone/build a graph for a remote repo.
+- The Published Hub graph is a rebuildable local, read-only view of published
+  OKF; it is not a database or second source of truth.
+- Query-based diagrams use diagram-design to create local HTML/SVG from
+  user-selected knowledge; the diagram does not become Hub knowledge.
+- Provider profiles beyond the current bounded AWS/SQS Domain Enrichment.
+- Batch Refresh and mixed Init/Refresh.
+- Azure/GCP profiles and semantic profile migration.
 
-Semantic/vector search chỉ được xem xét sau khi lexical MiniSearch và graph
-context có bộ đo relevance chứng minh chưa đủ; nó không phải fallback tự động.
+Semantic/vector search is considered only after lexical MiniSearch and graph
+context have a relevance measurement proving they are insufficient; it is not
+an automatic fallback.
 
-Rich deterministic PR summary, independent Init PR, same-Repository
-Init/Refresh stack và existing-PR reconciliation đã implement; chúng không còn
-là deferred scope.
+Rich deterministic PR summaries, independent Init PRs, the same-Repository
+Init/Refresh stack and existing-PR reconciliation are implemented; they are no
+longer deferred scope.

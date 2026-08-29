@@ -1,29 +1,29 @@
-# 14 — Cung cấp context cho AI workflows trong SDLC
+# 14 — Providing Context for AI SDLC Workflows
 
-> Trạng thái: high-level direction và low-level qualification đã được owner
-> chấp nhận; paired model run đầu tiên đã đạt deterministic gate và đang chờ
-> owner review trước khi productize runtime.
+> Status: The high-level direction and low-level qualification were accepted by
+> the owner; the first paired model run passed the deterministic gate and awaits
+> owner review before runtime productization.
 
-## Câu trả lời ngắn
+## Short answer
 
-AgentBase là lớp system context dùng chung cho các AI workflow. BA, PO hoặc DM
-dùng Feature Discovery có thể hỏi Published Hub hệ thống hiện có gì, thành phần
-nào liên quan và bằng chứng nằm ở đâu mà không cần source checkout. Developer
-dùng Task Planning có thể bổ sung local Code Graph/source để tìm implementation
-chính xác.
+AgentBase is a shared system-context layer for AI workflows. A BA, PO or DM
+using Feature Discovery can ask the Published Hub what the existing system has,
+which components are related and where evidence lives without a source
+checkout. A developer using Task Planning can add a local Code Graph/source to
+find the exact implementation.
 
-AgentBase không thay thế workflow đó. Nó chỉ trả context có giới hạn, có nguồn và
-nêu rõ phần chưa biết.
+AgentBase does not replace those workflows. It returns bounded, sourced context
+and clearly states what remains unknown.
 
-## Vấn đề cần giải quyết
+## Problem to solve
 
-Một AI workflow thường nhận Feature, ticket hoặc tài liệu nghiệp vụ từ tracker
-nội bộ. BA, PO hoặc DM không nên phải clone repository hoặc chờ AI đọc source để
-hiểu system overview. Developer đã có source local nhưng nếu chỉ đưa User Story
-cho AI thì task breakdown thường chung chung và không bám implementation hiện
-tại.
+An AI workflow commonly receives a Feature, ticket or business document from an
+internal tracker. A BA, PO or DM should not have to clone a repository or wait
+for AI to read source just to understand a system overview. A developer may have
+local source, but giving AI only a User Story often produces generic task
+breakdowns that do not match the current implementation.
 
-AgentBase chuyển phần khám phá lặp lại đó thành knowledge được chuẩn bị trước:
+AgentBase turns that repeated discovery into prepared knowledge:
 
 ```text
 Repositories ──ingest/review/refresh──> Published Hub
@@ -34,201 +34,208 @@ Developer: User Story/Bug ──> Hub scope ──> local Code Graph/source
                                              └──> task-planning context
 ```
 
-Hub trả overview đã review và quan hệ nhiều repository cho cả hai phase. Phase
-Feature Discovery dừng ở Hub; thiếu source không phải failure và không được yêu
-cầu BA/PO/DM clone repository. Phase Task Planning mới dùng Code Graph/source vì
-developer đã có local checkout và cần implementation hiện tại. Đây là cùng
-snapshot-default query boundary hiện có, không phải một query system thứ hai.
+The Hub returns reviewed overview and multi-repository relationships to both
+phases. Feature Discovery stops at the Hub; missing source is not a failure and
+BA/PO/DM are not asked to clone a repository. Task Planning uses Code
+Graph/source because the developer has a local checkout and needs the current
+implementation. This is the existing snapshot-default query boundary, not a
+second query system.
 
-## Cách sử dụng
+## How to use it
 
-Discovery vẫn là workflow chính và chỉ gọi AgentBase khi chính nó gặp một gap về
-hệ thống hoặc repository. Phase 1 dùng trực tiếp hai khả năng hiện có là
-Published Hub search và exact concept read; không prefetch, không tạo sẵn context
-và không lưu một artifact trung gian. Nếu qualification chứng minh host-agent
-orchestration chưa đủ ổn định, một integration skill nhỏ như
-`agentbase-add-context` mới được xem xét sau.
+Discovery remains the primary workflow and calls AgentBase only when it meets a
+system or repository gap. Phase 1 directly uses the two existing capabilities,
+Published Hub search and exact concept read; it does not prefetch, prepare
+context or store an intermediate artifact. If qualification proves host-agent
+orchestration insufficiently stable, a small integration skill such as
+`agentbase-add-context` may be considered later.
 
 ```text
 Feature Discovery (BA/PO/DM)       Task Planning (Developer)
             ↓                                 ↓
-     Published Hub                    Hub xác định scope
+     Published Hub                    Hub identifies scope
             ↓                                 ↓
   overview + evidence               local Code Graph/source
             └──────── context + gaps ─────────┘
                               ↓
-              workflow chính tiếp tục lifecycle riêng
+              primary workflow continues its own lifecycle
 ```
 
-Feature Discovery dùng Hub theo một thời điểm duy nhất: **on demand**, sau khi
-workflow gặp một gap cụ thể về capability, repository, dependency, flow hoặc
-constraint. AgentBase không tự đoán Feature cần gì và không đẩy overview vào
-workflow trước khi được hỏi.
+Feature Discovery uses the Hub at one point in time: **on demand**, after the
+workflow encounters a concrete gap about a capability, repository, dependency,
+flow or constraint. AgentBase does not guess what a Feature needs or push an
+overview into the workflow before being asked.
 
-Task Planning dùng Hub để tìm scope trước, rồi mới dùng local Code Graph/source
-cho symbol, caller/callee, execution path, impact, test và config. Task generation
-vẫn thuộc workflow của developer, không thuộc AgentBase.
+Task Planning uses the Hub to find scope first, then local Code Graph/source for
+symbols, callers/callees, execution paths, impact, tests and configuration. Task
+generation remains the developer workflow's responsibility, not AgentBase's.
 
-Không cần AgentBase gọi trực tiếp hoặc sửa một discovery skill cụ thể. Host agent
-điều phối các skill và dùng MCP như những tool thông thường.
+AgentBase does not need to call or modify a particular discovery skill directly.
+The host agent orchestrates skills and uses MCP as ordinary tools.
 
-## Context được trả về
+## Context returned
 
-Một context result ưu tiên đúng phần giúp workflow tiếp tục:
+A context result prioritizes exactly what lets the workflow continue:
 
-- capability, System, Interface hoặc Resource có liên quan;
-- repository và Domain đang sở hữu chúng;
-- relation, dependency và Flow đã có bằng chứng;
-- constraint hoặc knowledge quan trọng đã Published;
-- source/document reference để điều tra sâu hơn;
-- conflict, Question, freshness limitation và phần chưa tìm thấy.
+- the related capability, System, Interface or Resource;
+- the Repository and Domain that own them;
+- evidenced relations, dependencies and Flows;
+- important Published constraints or knowledge;
+- source/document references for deeper investigation;
+- conflicts, Questions, freshness limitations and anything not found.
 
-Kết quả phải gọn và theo scope của Feature. AgentBase không đổ toàn bộ Hub, raw
-Code Graph hoặc toàn bộ Markdown vào context window. Caller có thể query/read
-tiếp từ những result phù hợp.
+The result is concise and scoped to the Feature. AgentBase does not dump the
+entire Hub, raw Code Graph or all Markdown into the context window. The caller
+can query/read further from suitable results.
 
-Kết quả search/read chỉ tồn tại trong context của phiên AI theo policy của host.
-Nó không được ghi vào Hub, Local Draft hoặc một context store mới. Qualification
-có thể giữ lại tool trace trong Benchmark `results/` như evidence của phép thử;
-đó không phải knowledge authority.
+Search/read results exist only in the AI session context under the host policy.
+They are not written to the Hub, Local Draft or a new context store. Qualification
+may retain a tool trace in Benchmark `results/` as test evidence; it is not a
+knowledge authority.
 
-AgentBase cung cấp facts và evidence, không tự chuyển chúng thành Issue,
-Requirement, User Story, Acceptance Criteria hoặc Task. Cách tạo và duyệt các
-artifact đó vẫn thuộc workflow gọi AgentBase.
+AgentBase supplies facts and evidence; it does not turn them into Issues,
+Requirements, User Stories, Acceptance Criteria or Tasks automatically. Creating
+and approving those artifacts remains the calling workflow's responsibility.
 
-## Authority, failure và recovery
+## Authority, failure and recovery
 
-- Ordinary context chỉ đọc synchronized Published Hub; Local Draft không được
-  trộn vào câu trả lời.
-- Mỗi fact phải giữ source/provenance và limitation liên quan. Relation chưa
-  Published không được trình bày như fact.
-- Trong Feature Discovery, nếu Hub không đủ, AgentBase nói rõ gap và dừng; không
-  chuyển trách nhiệm source setup cho BA/PO/DM.
-- Trong Task Planning, Source/Code Graph chỉ được đọc khi developer có local
-  source được phép và câu hỏi cần độ chính xác đó.
-- Nếu AgentBase unavailable, workflow chính vẫn có thể tiếp tục bằng nguồn hiện
-  có của nó; không được nhận một context result mang vẻ đầy đủ nhưng thực tế bị
-  thiếu âm thầm.
-- Một Hub snapshot cũ không được mô tả như trạng thái source hiện tại. Workflow
-  có thể yêu cầu Refresh hoặc selective source verification riêng.
-- Quyền truy cập Hub và source giữ nguyên trust boundary hiện tại; skill context
-  không mở rộng credential hoặc quyền đọc.
+- Ordinary context reads the synchronized Published Hub only; Local Draft is
+  never mixed into an answer.
+- Every fact retains its source/provenance and related limitation. An un-
+  Published relation is not presented as fact.
+- In Feature Discovery, if the Hub is insufficient, AgentBase states the gap and
+  stops; it does not shift source setup to the BA/PO/DM.
+- In Task Planning, Source/Code Graph is read only when the developer has
+  permitted local source and the question needs that accuracy.
+- If AgentBase is unavailable, the primary workflow can continue with its own
+  sources; it must not receive a context result that appears complete while
+  silently missing data.
+- An old Hub snapshot is not described as the current source state. The workflow
+  may request Refresh or a separate selective source verification.
+- Hub and source access retain the current trust boundary; the context skill
+  does not broaden credentials or read permissions.
 
-## Giá trị và trade-off
+## Value and trade-offs
 
-Giá trị mong đợi:
+Expected value:
 
-- giảm thời gian AI phải khám phá lại repository trong mỗi workflow;
-- giảm lượng source không liên quan được đưa vào context window;
-- tái sử dụng cùng một system understanding giữa nhiều AI skill;
-- bổ sung quan hệ cross-repository mà một repository link riêng lẻ không thể
-  hiện đầy đủ;
-- giúp người dùng kiểm chứng output nhờ evidence và provenance.
+- reduce the time AI spends rediscovering a repository in each workflow;
+- reduce irrelevant source sent to the context window;
+- reuse the same system understanding across multiple AI skills;
+- add cross-repository relationships that one repository link cannot show;
+- let users verify output through evidence and provenance.
 
-Đổi lại, team phải Ingest, review, Publish và Refresh knowledge trước khi có thể
-tái sử dụng. AgentBase không thể trả lời phần Hub chưa bao phủ và không bảo đảm
-source hiện tại nếu chỉ có snapshot cũ. Việc đọc source vẫn cần thiết cho các câu
-hỏi implementation chính xác; mục tiêu là thu hẹp đúng chỗ cần đọc, không loại bỏ
-source investigation hoàn toàn.
+In return, the team must Ingest, review, Publish and Refresh knowledge before it
+can be reused. AgentBase cannot answer what the Hub does not cover and cannot
+guarantee the current source when only an old snapshot exists. Exact
+implementation questions still require source reading; the goal is to narrow
+where it is needed, not remove source investigation altogether.
 
-## Phạm vi qualification đầu tiên
+## First qualification scope
 
-Feature Discovery là use case đầu tiên vì đã có failure thực tế: AI được cung
-cấp repository link nhưng dành thời gian dài đọc source mà chưa lấy được context
-hữu ích. Phase này phải chứng minh Hub-only context có giá trị trước khi thêm
-runtime behavior hoặc mở rộng Hub schema.
+Feature Discovery is the first use case because it has a real failure mode: AI
+receives a repository link but spends a long time reading source without getting
+useful context. This phase must prove Hub-only context valuable before adding
+runtime behavior or expanding the Hub schema.
 
-Qualification đầu tiên dùng một Feature giả lập nhưng bám đúng Domain knowledge
-đã Published. Hai arm chạy cùng discovery workflow, model, Feature input, tracker
-context và giới hạn. Arm discovery-only không có AgentBase; arm assisted được
-phép tự gọi đúng hai tool Published Hub search/read khi nó thấy cần thêm system
-context. Vì fixed scenario yêu cầu existing system surface nhưng tracker không
-có dữ liệu đó, shared prompt buộc ít nhất một targeted Hub search nếu tool hiện
-diện; workflow vẫn tự chọn query và exact documents cần đọc. Không arm nào dùng
-AgentBase Code Graph/application source trong phép
-thử Phase 1, và không có context nào được chuẩn bị sẵn.
+The first qualification uses a simulated Feature grounded in Published Domain
+knowledge. Two arms run the same discovery workflow, model, Feature input,
+tracker context and limits. The discovery-only arm has no AgentBase; the assisted
+arm may call exactly two Published Hub search/read tools when it needs more
+system context. Because the fixed scenario requires an existing system surface
+that the tracker lacks, the shared prompt requires at least one targeted Hub
+search when the tool is present; the workflow still chooses the query and exact
+documents. Neither arm uses AgentBase Code Graph/application source in Phase 1,
+and no context is prepared in advance.
 
-Qualification dùng hai fixture AWS/Terraform ở môi trường development. Crawler
-là fixture nhỏ để kiểm tra truy vấn cross-repository Lambda/SQS. Fixture thực tế
-là `aws-samples/amazon-ecs-fullstack-app-terraform`, một ứng dụng ECS có
-frontend/backend, DynamoDB, S3, SNS và CodePipeline; nó đã có source-backed OKF
-result trong benchmark lịch sử. Hai fixture chỉ là dữ liệu kiểm thử, không tạo
-khái niệm Hub chính/phụ trong sản phẩm và không được suy ra từ khả năng truy cập
-của trang Domain Hub đã generate.
+Qualification uses two AWS/Terraform fixtures in the development environment.
+Crawler is a small fixture for cross-repository Lambda/SQS queries. The real
+fixture is `aws-samples/amazon-ecs-fullstack-app-terraform`, an ECS application
+with frontend/backend, DynamoDB, S3, SNS and CodePipeline; it has source-backed
+OKF results in historical benchmark data. The two fixtures are test data only:
+they do not create primary/secondary Hub concepts in the product and must not be
+inferred from access to a generated Domain Hub page.
 
-Kết quả paired run ECS ngày `2026-08-29T03-56-31Z` đạt `needs_review`: assisted
-giữ được critical backend interface, thêm hai important outcome (frontend
-consumer và blue/green delivery), không có unsupported claim. Chi phí tăng chỉ
-là số liệu chẩn đoán; owner review vẫn phải xác nhận chất lượng diễn giải trước khi
-coi đây là bằng chứng sản phẩm.
+The ECS paired run on `2026-08-29T03-56-31Z` reached `needs_review`: assisted
+preserved the critical backend interface and added two important outcomes
+(frontend consumer and blue/green delivery), with no unsupported claim. The
+increase in cost is diagnostic only; owner review must confirm interpretation
+quality before treating it as product evidence.
 
-Đã chạy thêm Crawler cross-repository và một biến thể ECS compatibility. Crawler
-tiếp tục đạt `needs_review`, với assisted bổ sung critical publisher → SQS →
-worker và hai important về publisher/storage. Biến thể ECS compatibility bị
-`incomplete` vì model có một lần gọi command ngoài allowlist và một evidence ID
-không được khai báo; đây là lỗi tuân thủ workflow, không phải thiếu dữ liệu Hub.
-Sau khi runner chặn shell trực tiếp và scenario được cấp budget ba searches
-theo trần chung, lần chạy lại `2026-08-29T04-21-39Z` đạt `needs_review`: assisted
-giữ critical backend interface và thêm important blue/green delivery, không có
+Additional Crawler cross-repository and ECS compatibility variants were run.
+Crawler again reached `needs_review`, with assisted adding the critical
+publisher → SQS → worker path and two important publisher/storage outcomes. The
+ECS compatibility variant was `incomplete` because the model made one command
+outside the allowlist and used an undeclared evidence ID; this is workflow
+compliance failure, not missing Hub data. After the runner blocked direct shell
+access and the scenario received a three-search budget under the common cap, the
+rerun at `2026-08-29T04-21-39Z` reached `needs_review`: assisted preserved the
+critical backend interface and added important blue/green delivery, with no
 unsupported claim.
 
-Vì private Discovery skill không phải đầu vào của dự án này, phép thử dùng một
-prompt Feature Discovery chung, bất biến và cùng output schema cho hai arm. Kết
-quả chỉ chứng minh giá trị của AgentBase context trong một workflow được kiểm
-soát; nó không được quảng bá là đã tích hợp hay chứng minh chính private skill.
+Because the private Discovery skill is not a project input, the test uses one
+common, immutable Feature Discovery prompt and the same output schema for both
+arms. The result proves AgentBase context value in a controlled workflow only;
+it must not be advertised as an integration or proof of the private skill.
 
-High-level success cần chứng minh:
+High-level success must show that:
 
-- workflow nhận được system context hữu ích mà BA/PO/DM không cần source local;
-- workflow tự nhận ra gap và query Hub thay vì nhận context prefetch;
-- context tìm đúng capability/repository/relation quan trọng và kèm evidence;
-- khi Hub search lộ một direct flow liên quan, workflow giữ đủ các endpoint và
-  immediate effects quan trọng thay vì chỉ mô tả một phần topology;
-- gap và limitation hiển thị rõ, không sinh fact đoán;
-- discovery output không mất critical information, không tăng claim sai và
-  không phình bởi context không liên quan;
-- assisted arm cải thiện ít nhất một outcome quan trọng như câu hỏi discovery,
-  impact coverage hoặc traceability. Thời gian và token/context cost chỉ là số
-  liệu tham khảo, không thể tự tạo ra kết quả pass.
+- the workflow receives useful system context without BA/PO/DM source local;
+- the workflow recognizes a gap and queries the Hub instead of receiving
+  prefetched context;
+- context finds the right capability/repository/important relation with
+  evidence;
+- when Hub search exposes a relevant direct flow, the workflow keeps all
+  important endpoints and immediate effects instead of describing only part of
+  the topology;
+- gaps and limitations are visible, without invented facts;
+- discovery output loses no critical information, adds no incorrect claims and
+  is not bloated by irrelevant context;
+- the assisted arm improves at least one important outcome, such as a discovery
+  question, impact coverage or traceability. Time and token/context cost are
+  reference diagnostics only and cannot create a pass.
 
-Kết quả chỉ được coi là có giá trị khi qua no-worse gate: không giảm critical
-quality so với discovery-only và có ít nhất một cải thiện có ý nghĩa. Nếu
-AgentBase làm output tệ hơn hoặc không tạo khác biệt, dự án phải sửa query
-guidance/Hub coverage rồi chạy lại; không tiếp tục build dựa trên kỳ vọng.
+The result is valuable only through a no-worse gate: no critical-quality
+regression against discovery-only and at least one meaningful improvement. If
+AgentBase makes output worse or changes nothing, fix query guidance/Hub coverage
+and rerun; do not continue building on expectation alone.
 
-Sau đó đã có Phase 2 task-planning A/B trên cùng một US và Phase 3 end-to-end
-`Feature → US → Tasks`. Pair end-to-end ECS `2026-08-29T05-45-00Z` giữ nguyên
-hai critical outcomes ở cả hai arm và full AgentBase thêm hai important outcomes:
-source-specific task boundary và compatibility `/status`; comparison đang ở
-`needs_review`. Đây là evidence định hướng tốt, chưa phải kết luận rằng mọi
-workflow AIT đều cải thiện tương tự.
+Since then, a Phase 2 task-planning A/B on the same US and a Phase 3 end-to-end
+`Feature → US → Tasks` run have also been completed. The ECS end-to-end pair at
+`2026-08-29T05-45-00Z` preserved both critical outcomes in both arms, while full
+AgentBase added two important outcomes: a source-specific task boundary and
+compatibility `/status`; the comparison is `needs_review`. This is promising
+directional evidence, not a conclusion that every AI workflow improves
+similarly.
 
-Planning, implementation, review và testing tái sử dụng cùng boundary; task
-generation vẫn thuộc workflow của developer, AgentBase chỉ cung cấp context có
-evidence và limitation, không trở thành SDLC orchestrator.
+Planning, implementation, review and testing reuse the same boundary; task
+generation remains the developer workflow's responsibility. AgentBase supplies
+only evidenced context and limitations and does not become an SDLC orchestrator.
 
-## Compatibility và adoption
+## Compatibility and adoption
 
-Đây là capability bổ sung trên Hub query, Code Graph và skill installation hiện
-có. Nó không yêu cầu migrate Hub, đổi OKF schema, sửa knowledge đã Published
-hoặc thay behavior của các workflow AgentBase hiện tại. Một AI client không cài
-skill context vẫn dùng AgentBase như trước.
+This is an additive capability on the existing Hub query, Code Graph and skill
+installation. It does not require a Hub migration, OKF schema change, edits to
+Published knowledge or behavior changes in current AgentBase workflows. An AI
+client without the context skill continues using AgentBase as before.
 
-Qualification Phase 1 dùng harness isolated và một Published Hub revision được
-pin; không yêu cầu cài skill context. Nếu productization được approve sau
-evidence, adoption tối thiểu chỉ cần client đã đăng ký AgentBase MCP và có quyền
-đọc Published Hub. Source checkout và Code Graph không phải prerequisite cho
-BA/PO/DM. Task Planning sau này yêu cầu developer có local source tương ứng. Một
-integration skill hoặc thay đổi discovery skill bên ngoài chỉ được xem xét nếu
-qualification chứng minh tool availability và prompt chung chưa đủ.
+Phase 1 qualification uses an isolated harness and a pinned Published Hub
+revision; installing a context skill is not required. If productization is
+approved after evidence, minimum adoption requires only a client registered with
+AgentBase MCP and read access to the Published Hub. BA/PO/DM do not need a
+source checkout or Code Graph. Later Task Planning requires the developer's
+corresponding local source. An integration skill or change to an external
+discovery skill is considered only if qualification proves that tool availability
+and the common prompt are insufficient.
 
 ## Non-goals
 
-- Thay Rally, tracker, discovery skill hoặc MCP nội bộ hiện có.
-- Chuẩn hóa lifecycle Feature → Issue → User Story của công ty khác.
-- Lưu mọi event, prompt hoặc artifact của SDLC vào Hub.
-- Tự ingest Feature/ticket tạm thời thành shared knowledge.
-- Tự scan toàn bộ repository trong mỗi context request.
-- Thêm vector database, combined graph, daemon hoặc background indexing cho use
-  case này.
-- Cam kết support mọi SDLC workflow trước khi discovery qualification hoàn tất.
+- Replace Rally, the tracker, discovery skills or existing internal MCP.
+- Standardize another company's Feature → Issue → User Story lifecycle.
+- Store every SDLC event, prompt or artifact in the Hub.
+- Ingest a temporary Feature/ticket into shared knowledge automatically.
+- Scan an entire repository for every context request.
+- Add a vector database, combined graph, daemon or background index for this use
+  case.
+- Promise support for every SDLC workflow before discovery qualification is
+  complete.

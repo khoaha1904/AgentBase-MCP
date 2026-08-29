@@ -1,170 +1,186 @@
-# 11 — Review và Publish
+# 11 — Review and Publish
 
-> Trạng thái: Init/Refresh stack, Capability 046 receipt-bound inspection/log,
-> atomic Batch Initial Ingest và independent Domain Enrichment PR đã implement
-> offline.
+> Status: Init/Refresh stack, Capability 046 receipt-bound inspection/log,
+> atomic Batch Initial Ingest and independent Domain Enrichment PR are
+> implemented offline.
 
-## Câu trả lời ngắn
+## Short answer
 
-AgentBase không tự thay đổi Hub remote. Người dùng chỉnh knowledge item trong
-editable draft trước Finalize; Finalize khóa một proposal atomic để review và
-Accept toàn bộ. Sau đó có thể gom các Local Draft commit dependency-safe vào
-PR; Git review/merge là cổng publish cuối.
+AgentBase does not modify the remote Hub automatically. The user edits knowledge
+items in an editable draft before Finalize; Finalize locks one atomic proposal
+for review and Accept as a whole. Local Draft commits can then be grouped into
+a dependency-safe PR; Git review/merge is the final publication gate.
 
 ```text
 Proposal ──preview + Accept──→ Local Draft ──PR──→ In Review ──sync──→ Published
 ```
 
-## Review và tạo PR
+## Review and create a PR
 
-- Preview trong authoring nhóm item theo repository và lần Ingest/Refresh.
-- Người dùng có thể thêm, sửa hoặc loại một knowledge item khi draft còn
-  editable. Sau Finalize, proposal không hỗ trợ cắt chọn từng item.
-- Nếu review proposal đã khóa phát hiện sai, Agent quay lại authoring, áp dụng
-  chỉnh sửa và Finalize lại một bundle dependency-safe; Accept luôn nhận toàn bộ
-  exact proposal đã review.
-- Accept khóa đúng nội dung đã review thành một immutable Local Draft commit.
-- Local Draft commit có thể tích lũy qua nhiều repository và được inspect/review;
-  ordinary Hub query chỉ đọc Published.
-- Question và limitation chưa giải quyết có thể publish nếu giữ rõ provenance.
-- Resolve Question hoặc correction/removal chỉ tạo Local Draft mới, không tự
-  publish.
-- Một Domain Enrichment có thể gom updates của nhiều repository, Question và
-  cross-repository relation thành một Local Draft/PR dependency-safe.
-- Một Batch Initial Ingest đã Finalize là một proposal/Accept/PR unit; không thể
-  chọn bỏ riêng member hoặc item sau Finalize.
-- Một profile upgrade có semantic mapping change gom mọi Published concept bị
-  ảnh hưởng thành một Hub Migration Draft và một migration PR. Upgrade không tự
-  publish; item thiếu evidence giữ trạng thái hiện tại và đi kèm Question.
+- Preview groups authoring items by repository and the Ingest/Refresh run.
+- While the draft is editable, the user can add, edit or remove a knowledge
+  item. After Finalize, the proposal cannot be selectively trimmed.
+- If review finds a locked proposal incorrect, the Agent returns to authoring,
+  applies the edits and Finalizes a new dependency-safe bundle; Accept always
+  accepts the exact reviewed proposal in full.
+- Accept locks exactly the reviewed content as an immutable Local Draft commit.
+- A Local Draft commit can accumulate across repositories and be inspected or
+  reviewed; ordinary Hub query reads Published only.
+- Unresolved Questions and limitations may be published when their provenance
+  remains clear.
+- Resolving a Question or correcting/removing content creates only a new Local
+  Draft; it does not publish automatically.
+- Domain Enrichment can group updates from multiple repositories, Questions and
+  cross-repository relations into one dependency-safe Local Draft/PR.
+- A finalized Batch Initial Ingest is one proposal/Accept/PR unit; its member or
+  item cannot be excluded after Finalize.
+- A profile upgrade with a semantic mapping change groups every affected
+  Published concept into one Hub Migration Draft and migration PR. Upgrade does
+  not publish automatically; items lacking evidence retain their current state
+  and carry a Question.
 
-PR phải tự giải thích đủ để reviewer hiểu trước khi đọc file diff:
+The PR must explain enough for a reviewer to understand it before reading the
+file diff:
 
-- mục đích của proposal và repository/Domain liên quan;
-- knowledge nào được thêm, cập nhật hoặc xóa;
-- Questions, limitations và source revision/evidence chính;
-- coverage của năm discovery lane, embedded groups và ignored counts/reasons;
-- validation/qualification đã chạy và điều gì chưa được xác minh.
+- the proposal's purpose and related repository/Domain;
+- knowledge that is added, updated or removed;
+- Questions, limitations and primary source revision/evidence;
+- coverage of the five discovery lanes, embedded groups and ignored
+  counts/reasons;
+- validation/qualification that ran and what remains unverified.
 
-Git diff vẫn là evidence cuối, nhưng không được bắt reviewer tự suy ra toàn bộ
-ý nghĩa từ một danh sách Markdown thay đổi.
+Git diff remains the final evidence, but reviewers must not have to infer the
+entire meaning from a list of changed Markdown files.
 
-MVP review dùng structured preview và exact before/after content qua MCP. Một
-trang HTML local có sơ đồ concept/relation và các nhóm thay đổi là enhancement
-tùy chọn sau MVP. Nếu làm, trang đó chỉ render cùng immutable inspection data,
-không trở thành knowledge authority, không cần service/database riêng và không
-tự Accept hoặc Publish.
+MVP review uses a structured preview and exact before/after content through MCP.
+A local HTML page with a concept/relation diagram and change groups is an
+optional post-MVP enhancement. If built, it renders only the same immutable
+inspection data, does not become a knowledge authority, needs no separate
+service/database and cannot Accept or Publish automatically.
 
-Trước PR, MCP xác nhận Hub Published mới nhất và yêu cầu giải quyết Git conflict.
-Hub Init còn xác nhận proposal vẫn bind exact remote default-branch source
-commit đã dùng ở Discover. Remote default branch có commit mới chỉ tạo warning
-`source-advanced`; exact snapshot cũ vẫn review/publish được. Chỉ snapshot mất,
-đổi hoặc mất authority mới buộc quay lại bước phù hợp.
-Thứ tự commit của Local Draft chỉ là thứ tự lưu local, không mặc nhiên là
-dependency publication. Mỗi Repository Init có thể mở PR riêng cùng lúc từ
-Published `main`; Refresh chỉ phụ thuộc proposal trước của chính Repository đó.
+Before a PR, MCP confirms the latest Published Hub and requires Git conflicts to
+be resolved. Hub Init also confirms that the proposal remains bound to the exact
+remote default-branch source commit used during Discover. A new commit on the
+remote default branch creates a `source-advanced` warning; the exact old
+snapshot can still be reviewed/published. Only a missing/changed authority or
+snapshot requires returning to the appropriate step. Local Draft commit order
+is only local storage order, not an implicit publication dependency. Each
+Repository Init can open its own PR from Published `main` concurrently; Refresh
+depends only on that Repository's prior proposal.
 
-## Khi PR kết thúc
+## When a PR ends
 
-- Proposal commit có matching open PR được hiển thị `In Review`, nhưng đó là
-  trạng thái suy ra; proposal vẫn là Local Draft cho tới khi merge và sync.
-- PR bị đóng/từ chối đưa proposal về `Local Draft` để thử lại.
-- Sau khi merge, MCP pull Hub và nhận diện từng proposal bằng commit/proposal/
-  diff identity. Proposal đã Published rời pending ancestry; proposal còn lại
-  được rebase và giữ local.
+- A proposal commit with a matching open PR is shown as `In Review`, but that is
+  a derived state; the proposal remains a Local Draft until merge and sync.
+- A closed/rejected PR returns the proposal to `Local Draft` for another try.
+- After merge, MCP pulls the Hub and identifies each proposal by commit,
+  proposal and diff identity. A Published proposal leaves pending ancestry;
+  another proposal is rebased and retained locally.
 
-Workflow phải retry được mà không làm mất draft hoặc publish trùng. Branch,
-commit, change ID và cơ chế retry cụ thể thuộc low-level.
+The workflow must be retryable without losing drafts or publishing duplicates.
+Branch, commit, change ID and concrete retry mechanics belong to the low level.
 
-Không có publication status database riêng. Local Draft derive từ pending Git
-ancestry, In Review từ exact matching open PR và Published từ proposal được nhận
-diện trong remote `main`; receipt chỉ phục vụ retry/recovery.
+There is no separate publication-status database. Local Draft derives from
+pending Git ancestry, In Review from an exact matching open PR and Published
+from a proposal identified in remote `main`; the Receipt exists only for
+retry/recovery.
 
-## Dependency và quyền publish
+## Dependencies and publish access
 
-Trước Accept, MCP kiểm tra các item đã chọn có đủ dependency nội dung hay không. Ví dụ,
-relation phải trỏ tới concept đã Published hoặc được chọn cùng proposal. Trước
-PR, MCP kiểm tra dependency theo từng Repository publication chain thay vì bắt
-mọi proposal thành một global pending prefix. MCP không tự thêm item âm thầm và
-không tạo proposal/PR chưa hợp lệ.
+Before Accept, MCP checks that selected items have sufficient content
+dependencies. For example, a relation must point to a Published concept or a
+concept selected in the same proposal. Before a PR, MCP checks dependencies per
+Repository publication chain instead of requiring every proposal to form one
+global pending prefix. MCP does not silently add items or create an invalid
+proposal/PR.
 
-AI chỉnh draft và tự sửa dangling dependency máy móc trước khi gọi Finalize;
-chỉ hỏi user khi có nhiều lựa chọn nghiệp vụ hợp lệ. Finalize là validator
-deterministic, không gọi model: cấu trúc gãy thì fail, còn knowledge chưa đầy đủ
-vẫn được đi tiếp với Question/Limitation rõ ràng.
+The AI edits the draft and mechanically repairs dangling dependencies before
+calling Finalize; it asks the user only when several valid business choices
+exist. Finalize is deterministic and does not call a model: broken structure
+fails, while incomplete knowledge can proceed with an explicit
+Question/Limitation.
 
-Người có quyền source/workspace có thể tạo và review Local Draft. Quyền Git
-quyết định ai được tạo PR; maintainer review/merge là authority cuối để knowledge
-trở thành Published. Quyền đọc Hub không mặc nhiên cho phép sửa Hub, và
-AgentBase phiên bản đầu không xây thêm ACL ghi riêng.
+A person with source/workspace access can create and review a Local Draft. Git
+permissions decide who can create a PR; maintainer review/merge is the final
+authority for knowledge to become Published. Hub read access does not imply Hub
+write access, and the first AgentBase version adds no separate write ACL layer.
 
-## Publication boundary hiện tại
+## Current publication boundary
 
-Tool `submit_hub_okf_proposals` dùng token riêng của MCP. Mỗi Init tạo một branch
-và PR độc lập từ Published `main`; chuỗi cùng Repository tạo stack
-`main ← Init ← Refresh`, trong đó mỗi PR chỉ hiện delta của proposal đó.
+The `submit_hub_okf_proposals` tool uses an MCP-owned token. Each Init creates an
+independent branch and PR from Published `main`; a chain for one Repository is
+`main ← Init ← Refresh`, with each PR showing only that proposal's delta.
 
-Tạo branch và PR Hub là **quyền hạn độc quyền của MCP** trong workflow này.
-Agent chỉ yêu cầu MCP submit proposal IDs; agent không được dùng `gh`, GitHub
-token cá nhân, ambient Git credential hay một publisher khác để làm thay. Quyền
-này không bao gồm merge, approve, đóng PR hoặc thay đổi repository settings.
+Creating a Hub branch and PR is **exclusively an MCP permission** in this
+workflow. The Agent only asks MCP to submit proposal IDs; it must not use `gh`, a
+personal GitHub token, ambient Git credentials or another publisher instead.
+This permission does not include merging, approving, closing PRs or changing
+repository settings.
 
-PR body được tạo deterministic từ accepted proposal, inspection và Git metadata;
-metadata tùy chọn bị thiếu được ghi là unavailable. MCP không dùng `gh`, không
-merge, approve, close hoặc xóa branch. Khi Published `main` đổi, proposal còn mở
-được reconcile tuần tự và cập nhật trên chính branch/PR hiện có; conflict phải
-được giải quyết trước khi branch đó được cập nhật.
+The PR body is generated deterministically from the accepted proposal,
+inspection and Git metadata; missing optional metadata is recorded as
+unavailable. MCP does not use `gh`, merge, approve, close or delete branches.
+When Published `main` changes, open proposals are reconciled sequentially and
+updated on their existing branch/PR; conflicts must be resolved before that
+branch is updated.
 
-Successful proposal còn cập nhật concise human-readable activity summary.
-Repository log dành cho Init/Refresh/correction/Question resolution. Domain log
-chỉ dành cho Domain Enrichment, cross-repository relation/Flow và explicit
-Domain correction; routine membership không ghi hai log. Capability 046 chỉ ghi
-Repository Init entry. Git/PR/diff vẫn là history authority; log không ghi query,
-raw Inventory, tool call hay failed/Incomplete attempt.
+A successful proposal also updates a concise human-readable activity summary.
+Repository logs cover Init/Refresh/correction/Question resolution. The Domain
+log covers Domain Enrichment, cross-repository relation/Flow and explicit
+Domain correction; routine membership is not written to either log. Capability
+046 writes only a Repository Init entry. Git/PR/diff remains the history
+authority; logs do not record queries, raw Inventory, tool calls or failed/
+Incomplete attempts.
 
-Remote Hub hoàn toàn rỗng dùng một explicit Bootstrap ngoại lệ: sau preview và
-confirmation, MCP tạo thẳng target branch với complete baseline gồm root
-`index.md`, README chuẩn và CI. Commit này không chứa Local Draft/knowledge và
-là lần duy nhất MCP ghi trực tiếp target branch.
+An entirely empty Remote Hub uses one explicit Bootstrap exception: after
+preview and confirmation, MCP writes the target branch directly with a complete
+baseline containing the root `index.md`, standard README and CI. This commit
+contains no Local Draft/knowledge and is the only time MCP writes directly to
+the target branch.
 
-Với Hub đã có branch, Initialization là support-only PR: thêm README khi thiếu
-và thêm/sửa đúng ba file CI khi CI chưa current; README đã tồn tại và CI current
-được giữ nguyên. Nếu baseline đã đủ thì không tạo PR. Hub tự chạy validator đã
-review mà không tải npm package, checkout MCP hay cần MCP token.
+For a Hub that already has a branch, Initialization is a support-only PR: add a
+README when missing and add/update exactly the three CI files when CI is not
+current; an existing README and current CI are preserved. If the baseline is
+already complete, no PR is created. The Hub runs the reviewed validator itself
+without downloading npm packages, checking out MCP or requiring an MCP token.
 
-README chuẩn là trang onboarding ngắn cho người đọc GitHub: giới thiệu Hub và
-AgentBase-MCP, trỏ vào `index.md`, giải thích Hub lưu knowledge/evidence chứ
-không sao chép source/Code Graph, tóm tắt layout, PR lifecycle và CI. Nó không
-liệt kê toàn bộ concept hay thay thế `index.md` làm knowledge navigation.
+The standard README is a short onboarding page for GitHub readers: it introduces
+the Hub and AgentBase-MCP, links to `index.md`, explains that the Hub stores
+knowledge/evidence rather than source/Code Graph copies, and summarizes layout,
+PR lifecycle and CI. It does not list every concept or replace `index.md` as
+knowledge navigation.
 
-Remote Hub identity gồm exact GitHub host, repository và target branch. Mỗi
-identity có local checkout/configuration riêng; một token Hub owner-private
-được dùng chung; chỉ một identity active tại một thời điểm. GitHub.com dùng
-public API, GitHub Enterprise dùng API chuẩn trên chính enterprise host. Đổi
-active Hub không replay hay merge Local Draft giữa hai Hub.
+Remote Hub identity consists of the exact GitHub host, repository and target
+branch. Each identity has its own local checkout/configuration; one private
+Hub-owner token is shared; only one identity is active at a time. GitHub.com uses
+the public API, while GitHub Enterprise uses the standard API on that enterprise
+host. Switching the active Hub does not replay or merge Local Drafts between
+Hubs.
 
-## Connect hoặc switch Hub
+## Connect or switch Hub
 
-Người dùng dùng `abs hub connect --url <repository-url> --branch <branch>` với
-credential-free repository URL và exact branch. Command hỏi token bằng prompt
-ẩn; nhập token mới để thay thế token dùng chung, hoặc để trống để tái sử dụng
-token cũ. Sau đó command kiểm tra remote/OKF rồi mới atomically đổi active
-profile. Người dùng không phải gọi một credential helper nội bộ rồi quay lại
-gọi MCP lần hai.
+The user runs `abs hub connect --url <repository-url> --branch <branch>` with a
+credential-free repository URL and exact branch. The command requests the token
+through a hidden prompt; entering a new token replaces the shared token, while
+an empty input reuses the old token. The command then checks the remote/OKF and
+atomically switches the active profile. The user does not need to call an
+internal credential helper and then call MCP a second time.
 
-`abs status` chỉ đọc trạng thái; `abs hub sync` là pull explicit. Các bước
-prepare/finalize/accept/submit/recover vẫn là workflow nội bộ của skill/MCP và
-không nằm trong public `abs --help`.
+`abs status` only reads status; `abs hub sync` is an explicit pull. Prepare,
+finalize, accept, submit and recover remain internal skill/MCP workflows and are
+not part of public `abs --help`.
 
-Token không đi qua chat/tool arguments, không được in ra và chỉ được lưu
-owner-private trong credential dùng chung. Nếu token thiếu quyền hoặc Hub không
-hợp lệ, Hub đang active và token cũ được giữ nguyên; token thay thế của một
-failure được báo bình thường sẽ được rollback. Nếu process bị kill/mất điện
-đúng sau khi token mới được stage, chỉ trạng thái riêng tư có thể còn lại;
-active Hub vẫn không đổi. Connect không tự synchronize, copy Local Draft hoặc
-trộn knowledge giữa hai Hub.
+The token does not pass through chat/tool arguments, is never printed and is
+stored only owner-private in the shared credential. If the token lacks access
+or the Hub is invalid, the active Hub and old token remain; a replacement token
+from a normally reported failure is rolled back. If the process is killed or
+power is lost immediately after staging a new token, only private state may
+remain; the active Hub is unchanged. Connect does not synchronize, copy Local
+Drafts or mix knowledge between Hubs.
 
-Status luôn ưu tiên báo được local state, sau đó mới best-effort kiểm tra remote
-head và số PR mở nhắm vào target branch. Mất mạng, thiếu quyền, pending lỗi hoặc
-sync conflict chỉ làm phần liên quan thành unavailable/blocked. Pull vẫn là
-hành động explicit. Last Published commit đã synchronize và remote commit mới
-fetch phải là hai state khác nhau; conflict không được làm local draft mất base.
+Status always reports local state first, then best-effort checks the remote head
+and count of open PRs targeting the branch. Network loss, missing permissions,
+pending errors or a sync conflict make only the affected part unavailable or
+blocked. Pull remains explicit. The last synchronized Published commit and a
+newly fetched remote commit are distinct states; a conflict must not discard the
+local draft base.

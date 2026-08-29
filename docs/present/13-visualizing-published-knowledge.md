@@ -1,33 +1,36 @@
-# 13. Visualize Published knowledge
+# 13 — Visualizing Published Knowledge
 
-AgentBase có hai cách biến knowledge đã Published thành hình ảnh. Chúng dùng
-cùng dữ liệu nhưng phục vụ hai việc khác nhau.
+AgentBase has two ways to turn Published knowledge into visuals. They use the
+same data but serve different purposes.
 
-## 1. Vẽ diagram khi đang hỏi
+## 1. Draw a diagram while asking a question
 
-`agentbase-diagram` là workflow nhẹ. Người dùng hỏi về một phần cụ thể, AgentBase
-chọn các concept/relation liên quan rồi vẽ một trong ba loại đầu tiên:
+`agentbase-diagram` is a lightweight workflow. The user asks about a specific
+part; AgentBase selects related concepts/relations and draws one of the first
+three types:
 
-- Architecture: các thành phần và ranh giới chính;
-- Dependency: thành phần nào phụ thuộc thành phần nào;
-- Sequence: một luồng chạy theo thứ tự nào.
+- Architecture: the main components and boundaries;
+- Dependency: which component depends on which;
+- Sequence: the order in which a flow runs.
 
-Diagram chỉ mô tả dữ liệu có bằng chứng. Thiếu relation thì trả diagram một phần
-hoặc báo chưa đủ dữ liệu; Agent không tự nối các node cho đẹp.
+The diagram describes only data with evidence. Missing relations produce a
+partial diagram or an insufficient-data notice; the Agent does not connect
+nodes merely to make the picture look complete.
 
-## 2. Generate Domain site một lần
+## 2. Generate a Domain site once
 
-`agentbase-domain-site` là workflow nặng và chỉ chạy khi người dùng yêu cầu rõ.
-Nó generate một static 2D knowledge map cho đúng một Domain từ đúng một
-Published Hub commit. Site hiển thị ngay toàn bộ concept hợp lệ trong Domain
-scope, dùng node tròn có nhãn dưới, search/filter/focus/Flow toggle, drawer
-overview bên phải và document overview overlay cho node đang chọn.
+`agentbase-domain-site` is a heavy workflow and runs only on an explicit user
+request. It generates a static 2D knowledge map for one Domain from one exact
+Published Hub commit. The site immediately shows every valid concept in Domain
+scope, using labeled circular nodes, search/filter/focus/Flow toggles, a right-
+side overview drawer and a document-overview overlay for the selected node.
 
-Kết quả là một build directory cố định. Người dùng review rồi có thể copy sang
-repo riêng như `Domain-Hub` và publish bằng GitHub Pages. Sau khi generate, site
-không cần MCP, token hay kết nối Hub; vì vậy muốn dữ liệu mới phải generate lại.
+The result is a fixed build directory. The user can review it, copy it to a
+separate repository such as `Domain-Hub` and publish it with GitHub Pages. After
+generation, the site needs no MCP, token or Hub connection; new data therefore
+requires another generation.
 
-## Một nguồn dữ liệu chung
+## One shared data source
 
 ```text
 Published OKF commit
@@ -37,37 +40,37 @@ Published visualization projection
         └── full Domain snapshot → static 2D site
 ```
 
-Projection giữ concept, relation, direction, provenance và open Question. Nó
-không lưu màu, tọa độ hoặc layout vào Hub. Relation candidate chưa được chấp
-nhận không trở thành edge.
+The projection keeps concepts, relations, direction, provenance and open
+Questions. It does not store colors, coordinates or layout in the Hub. An
+unaccepted relation candidate does not become an edge.
 
-Node trên projection là concept đã vượt qua node-eligibility gate. Embedded
-knowledge vẫn được query trong parent nhưng không được vẽ thành node giả. Khi
-Resource như SQS/SNS được promote, UI có thể hiển thị transport node và các
-relation producer/consumer; message contract chỉ là node riêng nếu nó cũng có
-identity và query value độc lập.
+Projection nodes are concepts that pass the node-eligibility gate. Embedded
+knowledge remains queryable in its parent but is not drawn as a fake node. When
+a Resource such as SQS/SNS is promoted, the UI may show a transport node and
+producer/consumer relations; a message contract is a separate node only when it
+also has independent identity and query value.
 
-Một relation đã Published có thể nối sang Domain khác. View vẫn thuộc đúng một
-Domain: đầu bên ngoài chỉ hiện như boundary node và không bị hiểu thành repository
-thuộc nhiều Domain hoặc tự mở rộng cả Domain kia.
+A Published relation may point into another Domain. The view still belongs to
+one Domain: the external end appears only as a boundary node and is not treated
+as a repository in multiple Domains or used to expand the other Domain.
 
-## Ranh giới
+## Boundaries
 
-- Chỉ đọc Published Hub; không trộn Local Draft.
-- Không thay thế search/query knowledge hoặc Code Graph.
-- Không tạo full-Hub UI hoặc giữ thêm một chế độ 3D.
-- Document overview chỉ là text-safe overview từ Published projection; muốn
-  đọc toàn bộ Markdown vẫn dùng `read_hub_okf_concept`.
-- Không watcher, daemon, live refresh hoặc auto-push Domain site.
-- Phải cảnh báo trước khi đưa knowledge nội bộ lên Pages/repo có visibility rộng.
-- Architecture có thể partial; Dependency cần edge thật; Sequence cần
-  `flow_steps` thật.
+- Read the Published Hub only; do not mix Local Draft.
+- Do not replace knowledge search/query or Code Graph.
+- Do not create a full-Hub UI or retain another 3D mode.
+- Document overview is a text-safe overview from the Published projection; read
+  the complete Markdown with `read_hub_okf_concept`.
+- No watcher, daemon, live refresh or automatic Domain-site push.
+- Warn before exposing internal knowledge through Pages or a broadly visible
+  repository.
+- Architecture may be partial; Dependency needs real edges; Sequence needs real
+  `flow_steps`.
 
-Qualification trước đây dùng một Domain có tám repository, runtime relations và
-Flow steps thật. Snapshot generated đó hiện đã được reset để chuẩn bị dữ liệu
-qualification mới. Capability 054 dùng một dataset qualification ba
-repository có publisher/worker và SQS Resource source-backed, rồi generate lại
-snapshot `domain-hub/crawler` chỉ sau khi ingest/query/projection đã được kiểm
-tra. Snapshot này là static Published fixture để review UI, không phải nguồn
-authority mới; thiếu topology hoặc resource evidence vẫn được báo rõ thay vì
-suy diễn.
+Earlier qualification used one Domain with eight repositories, runtime relations
+and real Flow steps. That generated snapshot was reset to prepare a new
+qualification dataset. Capability 054 uses a three-repository dataset with a
+source-backed publisher/worker and SQS Resource, then regenerates
+`domain-hub/crawler` only after ingest/query/projection checks pass. This
+snapshot is a static Published fixture for UI review, not a new authority;
+missing topology or resource evidence is reported instead of inferred.
