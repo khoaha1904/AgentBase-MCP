@@ -14,7 +14,6 @@ export type AgentBaseMcpHttpOptions = Parameters<typeof createAgentBaseMcpServer
 export function createAgentBaseMcpHttpHandler(options: AgentBaseMcpHttpOptions): McpHttpHandler {
   return createMcpHandler(() => createAgentBaseMcpServer(options).server, {
     legacy: "stateless",
-    responseMode: "json",
+    responseMode: "auto",
   });
 }
-
