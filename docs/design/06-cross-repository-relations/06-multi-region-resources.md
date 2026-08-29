@@ -1,13 +1,14 @@
 # 06.06 — Multi-region resources
 
-> Trạng thái: Technical design đã chốt; deployment-aware enrichment chưa implement.
+> Status: Technical design decided; deployment-aware enrichment is not
+> implemented.
 
-## Quyết định ngắn
+## Short decision
 
-Region là deployment scope, không phải Domain hoặc Concept Schema. Một logical
-capability mặc định giữ một concept với nhiều external identity entries; chỉ
-tách khi từng deployment có ownership, lifecycle, behavior hoặc query value độc
-lập.
+Region is deployment scope, not a Domain or Concept Schema. A logical capability
+keeps one concept with multiple external-identity entries by default; split only
+when each deployment has independent ownership, lifecycle, behavior or query
+value.
 
 ```text
 Vehicle Events (Interface concept)
@@ -15,77 +16,77 @@ Vehicle Events (Interface concept)
   └─ AWS deployment: account A / eu-west-1      / ARN 2
 ```
 
-Hai ARN khác nhau chứng minh hai deployed resources, không tự quyết định chúng
-là một hay hai logical concepts.
+Two different ARNs prove two deployed resources, not whether they are one or two
+logical concepts.
 
-## Giữ một concept khi
+## Keep one concept when
 
-- cùng purpose và external contract;
-- cùng owner và lifecycle/release policy;
-- chỉ là replicas hoặc regional deployments của một logical capability;
-- người dùng thường query ở logical level;
-- khác biệt region có thể trình bày ngắn bằng deployment references.
+- purpose and external contract are shared;
+- owner and lifecycle/release policy are shared;
+- they are replicas or regional deployments of one logical capability;
+- users normally query at logical level;
+- the regional difference can be shown briefly as deployment references.
 
-Concept giữ one provider-neutral overview. Mỗi deployment là một
-`agentbase.external_identities[]` entry riêng với exact account/region/native
-identity và evidence theo 06.02.
+The concept keeps one provider-neutral overview. Each deployment is a separate
+`agentbase.external_identities[]` entry with exact account/region/native identity
+and evidence under 06.02.
 
-## Tách concepts khi
+## Split concepts when
 
-- deployments có owners hoặc release/lifecycle độc lập;
-- consumers, contracts, data classification/residency hoặc failure behavior
-  khác nhau đáng kể;
-- một deployment có giá trị query/navigation độc lập;
-- relation chỉ đúng cho một deployment và nếu giữ chung sẽ tạo claim sai;
-- provider evidence cho thấy đây là resources khác vai trò, không chỉ replicas.
+- deployments have independent owners or release/lifecycle;
+- consumers, contracts, data classification/residency or failure behavior differ
+  materially;
+- one deployment has independent query/navigation value;
+- a relation is true for only one deployment and a shared edge would mislead;
+- provider evidence shows different-role resources rather than replicas.
 
-Concepts sau khi tách vẫn dùng cùng provider-neutral schema và có thể liên kết
-bằng canonical relation phù hợp. Không tạo schema `RegionalQueue`, `AWSQueue`
-hoặc một Domain cho từng region.
+Split concepts still use the provider-neutral schema and may link with a
+canonical relation. Do not create `RegionalQueue`, `AWSQueue` or a Domain per
+region.
 
 ## Relation scope
 
-Canonical relation hiện không có region selector:
+Canonical relations currently have no region selector:
 
-- relation đúng ở logical level được ghi giữa logical concepts;
-- deployment-specific detail nhỏ được giữ trong overview/evidence;
-- nếu deployment-specific relation quan trọng cho query hoặc nếu unscoped edge
-  sẽ gây hiểu sai, split endpoint concept trước rồi mới ghi relation;
-- không mở rộng relation schema bằng arbitrary scope expression trong MVP.
+- a logical-level relation connects logical concepts;
+- small deployment-specific detail stays in overview/evidence;
+- if a deployment-specific relation is important for query or an unscoped edge
+  would mislead, split endpoint concepts before recording the relation;
+- do not extend the relation schema with arbitrary scope expressions in the MVP.
 
-Cách này ưu tiên graph nhỏ và đúng hơn một graph chi tiết nhưng mơ hồ.
+This favors a smaller, correct graph over a detailed but ambiguous graph.
 
 ## Verification
 
-- Mỗi regional candidate phải có explicit/evidenced region trước provider call.
-- MCP không dùng CLI default region làm truth và không thử nhiều regions.
-- Provider verification xử lý từng exact deployment identity tuần tự.
-- Account + region + scoped native ID phải consistent với provider profile.
-- Global resource dùng explicit provider `global` scope rule; không gán một
-  region giả để thỏa schema.
+- Each regional candidate has an explicit/evidenced region before a provider call.
+- MCP does not treat a CLI default region as truth or try multiple regions.
+- Provider verification handles each exact deployment identity sequentially.
+- Account + region + scoped native ID must match the provider profile.
+- A global resource uses an explicit provider `global` scope rule; do not assign a
+  fake region to satisfy a schema.
 
-## Refresh và Enrichment
+## Refresh and Enrichment
 
-- Thêm deployment mới bổ sung external identity entry với provenance.
-- Không thấy deployment trong lần đọc sau không tự xóa entry.
-- Removal cần provider/source evidence và explicit destructive intent.
-- Deployment được thay thế giữ history qua Git và ordinary correction/removal proposal; ID cũ không
-  tiếp tục được trình bày như current alias.
-- Nếu evidence mới chứng minh deployments đã có independent query value,
-  Enrichment có thể propose split; reverse merge của Published concepts được
-  giữ thành Question vì merge/redirect là post-MVP.
+- A new deployment adds an external-identity entry with provenance.
+- Not seeing a deployment on a later read does not delete its entry automatically.
+- Removal needs provider/source evidence and explicit destructive intent.
+- A replaced deployment keeps history through Git and an ordinary correction/
+  removal proposal; the old ID is no longer presented as a current alias.
+- If new evidence proves independent query value, Enrichment may propose a split;
+  reverse merge of Published concepts remains a Question because merge/redirect
+  is post-MVP.
 
-## Ví dụ
+## Examples
 
-| Trường hợp | Representation |
+| Case | Representation |
 |---|---|
-| Một Lambda workload deploy cùng contract ở hai regions để HA | Một Function concept, hai external identities. |
-| Hai regional queues có consumers và retention policy độc lập | Hai concepts nếu cần query riêng. |
-| Cùng queue name ở hai regions | Hai deployment identities; tên giống không phải same-resource match. |
-| Một global IAM role | Một external identity với provider-defined global scope. |
+| One Lambda workload deployed with the same contract in two regions for HA | One Function concept, two external identities. |
+| Two regional queues with independent consumers and retention | Two concepts when separate queries are needed. |
+| Same queue name in two regions | Two deployment identities; equal names are not a same-resource match. |
+| One global IAM role | One external identity with provider-defined global scope. |
 
 ## Baseline impact
 
-Đây là **Contained change sau 06.02**. Không cần Region entity, deployment graph,
-new schema hoặc provider-specific concept tree. Independent deployment concepts
-chỉ xuất hiện khi concept qualification hiện tại chứng minh query value.
+This is a **Contained change after 06.02**. No Region entity, deployment graph,
+new schema or provider-specific concept tree is needed. Independent deployment
+concepts appear only when current concept qualification proves query value.
