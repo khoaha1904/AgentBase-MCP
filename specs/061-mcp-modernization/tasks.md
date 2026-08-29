@@ -8,6 +8,8 @@
 - [x] T006 Record deferred modern HTTP/auth/tasks work in current documentation.
 - [x] T007 Add the stateless modern Streamable HTTP adapter.
 - [x] T008 Verify a sessionless modern HTTP tools/list exchange.
+- [x] T009 Declare JSON Schema 2020-12 for every advertised tool input.
+- [x] T010 Verify legacy and modern tool catalogs preserve their contracts.
 
 ## Result
 

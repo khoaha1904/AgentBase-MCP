@@ -23,9 +23,11 @@ test("[AB-MCPMOD-002][AB-MCPMOD-003] modern HTTP handler serves tools/list witho
       } }),
     }));
     assert.equal(response.status, 200);
-    const body = await response.json() as { result?: { tools?: unknown[] } };
+    const body = await response.json() as { result?: { tools?: Array<{ inputSchema?: { $schema?: string } }> } };
     assert.ok(Array.isArray(body.result?.tools));
     assert.ok((body.result?.tools?.length ?? 0) > 0);
+    assert.ok(body.result?.tools?.every((tool) =>
+      tool.inputSchema?.$schema === "https://json-schema.org/draft/2020-12/schema"));
   } finally {
     await handler.close();
   }

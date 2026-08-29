@@ -11,7 +11,7 @@ import { DiscoverySession } from "./discovery-session.ts";
 import { GatewaySession, type GatewaySessionOptions } from "./gateway-session.ts";
 import { SAFE_TOOLS } from "./tool-manifest.ts";
 import { callOkfSchemaTool, OKF_SCHEMA_TOOLS, type OkfSchemaToolName } from "./okf-schema-tools.ts";
-import { AGENTBASE_MCP_SERVER_OPTIONS } from "./protocol-policy.ts";
+import { AGENTBASE_MCP_SERVER_OPTIONS, modernToolInputSchema } from "./protocol-policy.ts";
 
 export type AgentBaseMcpServer = Readonly<{
   server: McpServer;
@@ -35,7 +35,7 @@ export function createAgentBaseMcpServer(options: GatewaySessionOptions & Readon
   });
   const server = new McpServer({ name: "agentbase-codebase-memory", version: "0.0.0" }, AGENTBASE_MCP_SERVER_OPTIONS);
   for (const tool of HUB_OKF_TOOLS) {
-    server.registerTool(tool.name, { description: tool.description, inputSchema: fromJsonSchema(tool.inputSchema) },
+    server.registerTool(tool.name, { description: tool.description, inputSchema: fromJsonSchema(modernToolInputSchema(tool.inputSchema)) },
       async (argumentsValue): Promise<CallToolResult> => {
         return callHubOkfTool(
           tool.name as HubOkfToolName,
@@ -45,7 +45,7 @@ export function createAgentBaseMcpServer(options: GatewaySessionOptions & Readon
       });
   }
   for (const tool of OKF_SCHEMA_TOOLS) {
-    server.registerTool(tool.name, { description: tool.description, inputSchema: fromJsonSchema(tool.inputSchema) },
+    server.registerTool(tool.name, { description: tool.description, inputSchema: fromJsonSchema(modernToolInputSchema(tool.inputSchema)) },
       async (argumentsValue): Promise<CallToolResult> => callOkfSchemaTool(
         tool.name as OkfSchemaToolName,
         argumentsValue as Record<string, unknown>,
@@ -56,7 +56,7 @@ export function createAgentBaseMcpServer(options: GatewaySessionOptions & Readon
     server.registerTool(tool.name, {
       ...(tool.title === undefined ? {} : { title: tool.title }),
       ...(tool.description === undefined ? {} : { description: tool.description }),
-      inputSchema: fromJsonSchema(tool.inputSchema),
+      inputSchema: fromJsonSchema(modernToolInputSchema(tool.inputSchema)),
       ...(tool.annotations === undefined ? {} : { annotations: tool.annotations }),
     }, async (argumentsValue): Promise<CallToolResult> => gateway.call(tool.name, argumentsValue as Record<string, unknown>));
   }
