@@ -1,29 +1,31 @@
 # 04 — Current baseline and impact
 
-> Trạng thái: Catalog 7 implementation là current authority.
+> Status: Catalog 7 implementation is the current authority.
 
-## Baseline hiện tại
+## Current baseline
 
 - Catalog version: `7.0.0`.
 - Initial Ingest roles: Repository, Domain, System, Component, Function,
-  Interface, Flow và Resource.
-- Entity/Metric chỉ thuộc enrichment; Question/Guidance do workflow quản lý.
-- Guidance tách technology detection, standalone/embedded disposition và schema
-  selection.
-- OKF parser vẫn open-world: foreign/legacy type được đọc và bảo toàn.
+  Interface, Flow and Resource.
+- Entity/Metric are enrichment-only; Question/Guidance are workflow-managed.
+- Guidance separates technology detection, standalone/embedded disposition and
+  schema selection.
+- The OKF parser remains open-world: foreign/legacy types are read and
+  preserved.
 
-## Điều đã thay đổi so với design ban đầu
+## Changes from the original design
 
-Catalog 6 từng định nghĩa hơn 20 role như Server, Queue, Database Table và
-Infrastructure Module. Benchmark cho thấy catalog rộng làm Agent tốn công chọn
-schema và dễ promote implementation detail thành file concept. Catalog 7 thay
-nó bằng tám boundary tổng quát; queue/table/bucket/host thường trở thành
-embedded knowledge có technology metadata và exact evidence trong parent.
+Catalog 6 defined more than 20 roles such as Server, Queue, Database Table and
+Infrastructure Module. Benchmarking showed that a broad catalog made the Agent
+spend effort choosing schemas and promoted implementation details into concept
+files. Catalog 7 replaces it with eight general boundaries; queue/table/bucket/
+host usually become embedded knowledge with technology metadata and exact parent
+evidence.
 
-Đây là clean cutover vì chưa có catalog-6 concept Published. Code Graph, OKF
-document model, relationships và Hub lifecycle được giữ nguyên.
+This is a clean cutover because no catalog-6 concept was Published. Code Graph,
+the OKF document model, relationships and Hub lifecycle remain unchanged.
 
-## Gap còn lại
+## Remaining gap
 
-Azure/GCP profiles, SAM/CloudFormation detector, provider verification và
-semantic profile migration chưa thuộc MVP hiện tại.
+Azure/GCP profiles, the SAM/CloudFormation detector, provider verification and
+semantic profile migration are not in the current MVP.

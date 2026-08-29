@@ -1,6 +1,6 @@
 # 04.01 — Provider-neutral catalog 7
 
-> Trạng thái: Implemented.
+> Status: Implemented.
 
 ## Initial Ingest roles
 
@@ -15,29 +15,31 @@
 | Flow | Cross-concept sequence with query/navigation value |
 | Resource | Independently operated/shared resource boundary |
 
-Entity và Metric là enrichment-only. Provider products không tạo schema mới.
+Entity and Metric are enrichment-only. Provider products do not create new
+schemas.
 
 ## Service-level runtime relations
 
-`System` là boundary đủ dùng cho một service khi không có workload con độc lập
-cần thành `Component`. Trong trường hợp đó, System có thể khai báo
-`consumes -> Interface` bằng exact runtime-call/subscription evidence. Không tạo
-Component trùng lặp chỉ để mang relation, và không mở rộng thành một
-`depends-on` System tổng quát.
+`System` is a sufficient service boundary when no independent child workload
+needs to become a `Component`. In that case, a System may declare
+`consumes → Interface` with exact runtime-call/subscription evidence. Do not
+create a duplicate Component just to carry a relation or expand it into a
+general `depends-on` System relation.
 
 ## Embedded knowledge
 
-Queue, topic, event bus, table, bucket, database, load balancer và host mặc định
-nằm trong Function/Component/System parent. Một embedded item giữ:
+Queue, topic, event bus, table, bucket, database, load balancer and host default
+to embedded knowledge in a Function/Component/System parent. An embedded item
+keeps:
 
-- display name và concise role;
+- display name and concise role;
 - provider-neutral kind;
 - optional provider/product/source-tool/resource-type metadata;
 - exact evidence sources.
 
-Nó chưa có concept ID, file riêng hoặc graph edge. Promote sang Interface hoặc
-Resource chỉ khi có evidence về shared contract, ownership, lifecycle,
-operational boundary hoặc independent query value.
+It has no concept ID, separate file or graph edge yet. Promote to Interface or
+Resource only with evidence of a shared contract, ownership, lifecycle,
+operational boundary or independent query value.
 
 ## Technology metadata
 
@@ -49,5 +51,5 @@ agentbase:
     resourceType: aws_lambda_function
 ```
 
-Metadata chỉ mô tả implementation evidence; Terraform vẫn là desired state và
-không chứng minh deployment/account/region/ARN hiện tại.
+Metadata describes implementation evidence only; Terraform remains desired state
+and does not prove the current deployment/account/region/ARN.

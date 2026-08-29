@@ -1,46 +1,46 @@
 # 04.06 — Node eligibility and provider coverage
 
-> Trạng thái: implemented và được kiểm chứng bằng conformance fixtures của
-> capability 052.
+> Status: Implemented and verified with capability-052 conformance fixtures.
 
-## Node và concept
+## Node and concept
 
-Concept là một knowledge instance được lưu bằng Markdown. Node là concept instance
-được đưa vào Published graph projection. Governance documents và embedded rows
-không phải node; Flow có thể là scenario node nhưng không được trộn mặc định với
-architecture topology.
+A concept is a knowledge instance stored as Markdown. A node is a concept
+instance included in the Published graph projection. Governance documents and
+embedded rows are not nodes; a Flow may be a scenario node but is not mixed into
+architecture topology by default.
 
 ## Promotion gate
 
-Candidate chỉ được author thành standalone node khi có đủ:
+A candidate may be authored as a standalone node only with all of:
 
-1. **Stable identity** — exact provider identity, scoped provider ID hoặc
-   deterministic source identity (ví dụ Terraform address kèm source anchor).
-2. **Independent query/link value** — người dùng hoặc concept khác có lý do độc
-   lập để tìm/liên kết endpoint này.
+1. **Stable identity** — exact provider identity, scoped provider ID or
+   deterministic source identity (for example, a Terraform address with a
+   source anchor).
+2. **Independent query/link value** — a user or another concept has an
+   independent reason to find/link this endpoint.
 3. **Boundary evidence** — lifecycle, ownership, permission, failure, scaling,
-   security, cross-boundary usage hoặc contract evidence phù hợp với role.
-4. **Interaction evidence khi tạo edge** — source chứng minh producer,
-   consumer, trigger hoặc access; identity một mình không tạo relation.
+   security, cross-boundary usage or contract evidence appropriate to the role.
+4. **Interaction evidence for an edge** — source proves producer, consumer,
+   trigger or access; identity alone does not create a relation.
 
-Thiếu identity hoặc query value thì không tạo node. Có giá trị nhưng chưa đủ
-boundary thì giữ embedded knowledge trong parent. Có evidence nhưng identity hoặc
-interaction còn mơ hồ thì giữ candidate/Question. Không tạo placeholder node để
-làm graph đầy hơn.
+Without identity or query value, do not create a node. With value but insufficient
+boundary, keep embedded knowledge in the parent. With evidence but ambiguous
+identity or interaction, keep a candidate/Question. Do not create a placeholder
+node to make the graph look fuller.
 
-## Resource và Interface
+## Resource and Interface
 
-- Queue/topic/bus là **Resource** khi đại diện hạ tầng vận hành hoặc integration
-  boundary có identity và usage độc lập.
-- API/event/message schema là **Interface** khi contract có consumer/producer value
-  riêng.
-- Một queue/topic (transport) không tự đại diện cho message/event schema
-  (contract); hai concept chỉ tách khi cả hai cùng vượt gate.
-- Lambda có deployment/trigger/failure boundary riêng thì là **Function**.
-- IAM role, module nội bộ, handler, log group và resource packaging vẫn là
-  embedded evidence trừ khi có boundary độc lập được chứng minh.
+- A queue/topic/bus is **Resource** when it represents an operated
+  infrastructure or integration boundary with independent identity and usage.
+- An API/event/message schema is **Interface** when the contract has separate
+  consumer/producer value.
+- A queue/topic transport does not represent its message/event schema contract;
+  split the concepts only when both pass the gate.
+- A Lambda with its own deployment/trigger/failure boundary is **Function**.
+- An IAM role, internal module, handler, log group and resource packaging remain
+  embedded evidence unless an independent boundary is proven.
 
-Ví dụ canonical topology:
+Canonical topology example:
 
 ```text
 producer Function ──publishes-to──> queue Resource
@@ -49,30 +49,31 @@ consumer Function <──triggered-by── queue Resource
 
 ## Coverage rollout
 
-Policy áp dụng cho mọi provider, nhưng conformance đầu tiên chỉ rollout nhóm AWS
-phổ biến:
+The policy applies to every provider, but initial conformance rolls out common
+AWS groups:
 
-| Nhóm | AWS services | Role mặc định |
+| Group | AWS services | Default role |
 |---|---|---|
 | Workload | Lambda | Function |
-| Messaging | SQS, SNS, EventBridge | Resource khi shared/boundary đủ mạnh |
-| Data | S3, DynamoDB, RDS | Resource khi lifecycle/usage độc lập |
-| Hosting | EC2/VM | hosting evidence; không tự tạo Server node |
+| Messaging | SQS, SNS, EventBridge | Resource when shared/boundary evidence is strong enough |
+| Data | S3, DynamoDB, RDS | Resource with independent lifecycle/usage |
+| Hosting | EC2/VM | hosting evidence; no automatic Server node |
 
-Mỗi service dùng cùng gate, relation vocabulary, external-identity envelope và
-conformance scenarios. Profile chỉ sở hữu mapping technology, identity parsing
-và source/provider evidence; profile không được tạo schema hoặc predicate riêng.
+Each service uses the same gate, relation vocabulary, external-identity envelope
+and conformance scenarios. A profile owns technology mapping, identity parsing
+and source/provider evidence only; it may not create a schema or predicate.
 
-Provider mới (ví dụ GCP Pub/Sub, Cloud Storage, Cloud SQL) chỉ cần thêm profile,
-parser và fixtures. Concept paths, `Resource`/`Interface` roles, canonical edges,
-MiniSearch fields và projection schema không đổi. Mapping thay đổi trên knowledge
-đã Published phải đi qua migration/Question review như các profile changes khác.
+A new provider (for example GCP Pub/Sub, Cloud Storage or Cloud SQL) needs only a
+profile, parser and fixtures. Concept paths, `Resource`/`Interface` roles,
+canonical edges, MiniSearch fields and projection schema stay unchanged. Mapping
+changes on Published knowledge go through migration/Question review like other
+profile changes.
 
-## Review và test impact
+## Review and test impact
 
-Bao phủ nhóm phổ biến giảm đáng kể phạm vi review so với toàn bộ AWS vì test được
-tái sử dụng theo ba behavior families: workload, messaging và data. Mỗi service
-chỉ thêm identity/interaction fixtures và mapping cases. Tuy vậy không coi đây là
-phép nhân đơn giản theo số service: mỗi provider/resource vẫn phải kiểm tra IaC
-identity, deployed identity, missing scope, ambiguous name, embedded fallback và
-relation evidence.
+Covering common groups greatly reduces review scope compared with all AWS because
+tests are reused across three behavior families: workload, messaging and data.
+Each service adds only identity/interaction fixtures and mapping cases. This is
+not a simple multiplication by service count: every provider/resource still
+checks IaC identity, deployed identity, missing scope, ambiguous name, embedded
+fallback and relation evidence.

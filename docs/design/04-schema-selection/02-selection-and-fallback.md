@@ -1,6 +1,6 @@
 # 04.02 — Selection, disposition and uncertainty
 
-> Trạng thái: Implemented cho single-repository Init; enrichment còn deferred.
+> Status: Implemented for single-repository Init; enrichment remains deferred.
 
 ```text
 evidence-bearing candidates/observations
@@ -12,16 +12,16 @@ MCP-rendered editable OKF skeletons
 Agent enrichment → changed-document validation
 ```
 
-Candidate phải có stable identity basis, independent query/link value và exact
-owned evidence. Caller không được tự khẳng định provider/product/schema để ghi
-đè mapping. Kết quả là `exact`, `suggested`, `embedded`, `ambiguous` hoặc
-`unsupported`; không có confidence number.
+A candidate needs a stable identity basis, independent query/link value and
+exact owned evidence. The caller may not assert a provider/product/schema to
+override mapping. Outcomes are `exact`, `suggested`, `embedded`, `ambiguous` or
+`unsupported`; there is no confidence number.
 
-- `exact/suggested`: có thể tạo skeleton cho role released.
-- `embedded`: giữ trong useful parent, không tạo file riêng.
-- `ambiguous/unsupported`: giữ evidence + limitation/Question; không ép vào
-  type gần giống.
+- `exact/suggested`: may create a skeleton for a released role.
+- `embedded`: keep it in a useful parent; do not create a separate file.
+- `ambiguous/unsupported`: retain evidence plus limitation/Question; do not
+  force it into a similar type.
 
-Suggested role luôn mang proposal-review limitation. Exact structured mapping
-ưu tiên khi source hỗ trợ nhưng việc bỏ sót low-value evidence chỉ là coverage
-diagnostic, không làm proposal truthful-partial trở thành invalid.
+A suggested role always carries a proposal-review limitation. Exact structured
+mapping is preferred when source supports it, but omitted low-value evidence is
+only a coverage diagnostic and does not make a truthful partial proposal invalid.

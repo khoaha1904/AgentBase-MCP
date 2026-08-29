@@ -1,13 +1,14 @@
 # 04.04 — Source Detector Profiles
 
-> Trạng thái: Terraform-family Detector v1 implemented.
+> Status: Terraform-family Detector v1 is implemented.
 
-Detector chấp nhận bounded structured observations và kiểm tra source path:
+The detector accepts bounded structured observations and checks source paths:
 
-- Terraform: `.tf` hoặc `.tf.json`;
-- Terragrunt: `terragrunt.hcl` và module orchestration;
-- exact provider resource phải trỏ tới Terraform declaration tương ứng.
+- Terraform: `.tf` or `.tf.json`;
+- Terragrunt: `terragrunt.hcl` and module orchestration;
+- an exact provider resource must point to the corresponding Terraform
+  declaration.
 
-Indirection chưa resolve trả ambiguous; detector không invent name, ARN,
-account hoặc region. SAM/CloudFormation/YAML hiện unsupported và không được gắn
-nhãn giả thành Terraform/Terragrunt.
+Unresolved indirection returns ambiguous; the detector does not invent a name,
+ARN, account or region. SAM/CloudFormation/YAML are unsupported and must not be
+falsely labeled Terraform/Terragrunt.

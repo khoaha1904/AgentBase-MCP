@@ -1,12 +1,13 @@
 # 04.03 — Cloud Provider Profiles
 
-> Trạng thái: AWS Profile v2 implemented; provider khác deferred.
+> Status: AWS Profile v2 is implemented; other providers are deferred.
 
-AWS Profile normalize EC2/VM, Lambda, SQS, SNS, EventBridge, S3, RDS và DynamoDB
-thành technology metadata. Lambda có independent runtime evidence có thể map
-exact tới Function. Các resource khác mặc định embedded và không tự chọn
-Server/Queue/Table/Bucket schema.
+The AWS Profile normalizes EC2/VM, Lambda, SQS, SNS, EventBridge, S3, RDS and
+DynamoDB into technology metadata. A Lambda with independent runtime evidence
+may map exactly to Function. Other resources default to embedded and do not
+select Server/Queue/Table/Bucket schemas automatically.
 
-Profile là deterministic versioned data contract, không login cloud, giữ
-credential, gọi provider CLI hay biến official docs thành repository evidence.
-Azure/GCP cần profile và conformance riêng nhưng dùng cùng catalog roles.
+A profile is a deterministic, versioned data contract. It does not log into a
+cloud, store credentials, call a provider CLI or turn official docs into
+repository evidence. Azure/GCP need their own profiles and conformance while
+reusing the same catalog roles.

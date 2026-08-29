@@ -1,34 +1,35 @@
 # 04 — Schema selection
 
-> Trạng thái: Catalog 7 đã implement; catalog 6 design đã superseded.
+> Status: Catalog 7 is implemented; the catalog 6 design is superseded.
 
 High-level decision:
-[MCP lựa chọn schema thế nào?](../../present/04-how-concept-schemas-are-selected.md)
+[How does MCP select a schema?](../../present/04-how-concept-schemas-are-selected.md)
 
-## Phân rã
+## Decomposition
 
 - [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — baseline, gap,
-  impact và phạm vi clean cutover.
-- [`01-provider-neutral-catalog.md`](01-provider-neutral-catalog.md) — catalog
-  schema theo vai trò kiến trúc chung.
-- [`02-selection-and-fallback.md`](02-selection-and-fallback.md) — pipeline chọn
-  schema, fallback, limitation và Question.
-- [`03-cloud-provider-profiles.md`](03-cloud-provider-profiles.md) — profile ánh
-  xạ AWS product vào schema chung và metadata.
+  impact and clean-cutover scope.
+- [`01-provider-neutral-catalog.md`](01-provider-neutral-catalog.md) — schema
+  catalog by general architecture role.
+- [`02-selection-and-fallback.md`](02-selection-and-fallback.md) — schema
+  selection pipeline, fallback, limitation and Question.
+- [`03-cloud-provider-profiles.md`](03-cloud-provider-profiles.md) — map AWS
+  products to common schemas and metadata.
 - [`04-source-detector-profiles.md`](04-source-detector-profiles.md) — detector
-  cho Terraform và các source type về sau.
-- [`05-catalog-cutover.md`](05-catalog-cutover.md) — thay catalog hiện tại và
-  rebuild draft mà không có content migration.
+  for Terraform and future source types.
+- [`05-catalog-cutover.md`](05-catalog-cutover.md) — replace the current catalog
+  and rebuild a draft without content migration.
 - [`06-node-eligibility-and-provider-coverage.md`](06-node-eligibility-and-provider-coverage.md)
-  — gate để một concept trở thành graph node và rollout coverage theo nhóm
-  provider phổ biến.
+  — gate for a concept to become a graph node and coverage rollout for common
+  providers.
 
 ## Current implementation
 
-Catalog `7.0.0` giữ tám Initial Ingest roles: Repository, Domain, System,
-Component, Function, Interface, Flow và Resource. Entity/Metric chỉ dùng cho
-enrichment. AWS Profile v2 + Terraform-family Detector v1 tách technology khỏi
-concept role; resource nội bộ mặc định embedded, còn shared/independently
-operated resources có thể promote thành Resource theo node-eligibility gate.
-Terraform/Terragrunt được hỗ trợ, SAM/CloudFormation chưa hỗ trợ.
-Legacy/foreign type vẫn readable nhưng AgentBase không author type đã retired.
+Catalog `7.0.0` keeps eight Initial Ingest roles: Repository, Domain, System,
+Component, Function, Interface, Flow and Resource. Entity/Metric are
+enrichment-only. AWS Profile v2 plus Terraform-family Detector v1 separate
+technology from concept role; internal resources default to embedded, while
+shared/independently operated resources may promote to Resource through the
+node-eligibility gate. Terraform/Terragrunt are supported; SAM/CloudFormation
+are not. Legacy/foreign types remain readable, but AgentBase no longer authors
+the retired type.
