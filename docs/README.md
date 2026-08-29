@@ -12,11 +12,12 @@ retain their original bytes and are excluded from translation. A translation
 must preserve requirements, identifiers, links, code examples and observable
 runtime behavior.
 
-All product documentation lives in this repository and has two levels:
+All current product documentation lives in this repository at three contract levels:
 
 ```text
-docs/present/  high-level product direction and presentation
-docs/design/   low-level design, architecture and current AB-* requirements
+docs/product/       product outcomes, scope and authority
+docs/architecture.md system ownership and boundary direction
+docs/capabilities/  behavior, low-level design and current AB-* requirements
 ```
 
 Numbered `specs/` record feature changes. They are historical after completion
@@ -29,40 +30,40 @@ status. Then load the smallest relevant route:
 
 | Need | Read next |
 |---|---|
-| Product outcome, terminology, scope or authority | `docs/present/README.md` and the affected numbered presentation |
-| Source ownership or dependency boundary | `docs/design/00-architecture.md` |
-| Low-level behavior or requirement IDs | the affected numbered directory under `docs/design/` |
+| Product outcome, terminology, scope or authority | `docs/product/README.md` and the affected numbered presentation |
+| Source ownership or dependency boundary | `docs/architecture.md` |
+| Low-level behavior or requirement IDs | the affected numbered directory under `docs/capabilities/` |
 | Current feature implementation | the active artifact selected by `specs/CURRENT.md` |
 
 Current requirement routes:
 
-- Foundation: `docs/design/12-version-scope/01-foundation-requirements.md`
-- Code Graph: `docs/design/01-repository-reading/05-runtime-requirements.md`
-- OKF: `docs/design/05-knowledge-entry/06-runtime-requirements.md`
-- Domain Enrichment: `docs/design/06-cross-repository-relations/07-runtime-requirements.md`
-- Batch Initial Ingest: `docs/design/09-ingest-and-refresh/09-runtime-requirements.md`
-- Local Hub and publication: `docs/design/11-review-and-publish/01-runtime-requirements.md`
-- Installation: `docs/design/12-version-scope/02-installation-requirements.md`
-- CLI: `docs/design/12-version-scope/08-cli-runtime-requirements.md`
-- Benchmark: `docs/design/12-version-scope/03-benchmark-requirements.md`
-- Published visualization: `docs/design/13-visualization/04-runtime-requirements.md`
-- AI SDLC context: `docs/design/14-ai-sdlc-context/02-runtime-requirements.md`
-- Query: `docs/design/10-query-routing/07-runtime-requirements.md`
-- Product scope: `docs/present/00-product-scope-and-authority.md`
-- Architecture ownership: `docs/design/00-architecture.md`
+- Foundation: `docs/capabilities/12-version-scope/01-foundation-requirements.md`
+- Code Graph: `docs/capabilities/01-repository-reading/05-runtime-requirements.md`
+- OKF: `docs/capabilities/05-knowledge-entry/06-runtime-requirements.md`
+- Domain Enrichment: `docs/capabilities/06-cross-repository-relations/07-runtime-requirements.md`
+- Batch Initial Ingest: `docs/capabilities/09-ingest-and-refresh/09-runtime-requirements.md`
+- Local Hub and publication: `docs/capabilities/11-review-and-publish/01-runtime-requirements.md`
+- Installation: `docs/capabilities/12-version-scope/02-installation-requirements.md`
+- CLI: `docs/capabilities/12-version-scope/08-cli-runtime-requirements.md`
+- Benchmark: `docs/capabilities/12-version-scope/03-benchmark-requirements.md`
+- Published visualization: `docs/capabilities/13-visualization/04-runtime-requirements.md`
+- AI SDLC context: `docs/capabilities/14-ai-sdlc-context/02-runtime-requirements.md`
+- Query: `docs/capabilities/10-query-routing/07-runtime-requirements.md`
+- Product scope: `docs/product/00-product-scope-and-authority.md`
+- Architecture ownership: `docs/architecture.md`
 
 ## Authority order
 
 1. Latest owner decision.
-2. Affected high-level presentation.
-3. Affected low-level design and `AB-*` requirements.
+2. Affected Product Contract.
+3. Affected Architecture and Capability Contracts, in that order when both apply.
 4. Approved active capability for not-yet-accepted change scope.
 5. Code and focused verification as evidence of implemented behavior.
 6. Completed capabilities and Git history as historical explanation.
 
 The mandatory high-level → low-level → implementation lifecycle and its
 anti-dead-spec gap loop are defined in the repository
-[`AGENTS.md`](../AGENTS.md). `docs/design/README.md` provides the low-level design
+[`AGENTS.md`](../AGENTS.md). `docs/capabilities/README.md` provides the low-level design
 organization and baseline/impact vocabulary; it does not create a second
 lifecycle. Every implementation session must follow the repository rule.
 
@@ -86,40 +87,39 @@ The current paths map to those levels as follows:
 
 | Level | Current location | Responsibility |
 |---|---|---|
-| Product Contract | `docs/present/` | Product outcome, scope, authority, workflows and non-goals |
-| Architecture Contract | `docs/design/00-architecture.md` | System boundaries, ownership, data/state flow, runtime shape and architectural trade-offs |
-| Capability Contract | `docs/design/<area>/` | Capability behavior, contracts, bounds, failure/recovery and `AB-*` requirements |
+| Product Contract | `docs/product/` | Product outcome, scope, authority, workflows and non-goals |
+| Architecture Contract | `docs/architecture.md` | System boundaries, ownership, data/state flow, runtime shape and architectural trade-offs |
+| Capability Contract | `docs/capabilities/<area>/` | Capability behavior, contracts, bounds, failure/recovery and `AB-*` requirements |
 | Implementation Contract | Affected capability design or spec plan | Concrete modules, libraries, interfaces and coding/migration decisions for one accepted change |
 | Validation Evidence | Tests, verification reports and `npm run verify` output | Evidence that implementation matches accepted contracts |
 
-The numbered areas currently map like this; the mapping is semantic and does
-not require moving files:
+The numbered areas map physically to the contract levels as follows:
 
 | Current area | Product-level overview | Capability/low-level contract |
 |---|---|---|
-| Scope and authority | `docs/present/00-product-scope-and-authority.md` | `docs/design/12-version-scope/` cross-cutting requirements |
-| Repository reading | `docs/present/01-how-mcp-reads-a-repository.md` | `docs/design/01-repository-reading/` |
-| Hub/Domain/Repository model | `docs/present/02-hub-domains-and-repositories.md` | `docs/design/02-hub-domain-repository-model/` |
-| Concept discovery | `docs/present/03-how-concepts-are-identified.md` | `docs/design/03-concept-discovery/` |
-| Schema selection | `docs/present/04-how-concept-schemas-are-selected.md` | `docs/design/04-schema-selection/` |
-| Knowledge entry | `docs/present/05-how-repository-knowledge-enters-the-hub.md` | `docs/design/05-knowledge-entry/` |
-| Cross-repository relations | `docs/present/06-cross-repository-and-cross-domain-relationships.md` | `docs/design/06-cross-repository-relations/` |
-| Questions and guidance | `docs/present/07-conflicts-questions-and-maintainer-guidance.md` | `docs/design/07-conflicts-and-questions/` |
-| Observed values | `docs/present/08-live-references-for-change-prone-values.md` | `docs/design/08-live-references/` |
-| Ingest and Refresh | `docs/present/09-ingest-and-refresh.md` | `docs/design/09-ingest-and-refresh/` |
-| Query routing | `docs/present/10-querying-code-graph-and-hub.md` | `docs/design/10-query-routing/` |
-| Review and Publish | `docs/present/11-review-accept-and-publish.md` | `docs/design/11-review-and-publish/` |
-| Version scope and limits | `docs/present/12-current-limits-and-open-decisions.md` | `docs/design/12-version-scope/` |
-| Visualization | `docs/present/13-visualizing-published-knowledge.md` | `docs/design/13-visualization/` |
-| AI SDLC context | `docs/present/14-context-for-ai-sdlc-workflows.md` | `docs/design/14-ai-sdlc-context/` |
+| Scope and authority | `docs/product/00-product-scope-and-authority.md` | `docs/capabilities/12-version-scope/` cross-cutting requirements |
+| Repository reading | `docs/product/01-how-mcp-reads-a-repository.md` | `docs/capabilities/01-repository-reading/` |
+| Hub/Domain/Repository model | `docs/product/02-hub-domains-and-repositories.md` | `docs/capabilities/02-hub-domain-repository-model/` |
+| Concept discovery | `docs/product/03-how-concepts-are-identified.md` | `docs/capabilities/03-concept-discovery/` |
+| Schema selection | `docs/product/04-how-concept-schemas-are-selected.md` | `docs/capabilities/04-schema-selection/` |
+| Knowledge entry | `docs/product/05-how-repository-knowledge-enters-the-hub.md` | `docs/capabilities/05-knowledge-entry/` |
+| Cross-repository relations | `docs/product/06-cross-repository-and-cross-domain-relationships.md` | `docs/capabilities/06-cross-repository-relations/` |
+| Questions and guidance | `docs/product/07-conflicts-questions-and-maintainer-guidance.md` | `docs/capabilities/07-conflicts-and-questions/` |
+| Observed values | `docs/product/08-live-references-for-change-prone-values.md` | `docs/capabilities/08-live-references/` |
+| Ingest and Refresh | `docs/product/09-ingest-and-refresh.md` | `docs/capabilities/09-ingest-and-refresh/` |
+| Query routing | `docs/product/10-querying-code-graph-and-hub.md` | `docs/capabilities/10-query-routing/` |
+| Review and Publish | `docs/product/11-review-accept-and-publish.md` | `docs/capabilities/11-review-and-publish/` |
+| Version scope and limits | `docs/product/12-current-limits-and-open-decisions.md` | `docs/capabilities/12-version-scope/` |
+| Visualization | `docs/product/13-visualizing-published-knowledge.md` | `docs/capabilities/13-visualization/` |
+| AI SDLC context | `docs/product/14-context-for-ai-sdlc-workflows.md` | `docs/capabilities/14-ai-sdlc-context/` |
 
-The `docs/present/` numbered pages are capability overviews, not all-purpose
+The `docs/product/` numbered pages are capability overviews, not all-purpose
 product policy. Product-wide scope and authority remain in `00` and shared
 limits; numbered capability pages explain the user-facing purpose of each
-area. The optional future rename can therefore split `product/` from
-`capabilities/` by this map instead of guessing from filenames.
+area. `docs/architecture.md` owns cross-capability system shape, while the
+numbered `docs/capabilities/` areas own behavior and bounded low-level contracts.
 
-`docs/design/00-architecture.md` may mention implementation baseline as
+`docs/architecture.md` may mention implementation baseline as
 evidence, but architectural decisions remain separate from file-, class- and
 package-level implementation choices. A separate global implementation tree is
 not required unless repeated cross-capability decisions justify it.
@@ -152,9 +152,9 @@ New specs should keep both kinds of reference:
 
 ```yaml
 current_refs:
-  - docs/present/00-product-scope-and-authority.md
+  - docs/product/00-product-scope-and-authority.md
 baseline:
-  - path: docs/present/00-product-scope-and-authority.md
+  - path: docs/product/00-product-scope-and-authority.md
     commit: <git-sha-before-implementation>
 ```
 
@@ -164,8 +164,10 @@ Completed specs are not rewritten when current docs change. A later behavior
 change creates a new spec with `supersedes` or `amends`; its `verification.md`
 may record the landed/source-snapshot commit after completion.
 
-During a future directory rename, update current links atomically and keep an
-old-path README redirect or mapping. Do not bulk-edit historical spec content.
+The former `present` and `design` roots retain compatibility mapping READMEs.
+Current links use the new paths; completed specs and historical bug records keep
+their original path text and resolve it through Git baselines plus those maps.
+Do not bulk-edit historical spec content.
 
 ## Current checkpoint
 

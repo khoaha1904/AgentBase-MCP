@@ -10,35 +10,35 @@ const ids = (prefix, count, start = 1) => Array.from(
 );
 
 const DOCUMENT_ROUTES = [
-  "docs/present/README.md",
-  "docs/present/00-product-scope-and-authority.md",
-  "docs/design/README.md",
-  "docs/design/00-architecture.md",
-  "docs/design/01-repository-reading/05-runtime-requirements.md",
-  "docs/design/05-knowledge-entry/06-runtime-requirements.md",
-  "docs/design/10-query-routing/07-runtime-requirements.md",
-  "docs/design/11-review-and-publish/01-runtime-requirements.md",
-  "docs/design/12-version-scope/01-foundation-requirements.md",
-  "docs/design/12-version-scope/02-installation-requirements.md",
-  "docs/design/12-version-scope/03-benchmark-requirements.md",
+  "docs/product/README.md",
+  "docs/product/00-product-scope-and-authority.md",
+  "docs/capabilities/README.md",
+  "docs/architecture.md",
+  "docs/capabilities/01-repository-reading/05-runtime-requirements.md",
+  "docs/capabilities/05-knowledge-entry/06-runtime-requirements.md",
+  "docs/capabilities/10-query-routing/07-runtime-requirements.md",
+  "docs/capabilities/11-review-and-publish/01-runtime-requirements.md",
+  "docs/capabilities/12-version-scope/01-foundation-requirements.md",
+  "docs/capabilities/12-version-scope/02-installation-requirements.md",
+  "docs/capabilities/12-version-scope/03-benchmark-requirements.md",
 ];
 
 const REQUIREMENT_GROUPS = [
-  ["foundation", "docs/design/12-version-scope/01-foundation-requirements.md", ids("AB-FND", 19), "SPEC-LIVING-MISSING", "SPEC-ID-MISSING"],
-  ["managed graph", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-MVP", 7), "SPEC-MVP-LIVING-MISSING", "SPEC-MVP-ID-MISSING"],
-  ["graph lifecycle", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-GRAPH", 14), "SPEC-GRAPH-LIVING-MISSING", "SPEC-GRAPH-ID-MISSING"],
-  ["graph freshness", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-GRAPH-REFRESH", 12), "SPEC-GRAPH-LIVING-MISSING", "SPEC-GRAPH-REFRESH-ID-MISSING"],
-  ["MCP surface", "docs/design/01-repository-reading/05-runtime-requirements.md", ids("AB-MCP", 26), "SPEC-GRAPH-LIVING-MISSING", "SPEC-MCP-ID-MISSING"],
-  ["OKF proposal", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-MVP", 16, 8), "SPEC-OKF-LIVING-MISSING", "SPEC-MVP-ID-MISSING"],
-  ["observations", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-OBS", 7), "SPEC-OKF-LIVING-MISSING", "SPEC-OBS-ID-MISSING"],
-  ["schema catalog", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-SCHEMA", 36), "SPEC-OKF-LIVING-MISSING", "SPEC-SCHEMA-ID-MISSING"],
-  ["live claims", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-CLAIM", 5), "SPEC-OKF-LIVING-MISSING", "SPEC-CLAIM-ID-MISSING"],
-  ["initial ingest", "docs/design/05-knowledge-entry/06-runtime-requirements.md", ids("AB-INGEST", 21), "SPEC-OKF-LIVING-MISSING", "SPEC-INGEST-ID-MISSING"],
-  ["product", "docs/present/00-product-scope-and-authority.md", [...ids("AB-PRODUCT", 5), ...ids("AB-MIGRATION", 6)], "SPEC-PRODUCT-LIVING-MISSING", "SPEC-PRODUCT-ID-MISSING"],
-  ["query", "docs/design/10-query-routing/07-runtime-requirements.md", ids("AB-QUERY", 18), "SPEC-QUERY-LIVING-MISSING", "SPEC-QUERY-ID-MISSING"],
-  ["local Hub", "docs/design/11-review-and-publish/01-runtime-requirements.md", [...ids("AB-LOCAL-HUB", 16), ...ids("AB-PUBLISH", 10), ...ids("AB-HUB-SETUP", 17)], "SPEC-HUB-LIVING-MISSING", "SPEC-HUB-ID-MISSING"],
-  ["installation", "docs/design/12-version-scope/02-installation-requirements.md", ids("AB-INSTALL", 31), "SPEC-INSTALL-LIVING-MISSING", "SPEC-INSTALL-ID-MISSING"],
-  ["benchmark", "docs/design/12-version-scope/03-benchmark-requirements.md", ids("AB-BENCH", 87), "SPEC-BENCH-LIVING-MISSING", "SPEC-BENCH-ID-MISSING"],
+  ["foundation", "docs/capabilities/12-version-scope/01-foundation-requirements.md", ids("AB-FND", 19), "SPEC-LIVING-MISSING", "SPEC-ID-MISSING"],
+  ["managed graph", "docs/capabilities/01-repository-reading/05-runtime-requirements.md", ids("AB-MVP", 7), "SPEC-MVP-LIVING-MISSING", "SPEC-MVP-ID-MISSING"],
+  ["graph lifecycle", "docs/capabilities/01-repository-reading/05-runtime-requirements.md", ids("AB-GRAPH", 14), "SPEC-GRAPH-LIVING-MISSING", "SPEC-GRAPH-ID-MISSING"],
+  ["graph freshness", "docs/capabilities/01-repository-reading/05-runtime-requirements.md", ids("AB-GRAPH-REFRESH", 12), "SPEC-GRAPH-LIVING-MISSING", "SPEC-GRAPH-REFRESH-ID-MISSING"],
+  ["MCP surface", "docs/capabilities/01-repository-reading/05-runtime-requirements.md", ids("AB-MCP", 26), "SPEC-GRAPH-LIVING-MISSING", "SPEC-MCP-ID-MISSING"],
+  ["OKF proposal", "docs/capabilities/05-knowledge-entry/06-runtime-requirements.md", ids("AB-MVP", 16, 8), "SPEC-OKF-LIVING-MISSING", "SPEC-MVP-ID-MISSING"],
+  ["observations", "docs/capabilities/05-knowledge-entry/06-runtime-requirements.md", ids("AB-OBS", 7), "SPEC-OKF-LIVING-MISSING", "SPEC-OBS-ID-MISSING"],
+  ["schema catalog", "docs/capabilities/05-knowledge-entry/06-runtime-requirements.md", ids("AB-SCHEMA", 36), "SPEC-OKF-LIVING-MISSING", "SPEC-SCHEMA-ID-MISSING"],
+  ["live claims", "docs/capabilities/05-knowledge-entry/06-runtime-requirements.md", ids("AB-CLAIM", 5), "SPEC-OKF-LIVING-MISSING", "SPEC-CLAIM-ID-MISSING"],
+  ["initial ingest", "docs/capabilities/05-knowledge-entry/06-runtime-requirements.md", ids("AB-INGEST", 21), "SPEC-OKF-LIVING-MISSING", "SPEC-INGEST-ID-MISSING"],
+  ["product", "docs/product/00-product-scope-and-authority.md", [...ids("AB-PRODUCT", 5), ...ids("AB-MIGRATION", 6)], "SPEC-PRODUCT-LIVING-MISSING", "SPEC-PRODUCT-ID-MISSING"],
+  ["query", "docs/capabilities/10-query-routing/07-runtime-requirements.md", ids("AB-QUERY", 18), "SPEC-QUERY-LIVING-MISSING", "SPEC-QUERY-ID-MISSING"],
+  ["local Hub", "docs/capabilities/11-review-and-publish/01-runtime-requirements.md", [...ids("AB-LOCAL-HUB", 16), ...ids("AB-PUBLISH", 10), ...ids("AB-HUB-SETUP", 17)], "SPEC-HUB-LIVING-MISSING", "SPEC-HUB-ID-MISSING"],
+  ["installation", "docs/capabilities/12-version-scope/02-installation-requirements.md", ids("AB-INSTALL", 31), "SPEC-INSTALL-LIVING-MISSING", "SPEC-INSTALL-ID-MISSING"],
+  ["benchmark", "docs/capabilities/12-version-scope/03-benchmark-requirements.md", ids("AB-BENCH", 87), "SPEC-BENCH-LIVING-MISSING", "SPEC-BENCH-ID-MISSING"],
 ];
 
 const CURRENT_DOCUMENTS = [
@@ -59,6 +59,8 @@ const ACTIVE_NAMING_RULES = [
 ];
 const LANGUAGE_EXCLUSIONS = ["assets/hub-ci/", "fixtures/", "vendor/"];
 const VIETNAMESE_TEXT = /[\u0102\u0103\u0110\u0111\u01A0\u01A1\u01AF\u01B0\u1EA0-\u1EF9]|\b(?:c\u00f3|c\u1ee7a|\u0111\u01b0\u1ee3c|kh\u00f4ng|m\u1ed9t|nh\u1eefng|ph\u1ea3i|tr\u006fng|v\u00e0|v\u1edbi)\b/iu;
+const CURRENT_AUTHORITY = /^(?:AGENTS\.md|README\.md|docs\/(?:README\.md|architecture\.md|product\/|capabilities\/))/;
+const OBSOLETE_DOCUMENTATION_ROUTE = /docs\/(?:present|design)\//;
 
 function read(root, relative) {
   const file = path.join(root, relative);
@@ -75,6 +77,14 @@ export function checkRepositoryLanguageEntries(entries) {
   });
 }
 
+export function checkCurrentDocumentationPathEntries(entries) {
+  return entries.flatMap(({ relative, source }) => (
+    CURRENT_AUTHORITY.test(relative) && OBSOLETE_DOCUMENTATION_ROUTE.test(source)
+      ? [{ code: "SPEC-OBSOLETE-DOC-ROUTE", message: `${relative} references a compatibility-only documentation path` }]
+      : []
+  ));
+}
+
 function checkRepositoryLanguage(root) {
   const files = execFileSync("git", ["ls-files", "-z"], { cwd: root, encoding: "utf8" })
     .split("\0")
@@ -85,8 +95,18 @@ function checkRepositoryLanguage(root) {
   })));
 }
 
+function checkCurrentDocumentationPaths(root) {
+  const files = execFileSync("git", ["ls-files", "-z"], { cwd: root, encoding: "utf8" })
+    .split("\0")
+    .filter(Boolean);
+  return checkCurrentDocumentationPathEntries(files.map((relative) => ({
+    relative,
+    source: fs.readFileSync(path.join(root, relative), "utf8"),
+  })));
+}
+
 export function checkSpecifications(root) {
-  const errors = checkRepositoryLanguage(root);
+  const errors = [...checkRepositoryLanguage(root), ...checkCurrentDocumentationPaths(root)];
   const agentGuide = read(root, "AGENTS.md");
   const docsIndex = read(root, "docs/README.md");
   const current = read(root, "specs/CURRENT.md");

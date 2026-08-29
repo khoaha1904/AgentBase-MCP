@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { checkRepositoryLanguageEntries } from "./check-specs.mjs";
+import {
+  checkCurrentDocumentationPathEntries,
+  checkRepositoryLanguageEntries,
+} from "./check-specs.mjs";
 
 test("[AB-LANG-006] repository language check rejects Vietnamese prose and allows other Unicode", () => {
   assert.deepEqual(checkRepositoryLanguageEntries([
@@ -17,5 +20,19 @@ test("[AB-LANG-006] repository language check rejects Vietnamese prose and allow
 
   assert.deepEqual(checkRepositoryLanguageEntries([
     { relative: "vendor/example.md", source: "Kh\u00f4ng \u0111\u01b0\u1ee3c ghi ti\u1ebfng Vi\u1ec7t.\n" },
+  ]), []);
+});
+
+test("[AB-DOC-006] current authority rejects old routes while compatibility and history retain them", () => {
+  assert.deepEqual(checkCurrentDocumentationPathEntries([
+    { relative: "docs/README.md", source: "Read docs/design/README.md.\n" },
+  ]), [{
+    code: "SPEC-OBSOLETE-DOC-ROUTE",
+    message: "docs/README.md references a compatibility-only documentation path",
+  }]);
+
+  assert.deepEqual(checkCurrentDocumentationPathEntries([
+    { relative: "docs/design/README.md", source: "docs/design/<area> maps to docs/capabilities/<area>.\n" },
+    { relative: "specs/062-example/spec.md", source: "Baseline: docs/present/example.md\n" },
   ]), []);
 });

@@ -27,8 +27,9 @@ vendor snapshots, generated output or immutable external evidence.
   implementation details.
 - Keep at most one active capability in `specs/CURRENT.md`; between slices use
   `None` plus the most recently completed capability.
-- Product direction lives under `docs/present/`; current architecture, design
-  and `AB-*` requirements live under `docs/design/`. Numbered
+- Product direction lives under `docs/product/`; architecture ownership lives in
+  `docs/architecture.md`; capability design and current `AB-*` requirements live
+  under `docs/capabilities/`. Numbered
   `specs/<number>-<name>/` directories are historical after completion.
 - Update current truth once in the narrowest design/requirements route. Do not create handoff,
   roadmap, ADR or evidence files that repeat it.
@@ -57,10 +58,10 @@ silently redefine an upstream contract.
 
 ### Before implementation
 
-1. **High-level decision** — update the affected `docs/present/` document first.
+1. **High-level decision** — update the affected `docs/product/` document first.
    Record the user-visible outcome, scope and non-goals, failure/recovery,
    compatibility or migration impact, and expected product trade-offs.
-2. **Low-level design** — update the affected `docs/design/` boundary next.
+2. **Low-level design** — update the affected `docs/capabilities/` boundary next.
    Record reusable baseline, changed ownership, data/tool contracts, bounds,
    failure/recovery, security impact, verification evidence and stable `AB-*`
    requirements. Query behavior belongs in numbered Query design (10), not in
@@ -109,7 +110,7 @@ explicit deferred boundary rather than leaving it implicit.
   disposable and non-canonical. Only bounded provenance-bearing observations
   may enter OKF workflows.
 
-`docs/design/00-architecture.md` is the ownership index. Before changing runtime behavior,
+`docs/architecture.md` is the ownership index. Before changing runtime behavior,
 confirm the active plan, affected requirements, owning capability, public entrypoint
 and focused requirement-linked tests. Run `npm run depcruise` after source
 dependency changes; do not weaken a rule without explicit owner approval.
