@@ -9,8 +9,7 @@ or storage path changed.
 ## Baseline and landed snapshot
 
 - Baseline before this slice: `e9d04dd`
-- Landed commits: `5bb1365`, `7e6bf77`
-- Mapping/reference follow-up: current commit after this verification update
+- Landed commits: `5bb1365`, `7e6bf77`, `772d3e7`
 - Existing completed specs and `docs/present/` / `docs/design/` paths were not
   moved, deleted or rewritten.
 
