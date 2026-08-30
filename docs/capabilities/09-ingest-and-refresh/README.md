@@ -5,7 +5,7 @@
 > The Capability 046 Initial Ingest discovery runtime is also implemented.
 
 Product Contract:
-[Ingest and Refresh](../../product/09-ingest-and-refresh.md)
+[Knowledge lifecycle](../../product/03-knowledge-lifecycle.md)
 
 ## Contract map
 

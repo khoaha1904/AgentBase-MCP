@@ -5,7 +5,7 @@
 > an MCP token remain outside the MVP.
 
 Product Contract:
-[Observed snapshots and source references](../../product/08-live-references-for-change-prone-values.md)
+[Trust, conflicts and freshness](../../product/04-trust-conflicts-and-freshness.md)
 
 ## Contract map
 

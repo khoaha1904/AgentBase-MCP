@@ -4,7 +4,7 @@
 > subproject-scope automation in a monorepo is deferred.
 
 Product Contract:
-[How are Hub, Domain and Repository organized?](../../product/02-hub-domains-and-repositories.md)
+[Knowledge model and relations](../../product/02-knowledge-model-and-relations.md)
 
 ## Contract map
 

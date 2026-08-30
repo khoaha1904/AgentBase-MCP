@@ -30,7 +30,7 @@ status. Then load the smallest relevant route:
 
 | Need | Read next |
 |---|---|
-| Product outcome, terminology, scope or authority | `docs/product/README.md` and the affected numbered presentation |
+| Product outcome, terminology, scope or authority | `docs/product/README.md` and the affected Product Contract |
 | Source ownership or dependency boundary | `docs/architecture/README.md` |
 | Low-level behavior or requirement IDs | the affected numbered directory under `docs/capabilities/` |
 | Current feature implementation | the active artifact selected by `specs/CURRENT.md` |
@@ -55,7 +55,7 @@ Current requirement routes:
 - Published visualization: `docs/capabilities/13-visualization/04-runtime-requirements.md`
 - AI SDLC context: `docs/capabilities/14-ai-sdlc-context/02-runtime-requirements.md`
 - Query: `docs/capabilities/10-query-routing/07-runtime-requirements.md`
-- Product scope: `docs/product/00-product-scope-and-authority.md`
+- Product scope: `docs/product/00-scope-and-authority.md`
 - Architecture ownership: `docs/architecture/README.md`
 
 ## Authority order
@@ -117,31 +117,23 @@ The current paths map to those levels as follows:
 | Feature-scoped Implementation Contract | Active `specs/<feature>/plan.md` | Concrete modules, libraries, interfaces and coding/migration decisions for one accepted change |
 | Validation Evidence | Tests, verification reports and `npm run verify` output | Evidence that implementation matches accepted contracts |
 
-The numbered areas map physically to the contract levels as follows:
+The Product-to-Capability mapping is many-to-one:
 
-| Current area | Product-level overview | Capability/low-level contract |
-|---|---|---|
-| Scope and authority | `docs/product/00-product-scope-and-authority.md` | `docs/capabilities/12-version-scope/` cross-cutting requirements |
-| Repository reading | `docs/product/01-how-mcp-reads-a-repository.md` | `docs/capabilities/01-repository-reading/` |
-| Hub/Domain/Repository model | `docs/product/02-hub-domains-and-repositories.md` | `docs/capabilities/02-hub-domain-repository-model/` |
-| Concept discovery | `docs/product/03-how-concepts-are-identified.md` | `docs/capabilities/03-concept-discovery/` |
-| Schema selection | `docs/product/04-how-concept-schemas-are-selected.md` | `docs/capabilities/04-schema-selection/` |
-| Knowledge entry | `docs/product/05-how-repository-knowledge-enters-the-hub.md` | `docs/capabilities/05-knowledge-entry/` |
-| Cross-repository relations | `docs/product/06-cross-repository-and-cross-domain-relationships.md` | `docs/capabilities/06-cross-repository-relations/` |
-| Questions and guidance | `docs/product/07-conflicts-questions-and-maintainer-guidance.md` | `docs/capabilities/07-conflicts-and-questions/` |
-| Observed values | `docs/product/08-live-references-for-change-prone-values.md` | `docs/capabilities/08-live-references/` |
-| Ingest and Refresh | `docs/product/09-ingest-and-refresh.md` | `docs/capabilities/09-ingest-and-refresh/` |
-| Query routing | `docs/product/10-querying-code-graph-and-hub.md` | `docs/capabilities/10-query-routing/` |
-| Review and Publish | `docs/product/11-review-accept-and-publish.md` | `docs/capabilities/11-review-and-publish/` |
-| Version scope and limits | `docs/product/12-current-limits-and-open-decisions.md` | `docs/capabilities/12-version-scope/` |
-| Visualization | `docs/product/13-visualizing-published-knowledge.md` | `docs/capabilities/13-visualization/` |
-| AI SDLC context | `docs/product/14-context-for-ai-sdlc-workflows.md` | `docs/capabilities/14-ai-sdlc-context/` |
+| Product Contract | Capability Contracts |
+|---|---|
+| `docs/product/00-scope-and-authority.md` | `12-version-scope` |
+| `docs/product/01-repository-understanding.md` | `01-repository-reading`, `03-concept-discovery`, `04-schema-selection` |
+| `docs/product/02-knowledge-model-and-relations.md` | `02-hub-domain-repository-model`, `06-cross-repository-relations` |
+| `docs/product/03-knowledge-lifecycle.md` | `05-knowledge-entry`, `09-ingest-and-refresh`, `11-review-and-publish` |
+| `docs/product/04-trust-conflicts-and-freshness.md` | `07-conflicts-and-questions`, `08-live-references` |
+| `docs/product/05-query-and-context.md` | `10-query-routing` |
+| `docs/product/06-visualization.md` | `13-visualization` |
+| `docs/product/07-ai-sdlc-context.md` | `14-ai-sdlc-context` |
 
-The `docs/product/` numbered pages are capability overviews, not all-purpose
-product policy. Product-wide scope and authority remain in `00` and shared
-limits; numbered capability pages explain the user-facing purpose of each
-area. `docs/architecture/` owns cross-capability system shape, while the
-numbered `docs/capabilities/` areas own behavior and bounded low-level contracts.
+Product Contracts own stable outcomes rather than mirroring capability
+granularity. `docs/architecture/` owns cross-capability system shape, while the
+14 `docs/capabilities/` areas retain independent behavior and requirement
+ownership.
 
 `docs/architecture/` may mention implementation baseline as
 evidence, but architectural decisions remain separate from file-, class- and
@@ -178,9 +170,9 @@ New specs should keep both kinds of reference:
 
 ```yaml
 current_refs:
-  - docs/product/00-product-scope-and-authority.md
+  - docs/product/00-scope-and-authority.md
 baseline:
-  - path: docs/product/00-product-scope-and-authority.md
+  - path: docs/product/00-scope-and-authority.md
     commit: <git-sha-before-implementation>
 ```
 

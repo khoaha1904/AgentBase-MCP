@@ -11,7 +11,7 @@ const ids = (prefix, count, start = 1) => Array.from(
 
 const DOCUMENT_ROUTES = [
   "docs/product/README.md",
-  "docs/product/00-product-scope-and-authority.md",
+  "docs/product/00-scope-and-authority.md",
   "docs/capabilities/README.md",
   "docs/architecture/README.md",
   "docs/capabilities/01-repository-reading/05-runtime-requirements.md",
@@ -33,38 +33,31 @@ const ARCHITECTURE_DOCUMENTS = [
 ];
 
 const PRODUCT_SECTIONS = [
-  ["00-product-scope-and-authority.md", "12-version-scope/README.md"],
-  ["01-how-mcp-reads-a-repository.md", "01-repository-reading/README.md"],
-  ["02-hub-domains-and-repositories.md", "02-hub-domain-repository-model/README.md"],
-  ["03-how-concepts-are-identified.md", "03-concept-discovery/README.md"],
-  ["04-how-concept-schemas-are-selected.md", "04-schema-selection/README.md"],
-  ["05-how-repository-knowledge-enters-the-hub.md", "05-knowledge-entry/README.md"],
-  ["06-cross-repository-and-cross-domain-relationships.md", "06-cross-repository-relations/README.md"],
-  ["07-conflicts-questions-and-maintainer-guidance.md", "07-conflicts-and-questions/README.md"],
-  ["08-live-references-for-change-prone-values.md", "08-live-references/README.md"],
-  ["09-ingest-and-refresh.md", "09-ingest-and-refresh/README.md"],
-  ["10-querying-code-graph-and-hub.md", "10-query-routing/README.md"],
-  ["11-review-accept-and-publish.md", "11-review-and-publish/README.md"],
-  ["12-current-limits-and-open-decisions.md", "12-version-scope/README.md"],
-  ["13-visualizing-published-knowledge.md", "13-visualization/README.md"],
-  ["14-context-for-ai-sdlc-workflows.md", "14-ai-sdlc-context/README.md"],
+  ["00-scope-and-authority.md", ["12-version-scope/README.md"]],
+  ["01-repository-understanding.md", ["01-repository-reading/README.md", "03-concept-discovery/README.md", "04-schema-selection/README.md"]],
+  ["02-knowledge-model-and-relations.md", ["02-hub-domain-repository-model/README.md", "06-cross-repository-relations/README.md"]],
+  ["03-knowledge-lifecycle.md", ["05-knowledge-entry/README.md", "09-ingest-and-refresh/README.md", "11-review-and-publish/README.md"]],
+  ["04-trust-conflicts-and-freshness.md", ["07-conflicts-and-questions/README.md", "08-live-references/README.md"]],
+  ["05-query-and-context.md", ["10-query-routing/README.md"]],
+  ["06-visualization.md", ["13-visualization/README.md"]],
+  ["07-ai-sdlc-context.md", ["14-ai-sdlc-context/README.md"]],
 ];
 
 const CAPABILITY_SECTIONS = [
-  ["01-repository-reading", "01-how-mcp-reads-a-repository.md", "05-runtime-requirements.md"],
-  ["02-hub-domain-repository-model", "02-hub-domains-and-repositories.md", "06-capability-requirements.md"],
-  ["03-concept-discovery", "03-how-concepts-are-identified.md", "06-capability-requirements.md"],
-  ["04-schema-selection", "04-how-concept-schemas-are-selected.md", "07-capability-requirements.md"],
-  ["05-knowledge-entry", "05-how-repository-knowledge-enters-the-hub.md", "06-runtime-requirements.md"],
-  ["06-cross-repository-relations", "06-cross-repository-and-cross-domain-relationships.md", "07-runtime-requirements.md"],
-  ["07-conflicts-and-questions", "07-conflicts-questions-and-maintainer-guidance.md", "07-capability-requirements.md"],
-  ["08-live-references", "08-live-references-for-change-prone-values.md", "07-capability-requirements.md"],
-  ["09-ingest-and-refresh", "09-ingest-and-refresh.md", "09-runtime-requirements.md"],
-  ["10-query-routing", "10-querying-code-graph-and-hub.md", "07-runtime-requirements.md"],
-  ["11-review-and-publish", "11-review-accept-and-publish.md", "01-runtime-requirements.md"],
-  ["12-version-scope", "12-current-limits-and-open-decisions.md", "01-foundation-requirements.md"],
-  ["13-visualization", "13-visualizing-published-knowledge.md", "04-runtime-requirements.md"],
-  ["14-ai-sdlc-context", "14-context-for-ai-sdlc-workflows.md", "02-runtime-requirements.md"],
+  ["01-repository-reading", "01-repository-understanding.md", "05-runtime-requirements.md"],
+  ["02-hub-domain-repository-model", "02-knowledge-model-and-relations.md", "06-capability-requirements.md"],
+  ["03-concept-discovery", "01-repository-understanding.md", "06-capability-requirements.md"],
+  ["04-schema-selection", "01-repository-understanding.md", "07-capability-requirements.md"],
+  ["05-knowledge-entry", "03-knowledge-lifecycle.md", "06-runtime-requirements.md"],
+  ["06-cross-repository-relations", "02-knowledge-model-and-relations.md", "07-runtime-requirements.md"],
+  ["07-conflicts-and-questions", "04-trust-conflicts-and-freshness.md", "07-capability-requirements.md"],
+  ["08-live-references", "04-trust-conflicts-and-freshness.md", "07-capability-requirements.md"],
+  ["09-ingest-and-refresh", "03-knowledge-lifecycle.md", "09-runtime-requirements.md"],
+  ["10-query-routing", "05-query-and-context.md", "07-runtime-requirements.md"],
+  ["11-review-and-publish", "03-knowledge-lifecycle.md", "01-runtime-requirements.md"],
+  ["12-version-scope", "00-scope-and-authority.md", "01-foundation-requirements.md"],
+  ["13-visualization", "06-visualization.md", "04-runtime-requirements.md"],
+  ["14-ai-sdlc-context", "07-ai-sdlc-context.md", "02-runtime-requirements.md"],
 ];
 
 const REQUIREMENT_GROUPS = [
@@ -78,7 +71,7 @@ const REQUIREMENT_GROUPS = [
   ["schema catalog", "docs/capabilities/05-knowledge-entry/06-runtime-requirements.md", ids("AB-SCHEMA", 36), "SPEC-OKF-LIVING-MISSING", "SPEC-SCHEMA-ID-MISSING"],
   ["live claims", "docs/capabilities/05-knowledge-entry/06-runtime-requirements.md", ids("AB-CLAIM", 5), "SPEC-OKF-LIVING-MISSING", "SPEC-CLAIM-ID-MISSING"],
   ["initial ingest", "docs/capabilities/05-knowledge-entry/06-runtime-requirements.md", ids("AB-INGEST", 21), "SPEC-OKF-LIVING-MISSING", "SPEC-INGEST-ID-MISSING"],
-  ["product", "docs/product/00-product-scope-and-authority.md", [...ids("AB-PRODUCT", 5), ...ids("AB-MIGRATION", 6)], "SPEC-PRODUCT-LIVING-MISSING", "SPEC-PRODUCT-ID-MISSING"],
+  ["product", "docs/product/00-scope-and-authority.md", [...ids("AB-PRODUCT", 5), ...ids("AB-MIGRATION", 6)], "SPEC-PRODUCT-LIVING-MISSING", "SPEC-PRODUCT-ID-MISSING"],
   ["query", "docs/capabilities/10-query-routing/07-runtime-requirements.md", ids("AB-QUERY", 18), "SPEC-QUERY-LIVING-MISSING", "SPEC-QUERY-ID-MISSING"],
   ["local Hub", "docs/capabilities/11-review-and-publish/01-runtime-requirements.md", [...ids("AB-LOCAL-HUB", 16), ...ids("AB-PUBLISH", 10), ...ids("AB-HUB-SETUP", 17)], "SPEC-HUB-LIVING-MISSING", "SPEC-HUB-ID-MISSING"],
   ["installation", "docs/capabilities/12-version-scope/02-installation-requirements.md", ids("AB-INSTALL", 31), "SPEC-INSTALL-LIVING-MISSING", "SPEC-INSTALL-ID-MISSING"],
@@ -185,16 +178,17 @@ export function checkArchitectureContractEntries({ index, documents }) {
 
 export function checkProductContractEntries({ index, documents }) {
   const errors = [];
-  for (const [productFile, capabilityIndex] of PRODUCT_SECTIONS) {
+  for (const [productFile, capabilityIndexes] of PRODUCT_SECTIONS) {
     const relative = `docs/product/${productFile}`;
     const source = documents[relative];
     if (source === null) {
       errors.push({ code: "SPEC-PRODUCT-DOC-MISSING", message: `${relative} is required` });
-    } else if (productFile !== "00-product-scope-and-authority.md" && !/^> Status:/m.test(source)) {
+    } else if (!/^> Status:/m.test(source)) {
       errors.push({ code: "SPEC-PRODUCT-STATUS-MISSING", message: `${relative} must declare its synchronization status` });
     }
-    if (index !== null && (!index.includes(productFile) || !index.includes(capabilityIndex))) {
-      errors.push({ code: "SPEC-PRODUCT-ROUTE-MISSING", message: `docs/product/README.md must route ${relative} to docs/capabilities/${capabilityIndex}` });
+    const missingCapability = capabilityIndexes.find((capabilityIndex) => !index?.includes(capabilityIndex));
+    if (index !== null && (!index.includes(productFile) || missingCapability)) {
+      errors.push({ code: "SPEC-PRODUCT-ROUTE-MISSING", message: `docs/product/README.md must route ${relative} to every owned Capability Contract` });
     }
   }
   return errors;

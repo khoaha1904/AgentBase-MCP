@@ -3,7 +3,7 @@
 > Status: Catalog 7 is implemented; the catalog 6 design is superseded.
 
 Product Contract:
-[How does MCP select a schema?](../../product/04-how-concept-schemas-are-selected.md)
+[Repository understanding](../../product/01-repository-understanding.md)
 
 ## Contract map
 

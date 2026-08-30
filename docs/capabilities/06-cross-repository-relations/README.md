@@ -4,7 +4,7 @@
 > deferred beyond MVP; separate real-provider qualification remains.
 
 Product Contract:
-[Relations across repositories and Domains](../../product/06-cross-repository-and-cross-domain-relationships.md)
+[Knowledge model and relations](../../product/02-knowledge-model-and-relations.md)
 
 ## Contract map
 

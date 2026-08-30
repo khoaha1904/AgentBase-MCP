@@ -1,4 +1,7 @@
-# Product
+# 00 — Scope and authority
+
+> Status: Product identity, authority, MVP scope and migration boundaries are
+> accepted and implemented unless an item is explicitly marked deferred.
 
 ## Outcome and ownership
 
@@ -218,17 +221,35 @@ baseline after preview/confirmation.
 - A complete universal ontology or one file/directory per schema.
 - Model SDKs, model credential storage or real model calls in canonical tests.
 
-## Domain Enrichment boundary
+## Accepted current limits
 
-Initial Ingest stays inside one repository and records unresolved evidence as
-limitations or governed Questions. The bounded Domain Enrichment workflow can
-review several already-published repositories together, answer Questions and
-propose cross-repository relationships without interrupting each Ingest.
+- There is no backup or shared Local Draft; unpublished work remains local and
+  can be lost with the owning machine.
+- Refresh reads one repository and never treats absence as deletion evidence.
+- Batch Refresh and mixed Init/Refresh are deferred.
+- Reconciliation cannot guarantee a relationship when sources lack strong
+  shared identity.
+- AgentBase performs no remote auto-clone, global provider-account/region scan
+  or automatic semantic/vector fallback.
+- Hub access reads all Published knowledge; there is no Domain-, concept- or
+  field-level ACL.
+- Structured infrastructure evidence currently supports Terraform/Terragrunt;
+  SAM/CloudFormation and additional provider profiles are deferred.
+- Ordinary Hub query is Published-only. Local Draft exists for review.
+- The Published Hub graph and every search index are rebuildable read-only
+  projections, not additional sources of truth.
+- Real model/provider qualification is opt-in evidence and is not required by
+  the canonical offline repository gate.
 
-Some questions may identify external evidence that could resolve repository or
-cross-repository resource identity, such as AWS account, region, deployed name
-or ARN. Released AWS CLI profiles require explicit bounded read-only evidence
-collection, never store credentials or secrets in Hub and preserve source/time
-provenance. Additional provider/profile access remains separately specified.
-Exact canonical
-resource identity can support cross-repository links; same-name guesses cannot.
+There are no unresolved product decisions hidden in these limits. Expanding a
+limit requires an explicit Product/Architecture/Capability Contract delta.
+
+## Downstream Product Contracts
+
+- [Repository understanding](01-repository-understanding.md)
+- [Knowledge model and relations](02-knowledge-model-and-relations.md)
+- [Knowledge lifecycle](03-knowledge-lifecycle.md)
+- [Trust, conflicts and freshness](04-trust-conflicts-and-freshness.md)
+- [Query and context](05-query-and-context.md)
+- [Visualization](06-visualization.md)
+- [AI SDLC context](07-ai-sdlc-context.md)

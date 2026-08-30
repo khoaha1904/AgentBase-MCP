@@ -4,7 +4,7 @@
 > authority and exact profile isolation are implemented.
 
 Product Contract:
-[How does repository knowledge enter the Hub?](../../product/05-how-repository-knowledge-enters-the-hub.md)
+[Knowledge lifecycle](../../product/03-knowledge-lifecycle.md)
 
 ## Contract map
 

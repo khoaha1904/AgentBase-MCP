@@ -4,7 +4,7 @@
 > Seed/Inventory coverage are implemented.
 
 Product Contract:
-[How are concepts identified?](../../product/03-how-concepts-are-identified.md)
+[Repository understanding](../../product/01-repository-understanding.md)
 
 ## Contract map
 

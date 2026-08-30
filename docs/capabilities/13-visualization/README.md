@@ -4,7 +4,7 @@
 > generated snapshot is disposable validation output rather than authority.
 
 Product Contract:
-[Visualize Published knowledge](../../product/13-visualizing-published-knowledge.md).
+[Visualization](../../product/06-visualization.md).
 
 Architecture Contract:
 [Publication flow and visualization boundary](../../architecture/flows.md#publication-flow).

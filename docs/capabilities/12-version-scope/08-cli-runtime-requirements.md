@@ -3,7 +3,7 @@
 > Status: implemented baseline — `abs` public dispatch and shared-token Hub
 > connect are verified by the repository gate.
 
-High-level authority: [`docs/product/00-product-scope-and-authority.md`](../../product/00-product-scope-and-authority.md)
+High-level authority: [`docs/product/00-scope-and-authority.md`](../../product/00-scope-and-authority.md)
 and [`docs/product/README.md`](../../product/README.md).
 
 ## Baseline and gap

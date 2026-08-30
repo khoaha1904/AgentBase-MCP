@@ -5,7 +5,7 @@
 > arbitrary remote clone/query remains out of scope.
 
 Product Contract:
-[How does MCP read a project?](../../product/01-how-mcp-reads-a-repository.md)
+[Repository understanding](../../product/01-repository-understanding.md)
 
 ## Contract map
 

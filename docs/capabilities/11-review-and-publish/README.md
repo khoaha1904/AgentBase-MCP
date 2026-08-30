@@ -4,7 +4,7 @@
 > atomic Batch Initial Ingest pull requests and existing-PR reconciliation are implemented.
 
 Product Contract:
-[Review and Publish](../../product/11-review-accept-and-publish.md)
+[Knowledge lifecycle](../../product/03-knowledge-lifecycle.md)
 
 ## Contract map
 

@@ -1,8 +1,8 @@
 # AgentBase capability contracts
 
-This directory decomposes the 14 Product Contract outcomes in
-[`docs/product`](../product/README.md) into independently reviewable behavior,
-boundaries, failure/recovery rules and stable requirements.
+This directory decomposes the eight broader Product Contract outcomes in
+[`docs/product`](../product/README.md) into 14 independently reviewable
+behavioral boundaries with stable requirements.
 
 [Architecture ownership](../architecture/README.md) is the shared source map. The
 `*-requirements.md` files in the corresponding numbered area hold current
@@ -10,7 +10,8 @@ normative `AB-*` requirements; there is no parallel contracts tree.
 
 ## Organization
 
-- Each high-level section maps to exactly one directory numbered 01 through 14.
+- Each capability has one Product Contract owner, while one Product Contract may
+  own several capability directories.
 - The directory's `README.md` holds scope, the high-level link and the child
   design index.
 - Each child file addresses one behavioral boundary without repeating the

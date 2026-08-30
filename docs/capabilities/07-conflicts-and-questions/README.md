@@ -3,7 +3,7 @@
 > Status: Shared Questions/exact Guidance and three-tier AWS/SQS enrichment are implemented; broader conflict composition is deferred.
 
 Product Contract:
-[Conflicting data, Questions and Maintainer Guidance](../../product/07-conflicts-questions-and-maintainer-guidance.md)
+[Trust, conflicts and freshness](../../product/04-trust-conflicts-and-freshness.md)
 
 ## Contract map
 

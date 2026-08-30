@@ -4,7 +4,7 @@
 > harnesses are implemented; no context skill or runtime behavior is added.
 
 Product Contract:
-[`Context for AI workflows in the SDLC`](../../product/14-context-for-ai-sdlc-workflows.md)
+[`AI SDLC context`](../../product/07-ai-sdlc-context.md)
 
 Architecture Contract:
 [Query and context flow](../../architecture/flows.md#query-and-context-flow).

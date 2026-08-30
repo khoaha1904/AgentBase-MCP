@@ -3,7 +3,7 @@
 > Status: MVP capability boundary implemented and audited offline.
 
 Product Contract:
-[Current limits and first-version scope](../../product/12-current-limits-and-open-decisions.md)
+[Scope and authority](../../product/00-scope-and-authority.md)
 
 ## Contract map
 

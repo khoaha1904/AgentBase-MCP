@@ -46,20 +46,20 @@ test("Spec Kit templates retain the contract delta and validation handoff", () =
 
 test("every capability routes to its product outcome and normative requirements", () => {
   const areas = [
-    ["01-repository-reading", "01-how-mcp-reads-a-repository.md", "05-runtime-requirements.md"],
-    ["02-hub-domain-repository-model", "02-hub-domains-and-repositories.md", "06-capability-requirements.md"],
-    ["03-concept-discovery", "03-how-concepts-are-identified.md", "06-capability-requirements.md"],
-    ["04-schema-selection", "04-how-concept-schemas-are-selected.md", "07-capability-requirements.md"],
-    ["05-knowledge-entry", "05-how-repository-knowledge-enters-the-hub.md", "06-runtime-requirements.md"],
-    ["06-cross-repository-relations", "06-cross-repository-and-cross-domain-relationships.md", "07-runtime-requirements.md"],
-    ["07-conflicts-and-questions", "07-conflicts-questions-and-maintainer-guidance.md", "07-capability-requirements.md"],
-    ["08-live-references", "08-live-references-for-change-prone-values.md", "07-capability-requirements.md"],
-    ["09-ingest-and-refresh", "09-ingest-and-refresh.md", "09-runtime-requirements.md"],
-    ["10-query-routing", "10-querying-code-graph-and-hub.md", "07-runtime-requirements.md"],
-    ["11-review-and-publish", "11-review-accept-and-publish.md", "01-runtime-requirements.md"],
-    ["12-version-scope", "12-current-limits-and-open-decisions.md", "01-foundation-requirements.md"],
-    ["13-visualization", "13-visualizing-published-knowledge.md", "04-runtime-requirements.md"],
-    ["14-ai-sdlc-context", "14-context-for-ai-sdlc-workflows.md", "02-runtime-requirements.md"],
+    ["01-repository-reading", "01-repository-understanding.md", "05-runtime-requirements.md"],
+    ["02-hub-domain-repository-model", "02-knowledge-model-and-relations.md", "06-capability-requirements.md"],
+    ["03-concept-discovery", "01-repository-understanding.md", "06-capability-requirements.md"],
+    ["04-schema-selection", "01-repository-understanding.md", "07-capability-requirements.md"],
+    ["05-knowledge-entry", "03-knowledge-lifecycle.md", "06-runtime-requirements.md"],
+    ["06-cross-repository-relations", "02-knowledge-model-and-relations.md", "07-runtime-requirements.md"],
+    ["07-conflicts-and-questions", "04-trust-conflicts-and-freshness.md", "07-capability-requirements.md"],
+    ["08-live-references", "04-trust-conflicts-and-freshness.md", "07-capability-requirements.md"],
+    ["09-ingest-and-refresh", "03-knowledge-lifecycle.md", "09-runtime-requirements.md"],
+    ["10-query-routing", "05-query-and-context.md", "07-runtime-requirements.md"],
+    ["11-review-and-publish", "03-knowledge-lifecycle.md", "01-runtime-requirements.md"],
+    ["12-version-scope", "00-scope-and-authority.md", "01-foundation-requirements.md"],
+    ["13-visualization", "06-visualization.md", "04-runtime-requirements.md"],
+    ["14-ai-sdlc-context", "07-ai-sdlc-context.md", "02-runtime-requirements.md"],
   ];
   const entries = Object.fromEntries(areas.map(([area, productFile, requirementsFile]) => [area, {
     index: `../../product/${productFile}\n${requirementsFile}\n`,
@@ -75,23 +75,16 @@ test("every capability routes to its product outcome and normative requirements"
   }]);
 });
 
-test("product contract index routes every outcome to a capability and status", () => {
+test("product contract index routes every outcome to all owned capabilities", () => {
   const productFiles = [
-    "00-product-scope-and-authority.md",
-    "01-how-mcp-reads-a-repository.md",
-    "02-hub-domains-and-repositories.md",
-    "03-how-concepts-are-identified.md",
-    "04-how-concept-schemas-are-selected.md",
-    "05-how-repository-knowledge-enters-the-hub.md",
-    "06-cross-repository-and-cross-domain-relationships.md",
-    "07-conflicts-questions-and-maintainer-guidance.md",
-    "08-live-references-for-change-prone-values.md",
-    "09-ingest-and-refresh.md",
-    "10-querying-code-graph-and-hub.md",
-    "11-review-accept-and-publish.md",
-    "12-current-limits-and-open-decisions.md",
-    "13-visualizing-published-knowledge.md",
-    "14-context-for-ai-sdlc-workflows.md",
+    "00-scope-and-authority.md",
+    "01-repository-understanding.md",
+    "02-knowledge-model-and-relations.md",
+    "03-knowledge-lifecycle.md",
+    "04-trust-conflicts-and-freshness.md",
+    "05-query-and-context.md",
+    "06-visualization.md",
+    "07-ai-sdlc-context.md",
   ];
   const capabilityIndexes = [
     "12-version-scope/README.md", "01-repository-reading/README.md",
@@ -100,20 +93,20 @@ test("product contract index routes every outcome to a capability and status", (
     "06-cross-repository-relations/README.md", "07-conflicts-and-questions/README.md",
     "08-live-references/README.md", "09-ingest-and-refresh/README.md",
     "10-query-routing/README.md", "11-review-and-publish/README.md",
-    "12-version-scope/README.md", "13-visualization/README.md",
+    "13-visualization/README.md",
     "14-ai-sdlc-context/README.md",
   ];
   const documents = Object.fromEntries(productFiles.map((file) => [
     `docs/product/${file}`,
-    file.startsWith("00-") ? "# Product\n" : "# Product\n\n> Status: Implemented.\n",
+    "# Product\n\n> Status: Implemented.\n",
   ]));
   const index = [...productFiles, ...capabilityIndexes].join("\n");
   assert.deepEqual(checkProductContractEntries({ index, documents }), []);
 
-  documents["docs/product/13-visualizing-published-knowledge.md"] = "# Product\n";
+  documents["docs/product/06-visualization.md"] = "# Product\n";
   assert.deepEqual(checkProductContractEntries({ index, documents }), [{
     code: "SPEC-PRODUCT-STATUS-MISSING",
-    message: "docs/product/13-visualizing-published-knowledge.md must declare its synchronization status",
+    message: "docs/product/06-visualization.md must declare its synchronization status",
   }]);
 });
 

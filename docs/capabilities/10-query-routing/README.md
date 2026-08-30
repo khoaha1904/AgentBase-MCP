@@ -5,7 +5,7 @@
 > qualification hardening are implemented; MCP remains deterministic.
 
 Product Contract:
-[Querying the Code Graph and Hub](../../product/10-querying-code-graph-and-hub.md)
+[Query and context](../../product/05-query-and-context.md)
 
 ## Contract map
 
