@@ -3,10 +3,10 @@
 > Status: Independent Init pull requests, same-Repository Init/Refresh stacks,
 > atomic Batch Initial Ingest pull requests and existing-PR reconciliation are implemented.
 
-High-level decision:
+Product Contract:
 [Review and Publish](../../product/11-review-accept-and-publish.md)
 
-## Planned breakdown
+## Contract map
 
 - [`01-runtime-requirements.md`](01-runtime-requirements.md) — current Local Hub,
   setup, publication and synchronization `AB-*` requirements. Query authority

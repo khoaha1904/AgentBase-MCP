@@ -1,7 +1,8 @@
-# Code Graph runtime requirements
+# 01.05 — Capability requirements
 
-Current requirements for owned Codebase Memory, graph evidence, freshness and the
-agent-facing stdio MCP. The graph remains detailed, private and disposable.
+These `AB-MVP-*`, `AB-GRAPH-*`, `AB-GRAPH-REFRESH-*` and `AB-MCP-*`
+requirements are the normative Repository Reading Capability Contract. The
+graph remains detailed, private and disposable.
 
 ## Owned provider and evidence
 

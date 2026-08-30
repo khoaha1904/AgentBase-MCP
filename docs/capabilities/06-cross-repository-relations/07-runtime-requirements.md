@@ -1,6 +1,9 @@
-# 06.07 — Domain Enrichment runtime requirements
+# 06.07 — Capability requirements
 
 > Status: The first AWS/SQS slice is implemented with deterministic offline E2E.
+
+These `AB-ENRICH-*` requirements are the normative Cross-Repository Relations
+Capability Contract for the released bounded enrichment slice.
 
 - **AB-ENRICH-001** — A run binds exact remote Published Hub commit, one
   confirmed Domain, 1–32 Published Repository IDs, exact candidate/Question

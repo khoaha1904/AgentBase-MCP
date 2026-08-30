@@ -100,6 +100,18 @@ const IMPLEMENTATION_PLAN_MARKERS = [
   "## Implementation Decisions",
   "## Validation Mapping",
 ];
+const SPECIFICATION_CONTRACT_MARKERS = [
+  "## Contract Delta",
+  "**Product Contract**",
+  "**Architecture Contract**",
+  "**Capability Contract**",
+  "**Stable requirements**",
+];
+const TASK_CONTRACT_MARKERS = [
+  "Product, Architecture and Capability Contract deltas",
+  "Validation Evidence",
+  "repository verification gate",
+];
 const ACTIVE_NAMING_RULES = [
   { code: "SPEC-TEMP-PRODUCT-NAME", pattern: /^#\s+AgentBase Next\b/im, message: "current docs must use AgentBase-MCP" },
   { code: "SPEC-TEMP-PRODUCT-NAME", pattern: /\bAgentBase Next is\b/i, message: "current docs must not present the rebuild name as product identity" },
@@ -149,6 +161,13 @@ export function checkImplementationPlanEntry({ relative, source, active = false 
     errors.push({ code: "SPEC-PLAN-UNRESOLVED", message: `${relative} contains an unresolved implementation decision` });
   }
   return errors;
+}
+
+export function checkTemplateContractEntry({ relative, source, markers }) {
+  if (source === null) return [{ code: "SPEC-TEMPLATE-MISSING", message: `${relative} is required` }];
+  return markers.flatMap((marker) => source.includes(marker)
+    ? []
+    : [{ code: "SPEC-TEMPLATE-CONTRACT-MISSING", message: `${relative} is missing ${marker}` }]);
 }
 
 export function checkArchitectureContractEntries({ index, documents }) {
@@ -254,6 +273,16 @@ export function checkSpecifications(root) {
     relative: ".specify/templates/plan-template.md",
     source: read(root, ".specify/templates/plan-template.md"),
   }));
+  errors.push(...checkTemplateContractEntry({
+    relative: ".specify/templates/spec-template.md",
+    source: read(root, ".specify/templates/spec-template.md"),
+    markers: SPECIFICATION_CONTRACT_MARKERS,
+  }));
+  errors.push(...checkTemplateContractEntry({
+    relative: ".specify/templates/tasks-template.md",
+    source: read(root, ".specify/templates/tasks-template.md"),
+    markers: TASK_CONTRACT_MARKERS,
+  }));
 
   if (!agentGuide) errors.push({ code: "SPEC-GUIDE-MISSING", message: "AGENTS.md is required" });
   else for (const route of ["docs/README.md", "specs/CURRENT.md"]) {
@@ -296,6 +325,11 @@ export function checkSpecifications(root) {
       errors.push({ code: "SPEC-ACTIVE-BROKEN", message: "specs/CURRENT.md must link to an existing active or most recently completed specification" });
     }
     if (!activeNone && target) {
+      errors.push(...checkTemplateContractEntry({
+        relative: path.posix.join("specs", target),
+        source: read(root, path.posix.join("specs", target)),
+        markers: SPECIFICATION_CONTRACT_MARKERS,
+      }));
       const planRelative = path.posix.join("specs", path.posix.dirname(target), "plan.md");
       errors.push(...checkImplementationPlanEntry({
         relative: planRelative,

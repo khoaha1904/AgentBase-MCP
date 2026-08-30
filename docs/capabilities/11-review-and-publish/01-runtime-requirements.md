@@ -1,4 +1,8 @@
-# AgentBase-Hub runtime requirements
+# 11.01 — Capability requirements
+
+This file contains normative requirements enforced by the shared Local Hub,
+publication, Question and synchronization runtime. Capability-specific indexes
+route to shared groups without copying their IDs.
 
 AgentBase-Hub is optional until the first Hub-dependent action. Indexing, graph
 queries and ordinary coding never create Hub state, commits or publication.

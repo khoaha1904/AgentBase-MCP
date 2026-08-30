@@ -3,10 +3,10 @@
 > Status: Proposal/template, Published-only query, remote-required OKF
 > authority and exact profile isolation are implemented.
 
-High-level decision:
+Product Contract:
 [How does repository knowledge enter the Hub?](../../product/05-how-repository-knowledge-enters-the-hub.md)
 
-## Planned decomposition
+## Contract map
 
 - [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — baseline, gap and
   the decision to keep proposal/change set as publication unit.

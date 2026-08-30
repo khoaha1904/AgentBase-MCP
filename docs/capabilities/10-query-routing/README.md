@@ -4,10 +4,10 @@
 > scope, bounded relation discovery and Capability 051 failure visibility/
 > qualification hardening are implemented; MCP remains deterministic.
 
-High-level decision:
+Product Contract:
 [Querying the Code Graph and Hub](../../product/10-querying-code-graph-and-hub.md)
 
-## Planned breakdown
+## Contract map
 
 - [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — current query surfaces,
   reusable boundaries, gaps and impact checkpoint.

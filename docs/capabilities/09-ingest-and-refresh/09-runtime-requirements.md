@@ -1,7 +1,11 @@
-# 09.09 — Batch Initial Ingest runtime requirements
+# 09.09 — Capability requirements
 
 > Status: Baseline Batch Initial Ingest and Capability 046 per-member
 > SourceSnapshot/Seed/Receipt additions are implemented offline.
+
+These `AB-BATCH-*` requirements are the normative Batch Initial Ingest portion
+of the Ingest and Refresh Capability Contract. Single-repository authoring
+requirements remain enforced by the shared OKF authoring runtime.
 
 - **AB-BATCH-001** — A batch binds an exact Hub base, one confirmed Domain and
   2..32 explicit unique local repository roots; it does not scan a workspace for repositories.

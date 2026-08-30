@@ -100,9 +100,12 @@ tasks.md → plan.md
 verification.md → requirements + tests
 ```
 
-`spec.md` records the accepted change requirements and delta. `$speckit-plan`
-reads it and creates `plan.md`; that plan links back to the spec and upstream
-contracts and is the feature-scoped Implementation Contract.
+`spec.md` records the accepted change requirements and a Contract Delta linking
+the affected current contracts. `$speckit-plan` reads it and creates `plan.md`;
+that plan links back to the spec and upstream contracts and is the
+feature-scoped Implementation Contract. Generated tasks synchronize an accepted
+current-contract delta before behavior implementation and finish by mapping
+requirements to Validation Evidence.
 
 The current paths map to those levels as follows:
 

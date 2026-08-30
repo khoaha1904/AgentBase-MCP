@@ -1,4 +1,8 @@
-# 14.02 — Runtime requirements
+# 14.02 — Capability requirements
+
+These `AB-CONTEXT-*` requirements are the normative AI SDLC Context Capability
+Contract. Qualification results are Validation Evidence, not requirement
+authority.
 
 > Status: AB-CONTEXT-001..010 deterministic implementation approved; the first
 > ECS real pair passed deterministic checks and remains pending owner review.

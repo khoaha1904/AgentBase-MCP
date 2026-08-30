@@ -1,8 +1,10 @@
-# Evidence and OKF runtime requirements
+# 05.06 — Capability requirements
 
-Current requirements for explicit observations, repository-local OKF proposals and
-the AgentBase concept schema catalog. Google OKF v0.2 is the portable format;
-AgentBase lifecycle fields and types are producer conventions.
+This file contains normative requirements enforced by the shared OKF authoring
+runtime. Capability-specific indexes in Schema Selection, Concept Discovery and
+Observed Snapshots route to the relevant groups without copying their IDs.
+Google OKF v0.2 is the portable format; AgentBase lifecycle fields and types are
+producer conventions.
 
 Normative OKF source is pinned to commit
 `3fcbb9f828c2f23d109c855ee403c3a4c81f3a96`:

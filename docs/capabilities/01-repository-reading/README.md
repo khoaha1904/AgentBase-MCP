@@ -4,10 +4,10 @@
 > Capability 046 remote-default Hub authoring snapshots are implemented;
 > arbitrary remote clone/query remains out of scope.
 
-High-level decision:
+Product Contract:
 [How does MCP read a project?](../../product/01-how-mcp-reads-a-repository.md)
 
-## Decomposition
+## Contract map
 
 - [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — graph, evidence and
   skill baseline; identifies reusable parts and gaps.

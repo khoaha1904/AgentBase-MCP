@@ -1,7 +1,10 @@
-# 10.07 — Runtime requirements
+# 10.07 — Capability requirements
 
 > Status: AB-QUERY-001..016 implemented and covered by capability 049 evidence;
 > AB-QUERY-017..018 are the approved Capability 051 hardening additions.
+
+These `AB-QUERY-*` requirements are the normative Query Routing Capability
+Contract.
 
 - **AB-QUERY-001** — Code questions primarily use Code Graph; business/system/
   cross-repository questions primarily use local Hub; combined answers retain

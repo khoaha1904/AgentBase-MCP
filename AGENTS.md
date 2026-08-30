@@ -37,11 +37,11 @@ vendor snapshots, generated output or immutable external evidence.
   time behind current requirements.
 - Prevent dead specs while implementing. If code exposes a broad product,
   architecture, authority, migration or workflow gap, stop implementation and
-  return to the affected AgentBase high-level and low-level design for owner
+  return to the affected Product, Architecture and Capability Contracts for owner
   review before continuing. Small related implementation corrections may be
   batched, but the affected design levels and current requirements must be
   backfilled before the slice is considered complete. Never close a capability
-  while code, high-level design, low-level design and current requirements disagree.
+  while the contract levels, code and current requirements disagree.
 
 ## Mandatory change lifecycle
 
@@ -66,12 +66,14 @@ silently redefine an upstream contract.
    runtime shape changes.
 3. **Capability Contract** — update the affected `docs/capabilities/` boundary
    when behavior changes. Record reusable baseline, data/tool contracts, bounds,
-   failure/recovery, security impact, verification evidence and stable `AB-*`
-   requirements. Query behavior belongs in numbered Query design (10), not in
+   failure/recovery, security impact, validation obligations and stable `AB-*`
+   requirements. Tests and retained reports provide the Validation Evidence;
+   they do not become Capability Contract authority. Query behavior belongs in numbered Query design (10), not in
    an ad-hoc new query system.
 4. **Implementation Contract** — create or update one numbered `specs/<id>/`
-   artifact and `specs/CURRENT.md`. Keep accepted change requirements in
-   `spec.md`; use `plan.md` for concrete modules, interfaces, data/state choices,
+   artifact and `specs/CURRENT.md`. Keep accepted change requirements and links
+   to affected upstream contracts in the `spec.md` Contract Delta; use `plan.md`
+   for concrete modules, interfaces, data/state choices,
    dependencies, migration/recovery and requirement-to-verification mapping.
    Historical capabilities are never silently rewritten.
 5. **Consistency gate** — compare all affected upstream contracts, the active

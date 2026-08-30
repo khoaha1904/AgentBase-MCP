@@ -2,28 +2,31 @@
 
 > Status: MVP capability boundary implemented and audited offline.
 
-High-level decision:
+Product Contract:
 [Current limits and first-version scope](../../product/12-current-limits-and-open-decisions.md)
 
-## Planned decomposition
+## Contract map
 
-- [`01-foundation-requirements.md`](01-foundation-requirements.md) — repository
+- **Normative requirements:**
+  [`01-foundation-requirements.md`](01-foundation-requirements.md) — repository
   engineering and verification requirements.
-- [`02-installation-requirements.md`](02-installation-requirements.md) — setup,
+  [`02-installation-requirements.md`](02-installation-requirements.md) — setup,
   credential and client registration requirements.
-- [`03-benchmark-requirements.md`](03-benchmark-requirements.md) — opt-in agent
+  [`03-benchmark-requirements.md`](03-benchmark-requirements.md) — opt-in agent
   benchmark requirements and retained evidence.
-- [`04-v1-capability-boundaries.md`](04-v1-capability-boundaries.md) — required
+- **Behavior and boundaries:**
+  [`04-v1-capability-boundaries.md`](04-v1-capability-boundaries.md) — required
   first-version scope and release gaps.
-- [`05-accepted-limitations.md`](05-accepted-limitations.md) — accepted limits
+  [`05-accepted-limitations.md`](05-accepted-limitations.md) — accepted limits
   and failure modes.
-- [`06-cross-cutting-constraints.md`](06-cross-cutting-constraints.md) —
+  [`06-cross-cutting-constraints.md`](06-cross-cutting-constraints.md) —
   local-first, provenance and no-auto-publish.
-- [`07-deferred-capabilities.md`](07-deferred-capabilities.md) — capabilities
+  [`07-deferred-capabilities.md`](07-deferred-capabilities.md) — capabilities
   added after MVP only when a real need appears.
-- [`08-cli-runtime-requirements.md`](08-cli-runtime-requirements.md) — public
+- **Additional normative requirements:**
+  [`08-cli-runtime-requirements.md`](08-cli-runtime-requirements.md) — public
   `abs` grammar, shared-token connect, compatibility and verification boundary.
-- [`09-mcp-protocol-requirements.md`](09-mcp-protocol-requirements.md) — supported
+  [`09-mcp-protocol-requirements.md`](09-mcp-protocol-requirements.md) — supported
   MCP eras, stateless transport behavior and deferred remote authority.
 
 Do not create a separate decision register; current decisions already belong to

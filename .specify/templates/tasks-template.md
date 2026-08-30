@@ -7,7 +7,8 @@ description: "Task list template for feature implementation"
 
 **Input**: Design documents from `/specs/[###-feature-name]/`
 
-**Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
+**Prerequisites**: plan.md and spec.md (required), affected Product/Architecture/
+Capability Contracts, research.md, data-model.md, contracts/
 
 **Tests**: The examples below include test tasks. Tests are OPTIONAL - only include them if explicitly requested in the feature specification.
 
@@ -52,6 +53,9 @@ description: "Task list template for feature implementation"
 - [ ] T001 Create project structure per implementation plan
 - [ ] T002 Initialize [language] project with [framework] dependencies
 - [ ] T003 [P] Configure linting and formatting tools
+- [ ] TXXX Synchronize the Product, Architecture and Capability Contract deltas
+  named by spec.md before behavior implementation (omit only when the spec says
+  no current-contract update)
 
 ---
 
@@ -157,6 +161,8 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] TXXX [P] Additional unit tests (if requested) in tests/unit/
 - [ ] TXXX Security hardening
 - [ ] TXXX Run quickstart.md validation
+- [ ] TXXX Map every affected requirement to focused tests and retained
+  Validation Evidence; run the repository verification gate
 
 ---
 

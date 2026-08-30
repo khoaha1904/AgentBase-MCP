@@ -3,10 +3,10 @@
 > Status: AWS/SQS runtime slice implemented offline; Published merge/redirect is
 > deferred beyond MVP; separate real-provider qualification remains.
 
-High-level decision:
+Product Contract:
 [Relations across repositories and Domains](../../product/06-cross-repository-and-cross-domain-relationships.md)
 
-## Planned decomposition
+## Contract map
 
 - [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — reusable parts,
   gaps and the impact checkpoint before deeper design.

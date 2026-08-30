@@ -8,6 +8,23 @@
 
 **Input**: User description: "$ARGUMENTS"
 
+## Contract Delta *(mandatory)*
+
+<!--
+  Link the current contracts that constrain this feature. State exactly which
+  accepted behavior changes. Use N/A with a reason only when a level is truly
+  unaffected. This spec records the accepted delta; it does not replace current
+  Product, Architecture or Capability Contracts.
+-->
+
+- **Change classification**: [implementation-only / capability behavior / architecture boundary / product outcome]
+- **Product Contract**: [current path and affected decision, or N/A with rationale]
+- **Architecture Contract**: [current path and affected boundary, or N/A with rationale]
+- **Capability Contract**: [current path and affected behavior]
+- **Stable requirements**: [existing and proposed requirement IDs]
+- **Current-contract updates**: [exact docs to update before implementation, or none]
+- **Baseline commit**: [full Git commit SHA reviewed for this delta]
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--

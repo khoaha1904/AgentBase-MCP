@@ -8,7 +8,25 @@ import {
   checkImplementationPlanEntry,
   checkProductContractEntries,
   checkRepositoryLanguageEntries,
+  checkTemplateContractEntry,
 } from "./check-specs.mjs";
+
+test("Spec Kit templates retain the contract delta and validation handoff", () => {
+  assert.deepEqual(checkTemplateContractEntry({
+    relative: ".specify/templates/spec-template.md",
+    source: "## Contract Delta\n**Product Contract**\n",
+    markers: ["## Contract Delta", "**Product Contract**"],
+  }), []);
+
+  assert.deepEqual(checkTemplateContractEntry({
+    relative: ".specify/templates/tasks-template.md",
+    source: "Validation Evidence\n",
+    markers: ["Validation Evidence", "repository verification gate"],
+  }), [{
+    code: "SPEC-TEMPLATE-CONTRACT-MISSING",
+    message: ".specify/templates/tasks-template.md is missing repository verification gate",
+  }]);
+});
 
 test("every capability routes to its product outcome and normative requirements", () => {
   const areas = [

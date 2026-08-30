@@ -4,10 +4,10 @@
 > Enrichment, the freshness report and Hub CI are implemented under the baseline.
 > The Capability 046 Initial Ingest discovery runtime is also implemented.
 
-High-level decision:
+Product Contract:
 [Ingest and Refresh](../../product/09-ingest-and-refresh.md)
 
-## Breakdown
+## Contract map
 
 - [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — current authoring
   baseline, orchestration gap and impact.
