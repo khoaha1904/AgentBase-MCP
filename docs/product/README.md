@@ -1,8 +1,18 @@
-# AgentBase — high-level product design
+# AgentBase Product Contract
 
-This directory presents product direction. Low-level design and implementation
-follow each area; the synchronization status below distinguishes implemented
-behavior from direction that is not yet implemented.
+This directory owns AgentBase's product outcomes, user-visible workflows,
+authority, scope and non-goals. It defines **what** the product must achieve;
+[`docs/architecture`](../architecture/README.md) defines the shared system shape
+and [`docs/capabilities`](../capabilities/README.md) defines bounded behavior.
+
+Page `00` owns product-wide policy. Pages `01` through `14` are user-facing
+outcome slices, not implementation plans. Their status notes distinguish
+implemented behavior from accepted direction. Concrete modules, packages and
+coding decisions belong in the active feature's `specs/<feature>/plan.md`.
+
+When implementation evidence conflicts with this contract, record the gap and
+route the product decision here before changing downstream contracts. Do not
+silently redefine product behavior in architecture, capability or source docs.
 
 ## What problem does AgentBase solve?
 
@@ -56,25 +66,27 @@ publish without explicit authorization.
 - **Maintainer Guidance:** scoped guidance supplied by a user.
 - **PR:** a proposed change for a maintainer to review and merge into the shared Hub.
 
-## Product sections
+## Product sections and downstream contracts
 
-0. [Product scope and authority](00-product-scope-and-authority.md)
-1. [How MCP reads a repository](01-how-mcp-reads-a-repository.md)
-2. [How Hub, Domain and Repository are organized](02-hub-domains-and-repositories.md)
-3. [How MCP identifies concepts in a repository](03-how-concepts-are-identified.md)
-4. [How MCP selects a concept schema](04-how-concept-schemas-are-selected.md)
-5. [How repository knowledge enters the Hub](05-how-repository-knowledge-enters-the-hub.md)
-6. [Cross-repository and cross-domain relationships](06-cross-repository-and-cross-domain-relationships.md)
-7. [Conflicts, Questions and Maintainer Guidance](07-conflicts-questions-and-maintainer-guidance.md)
-8. [Observed snapshots and source references](08-live-references-for-change-prone-values.md)
-9. [Ingest and Refresh](09-ingest-and-refresh.md)
-10. [Querying Code Graph and Hub](10-querying-code-graph-and-hub.md)
-11. [Review and Publish](11-review-accept-and-publish.md)
-12. [Version-one limits and scope](12-current-limits-and-open-decisions.md)
-13. [Visualizing Published knowledge](13-visualizing-published-knowledge.md)
-14. [Context for AI workflows in the SDLC](14-context-for-ai-sdlc-workflows.md)
+| Area | Product outcome | Capability Contract |
+|---|---|---|
+| 00 | [Product scope and authority](00-product-scope-and-authority.md) | [Version scope](../capabilities/12-version-scope/README.md) |
+| 01 | [How MCP reads a repository](01-how-mcp-reads-a-repository.md) | [Repository reading](../capabilities/01-repository-reading/README.md) |
+| 02 | [How Hub, Domain and Repository are organized](02-hub-domains-and-repositories.md) | [Hub, Domain and Repository model](../capabilities/02-hub-domain-repository-model/README.md) |
+| 03 | [How MCP identifies concepts in a repository](03-how-concepts-are-identified.md) | [Concept discovery](../capabilities/03-concept-discovery/README.md) |
+| 04 | [How MCP selects a concept schema](04-how-concept-schemas-are-selected.md) | [Schema selection](../capabilities/04-schema-selection/README.md) |
+| 05 | [How repository knowledge enters the Hub](05-how-repository-knowledge-enters-the-hub.md) | [Knowledge entry](../capabilities/05-knowledge-entry/README.md) |
+| 06 | [Cross-repository and cross-domain relationships](06-cross-repository-and-cross-domain-relationships.md) | [Cross-repository relations](../capabilities/06-cross-repository-relations/README.md) |
+| 07 | [Conflicts, Questions and Maintainer Guidance](07-conflicts-questions-and-maintainer-guidance.md) | [Conflicts, Questions and Guidance](../capabilities/07-conflicts-and-questions/README.md) |
+| 08 | [Observed snapshots and source references](08-live-references-for-change-prone-values.md) | [Observed snapshots](../capabilities/08-live-references/README.md) |
+| 09 | [Ingest and Refresh](09-ingest-and-refresh.md) | [Ingest and Refresh](../capabilities/09-ingest-and-refresh/README.md) |
+| 10 | [Querying Code Graph and Hub](10-querying-code-graph-and-hub.md) | [Query routing](../capabilities/10-query-routing/README.md) |
+| 11 | [Review and Publish](11-review-accept-and-publish.md) | [Review and Publish](../capabilities/11-review-and-publish/README.md) |
+| 12 | [Version-one limits and scope](12-current-limits-and-open-decisions.md) | [Version scope](../capabilities/12-version-scope/README.md) |
+| 13 | [Visualizing Published knowledge](13-visualizing-published-knowledge.md) | [Published visualization](../capabilities/13-visualization/README.md) |
+| 14 | [Context for AI workflows in the SDLC](14-context-for-ai-sdlc-workflows.md) | [AI SDLC context](../capabilities/14-ai-sdlc-context/README.md) |
 
-All twelve foundation sections were reviewed as one whole. Section 13 is a
+The twelve foundation sections were reviewed as one whole. Section 13 is a
 new capability presentation and preserves the authority of earlier sections.
 Capability 051 completed reliability hardening without changing OKF schema or
 query authority. Section 14 opens AgentBase as a context layer for external

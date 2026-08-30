@@ -32,6 +32,24 @@ const ARCHITECTURE_DOCUMENTS = [
   "docs/architecture/runtime.md",
 ];
 
+const PRODUCT_SECTIONS = [
+  ["00-product-scope-and-authority.md", "12-version-scope/README.md"],
+  ["01-how-mcp-reads-a-repository.md", "01-repository-reading/README.md"],
+  ["02-hub-domains-and-repositories.md", "02-hub-domain-repository-model/README.md"],
+  ["03-how-concepts-are-identified.md", "03-concept-discovery/README.md"],
+  ["04-how-concept-schemas-are-selected.md", "04-schema-selection/README.md"],
+  ["05-how-repository-knowledge-enters-the-hub.md", "05-knowledge-entry/README.md"],
+  ["06-cross-repository-and-cross-domain-relationships.md", "06-cross-repository-relations/README.md"],
+  ["07-conflicts-questions-and-maintainer-guidance.md", "07-conflicts-and-questions/README.md"],
+  ["08-live-references-for-change-prone-values.md", "08-live-references/README.md"],
+  ["09-ingest-and-refresh.md", "09-ingest-and-refresh/README.md"],
+  ["10-querying-code-graph-and-hub.md", "10-query-routing/README.md"],
+  ["11-review-accept-and-publish.md", "11-review-and-publish/README.md"],
+  ["12-current-limits-and-open-decisions.md", "12-version-scope/README.md"],
+  ["13-visualizing-published-knowledge.md", "13-visualization/README.md"],
+  ["14-context-for-ai-sdlc-workflows.md", "14-ai-sdlc-context/README.md"],
+];
+
 const REQUIREMENT_GROUPS = [
   ["foundation", "docs/capabilities/12-version-scope/01-foundation-requirements.md", ids("AB-FND", 19), "SPEC-LIVING-MISSING", "SPEC-ID-MISSING"],
   ["managed graph", "docs/capabilities/01-repository-reading/05-runtime-requirements.md", ids("AB-MVP", 7), "SPEC-MVP-LIVING-MISSING", "SPEC-MVP-ID-MISSING"],
@@ -129,6 +147,23 @@ export function checkArchitectureContractEntries({ index, documents }) {
   return errors;
 }
 
+export function checkProductContractEntries({ index, documents }) {
+  const errors = [];
+  for (const [productFile, capabilityIndex] of PRODUCT_SECTIONS) {
+    const relative = `docs/product/${productFile}`;
+    const source = documents[relative];
+    if (source === null) {
+      errors.push({ code: "SPEC-PRODUCT-DOC-MISSING", message: `${relative} is required` });
+    } else if (productFile !== "00-product-scope-and-authority.md" && !/^> Status:/m.test(source)) {
+      errors.push({ code: "SPEC-PRODUCT-STATUS-MISSING", message: `${relative} must declare its synchronization status` });
+    }
+    if (index !== null && (!index.includes(productFile) || !index.includes(capabilityIndex))) {
+      errors.push({ code: "SPEC-PRODUCT-ROUTE-MISSING", message: `docs/product/README.md must route ${relative} to docs/capabilities/${capabilityIndex}` });
+    }
+  }
+  return errors;
+}
+
 function checkRepositoryLanguage(root) {
   const files = execFileSync("git", ["ls-files", "-z"], { cwd: root, encoding: "utf8" })
     .split("\0")
@@ -158,6 +193,14 @@ export function checkSpecifications(root) {
   errors.push(...checkArchitectureContractEntries({
     index: architectureIndex,
     documents: Object.fromEntries(ARCHITECTURE_DOCUMENTS.map((relative) => [relative, read(root, relative)])),
+  }));
+  const productIndex = read(root, "docs/product/README.md");
+  errors.push(...checkProductContractEntries({
+    index: productIndex,
+    documents: Object.fromEntries(PRODUCT_SECTIONS.map(([productFile]) => {
+      const relative = `docs/product/${productFile}`;
+      return [relative, read(root, relative)];
+    })),
   }));
   errors.push(...checkImplementationPlanEntry({
     relative: ".specify/templates/plan-template.md",

@@ -1,5 +1,9 @@
 # 13 — Visualizing Published Knowledge
 
+> Status: Published projection, focused query diagrams and static Domain-site
+> generation are implemented; model and multi-repository Domain qualification
+> remain pending.
+
 AgentBase has two ways to turn Published knowledge into visuals. They use the
 same data but serve different purposes.
 

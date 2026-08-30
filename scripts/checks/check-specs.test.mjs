@@ -5,8 +5,51 @@ import {
   checkArchitectureContractEntries,
   checkCurrentDocumentationPathEntries,
   checkImplementationPlanEntry,
+  checkProductContractEntries,
   checkRepositoryLanguageEntries,
 } from "./check-specs.mjs";
+
+test("product contract index routes every outcome to a capability and status", () => {
+  const productFiles = [
+    "00-product-scope-and-authority.md",
+    "01-how-mcp-reads-a-repository.md",
+    "02-hub-domains-and-repositories.md",
+    "03-how-concepts-are-identified.md",
+    "04-how-concept-schemas-are-selected.md",
+    "05-how-repository-knowledge-enters-the-hub.md",
+    "06-cross-repository-and-cross-domain-relationships.md",
+    "07-conflicts-questions-and-maintainer-guidance.md",
+    "08-live-references-for-change-prone-values.md",
+    "09-ingest-and-refresh.md",
+    "10-querying-code-graph-and-hub.md",
+    "11-review-accept-and-publish.md",
+    "12-current-limits-and-open-decisions.md",
+    "13-visualizing-published-knowledge.md",
+    "14-context-for-ai-sdlc-workflows.md",
+  ];
+  const capabilityIndexes = [
+    "12-version-scope/README.md", "01-repository-reading/README.md",
+    "02-hub-domain-repository-model/README.md", "03-concept-discovery/README.md",
+    "04-schema-selection/README.md", "05-knowledge-entry/README.md",
+    "06-cross-repository-relations/README.md", "07-conflicts-and-questions/README.md",
+    "08-live-references/README.md", "09-ingest-and-refresh/README.md",
+    "10-query-routing/README.md", "11-review-and-publish/README.md",
+    "12-version-scope/README.md", "13-visualization/README.md",
+    "14-ai-sdlc-context/README.md",
+  ];
+  const documents = Object.fromEntries(productFiles.map((file) => [
+    `docs/product/${file}`,
+    file.startsWith("00-") ? "# Product\n" : "# Product\n\n> Status: Implemented.\n",
+  ]));
+  const index = [...productFiles, ...capabilityIndexes].join("\n");
+  assert.deepEqual(checkProductContractEntries({ index, documents }), []);
+
+  documents["docs/product/13-visualizing-published-knowledge.md"] = "# Product\n";
+  assert.deepEqual(checkProductContractEntries({ index, documents }), [{
+    code: "SPEC-PRODUCT-STATUS-MISSING",
+    message: "docs/product/13-visualizing-published-knowledge.md must declare its synchronization status",
+  }]);
+});
 
 test("architecture contract index must route to every required system document", () => {
   const documents = {
