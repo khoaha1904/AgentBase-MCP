@@ -166,8 +166,11 @@ export function checkTemplateContractEntry({ relative, source, markers }) {
 export function checkArchitectureContractEntries({ index, documents }) {
   const errors = [];
   for (const relative of ARCHITECTURE_DOCUMENTS) {
-    if (documents[relative] === null) {
+    const source = documents[relative];
+    if (source === null) {
       errors.push({ code: "SPEC-ARCHITECTURE-DOC-MISSING", message: `${relative} is required` });
+    } else if (!/^> Status:/m.test(source)) {
+      errors.push({ code: "SPEC-ARCHITECTURE-STATUS-MISSING", message: `${relative} must declare its synchronization status` });
     }
     if (index !== null && !index.includes(path.posix.basename(relative))) {
       errors.push({ code: "SPEC-ARCHITECTURE-ROUTE-MISSING", message: `docs/architecture/README.md does not route to ${relative}` });

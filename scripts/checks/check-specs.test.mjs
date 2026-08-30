@@ -112,11 +112,11 @@ test("product contract index routes every outcome to all owned capabilities", ()
 
 test("architecture contract index must route to every required system document", () => {
   const documents = {
-    "docs/architecture/ownership.md": "# Ownership\n",
-    "docs/architecture/dependencies.md": "# Dependencies\n",
-    "docs/architecture/flows.md": "# Flows\n",
-    "docs/architecture/state-and-trust.md": "# State\n",
-    "docs/architecture/runtime.md": "# Runtime\n",
+    "docs/architecture/ownership.md": "# Ownership\n\n> Status: Accepted.\n",
+    "docs/architecture/dependencies.md": "# Dependencies\n\n> Status: Accepted.\n",
+    "docs/architecture/flows.md": "# Flows\n\n> Status: Accepted.\n",
+    "docs/architecture/state-and-trust.md": "# State\n\n> Status: Accepted.\n",
+    "docs/architecture/runtime.md": "# Runtime\n\n> Status: Accepted.\n",
   };
   const index = Object.keys(documents).map((relative) => relative.split("/").at(-1)).join("\n");
   assert.deepEqual(checkArchitectureContractEntries({ index, documents }), []);
@@ -127,6 +127,13 @@ test("architecture contract index must route to every required system document",
   }), [
     { code: "SPEC-ARCHITECTURE-DOC-MISSING", message: "docs/architecture/flows.md is required" },
     { code: "SPEC-ARCHITECTURE-ROUTE-MISSING", message: "docs/architecture/README.md does not route to docs/architecture/flows.md" },
+  ]);
+
+  assert.deepEqual(checkArchitectureContractEntries({
+    index,
+    documents: { ...documents, "docs/architecture/runtime.md": "# Runtime\n" },
+  }), [
+    { code: "SPEC-ARCHITECTURE-STATUS-MISSING", message: "docs/architecture/runtime.md must declare its synchronization status" },
   ]);
 });
 

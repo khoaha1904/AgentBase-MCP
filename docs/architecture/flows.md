@@ -1,5 +1,8 @@
 # Cross-capability flows
 
+> Status: Accepted sequencing and authority baseline; update when a
+> cross-capability flow or authority transfer changes.
+
 These flows define system sequencing and authority transfer. Detailed behavior,
 bounds and failure recovery remain in the linked Capability Contracts.
 

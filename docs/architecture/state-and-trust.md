@@ -1,5 +1,8 @@
 # State and trust boundaries
 
+> Status: Accepted state and trust baseline; update when authority, persistence,
+> credential or recovery boundaries change.
+
 ## Authority flow
 
 ```text

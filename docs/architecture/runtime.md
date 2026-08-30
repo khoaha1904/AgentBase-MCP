@@ -1,5 +1,8 @@
 # Runtime boundaries
 
+> Status: Accepted runtime composition baseline; update when a runtime adapter,
+> process boundary or external authorization boundary changes.
+
 | Boundary | Architecture ownership | Capability Contract |
 |---|---|---|
 | MCP composition and wire protocol | `app/codebase-memory-mcp` registers business tools; protocol adapters own version and transport negotiation | [MCP protocol](../capabilities/12-version-scope/09-mcp-protocol-requirements.md) and [Code Graph runtime](../capabilities/01-repository-reading/05-runtime-requirements.md) |

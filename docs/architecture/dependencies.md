@@ -1,5 +1,8 @@
 # Dependency direction
 
+> Status: Accepted dependency direction; update when an import boundary or
+> public entrypoint rule changes.
+
 Cross-capability imports use the target capability's public `index.ts`.
 
 ```text

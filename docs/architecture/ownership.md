@@ -1,5 +1,8 @@
 # Ownership
 
+> Status: Accepted system ownership baseline; update when a cross-capability
+> boundary or responsibility changes.
+
 AgentBase-MCP is a TypeScript Node.js modular monolith. Every runtime file has
 one capability owner, every capability exposes a small public `index.ts`, and
 tests stay beside their behavior owner.
