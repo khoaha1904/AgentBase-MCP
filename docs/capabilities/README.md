@@ -94,25 +94,6 @@ implementation, benchmark, PR and capability commit.
 13. [Published visualization](13-visualization/README.md)
 14. [Context for AI SDLC workflows](14-ai-sdlc-context/README.md)
 
-## Implementation trace — 2026-08-29
-
-| Section | Low-level status |
-|---|---|
-| 01 | Lazy graph/source reading and explicit workspace routing implemented; remote clone deferred |
-| 02 | Domain/Repository plus single/batch Initial Ingest confirmation implemented; monorepo runtime deferred |
-| 03 | Evidence-bearing candidates/guidance implemented; candidate UI remains deferred |
-| 04 | Catalog 7 implemented; catalog 6 design superseded |
-| 05 | Remote-profile Draft, Published-only query, proposal/template and isolation implemented |
-| 06 | Bounded AWS/SQS relation identity and Domain Enrichment runtime implemented; merge/other profiles deferred |
-| 07 | Shared Questions, exact Guidance and ordinary correction/removal proposal implemented |
-| 08 | Repository snapshot-first, AWS/SQS observations, local freshness report and Hub CI implemented |
-| 09 | Single Init/Refresh, Batch Initial Ingest, Domain Enrichment, freshness and CI implemented; Batch Refresh deferred |
-| 10 | Published-only snapshot-first query implemented; multi-term ranking, Repository-aware Domain scope and bounded relation results accepted for capability 049; remote read deferred |
-| 11 | Reviewable batch publication and exact same-Repository Init/Refresh stack implemented |
-| 12 | Terraform/Terragrunt MVP boundary and small `abs` CLI/shared-token connect implemented and verified; provider expansion deferred |
-| 13 | Shared Published projection, query diagrams and static Domain site implemented; model/domain qualification pending |
-| 14 | On-demand Hub Feature Discovery A/B designed; integration skill and model qualification pending |
-
 The current [MCP protocol Capability Contract](12-version-scope/09-mcp-protocol-requirements.md)
 owns modern stdio negotiation, stateless Streamable HTTP, legacy compatibility,
 tool-schema behavior and deferred remote authority. The Architecture Contract
@@ -124,21 +105,3 @@ tests are evidence. The active spec holds change intent and its feature-scoped
 Implementation Contract only while a capability is being changed. Explanatory
 pages in this directory describe behavior and trade-offs and must be updated
 when implementation evidence invalidates an old assumption.
-
-## Original design order
-
-Numerical order is not mandatory. The original dependency order was:
-
-```text
-05 Knowledge/storage foundation
-→ 02 Hub/Domain/Repository identity
-→ 04 Schema model
-→ 01 Repository reading
-→ 03 Concept discovery
-→ 09 Ingest/Refresh orchestration
-→ 06 Relations → 07 Conflicts → 08 Observed snapshots
-→ 10 Query → 11 Publish
-→ 12 Cross-cutting scope check
-```
-
-This order is design history, not the current work queue.
