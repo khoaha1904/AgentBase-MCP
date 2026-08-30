@@ -13,7 +13,7 @@ const DOCUMENT_ROUTES = [
   "docs/product/README.md",
   "docs/product/00-product-scope-and-authority.md",
   "docs/capabilities/README.md",
-  "docs/architecture.md",
+  "docs/architecture/README.md",
   "docs/capabilities/01-repository-reading/05-runtime-requirements.md",
   "docs/capabilities/05-knowledge-entry/06-runtime-requirements.md",
   "docs/capabilities/10-query-routing/07-runtime-requirements.md",
@@ -22,6 +22,14 @@ const DOCUMENT_ROUTES = [
   "docs/capabilities/12-version-scope/02-installation-requirements.md",
   "docs/capabilities/12-version-scope/03-benchmark-requirements.md",
   "docs/capabilities/12-version-scope/09-mcp-protocol-requirements.md",
+];
+
+const ARCHITECTURE_DOCUMENTS = [
+  "docs/architecture/ownership.md",
+  "docs/architecture/dependencies.md",
+  "docs/architecture/flows.md",
+  "docs/architecture/state-and-trust.md",
+  "docs/architecture/runtime.md",
 ];
 
 const REQUIREMENT_GROUPS = [
@@ -66,7 +74,7 @@ const ACTIVE_NAMING_RULES = [
 ];
 const LANGUAGE_EXCLUSIONS = ["assets/hub-ci/", "fixtures/", "vendor/"];
 const VIETNAMESE_TEXT = /[\u0102\u0103\u0110\u0111\u01A0\u01A1\u01AF\u01B0\u1EA0-\u1EF9]|\b(?:c\u00f3|c\u1ee7a|\u0111\u01b0\u1ee3c|kh\u00f4ng|m\u1ed9t|nh\u1eefng|ph\u1ea3i|tr\u006fng|v\u00e0|v\u1edbi)\b/iu;
-const CURRENT_AUTHORITY = /^(?:AGENTS\.md|README\.md|docs\/(?:README\.md|architecture\.md|product\/|capabilities\/))/;
+const CURRENT_AUTHORITY = /^(?:AGENTS\.md|README\.md|docs\/(?:README\.md|architecture\/|product\/|capabilities\/))/;
 const OBSOLETE_DOCUMENTATION_ROUTE = /docs\/(?:present|design)\//;
 
 function read(root, relative) {
@@ -108,6 +116,19 @@ export function checkImplementationPlanEntry({ relative, source, active = false 
   return errors;
 }
 
+export function checkArchitectureContractEntries({ index, documents }) {
+  const errors = [];
+  for (const relative of ARCHITECTURE_DOCUMENTS) {
+    if (documents[relative] === null) {
+      errors.push({ code: "SPEC-ARCHITECTURE-DOC-MISSING", message: `${relative} is required` });
+    }
+    if (index !== null && !index.includes(path.posix.basename(relative))) {
+      errors.push({ code: "SPEC-ARCHITECTURE-ROUTE-MISSING", message: `docs/architecture/README.md does not route to ${relative}` });
+    }
+  }
+  return errors;
+}
+
 function checkRepositoryLanguage(root) {
   const files = execFileSync("git", ["ls-files", "-z"], { cwd: root, encoding: "utf8" })
     .split("\0")
@@ -133,6 +154,11 @@ export function checkSpecifications(root) {
   const agentGuide = read(root, "AGENTS.md");
   const docsIndex = read(root, "docs/README.md");
   const current = read(root, "specs/CURRENT.md");
+  const architectureIndex = read(root, "docs/architecture/README.md");
+  errors.push(...checkArchitectureContractEntries({
+    index: architectureIndex,
+    documents: Object.fromEntries(ARCHITECTURE_DOCUMENTS.map((relative) => [relative, read(root, relative)])),
+  }));
   errors.push(...checkImplementationPlanEntry({
     relative: ".specify/templates/plan-template.md",
     source: read(root, ".specify/templates/plan-template.md"),

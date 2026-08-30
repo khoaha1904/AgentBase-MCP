@@ -4,7 +4,7 @@ This directory decomposes the 14 high-level decisions in
 [`docs/product`](../product/README.md) into capability behavior and low-level
 designs that can be reviewed and implemented independently.
 
-[Architecture ownership](../architecture.md) is the shared source map. The
+[Architecture ownership](../architecture/README.md) is the shared source map. The
 `*-requirements.md` files in the corresponding numbered area hold current
 `AB-*` requirements; there is no parallel contracts tree.
 
@@ -112,7 +112,7 @@ owns modern stdio negotiation, stateless Streamable HTTP, legacy compatibility,
 tool-schema behavior and deferred remote authority. The Architecture Contract
 owns only its system boundary.
 
-Current runtime authority lives in `docs/`; `docs/architecture.md` holds system
+Current runtime authority lives in `docs/`; `docs/architecture/` holds system
 ownership and `docs/capabilities/` holds capability contracts, while code and
 tests are evidence. The active spec holds change
 intent only while a capability is being implemented. Design in this directory

@@ -28,7 +28,7 @@ vendor snapshots, generated output or immutable external evidence.
 - Keep at most one active capability in `specs/CURRENT.md`; between slices use
   `None` plus the most recently completed capability.
 - Product direction lives under `docs/product/`; architecture ownership lives in
-  `docs/architecture.md`; capability design and current `AB-*` requirements live
+  `docs/architecture/`; capability design and current `AB-*` requirements live
   under `docs/capabilities/`. Numbered
   `specs/<number>-<name>/` directories are historical after completion.
 - Update current truth once in the narrowest design/requirements route. Do not create handoff,
@@ -61,7 +61,7 @@ silently redefine an upstream contract.
 1. **Product Contract** — review the affected `docs/product/` decision and update
    it when the user-visible outcome, scope, non-goals, failure/recovery,
    compatibility, migration or product trade-off changes.
-2. **Architecture Contract** — review `docs/architecture.md` and update it when
+2. **Architecture Contract** — review `docs/architecture/` and update it when
    system ownership, boundaries, dependency direction, data/state flow or
    runtime shape changes.
 3. **Capability Contract** — update the affected `docs/capabilities/` boundary
@@ -116,7 +116,7 @@ leaving it implicit.
   disposable and non-canonical. Only bounded provenance-bearing observations
   may enter OKF workflows.
 
-`docs/architecture.md` is the ownership index. Before changing runtime behavior,
+`docs/architecture/README.md` is the ownership index. Before changing runtime behavior,
 confirm the active plan, affected requirements, owning capability, public entrypoint
 and focused requirement-linked tests. Run `npm run depcruise` after source
 dependency changes; do not weaken a rule without explicit owner approval.

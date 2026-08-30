@@ -98,5 +98,5 @@ but are not installed, started or exposed by this release.
 Start at [`docs/README.md`](docs/README.md). It routes agents to the smallest
 affected product decision or technical design instead of requiring the full
 documentation set. Current authority is separated into `docs/product/`,
-`docs/architecture.md` and `docs/capabilities/`; numbered `specs/` directories
+`docs/architecture/` and `docs/capabilities/`; numbered `specs/` directories
 preserve change history.

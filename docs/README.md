@@ -16,7 +16,7 @@ All current product documentation lives in this repository at three contract lev
 
 ```text
 docs/product/       product outcomes, scope and authority
-docs/architecture.md system ownership and boundary direction
+docs/architecture/   system ownership, flows and boundary direction
 docs/capabilities/  behavior, low-level design and current AB-* requirements
 ```
 
@@ -31,7 +31,7 @@ status. Then load the smallest relevant route:
 | Need | Read next |
 |---|---|
 | Product outcome, terminology, scope or authority | `docs/product/README.md` and the affected numbered presentation |
-| Source ownership or dependency boundary | `docs/architecture.md` |
+| Source ownership or dependency boundary | `docs/architecture/README.md` |
 | Low-level behavior or requirement IDs | the affected numbered directory under `docs/capabilities/` |
 | Current feature implementation | the active artifact selected by `specs/CURRENT.md` |
 
@@ -51,7 +51,7 @@ Current requirement routes:
 - AI SDLC context: `docs/capabilities/14-ai-sdlc-context/02-runtime-requirements.md`
 - Query: `docs/capabilities/10-query-routing/07-runtime-requirements.md`
 - Product scope: `docs/product/00-product-scope-and-authority.md`
-- Architecture ownership: `docs/architecture.md`
+- Architecture ownership: `docs/architecture/README.md`
 
 ## Authority order
 
@@ -104,7 +104,7 @@ The current paths map to those levels as follows:
 | Level | Current location | Responsibility |
 |---|---|---|
 | Product Contract | `docs/product/` | Product outcome, scope, authority, workflows and non-goals |
-| Architecture Contract | `docs/architecture.md` | System boundaries, ownership, data/state flow, runtime shape and architectural trade-offs |
+| Architecture Contract | `docs/architecture/` | System boundaries, ownership, cross-capability flows, state/trust boundaries and runtime shape |
 | Capability Contract | `docs/capabilities/<area>/` | Capability behavior, contracts, bounds, failure/recovery and `AB-*` requirements |
 | Feature-scoped Implementation Contract | Active `specs/<feature>/plan.md` | Concrete modules, libraries, interfaces and coding/migration decisions for one accepted change |
 | Validation Evidence | Tests, verification reports and `npm run verify` output | Evidence that implementation matches accepted contracts |
@@ -132,10 +132,10 @@ The numbered areas map physically to the contract levels as follows:
 The `docs/product/` numbered pages are capability overviews, not all-purpose
 product policy. Product-wide scope and authority remain in `00` and shared
 limits; numbered capability pages explain the user-facing purpose of each
-area. `docs/architecture.md` owns cross-capability system shape, while the
+area. `docs/architecture/` owns cross-capability system shape, while the
 numbered `docs/capabilities/` areas own behavior and bounded low-level contracts.
 
-`docs/architecture.md` may mention implementation baseline as
+`docs/architecture/` may mention implementation baseline as
 evidence, but architectural decisions remain separate from file-, class- and
 package-level implementation choices. A separate global implementation tree is
 not required unless repeated cross-capability decisions justify it. New active

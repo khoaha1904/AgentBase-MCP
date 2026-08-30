@@ -3,7 +3,7 @@
 Current wire-level behavior for the AgentBase MCP composition boundary. Product
 direction remains in
 [`docs/product/00-product-scope-and-authority.md`](../../product/00-product-scope-and-authority.md#mcp-protocol-direction),
-while [`docs/architecture.md`](../../architecture.md#runtime-boundaries) owns the
+while [the Architecture Contract](../../architecture/runtime.md) owns the
 system boundary between business tools and protocol adapters.
 
 ## Supported protocol and transport behavior

@@ -2,10 +2,31 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  checkArchitectureContractEntries,
   checkCurrentDocumentationPathEntries,
   checkImplementationPlanEntry,
   checkRepositoryLanguageEntries,
 } from "./check-specs.mjs";
+
+test("architecture contract index must route to every required system document", () => {
+  const documents = {
+    "docs/architecture/ownership.md": "# Ownership\n",
+    "docs/architecture/dependencies.md": "# Dependencies\n",
+    "docs/architecture/flows.md": "# Flows\n",
+    "docs/architecture/state-and-trust.md": "# State\n",
+    "docs/architecture/runtime.md": "# Runtime\n",
+  };
+  const index = Object.keys(documents).map((relative) => relative.split("/").at(-1)).join("\n");
+  assert.deepEqual(checkArchitectureContractEntries({ index, documents }), []);
+
+  assert.deepEqual(checkArchitectureContractEntries({
+    index: index.replace("flows.md", ""),
+    documents: { ...documents, "docs/architecture/flows.md": null },
+  }), [
+    { code: "SPEC-ARCHITECTURE-DOC-MISSING", message: "docs/architecture/flows.md is required" },
+    { code: "SPEC-ARCHITECTURE-ROUTE-MISSING", message: "docs/architecture/README.md does not route to docs/architecture/flows.md" },
+  ]);
+});
 
 test("[AB-LANG-006] repository language check rejects Vietnamese prose and allows other Unicode", () => {
   assert.deepEqual(checkRepositoryLanguageEntries([
