@@ -8,9 +8,10 @@ the canonical repository gate rejects Vietnamese text outside explicit vendor,
 generated and immutable-fixture exclusions.
 
 Capability 062 documentation contract normalization is complete. It defines
-current-vs-historical authority, impact review, baseline Git references and the
-semantic mapping of existing docs without moving old paths. Directory rename is
-deferred until a later pilot demonstrates a concrete need.
+current-vs-historical authority, impact review and baseline Git references. The
+later approved migration now maps current Product, Architecture and Capability
+Contracts to their canonical paths while completed specs retain historical
+references through compatibility maps.
 
 Most recent completed: [`061-mcp-modernization`](061-mcp-modernization/spec.md) —
 MCP `2026-07-28` is implemented for era-negotiating stdio and reusable

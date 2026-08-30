@@ -21,6 +21,7 @@ const DOCUMENT_ROUTES = [
   "docs/capabilities/12-version-scope/01-foundation-requirements.md",
   "docs/capabilities/12-version-scope/02-installation-requirements.md",
   "docs/capabilities/12-version-scope/03-benchmark-requirements.md",
+  "docs/capabilities/12-version-scope/09-mcp-protocol-requirements.md",
 ];
 
 const REQUIREMENT_GROUPS = [
@@ -39,6 +40,7 @@ const REQUIREMENT_GROUPS = [
   ["local Hub", "docs/capabilities/11-review-and-publish/01-runtime-requirements.md", [...ids("AB-LOCAL-HUB", 16), ...ids("AB-PUBLISH", 10), ...ids("AB-HUB-SETUP", 17)], "SPEC-HUB-LIVING-MISSING", "SPEC-HUB-ID-MISSING"],
   ["installation", "docs/capabilities/12-version-scope/02-installation-requirements.md", ids("AB-INSTALL", 31), "SPEC-INSTALL-LIVING-MISSING", "SPEC-INSTALL-ID-MISSING"],
   ["benchmark", "docs/capabilities/12-version-scope/03-benchmark-requirements.md", ids("AB-BENCH", 87), "SPEC-BENCH-LIVING-MISSING", "SPEC-BENCH-ID-MISSING"],
+  ["MCP protocol", "docs/capabilities/12-version-scope/09-mcp-protocol-requirements.md", ids("AB-MCPMOD", 6), "SPEC-MCPMOD-LIVING-MISSING", "SPEC-MCPMOD-ID-MISSING"],
 ];
 
 const CURRENT_DOCUMENTS = [
@@ -50,6 +52,11 @@ const CURRENT_DOCUMENTS = [
 ];
 
 const UNRESOLVED = /\b(?:NEEDS CLARIFICATION|TODO|TKTK)\b|\?\?\?|<placeholder>/i;
+const IMPLEMENTATION_PLAN_MARKERS = [
+  "## Upstream Contracts",
+  "## Implementation Decisions",
+  "## Validation Mapping",
+];
 const ACTIVE_NAMING_RULES = [
   { code: "SPEC-TEMP-PRODUCT-NAME", pattern: /^#\s+AgentBase Next\b/im, message: "current docs must use AgentBase-MCP" },
   { code: "SPEC-TEMP-PRODUCT-NAME", pattern: /\bAgentBase Next is\b/i, message: "current docs must not present the rebuild name as product identity" },
@@ -85,6 +92,22 @@ export function checkCurrentDocumentationPathEntries(entries) {
   ));
 }
 
+export function checkImplementationPlanEntry({ relative, source, active = false }) {
+  if (source === null) {
+    const purpose = active ? " for the active capability" : "";
+    return [{ code: "SPEC-PLAN-MISSING", message: `${relative} is required${purpose}` }];
+  }
+  const errors = IMPLEMENTATION_PLAN_MARKERS.flatMap((marker) => (
+    source.includes(marker)
+      ? []
+      : [{ code: "SPEC-PLAN-CONTRACT-MISSING", message: `${relative} is missing ${marker}` }]
+  ));
+  if (active && UNRESOLVED.test(source)) {
+    errors.push({ code: "SPEC-PLAN-UNRESOLVED", message: `${relative} contains an unresolved implementation decision` });
+  }
+  return errors;
+}
+
 function checkRepositoryLanguage(root) {
   const files = execFileSync("git", ["ls-files", "-z"], { cwd: root, encoding: "utf8" })
     .split("\0")
@@ -110,6 +133,10 @@ export function checkSpecifications(root) {
   const agentGuide = read(root, "AGENTS.md");
   const docsIndex = read(root, "docs/README.md");
   const current = read(root, "specs/CURRENT.md");
+  errors.push(...checkImplementationPlanEntry({
+    relative: ".specify/templates/plan-template.md",
+    source: read(root, ".specify/templates/plan-template.md"),
+  }));
 
   if (!agentGuide) errors.push({ code: "SPEC-GUIDE-MISSING", message: "AGENTS.md is required" });
   else for (const route of ["docs/README.md", "specs/CURRENT.md"]) {
@@ -150,6 +177,14 @@ export function checkSpecifications(root) {
       : current.match(/Active capability:\s*\[[^\]]+\]\(([^)]+)\)/)?.[1];
     if (!target || !fs.existsSync(path.resolve(root, "specs", target))) {
       errors.push({ code: "SPEC-ACTIVE-BROKEN", message: "specs/CURRENT.md must link to an existing active or most recently completed specification" });
+    }
+    if (!activeNone && target) {
+      const planRelative = path.posix.join("specs", path.posix.dirname(target), "plan.md");
+      errors.push(...checkImplementationPlanEntry({
+        relative: planRelative,
+        source: read(root, planRelative),
+        active: true,
+      }));
     }
   }
 

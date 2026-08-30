@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   checkCurrentDocumentationPathEntries,
+  checkImplementationPlanEntry,
   checkRepositoryLanguageEntries,
 } from "./check-specs.mjs";
 
@@ -35,4 +36,30 @@ test("[AB-DOC-006] current authority rejects old routes while compatibility and 
     { relative: "docs/design/README.md", source: "docs/design/<area> maps to docs/capabilities/<area>.\n" },
     { relative: "specs/062-example/spec.md", source: "Baseline: docs/present/example.md\n" },
   ]), []);
+});
+
+test("active implementation plans must contain the contract sections and resolve decisions", () => {
+  const valid = [
+    "## Upstream Contracts",
+    "## Implementation Decisions",
+    "## Validation Mapping",
+  ].join("\n");
+  assert.deepEqual(checkImplementationPlanEntry({ relative: "specs/064-example/plan.md", source: valid, active: true }), []);
+
+  assert.deepEqual(checkImplementationPlanEntry({
+    relative: "specs/064-example/plan.md",
+    source: `${valid}\nNEEDS CLARIFICATION`,
+    active: true,
+  }), [{
+    code: "SPEC-PLAN-UNRESOLVED",
+    message: "specs/064-example/plan.md contains an unresolved implementation decision",
+  }]);
+
+  assert.deepEqual(checkImplementationPlanEntry({
+    relative: "specs/064-example/plan.md",
+    source: "## Upstream Contracts\n## Implementation Decisions\n",
+  }), [{
+    code: "SPEC-PLAN-CONTRACT-MISSING",
+    message: "specs/064-example/plan.md is missing ## Validation Mapping",
+  }]);
 });

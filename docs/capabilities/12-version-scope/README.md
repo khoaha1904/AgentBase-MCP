@@ -23,6 +23,8 @@ High-level decision:
   added after MVP only when a real need appears.
 - [`08-cli-runtime-requirements.md`](08-cli-runtime-requirements.md) — public
   `abs` grammar, shared-token connect, compatibility and verification boundary.
+- [`09-mcp-protocol-requirements.md`](09-mcp-protocol-requirements.md) — supported
+  MCP eras, stateless transport behavior and deferred remote authority.
 
 Do not create a separate decision register; current decisions already belong to
 their high/low-level owners, and another registry would become a dead-spec

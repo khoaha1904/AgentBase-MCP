@@ -107,10 +107,10 @@ implementation, benchmark, PR and capability commit.
 | 13 | Shared Published projection, query diagrams and static Domain site implemented; model/domain qualification pending |
 | 14 | On-demand Hub Feature Discovery A/B designed; integration skill and model qualification pending |
 
-MCP protocol modernization (capability 061) is implemented in the protocol
-boundary: modern `2026-07-28` stdio negotiation, stateless Streamable HTTP,
-legacy `2025-11-25` compatibility, JSON Schema 2020-12 tool inputs and additive
-structured results. Remote OAuth and Tasks remain demand-driven.
+The current [MCP protocol Capability Contract](12-version-scope/09-mcp-protocol-requirements.md)
+owns modern stdio negotiation, stateless Streamable HTTP, legacy compatibility,
+tool-schema behavior and deferred remote authority. The Architecture Contract
+owns only its system boundary.
 
 Current runtime authority lives in `docs/`; `docs/architecture.md` holds system
 ownership and `docs/capabilities/` holds capability contracts, while code and

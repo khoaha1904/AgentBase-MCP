@@ -58,21 +58,26 @@ silently redefine an upstream contract.
 
 ### Before implementation
 
-1. **High-level decision** — update the affected `docs/product/` document first.
-   Record the user-visible outcome, scope and non-goals, failure/recovery,
-   compatibility or migration impact, and expected product trade-offs.
-2. **Low-level design** — update the affected `docs/capabilities/` boundary next.
-   Record reusable baseline, changed ownership, data/tool contracts, bounds,
+1. **Product Contract** — review the affected `docs/product/` decision and update
+   it when the user-visible outcome, scope, non-goals, failure/recovery,
+   compatibility, migration or product trade-off changes.
+2. **Architecture Contract** — review `docs/architecture.md` and update it when
+   system ownership, boundaries, dependency direction, data/state flow or
+   runtime shape changes.
+3. **Capability Contract** — update the affected `docs/capabilities/` boundary
+   when behavior changes. Record reusable baseline, data/tool contracts, bounds,
    failure/recovery, security impact, verification evidence and stable `AB-*`
    requirements. Query behavior belongs in numbered Query design (10), not in
    an ad-hoc new query system.
-3. **Active capability** — create or update one numbered `specs/<id>/` artifact
-   and `specs/CURRENT.md` so implementation scope and acceptance evidence are
-   explicit. Historical capabilities are never silently rewritten.
-4. **Consistency gate** — compare high-level, low-level, active requirements and
-   the implementation baseline. Do not write runtime code until they describe
-   the same intended behavior and the owner has approved any material scope,
-   authority, security, migration or architecture decision.
+4. **Implementation Contract** — create or update one numbered `specs/<id>/`
+   artifact and `specs/CURRENT.md`. Keep accepted change requirements in
+   `spec.md`; use `plan.md` for concrete modules, interfaces, data/state choices,
+   dependencies, migration/recovery and requirement-to-verification mapping.
+   Historical capabilities are never silently rewritten.
+5. **Consistency gate** — compare all affected upstream contracts, the active
+   implementation contract and the code baseline. Do not write runtime code
+   until they describe the same intended behavior and the owner has approved
+   any material scope, authority, security, migration or architecture decision.
 
 ### During implementation
 
@@ -92,10 +97,11 @@ silently redefine an upstream contract.
 
 ### Completion gate
 
-A slice is complete only when high-level, low-level, active requirements, code,
-tests and verification describe the same behavior. Before PR/capability close,
-run focused checks and the repository gate, then record any remaining gap as an
-explicit deferred boundary rather than leaving it implicit.
+A slice is complete only when the affected Product, Architecture, Capability and
+Implementation Contracts, code, tests and verification describe the same
+behavior. Before PR/capability close, run focused checks and the repository gate,
+then record any remaining gap as an explicit deferred boundary rather than
+leaving it implicit.
 
 ## Architecture rules
 

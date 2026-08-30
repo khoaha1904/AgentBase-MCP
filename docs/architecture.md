@@ -1,16 +1,21 @@
-# Architecture
+# Architecture Contract
 
-## Shape
+This document owns SYSTEM HOW: system shape, capability ownership, dependency
+direction, state flow and runtime boundaries. Product outcomes live under
+[`docs/product/`](product/README.md), behavior and stable requirements live under
+[`docs/capabilities/`](capabilities/README.md), and concrete CODE HOW for an
+active change lives in its `specs/<feature>/plan.md` Implementation Contract.
 
-AgentBase-MCP is a Node.js 24 modular monolith. TypeScript is executed directly
-with erasable syntax and statically checked without a generated build tree.
+Implementation paths below identify the current ownership baseline. They are
+architectural evidence, not a substitute for capability behavior or feature
+planning.
 
-Every runtime file has one capability owner, every capability exposes a small
-public `index.ts`, and cross-capability imports use that entrypoint. Core cannot
-import providers or application workflows; providers cannot import application
-workflows. Tests stay beside their owner. This document and the source directory
-layout are the ownership map; dependency-cruiser enforces cycles, direction and
-cross-capability public-entrypoint use without a second ownership registry.
+## System shape
+
+AgentBase-MCP is a TypeScript Node.js modular monolith. Every runtime file has
+one capability owner, every capability exposes a small public `index.ts`, and
+cross-capability imports use that entrypoint. Tests stay beside their behavior
+owner.
 
 ```text
 src/cli.ts                         composition root and `abs` CLI dispatcher
@@ -26,13 +31,13 @@ src/core/
   hub/                            Hub identity, ancestry and transitions
 src/providers/
   fake-code-intelligence/         deterministic conformance provider
-  codebase-memory/                exact managed graph adapter/lifecycle
+  codebase-memory/                managed graph adapter and lifecycle
   github-hub/                     bounded Git/worktree/GitHub transport
-  aws-cli/                        released read-only AWS observation profiles
+  aws-cli/                        read-only provider observation adapter
 src/app/
-  local-storage/                  one owner-private local storage root
+  local-storage/                  owner-private local storage root
   foundation-demo/                offline product demonstration
-  codebase-memory-mcp/            filtered stdio MCP composition
+  codebase-memory-mcp/            MCP composition and protocol adapters
   repository-okf/                 one-repository evidence workflow
     graph/                        graph rounds and freshness
     evidence/                     source state and normalized evidence
@@ -42,39 +47,29 @@ src/app/
     configuration/                settings and credentials
     workspace/                    checkout, setup and bootstrap
     authoring/                    proposals, refresh and Questions
-    batch-ingest/                 sequential multi-repository Init/checkpoints
-    enrichment/                   Published Domain reconciliation/checkpoints
+    batch-ingest/                 multi-repository Init coordination
+    enrichment/                   provider reconciliation
     review/                       inspection and acceptance
     publication/                  submit, publish and synchronize
-    ci/                           offline validation and support-baseline initialization
-    query/                        accepted-Hub reads, freshness and runtime actions
-    mcp/                          MCP adapters
+    ci/                           offline Hub validation and initialization
+    query/                        accepted-Hub reads and projections
+    mcp/                          Hub MCP adapters
 scripts/
   checks/                         repository verification
   installation/                   setup and migration utilities
   benchmark/                      opt-in measurement and qualification
 ```
 
-Product skill sources live under `.agents/skills/<goal>/`; its `README.md`
-separates nine public user-goal workflows and three internal supporting workflows
-from development-only Spec Kit skills.
-
-The terminal CLI has one public name, `abs`. Its public help exposes only
-`status`, `hub connect` and `hub sync`; `mcp` remains a technical launcher used
-by client registration. Repository proposal, OKF authoring, Hub review/PR,
-validator and benchmark commands remain internal/developer routes and are not
-presented as a second public product surface. `OKF` names the shared format,
-not the executable.
-Interactive installation copies only the explicit product allowlist into each
-selected client's user scope. Do not create empty skill scaffolds before the
-workflow exists.
+Product skills under `.agents/skills/` and the terminal CLI are presentation
+and integration adapters over these owners. Their released surface belongs to
+the [Version Scope Capability Contract](capabilities/12-version-scope/README.md),
+not to this ownership map.
 
 Do not create generic `common`, `utils` or `helpers` areas for possible reuse.
-Split a file only when the results have distinct responsibilities and reasons
-to change. Review a cohesive file from behavior and diff evidence; file lines,
-bytes, density, line length and import count are not architecture gates.
+Split only distinct responsibilities with independent reasons to change; file
+size, density, line length and import count are not architecture boundaries.
 
-## Dependency and state boundaries
+## Ownership and dependency direction
 
 ```text
 app -> core public entrypoints
@@ -84,128 +79,77 @@ core -X-> provider/app
 provider -X-> app
 ```
 
+Core owns provider-neutral policy and values. Providers translate external or
+engine-private behavior into those contracts. Application capabilities compose
+core and provider entrypoints into user workflows; they do not redefine either
+boundary. `src/cli.ts` is the composition root and may dispatch application
+entrypoints without becoming their behavior owner.
+
+The source layout is the ownership registry. Dependency Cruiser enforces cycles,
+dependency direction and public-entrypoint use; do not create a duplicate
+ownership manifest. The stable architecture controls are defined by
+[`AB-FND-010..014`](capabilities/12-version-scope/01-foundation-requirements.md#architecture-and-verification).
+
+## State and authority flow
+
+```text
+read-only source repository
+        ↓
+private provider/cache state
+        ↓
+normalized provenance-bearing evidence
+        ↓
+local proposal/recovery workspace
+        ↓ explicit review and acceptance
+shared Git-backed Hub knowledge
+```
+
 | State | Scope | Shared | Rebuildable |
 |---|---|---:|---:|
 | Detailed graph and provider cache | machine/repository | no | yes |
 | Freshness receipt | machine/repository/provider | no | yes |
 | Observation/evidence bundle | source revision | no in current product | yes |
 | Unaccepted proposal workspace | local transaction | no | yes from reviewed input |
-| Derived Question index/cache | exact local Hub commit | no | yes from shared Question documents |
-| Accepted Hub `main` and pending commits | user/team knowledge | yes through Git | governed |
+| Derived Question/query projection | exact local Hub commit | no | yes from shared documents |
+| Accepted Hub state and pending commits | user/team knowledge | yes through Git | governed |
 
 Private state lives outside source checkouts where required, uses bounded exact
-paths and never enters normalized evidence. Mutations use atomic files, exact
-digests and serialized ownership. Failure preserves the previous admitted state
-and returns visible recovery rather than hidden retry.
+paths and never enters normalized evidence. Mutations use atomic state and exact
+ownership. Failure preserves the previous admitted state and returns visible
+recovery rather than silently changing authority.
 
-The application-local storage contract is one owner-private
-`AGENTBASE_HOME`/`~/.agentbase` root. `config/` contains Hub configuration and
-credentials, `hubs/` contains durable Hub checkouts, `state/` contains
-recoverable workflow state, `cache/` contains rebuildable provider/query data,
-and `tmp/` contains disposable local workspaces. XDG-era paths remain readable
-and untouched; a safe legacy `/tmp` Hub runtime is copied once into `state/`
-without deleting its source.
+Application-local state is partitioned below one owner-private
+`AGENTBASE_HOME`/`~/.agentbase` root: `config/` owns configuration and
+credentials, `hubs/` owns durable Hub checkouts, `state/` owns recoverable
+workflow state, `cache/` owns rebuildable data, and `tmp/` owns disposable
+workspaces. Storage behavior and compatibility belong to the
+[Knowledge Entry Capability Contract](capabilities/05-knowledge-entry/03-local-draft-storage.md).
 
 ## Runtime boundaries
 
-### MCP protocol boundary (current)
+| Boundary | Architecture ownership | Capability Contract |
+|---|---|---|
+| MCP composition and wire protocol | `app/codebase-memory-mcp` registers business tools; its protocol adapters own version and transport negotiation | [MCP protocol](capabilities/12-version-scope/09-mcp-protocol-requirements.md) and [Code Graph runtime](capabilities/01-repository-reading/05-runtime-requirements.md) |
+| Code Intelligence | `core/code-intelligence` owns neutral values; provider adapters own engine lifecycle and translation | [Repository reading](capabilities/01-repository-reading/README.md) |
+| Knowledge authoring | `core/knowledge` owns portable documents and policy; `app/repository-okf` composes repository evidence | [Knowledge entry](capabilities/05-knowledge-entry/README.md) and [Ingest/Refresh](capabilities/09-ingest-and-refresh/README.md) |
+| Hub governance and publication | `core/hub` owns identity/transitions; `app/hub-okf` owns local workflows; `providers/github-hub` owns transport | [Review and Publish](capabilities/11-review-and-publish/README.md) |
+| Provider enrichment | provider adapters own bounded observations; `app/hub-okf/enrichment` owns reconciliation | [Cross-repository relations](capabilities/06-cross-repository-relations/README.md) |
+| Query and visualization | `core/knowledge/query` owns accepted reads; application projections remain derived and commit-bound | [Query routing](capabilities/10-query-routing/README.md) and [Visualization](capabilities/13-visualization/README.md) |
+| CLI, installation and local storage | `src/cli.ts` dispatches; application owners and installation scripts own their transactions | [Version scope](capabilities/12-version-scope/README.md) |
+| Benchmark and AI-SDLC qualification | scripts own isolated measurement; production runtime contains no model execution authority | [Benchmark](capabilities/12-version-scope/03-benchmark-requirements.md) and [AI SDLC context](capabilities/14-ai-sdlc-context/README.md) |
 
-The high-level AgentBase MCP factory owns tool registration and business
-actions. A low-level protocol policy owns the supported MCP versions and
-transport-era defaults. Legacy `2025-11-25` remains accepted for stdio
-interoperability and modern `2026-07-28` is advertised for future transports.
-Business modules do not import transport internals or perform negotiation.
+The high-level MCP server factory owns tool registration. Low-level protocol
+adapters own wire versions and transport negotiation. Business capabilities do
+not import transport internals, and transport adapters do not acquire product
+authority. External authorization, provider credentials and network access stay
+behind their explicit adapter/workflow boundary; local knowledge work does not
+gain ambient network or credential authority.
 
-The reusable Streamable HTTP adapter uses `createMcpHandler` with per-request
-server construction and stateless legacy fallback. Opening a production port,
-OAuth/OIDC authorization and the Tasks extension are deferred until a concrete
-remote deployment requires them. Legacy HTTP+SSE is not a new design target.
-The stdio launcher uses the SDK `serveStdio` factory so one connection is
-pinned to its negotiated modern or legacy era without duplicating tool
-registration.
+## Architecture evolution
 
-- Exact production package dependencies are
-  `@modelcontextprotocol/client@2.0.0`,
-  `@modelcontextprotocol/server@2.0.0`, `yaml@2.9.0` and
-  `cytoscape@3.34.2`, plus `minisearch@7.2.0` for the transient Published-Hub
-  BM25+ projection. Cytoscape.js is copied into explicit static Domain-site
-  output; it is not a live MCP UI runtime.
-- Codebase Memory `v0.10.8` is an attributed immutable source snapshot with one
-  AgentBase-owned 12-language profile. A release maintainer explicitly builds
-  one reviewed bundle per supported platform from those exact bytes. Ordinary
-  installation only selects, verifies and atomically activates that bundled
-  artifact; runtime verifies source/profile/platform, tool surface and
-  executable identity. It never searches `PATH`, accepts a user binary,
-  downloads a provider or invokes the native build toolchain.
-- One short-lived stdio provider session owns one explicit repository evidence
-  round and closes on every path. One-shot invocation is explicit rollback; no
-  watcher, UI, daemon or automatic transport retry exists.
-- Exact freshness reuse skips only indexing. Queries, source-integrity checks
-  and cleanup always run; cache failure asks for explicit `--refresh`.
-- The public stdio gateway exposes 44 goal-level tools: nine Codebase Memory
-  actions including one controlled `index_repository`, four AgentBase schema/
-  authoring actions and 31 local Hub lifecycle/query/visualization actions. It omits raw
-  provider expert/mutation tools and binds one connection to one
-  repository at a time; a sequential repository change cleanly replaces the
-  provider child and retains repository-private caches. Explicit current-value questions use ordinary graph/search/snippet
-  reads from an observed value's source file; there is no live-reference parser,
-  resolver, cache or graph owner.
-- YAML parsing stays behind `core/knowledge`, rejects unsafe/oversized input and
-  never reserializes protected documents merely for normalization.
-- `core/knowledge` owns the portable `agentbase.observed_values` and shared
-  Question document contracts. `app/hub-okf` owns MCP-rendered Question transitions,
-  optional rebuildable indexes and atomic answer-to-guidance proposals; the MCP
-  gateway supplies only the authorized current-repository binding.
-- `providers/aws-cli` owns fixed no-shell argv, CLI v2 admission and normalized
-  provider observations. `app/hub-okf/enrichment` owns Published-only manifests,
-  sequential reconciliation and proposal assembly. The MVP releases STS caller
-  identity plus exact SQS queue reads only; it has no arbitrary command surface.
-- `app/hub-okf/batch-ingest` owns explicit Batch Initial Ingest manifests,
-  member checkpoints and deterministic diff composition. It reuses ordinary
-  repository authoring sessions, runs no model/provider process and may compose
-  only append-only indexes plus navigation of the one confirmed Domain.
-- `agentbase-ingest` owns the five-stage host-agent workflow: Preflight,
-  Discover, Investigate, Author and Validate. MCP remains deterministic and
-  bounded: it resolves Repository/Domain context, classifies exact technology
-  evidence, validates standalone-versus-embedded promotion and exposes catalog/
-  profile versions. It renders promoted skeletons plus embedded source-backed
-  knowledge in one isolated workspace and validates one proposal. Concept
-  Schema owns meaning; the shared
-  document renderer owns OKF encoding. MCP contains no reasoning engine,
-  template language or persistent candidate database.
-- Catalog roles are provider-neutral. Terraform-family Detector v1 validates
-  source-native Terraform/Terragrunt observations and AWS Profile v2 maps
-  supported products to generic roles;
-  provider/product/source-tool remain metadata and evidence.
-- GitHub access is owned by explicit Hub workflows and one owner-private shared
-  Hub credential. The owner-invoked terminal connect workflow admits or reuses
-  that credential through masked input before calling the ordinary attach
-  boundary; MCP tools never accept token arguments, invoke `gh` or use ambient
-  Git credentials. Attach, bootstrap, publication and synchronization continue
-  to use only the admitted shared credential. A future bounded
-  remote-reference reader must use the same authority boundary rather than
-  giving the agent direct repository access. Local knowledge work requires no
-  network.
-- Benchmark model execution is an opt-in external Codex process in an isolated
-  result workspace; AgentBase contains no model SDK or credential storage.
-
-## Navigation and change rules
-
-For a change, read `docs/README.md`, `specs/CURRENT.md`, this ownership index,
-the single affected design/requirements route, its public entrypoint and focused tests.
-Read a numbered capability only when it is active or directly explains the
-behavior being changed.
-
-Keep at most one active capability in `specs/CURRENT.md`. Product or architecture
-changes use specification-driven development and update the affected current
-contract when accepted. Legacy repositories are read-only evidence and never
-runtime/build dependencies.
-
-## Verification
-
-`npm run verify` composes specification checks, TypeScript checking, native
-dependency architecture, dead-code/dependency health, redacted secret scanning,
-offline tests and `git diff --check`. Canonical tests use fakes, captured
-provider responses, disposable Git repositories and fake GitHub HTTP.
-Native-provider qualification, real GitHub actions and model-backed benchmarks
-remain explicit opt-in operations.
+For a change, start at [`docs/README.md`](README.md), select the active artifact
+through [`specs/CURRENT.md`](../specs/CURRENT.md), and inspect only the affected
+boundary and Capability Contract. Changes to ownership, dependency direction,
+state flow or runtime shape update this Architecture Contract before CODE HOW is
+accepted in the active `plan.md`. The mandatory consistency and verification
+gates remain in [`AGENTS.md`](../AGENTS.md).

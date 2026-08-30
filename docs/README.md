@@ -45,6 +45,7 @@ Current requirement routes:
 - Local Hub and publication: `docs/capabilities/11-review-and-publish/01-runtime-requirements.md`
 - Installation: `docs/capabilities/12-version-scope/02-installation-requirements.md`
 - CLI: `docs/capabilities/12-version-scope/08-cli-runtime-requirements.md`
+- MCP protocol: `docs/capabilities/12-version-scope/09-mcp-protocol-requirements.md`
 - Benchmark: `docs/capabilities/12-version-scope/03-benchmark-requirements.md`
 - Published visualization: `docs/capabilities/13-visualization/04-runtime-requirements.md`
 - AI SDLC context: `docs/capabilities/14-ai-sdlc-context/02-runtime-requirements.md`
@@ -78,10 +79,25 @@ Architecture Contract  SYSTEM HOW
         ↓
 Capability Contract    BEHAVIOR / BOUNDARY
         ↓
-Implementation Contract CODE HOW
+Feature-scoped Implementation Contract CODE HOW
         ↓
 Validation Evidence    TEST / VERIFY
 ```
+
+“Feature-scoped” describes where the existing Implementation Contract lives; it
+does not add a fifth decision level or a separate “Feature Contract.” Spec Kit
+artifacts connect the levels in this direction:
+
+```text
+specs/CURRENT.md → spec.md
+plan.md → spec.md + affected Product/Architecture/Capability Contracts
+tasks.md → plan.md
+verification.md → requirements + tests
+```
+
+`spec.md` records the accepted change requirements and delta. `$speckit-plan`
+reads it and creates `plan.md`; that plan links back to the spec and upstream
+contracts and is the feature-scoped Implementation Contract.
 
 The current paths map to those levels as follows:
 
@@ -90,7 +106,7 @@ The current paths map to those levels as follows:
 | Product Contract | `docs/product/` | Product outcome, scope, authority, workflows and non-goals |
 | Architecture Contract | `docs/architecture.md` | System boundaries, ownership, data/state flow, runtime shape and architectural trade-offs |
 | Capability Contract | `docs/capabilities/<area>/` | Capability behavior, contracts, bounds, failure/recovery and `AB-*` requirements |
-| Implementation Contract | Affected capability design or spec plan | Concrete modules, libraries, interfaces and coding/migration decisions for one accepted change |
+| Feature-scoped Implementation Contract | Active `specs/<feature>/plan.md` | Concrete modules, libraries, interfaces and coding/migration decisions for one accepted change |
 | Validation Evidence | Tests, verification reports and `npm run verify` output | Evidence that implementation matches accepted contracts |
 
 The numbered areas map physically to the contract levels as follows:
@@ -122,7 +138,9 @@ numbered `docs/capabilities/` areas own behavior and bounded low-level contracts
 `docs/architecture.md` may mention implementation baseline as
 evidence, but architectural decisions remain separate from file-, class- and
 package-level implementation choices. A separate global implementation tree is
-not required unless repeated cross-capability decisions justify it.
+not required unless repeated cross-capability decisions justify it. New active
+features use `plan.md` as their feature-scoped Implementation Contract; completed
+plans remain historical and are not migrated to the current template.
 
 ## Change impact gate
 

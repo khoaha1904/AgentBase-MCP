@@ -6,9 +6,21 @@
 
 **Note**: This template is filled in by the `$speckit-plan` command; its definition describes the execution workflow.
 
+This feature-scoped plan is the Implementation Contract. It records CODE HOW
+for accepted upstream decisions and must not introduce new product behavior,
+scope or architecture authority.
+
 ## Summary
 
 [Extract from feature spec: primary requirement + technical approach from research]
+
+## Upstream Contracts
+
+- **Product Contract**: [current document and accepted decision, or N/A with rationale]
+- **Architecture Contract**: [current document and accepted decision, or N/A with rationale]
+- **Capability Contract**: [current document and accepted behavior/boundary]
+- **Affected Requirements**: [stable requirement IDs]
+- **Baseline Commit**: [full Git commit SHA reviewed before implementation]
 
 ## Technical Context
 
@@ -102,6 +114,21 @@ ios/ or android/
 
 **Structure Decision**: [Document the selected structure and reference the real
 directories captured above]
+
+## Implementation Decisions
+
+| Concern | Choice | Rationale and trade-off |
+|---|---|---|
+| Ownership and affected modules | [concrete modules and integration points] | [why this is the smallest responsible surface] |
+| Interfaces and data contracts | [interfaces, schemas and state transitions] | [compatibility and boundary reasoning] |
+| State, migration and recovery | [persistence, migration, rollback or N/A] | [failure and recovery behavior] |
+| Dependencies, security and compatibility | [dependency, trust-boundary and compatibility impact] | [risk controls or N/A] |
+
+## Validation Mapping
+
+| Requirement | Implementation surface | Verification evidence |
+|---|---|---|
+| [stable requirement ID] | [responsible module or interface] | [focused test/scenario and repository gate] |
 
 ## Complexity Tracking
 
