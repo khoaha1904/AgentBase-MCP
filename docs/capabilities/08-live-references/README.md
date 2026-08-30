@@ -4,10 +4,10 @@
 > projection and read-only Hub CI are implemented; remote repository reads with
 > an MCP token remain outside the MVP.
 
-High-level decision:
+Product Contract:
 [Observed snapshots and source references](../../product/08-live-references-for-change-prone-values.md)
 
-## Planned breakdown
+## Contract map
 
 - [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — implemented
   clean-cut baseline and the broad capabilities still deferred.
@@ -20,3 +20,5 @@ High-level decision:
 - [`05-sensitive-value-filtering.md`](05-sensitive-value-filtering.md) — preventing secrets from entering Local Draft and the Hub.
 - [`06-provider-observations.md`](06-provider-observations.md) — provider values are observed only during
   Domain Enrichment, not during Ingest.
+- [`07-capability-requirements.md`](07-capability-requirements.md) — normative
+  routes for observation, value safety, freshness and degraded reads.

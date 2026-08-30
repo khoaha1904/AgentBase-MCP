@@ -2,10 +2,10 @@
 
 > Status: Shared Questions/exact Guidance and three-tier AWS/SQS enrichment are implemented; broader conflict composition is deferred.
 
-High-level decision:
+Product Contract:
 [Conflicting data, Questions and Maintainer Guidance](../../product/07-conflicts-questions-and-maintainer-guidance.md)
 
-## Planned breakdown
+## Contract map
 
 - [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — current claim/
   Question/guidance baseline, shared-state gap and impact checkpoint.
@@ -22,3 +22,5 @@ High-level decision:
 - [`06-batch-question-resolution.md`](06-batch-question-resolution.md) —
   automatic verification, recommended confirmation and direct maintainer input
   in one Domain Enrichment draft.
+- [`07-capability-requirements.md`](07-capability-requirements.md) — normative
+  routes for Questions, Guidance, corrections and bounded resolution.

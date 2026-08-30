@@ -3,11 +3,43 @@ import test from "node:test";
 
 import {
   checkArchitectureContractEntries,
+  checkCapabilityContractEntries,
   checkCurrentDocumentationPathEntries,
   checkImplementationPlanEntry,
   checkProductContractEntries,
   checkRepositoryLanguageEntries,
 } from "./check-specs.mjs";
+
+test("every capability routes to its product outcome and normative requirements", () => {
+  const areas = [
+    ["01-repository-reading", "01-how-mcp-reads-a-repository.md", "05-runtime-requirements.md"],
+    ["02-hub-domain-repository-model", "02-hub-domains-and-repositories.md", "06-capability-requirements.md"],
+    ["03-concept-discovery", "03-how-concepts-are-identified.md", "06-capability-requirements.md"],
+    ["04-schema-selection", "04-how-concept-schemas-are-selected.md", "07-capability-requirements.md"],
+    ["05-knowledge-entry", "05-how-repository-knowledge-enters-the-hub.md", "06-runtime-requirements.md"],
+    ["06-cross-repository-relations", "06-cross-repository-and-cross-domain-relationships.md", "07-runtime-requirements.md"],
+    ["07-conflicts-and-questions", "07-conflicts-questions-and-maintainer-guidance.md", "07-capability-requirements.md"],
+    ["08-live-references", "08-live-references-for-change-prone-values.md", "07-capability-requirements.md"],
+    ["09-ingest-and-refresh", "09-ingest-and-refresh.md", "09-runtime-requirements.md"],
+    ["10-query-routing", "10-querying-code-graph-and-hub.md", "07-runtime-requirements.md"],
+    ["11-review-and-publish", "11-review-accept-and-publish.md", "01-runtime-requirements.md"],
+    ["12-version-scope", "12-current-limits-and-open-decisions.md", "01-foundation-requirements.md"],
+    ["13-visualization", "13-visualizing-published-knowledge.md", "04-runtime-requirements.md"],
+    ["14-ai-sdlc-context", "14-context-for-ai-sdlc-workflows.md", "02-runtime-requirements.md"],
+  ];
+  const entries = Object.fromEntries(areas.map(([area, productFile, requirementsFile]) => [area, {
+    index: `../../product/${productFile}\n${requirementsFile}\n`,
+    requirements: "AB-EXAMPLE-001\n",
+  }]));
+  const rootIndex = areas.map(([area]) => `${area}/README.md`).join("\n");
+  assert.deepEqual(checkCapabilityContractEntries({ rootIndex, entries }), []);
+
+  entries["03-concept-discovery"].requirements = null;
+  assert.deepEqual(checkCapabilityContractEntries({ rootIndex, entries }), [{
+    code: "SPEC-CAPABILITY-REQUIREMENTS-MISSING",
+    message: "docs/capabilities/03-concept-discovery/06-capability-requirements.md must route or define AB-* requirements",
+  }]);
+});
 
 test("product contract index routes every outcome to a capability and status", () => {
   const productFiles = [

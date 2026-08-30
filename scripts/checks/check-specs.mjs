@@ -50,6 +50,23 @@ const PRODUCT_SECTIONS = [
   ["14-context-for-ai-sdlc-workflows.md", "14-ai-sdlc-context/README.md"],
 ];
 
+const CAPABILITY_SECTIONS = [
+  ["01-repository-reading", "01-how-mcp-reads-a-repository.md", "05-runtime-requirements.md"],
+  ["02-hub-domain-repository-model", "02-hub-domains-and-repositories.md", "06-capability-requirements.md"],
+  ["03-concept-discovery", "03-how-concepts-are-identified.md", "06-capability-requirements.md"],
+  ["04-schema-selection", "04-how-concept-schemas-are-selected.md", "07-capability-requirements.md"],
+  ["05-knowledge-entry", "05-how-repository-knowledge-enters-the-hub.md", "06-runtime-requirements.md"],
+  ["06-cross-repository-relations", "06-cross-repository-and-cross-domain-relationships.md", "07-runtime-requirements.md"],
+  ["07-conflicts-and-questions", "07-conflicts-questions-and-maintainer-guidance.md", "07-capability-requirements.md"],
+  ["08-live-references", "08-live-references-for-change-prone-values.md", "07-capability-requirements.md"],
+  ["09-ingest-and-refresh", "09-ingest-and-refresh.md", "09-runtime-requirements.md"],
+  ["10-query-routing", "10-querying-code-graph-and-hub.md", "07-runtime-requirements.md"],
+  ["11-review-and-publish", "11-review-accept-and-publish.md", "01-runtime-requirements.md"],
+  ["12-version-scope", "12-current-limits-and-open-decisions.md", "01-foundation-requirements.md"],
+  ["13-visualization", "13-visualizing-published-knowledge.md", "04-runtime-requirements.md"],
+  ["14-ai-sdlc-context", "14-context-for-ai-sdlc-workflows.md", "02-runtime-requirements.md"],
+];
+
 const REQUIREMENT_GROUPS = [
   ["foundation", "docs/capabilities/12-version-scope/01-foundation-requirements.md", ids("AB-FND", 19), "SPEC-LIVING-MISSING", "SPEC-ID-MISSING"],
   ["managed graph", "docs/capabilities/01-repository-reading/05-runtime-requirements.md", ids("AB-MVP", 7), "SPEC-MVP-LIVING-MISSING", "SPEC-MVP-ID-MISSING"],
@@ -164,6 +181,30 @@ export function checkProductContractEntries({ index, documents }) {
   return errors;
 }
 
+export function checkCapabilityContractEntries({ rootIndex, entries }) {
+  const errors = [];
+  for (const [area, productFile, requirementsFile] of CAPABILITY_SECTIONS) {
+    const entry = entries[area];
+    if (!entry?.index) {
+      errors.push({ code: "SPEC-CAPABILITY-INDEX-MISSING", message: `docs/capabilities/${area}/README.md is required` });
+    } else {
+      if (!entry.index.includes(`../../product/${productFile}`)) {
+        errors.push({ code: "SPEC-CAPABILITY-PRODUCT-ROUTE-MISSING", message: `docs/capabilities/${area}/README.md must route to docs/product/${productFile}` });
+      }
+      if (!entry.index.includes(requirementsFile)) {
+        errors.push({ code: "SPEC-CAPABILITY-REQUIREMENTS-ROUTE-MISSING", message: `docs/capabilities/${area}/README.md must route to ${requirementsFile}` });
+      }
+    }
+    if (!entry?.requirements || !/AB-[A-Z0-9-]+-[0-9]{3}/.test(entry.requirements)) {
+      errors.push({ code: "SPEC-CAPABILITY-REQUIREMENTS-MISSING", message: `docs/capabilities/${area}/${requirementsFile} must route or define AB-* requirements` });
+    }
+    if (rootIndex !== null && !rootIndex.includes(`${area}/README.md`)) {
+      errors.push({ code: "SPEC-CAPABILITY-ROOT-ROUTE-MISSING", message: `docs/capabilities/README.md must route to docs/capabilities/${area}/README.md` });
+    }
+  }
+  return errors;
+}
+
 function checkRepositoryLanguage(root) {
   const files = execFileSync("git", ["ls-files", "-z"], { cwd: root, encoding: "utf8" })
     .split("\0")
@@ -201,6 +242,13 @@ export function checkSpecifications(root) {
       const relative = `docs/product/${productFile}`;
       return [relative, read(root, relative)];
     })),
+  }));
+  errors.push(...checkCapabilityContractEntries({
+    rootIndex: read(root, "docs/capabilities/README.md"),
+    entries: Object.fromEntries(CAPABILITY_SECTIONS.map(([area, , requirementsFile]) => [area, {
+      index: read(root, `docs/capabilities/${area}/README.md`),
+      requirements: read(root, `docs/capabilities/${area}/${requirementsFile}`),
+    }])),
   }));
   errors.push(...checkImplementationPlanEntry({
     relative: ".specify/templates/plan-template.md",

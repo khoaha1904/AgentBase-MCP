@@ -3,10 +3,10 @@
 > Status: Candidate/guidance foundation and Capability 046 Discovery
 > Seed/Inventory coverage are implemented.
 
-High-level decision:
+Product Contract:
 [How are concepts identified?](../../product/03-how-concepts-are-identified.md)
 
-## Decomposition
+## Contract map
 
 - [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — current
   signal/schema baseline, gap and impact.
@@ -20,6 +20,8 @@ High-level decision:
   Published Hub and Local Draft.
 - [`05-candidate-review.md`](05-candidate-review.md) — promote, keep a Question
   or discard a candidate.
+- [`06-capability-requirements.md`](06-capability-requirements.md) — normative
+  requirement routes for discovery coverage, evidence and disposition.
 
 ## Current implementation delta
 

@@ -2,10 +2,10 @@
 
 > Status: Catalog 7 is implemented; the catalog 6 design is superseded.
 
-High-level decision:
+Product Contract:
 [How does MCP select a schema?](../../product/04-how-concept-schemas-are-selected.md)
 
-## Decomposition
+## Contract map
 
 - [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — baseline, gap,
   impact and clean-cutover scope.
@@ -22,6 +22,8 @@ High-level decision:
 - [`06-node-eligibility-and-provider-coverage.md`](06-node-eligibility-and-provider-coverage.md)
   — gate for a concept to become a graph node and coverage rollout for common
   providers.
+- [`07-capability-requirements.md`](07-capability-requirements.md) — normative
+  routes to the current `AB-SCHEMA-*` definitions.
 
 ## Current implementation
 

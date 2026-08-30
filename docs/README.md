@@ -39,8 +39,13 @@ Current requirement routes:
 
 - Foundation: `docs/capabilities/12-version-scope/01-foundation-requirements.md`
 - Code Graph: `docs/capabilities/01-repository-reading/05-runtime-requirements.md`
+- Hub/Domain/Repository model: `docs/capabilities/02-hub-domain-repository-model/06-capability-requirements.md`
+- Concept discovery: `docs/capabilities/03-concept-discovery/06-capability-requirements.md`
+- Schema selection: `docs/capabilities/04-schema-selection/07-capability-requirements.md`
 - OKF: `docs/capabilities/05-knowledge-entry/06-runtime-requirements.md`
 - Domain Enrichment: `docs/capabilities/06-cross-repository-relations/07-runtime-requirements.md`
+- Conflicts and Questions: `docs/capabilities/07-conflicts-and-questions/07-capability-requirements.md`
+- Observed snapshots: `docs/capabilities/08-live-references/07-capability-requirements.md`
 - Batch Initial Ingest: `docs/capabilities/09-ingest-and-refresh/09-runtime-requirements.md`
 - Local Hub and publication: `docs/capabilities/11-review-and-publish/01-runtime-requirements.md`
 - Installation: `docs/capabilities/12-version-scope/02-installation-requirements.md`

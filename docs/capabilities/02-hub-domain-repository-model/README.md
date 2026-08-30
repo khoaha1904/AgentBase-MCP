@@ -3,10 +3,10 @@
 > Status: Domain/Repository and Batch Initial Ingest are implemented;
 > subproject-scope automation in a monorepo is deferred.
 
-High-level decision:
+Product Contract:
 [How are Hub, Domain and Repository organized?](../../product/02-hub-domains-and-repositories.md)
 
-## Planned decomposition
+## Contract map
 
 - [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — Domain baseline and
   the one-primary-Domain-per-Git-repository decision.
@@ -20,6 +20,8 @@ High-level decision:
   subproject evidence scope.
 - [`05-cross-domain-navigation.md`](05-cross-domain-navigation.md) — link to
   another Domain without changing repository ownership.
+- [`06-capability-requirements.md`](06-capability-requirements.md) — normative
+  requirement routes for identity, Domain confirmation and batch assignment.
 
 ## Current implementation delta
 
