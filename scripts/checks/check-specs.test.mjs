@@ -8,8 +8,24 @@ import {
   checkImplementationPlanEntry,
   checkProductContractEntries,
   checkRepositoryLanguageEntries,
+  checkRequirementDefinitionEntries,
   checkTemplateContractEntry,
 } from "./check-specs.mjs";
+
+test("normative requirement IDs have one definition owner", () => {
+  assert.deepEqual(checkRequirementDefinitionEntries([
+    { relative: "a-requirements.md", source: "- **AB-A-001, AB-A-002** — First.\n" },
+    { relative: "b-requirements.md", source: "See `AB-A-001`; do not redefine it.\n- **AB-B-001** — Second.\n" },
+  ]), []);
+
+  assert.deepEqual(checkRequirementDefinitionEntries([
+    { relative: "a-requirements.md", source: "- **AB-A-001** — First.\n" },
+    { relative: "b-requirements.md", source: "- **AB-A-001** — Duplicate.\n" },
+  ]), [{
+    code: "SPEC-REQUIREMENT-DUPLICATE",
+    message: "AB-A-001 is defined in both a-requirements.md and b-requirements.md",
+  }]);
+});
 
 test("Spec Kit templates retain the contract delta and validation handoff", () => {
   assert.deepEqual(checkTemplateContractEntry({
@@ -138,7 +154,7 @@ test("[AB-LANG-006] repository language check rejects Vietnamese prose and allow
   ]), []);
 });
 
-test("[AB-DOC-006] current authority rejects old routes while compatibility and history retain them", () => {
+test("[AB-DOC-006] current authority rejects old routes while history retains them", () => {
   assert.deepEqual(checkCurrentDocumentationPathEntries([
     { relative: "docs/README.md", source: "Read docs/design/README.md.\n" },
   ]), [{
@@ -147,7 +163,6 @@ test("[AB-DOC-006] current authority rejects old routes while compatibility and 
   }]);
 
   assert.deepEqual(checkCurrentDocumentationPathEntries([
-    { relative: "docs/design/README.md", source: "docs/design/<area> maps to docs/capabilities/<area>.\n" },
     { relative: "specs/062-example/spec.md", source: "Baseline: docs/present/example.md\n" },
   ]), []);
 });

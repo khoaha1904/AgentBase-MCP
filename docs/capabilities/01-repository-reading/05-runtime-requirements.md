@@ -27,11 +27,13 @@ graph remains detailed, private and disposable.
 - **AB-MVP-007** — Canonical verification replays captured output and fake
   processes. Explicit native qualification owns Linux x64 and macOS arm64
   evidence; both must pass before a source migration closes.
-- **AB-MVP-008** — Preparation verifies pristine inventories, applies the
+- Provider preparation follows
+  [`AB-INSTALL-039..041`](../12-version-scope/02-installation-requirements.md#owned-native-provider-bundle): it verifies pristine inventories, applies the
   AgentBase patch only in disposable staging, probes the accepted private
   provider surface and atomically publishes an ignored artifact. Ordinary MCP
   startup never builds, downloads, updates or recovers the provider.
-- **AB-MVP-009** — The Codebase Memory Graph UI frontend is excluded from the
+- The UI boundary follows
+  [`AB-INSTALL-038`](../12-version-scope/02-installation-requirements.md#owned-native-provider-bundle): the Codebase Memory Graph UI frontend is excluded from the
   released source snapshot. Its upstream C runtime scaffolding may remain only
   where shared by the core build and receives no HTTP/UI authority.
   diagram-design remains an attributed inactive source foundation; no diagram

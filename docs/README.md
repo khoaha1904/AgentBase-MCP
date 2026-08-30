@@ -190,10 +190,11 @@ Completed specs are not rewritten when current docs change. A later behavior
 change creates a new spec with `supersedes` or `amends`; its `verification.md`
 may record the landed/source-snapshot commit after completion.
 
-The former `present` and `design` roots retain compatibility mapping READMEs.
-Current links use the new paths; completed specs and historical bug records keep
-their original path text and resolve it through Git baselines plus those maps.
-Do not bulk-edit historical spec content.
+The former presentation and low-level-design trees were removed after their
+current content moved to Product, Architecture and Capability Contracts.
+Current links use the canonical paths. Completed specs and historical bug
+records keep their original path text and resolve it through their pinned Git
+baselines and repository history; do not bulk-edit historical spec content.
 
 ## Current checkpoint
 

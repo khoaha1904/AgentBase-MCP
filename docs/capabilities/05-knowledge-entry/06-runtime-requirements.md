@@ -223,7 +223,7 @@ Normative OKF source is pinned to commit
   actionable diagnostic. Guidance states that `source` and `target` are
   identities of supplied concepts; embedded knowledge and free text are not
   endpoints and are not promoted merely to complete a Flow.
-- **AB-INGEST-011** — Initial Ingest preparation renders editable skeletons for
+- Flow-specific clarification for `AB-INGEST-011`: Initial Ingest preparation renders editable skeletons for
   promoted candidates. A Flow skeleton contains `flow_steps: []` as an explicit
   edit point because endpoints cannot be inferred safely; preparation may return
   that skeleton, but normal changed-set/final proposal validation rejects it

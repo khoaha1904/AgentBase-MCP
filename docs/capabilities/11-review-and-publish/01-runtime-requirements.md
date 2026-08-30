@@ -122,9 +122,9 @@ queries and ordinary coding never create Hub state, commits or publication.
   same remote branch so the PR number/URL survives; conflict stops before push.
   A Refresh whose predecessor became Published is retargeted to `main` before it
   can continue. MCP never approves, closes or merges the PR.
-- **AB-INGEST-010** — A confirmed primary Domain is materialized on the
-  current-source Repository concept with deterministic owner-guidance evidence;
-  it is not stored in a side registry or inferred from a System name.
+- Confirmed primary-Domain materialization is governed by
+  [`AB-INGEST-010`](../05-knowledge-entry/06-runtime-requirements.md#single-repository-initial-ingest);
+  publication adds no side registry or System-name inference.
 - **AB-QUESTION-001** — Question is an MCP-rendered shared Hub governance
   document at `questions/<stable-id>.md`, with navigation in
   `questions/index.md`. It is part of the ordinary proposal tree/digest and

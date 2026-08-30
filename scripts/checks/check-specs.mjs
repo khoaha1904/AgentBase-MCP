@@ -224,10 +224,28 @@ export function checkCapabilityContractEntries({ rootIndex, entries }) {
   return errors;
 }
 
+export function checkRequirementDefinitionEntries(entries) {
+  const owners = new Map();
+  for (const { relative, source } of entries) {
+    for (const line of source.split("\n")) {
+      const declaration = line.match(/^- \*\*(.+?)\*\*/)?.[1];
+      if (!declaration) continue;
+      for (const requirement of declaration.match(/AB-[A-Z0-9-]+-[0-9]{3}/g) ?? []) {
+        const prior = owners.get(requirement);
+        if (prior && prior !== relative) {
+          return [{ code: "SPEC-REQUIREMENT-DUPLICATE", message: `${requirement} is defined in both ${prior} and ${relative}` }];
+        }
+        owners.set(requirement, relative);
+      }
+    }
+  }
+  return [];
+}
+
 function checkRepositoryLanguage(root) {
   const files = execFileSync("git", ["ls-files", "-z"], { cwd: root, encoding: "utf8" })
     .split("\0")
-    .filter(Boolean);
+    .filter((relative) => relative && fs.existsSync(path.join(root, relative)));
   return checkRepositoryLanguageEntries(files.map((relative) => ({
     relative,
     source: fs.readFileSync(path.join(root, relative), "utf8"),
@@ -237,7 +255,7 @@ function checkRepositoryLanguage(root) {
 function checkCurrentDocumentationPaths(root) {
   const files = execFileSync("git", ["ls-files", "-z"], { cwd: root, encoding: "utf8" })
     .split("\0")
-    .filter(Boolean);
+    .filter((relative) => relative && fs.existsSync(path.join(root, relative)));
   return checkCurrentDocumentationPathEntries(files.map((relative) => ({
     relative,
     source: fs.readFileSync(path.join(root, relative), "utf8"),
@@ -246,6 +264,18 @@ function checkCurrentDocumentationPaths(root) {
 
 export function checkSpecifications(root) {
   const errors = [...checkRepositoryLanguage(root), ...checkCurrentDocumentationPaths(root)];
+  for (const relative of ["docs/present", "docs/design"]) {
+    if (fs.existsSync(path.join(root, relative))) {
+      errors.push({ code: "SPEC-LEGACY-DOC-ROOT", message: `${relative} must not be recreated; use the canonical contract directories` });
+    }
+  }
+  const requirementFiles = execFileSync("git", ["ls-files", "-z", "docs/capabilities/**/*requirements.md"], { cwd: root, encoding: "utf8" })
+    .split("\0")
+    .filter((relative) => relative && fs.existsSync(path.join(root, relative)));
+  errors.push(...checkRequirementDefinitionEntries(requirementFiles.map((relative) => ({
+    relative,
+    source: fs.readFileSync(path.join(root, relative), "utf8"),
+  }))));
   const agentGuide = read(root, "AGENTS.md");
   const docsIndex = read(root, "docs/README.md");
   const current = read(root, "specs/CURRENT.md");
