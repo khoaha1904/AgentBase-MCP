@@ -1,4 +1,7 @@
-# 13.04 — Runtime requirements
+# 13.04 — Capability requirements
+
+These `AB-VIS-*` requirements are the normative Visualization Capability
+Contract. The neighboring pages explain the behavior and supporting rationale.
 
 - **AB-VIS-001** — Visualization reads one exact synchronized Published commit
   and never mixes Local Draft or proposal bytes.

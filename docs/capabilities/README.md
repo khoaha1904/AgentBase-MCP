@@ -1,28 +1,33 @@
 # AgentBase capability contracts
 
-This directory decomposes the 14 high-level decisions in
-[`docs/product`](../product/README.md) into capability behavior and low-level
-designs that can be reviewed and implemented independently.
+This directory decomposes the 14 Product Contract outcomes in
+[`docs/product`](../product/README.md) into independently reviewable behavior,
+boundaries, failure/recovery rules and stable requirements.
 
 [Architecture ownership](../architecture/README.md) is the shared source map. The
 `*-requirements.md` files in the corresponding numbered area hold current
-`AB-*` requirements; there is no parallel contracts tree.
+normative `AB-*` requirements; there is no parallel contracts tree.
 
 ## Organization
 
 - Each high-level section maps to exactly one directory numbered 01 through 14.
 - The directory's `README.md` holds scope, the high-level link and the child
   design index.
-- Each child file addresses one technical boundary without repeating the
-  product decision.
-- A child file may be a current design, implemented baseline or deferred design;
-  its opening status must say which.
+- Each child file addresses one behavioral boundary without repeating the
+  product decision or prescribing feature-specific source changes.
+- `*-requirements.md` is normative. Other child pages explain behavior,
+  rationale or constraints; a baseline/qualification page is supporting
+  evidence and must not silently become implementation authority.
+- Concrete modules, packages, functions, file layouts and migration steps for
+  an active change belong in `specs/<feature>/plan.md`.
+- A child file may describe a current, implemented or deferred boundary; its
+  opening status or area index must distinguish that state.
 - Superseded historical designs remain traceable but must not be described as
   the current baseline.
 
 ## Baseline-first principle
 
-Technical design does not redesign AgentBase from scratch. Every section must
+Capability design does not redesign AgentBase from scratch. Every section must
 start from two sources:
 
 1. **High-level decision** is the current authority and defines the product
@@ -60,13 +65,13 @@ parts and at least one scope-reduction option.
 If baseline review reveals a real constraint, important limitation or a better
 existing design, the Agent must propose a high-level adjustment with its
 trade-offs. Only after owner approval may it edit `docs/product` and continue
-technical design. Do not bend technical design to evade the high level or force
+capability design. Do not bend capability design to evade the high level or force
 code to match it before the owner sees the impact.
 
 ## Lifecycle rule
 
 The mandatory lifecycle, gap classification and completion gate are defined
-centrally in [`AgentBase-MCP/AGENTS.md`](../../AGENTS.md). These design documents
+centrally in [`AgentBase-MCP/AGENTS.md`](../../AGENTS.md). These capability documents
 keep only the baseline/impact and technical content for each boundary; they do
 not create a second process. Every capability must return to that rule before
 implementation, benchmark, PR and capability commit.
@@ -114,10 +119,10 @@ owns only its system boundary.
 
 Current runtime authority lives in `docs/`; `docs/architecture/` holds system
 ownership and `docs/capabilities/` holds capability contracts, while code and
-tests are evidence. The active spec holds change
-intent only while a capability is being implemented. Design in this directory
-explains shape/trade-offs and must be updated when implementation invalidates an
-old assumption.
+tests are evidence. The active spec holds change intent and its feature-scoped
+Implementation Contract only while a capability is being changed. Explanatory
+pages in this directory describe behavior and trade-offs and must be updated
+when implementation evidence invalidates an old assumption.
 
 ## Original design order
 

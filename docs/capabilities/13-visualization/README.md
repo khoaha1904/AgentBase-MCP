@@ -1,18 +1,29 @@
 # 13 — Published visualization
 
-**Status:** implemented; prior eight-repository qualification is historical and
-the generated snapshot is currently reset for a new resource-node qualification.
+> Status: Implemented. Prior eight-repository qualification is historical; the
+> generated snapshot is disposable validation output rather than authority.
 
-High-level owner: [Visualize Published knowledge](../../product/13-visualizing-published-knowledge.md).
+Product Contract:
+[Visualize Published knowledge](../../product/13-visualizing-published-knowledge.md).
+
+Architecture Contract:
+[Publication flow and visualization boundary](../../architecture/flows.md#publication-flow).
 
 This area owns presentation projections derived from one exact Published Hub
 commit. It does not own OKF authoring, Draft review, source graphs or remote
 publication.
 
-## Design map
+## Contract map
 
-1. [Baseline and impact](00-baseline-and-impact.md)
-2. [Published projection](01-published-projection.md)
-3. [Query-scoped diagrams](02-query-scoped-diagrams.md)
-4. [Static Domain site](03-static-domain-site.md)
-5. [Runtime requirements](04-runtime-requirements.md)
+- **Supporting implementation evidence:**
+  [Baseline and impact](00-baseline-and-impact.md).
+- **Behavior and boundaries:**
+  [Published projection](01-published-projection.md),
+  [query-scoped diagrams](02-query-scoped-diagrams.md) and
+  [static Domain site](03-static-domain-site.md).
+- **Normative Capability Contract:**
+  [Runtime requirements](04-runtime-requirements.md).
+
+The baseline page records reusable implementation evidence at the time of the
+capability review. It does not override the `AB-VIS-*` requirements and is not a
+global Implementation Contract.
