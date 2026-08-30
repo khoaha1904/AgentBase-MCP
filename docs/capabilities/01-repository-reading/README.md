@@ -22,7 +22,7 @@ Product Contract:
 - [`05-runtime-requirements.md`](05-runtime-requirements.md) — current graph,
   refresh and MCP `AB-*` requirements.
 
-## Current implementation delta
+## Current behavior and boundary
 
 `agentbase-query`, `use-codebase-memory`, Initial Ingest and Refresh connect the
 Published Hub, owned Codebase Memory, exact source reads and evidence

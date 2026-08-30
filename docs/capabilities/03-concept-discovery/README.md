@@ -23,7 +23,7 @@ Product Contract:
 - [`06-capability-requirements.md`](06-capability-requirements.md) — normative
   requirement routes for discovery coverage, evidence and disposition.
 
-## Current implementation delta
+## Current behavior and boundary
 
 Initial Ingest guidance requires an identity basis, query/link value,
 standalone/embedded disposition and exact owned observations. There is no

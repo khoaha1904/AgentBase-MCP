@@ -25,7 +25,7 @@ Product Contract:
 - [`07-capability-requirements.md`](07-capability-requirements.md) — normative
   routes to the current `AB-SCHEMA-*` definitions.
 
-## Current implementation
+## Current behavior and boundary
 
 Catalog `7.0.0` keeps eight Initial Ingest roles: Repository, Domain, System,
 Component, Function, Interface, Flow and Resource. Entity/Metric are

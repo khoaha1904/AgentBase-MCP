@@ -23,7 +23,7 @@ Product Contract:
 - [`06-runtime-requirements.md`](06-runtime-requirements.md) — current OKF,
   schema, live-claim and Initial Ingest `AB-*` requirements.
 
-## Implementation delta
+## Current behavior and boundary
 
 Git-backed proposals, exact Markdown skeleton/template, Local Draft commits,
 inspection and publication receipts exist; there is no database or raw graph

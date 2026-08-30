@@ -32,7 +32,7 @@ Product Contract:
 - [`10-workspace-scan.md`](10-workspace-scan.md) — bounded workspace inventory
   and user-directed routing to Init or sequential Refresh.
 
-## Implementation trace
+## Current behavior and boundary
 
 - Implemented: single-repository Preflight → Discover → Investigate → Author →
   Validate/Inspect; explicit partial outcome; no-change; exact source-state

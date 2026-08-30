@@ -23,7 +23,7 @@ Product Contract:
 - [`06-capability-requirements.md`](06-capability-requirements.md) — normative
   requirement routes for identity, Domain confirmation and batch assignment.
 
-## Current implementation delta
+## Current behavior and boundary
 
 Repository primary Domain, owner confirmation, `part-of` validation and explicit
 Batch Initial Ingest are implemented. A parent containing multiple repositories
