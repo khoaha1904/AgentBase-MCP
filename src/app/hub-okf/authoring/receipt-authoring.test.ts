@@ -147,7 +147,12 @@ test("[AB-MCP-024..030] Receipt Prepare is idempotent and Finalize owns Question
     assert.match(validWorker, /\| jobs \|/);
     assert.match(validWorker, /\| events \|/);
     assert.match(validWorker, /\| upstream API \|/);
-    const authoredWorker = validWorker.replace("| jobs |", "| Job transport |")
+    assert.match(validWorker, /  - id: queue-resource\n/);
+    assert.match(validWorker, /  - id: topic-resource\n/);
+    assert.match(validWorker, /  - id: external-doc\n/);
+    const authoredWorker = validWorker
+      .replace(/  - id: queue-resource\n    resource: [^\n]+\n    observed_revision: [^\n]+\n/, "")
+      .replace("| jobs |", "| Job transport |")
       .split("\n").filter((line) => !line.startsWith("| events |")).join("\n");
     fs.writeFileSync(workerPath, authoredWorker.replace("main.tf#L1-L3", "main.tf#L1-L99"));
     assert.throws(() => finalizeHubAuthoringSession(stateRoot, first.id, hub, [], [],
@@ -164,6 +169,13 @@ test("[AB-MCP-024..030] Receipt Prepare is idempotent and Finalize owns Question
     const authoredWorkerConcept = bundle.concepts.get(skeletons.find((item) => item.candidateId === "worker")!.identity)!;
     assert.match(authoredWorkerConcept.body, /\| Job transport \|/);
     assert.match(authoredWorkerConcept.body, /\| events \|/);
+    const retainedSourceIds = Array.isArray(authoredWorkerConcept.frontmatter.sources)
+      ? authoredWorkerConcept.frontmatter.sources.flatMap((source) => source && typeof source === "object"
+        && !Array.isArray(source) && typeof source.id === "string" ? [source.id] : []) : [];
+    assert.equal(retainedSourceIds.filter((id) => id === "queue-resource").length, 1,
+      "Finalize restores missing embedded evidence exactly once");
+    assert.equal(retainedSourceIds.filter((id) => id === "topic-resource").length, 1);
+    assert.equal(retainedSourceIds.filter((id) => id === "external-doc").length, 1);
     assert.equal(parseQuestionDocument(question).references[0]?.referenceKind, "candidate-evidence");
     for (const concept of [...bundle.concepts.values()].filter((entry) => entry.type !== "Question")) {
       const repositorySources = Array.isArray(concept.frontmatter.sources)

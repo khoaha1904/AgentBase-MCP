@@ -417,15 +417,19 @@ Normative OKF source is pinned to commit
   no Published Hub/OKF migration is introduced.
 - **AB-INGEST-019** — Receipt-bound embedded materialization is proven by at
   least one exact candidate-owned repository evidence resource remaining in the
-  resolved parent concept. Agent-authored human-readable label/prose may differ
-  from the candidate identity hint and is not a Finalize gate. Missing Receipt
-  evidence is never silently accepted; AB-INGEST-020 owns its normalization.
+  resolved parent concept. Candidate-owned embedded evidence is retained in the
+  parent's frontmatter sources so Published query and visualization can resolve
+  it; body-only evidence text is insufficient. Agent-authored human-readable
+  label/prose may differ from the candidate identity hint and is not a Finalize
+  gate. Missing Receipt evidence is never silently accepted; AB-INGEST-020 owns
+  its normalization.
 - **AB-INGEST-020** — Before Receipt materialization validation, Finalize keeps
   an existing embedded row that retains exact candidate-owned evidence and
-  deterministically restores a missing canonical row from the frozen Receipt
-  into its resolved parent. This normalization uses no graph/source reread and
-  does not consume the Agent repair budget. A row that still cannot be resolved
-  to a valid parent/evidence remains an integrity failure.
+  deterministically restores a missing canonical row and missing frontmatter
+  source record from the frozen Receipt into its resolved parent. This
+  normalization uses no graph/source reread and does not consume the Agent
+  repair budget. A row that still cannot be resolved to a valid parent/evidence
+  remains an integrity failure.
 - **AB-INGEST-021** — Discovery and authoring preserve bounded limitations when
   provider output is partial, malformed or redacted. A high-value signal is
   materialized, represented as a Question, or recorded with an explicit ignored

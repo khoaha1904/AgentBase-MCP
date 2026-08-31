@@ -493,7 +493,10 @@ function restoreReceiptEmbeddedKnowledge(session: HubAuthoringSession, root: str
   const candidates = new Map(receipt.guidanceRequest.candidates.map((candidate) => [candidate.id, candidate]));
   const recommendations = new Map(receipt.guidance.recommendations.map((item) => [item.candidateId, item]));
   const observations = [...receipt.guidanceRequest.semanticObservations, ...receipt.guidanceRequest.resourceObservations];
-  const itemsByOwner = new Map<string, { row: string; evidence: readonly string[] }[]>();
+  const itemsByOwner = new Map<string, {
+    items: { row: string; evidence: readonly string[] }[];
+    sources: Array<Readonly<{ id: string; resource: string; observed_revision: string }>>;
+  }>();
   for (const output of receipt.inventory.items.flatMap((item) => item.outcome === "materialized" ? item.outputs : [])) {
     const candidate = candidates.get(output.candidateId), recommendation = recommendations.get(output.candidateId);
     if (candidate?.disposition !== "embedded" || recommendation?.status !== "embedded") continue;
@@ -504,22 +507,29 @@ function restoreReceiptEmbeddedKnowledge(session: HubAuthoringSession, root: str
       const observation = observations.find((entry) => entry.id === id);
       return observation ? [{ id: observation.id.replaceAll(":", "-"), resource: createRepositorySourceResource(
         receipt.source.repositoryId, observation.source.path, observation.source.startLine, observation.source.endLine,
-      ) }] : [];
+      ), observed_revision: receipt.source.commit }] : [];
     });
     if (!sources.length) continue;
     const row = renderEmbeddedKnowledgeRow(candidate, recommendation, sources);
-    if (owner.body.includes(row)) continue;
-    const items = itemsByOwner.get(owner.conceptId) ?? [];
-    if (!items.some((item) => item.row === row)) {
-      items.push({ row, evidence: renderEmbeddedKnowledgeEvidence(sources) });
+    const retained = itemsByOwner.get(owner.conceptId) ?? { items: [], sources: [] };
+    if (!owner.body.includes(row) && !retained.items.some((item) => item.row === row)) {
+      retained.items.push({ row, evidence: renderEmbeddedKnowledgeEvidence(sources) });
     }
-    itemsByOwner.set(owner.conceptId, items);
+    for (const source of sources) {
+      if (!retained.sources.some((existing) => existing.id === source.id)) retained.sources.push(source);
+    }
+    itemsByOwner.set(owner.conceptId, retained);
   }
-  for (const [ownerId, items] of itemsByOwner) {
+  for (const [ownerId, retained] of itemsByOwner) {
     const owner = bundle.concepts.get(ownerId);
     if (!owner) continue;
+    const existingSources = Array.isArray(owner.frontmatter.sources) ? [...owner.frontmatter.sources] : [];
+    for (const source of retained.sources) {
+      if (!existingSources.some((value) => mapping(value)?.id === source.id)) existingSources.push(source);
+    }
     fs.writeFileSync(path.join(root, owner.path), renderConceptDocument({ ...owner,
-      body: appendEmbeddedKnowledge(owner.body, items) }), { mode: 0o600 });
+      frontmatter: { ...owner.frontmatter, sources: existingSources },
+      body: appendEmbeddedKnowledge(owner.body, retained.items) }), { mode: 0o600 });
   }
 }
 

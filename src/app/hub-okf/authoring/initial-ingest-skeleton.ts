@@ -112,6 +112,20 @@ function embeddedKnowledge(
   ].join("\n") : "";
 }
 
+function embeddedSources(
+  parentCandidateId: string,
+  recommendations: OkfAuthoringGuidance["recommendations"],
+  candidates: ReadonlyMap<string, ConceptCandidate>,
+  sources: ReadonlyMap<string, Readonly<{ id: string; resource: string; observed_revision?: string }>>,
+): readonly Readonly<{ id: string; resource: string; observed_revision?: string }>[] {
+  const exact = recommendations.filter((item) => item.status === "embedded" && item.parentCandidateId === parentCandidateId)
+    .flatMap((recommendation) => {
+      const candidate = candidates.get(recommendation.candidateId);
+      return candidate ? candidateSources(candidate, sources) : [];
+    });
+  return [...new Map(exact.map((source) => [source.id, source])).values()];
+}
+
 function document(relative: string, type: string, frontmatter: OkfFrontmatter, body: string): string {
   const concept: ConceptDocument = {
     conceptId: relative.slice(0, -3), path: relative, type, status: "draft",
@@ -213,6 +227,7 @@ export function writeInitialIngestSkeletons(options: WriteInitialIngestSkeletons
     const relative = availablePath(options.bundleRoot, recommendation.schema.directoryHint, candidate.identityHint, used);
     used.add(relative);
     const sources = candidateSources(candidate, sourceById);
+    const retainedEmbeddedSources = embeddedSources(candidate.id, embedded, candidates, sourceById);
     const systemDomainSource = recommendation.schema.type === "System" && ownerSource ? ownerSource : undefined;
     const frontmatter: OkfFrontmatter = {
       type: recommendation.schema.type,
@@ -220,7 +235,8 @@ export function writeInitialIngestSkeletons(options: WriteInitialIngestSkeletons
       description: candidate.queryValue,
       status: "draft",
       generated,
-      sources: [...sources, ...(systemDomainSource ? [systemDomainSource] : [])],
+      sources: [...new Map([...sources, ...retainedEmbeddedSources, ...(systemDomainSource ? [systemDomainSource] : [])]
+        .map((source) => [source.id, source])).values()],
       ...(recommendation.schema.type === "Flow" ? { flow_steps: [] } : {}),
       ...(systemDomainSource && options.confirmedDomain ? {
         relationships: [{ kind: "part-of", target: options.confirmedDomain.identity, evidence: [systemDomainSource.id] }],
@@ -247,7 +263,9 @@ export function writeInitialIngestSkeletons(options: WriteInitialIngestSkeletons
     description: repositoryPurpose,
     status: "draft",
     generated,
-    sources: [...repositorySources, ...(ownerSource ? [ownerSource] : [])],
+    sources: [...new Map([...repositorySources,
+      ...embeddedSources(repositoryEvidenceCandidate.id, embedded, candidates, sourceById),
+      ...(ownerSource ? [ownerSource] : [])].map((source) => [source.id, source])).values()],
     ...(options.confirmedDomain ? {
       relationships: [{ kind: "part-of", target: options.confirmedDomain.identity, evidence: [ownerSource!.id] }],
     } : {}),
