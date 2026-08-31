@@ -63,5 +63,5 @@
 - [x] T038 Record the owner-approved single-, multi- and unassociated Repository-affinity layout.
 - [x] T039 [US5] Place outside nodes deterministically from their visible relation endpoints.
 - [x] T040 Add requirement-linked generated-site regression coverage and inspect the real Crawler layout.
-- [ ] T041 Run `npm run verify` and push the reviewed MCP change.
-- [ ] T042 Regenerate, publish and verify the Crawler Domain site.
+- [x] T041 Run `npm run verify` and push the reviewed MCP change.
+- [x] T042 Regenerate, publish and verify the Crawler Domain site.
