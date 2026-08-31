@@ -79,6 +79,10 @@ possible; and stop benchmark fixtures from prescribing exact concept paths.
   for its ordered arrows rather than an isolated circular node.
 - Selecting a System highlights its direct Published members without turning
   structural containment into visible runtime arrows.
+- Outside-node layout follows Published relation affinity: a node related to one
+  Repository sits beside that region, a node related to multiple Repositories
+  sits between them, and only an unassociated node uses the fallback external
+  lane. Layout never changes Published membership or topology.
 - Embedded relation endpoints are `self`, an exact admitted concept identity or
   one unique same-parent embedded name. Presentation-only `monitors` and
   `redrives-to` are allowed alongside canonical runtime predicates.
@@ -138,7 +142,9 @@ nodes are labeled and remain outside, normal nodes snap back into their valid
 ownership zone after dragging, reset restores deterministic positions,
 structural edges are hidden, valid embedded writes, monitoring and redrive rows
 render directed arrows, Flow steps are initially visible under a compact Flow
-label, and selecting a System highlights its direct members.
+label, selecting a System highlights its direct members, and an external node
+connected only to one Repository sits beside that region without crossing an
+unrelated Repository region.
 
 ## Requirements
 
@@ -189,6 +195,10 @@ label, and selecting a System highlights its direct members.
   compact label for its ordered arrows rather than an isolated circular node.
 - **FR-021**: Selecting a System MUST highlight its direct Published members
   without exposing structural containment as runtime arrows.
+- **FR-022**: Outside-node placement MUST deterministically use Published
+  relation endpoints to place single-Repository nodes beside that region,
+  multi-Repository nodes between related regions and unassociated nodes in a
+  fallback external lane without changing membership or topology.
 
 ## Success Criteria
 
@@ -210,3 +220,6 @@ label, and selecting a System highlights its direct members.
   and evidence-backed embedded arrows without unsupported topology.
 - **SC-009**: Focused generated-site tests prove default-visible Flow steps,
   compact Flow labels, reset-preserved visibility and System-member highlighting.
+- **SC-010**: A real Crawler build places `Crawler Jobs Queue` beside the sole
+  related Repository region, and focused tests retain deterministic multi-region
+  and unassociated fallbacks without data-model changes.

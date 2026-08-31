@@ -75,8 +75,12 @@ Contract. The neighboring pages explain the behavior and supporting rationale.
   context rather than a graph node. Each Repository concept renders as a compact
   selectable card inside a fixed labeled region; singly owned nodes appear
   inside while visibly labeled shared, multi-repository and external nodes
-  remain outside. Repository and Domain documents remain inspectable without
-  changing Published projection authority.
+  remain outside. An outside node related to one Repository is placed beside
+  that region, one related to multiple Repositories is placed between their
+  regions, and only an unassociated node uses the fallback external lane.
+  Placement is deterministic and uses only Published relation endpoints;
+  Repository and Domain documents remain inspectable without changing
+  Published projection authority.
 - **AB-VIS-021** — Normal Domain-site nodes may be repositioned only within
   their ownership zone. Repository cards and region boundaries remain fixed;
   regions never resize, and reset or reload restores the deterministic layout.

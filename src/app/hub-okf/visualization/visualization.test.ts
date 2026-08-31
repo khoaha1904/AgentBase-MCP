@@ -404,6 +404,11 @@ test("[AB-VIS-006..010][AB-VIS-012..022] static Domain site is reproducible, off
   assert.match(generatedApp, /nodeById\.get\(selected\)\?\.type === "System"/);
   assert.match(generatedApp, /candidate\.parentIds\.includes\(selected\)/);
   assert.match(generatedApp, /flowToggle\.checked = true/);
+  assert.match(generatedApp, /fixedPositions\(graphNodes, graphHost\.clientWidth <= 720 \? 1 : 2, visualEdges\)/);
+  assert.match(generatedApp, /edge\.displaySource === node\.id \? edge\.displayTarget/);
+  assert.match(generatedApp, /repositoryIds\.length === 1/);
+  assert.match(generatedApp, /repositoryIds\.length > 1/);
+  assert.match(generatedApp, /maximumBottom \+ 100/);
   assert.match(generatedApp, /shape: "ellipse"/);
   assert.match(generatedApp, /initialVisible = \(\) => new Set\(graphNodes\.map/);
   assert.match(generatedIndex, /id="view-document"/);

@@ -55,6 +55,7 @@ after code and verification pass
 | Interaction | Constrain normal-node dragging to ownership zones; keep Repository cards/regions fixed and resettable | Lets reviewers untangle arrows without misrepresenting ownership |
 | Flow presentation | Show step arrows initially and render the Flow concept as a compact label | Makes ordered behavior visible without an isolated duplicate node |
 | System selection | Highlight direct `part-of` members from Published parent identities | Exposes membership on demand without drawing structural arrows |
+| Outside-node placement | Derive Repository affinity from visible edge endpoints; place beside one region, between several or in the fallback lane | Shortens real arrows without changing knowledge membership |
 
 ## Validation Mapping
 

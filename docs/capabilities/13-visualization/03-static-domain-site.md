@@ -31,7 +31,9 @@ reproducible.
 - every other non-governance concept admitted by the Domain scope is visible
   first; Repository concepts are compact selectable cards inside fixed labeled
   regions, with owned nodes placed inside while shared, multi-repository and
-  external nodes are visibly labeled and remain outside;
+  external nodes are visibly labeled and remain outside; relation endpoints
+  place one-Repository outside nodes beside that region, multi-Repository nodes
+  between related regions and unassociated nodes in a fallback external lane;
 - promoted `Resource` nodes (for example a shared queue/topic) are visible as
   normal concepts; concrete evidence-backed embedded resources may appear as
   smaller dashed presentation-only references without creating concept files;

@@ -46,6 +46,12 @@ knowledge is labeled and remains outside it. Reloading or resetting the map
 restores the deterministic generated layout; presentation coordinates never
 enter Published knowledge.
 
+An outside node related to one Repository is placed beside that Repository
+region. A node related to multiple Repositories is placed between their regions;
+only an outside node with no related Repository falls back to the shared
+external lane. Placement uses Published relation endpoints and never changes
+membership or infers topology.
+
 Embedded knowledge remains owned by its parent Markdown concept. The Published
 projection may render a concrete, exactly sourced embedded resource as a
 visually distinct presentation-only reference when that dependency makes the
