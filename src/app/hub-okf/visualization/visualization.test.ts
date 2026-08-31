@@ -394,6 +394,7 @@ test("[AB-VIS-006..010][AB-VIS-012..022] static Domain site is reproducible, off
   assert.match(generatedApp, /node\.repositoryIds\.length === 1/);
   assert.match(generatedApp, /repository-region/);
   assert.match(generatedApp, /cy\.nodes\('\[type = "Repository"\]'\)\.ungrabify\(\)/);
+  assert.match(generatedApp, /"text-max-width": 116, "text-valign": "center", "text-wrap": "ellipsis"/);
   assert.match(generatedApp, /cy\.on\("dragfree", "node"/);
   assert.match(generatedApp, /clampToOwnership/);
   assert.match(generatedApp, /Shared \/ External/);
