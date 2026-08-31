@@ -379,7 +379,7 @@ test("[AB-VIS-006..010][AB-VIS-012..024] static Domain site is reproducible, off
   assert.doesNotMatch(generatedText, /ghp_[A-Za-z0-9]{20,}|search_hub_okf|prepare_hub_visualization/);
   const generatedIndex = fs.readFileSync(path.join(first, "index.html"), "utf8");
   const generatedApp = fs.readFileSync(path.join(first, "assets/app.js"), "utf8");
-  const browserBuildKey = `6-${graph.commit}`;
+  const browserBuildKey = `7-${graph.commit}`;
   assert.match(generatedIndex, /Interactive 2D Domain knowledge map/);
   assert.equal(generatedIndex.includes(`assets/app.css?build=${browserBuildKey}`), true);
   assert.equal(generatedIndex.includes(`assets/cytoscape.min.js?build=${browserBuildKey}`), true);
