@@ -56,6 +56,7 @@ after code and verification pass
 | Flow presentation | Show step arrows initially and render the Flow concept as a compact label | Makes ordered behavior visible without an isolated duplicate node |
 | System selection | Highlight direct `part-of` members from Published parent identities | Exposes membership on demand without drawing structural arrows |
 | Outside-node placement | Derive Repository affinity from visible edge endpoints; place beside one region, between several or in the fallback lane | Shortens real arrows without changing knowledge membership |
+| Repository-region placement | Keep 1–2 regions linear; place 3+ regions on a relation-ordered ellipse sized from fixed region bounds | Avoids row-order crossings without a new layout dependency |
 
 ## Validation Mapping
 
@@ -64,7 +65,7 @@ after code and verification pass
 | `AB-SCHEMA-057..059` | authoring guidance and three-shape skeleton/schema tests |
 | `AB-SCHEMA-060` | root-only navigation regression |
 | `AB-BENCH-091..095` | profile/semantic-assessment tests and corrected prompt fixture |
-| `AB-VIS-008`, `AB-VIS-015..023`, `AB-CONTEXT-VIS-009` | embedded projection, identity, relation and static-site presentation tests |
+| `AB-VIS-008`, `AB-VIS-015..024`, `AB-CONTEXT-VIS-009` | embedded projection, identity, relation and static-site presentation tests |
 
 ## Complexity Tracking
 

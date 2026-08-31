@@ -27,7 +27,7 @@ possible; and stop benchmark fixtures from prescribing exact concept paths.
   `docs/capabilities/13-visualization/04-runtime-requirements.md` and
   `docs/capabilities/14-ai-sdlc-context/07-useful-visual-context.md`.
 - **Stable requirements**: `AB-SCHEMA-057..060`, `AB-BENCH-091..095`,
-  `AB-VIS-015..023` and `AB-CONTEXT-VIS-009`.
+  `AB-VIS-015..024` and `AB-CONTEXT-VIS-009`.
 - **Baseline commit**: `c2fe125d91e6154891e37a8344abc719747ab71c`.
 - **Supersedes**: capability 066's exact DLQ/alarm output expectations and
   capability 067's conclusion that those two candidates must be standalone.
@@ -83,6 +83,10 @@ possible; and stop benchmark fixtures from prescribing exact concept paths.
   Repository sits beside that region, a node related to multiple Repositories
   sits between them, and only an unassociated node uses the fallback external
   lane. Layout never changes Published membership or topology.
+- Three or more Repository regions use a deterministic relation-aware ring
+  rather than a responsive row/grid. The ring is separated by fixed region
+  bounds so a cross-Repository arrow does not pass through an unrelated region;
+  one- and two-Repository views remain linear.
 - Embedded relation endpoints are `self`, an exact admitted concept identity or
   one unique same-parent embedded name. Presentation-only `monitors` and
   `redrives-to` are allowed alongside canonical runtime predicates.
@@ -146,6 +150,9 @@ label, selecting a System highlights its direct members, and an external node
 connected only to one Repository sits beside that region without crossing an
 unrelated Repository region.
 
+For three Repositories, relation-aware ordering places the regions on a ring
+and the two bridge arrows do not intersect the unrelated third region.
+
 ## Requirements
 
 - **FR-001**: Authoring guidance MUST keep evidence within one runtime/ownership
@@ -199,6 +206,9 @@ unrelated Repository region.
   relation endpoints to place single-Repository nodes beside that region,
   multi-Repository nodes between related regions and unassociated nodes in a
   fallback external lane without changing membership or topology.
+- **FR-023**: Three or more Repository regions MUST use a deterministic
+  relation-aware ring with fixed-bound separation, while one- and
+  two-Repository views remain compact and linear.
 
 ## Success Criteria
 
@@ -223,3 +233,6 @@ unrelated Repository region.
 - **SC-010**: A real Crawler build places `Crawler Jobs Queue` beside the sole
   related Repository region, and focused tests retain deterministic multi-region
   and unassociated fallbacks without data-model changes.
+- **SC-011**: The three-Repository Crawler topology renders as a non-overlapping
+  ring and neither bridge arrow intersects the unrelated Repository region on
+  desktop or mobile.

@@ -65,3 +65,10 @@
 - [x] T040 Add requirement-linked generated-site regression coverage and inspect the real Crawler layout.
 - [x] T041 Run `npm run verify` and push the reviewed MCP change.
 - [x] T042 Regenerate, publish and verify the Crawler Domain site.
+
+## Relation-aware Repository ring correction
+
+- [x] T043 Record the owner-approved non-overlapping Repository-ring contract.
+- [x] T044 [US5] Place three or more Repository regions on a deterministic relation-aware ring.
+- [x] T045 Add a requirement-linked three-Repository crossing regression and run repository verification.
+- [ ] T046 Regenerate, inspect and publish the Crawler Domain site.

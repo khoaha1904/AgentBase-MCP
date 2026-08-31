@@ -52,6 +52,12 @@ only an outside node with no related Repository falls back to the shared
 external lane. Placement uses Published relation endpoints and never changes
 membership or infers topology.
 
+Repository regions use a deterministic relation-aware ring when three or more
+Repositories are visible. The ring keeps cross-repository arrows out of
+unrelated Repository regions; one- and two-Repository maps retain the compact
+linear arrangement. This is presentation state only and does not imply an
+architectural order.
+
 Embedded knowledge remains owned by its parent Markdown concept. The Published
 projection may render a concrete, exactly sourced embedded resource as a
 visually distinct presentation-only reference when that dependency makes the

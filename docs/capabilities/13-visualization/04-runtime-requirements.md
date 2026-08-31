@@ -94,3 +94,9 @@ Contract. The neighboring pages explain the behavior and supporting rationale.
   the bounded runtime predicate set, and cites evidence resolved by the parent
   Published concept. Invalid rows are deterministically omitted with warnings
   and valid rows count toward projection bounds.
+- **AB-VIS-024** — A Domain site with three or more visible Repository regions
+  places them on a deterministic relation-aware ring with enough separation for
+  their fixed bounds. Cross-Repository runtime arrows must not pass through an
+  unrelated Repository region in the three-Repository qualification topology;
+  one- and two-Repository views retain a compact linear placement. Layout uses
+  Published relation endpoints only and never changes knowledge topology.

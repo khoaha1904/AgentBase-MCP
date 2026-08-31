@@ -345,7 +345,7 @@ test("[AB-VIS-005..010][AB-SCHEMA-050] diagram packets preserve Published topolo
   assert.equal(serializePublishedVisualizationProjection(projection), before);
 });
 
-test("[AB-VIS-006..010][AB-VIS-012..022] static Domain site is reproducible, offline and no-overwrite", async (context) => {
+test("[AB-VIS-006..010][AB-VIS-012..024] static Domain site is reproducible, offline and no-overwrite", async (context) => {
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-domain-site-test-"));
   context.after(() => fs.rmSync(temporary, { recursive: true, force: true }));
   const documents = fixtureDocuments();
@@ -388,6 +388,7 @@ test("[AB-VIS-006..010][AB-VIS-012..022] static Domain site is reproducible, off
   assert.match(generatedApp, /new URL\(import\.meta\.url\)\.search/);
   assert.match(generatedApp, /fetch\(`data\/domain\.json\$\{browserBuildQuery\}`\)/);
   assert.match(generatedApp, /name: "preset"/);
+  assert.match(generatedApp, /minZoom: \.12/);
   assert.match(generatedApp, /autoungrabify: false/);
   assert.match(generatedApp, /node\.type !== "Domain"/);
   assert.match(generatedApp, /edge\.displayClass !== "structural"/);
@@ -409,6 +410,7 @@ test("[AB-VIS-006..010][AB-VIS-012..022] static Domain site is reproducible, off
   assert.match(generatedApp, /repositoryIds\.length === 1/);
   assert.match(generatedApp, /repositoryIds\.length > 1/);
   assert.match(generatedApp, /maximumBottom \+ 100/);
+  assert.match(generatedApp, /relationOrderedRepositories/);
   assert.match(generatedApp, /shape: "ellipse"/);
   assert.match(generatedApp, /initialVisible = \(\) => new Set\(graphNodes\.map/);
   assert.match(generatedIndex, /id="view-document"/);
@@ -426,6 +428,56 @@ test("[AB-VIS-006..010][AB-VIS-012..022] static Domain site is reproducible, off
   assert.match(generatedIndex, /Reset layout/);
   assert.match(generatedIndex, /About this Domain/);
   assert.equal(fs.existsSync(path.join(first, "assets/three.module.min.js")), false);
+
+  const layoutSource = generatedApp.slice(generatedApp.indexOf("function repositoryRegionId"),
+    generatedApp.indexOf("\nfunction outsideLabel"));
+  type LayoutNode = { id: string; type: string; repositoryIds: string[] };
+  type LayoutEdge = { displaySource: string; displayTarget: string };
+  type Region = { x: number; y: number; width: number; height: number };
+  const evaluateLayout = Function(`"use strict"; ${layoutSource}; return fixedPositions;`) as () =>
+    (nodes: LayoutNode[], columns: number, edges: LayoutEdge[]) => {
+      positions: Map<string, { x: number; y: number }>;
+      regions: Map<string, Region>;
+    };
+  const fixedPositions = evaluateLayout();
+  const repositoryIds = ["repositories/bridge", "repositories/worker", "repositories/pipeline"];
+  const layoutNodes: LayoutNode[] = [
+    ...repositoryIds.map((id) => ({ id, type: "Repository", repositoryIds: [id] })),
+    { id: "components/bridge", type: "Function", repositoryIds: [repositoryIds[0]!] },
+    { id: "components/worker", type: "Function", repositoryIds: [repositoryIds[1]!] },
+    { id: "components/pipeline", type: "Function", repositoryIds: [repositoryIds[2]!] },
+  ];
+  const layoutEdges = [
+    { displaySource: "components/bridge", displayTarget: "components/worker" },
+    { displaySource: "components/bridge", displayTarget: "components/pipeline" },
+  ];
+  const layout = fixedPositions(layoutNodes, 1, layoutEdges);
+  const bridgeRegion = layout.regions.get(repositoryIds[0]!)!;
+  const workerRegion = layout.regions.get(repositoryIds[1]!)!;
+  const pipelineRegion = layout.regions.get(repositoryIds[2]!)!;
+  assert.equal(new Set([bridgeRegion.x, workerRegion.x, pipelineRegion.x]).size > 1, true,
+    "[AB-VIS-024] three Repository regions form a ring even at the narrow breakpoint");
+  assert.equal(bridgeRegion.y < workerRegion.y && bridgeRegion.y < pipelineRegion.y, true,
+    "[AB-VIS-024] the highest-degree Repository starts the relation-aware ring");
+  for (const [leftIndex, left] of [bridgeRegion, workerRegion, pipelineRegion].entries()) {
+    for (const right of [bridgeRegion, workerRegion, pipelineRegion].slice(leftIndex + 1)) {
+      assert.equal(Math.abs(left.x - right.x) < (left.width + right.width) / 2
+        && Math.abs(left.y - right.y) < (left.height + right.height) / 2, false,
+      "[AB-VIS-024] fixed Repository regions do not overlap");
+    }
+  }
+  const crosses = (sourceId: string, targetId: string, region: Region) => {
+    const source = layout.positions.get(sourceId)!, target = layout.positions.get(targetId)!;
+    return Array.from({ length: 101 }, (_, index) => index / 100).some((ratio) => {
+      const x = source.x + (target.x - source.x) * ratio;
+      const y = source.y + (target.y - source.y) * ratio;
+      return Math.abs(x - region.x) <= region.width / 2 && Math.abs(y - region.y) <= region.height / 2;
+    });
+  };
+  assert.equal(crosses("components/bridge", "components/worker", pipelineRegion), false,
+    "[AB-VIS-024] bridge-to-worker arrow avoids the unrelated pipeline region");
+  assert.equal(crosses("components/bridge", "components/pipeline", workerRegion), false,
+    "[AB-VIS-024] bridge-to-pipeline arrow avoids the unrelated worker region");
 
   assert.throws(() => buildStaticDomainSite(projection,
     { outputDirectory: "relative/site", visibilityAcknowledged: true }), /explicit absolute path/);
