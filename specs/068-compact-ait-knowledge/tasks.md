@@ -71,4 +71,4 @@
 - [x] T043 Record the owner-approved non-overlapping Repository-ring contract.
 - [x] T044 [US5] Place three or more Repository regions on a deterministic relation-aware ring.
 - [x] T045 Add a requirement-linked three-Repository crossing regression and run repository verification.
-- [ ] T046 Regenerate, inspect and publish the Crawler Domain site.
+- [x] T046 Regenerate, inspect and publish the Crawler Domain site.
