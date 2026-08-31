@@ -150,7 +150,6 @@ async function addPublishedEnrichmentFixture(root: string): Promise<Readonly<{
   repositoryIds: readonly string[]; questions: readonly SharedQuestion[]; commit: string;
 }>> {
   fs.copyFileSync(path.join(root, "repositories/repo-2.md"), path.join(root, "repositories/repo-3.md"));
-  fs.appendFileSync(path.join(root, "repositories/index.md"), "\n* [Repo 3](repo-3.md) - Repository\n");
   const repositoryPaths = ["repositories/repo-1.md", "repositories/repo-2.md", "repositories/repo-3.md"];
   const repositoryIds = ["repository-source-one-111111111111", "repository-source-two-222222222222", "repository-source-three-333333333333"];
   for (const [index, relative] of repositoryPaths.entries()) {

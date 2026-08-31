@@ -2,9 +2,12 @@
 
 > Status: The AWS/SQS MVP is implemented offline; real AWS qualification has not run.
 
-The qualification-only mock provider path belongs to capability 053 and is
-implemented. It uses a temporary Published fixture and stops at proposal/inspection;
-it neither replaces real AWS qualification nor changes Domain Enrichment authority.
+Capability 053's historical mock qualification used a temporary Published
+fixture and stopped at proposal/inspection. Capability 064 supersedes that
+development-fixture boundary for the workspace's disposable `hub-3`: the fake
+still replaces only the AWS CLI process, while AgentBase uses the ordinary real
+adapter, reconciliation, proposal, Accept and Publish lifecycle. This does not
+replace real AWS qualification or add a public mock mode.
 
 ## Entry and authority
 
@@ -64,3 +67,30 @@ membership; the user retries or confirms new membership.
 - Do not Accept/Publish automatically.
 - Do not persist provider response dumps or secrets.
 - Do not turn an external observation into timeless current truth.
+
+## Development provider fixture
+
+The fixture is allowed only for an explicitly guarded development
+qualification target. AgentBase receives ordinary AWS CLI response bytes; no
+mock marker, alternate evidence class, provider fork or Hub role is introduced.
+Once the ordinary proposal is reviewed, the authorized qualification may use
+the existing explicit Accept, pull-request publication, merge and synchronize
+transitions. Failure before Accept leaves Published and Local Draft unchanged.
+
+A provider observation may resolve a factual identity/relation Question through
+the existing evidence rule. It does not answer operational ownership, intent or
+another maintainer decision. Those Questions remain open without owner guidance.
+
+- **AB-ENRICH-015** — A development AWS fixture replaces only the bounded
+  process runner beneath `AwsCliAdapter`; every downstream outcome is processed
+  by the ordinary enrichment and governance contracts without mock metadata.
+- **AB-ENRICH-016** — Fixture publication fails closed unless an exact
+  qualification target allowlist admits the active Hub identity and branch.
+  The workspace qualification admits only `khoaha1904/hub-3` on `main` and
+  never `khoaha1904/AgentBase-Hub`.
+- **AB-ENRICH-017** — An owner-authorized fixture run preserves Prepare, Run,
+  Finalize, inspect, Accept, submit, external merge and synchronize as distinct
+  transitions; no failure automatically advances the next transition.
+- **AB-ENRICH-018** — Exact provider evidence may automatically resolve only
+  factual provider identity/relation Questions. Maintainer-decision Questions
+  require exact owner guidance or remain open.

@@ -14,7 +14,7 @@ const MAXIMUM_FLOW_STEPS = 64;
 export type DiagramType = "architecture" | "dependency" | "sequence";
 
 export type DiagramPacket = Readonly<{
-  schemaVersion: 1;
+  schemaVersion: 3;
   hub: string;
   commit: string;
   domain: PublishedVisualizationProjection["domain"];
@@ -97,7 +97,7 @@ function packet(
     domain: projection.domain.id,
     reasons: [],
     packet: {
-      schemaVersion: 1,
+      schemaVersion: 3,
       hub: projection.hub,
       commit: projection.commit,
       domain: projection.domain,

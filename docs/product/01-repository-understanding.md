@@ -62,6 +62,14 @@ uncertain candidate becomes a Question or explicit limitation; AgentBase does
 not use a numeric confidence score or silently merge a name/prose match with an
 existing concept.
 
+Knowledge that shares one runtime, deployment and ownership boundary stays in
+one useful parent even when it contains several provider resources. A small
+repository with one runtime normally contributes one Repository plus one
+Function or Component. Independently deployed frontend and backend runtimes
+remain separate Components; consolidation never hides a real impact, security,
+compatibility or failure boundary. File and concept counts are diagnostics, not
+product success metrics.
+
 ## Provider-neutral representation
 
 A schema describes a reusable knowledge role; a concept is one concrete
@@ -73,6 +81,11 @@ One concept declares one schema. A queue, topic, table, bucket or host normally
 stays embedded unless evidence proves an independent contract or operational
 boundary. Unsupported or ambiguous technology remains readable as evidence and
 does not disappear merely because a provider profile cannot classify it.
+
+An independently shared transport may remain a Resource. Internal persistence,
+dead-letter handling and alarms stay in the runtime's Dependencies, Operations
+or Failure and Recovery sections unless they have separate ownership, lifecycle,
+runbook or independent query value.
 
 Profile and catalog changes never authorize silent reclassification of
 Published knowledge. A semantic change requires a reviewable migration proposal;

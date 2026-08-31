@@ -17,14 +17,14 @@ import {
   resolveSourceSnapshot,
   type SourceSnapshot,
 } from "../../../providers/github-hub/index.ts";
-import { AWS_SQS_PROFILE, AWS_STS_PROFILE } from "../../../providers/aws-cli/index.ts";
+import { AwsCliAdapter, AWS_SQS_PROFILE, AWS_STS_PROFILE } from "../../../providers/aws-cli/index.ts";
 import { hubProfileId, type AdmittedLocalHubState } from "../../../core/hub/index.ts";
 import {
   discoverRepositorySourceChanges, discoverRepositorySourceState, resolveRepositorySourceRoot,
 } from "../../repository-okf/index.ts";
 import {
   beginHubAuthoringSession, finalizeHubAuthoringSession, materializeInitialIngestSessionSkeletons,
-  readHubAuthoringSession,
+  readHubAuthoringSession, validateHubAuthoringSession,
 } from "../authoring/authoring-session.ts";
 import { listHubQuestions } from "../authoring/questions.ts";
 import { acceptHubProposal } from "../review/accept.ts";
@@ -178,6 +178,7 @@ export function createHubRuntimeActions(
     sourceSnapshotResolver?: typeof resolveSourceSnapshot;
     discoveryReceiptResolver?: (id: string) => InventoryReceipt | undefined;
     discoveryReceiptRebaser?: (id: string, publishedBase: string) => InventoryReceipt | undefined;
+    enrichmentAdapter?: AwsCliAdapter;
     onSourceSnapshot?: (snapshot: SourceSnapshot, mode: "new" | "refresh", authority: Readonly<{
       hubProfileId: string;
       publishedBase: string;
@@ -472,6 +473,7 @@ export function createHubRuntimeActions(
         ...(guidance ? { guidance } : {}),
         ...(coverage ? { coverage } : {}),
         ...(receipt ? { discoveryReceipt: receipt } : {}),
+        ...(sourceChanges ? { sourceChanges } : {}),
         requireObservedRevision: true,
         createdAt: new Date().toISOString(),
       });
@@ -496,10 +498,23 @@ export function createHubRuntimeActions(
         skeletons,
         ...(input.mode === "new" ? { authoringConstraints: [
           "Preserve generated sources, relationships, repository identity metadata and navigation; enrich the skeleton instead of rebuilding its frontmatter.",
+          "Add Embedded Relations only for exact evidenced runtime directions; containment and prose alone never create arrows.",
         ] } : {}),
       };
     },
-    async finalize(sessionId, questions, removals) {
+    async validate(sessionId) {
+      const configuration = configured();
+      const session = readHubAuthoringSession(stateRoot, sessionId, configuration.localRoot);
+      const source = discoverRepositorySourceState(session.sourceRepositoryRoot);
+      const currentSource = { commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest };
+      if (JSON.stringify(currentSource) !== JSON.stringify(session.sourceState)) {
+        throw new Error("source repository changed after Prepare");
+      }
+      const localHub = await admitPersistentLocalHub(configuration, undefined, { readOnly: true });
+      if (localHub.activeHead !== session.baseCommit) throw new Error("Hub authoring base changed after Prepare");
+      return validateHubAuthoringSession(stateRoot, sessionId, configuration.localRoot);
+    },
+    async finalize(sessionId, questions, removals, changeAccounting) {
       const configuration = configured(true);
       const session = readHubAuthoringSession(stateRoot, sessionId, configuration.localRoot);
       const source = discoverRepositorySourceState(session.sourceRepositoryRoot);
@@ -544,7 +559,7 @@ export function createHubRuntimeActions(
           base_commit: replacement.baseCommit, skeletons };
       }
       const finalized = finalizeHubAuthoringSession(stateRoot, sessionId, configuration.localRoot,
-        questions ?? [], removals ?? [], currentSource, localHub.activeHead);
+        questions ?? [], removals ?? [], currentSource, localHub.activeHead, true, changeAccounting ?? []);
       if (!session.discoveryReceipt || configuration.kind !== "remote" || !configuration.token) return finalized;
       try {
         const repository = session.discoveryReceipt.source.remote.replace(`https://${configuration.host}/`, "").replace(/\.git$/, "");
@@ -645,7 +660,8 @@ export function createHubRuntimeActions(
       const manifest = readEnrichmentManifest(stateRoot, input.manifestId, input.manifestRevision);
       if (manifest.baseCommit !== localHub.remoteBase) throw new Error("Published Hub base changed after enrichment Prepare");
       return withPublishedHub(localHub, stateRoot, (publishedRoot) => runDomainEnrichment({
-        stateRoot, publishedRoot, ...input,
+        stateRoot, publishedRoot, ...input, ...(dependencies.enrichmentAdapter
+          ? { adapter: dependencies.enrichmentAdapter } : {}),
       }));
     },
     async finalizeEnrichment(input) {

@@ -27,6 +27,11 @@ Selection classify evidence without acquiring publication authority. Knowledge
 Entry renders a local proposal; only Review and Publish may advance shared Hub
 state.
 
+Refresh freezes its bounded source-change set in the authoring session. Finalize
+checks one outcome for every returned path and retains that accounting in the
+proposal inspection beside omitted counts and source-diff limitations. The
+accounting is review context, not an OKF concept or independent state authority.
+
 Routes: [Repository Reading](../capabilities/01-repository-reading/README.md),
 [Concept Discovery](../capabilities/03-concept-discovery/README.md),
 [Schema Selection](../capabilities/04-schema-selection/README.md),
@@ -41,13 +46,26 @@ Exact Published Hub commit
         ↓ commit-bound projection
 Query Routing
         ├─→ bounded answer context
-        ├─→ AI-SDLC context packet
-        └─→ Visualization projection
+        ├─→ Phase 1 AI-SDLC context / impact view
+        └─→ Published Visualization projection
+
+Authorized local Repository revision
+        ↓ bounded Code Graph/source queries
+Phase 2 AI-SDLC context
+        └─→ session-local implementation impact view
 ```
 
 Query and presentation consume accepted knowledge; they do not overlay Local
 Draft or mutate Hub state. AI-SDLC and visualization outputs remain derived and
-rebuildable.
+rebuildable. The Phase 2 implementation view is owned by AI-SDLC context rather
+than Published Visualization: exact files, symbols and source edges retain the
+authorized repository revision and are never written to Hub or a durable graph
+artifact.
+
+The Published Visualization branch may expand standardized, evidence-backed
+embedded resource rows into presentation-only references. Those references
+remain owned by their Published parent, use only an `embedded-in` presentation
+link and never become accepted OKF concepts or canonical runtime relations.
 
 Routes: [Query Routing](../capabilities/10-query-routing/README.md),
 [AI-SDLC Context](../capabilities/14-ai-sdlc-context/README.md), and

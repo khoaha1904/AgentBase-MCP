@@ -23,6 +23,12 @@ Hub
 The Hub keeps overview, ownership, important relations, decisions and
 navigation. Exact implementation detail remains in source.
 
+Concept type comes from frontmatter, not from a requirement that every type own
+a maintained category index. The root index and concept-to-concept links are
+knowledge authority; category listings may be derived for HTML or browser
+presentation. Folders remain stable namespaces and do not justify splitting one
+runtime into technology-shaped documents.
+
 ## Identity and membership
 
 - A repository has one stable Hub identity and exactly one primary Domain.

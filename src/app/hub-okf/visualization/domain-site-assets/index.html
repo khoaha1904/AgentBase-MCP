@@ -13,6 +13,7 @@
       <div>
         <p class="eyebrow">AgentBase · Published knowledge</p>
         <h1 id="domain-title">Domain map</h1>
+        <button id="domain-details" class="text-button" type="button">About this Domain</button>
       </div>
       <div class="snapshot" id="snapshot"></div>
     </header>
@@ -30,17 +31,17 @@
         <div class="button-row">
           <button id="focus-one" type="button">1 hop</button>
           <button id="focus-two" type="button">2 hops</button>
-          <button id="reset" type="button">Reset</button>
+          <button id="reset" type="button">Reset layout</button>
         </div>
-        <p class="hint">Drag to pan · scroll to zoom · select a node to inspect and reveal nearby knowledge.</p>
+        <p class="hint">Drag the canvas to pan · drag nodes within their ownership zone · scroll to zoom · select a node to inspect it.</p>
         <div id="stats" class="stats" aria-live="polite"></div>
         <div class="legend" aria-label="Map legend">
-          <span><i class="swatch domain"></i>Domain</span>
           <span><i class="swatch system"></i>System</span>
-          <span><i class="swatch repository"></i>Repository</span>
+          <span><i class="swatch repository"></i>Repository card and region</span>
           <span><i class="swatch concept"></i>Concept</span>
+          <span><i class="swatch embedded"></i>Embedded resource</span>
           <span><i class="swatch runtime"></i>Runtime relation</span>
-          <span><i class="swatch boundary"></i>External boundary</span>
+          <span><i class="swatch boundary"></i>Shared / External</span>
         </div>
       </aside>
       <section class="stage" aria-label="Interactive 2D Domain knowledge map">

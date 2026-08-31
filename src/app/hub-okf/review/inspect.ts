@@ -4,6 +4,7 @@ import path from "node:path";
 
 import type { ProposalDiffEntry } from "../../../core/knowledge/index.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
+import type { RefreshChangeAccounting } from "../authoring/refresh-change-accounting.ts";
 
 export type HubChangeEntry = Readonly<{
   path: string;
@@ -39,6 +40,7 @@ export type HubProposalInspection = Readonly<{
     limitations: readonly string[];
   }>;
   activity?: Readonly<{ repositoryLog: string; domainLog: null }>;
+  changeAccounting?: RefreshChangeAccounting;
   groups: HubInspectionGroups;
   batch?: Readonly<{
     members: readonly Readonly<{ repositoryId: string; paths: readonly string[];
@@ -74,7 +76,7 @@ export function attachHubInspectionContext(
   inspection: HubProposalInspection,
   questions: readonly QuestionDeclaration[] = inspection.questions ?? [],
   coverage: HubProposalInspection["coverage"] = inspection.coverage,
-  context: Readonly<Pick<HubProposalInspection, "discovery" | "activity">> = {},
+  context: Readonly<Pick<HubProposalInspection, "discovery" | "activity" | "changeAccounting">> = {},
 ): HubProposalInspection {
   return {
     ...inspection,
@@ -82,6 +84,7 @@ export function attachHubInspectionContext(
     ...(coverage ? { coverage } : {}),
     ...(context.discovery ? { discovery: context.discovery } : {}),
     ...(context.activity ? { activity: context.activity } : {}),
+    ...(context.changeAccounting ? { changeAccounting: context.changeAccounting } : {}),
     groups: groups(inspection.entries, questions, coverage?.limitations ?? []),
   };
 }

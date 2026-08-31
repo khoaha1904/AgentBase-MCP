@@ -26,21 +26,29 @@ reproducible.
 
 ## First view
 
-- one Domain per site;
-- every non-governance concept admitted by the Domain scope is visible first,
-  including Repository-associated concepts;
+- one Domain per site, represented by the page rather than a duplicate graph
+  node;
+- every other non-governance concept admitted by the Domain scope is visible
+  first; Repository concepts are compact selectable cards inside fixed labeled
+  regions, with owned nodes placed inside while shared, multi-repository and
+  external nodes are visibly labeled and remain outside;
 - promoted `Resource` nodes (for example a shared queue/topic) are visible as
-  normal concepts; embedded resource rows remain in their parent document and
-  are not rendered as synthetic nodes;
+  normal concepts; concrete evidence-backed embedded resources may appear as
+  smaller dashed presentation-only references without creating concept files;
 - direct cross-Domain endpoints appear as non-expandable boundary nodes;
 - circular nodes use labels below the node; search, type/repository filters,
   1–2 hop focus and a readable right-side selection drawer;
 - the drawer exposes overview, direct relation context and a text-only document
   overview overlay;
-- deterministic 2D layout with readable labels, pan and zoom;
+- the drawer summarizes evidence by repository file and keeps exact citations
+  behind an explicit disclosure instead of listing every line span by default;
+- deterministic resettable 2D layout with readable labels, pan and zoom; normal
+  nodes may be repositioned only within their ownership zone while Repository
+  cards and region boundaries remain fixed;
 - Flow-step edges hidden by default behind one explicit toggle;
 - open Question counts as badges, not default nodes;
-- directed runtime edges and visually distinct structural links.
+- directed canonical and evidence-backed embedded runtime edges; structural
+  links already represented by repository containment are hidden by default.
 
 The site uses bundled local Cytoscape.js and system fonts. It works from a static web
 host with no Hub/MCP access. Local preview is allowed with a warning that this

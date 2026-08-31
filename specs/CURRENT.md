@@ -1,6 +1,30 @@
 # Current capability
 
-Active capability: None.
+Active capability: [`068-compact-ait-knowledge`](068-compact-ait-knowledge/spec.md) —
+consolidate Hub knowledge around independently useful runtime/ownership
+boundaries, derive category navigation and make benchmark evaluation independent
+of exact concept paths before resetting the pre-release Hub data.
+
+Most recent completed: [`067-refresh-preflight-topology`](067-refresh-preflight-topology/spec.md) —
+session-bound validation now returns combined repairable defects before Finalize,
+uses revision-distinct source IDs across span changes and keeps new Refresh
+concepts structurally reachable. The corrected C1 lifecycle and all six
+feature/topology probes pass; the feature remains unmerged for owner review.
+
+Most recent completed: [`066-refresh-feature-recall-benchmark`](066-refresh-feature-recall-benchmark/spec.md) —
+the isolated Crawler retry/DLQ Refresh retained detailed feature knowledge but
+exposed a pre-Finalize validation gap and missing structural topology for two
+new Resources. The follow-up runtime correction is capability 067.
+
+Most recent completed: [`065-refresh-change-accounting`](065-refresh-change-accounting/spec.md) —
+runtime Refresh now requires one evidenced or explicit outcome per returned
+changed path and retains partial change accounting in proposal inspection. The
+feature is verified on `feature/refresh-change-accounting` and remains unmerged.
+
+Most recent completed: [`064-ait-visual-context`](064-ait-visual-context/spec.md) —
+two decision-useful P0 visuals and their data readiness are accepted; the
+bounded AWS CLI fixture passed through ordinary Enrichment, Accept and Publish
+into `hub-3`, resolving only the factual provider Question.
 
 Most recent completed: [`063-english-repository-language`](063-english-repository-language/spec.md) —
 AgentBase-owned artifacts are standardized on English without runtime changes;

@@ -59,6 +59,7 @@ export {
   materializeInitialIngestSessionSkeletons,
   markInventoryReceiptFinalized,
   readHubAuthoringSession,
+  validateHubAuthoringSession,
   type BeginHubAuthoringOptions,
   type HubAuthoringSession,
 } from "./authoring/authoring-session.ts";

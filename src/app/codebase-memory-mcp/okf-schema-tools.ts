@@ -162,10 +162,14 @@ export const OKF_SCHEMA_TOOLS = [
   },
   {
     name: "validate_okf_changes",
-    description: "Validate changed concept documents only, excluding root/category index files, against bounded unchanged concept target summaries. Apply relationship guidance from the exact frontmatter type; a display name or prose never changes the schema. Identity is the OKF-root-relative Markdown path without .md; targets are not changed concepts.",
+    description: "Validate changed concept documents only, excluding navigation index files, against bounded unchanged concept target summaries. Optionally bind the prepared authoring session so source revision and structural reachability defects are caught before Finalize. Apply relationship guidance from the exact frontmatter type; a display name or prose never changes the schema. Identity is the OKF-root-relative Markdown path without .md; targets are not changed concepts.",
     inputSchema: {
       type: "object",
-      properties: { changes: conceptSetInputSchema.properties.concepts, targets: targetSummarySchema },
+      properties: {
+        session_id: { type: "string", pattern: "^hub-session-[a-f0-9]{24}$" },
+        changes: conceptSetInputSchema.properties.concepts,
+        targets: targetSummarySchema,
+      },
       required: ["changes", "targets"], additionalProperties: false,
     },
   },
@@ -377,7 +381,10 @@ function validateBundle(entries: readonly SuppliedConcept[], targets: readonly O
 }
 
 export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record<string, unknown>>,
-  dependencies: Readonly<{ discovery?: DiscoverySession }> = {}): CallToolResult {
+  dependencies: Readonly<{
+    discovery?: DiscoverySession;
+    validateAuthoringSession?: (sessionId: string) => Promise<unknown>;
+  }> = {}): CallToolResult | Promise<CallToolResult> {
   try {
     if (name === "list_okf_schemas") return result({
       catalogVersion: AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
@@ -439,7 +446,23 @@ export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record
     if (!supplied.entries) return result({ error: supplied.error }, true);
     const targets = suppliedTargets(args);
     if (!targets.entries) return result({ error: targets.error }, true);
-    return validateBundle(supplied.entries, targets.entries);
+    const validation = validateBundle(supplied.entries, targets.entries);
+    if (args.session_id === undefined) return validation;
+    if (typeof args.session_id !== "string" || !/^hub-session-[a-f0-9]{24}$/.test(args.session_id)) {
+      return result({ error: "session_id must identify one prepared Hub authoring session" }, true);
+    }
+    if (!dependencies.validateAuthoringSession) {
+      return result({ error: "session-bound authoring validation is unavailable" }, true);
+    }
+    return dependencies.validateAuthoringSession(args.session_id).then((sessionValidation) => result({
+      ...(validation.structuredContent ?? {}), sessionValidation,
+    }, Boolean(validation.isError)), (error) => result({
+      ...(validation.structuredContent ?? {}),
+      sessionValidation: {
+        valid: false,
+        error: error instanceof Error ? error.message : "session validation failed",
+      },
+    }, true));
   } catch (error) {
     const message = error instanceof Error ? error.message : "concept validation failed";
     return name === "get_okf_authoring_schemas" && error instanceof OkfGuidanceInputError

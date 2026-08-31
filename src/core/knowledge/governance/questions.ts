@@ -126,8 +126,11 @@ export function createQuestionId(input: Readonly<{
   return `question-${createHash("sha256").update(JSON.stringify(tuple)).digest("hex").slice(0, 24)}`;
 }
 
-export function renderQuestionBody(question: Pick<SharedQuestion, "kind" | "subject" | "property">): string {
-  const reason = question.kind === "conflict" ? "Evidence currently disagrees."
+export function renderQuestionBody(question: Pick<SharedQuestion, "state" | "kind" | "subject" | "property" | "guidance">): string {
+  const reason = question.state === "resolved"
+    ? question.guidance.length ? "Resolved by accepted maintainer Guidance." : "Resolved by accepted evidence."
+    : question.state === "needs-review" ? "Accepted knowledge changed; this Question needs review."
+      : question.kind === "conflict" ? "Evidence currently disagrees."
     : question.kind === "missing-evidence" ? "Useful knowledge is missing supporting evidence."
       : "A maintainer decision is still required.";
   return `# Question\n\n${reason}\n\n# Scope\n\n\`${question.subject}\` · \`${question.property}\`.\n`;
@@ -242,12 +245,12 @@ export function resolveQuestion(previous: SharedQuestion, guidanceId: string): S
   if (previous.state !== "open" && previous.state !== "needs-review") throw new Error("Question is not awaiting resolution");
   if (!/^guidance\/[a-z0-9][a-z0-9./-]*$/.test(guidanceId)) throw new Error("Question Guidance identity is invalid");
   return { ...previous, revision: previous.revision + 1, state: "resolved",
-    guidance: uniqueSorted([...previous.guidance, guidanceId]) };
+    missingEvidence: [], guidance: uniqueSorted([...previous.guidance, guidanceId]) };
 }
 
 export function resolveQuestionFromEvidence(previous: SharedQuestion, reference: QuestionReference): SharedQuestion {
   if (previous.state !== "open" && previous.state !== "needs-review") throw new Error("Question is not awaiting resolution");
   const references = [...new Map([...previous.references, reference].map((item) => [referenceKey(item), item])).values()]
     .sort((left, right) => referenceKey(left).localeCompare(referenceKey(right)));
-  return { ...previous, revision: previous.revision + 1, state: "resolved", references };
+  return { ...previous, revision: previous.revision + 1, state: "resolved", references, missingEvidence: [] };
 }

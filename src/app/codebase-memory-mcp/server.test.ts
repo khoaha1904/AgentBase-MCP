@@ -24,8 +24,14 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
   const bindings: string[] = [];
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const runtimeActions = createHubRuntimeActions({ HOME: state, XDG_CONFIG_HOME: path.join(state, "config") }, path.join(state, "hub-runtime"));
-  let initializationPreviews = 0, initializations = 0, visualizations = 0;
+  let initializationPreviews = 0, initializations = 0, visualizations = 0, validatedSessions = 0;
+  let finalizedAccounting: unknown;
   const hubActions = { ...runtimeActions,
+    async validate(sessionId: string) { validatedSessions += 1; return { valid: true, session_id: sessionId }; },
+    async finalize(sessionId: string, _questions?: unknown, _removals?: unknown, changeAccounting?: unknown) {
+      finalizedAccounting = changeAccounting;
+      return { sessionId };
+    },
     async previewHubInitialization() { initializationPreviews += 1; return { state: "changes-required", base_commit: "a".repeat(40) }; },
     async initializeHub(input: Readonly<{ expectedBase: string; expectedInitializationDigest: string }>) {
       initializations += 1; return input;
@@ -121,9 +127,18 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
     assert.match(prepareTool?.description ?? "", /changed paths, observed source state and known gaps/);
     assert.match(JSON.stringify(prepareTool?.inputSchema), /New Initial Ingest requires repositories\/<slug>/);
     assert.ok("removals" in ((finalizeTool?.inputSchema.properties ?? {}) as Record<string, unknown>));
+    assert.ok("change_accounting" in ((finalizeTool?.inputSchema.properties ?? {}) as Record<string, unknown>));
+    assert.match(JSON.stringify(finalizeTool?.inputSchema), /updated.*new.*embedded.*question.*ignored/);
     assert.doesNotMatch(JSON.stringify(finalizeTool?.inputSchema), /supersede|retract|lifecycle/);
     assert.match(JSON.stringify(finalizeTool?.inputSchema), /observation_refs/);
     assert.doesNotMatch(JSON.stringify(finalizeTool?.inputSchema), /claim_ids/);
+    await client.callTool({ name: "finalize_hub_okf_proposal", arguments: {
+      session_id: `hub-session-${"a".repeat(24)}`,
+      change_accounting: [{ path: "src/auth/forgot-password.ts", outcome: "new", reason: "Adds password reset." }],
+    } });
+    assert.deepEqual(finalizedAccounting, [{
+      path: "src/auth/forgot-password.ts", outcome: "new", reason: "Adds password reset.",
+    }]);
     const enrichmentTools = tools.tools.filter((tool) => tool.name.includes("domain_enrichment"));
     assert.deepEqual(enrichmentTools.map((tool) => tool.name), ["prepare_domain_enrichment",
       "revise_domain_enrichment_membership", "run_domain_enrichment", "finalize_domain_enrichment_proposal"]);
@@ -163,6 +178,32 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
     assert.match(unchangedStatus.content[0]?.type === "text" ? unchangedStatus.content[0].text : "", /unconfigured/);
     const schemas = await client.callTool({ name: "list_okf_schemas", arguments: {} });
     assert.equal(schemas.isError, undefined);
+    const validateTool = tools.tools.find((tool) => tool.name === "validate_okf_changes");
+    assert.ok("session_id" in ((validateTool?.inputSchema.properties ?? {}) as Record<string, unknown>));
+    const sessionValidation = await client.callTool({ name: "validate_okf_changes", arguments: {
+      session_id: `hub-session-${"a".repeat(24)}`,
+      changes: [{ identity: "resources/retry-queue", path: "resources/retry-queue.md", content: [
+        "---", "type: Resource", "title: Retry queue", "description: Retry queue", "status: draft",
+        "generated: { by: 'agentbase/0.0.0', at: '2026-08-31T00:00:00Z' }", "sources: []", "---", "", "# Purpose", "",
+      ].join("\n") }], targets: [],
+    } });
+    assert.equal(sessionValidation.isError, undefined);
+    assert.equal(validatedSessions, 1);
+    const combinedValidation = await client.callTool({ name: "validate_okf_changes", arguments: {
+      session_id: `hub-session-${"a".repeat(24)}`,
+      changes: [{ identity: "resources/retry-queue", path: "resources/retry-queue.md", content: [
+        "---", "type: Resource", "title: Retry queue", "description: Retry queue", "status: draft",
+        "generated: { by: 'agentbase/0.0.0', at: '2026-08-31T00:00:00Z' }",
+        "sources:", "  - id: duplicate", "    resource: agentbase://one",
+        "  - id: duplicate", "    resource: agentbase://two", "---", "", "# Purpose", "",
+      ].join("\n") }], targets: [],
+    } });
+    assert.equal(combinedValidation.isError, true);
+    assert.equal(validatedSessions, 2, "session preflight must run even when changed concept validation also fails");
+    assert.match(combinedValidation.content[0]?.type === "text" ? combinedValidation.content[0].text : "",
+      /source ids must be stable and unique/);
+    assert.match(combinedValidation.content[0]?.type === "text" ? combinedValidation.content[0].text : "",
+      /sessionValidation/);
     const invalidGuidance = await client.callTool({ name: "get_okf_authoring_schemas", arguments: {
       candidates: [
         { id: "function", identity_hint: "worker", identity_basis: "deployed runtime", query_value: "Worker runtime",

@@ -45,12 +45,21 @@ For every new or modified AgentBase concept:
   `entities/`, `systems/`, `components/`, `interfaces/`, `flows/`, `metrics/`,
   `resources/` or `repositories/`;
 - treat directory placement as classification, not ownership or containment;
-  express containment and implementation through prose and links;
+  express containment and implementation through evidenced structured
+  relationships plus resolving Markdown links;
 - never duplicate a component, interface, flow or resource beneath both a
   system and repository tree.
 
 Embedded knowledge is not a Concept Instance. Preserve its prepared bounded
 Markdown table in the parent with display name, concise role, provider-neutral
-kind, technology and exact sources. It receives no identity, file, navigation
-or relationship. Do not split SQS/SNS/event buses, tables, buckets, databases
+kind, technology and exact evidence references. It receives no identity, file, navigation
+or canonical relationship. An optional `Embedded Relations` table may retain
+an evidence-backed presentation relation among `self`, an exact admitted
+concept identity and unique same-parent embedded names. Its bounded relations
+are `provides`, `consumes`, `depends-on`, `triggered-by`, `publishes-to`,
+`reads-from`, `writes-to`, `monitors` and `redrives-to`; every row cites source
+IDs owned by the parent. Do not split SQS/SNS/event buses, tables, buckets, databases
 or compute hosts into files merely because their declarations are concrete.
+The same rule applies to internal frontend/backend modules and routes. Separate
+the frontend and backend themselves when deployment, runtime, ownership,
+security, compatibility or failure behavior is independent.

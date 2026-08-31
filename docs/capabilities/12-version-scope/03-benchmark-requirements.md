@@ -7,6 +7,31 @@ Discovery context comparison is governed by
 the same opt-in, isolated, pinned-input and durable-result principles without
 changing OKF-authoring semantics or the public `abs` CLI.
 
+## Current adaptive evaluation profile
+
+- **AB-BENCH-091** — Every active suite names one explicit versioned evaluation
+  profile. Fixture revision, runner version, profile and judge configuration
+  remain visible in results; a changed profile never silently reinterprets a
+  historical result.
+- **AB-BENCH-092** — Deterministic gates own lifecycle, source/change accounting,
+  OKF/schema, provenance, link and unsupported-claim integrity. File count,
+  concept count, word count, YAML/body ratio, time, tokens and tool-result bytes
+  are diagnostics rather than pass thresholds.
+- **AB-BENCH-093** — A scenario expresses three to five source-grounded semantic
+  obligations plus forbidden claims. An obligation may be satisfied by any
+  changed parent, Flow or independently useful concept with matching evidence;
+  the suite does not prescribe path, slug, type, concept count or relationship
+  topology unless the product contract makes that shape invariant.
+- **AB-BENCH-094** — Deterministic semantic recall reports `needs_revision` or
+  `knowledge_recalled`; it never reports `useful_for_ait`. Only the separate AIT
+  comparison may establish AIT usefulness through impact coverage, questions,
+  traceability and unsupported-claim review.
+- **AB-BENCH-095** — An AI semantic judge may assess truthfulness, decision
+  usefulness, consolidation and uncertainty only against a pinned profile and
+  exact evidence IDs. It may abstain; low-confidence or threshold decisions
+  require a second pinned judgment or owner review. AI never changes the active
+  profile without an explicit reviewed version update.
+
 ## Agent-driven OKF authoring
 
 The benchmark measures whether a real explicit host coding agent can use
@@ -646,3 +671,17 @@ created or rebuilt.
   beneath their run workspace; benchmark setup never reads or writes the
   operator's `~/.agentbase` storage, and the isolated root is removed with the
   run workspace.
+- **AB-BENCH-088** — Feature-recall qualification starts from one exact copied
+  Published Hub snapshot and applies one deterministic synthetic source commit
+  in an isolated Refresh runtime. The source fixture and operator Hub remain
+  unchanged; the snapshot is benchmark input rather than new Hub authority.
+- **AB-BENCH-089** — A feature-recall probe retains the finalized proposal,
+  inspection and exact changed-path accounting. Every returned changed path
+  has one outcome, while materially changed runtime and infrastructure paths
+  must be represented by source-evidenced knowledge rather than silently
+  ignored.
+- **AB-BENCH-090** — Feature-recall quality uses a small prioritized semantic
+  inventory tied to a later AIT decision. Missing critical failure behavior,
+  resource wiring or operational visibility makes quality `needs_revision`;
+  elapsed time and token use remain separate diagnostics. One decoy-only
+  follow-up is authorized only after the first feature probe is sound.

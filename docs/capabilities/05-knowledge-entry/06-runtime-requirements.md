@@ -49,9 +49,11 @@ Normative OKF source is pinned to commit
 - **AB-MVP-022** — Graph/direct-source comparison may record time, presented
   context, fact coverage and correction count; no unmeasured speed threshold is
   a product claim.
-- **AB-MVP-023** — Only root `index.md` carries OKF frontmatter. Category
-  indexes are navigation Markdown without frontmatter; host-agent guidance MUST
-  state this distinction before authoring.
+- **AB-MVP-023** — Only root `index.md` carries OKF frontmatter. Architecture
+  category indexes are optional derived navigation and are not required Hub
+  authority; when present they contain Markdown without frontmatter. A
+  workflow-owned governance index such as `questions/index.md` may remain part
+  of its exact lifecycle.
 
 ## Explicit observations
 
@@ -153,7 +155,8 @@ Normative OKF source is pinned to commit
 - **AB-SCHEMA-002** — Selection is advisory and matches graph plus authorized
   manifests, infrastructure, documentation and source evidence; it exposes
   matched/missing evidence and never fabricates a fact.
-- **AB-SCHEMA-003** — Create only observed useful instances and required indexes.
+- **AB-SCHEMA-003** — Create only observed useful instances and required root
+  navigation.
   One schema may yield many concepts and unused schemas yield no scaffolds.
 - **AB-SCHEMA-004** — Validation layers base OKF conformance, common AgentBase
   draft/provenance rules and the selected concrete schema. Missing evidence is a
@@ -476,3 +479,29 @@ Normative OKF source is pinned to commit
   relationship vocabulary, external-identity envelope and evidence ownership.
   A provider profile may add mapping, identity normalization and evidence
   adapters, but may not introduce provider-specific concept types or predicates.
+- **AB-SCHEMA-056** — `validate_okf_changes` may bind one prepared authoring
+  `session_id`. Session-bound validation checks the exact editable bundle against
+  its frozen base and authorized source before Finalize, including repository
+  source revision/identity rules and newly authored structural reachability. The
+  session check still runs when the supplied changed-set has content or relation
+  failures so one diagnostic exposes all repairable preflight defects. A source
+  ID reused at a different revision is rejected even when its source span also
+  changes. The session field is optional so standalone changed-set schema
+  validation retains its bounded, total-Hub-independent behavior.
+- **AB-SCHEMA-057** — Knowledge sharing one runtime, deployment and ownership
+  boundary remains in one Function, Component or System parent. Provider
+  resource count never forces standalone concepts. A one-runtime repository
+  normally contributes one Repository plus that runtime concept.
+- **AB-SCHEMA-058** — Consolidation preserves independently deployed frontend,
+  backend, worker and shared integration boundaries. Interface, Flow and
+  Resource promotion still requires independent contract, ordered-behavior,
+  ownership, lifecycle, failure, operation or AIT query value; no fixed concept
+  count is valid across repository shapes.
+- **AB-SCHEMA-059** — Component and Function may declare evidence-backed
+  `publishes-to`, `reads-from` and `writes-to` relations to independently
+  promoted Interface or Resource targets. Internal embedded items remain
+  searchable parent content and never become relation endpoints merely to
+  complete a graph or diagram.
+- **AB-SCHEMA-060** — New Initial Ingest skeletons add direct Domain entrypoints
+  to root navigation, or a Repository entrypoint when no Domain is confirmed.
+  Architecture category listings are derived and not authored proposal files.

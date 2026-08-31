@@ -24,6 +24,7 @@ import {
 import { discoverRepositorySourceState } from "../../src/app/repository-okf/index.ts";
 
 const authoringGoal = "okf-v0.2-semantic-authoring-v1";
+const runIdPattern = /^\d{4}-\d{2}-\d{2}T\d{6}Z$/;
 const assessmentLimitations = [
   "Deterministic source-path checks do not prove that authored observations are semantically supported; human review is required.",
   "Reference expectations are curated probes, not an exhaustive inventory of every valid repository concept.",
@@ -273,22 +274,29 @@ function progressiveNavigationFindings(bundle, expectation, repositoryId) {
   if (!fs.existsSync(rootFile)) return ["root index is missing progressive entrypoints"];
   const rootSource = fs.readFileSync(rootFile, "utf8");
   const targets = markdownTargets(rootSource, "index.md");
-  const allowed = new Set(["domains/index.md", "systems/index.md", "repositories/index.md"]);
+  const legacyIndexes = new Set(["domains/index.md", "systems/index.md", "repositories/index.md"]);
+  const entrypointTypes = new Set(["Domain", "System", "Repository"]);
   if (!targets.length) findings.push("root index has no progressive Domain, System or Repository entrypoint");
-  if (targets.length > allowed.size) findings.push(`root index has ${targets.length} entries; navigation must stay bounded`);
   for (const target of targets) {
-    if (!allowed.has(target)) findings.push(`root index links directly to ${target} instead of a bounded role index`);
     if (!bundle.files.includes(target)) findings.push(`root index target does not exist: ${target}`);
+    const concept = [...bundle.concepts.values()].find((item) => item.path === target);
+    if (!legacyIndexes.has(target) && (!concept || !entrypointTypes.has(concept.type))) {
+      findings.push(`root index target is not a Domain, System or Repository entrypoint: ${target}`);
+    }
   }
   const confirmedDomain = expectation.confirmedDomain;
   if (confirmedDomain) {
     const heading = rootSource.match(/^#\s+(.+)$/m)?.[1]?.trim();
     if (heading !== confirmedDomain.rootHeading) findings.push(`root heading must remain ${confirmedDomain.rootHeading}`);
-    if (!targets.includes("domains/index.md")) findings.push("confirmed Domain is not reachable from root domains/index.md");
     const domain = bundle.concepts.get(confirmedDomain.identity);
     if (!domain || domain.type !== "Domain" || domain.frontmatter.title !== confirmedDomain.title) {
       findings.push(`confirmed Domain is missing or mismatched: ${confirmedDomain.identity}`);
     } else {
+      const directlyLinked = targets.includes(domain.path);
+      const linkedFromLegacyIndex = targets.filter((target) => legacyIndexes.has(target)
+        && fs.existsSync(path.join(bundle.root, target))).some((target) =>
+        markdownTargets(fs.readFileSync(path.join(bundle.root, target), "utf8"), target).includes(domain.path));
+      if (!directlyLinked && !linkedFromLegacyIndex) findings.push(`confirmed Domain is not reachable from root: ${domain.path}`);
       const linkedEntry = markdownTargets(domain.body, domain.path).some((target) =>
         [...bundle.concepts.values()].some((concept) => concept.path === target
           && (concept.type === "System" || concept.type === "Repository")));
@@ -697,7 +705,7 @@ function finalizeArmRoot({ manifest, entry, root, runId }) {
       repository: entry.id,
       runId,
       arm: runData.arm ?? "mcp",
-      ...scoreSemanticBenchmark(expectation, bundle, scoringRepositoryId(runData), path.resolve(projectRoot, entry.path)),
+      ...scoreSemanticBenchmark(expectation, bundle, scoringRepositoryId(runData), fixtureFor(entry)),
       discoveryQualification: runData.discoveryQualification ?? null,
       okfTreeDigest: bundle.treeDigest,
     };

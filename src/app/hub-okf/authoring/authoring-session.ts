@@ -9,7 +9,7 @@ import {
   parseRepositorySourceResource, readObservedValues, readRepositoryIdentityRecord, repositorySourceResources,
   renderConceptDocument,
   repositoryActivityLogPath,
-  validateInventoryReceipt,
+  getOkfConceptSchema, validateInventoryReceipt, validateOkfRelationships,
   type ConfirmedDomain, type HubRemovalDeclaration, type OkfAuthoringGuidance,
   type InventoryReceipt,
   type OkfValue,
@@ -21,7 +21,13 @@ import {
 import { prepareNewHubProposal } from "./prepare.ts";
 import { prepareRefreshHubProposal } from "./refresh.ts";
 import {
-  renderEmbeddedKnowledgeRow, writeInitialIngestSkeletons, type InitialIngestSkeleton,
+  validateRefreshChangeAccounting,
+  type RefreshChangeOutcome,
+  type RefreshSourceChanges,
+} from "./refresh-change-accounting.ts";
+import {
+  renderEmbeddedKnowledgeEvidence, renderEmbeddedKnowledgeRow, writeInitialIngestSkeletons,
+  type InitialIngestSkeleton,
 } from "./initial-ingest-skeleton.ts";
 import {
   assertQuestionAuthoringUntouched,
@@ -46,6 +52,7 @@ export type HubAuthoringSession = Readonly<{
   guidance?: OkfAuthoringGuidance;
   coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
   discoveryReceipt?: InventoryReceipt;
+  sourceChanges?: RefreshSourceChanges;
   skeletons?: readonly InitialIngestSkeleton[];
   finalizeFailures?: number;
   requireObservedRevision?: boolean;
@@ -82,6 +89,7 @@ export type BeginHubAuthoringOptions = Readonly<{
   guidance?: OkfAuthoringGuidance;
   coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
   discoveryReceipt?: InventoryReceipt;
+  sourceChanges?: RefreshSourceChanges;
   requireObservedRevision?: boolean;
   createdAt: string;
 }>;
@@ -144,12 +152,21 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
   if (options.coverage && options.coverage.partial !== (options.coverage.limitations.length > 0)) {
     throw new Error("Hub authoring coverage is inconsistent");
   }
+  if (options.mode === "new" && options.sourceChanges) throw new Error("Initial Ingest cannot capture Refresh source changes");
+  if (options.sourceChanges && (!Number.isSafeInteger(options.sourceChanges.omitted) || options.sourceChanges.omitted < 0
+    || options.sourceChanges.paths.length > 128 || new Set(options.sourceChanges.paths).size !== options.sourceChanges.paths.length
+    || options.sourceChanges.paths.some((item) => !item || item.length > 512)
+    || options.sourceChanges.limitations.length > 64
+    || options.sourceChanges.limitations.some((item) => !item || item.length > 512))) {
+    throw new Error("Refresh source changes are invalid");
+  }
   if (options.discoveryReceipt && fs.existsSync(receiptTerminalPath(options.stateRoot, options.discoveryReceipt.id))) {
     throw new Error("discovery Receipt already finalized and cannot create another session");
   }
   const seed = [options.mode, authority, options.baseCommit, options.sourceRepositoryId,
     options.evidenceDigest, options.subjectDirectory, options.confirmedDomain?.identity ?? "",
-    options.confirmedDomain?.title ?? "", options.discoveryReceipt?.id ?? ""].join("\0");
+    options.confirmedDomain?.title ?? "", options.discoveryReceipt?.id ?? "",
+    JSON.stringify(options.sourceChanges ?? null)].join("\0");
   const id = `hub-session-${createHash("sha256").update(seed).digest("hex").slice(0, 24)}`;
   const root = path.join(path.resolve(options.stateRoot), "sessions", id);
   if (fs.existsSync(root)) {
@@ -160,6 +177,7 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
       && existing.sourceRepositoryId === options.sourceRepositoryId && existing.evidenceDigest === options.evidenceDigest
       && existing.subjectDirectory === options.subjectDirectory
       && existing.discoveryReceipt?.digest === options.discoveryReceipt?.digest
+      && JSON.stringify(existing.sourceChanges) === JSON.stringify(options.sourceChanges)
       && JSON.stringify(existing.sourceState) === JSON.stringify(options.sourceState);
       if (!matches) throw new Error("matching Hub authoring session exists with different authority");
       return existing;
@@ -185,6 +203,7 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
     ...(options.guidance ? { guidance: options.guidance } : {}),
     ...(options.coverage ? { coverage: options.coverage } : {}),
     ...(options.discoveryReceipt ? { discoveryReceipt: options.discoveryReceipt } : {}),
+    ...(options.sourceChanges ? { sourceChanges: options.sourceChanges } : {}),
     ...(options.requireObservedRevision ? { requireObservedRevision: true } : {}),
     root,
     bundleRoot,
@@ -298,7 +317,7 @@ function validateCurrentRepositorySources(session: HubAuthoringSession, bundleRo
       ? previous.frontmatter.sources : []).flatMap((value) => {
       const source = mapping(value);
       return typeof source.id === "string" && typeof source.resource === "string"
-        ? [[JSON.stringify([source.id, source.resource]), source.observed_revision] as const] : [];
+        ? [[source.id, source.observed_revision] as const] : [];
     }));
     const sourceEntries = (Array.isArray(concept.frontmatter.sources) ? concept.frontmatter.sources : []).flatMap((value) => {
       const source = mapping(value);
@@ -313,7 +332,7 @@ function validateCurrentRepositorySources(session: HubAuthoringSession, bundleRo
           failures.push(`${concept.path}: new repository source must use observed_revision ${session.sourceState.commit}`);
         }
         const previousRevision = typeof sourceEntry.id === "string"
-          ? previousRevisionsByIdentity.get(JSON.stringify([sourceEntry.id, resource])) : undefined;
+          ? previousRevisionsByIdentity.get(sourceEntry.id) : undefined;
         if (previousRevision !== undefined && previousRevision !== sourceEntry.observed_revision) {
           failures.push(`${concept.path}: re-observed repository source must use a revision-distinct source ID`);
         }
@@ -353,6 +372,50 @@ function validateCurrentRepositorySources(session: HubAuthoringSession, bundleRo
   if (failures.length) throw new Error(`authored repository sources failed validation: ${failures.join("; ")}`);
 }
 
+const STRUCTURAL_RELATIONSHIPS = new Set(["part-of", "implemented-in", "declared-by"]);
+
+function validateNewConceptStructuralReachability(session: HubAuthoringSession, bundleRoot: string): void {
+  if (session.mode !== "refresh") return;
+  const authored = loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true });
+  const base = loadOkfBundle(session.baseRoot);
+  const validation = validateOkfRelationships([...authored.concepts].map(([identity, concept]) => ({ identity, concept })));
+  const parents = new Map<string, string[]>();
+  for (const relationship of validation.relationships) {
+    if (!STRUCTURAL_RELATIONSHIPS.has(relationship.kind)) continue;
+    parents.set(relationship.source, [...parents.get(relationship.source) ?? [], relationship.target]);
+  }
+  const reachesBoundary = (identity: string, trail = new Set<string>()): boolean => {
+    if (trail.has(identity)) return false;
+    const concept = authored.concepts.get(identity);
+    if (!concept) return false;
+    if (concept.type === "Repository" || concept.type === "Domain") return true;
+    const next = new Set(trail).add(identity);
+    return (parents.get(identity) ?? []).some((parent) => reachesBoundary(parent, next));
+  };
+  const failures = [...authored.concepts.values()].flatMap((concept) => {
+    const schema = getOkfConceptSchema(concept.type);
+    if (base.concepts.has(concept.conceptId) || !schema || schema.authoringScope === "governance"
+      || concept.type === "Repository" || concept.type === "Domain" || reachesBoundary(concept.conceptId)) return [];
+    return [`${concept.path}: new standalone concept must have an evidenced structural path to a Repository or Domain`];
+  });
+  if (failures.length) throw new Error(`authored concept topology failed validation: ${failures.join("; ")}`);
+}
+
+function validateHubAuthoringBundle(session: HubAuthoringSession, bundleRoot: string): void {
+  validateCurrentRepositorySources(session, bundleRoot);
+  validateNewConceptStructuralReachability(session, bundleRoot);
+}
+
+export function validateHubAuthoringSession(
+  stateRoot: string,
+  sessionId: string,
+  expectedCheckoutRoot: string,
+): Readonly<{ valid: true; sessionId: string; mode: "new" | "refresh" }> {
+  const session = readHubAuthoringSession(stateRoot, sessionId, expectedCheckoutRoot);
+  validateHubAuthoringBundle(session, session.bundleRoot);
+  return { valid: true, sessionId: session.id, mode: session.mode };
+}
+
 function normalizeAuthoredObservations(
   session: HubAuthoringSession,
   targetRoot: string,
@@ -385,25 +448,40 @@ function mapping(value: OkfValue | undefined): Readonly<Record<string, OkfValue>
     ? value as Readonly<Record<string, OkfValue>> : {};
 }
 
-function appendEmbeddedRows(body: string, rows: readonly string[]): string {
-  if (!rows.length) return body;
+function appendEmbeddedKnowledge(
+  body: string,
+  items: readonly Readonly<{ row: string; evidence: readonly string[] }>[],
+): string {
+  if (!items.length) return body;
   const heading = "# Embedded Knowledge";
-  const header = "| Name | Role | Kind | Technology | Exact sources |";
+  const header = "| Name | Role | Kind | Technology | Evidence |";
   const separator = "|---|---|---|---|---|";
-  const lines = body.trimEnd().split("\n");
+  const rows = items.map((item) => item.row);
+  let lines = body.trimEnd().split("\n");
   const headerIndex = lines.findIndex((line) => line.trim() === header);
   if (headerIndex >= 0 && lines[headerIndex + 1]?.trim() === separator) {
     let insertAt = headerIndex + 2;
     while (lines[insertAt]?.trimStart().startsWith("|")) insertAt += 1;
     lines.splice(insertAt, 0, ...rows);
-    return `${lines.join("\n")}\n`;
+  } else {
+    const headingIndex = lines.findIndex((line) => line.trim() === heading);
+    if (headingIndex >= 0) lines.splice(headingIndex + 1, 0, "", header, separator, ...rows);
+    else lines.push("", heading, "", header, separator, ...rows);
   }
-  const headingIndex = lines.findIndex((line) => line.trim() === heading);
-  if (headingIndex >= 0) {
-    lines.splice(headingIndex + 1, 0, "", header, separator, ...rows);
-    return `${lines.join("\n")}\n`;
+  const evidence = items.flatMap((item) => item.evidence)
+    .filter((line) => !lines.some((existing) => existing.trim() === line));
+  if (evidence.length) {
+    const evidenceHeading = "## Exact Evidence";
+    const evidenceIndex = lines.findIndex((line) => line.trim() === evidenceHeading);
+    if (evidenceIndex < 0) lines.push("", evidenceHeading, "", ...evidence);
+    else {
+      let insertAt = evidenceIndex + 1;
+      while (lines[insertAt] !== undefined
+        && (!lines[insertAt]!.trim() || lines[insertAt]!.trimStart().startsWith("* "))) insertAt += 1;
+      lines.splice(insertAt, 0, ...evidence);
+    }
   }
-  return `${body.trimEnd()}\n\n${heading}\n\n${header}\n${separator}\n${rows.join("\n")}\n`;
+  return `${lines.join("\n")}\n`;
 }
 
 function restoreReceiptEmbeddedKnowledge(session: HubAuthoringSession, root: string): void {
@@ -415,7 +493,7 @@ function restoreReceiptEmbeddedKnowledge(session: HubAuthoringSession, root: str
   const candidates = new Map(receipt.guidanceRequest.candidates.map((candidate) => [candidate.id, candidate]));
   const recommendations = new Map(receipt.guidance.recommendations.map((item) => [item.candidateId, item]));
   const observations = [...receipt.guidanceRequest.semanticObservations, ...receipt.guidanceRequest.resourceObservations];
-  const rowsByOwner = new Map<string, string[]>();
+  const itemsByOwner = new Map<string, { row: string; evidence: readonly string[] }[]>();
   for (const output of receipt.inventory.items.flatMap((item) => item.outcome === "materialized" ? item.outputs : [])) {
     const candidate = candidates.get(output.candidateId), recommendation = recommendations.get(output.candidateId);
     if (candidate?.disposition !== "embedded" || recommendation?.status !== "embedded") continue;
@@ -428,17 +506,20 @@ function restoreReceiptEmbeddedKnowledge(session: HubAuthoringSession, root: str
         receipt.source.repositoryId, observation.source.path, observation.source.startLine, observation.source.endLine,
       ) }] : [];
     });
-    if (!sources.length || sources.some((source) => owner.body.includes(`\`${source.resource}\``))) continue;
+    if (!sources.length) continue;
     const row = renderEmbeddedKnowledgeRow(candidate, recommendation, sources);
-    const rows = rowsByOwner.get(owner.conceptId) ?? [];
-    if (!rows.includes(row)) rows.push(row);
-    rowsByOwner.set(owner.conceptId, rows);
+    if (owner.body.includes(row)) continue;
+    const items = itemsByOwner.get(owner.conceptId) ?? [];
+    if (!items.some((item) => item.row === row)) {
+      items.push({ row, evidence: renderEmbeddedKnowledgeEvidence(sources) });
+    }
+    itemsByOwner.set(owner.conceptId, items);
   }
-  for (const [ownerId, rows] of rowsByOwner) {
+  for (const [ownerId, items] of itemsByOwner) {
     const owner = bundle.concepts.get(ownerId);
     if (!owner) continue;
     fs.writeFileSync(path.join(root, owner.path), renderConceptDocument({ ...owner,
-      body: appendEmbeddedRows(owner.body, rows) }), { mode: 0o600 });
+      body: appendEmbeddedKnowledge(owner.body, items) }), { mode: 0o600 });
   }
 }
 
@@ -576,6 +657,7 @@ export function finalizeHubAuthoringSession(
   currentSourceState?: HubAuthoringSourceState,
   currentHubHead?: string,
   terminalizeReceipt = true,
+  changeAccounting: readonly RefreshChangeOutcome[] = [],
 ): Readonly<{ result: "no_change"; inspection: HubProposalInspection; observedSource: HubAuthoringSourceState & Readonly<{ observedAt: string }> }
   | { proposal: AnyHubProposal; inspection: HubProposalInspection; observedSource: HubAuthoringSourceState & Readonly<{ observedAt: string }> }> {
   const session = readHubAuthoringSession(stateRoot, sessionId, expectedCheckoutRoot);
@@ -591,6 +673,17 @@ export function finalizeHubAuthoringSession(
     || currentSourceState.dirtyDigest !== session.sourceState.dirtyDigest) {
     throw new Error("source repository changed after Prepare");
   }
+  if (session.mode !== "refresh" && changeAccounting.length) {
+    throw new Error("Initial Ingest does not accept Refresh change accounting");
+  }
+  const refreshAccounting = session.mode === "refresh" && session.sourceChanges
+    ? validateRefreshChangeAccounting({
+      sourceRepositoryId: session.sourceRepositoryId,
+      sourceChanges: session.sourceChanges,
+      baseRoot: session.baseRoot,
+      authoredRoot: session.bundleRoot,
+      outcomes: changeAccounting,
+    }) : undefined;
   const staging = path.join(path.resolve(stateRoot), "proposals", `.staging-${session.id}`);
   const normalizedRoot = path.join(path.resolve(stateRoot), "proposals", `.normalized-${session.id}`);
   privateDirectory(path.dirname(staging));
@@ -608,12 +701,12 @@ export function finalizeHubAuthoringSession(
     assertQuestionAuthoringUntouched(session.baseRoot, session.bundleRoot);
     if (session.mode === "refresh"
       && (loadOkfBundle(session.baseRoot).treeDigest !== loadOkfBundle(session.bundleRoot).treeDigest
-        || questions.length > 0 || removals.length > 0)) {
+        || questions.length > 0 || removals.length > 0 || Boolean(refreshAccounting?.outcomes.length))) {
       recordSuccessfulObservation(session);
     }
     normalizeAuthoredObservations(session, normalizedRoot, removals);
     restoreReceiptEmbeddedKnowledge(session, normalizedRoot);
-    validateCurrentRepositorySources(session, normalizedRoot);
+    validateHubAuthoringBundle(session, normalizedRoot);
     const observations = [...loadOkfBundle(normalizedRoot).concepts.values()]
       .flatMap((concept) => readObservedValues(concept));
     if (session.discoveryReceipt && (questions.length || removals.length)) {
@@ -675,15 +768,19 @@ export function finalizeHubAuthoringSession(
     && inspection.entries.every((entry) => entry.change === "preserved")) {
     fs.rmSync(staging, { recursive: true, force: true });
     fs.rmSync(session.root, { recursive: true, force: true });
-    return { result: "no_change", inspection: attachHubInspectionContext(inspection, [], session.coverage),
+    return { result: "no_change", inspection: attachHubInspectionContext(inspection, [], session.coverage,
+      refreshAccounting ? { changeAccounting: refreshAccounting } : {}),
       observedSource: { ...session.sourceState, observedAt: session.createdAt } };
   }
   const reviewed = { proposal: finalized.proposal,
     inspection: attachHubInspectionContext(inspection, questions, session.coverage,
-      session.discoveryReceipt && activityPath ? {
-        discovery: receiptInspectionContext(session, finalized.bundleRoot, receiptQuestionIds),
-        activity: { repositoryLog: activityPath, domainLog: null },
-      } : {}) };
+      {
+        ...(session.discoveryReceipt && activityPath ? {
+          discovery: receiptInspectionContext(session, finalized.bundleRoot, receiptQuestionIds),
+          activity: { repositoryLog: activityPath, domainLog: null },
+        } : {}),
+        ...(refreshAccounting ? { changeAccounting: refreshAccounting } : {}),
+      }) };
   fs.cpSync(session.baseRoot, path.join(staging, "base"), { recursive: true, errorOnExist: true, force: false });
   fs.writeFileSync(path.join(staging, "inspection.json"), `${JSON.stringify(reviewed.inspection, null, 2)}\n`, { mode: 0o600 });
   fs.writeFileSync(path.join(staging, "runtime.json"), `${JSON.stringify({ checkoutRoot: session.checkoutRoot })}\n`, { mode: 0o600 });

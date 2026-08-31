@@ -144,7 +144,9 @@ queries and ordinary coding never create Hub state, commits or publication.
   generic Ingest/Refresh cannot edit Question bytes or broaden mutable-draft
   policy. `Resolved` only means no maintainer action remains; competing current
   positions stay visible until a reviewed correction/removal changes Published
-  bytes.
+  bytes. The renderer-owned body reflects the current state, and a resolution
+  clears the current `missing_evidence` list while retaining exact references
+  and still-applicable limitations.
 - **AB-QUESTION-004** — An exact-revision answer attributed as `human:<id>`
   atomically proposes one stable Maintainer Guidance revision and the linked
   Question update. Published state does not change before ordinary validation,
@@ -226,6 +228,36 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-REFRESH-012** — The packaged Refresh skill investigates Changed Source →
   Known Gaps → Bounded Discovery and stops before Accept, publication, provider
   CLI enrichment or remote mutation.
+- **AB-REFRESH-013** — Runtime Refresh Prepare freezes the exact bounded
+  `paths`, `omitted` count and source-diff `limitations` returned for the
+  authorized source snapshot into the authoring session. Direct legacy test
+  sessions without this captured set retain their previous behavior.
+- **AB-REFRESH-014** — Finalize requires exactly one `updated`, `new`,
+  `embedded`, `question` or `ignored` outcome with a non-empty bounded reason
+  for every returned path. Duplicate, missing and extra paths fail before
+  proposal creation and leave the Refresh session repairable.
+- **AB-REFRESH-015** — An `updated`, `new` or `embedded` outcome must resolve to
+  a changed concept carrying normalized current-Repository source evidence for
+  that exact path. `new` requires a concept absent from the base; `updated`
+  requires a changed concept present in the base. Unsupported claims fail
+  Finalize.
+- **AB-REFRESH-016** — Finalized inspection retains ordered path outcomes,
+  partial status, omitted count and source-diff limitations. A non-empty fully
+  accounted returned delta records the new Repository observation through an
+  ordinary reviewable proposal even when all outcomes are `question` or
+  `ignored`; a zero-delta, zero-knowledge-change run remains `no_change`.
+- **AB-REFRESH-017** — Before its one Finalize call, Refresh invokes
+  `validate_okf_changes` with the prepared session ID. Session-bound validation
+  rejects repository source identities reused across changed observed revisions
+  while the editable workspace is still repairable; Finalize retains the same
+  invariant as the authoritative lock boundary.
+- **AB-REFRESH-018** — Every newly authored known non-governance concept other
+  than Domain or Repository has an evidenced structural path, using relations
+  admitted by each source concept's exact schema, to a Repository or Domain.
+  In particular, Resource reaches Repository through `implemented-in`; its
+  schema does not admit `declared-by` or Resource-to-Resource `depends-on`. An
+  unanchored candidate remains embedded or limited instead of becoming an
+  isolated Hub node that ordinary graph/query/visualization projection can omit.
 
 ## Lazy setup and first bootstrap
 

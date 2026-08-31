@@ -2,10 +2,13 @@
 
 ## Navigation
 
-- Only the root `index.md` may have OKF frontmatter; category indexes MUST NOT have frontmatter and contain navigation Markdown only.
-- Initial Ingest Prepare pre-populates required root/category navigation. Preserve
-  those rows and never append a target already present in the same index.
-- Keep one canonical concept file; indexes link to it and never copy it.
+- Only the root `index.md` carries OKF frontmatter. Initial Ingest Prepare adds a
+  direct Domain entrypoint, or a Repository entrypoint when no Domain is
+  confirmed. Preserve those rows and never append the same target twice.
+- Architecture category indexes are derived presentation and MUST NOT be
+  created during authoring. Workflow-owned governance indexes remain under
+  their exact renderer.
+- Keep one canonical concept file; root and concept links never copy it.
 - Root navigation grows with Domain and fallback entrypoints, not every entity.
 - A Domain concept links its Systems and critical Flows. A System concept links
   the components, functions, interfaces, flows and independently useful
@@ -32,6 +35,10 @@
   become evidence for the maintainer's business classification.
 - Create a System when cooperating entities deliver one recognizable
   capability. A library or reusable module need not belong to a known system.
+- Keep independently deployed frontend and backend runtimes as separate
+  Components. Keep modules, routes, storage and provider resources inside the
+  runtime that owns them unless another owner/runtime or AIT decision needs an
+  independent contract or resource boundary.
 - Keep repository-specific purpose, source structure, build, test and entry
   points in a Repository concept. Link to canonical entities instead of copying
   their architecture or contracts.

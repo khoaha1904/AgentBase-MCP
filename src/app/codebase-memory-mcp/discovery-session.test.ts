@@ -159,7 +159,7 @@ test("[AB-MCP-019..023][AB-INGEST-017] armed Init derives one fixed bounded Seed
   invalidQuestion.question.candidate_evidence[0]!.evidence_id = `evidence-${questionIndex + 1}`;
   const invalidMaterialized = invalidInventory.items[nestedIndex] as typeof inventory.items[number] & { candidate_ids: string[] };
   invalidMaterialized.candidate_ids.push("unknown-candidate");
-  const invalidGuidance = callOkfSchemaTool("get_okf_authoring_schemas", {
+  const invalidGuidance = await callOkfSchemaTool("get_okf_authoring_schemas", {
     ...guidanceRequest, discovery_inventory: invalidInventory,
   }, { discovery });
   assert.equal(invalidGuidance.isError, true);
@@ -172,7 +172,7 @@ test("[AB-MCP-019..023][AB-INGEST-017] armed Init derives one fixed bounded Seed
   assert.match((invalidValue as { error?: string }).error ?? "", /candidate evidence is invalid/);
   assert.match((invalidValue as { error?: string }).error ?? "", /unknown-candidate mapping is invalid/);
 
-  const guidance = callOkfSchemaTool("get_okf_authoring_schemas", {
+  const guidance = await callOkfSchemaTool("get_okf_authoring_schemas", {
     ...guidanceRequest, discovery_inventory: inventory,
   }, { discovery });
   assert.equal(guidance.isError, undefined);

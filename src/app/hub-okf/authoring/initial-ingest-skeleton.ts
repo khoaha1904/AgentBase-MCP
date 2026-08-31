@@ -78,7 +78,13 @@ export function renderEmbeddedKnowledgeRow(
     [recommendation.technology.provider, recommendation.technology.product].filter(Boolean).join(" / "),
     [recommendation.technology.sourceTool, recommendation.technology.resourceType].filter(Boolean).join(":"),
   ].filter(Boolean).join("; ") || "not identified";
-  return `| ${tableCell(candidate.identityHint)} | ${tableCell(candidate.queryValue)} | ${tableCell(recommendation.technology.kind ?? "resource")} | ${tableCell(technology)} | ${exactSources.map((source) => `${tableCell(source.id)}: \`${tableCell(source.resource)}\``).join("<br>")} |`;
+  return `| ${tableCell(candidate.identityHint)} | ${tableCell(candidate.queryValue)} | ${tableCell(recommendation.technology.kind ?? "resource")} | ${tableCell(technology)} | ${exactSources.map((source) => `\`${tableCell(source.id)}\``).join("<br>")} |`;
+}
+
+export function renderEmbeddedKnowledgeEvidence(
+  exactSources: readonly Readonly<{ id: string; resource: string }>[],
+): readonly string[] {
+  return exactSources.map((source) => `* \`${tableCell(source.id)}\` - \`${tableCell(source.resource)}\``);
 }
 
 function embeddedKnowledge(
@@ -87,18 +93,22 @@ function embeddedKnowledge(
   candidates: ReadonlyMap<string, ConceptCandidate>,
   sources: ReadonlyMap<string, Readonly<{ id: string; resource: string; observed_revision?: string }>>,
 ): string {
-  const rows = recommendations.filter((item) => item.status === "embedded" && item.parentCandidateId === parentCandidateId)
+  const items = recommendations.filter((item) => item.status === "embedded" && item.parentCandidateId === parentCandidateId)
     .map((recommendation) => {
       const candidate = candidates.get(recommendation.candidateId);
       if (!candidate) throw new Error(`embedded recommendation has unknown candidate: ${recommendation.candidateId}`);
       const exactSources = candidateSources(candidate, sources);
       if (!exactSources.length) throw new Error(`embedded recommendation requires exact sources: ${candidate.id}`);
-      return renderEmbeddedKnowledgeRow(candidate, recommendation, exactSources);
+      return {
+        row: renderEmbeddedKnowledgeRow(candidate, recommendation, exactSources),
+        evidence: renderEmbeddedKnowledgeEvidence(exactSources),
+      };
     });
-  return rows.length ? [
+  return items.length ? [
     "# Embedded Knowledge", "",
-    "| Name | Role | Kind | Technology | Exact sources |",
-    "|---|---|---|---|---|", ...rows,
+    "| Name | Role | Kind | Technology | Evidence |",
+    "|---|---|---|---|---|", ...items.map((item) => item.row),
+    "", "## Exact Evidence", "", ...items.flatMap((item) => item.evidence),
   ].join("\n") : "";
 }
 
@@ -276,17 +286,11 @@ export function writeInitialIngestSkeletons(options: WriteInitialIngestSkeletons
     }
   }
 
-  for (const entry of [{ path: repositoryPath, type: "Repository", title: options.repository.displayName }, ...conceptEntries]) {
-    const directory = path.posix.dirname(entry.path);
-    const indexPath = `${directory}/index.md`;
-    appendIndex(options.bundleRoot, indexPath, title(directory.split("/").at(-1) ?? directory),
-      `* [${entry.title}](${path.posix.basename(entry.path)}) - ${entry.type}`);
-  }
-  appendIndex(options.bundleRoot, "index.md", "AgentBase-Hub", "* [Repositories](repositories/index.md) - source repositories");
-  if (options.confirmedDomain) appendIndex(options.bundleRoot, "index.md", "AgentBase-Hub", "* [Domains](domains/index.md) - business domains");
-  if (conceptEntries.some((item) => path.posix.dirname(item.path) === "systems")) {
-    appendIndex(options.bundleRoot, "index.md", "AgentBase-Hub", "* [Systems](systems/index.md) - systems");
-  }
+  const entrypoint = options.confirmedDomain
+    ? { title: options.confirmedDomain.title, target: `${options.confirmedDomain.identity}.md`, type: "Domain" }
+    : { title: options.repository.displayName, target: repositoryPath, type: "Repository" };
+  appendIndex(options.bundleRoot, "index.md", "AgentBase-Hub",
+    `* [${entrypoint.title}](${entrypoint.target}) - ${entrypoint.type}`);
   const bundle = loadOkfBundle(options.bundleRoot, { requireAgentBaseRootIndex: true });
   for (const skeleton of skeletons) {
     const concept = bundle.concepts.get(skeleton.identity);

@@ -18,7 +18,8 @@ export function portableAgentText(value, { repository, workspace, runtimeRoot })
     .split(os.homedir()).join("<HOME>");
 }
 
-export function buildCodexArgs({ workspace, finalMessage, model, reasoningEffort, arm = "mcp", runtimeRoot, enabledTools, trackerRoot, disableShell = arm === "direct" }) {
+export function buildCodexArgs({ workspace, finalMessage, model, reasoningEffort, arm = "mcp", runtimeRoot,
+  enabledTools, trackerRoot, mcpEntryPoint, disableShell = arm === "direct" }) {
   if (!["mcp", "direct"].includes(arm)) throw new Error(`unknown benchmark arm: ${arm}`);
   const args = ["--ask-for-approval", "never", "exec", "--ephemeral", "--json", "--ignore-user-config",
     "--skip-git-repo-check", "--sandbox", "workspace-write", "--model", model, "--cd", workspace,
@@ -26,7 +27,8 @@ export function buildCodexArgs({ workspace, finalMessage, model, reasoningEffort
   if (disableShell) args.push("--disable", "shell_tool");
   if (arm === "mcp") args.push(
     "--config", `mcp_servers.agentbase.command=${toml(process.execPath)}`,
-    "--config", `mcp_servers.agentbase.args=${toml([path.join(projectRoot, "src", "cli.ts"), "mcp"])}`,
+    "--config", `mcp_servers.agentbase.args=${toml(mcpEntryPoint
+      ? [mcpEntryPoint] : [path.join(projectRoot, "src", "cli.ts"), "mcp"])}`,
     "--config", `mcp_servers.agentbase.cwd=${toml(projectRoot)}`,
     ...(runtimeRoot ? ["--config", `mcp_servers.agentbase.env={HOME=${toml(path.join(runtimeRoot, "home"))},AGENTBASE_HOME=${toml(path.join(runtimeRoot, "agentbase"))},XDG_CONFIG_HOME=${toml(path.join(runtimeRoot, "config"))},XDG_DATA_HOME=${toml(path.join(runtimeRoot, "data"))},TMPDIR=${toml(path.join(runtimeRoot, "tmp"))}}`] : []),
     ...(enabledTools ? ["--config", `mcp_servers.agentbase.enabled_tools=${toml(enabledTools)}`] : []),

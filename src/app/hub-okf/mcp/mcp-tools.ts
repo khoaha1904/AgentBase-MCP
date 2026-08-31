@@ -172,6 +172,17 @@ export const HUB_OKF_TOOLS = [
             }, required: ["kind", "concept_id", "reason", "evidence_resources"], additionalProperties: false,
           },
         },
+        change_accounting: {
+          type: "array", maxItems: 128,
+          description: "Refresh-only: exactly one reviewable outcome for every path returned by Prepare sourceChanges.paths.",
+          items: {
+            type: "object", properties: {
+              path: { type: "string", minLength: 1, maxLength: 512 },
+              outcome: { type: "string", enum: ["updated", "new", "embedded", "question", "ignored"] },
+              reason: { type: "string", minLength: 1, maxLength: 512 },
+            }, required: ["path", "outcome", "reason"], additionalProperties: false,
+          },
+        },
       },
       required: ["session_id"], additionalProperties: false,
     },

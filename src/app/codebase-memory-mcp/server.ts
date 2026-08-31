@@ -49,7 +49,7 @@ export function createAgentBaseMcpServer(options: GatewaySessionOptions & Readon
       async (argumentsValue): Promise<CallToolResult> => callOkfSchemaTool(
         tool.name as OkfSchemaToolName,
         argumentsValue as Record<string, unknown>,
-        { discovery },
+        { discovery, validateAuthoringSession: (sessionId) => hubActions.validate(sessionId) },
       ));
   }
   for (const tool of SAFE_TOOLS) {

@@ -45,13 +45,35 @@ skill.
    proposal is reviewed; it is not exact truth. Preserve the prepared bounded
    `Embedded Knowledge` table as searchable human-readable knowledge in its
    parent. An embedded row has no OKF identity, standalone file, navigation or
-   graph relationship. Do not promote or split it during this authoring pass.
+   canonical graph relationship. An optional `Embedded Relations` table may
+   describe a useful evidence-backed runtime direction using `self`, one exact
+   concept identity or one unique same-parent embedded name. Use only
+   `provides`, `consumes`, `depends-on`, `triggered-by`, `publishes-to`,
+   `reads-from`, `writes-to`, `monitors` or `redrives-to`, with parent source
+   IDs in every row. Do not infer a relation from containment, and do not
+   promote or split an embedded row during this authoring pass.
    Create the smallest independently
    useful linked concept set. A separate
    concept needs a stable identity plus an independent contract, ownership,
    lifecycle, failure/operational boundary, audience or important graph role.
+   A new known standalone concept also needs an evidenced structural path
+   allowed by its exact schema to a Repository or Domain. For a Resource, use
+   `implemented-in -> Repository`; Resource does not admit `declared-by` or
+   Resource-to-Resource `depends-on`. Otherwise keep it embedded or limited.
    Do not turn every route, handler, function or infrastructure block into a
    concept merely because it is concrete.
+   Group all knowledge sharing one runtime, deployment and ownership boundary
+   in that Function, Component or System parent. A one-runtime repository
+   normally has one Repository plus one runtime concept. Keep independently
+   deployed frontend and backend runtimes separate; consolidate their internal
+   modules and provider resources instead. Promote a shared queue, API or other
+   boundary only when another runtime, owner, lifecycle or AIT decision needs to
+   identify it independently. Prefer evidence-backed `publishes-to`,
+   `reads-from` and `writes-to` over generic `depends-on` when the target is an
+   independently promoted Interface or Resource.
+   Add optional metadata only when it supports reconciliation, retrieval or a
+   documented decision; do not copy provider inventories or repeat machine
+   metadata as generic prose.
    Preserve exact `sources[].observed_revision`; a newer observation must use a
    revision-distinct source ID. Receipt-bound Questions are renderer-owned and
    must not be authored under `questions/`.
@@ -59,20 +81,25 @@ skill.
    one small discovery pass. Omitted files, old observations and search/graph
    absence preserve accepted knowledge. Declare destructive removal only at
    Finalize with an exact reason and current-repository evidence.
-5. Keep the prepared navigation progressive. The root `index.md` carries `okf_version:
-   "0.2"` and links only existing Domain, System and Repository entrypoint
-   indexes. Preserve every existing nonblank root/category index line exactly
-   and in order; repository authoring may append navigation but must never
-   rename the Hub heading or restyle earlier entries. Never edit or generate
-   `log.md`; successful lifecycle Finalize owns its concise activity entry.
+5. Keep the prepared navigation progressive. The root `index.md` carries
+   `okf_version: "0.2"` and links directly to existing Domain entrypoints, or a
+   Repository entrypoint when no Domain is confirmed. Architecture category
+   indexes are optional derived presentation and must not be created during
+   authoring. Preserve every existing nonblank root line exactly and in order.
+   A workflow-owned governance index such as `questions/index.md` remains under
+   its exact renderer. Never edit or generate `log.md`; successful lifecycle
+   Finalize owns its concise activity entry.
 6. Validate created/modified concepts with `validate_okf_changes`, supplying
+   the prepared `session_id` when the invoking workflow returned one, and
    only their full Markdown plus unchanged target summaries from continuity or
    exact search/read. Read each changed file and send its complete Markdown
    document bytes as `content`, never its path or a wrapper object. For every
    supplied concept or target, `identity` is
    exactly its normalized path relative to the OKF root with `.md` removed;
    never include an outer `okf/` prefix. Apply relationship guidance from the
-   exact frontmatter `type`; a display name or prose never changes the schema.
+   exact frontmatter `type`; the canonical vocabulary is not permission to use
+   every predicate on every type, and a display name or prose never changes the
+   schema.
    Then run AgentBase final validation and diff. Repair only proposal files.
    Present warnings, limitations, and the complete diff.
 7. Stop before apply unless the maintainer explicitly authorizes applying that

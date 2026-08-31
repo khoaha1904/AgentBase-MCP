@@ -29,6 +29,76 @@ async function localSourceSnapshot(input: Readonly<{
     kind: "current-checkout", createdAt: "2026-08-25T00:00:00.000Z", privateRoot: input.stateRoot };
 }
 
+test("[AB-SCHEMA-057][AB-SCHEMA-060] one runtime keeps internal resources embedded with root-only navigation", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-compact-skeleton-"));
+  try {
+    fs.writeFileSync(path.join(root, "index.md"), "---\nokf_version: '0.2'\n---\n\n# Hub\n");
+    const candidates = [
+      { id: "repository", identityHint: "worker", identityBasis: "README", queryValue: "job worker repository",
+        evidenceIds: ["readme"], disposition: "concept" as const, suggestedType: "Repository" },
+      { id: "worker", identityHint: "worker", identityBasis: "Terraform address", queryValue: "job processing runtime",
+        evidenceIds: ["function"], disposition: "concept" as const },
+      ...[
+        ["jobs", "jobs queue", "worker input transport", "jobs-source"],
+        ["dlq", "retry DLQ", "failed job recovery", "dlq-source"],
+        ["state", "state table", "job state persistence", "state-source"],
+        ["results", "results bucket", "processed result storage", "results-source"],
+      ].map(([id, identityHint, queryValue, evidenceId]) => ({
+        id: id!, identityHint: identityHint!, identityBasis: "Terraform address", queryValue: queryValue!,
+        evidenceIds: [evidenceId!], disposition: "embedded" as const, parentCandidateId: "worker",
+      })),
+    ];
+    const request = {
+      candidates,
+      semanticObservations: [{ id: "readme", candidateId: "repository", role: "documentation" as const,
+        signal: "repository purpose", source: { path: "README.md", startLine: 1, endLine: 2 } }],
+      resourceObservations: [
+        { id: "function", candidateId: "worker", sourceTool: "terraform" as const,
+          resourceType: "aws_lambda_function", address: "aws_lambda_function.worker",
+          source: { path: "main.tf", startLine: 1, endLine: 3 } },
+        { id: "jobs-source", candidateId: "jobs", sourceTool: "terraform" as const,
+          resourceType: "aws_sqs_queue", address: "aws_sqs_queue.jobs",
+          source: { path: "main.tf", startLine: 4, endLine: 4 } },
+        { id: "dlq-source", candidateId: "dlq", sourceTool: "terraform" as const,
+          resourceType: "aws_sqs_queue", address: "aws_sqs_queue.dlq",
+          source: { path: "main.tf", startLine: 5, endLine: 5 } },
+        { id: "state-source", candidateId: "state", sourceTool: "terraform" as const,
+          resourceType: "aws_dynamodb_table", address: "aws_dynamodb_table.state",
+          source: { path: "main.tf", startLine: 6, endLine: 6 } },
+        { id: "results-source", candidateId: "results", sourceTool: "terraform" as const,
+          resourceType: "aws_s3_bucket", address: "aws_s3_bucket.results",
+          source: { path: "main.tf", startLine: 7, endLine: 7 } },
+      ],
+    };
+    const repositoryId = "repository-worker-aaaaaaaaaaaa";
+    const skeletons = writeInitialIngestSkeletons({
+      bundleRoot: root, subjectDirectory: "repositories/worker", sourceRepositoryId: repositoryId,
+      repository: { id: repositoryId, displayName: "worker", remotes: [], rootCommits: [] },
+      request, guidance: getOkfAuthoringGuidance(request), createdAt: "2026-08-31T00:00:00Z",
+      sourceState: { commit: "a".repeat(40), dirty: false, dirtyDigest: null },
+    });
+
+    assert.deepEqual(skeletons.map((item) => item.type).sort(), ["Function", "Repository"]);
+    const bundle = loadOkfBundle(root, { requireAgentBaseRootIndex: true });
+    assert.deepEqual(bundle.files.filter((file) => path.posix.basename(file) === "index.md"), ["index.md"]);
+    assert.match(fs.readFileSync(path.join(root, "index.md"), "utf8"),
+      /\[worker\]\(repositories\/worker\.md\) - Repository/);
+    const worker = bundle.concepts.get("components/worker")!;
+    assert.ok(worker);
+    const [table, evidence] = worker.body.split("## Exact Evidence");
+    assert.doesNotMatch(table!, /repository:\/\//);
+    for (const name of ["jobs queue", "retry DLQ", "state table", "results bucket"]) {
+      assert.match(table!, new RegExp(`\\| ${name} \\|`, "i"));
+    }
+    for (const source of ["jobs-source", "dlq-source", "state-source", "results-source"]) {
+      assert.match(evidence!, new RegExp(`\\* \\x60${source}\\x60 - \\x60repository://${repositoryId}/main\\.tf#L\\d+-L\\d+\\x60`));
+    }
+    assert.equal([...bundle.concepts.values()].some((concept) => concept.type === "Resource"), false);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] preparation renders one generic inspectable skeleton bundle and stops", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-initial-ingest-"));
   const source = path.join(root, "vehicle-events");
@@ -107,6 +177,8 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] pre
     });
     assert.equal(fs.readFileSync(path.join(dedupeBundle, "index.md"), "utf8").split("\n")
       .filter((line) => line.includes("](repositories/index.md)")).length, 1);
+    assert.match(fs.readFileSync(path.join(dedupeBundle, "index.md"), "utf8"),
+      /\[vehicle-events\]\(repositories\/vehicle-events\.md\) - Repository/i);
     const configured = readPersistedHubConfiguration(environment);
     assert.ok(configured?.kind === "remote");
     const publishedBase = (await runGit({ args: ["rev-parse", "HEAD"], cwd: configured.localRoot,
@@ -147,7 +219,9 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] pre
     const publisherBody = skeletonBundle.concepts.get("components/publisher")?.body ?? "";
     assert.match(publisherBody, /# Embedded Knowledge/);
     assert.match(publisherBody, /Vehicle-events \| Internal trigger transport for the publisher \| message-queue \| aws \/ sqs; terraform:aws_sqs_queue/i);
-    assert.match(publisherBody, /repository:\/\/repository-[a-z0-9-]+\/main\.tf#L4-L6/);
+    assert.match(publisherBody, /\| `queue` \|/);
+    assert.match(publisherBody, /## Exact Evidence[\s\S]*`queue` - `repository:\/\/repository-[a-z0-9-]+\/main\.tf#L4-L6`/);
+    assert.doesNotMatch(publisherBody.split("## Exact Evidence")[0]!, /repository:\/\//);
     assert.equal(skeletonBundle.concepts.has("resources/vehicle-events"), false);
     assert.equal(prepared.skeletons.some((item) => item.identity.includes("events") && item.type === "Resource"), false);
     assert.match(skeletonBundle.concepts.get("systems/vehicle-events")?.body ?? "", /suggested.*proposal review/i);
@@ -156,12 +230,10 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] pre
     ]);
     assert.match(skeletonBundle.concepts.get("domains/vehicle-data")?.body ?? "",
       /# Systems[\s\S]*\[Vehicle-events\]\(\.\.\/systems\/vehicle-events\.md\)/);
-    const componentsIndex = path.join(prepared.bundleRoot, "components", "index.md");
-    const preparedNavigation = fs.readFileSync(componentsIndex, "utf8");
-    fs.appendFileSync(componentsIndex, "\n* [Publisher](./publisher.md) - Function\n");
-    assert.throws(() => loadOkfBundle(prepared.bundleRoot, { requireAgentBaseRootIndex: true }),
-      /components\/index\.md: duplicate index target: publisher\.md/);
-    fs.writeFileSync(componentsIndex, preparedNavigation);
+    assert.deepEqual(skeletonBundle.files.filter((file) => file.endsWith("/index.md")), []);
+    const rootNavigation = fs.readFileSync(path.join(prepared.bundleRoot, "index.md"), "utf8");
+    assert.match(rootNavigation, /\[Vehicle Data\]\(domains\/vehicle-data\.md\) - Domain/);
+    assert.doesNotMatch(rootNavigation, /repositories\/vehicle-events\.md/);
     const flow = skeletonBundle.concepts.get("flows/publish-vehicle-event");
     assert.deepEqual(flow?.frontmatter.flow_steps, []);
     const unfilled = validateOkfRelationships(
@@ -220,11 +292,23 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] pre
     assert.deepEqual(refresh.selectedSchemas.sort(), ["Domain", "Flow", "Function", "Repository", "System"]);
     const repositoryPath = path.join(refresh.bundleRoot, "repositories", "vehicle-events.md");
     fs.appendFileSync(repositoryPath, "\nRefresh evidence confirms delivery ownership.\n");
-    const refreshed = await actions.finalize(refresh.sessionId) as {
+    await assert.rejects(actions.finalize(refresh.sessionId), /missing outcome for README\.md/);
+    assert.equal(fs.existsSync(refresh.bundleRoot), true, "failed accounting keeps the session repairable");
+    const refreshed = await actions.finalize(refresh.sessionId, [], [], [{
+      path: "README.md", outcome: "updated", reason: "Updates the Repository delivery-ownership overview.",
+    }]) as {
       proposal: { selectedSchemas: string[] };
-      inspection: { groups: { updated: readonly { path: string; after?: { content: string } }[] } };
+      inspection: {
+        changeAccounting: { partial: boolean; omitted: number; limitations: string[];
+          outcomes: readonly { path: string; outcome: string; reason: string }[] };
+        groups: { updated: readonly { path: string; after?: { content: string } }[] };
+      };
     };
     assert.deepEqual(refreshed.proposal.selectedSchemas, ["Domain", "Flow", "Function", "Repository", "System"]);
+    assert.deepEqual(refreshed.inspection.changeAccounting, {
+      outcomes: [{ path: "README.md", outcome: "updated", reason: "Updates the Repository delivery-ownership overview." }],
+      partial: false, omitted: 0, limitations: [],
+    });
     const updatedRepository = refreshed.inspection.groups.updated.find((entry) => entry.path === "repositories/vehicle-events.md");
     assert.ok(updatedRepository?.after);
     assert.equal(readRepositoryObservedSource(parseConceptDocument(updatedRepository.path, updatedRepository.after.content))?.commit,

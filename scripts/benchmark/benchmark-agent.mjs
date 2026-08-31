@@ -5,7 +5,8 @@ import os from "node:os";
 import path from "node:path";
 
 import {
-  loadOkfBundle, readRepositoryIdentityRecord, renderConceptDocument, resolveRepositoryIdentity,
+  loadOkfBundle, parseRepositorySourceResource, readRepositoryIdentityRecord, renderConceptDocument,
+  repositorySourceResources, resolveRepositoryIdentity,
 } from "../../src/core/knowledge/index.ts";
 import { createHubIdentity, hubProfileId } from "../../src/core/hub/index.ts";
 import { discoverRepositorySourceState } from "../../src/app/repository-okf/index.ts";
@@ -52,7 +53,7 @@ const skillInitialIngestEnabledTools = [
   ...skillInitialIngestRequiredTools, "search_graph", "trace_path", "get_code_snippet", "search_code",
   "index_status", "check_index_coverage", "detect_changes", "search_hub_okf", "read_hub_okf_concept",
 ];
-const refreshPromptVersions = new Set(["okf-refresh-v1", "okf-refresh-v2", "okf-refresh-v3"]);
+const refreshPromptVersions = new Set(["okf-refresh-v1", "okf-refresh-v2", "okf-refresh-v3", "okf-refresh-v4", "okf-refresh-v5", "okf-refresh-v6", "okf-refresh-v7"]);
 const refreshRequiredTools = [
   "get_hub_status", "preflight_hub_ingest", "index_repository", "get_architecture",
   "prepare_hub_okf", "validate_okf_changes", "finalize_hub_okf_proposal", "inspect_hub_okf_proposal",
@@ -338,15 +339,30 @@ function qualificationHubToken(host) {
   return configuration.token;
 }
 
-function createRefreshSource(repository, entry) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-refresh-source-"));
-  fs.cpSync(repository, root, { recursive: true });
-  const mutations = entry.mutations ?? [entry.mutation];
+function refreshMutationPath(root, relative) {
+  if (typeof relative !== "string" || !relative || path.posix.isAbsolute(relative)
+    || relative.split("/").some((part) => !part || part === "." || part === "..")) {
+    throw new Error(`invalid refresh mutation path: ${relative ?? "<missing>"}`);
+  }
+  return path.join(root, ...relative.split("/"));
+}
+
+export function applyRefreshMutations(root, mutations) {
   if (!mutations.length || mutations.length > 8 || mutations.some((mutation) => !mutation)) {
     throw new Error("refresh requires between one and eight source mutations");
   }
+  if (new Set(mutations.map((mutation) => mutation.path)).size !== mutations.length) {
+    throw new Error("refresh mutation paths must be unique");
+  }
   for (const mutation of mutations) {
-    const target = path.join(root, ...mutation.path.split("/"));
+    const target = refreshMutationPath(root, mutation.path);
+    if (Object.hasOwn(mutation, "content")) {
+      if (typeof mutation.content !== "string") throw new Error(`${mutation.path}: refresh content must be text`);
+      if (fs.existsSync(target)) throw new Error(`${mutation.path}: refresh create target already exists`);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, mutation.content);
+      continue;
+    }
     const before = fs.readFileSync(target, "utf8");
     const count = before.split(mutation.from).length - 1;
     if (count !== mutation.count) {
@@ -354,26 +370,37 @@ function createRefreshSource(repository, entry) {
     }
     fs.writeFileSync(target, before.split(mutation.from).join(mutation.to));
   }
+}
+
+function createRefreshSource(repository, entry) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-refresh-source-"));
+  fs.cpSync(repository, root, { recursive: true });
+  const mutations = entry.mutations ?? [entry.mutation];
+  applyRefreshMutations(root, mutations);
   gitSync(root, ["add", "--", ...mutations.map((mutation) => mutation.path)]);
   gitSync(root, ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost",
-    "commit", "--no-gpg-sign", "--no-verify", "-m", "Benchmark refresh source change"], new Date().toISOString());
+    "commit", "--no-gpg-sign", "--no-verify", "-m", "Benchmark refresh source change"],
+  entry.mutationCommittedAt ?? new Date().toISOString());
   return root;
 }
 
-function seedRefreshHub(runtimeRoot, entry) {
-  const localHubId = createHash("sha256").update(`refresh\0${entry.repositoryId}`).digest("hex").slice(0, 24);
+function refreshBaselineRoot(manifest, entry) {
+  if (entry.baselineRoot !== "suite") return path.resolve(projectRoot, entry.baseline);
+  const root = path.resolve(manifest.root);
+  const selected = path.resolve(root, entry.baseline);
+  if (selected !== root && !selected.startsWith(`${root}${path.sep}`)) {
+    throw new Error("refresh suite baseline escapes the suite root");
+  }
+  return selected;
+}
+
+function seedRefreshHub(runtimeRoot, manifest, entry) {
+  const hub = createHubIdentity("agentbase-benchmark/isolated-refresh-hub", "main");
+  const localHubId = hubProfileId(hub);
   const root = path.join(runtimeRoot, "data", "agentbase-mcp", "hubs", localHubId);
   fs.mkdirSync(root, { recursive: true, mode: 0o700 });
   gitSync(root, ["init", "--initial-branch=main"]);
-  fs.writeFileSync(path.join(root, "README.md"), "# AgentBase-Hub\n");
-  fs.writeFileSync(path.join(root, "index.md"), "---\nokf_version: \"0.2\"\n---\n\n# AgentBase-Hub\n");
-  gitSync(root, ["add", "README.md", "index.md"]);
-  gitSync(root, ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit",
-    "--no-gpg-sign", "--no-verify", "-m", `Initialize AgentBase-Hub base\n\nAgentBase-Hub-Kind: base\nAgentBase-Hub-ID: ${localHubId}\nAgentBase-Hub-Format: 1`],
-  "2026-08-22T00:00:00Z");
-  const baseCommit = gitSync(root, ["rev-parse", "HEAD"]);
-  for (const item of fs.readdirSync(root)) if (item !== ".git") fs.rmSync(path.join(root, item), { recursive: true, force: true });
-  fs.cpSync(path.resolve(projectRoot, entry.baseline), root, { recursive: true });
+  fs.cpSync(refreshBaselineRoot(manifest, entry), root, { recursive: true });
   const bundle = loadOkfBundle(root, { requireAgentBaseRootIndex: true });
   const repository = [...bundle.concepts.values()].find((concept) => readRepositoryIdentityRecord(concept)?.id === entry.repositoryId);
   if (!repository) throw new Error("refresh baseline lacks its canonical Repository concept");
@@ -388,19 +415,28 @@ function seedRefreshHub(runtimeRoot, entry) {
   gitSync(root, ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit",
     "--no-gpg-sign", "--no-verify", "-m", `Seed Refresh benchmark baseline\n\nAgentBase-Proposal-ID: ${proposalId}\nAgentBase-Subject: ${entry.subjectDirectory}\nAgentBase-Source-ID: ${entry.repositoryId}\nAgentBase-Evidence-Digest: sha256:${"1".repeat(64)}\nAgentBase-Diff-Digest: sha256:${"2".repeat(64)}\nAgentBase-Schema-Catalog: 7.0.0`],
   "2026-08-22T00:00:01Z");
-  const configuration = {
-    formatVersion: 1, kind: "local-only", localHubId, localRoot: root, baseCommit, catalogVersion: "7.0.0",
-  };
-  const configDirectory = path.join(runtimeRoot, "agentbase", "config", "hub");
-  fs.mkdirSync(configDirectory, { recursive: true, mode: 0o700 });
-  fs.writeFileSync(path.join(configDirectory, "hub.json"), `${JSON.stringify(configuration, null, 2)}\n`, { mode: 0o600 });
+  const baseCommit = gitSync(root, ["rev-parse", "HEAD"]);
+  gitSync(root, ["remote", "add", "origin", hub.canonicalHttpsUrl]);
+  gitSync(root, ["update-ref", "refs/agentbase/published", baseCommit]);
+  const environment = { ...process.env, HOME: path.join(runtimeRoot, "home"),
+    AGENTBASE_HOME: path.join(runtimeRoot, "agentbase"), XDG_CONFIG_HOME: path.join(runtimeRoot, "config"),
+    XDG_DATA_HOME: path.join(runtimeRoot, "data") };
+  activatePersistedHubConfiguration({ formatVersion: 1, kind: "remote", localHubId, localRoot: root,
+    baseCommit, catalogVersion: "7.0.0", host: hub.host, repository: hub.repository,
+    targetBranch: hub.targetBranch }, environment, null);
+  writeHubProfileToken(localHubId, "benchmark-refresh-isolated-token", environment);
 }
 
 function materializeRefreshOutput(runtimeRoot, workspace) {
   const proposals = path.join(runtimeRoot, "agentbase", "state", "hub-runtime", "proposals");
   const entries = fs.existsSync(proposals) ? fs.readdirSync(proposals).filter((entry) => /^[a-f0-9]{24}$/.test(entry)) : [];
   if (entries.length !== 1) throw new Error(`Refresh must finalize exactly one proposal; observed ${entries.length}`);
-  fs.cpSync(path.join(proposals, entries[0], "bundle"), path.join(workspace, "okf"), { recursive: true });
+  const proposalRoot = path.join(proposals, entries[0]);
+  fs.cpSync(path.join(proposalRoot, "bundle"), path.join(workspace, "okf"), { recursive: true });
+  return {
+    proposal: JSON.parse(fs.readFileSync(path.join(proposalRoot, "hub-proposal.json"), "utf8")),
+    inspection: JSON.parse(fs.readFileSync(path.join(proposalRoot, "inspection.json"), "utf8")),
+  };
 }
 
 export function validateRefreshKnowledge(workspace, entry) {
@@ -413,6 +449,95 @@ export function validateRefreshKnowledge(workspace, entry) {
   if (missing.length || retained.length) {
     throw new Error(`Refresh knowledge mismatch: missing [${missing.join(", ")}]; retained [${retained.join(", ")}]`);
   }
+}
+
+export function validateRefreshAccounting(inspection, entry) {
+  if (!entry.expectedChangeAccounting) return;
+  const accounting = inspection?.changeAccounting;
+  if (!accounting) throw new Error("Refresh inspection lacks change accounting");
+  const expected = entry.expectedChangeAccounting;
+  const actualPaths = accounting.outcomes.map((item) => item.path).sort();
+  const expectedPaths = Object.keys(expected.paths).sort();
+  if (JSON.stringify(actualPaths) !== JSON.stringify(expectedPaths)) {
+    throw new Error(`Refresh accounting paths differ: expected [${expectedPaths.join(", ")}], found [${actualPaths.join(", ")}]`);
+  }
+  for (const outcome of accounting.outcomes) {
+    const allowed = expected.paths[outcome.path];
+    if (!allowed.includes(outcome.outcome)) {
+      throw new Error(`${outcome.path}: Refresh accounting outcome ${outcome.outcome} is not allowed`);
+    }
+  }
+  if (accounting.partial !== false || accounting.omitted !== 0) {
+    throw new Error("Refresh accounting unexpectedly reports a partial bounded delta");
+  }
+}
+
+function matchesTermGroups(content, groups) {
+  const normalize = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const normalized = normalize(content);
+  return groups.every((group) => group.some((term) => normalized.includes(normalize(term))));
+}
+
+export function assessRefreshKnowledge(workspace, inspection, entry, evaluationProfile = null) {
+  const obligations = entry.semanticObligations ?? [];
+  const forbiddenClaims = entry.forbiddenClaims ?? [];
+  if (obligations.length && !/-v\d+$/.test(evaluationProfile ?? "")) {
+    throw new Error("Refresh semantic assessment requires a versioned evaluation profile");
+  }
+  if (obligations.length && (obligations.length < 3 || obligations.length > 5)) {
+    throw new Error("Refresh semantic assessment requires between three and five obligations");
+  }
+  if (obligations.some((item) => !item.sourcePaths?.length)) {
+    throw new Error("Refresh semantic obligations require sourcePaths");
+  }
+  const changedPaths = new Set((inspection?.entries ?? [])
+    .filter((item) => ["created", "modified", "conflict"].includes(item.change))
+    .map((item) => item.path));
+  const bundle = loadOkfBundle(path.join(workspace, "okf"), { requireAgentBaseRootIndex: true });
+  const changedConcepts = [...bundle.concepts.values()].filter((concept) => changedPaths.has(concept.path));
+  const contentByConcept = new Map(changedConcepts.map((concept) => [concept,
+    fs.readFileSync(path.join(workspace, "okf", ...concept.path.split("/")), "utf8")]));
+  const changedContent = [...contentByConcept.values()].join("\n");
+  const changedSources = changedConcepts.flatMap((concept) => repositorySourceResources(concept)
+    .map(parseRepositorySourceResource).filter((source) => source?.repositoryId === entry.repositoryId));
+  const obligationResults = obligations.map((probe) => {
+    const matched = matchesTermGroups(changedContent, probe.termGroups)
+      && probe.sourcePaths.every((sourcePath) => changedSources.some((source) => source.relativePath === sourcePath));
+    const matches = matched ? changedConcepts.filter((concept) =>
+      probe.termGroups.some((group) => matchesTermGroups(contentByConcept.get(concept), [group])))
+      .map((concept) => concept.conceptId).sort() : [];
+    return { id: probe.id, kind: "semantic-obligation", priority: probe.priority,
+      matched, concepts: matches };
+  });
+  const forbiddenResults = forbiddenClaims.map((probe) => {
+    const violations = changedConcepts.filter((concept) => matchesTermGroups(contentByConcept.get(concept), probe.termGroups))
+      .map((concept) => concept.conceptId).sort();
+    return { id: probe.id, kind: "forbidden-claim", priority: probe.priority,
+      matched: violations.length === 0, concepts: violations };
+  });
+  const results = [...obligationResults, ...forbiddenResults];
+  const tiers = Object.fromEntries(["critical", "important", "optional"].map((priority) => {
+    const selected = results.filter((item) => item.priority === priority);
+    return [priority, { matched: selected.filter((item) => item.matched).length, total: selected.length }];
+  }));
+  const missingCritical = results.filter((item) => item.priority === "critical" && !item.matched).map((item) => item.id);
+  return {
+    evaluationProfile,
+    qualityStatus: missingCritical.length ? "needs_revision" : "knowledge_recalled",
+    tiers,
+    probes: results,
+    missingCritical,
+    limitations: ["Deterministic semantic probes confirm representative recall, not downstream AIT usefulness."],
+  };
+}
+
+function refreshAssessmentMarkdown(assessment) {
+  const lines = ["# Refresh feature-recall assessment", "", `Quality: **${assessment.qualityStatus}**`, "", "## Probes", ""];
+  for (const probe of assessment.probes) {
+    lines.push(`- ${probe.matched ? "PASS" : "MISS"} · ${probe.priority} · \`${probe.id}\`${probe.concepts.length ? ` — ${probe.concepts.join(", ")}` : ""}`);
+  }
+  lines.push("", "## Boundary", "", ...assessment.limitations.map((item) => `- ${item}`), "");
+  return lines.join("\n");
 }
 
 function token(value) {
@@ -624,7 +749,7 @@ export function runAgentRepository({
     seedInitialIngestHub(runtimeRoot, qualificationHubToken("github.com"));
   }
   const sourceRepository = isRefresh ? createRefreshSource(repository, entry) : repository;
-  if (isRefresh) seedRefreshHub(runtimeRoot, entry);
+  if (isRefresh) seedRefreshHub(runtimeRoot, manifest, entry);
   const startedAt = new Date().toISOString();
   const startedMs = Date.now();
   const source = discoverRepositorySourceState(sourceRepository, startedAt);
@@ -667,6 +792,8 @@ export function runAgentRepository({
     provenanceRepositoryId: entry.repositoryId ?? benchmarkProvenanceRepositoryId(source, promptVersion),
     ...(isRefresh ? { baselineCommit: entry.commit, sourceCommit: source.commit } : {}),
     catalogVersion: manifest.catalogVersion,
+    suiteVersion: manifest.version,
+    evaluationProfile: manifest.evaluationProfile ?? null,
     promptVersion,
     promptDigest: `sha256:${createHash("sha256").update(portablePrompt).digest("hex")}`,
     ...(skillDigests ? { productSkills: skillDigests } : {}),
@@ -676,8 +803,13 @@ export function runAgentRepository({
     outcome: "running",
   };
   writeJson(path.join(root, "run.json"), run);
+  const { root: _manifestRoot, ...portableManifest } = manifest;
+  writeJson(path.join(root, "manifest.json"), portableManifest);
   const args = buildCodexArgs({
     workspace, finalMessage, model: manifest.agent.model, reasoningEffort: manifest.agent.reasoningEffort, arm, runtimeRoot,
+    ...(["okf-refresh-v4", "okf-refresh-v5", "okf-refresh-v6", "okf-refresh-v7"].includes(promptVersion)
+      || skillInitialIngestPromptVersions.has(promptVersion)
+      ? { mcpEntryPoint: path.join(projectRoot, "scripts", "benchmark", "benchmark-agentbase-mcp.mjs") } : {}),
     ...(skillInitialIngestPromptVersions.has(promptVersion) ? { enabledTools: skillInitialIngestEnabledTools }
       : configuredInitialIngestPromptVersions.has(promptVersion) ? { enabledTools: configuredInitialIngestEnabledTools }
       : initialIngestPromptVersions.has(promptVersion) ? { enabledTools: v13EnabledTools }
@@ -703,6 +835,8 @@ export function runAgentRepository({
   if (result.stderr) fs.writeFileSync(path.join(root, "agent-stderr.txt"), portable(result.stderr.slice(0, 1024 * 1024)));
   const summary = summarizeAgentEvents(result.stdout || "");
   let failure;
+  let refreshEvidence = null;
+  let refreshAssessment = null;
   try {
     const after = discoverRepositorySourceState(sourceRepository);
     if (after.commit !== source.commit || after.dirty !== source.dirty || after.dirtyDigest !== source.dirtyDigest) {
@@ -710,8 +844,14 @@ export function runAgentRepository({
     }
     if (result.status !== 0) throw new Error(`agent exited ${result.status ?? `by ${result.signal ?? "timeout"}`}`);
     if (isRefresh) {
-      materializeRefreshOutput(runtimeRoot, workspace);
+      refreshEvidence = materializeRefreshOutput(runtimeRoot, workspace);
+      validateRefreshAccounting(refreshEvidence.inspection, entry);
       validateRefreshKnowledge(workspace, entry);
+      refreshAssessment = assessRefreshKnowledge(workspace, refreshEvidence.inspection, entry, manifest.evaluationProfile);
+      writeJson(path.join(root, "proposal.json"), refreshEvidence.proposal);
+      writeJson(path.join(root, "inspection.json"), refreshEvidence.inspection);
+      writeJson(path.join(root, "refresh-assessment.json"), refreshAssessment);
+      fs.writeFileSync(path.join(root, "refresh-report.md"), refreshAssessmentMarkdown(refreshAssessment));
     }
     if (skillDigests) validateBenchmarkProductSkills(workspace, skillDigests);
     validateAgentWorkspace(workspace, Boolean(skillDigests));
@@ -749,6 +889,7 @@ export function runAgentRepository({
       representativeChecks: discoveryChecks,
       failures: discoveryLifecycleFailures,
     } : null,
+    refreshAssessment,
     requiredToolUsage: usage,
     failures: [
       ...(failure ? [failure] : []),

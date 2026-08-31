@@ -99,7 +99,23 @@ function fixtureDocuments(): Map<string, string> {
     target: domains/commerce
     evidence: [${SOURCE_ID}]` })],
     ["components/orders-api.md", concept({ type: "Component", title: "Orders API",
-      body: "[Orders](../systems/orders.md) [Repository](../repositories/orders.md) [Queue](../resources/shared-queue.md)", relationships: `
+      body: `[Orders](../systems/orders.md) [Repository](../repositories/orders.md) [Queue](../resources/shared-queue.md)
+
+# Embedded Knowledge
+
+| Name | Role | Kind | Technology | Identity | Evidence |
+|---|---|---|---|---|---|
+| Internal data store | Store API data. | object-storage | aws / s3 |  | \`${SOURCE_ID}\` |
+| Shared audit table | Store shared audit data. | database-table | aws / dynamodb | \`arn:aws:dynamodb:ap-southeast-1:123456789012:table/audit\` | \`${SOURCE_ID}\` |
+| Event source mapping | Connect runtime wiring. | resource | aws / lambda |  | \`${SOURCE_ID}\` |
+
+# Embedded Relations
+
+| Source | Relation | Target | Evidence |
+|---|---|---|---|
+| self | writes-to | Internal data store | \`${SOURCE_ID}\` |
+| self | writes-to | Shared audit table | \`${SOURCE_ID}\` |
+| self | part-of | Internal data store | \`${SOURCE_ID}\` |`, relationships: `
   - kind: part-of
     target: systems/orders
     evidence: [${SOURCE_ID}]
@@ -110,7 +126,21 @@ function fixtureDocuments(): Map<string, string> {
     target: resources/shared-queue
     evidence: [${SOURCE_ID}]` })],
     ["components/orders-worker.md", concept({ type: "Component", title: "Orders Worker",
-      body: "[Orders](../systems/orders.md) [Queue](../resources/shared-queue.md)", relationships: `
+      body: `[Orders](../systems/orders.md) [Queue](../resources/shared-queue.md)
+
+# Embedded Knowledge
+
+| Name | Role | Kind | Technology | Identity | Evidence |
+|---|---|---|---|---|---|
+| Internal data store | Store worker data. | object-storage | aws / s3 |  | \`${SOURCE_ID}\` |
+| Shared audit table | Store shared audit data. | database-table | aws / dynamodb | \`arn:aws:dynamodb:ap-southeast-1:123456789012:table/audit\` | \`${SOURCE_ID}\` |
+
+# Embedded Relations
+
+| Source | Relation | Target | Evidence |
+|---|---|---|---|
+| resources/shared-queue | redrives-to | Shared audit table | \`${SOURCE_ID}\` |
+| self | monitors | Missing resource | \`${SOURCE_ID}\` |`, relationships: `
   - kind: part-of
     target: systems/orders
     evidence: [${SOURCE_ID}]
@@ -146,7 +176,7 @@ function fixtureDocuments(): Map<string, string> {
   ]);
 }
 
-test("[AB-VIS-001..004][AB-VIS-011..014] projection is deterministic, directed and Domain bounded", async () => {
+test("[AB-VIS-001..004][AB-VIS-011..019][AB-VIS-023] projection is deterministic, directed and Domain bounded", async () => {
   const documents = fixtureDocuments();
   const reader = {
     commit: "a".repeat(40),
@@ -163,10 +193,12 @@ test("[AB-VIS-001..004][AB-VIS-011..014] projection is deterministic, directed a
   const second = buildPublishedVisualizationProjection(graph, options);
 
   assert.equal(first.commit, reader.commit);
+  assert.equal(first.schemaVersion, 3);
   assert.equal(serializePublishedVisualizationProjection(first), serializePublishedVisualizationProjection(second));
   const eligible = [...graph.domainScopes.get(options.domain) ?? []]
     .filter(([, role]) => role !== "boundary").map(([id]) => id);
-  assert.deepEqual(new Set(first.nodes.filter((node) => node.membership === "primary").map((node) => node.id)),
+  assert.deepEqual(new Set(first.nodes.filter((node) => node.membership === "primary"
+    && node.representation === "concept").map((node) => node.id)),
     new Set(eligible));
   assert.deepEqual(displayEndpoints("triggered-by", "worker", "queue"),
     { source: "queue", target: "worker", directed: true });
@@ -182,6 +214,23 @@ test("[AB-VIS-001..004][AB-VIS-011..014] projection is deterministic, directed a
   assert.equal(first.nodes.some((node) => node.type === "Question" || node.type === "Maintainer Guidance"), false);
   assert.deepEqual(first.nodes.find((node) => node.id === "components/orders-api")?.systemIds, ["systems/orders"]);
   assert.deepEqual(first.nodes.find((node) => node.id === "components/orders-api")?.repositoryIds, ["repositories/orders"]);
+
+  const embedded = first.nodes.filter((node) => node.representation === "embedded");
+  assert.equal(embedded.length, 3);
+  assert.equal(embedded.filter((node) => node.title === "Internal data store").length, 2);
+  const sharedAudit = embedded.find((node) => node.title === "Shared audit table");
+  assert.equal(sharedAudit?.externalIdentity, "arn:aws:dynamodb:ap-southeast-1:123456789012:table/audit");
+  assert.deepEqual(sharedAudit?.parentIds, ["components/orders-api", "components/orders-worker"]);
+  assert.equal(first.nodes.some((node) => node.title === "Event source mapping"), false);
+  assert.equal(first.edges.filter((edge) => edge.representation === "embedded").length, 7);
+  assert.equal(first.edges.some((edge) => edge.representation === "embedded" && edge.predicate === "writes-to"
+    && edge.displaySource === "components/orders-api" && edge.displayTarget === sharedAudit?.id), true);
+  assert.equal(first.edges.some((edge) => edge.representation === "embedded" && edge.predicate === "redrives-to"
+    && edge.displaySource === "resources/shared-queue" && edge.displayTarget === sharedAudit?.id), true);
+  assert.equal(first.edges.some((edge) => edge.predicate === "part-of" && edge.representation === "embedded"), false);
+  assert.equal(first.omissions.some((item) => item.detail.includes("part-of") && item.detail.includes("unsupported")), true);
+  assert.equal(first.omissions.some((item) => item.detail.includes("Missing resource")
+    && item.detail.includes("unresolved or ambiguous endpoint")), true);
 
   const trigger = first.edges.find((edge) => edge.predicate === "triggered-by");
   assert.deepEqual(trigger && [trigger.declaredSource, trigger.declaredTarget,
@@ -209,6 +258,35 @@ test("[AB-VIS-001..004][AB-VIS-011..014] projection is deterministic, directed a
 
   assert.throws(() => buildPublishedVisualizationProjection(graph, { ...options, maximumNodes: 2 }), /node limit exceeded/);
   assert.throws(() => buildPublishedVisualizationProjection(graph, { ...options, domain: "domains/missing" }), /exact Published Domain/);
+});
+
+test("[AB-REFRESH-018][AB-VIS-015] repository-anchored new Resource enters its Domain projection", async () => {
+  const documents = new Map([
+    ["domains/crawler.md", concept({ type: "Domain", title: "Crawler" })],
+    ["repositories/worker.md", concept({ type: "Repository", title: "Worker repository",
+      body: "[Crawler](../domains/crawler.md)", relationships: `
+  - kind: part-of
+    target: domains/crawler
+    evidence: [${SOURCE_ID}]` })],
+    ["resources/retry-queue.md", concept({ type: "Resource", title: "Retry queue",
+      body: "Implemented in [Worker repository](../repositories/worker.md).", relationships: `
+  - kind: implemented-in
+    target: repositories/worker
+    evidence: [${SOURCE_ID}]` })],
+  ]);
+  const graph = await loadHubGraph({
+    commit: "d".repeat(40),
+    async listMarkdownPaths() { return [...documents.keys()]; },
+    async readMarkdown(relativePath: string) { return documents.get(relativePath)!; },
+  }, 256 * 1024);
+  const projection = buildPublishedVisualizationProjection(graph, {
+    hub: "github.com/acme/hub#main", domain: "domains/crawler",
+  });
+  const resource = projection.nodes.find((node) => node.id === "resources/retry-queue");
+  assert.equal(resource?.membership, "primary");
+  assert.deepEqual(resource?.repositoryIds, ["repositories/worker"]);
+  assert.equal(projection.edges.some((edge) => edge.declaredSource === "resources/retry-queue"
+    && edge.predicate === "implemented-in" && edge.declaredTarget === "repositories/worker"), true);
 });
 
 test("[AB-VIS-005..010][AB-SCHEMA-050] diagram packets preserve Published topology or report insufficient data", async () => {
@@ -267,7 +345,7 @@ test("[AB-VIS-005..010][AB-SCHEMA-050] diagram packets preserve Published topolo
   assert.equal(serializePublishedVisualizationProjection(projection), before);
 });
 
-test("[AB-VIS-006..010][AB-VIS-012..014] static Domain site is reproducible, offline and no-overwrite", async (context) => {
+test("[AB-VIS-006..010][AB-VIS-012..022] static Domain site is reproducible, offline and no-overwrite", async (context) => {
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-domain-site-test-"));
   context.after(() => fs.rmSync(temporary, { recursive: true, force: true }));
   const documents = fixtureDocuments();
@@ -301,7 +379,7 @@ test("[AB-VIS-006..010][AB-VIS-012..014] static Domain site is reproducible, off
   assert.doesNotMatch(generatedText, /ghp_[A-Za-z0-9]{20,}|search_hub_okf|prepare_hub_visualization/);
   const generatedIndex = fs.readFileSync(path.join(first, "index.html"), "utf8");
   const generatedApp = fs.readFileSync(path.join(first, "assets/app.js"), "utf8");
-  const browserBuildKey = `3-${graph.commit}`;
+  const browserBuildKey = `6-${graph.commit}`;
   assert.match(generatedIndex, /Interactive 2D Domain knowledge map/);
   assert.equal(generatedIndex.includes(`assets/app.css?build=${browserBuildKey}`), true);
   assert.equal(generatedIndex.includes(`assets/cytoscape.min.js?build=${browserBuildKey}`), true);
@@ -309,17 +387,33 @@ test("[AB-VIS-006..010][AB-VIS-012..014] static Domain site is reproducible, off
   assert.doesNotMatch(generatedIndex, /__AGENTBASE_BUILD_KEY__/);
   assert.match(generatedApp, /new URL\(import\.meta\.url\)\.search/);
   assert.match(generatedApp, /fetch\(`data\/domain\.json\$\{browserBuildQuery\}`\)/);
-  assert.match(generatedApp, /name: "concentric"/);
+  assert.match(generatedApp, /name: "preset"/);
+  assert.match(generatedApp, /autoungrabify: false/);
+  assert.match(generatedApp, /node\.type !== "Domain"/);
+  assert.match(generatedApp, /edge\.displayClass !== "structural"/);
+  assert.match(generatedApp, /node\.repositoryIds\.length === 1/);
+  assert.match(generatedApp, /repository-region/);
+  assert.match(generatedApp, /cy\.nodes\('\[type = "Repository"\]'\)\.ungrabify\(\)/);
+  assert.match(generatedApp, /cy\.on\("dragfree", "node"/);
+  assert.match(generatedApp, /clampToOwnership/);
+  assert.match(generatedApp, /Shared \/ External/);
   assert.match(generatedApp, /flowToggle\.checked/);
   assert.match(generatedApp, /shape: "ellipse"/);
-  assert.match(generatedApp, /initialVisible = \(\) => new Set\(projection\.nodes\.map/);
+  assert.match(generatedApp, /initialVisible = \(\) => new Set\(graphNodes\.map/);
   assert.match(generatedIndex, /id="view-document"/);
   assert.match(generatedIndex, /id="document-dialog"/);
   assert.match(generatedApp, /documentDialog\.showModal\(\)/);
+  assert.match(generatedApp, /Show exact evidence/);
+  assert.match(generatedApp, /files or sources/);
+  assert.match(generatedApp, /node\.representation === "embedded"/);
   assert.match(generatedApp, /textContent/);
   const generatedCss = fs.readFileSync(path.join(first, "assets/app.css"), "utf8");
   assert.match(generatedCss, /\.details \{[^}]*display: none/);
   assert.match(generatedCss, /\.details\.is-open \{ display: block; \}/);
+  assert.doesNotMatch(generatedIndex, />Domain<\/span>/);
+  assert.match(generatedIndex, /Repository card and region/);
+  assert.match(generatedIndex, /Reset layout/);
+  assert.match(generatedIndex, /About this Domain/);
   assert.equal(fs.existsSync(path.join(first, "assets/three.module.min.js")), false);
 
   assert.throws(() => buildStaticDomainSite(projection,

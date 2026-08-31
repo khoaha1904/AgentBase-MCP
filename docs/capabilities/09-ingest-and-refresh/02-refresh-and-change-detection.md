@@ -15,12 +15,47 @@ Refresh neither scans the full repository nor looks only at changed files:
 Priority follows that order. The discovery pass uses the graph cache when fresh
 and does not open an unbounded source scan.
 
+## Changed-path accounting
+
+Prepare freezes the exact bounded source-change result used by the authoring
+session. Before Finalize, every returned path receives exactly one concise
+outcome and reason:
+
+- `updated` — an existing concept changed with exact evidence from the path;
+- `new` — a new standalone concept was justified by exact evidence from the path;
+- `embedded` — the evidence was retained inside a useful changed parent concept;
+- `question` — the path exposed unresolved knowledge that remains visible; or
+- `ignored` — the path has no useful shared-knowledge effect for the stated reason.
+
+Materialized outcomes are checked against changed concept bytes and normalized
+current-Repository source evidence. Missing, duplicate, extra or unsupported
+outcomes fail Finalize while leaving the session repairable. Omitted-path counts
+and source-diff limitations remain visible and mark the accounting partial; they
+do not become a completeness claim.
+
+## Pre-Finalize validation and structural reachability
+
+Refresh passes its prepared session ID to changed-set validation before its one
+Finalize call. This lets the same authoring boundary reject a reused source ID
+whose repository observation moved to a new revision, instead of discovering
+that defect only at Finalize.
+
+A new known standalone concept must have an evidenced structural path through
+`part-of`, `implemented-in` or `declared-by` to a Repository or Domain in the
+proposal. If no such ownership or containment is supported, keep the knowledge
+embedded or record the limitation rather than creating an isolated graph node.
+This is a knowledge-connectivity gate, not a requirement to create more concepts
+or diagrams.
+
 ## Build-up semantics
 
 - Partial but valid knowledge is expanded across multiple Refresh runs.
 - Unchanged source can still create a new proposal when a known gap or discovery
   pass finds useful evidenced knowledge.
 - No useful change is a successful no-op, not a failure.
+- A non-empty accounted source delta still proposes its Repository observation
+  checkpoint even when every returned path is `question` or `ignored`; the
+  reviewer must see that decision before the checkpoint can be accepted.
 - A concept missing from one discovery does not prove that an old concept
   disappeared. An exact Git/source diff can create an evidence-backed removal
   candidate but does not materialize deletion outside proposal review.

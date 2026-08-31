@@ -75,7 +75,7 @@ const REQUIREMENT_GROUPS = [
   ["query", "docs/capabilities/10-query-routing/07-runtime-requirements.md", ids("AB-QUERY", 18), "SPEC-QUERY-LIVING-MISSING", "SPEC-QUERY-ID-MISSING"],
   ["local Hub", "docs/capabilities/11-review-and-publish/01-runtime-requirements.md", [...ids("AB-LOCAL-HUB", 16), ...ids("AB-PUBLISH", 10), ...ids("AB-HUB-SETUP", 17)], "SPEC-HUB-LIVING-MISSING", "SPEC-HUB-ID-MISSING"],
   ["installation", "docs/capabilities/12-version-scope/02-installation-requirements.md", ids("AB-INSTALL", 31), "SPEC-INSTALL-LIVING-MISSING", "SPEC-INSTALL-ID-MISSING"],
-  ["benchmark", "docs/capabilities/12-version-scope/03-benchmark-requirements.md", ids("AB-BENCH", 87), "SPEC-BENCH-LIVING-MISSING", "SPEC-BENCH-ID-MISSING"],
+  ["benchmark", "docs/capabilities/12-version-scope/03-benchmark-requirements.md", ids("AB-BENCH", 90), "SPEC-BENCH-LIVING-MISSING", "SPEC-BENCH-ID-MISSING"],
   ["MCP protocol", "docs/capabilities/12-version-scope/09-mcp-protocol-requirements.md", ids("AB-MCPMOD", 6), "SPEC-MCPMOD-LIVING-MISSING", "SPEC-MCPMOD-ID-MISSING"],
 ];
 

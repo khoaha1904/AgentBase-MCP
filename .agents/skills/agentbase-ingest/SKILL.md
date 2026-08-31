@@ -45,7 +45,10 @@ This workflow uses `preflight_hub_ingest`, the tools named by
    otherwise truthful partial proposal. Usually keep one runtime's internal
    trigger, state and delivery sequence embedded; create a Flow only when it
    adds independent query or navigation value. This is an authoring heuristic,
-   not a fixed concept-count rule.
+   not a fixed concept-count rule. Treat ordinary frontend, backend, worker and
+   function runtimes the same way: keep each independently deployed or operated
+   runtime separate, and group its internal modules, storage, queues and alarms
+   in that parent. A provider resource count never determines concept count.
 4. **Author** — Build one Inventory covering every Seed group without changing
    MCP-owned lane, priority or group IDs. Give each group exactly one
    `materialized`, `question` or `ignored` outcome. A materialized item names
@@ -79,13 +82,17 @@ This workflow uses `preflight_hub_ingest`, the tools named by
    Run one bounded active-Hub identity match, then follow `agentbase-okf` inside
    the returned workspace. Enrich the returned OKF skeletons instead of
    rebuilding their frontmatter or navigation from memory. Prepare has already
-   populated root and category indexes; preserve those entries and never append
-   an existing navigation target. Keep a newly confirmed Domain sparse and
+   populated the direct root entrypoint; preserve it and never create
+   architecture category indexes. Keep a newly confirmed Domain sparse and
    summarize only the current repository-contributed scope supported by evidence;
    never invent a complete domain definition. Preserve the visible
    review limitation on every suggested skeleton. Preserve the one prepared
    Embedded Knowledge table in its parent. An embedded item has no OKF identity,
-   standalone file, navigation or graph relationship. Create only useful
+   standalone file, navigation or canonical graph relationship. When exact
+   evidence proves a useful runtime direction, add an optional `Embedded Relations`
+   table with `Source | Relation | Target | Evidence`: use `self`, one exact
+   concept identity or one unique same-parent embedded name, and cite only the
+   parent's source IDs. Create only useful
    concepts and required navigation. If the guidance call returns retryable
    `INVALID_ARGUMENT` with recovery `correct-and-retry-same-tool`, correct only
    the reported request defect and call it once more. Preserve truthful

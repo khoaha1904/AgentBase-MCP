@@ -7,6 +7,7 @@ import type { HubToolActions } from "./mcp-tool-actions.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
 import type { HubRemovalDeclaration } from "../../../core/knowledge/index.ts";
 import type { EnrichmentAnswer, EnrichmentCandidateInput } from "../enrichment/index.ts";
+import { REFRESH_CHANGE_OUTCOME_KINDS, type RefreshChangeOutcome } from "../authoring/refresh-change-accounting.ts";
 
 function result(value: unknown, isError = false): CallToolResult {
   const structuredContent = value && typeof value === "object" && !Array.isArray(value)
@@ -202,6 +203,22 @@ function removalDeclarations(value: unknown): readonly HubRemovalDeclaration[] {
   });
 }
 
+function refreshChangeOutcomes(value: unknown): readonly RefreshChangeOutcome[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > 128) {
+    throw new Error("change_accounting must be a list of at most 128 entries");
+  }
+  return value.map((item, index) => {
+    const entry = exactRecord(item, `change accounting ${index + 1}`, ["path", "outcome", "reason"]);
+    if (typeof entry.path !== "string" || entry.path.length < 1 || entry.path.length > 512
+      || !REFRESH_CHANGE_OUTCOME_KINDS.includes(entry.outcome as RefreshChangeOutcome["outcome"])
+      || typeof entry.reason !== "string" || entry.reason.length < 1 || entry.reason.length > 512) {
+      throw new Error(`change accounting ${index + 1} is invalid`);
+    }
+    return { path: entry.path, outcome: entry.outcome as RefreshChangeOutcome["outcome"], reason: entry.reason };
+  });
+}
+
 export async function callHubOkfTool(
   name: string,
   args: Readonly<Record<string, unknown>>,
@@ -270,7 +287,7 @@ export async function callHubOkfTool(
     }
     if (name === "finalize_hub_okf_proposal") {
       return result(await actions.finalize(required(args, "session_id"), questionDeclarations(args.questions),
-        removalDeclarations(args.removals)));
+        removalDeclarations(args.removals), refreshChangeOutcomes(args.change_accounting)));
     }
     if (name === "prepare_batch_hub_ingest") {
       return result(await actions.prepareBatch({

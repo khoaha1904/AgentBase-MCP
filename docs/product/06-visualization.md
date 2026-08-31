@@ -38,9 +38,31 @@ Concepts, accepted relation direction, provenance, Flows, Questions and visible
 omissions come from the Published projection. Colors, layout and coordinates are
 presentation state and never enter the Hub.
 
-Embedded knowledge is available through its parent rather than drawn as a fake
-node. A directly related concept from another Domain may appear as a boundary
-endpoint, but the view does not traverse and import that Domain.
+The Domain is page context rather than a repeated graph node. A Repository is
+shown as a compact selectable card inside its fixed grouping region, whose
+boundary does not grow during interaction. Repository-owned knowledge may be
+repositioned within that region, while shared, multi-repository and external
+knowledge is labeled and remains outside it. Reloading or resetting the map
+restores the deterministic generated layout; presentation coordinates never
+enter Published knowledge.
+
+Embedded knowledge remains owned by its parent Markdown concept. The Published
+projection may render a concrete, exactly sourced embedded resource as a
+visually distinct presentation-only reference when that dependency makes the
+map useful. This does not promote the resource, create another document or
+invent a runtime relation; an `embedded-in` link records only its published
+parent context. A directly related concept from another Domain may appear as a
+boundary endpoint, but the view does not traverse and import that Domain.
+
+Evidence-backed `Embedded Relations` may add runtime arrows between the parent,
+its embedded references and exact admitted concept identities. They are
+presentation-only, never canonical OKF relationships, and unresolved endpoints,
+unsupported predicates or missing evidence are omitted rather than inferred.
+
+Presentation-only resources are scoped to their parent unless Published
+knowledge carries the same exact strong external identity. Equal names never
+cause grouping. Evidence summaries may group citations by repository file for
+readability while retaining every exact source behind an explicit disclosure.
 
 Before generation or publication, AgentBase warns that output visibility must
 be at least as restricted as the Published knowledge it copies.

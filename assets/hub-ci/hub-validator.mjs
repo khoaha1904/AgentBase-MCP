@@ -7551,6 +7551,9 @@ var componentRelations = [
   { kind: "provides", targetTypes: ["Interface"], evidence: "interface declaration" },
   { kind: "consumes", targetTypes: ["Interface"], evidence: "runtime call or subscription" },
   { kind: "depends-on", targetTypes: ["Component", "Function", "Interface", "Resource"], evidence: "runtime dependency evidence" },
+  { kind: "publishes-to", targetTypes: ["Interface", "Resource"], evidence: "runtime publish evidence" },
+  { kind: "reads-from", targetTypes: ["Interface", "Resource"], evidence: "runtime read evidence" },
+  { kind: "writes-to", targetTypes: ["Interface", "Resource"], evidence: "runtime write evidence" },
   { kind: "implemented-in", targetTypes: ["Repository"], evidence: "source ownership evidence" }
 ];
 var SOFTWARE_SCHEMAS = [
@@ -8541,7 +8544,7 @@ function createQuestionId(input) {
   return `question-${createHash2("sha256").update(JSON.stringify(tuple)).digest("hex").slice(0, 24)}`;
 }
 function renderQuestionBody(question) {
-  const reason = question.kind === "conflict" ? "Evidence currently disagrees." : question.kind === "missing-evidence" ? "Useful knowledge is missing supporting evidence." : "A maintainer decision is still required.";
+  const reason = question.state === "resolved" ? question.guidance.length ? "Resolved by accepted maintainer Guidance." : "Resolved by accepted evidence." : question.state === "needs-review" ? "Accepted knowledge changed; this Question needs review." : question.kind === "conflict" ? "Evidence currently disagrees." : question.kind === "missing-evidence" ? "Useful knowledge is missing supporting evidence." : "A maintainer decision is still required.";
   return `# Question
 
 ${reason}

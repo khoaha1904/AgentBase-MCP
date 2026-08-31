@@ -59,6 +59,36 @@ test("[AB-SCHEMA-032][AB-SCHEMA-037] supporting Terraform resources remain embed
   }
 });
 
+test("[AB-SCHEMA-057][AB-SCHEMA-058] full-stack runtimes stay separate while backend storage stays embedded", () => {
+  const result = getOkfAuthoringGuidance({
+    candidates: [
+      { id: "frontend", identityHint: "web frontend", identityBasis: "independent deployment",
+        queryValue: "Browser application deployed independently", evidenceIds: ["docs.frontend"],
+        disposition: "concept" as const, suggestedType: "Component" },
+      { id: "backend", identityHint: "api backend", identityBasis: "independent deployment",
+        queryValue: "HTTP backend deployed independently", evidenceIds: ["docs.backend"],
+        disposition: "concept" as const, suggestedType: "Component" },
+      { id: "table", identityHint: "product table", identityBasis: "Terraform address",
+        queryValue: "Stores backend product state", evidenceIds: ["evidence.table"],
+        disposition: "embedded" as const, parentCandidateId: "backend" },
+    ],
+    semanticObservations: [
+      { id: "docs.frontend", candidateId: "frontend", role: "implementation" as const,
+        signal: "independent frontend runtime and deployment boundary", source },
+      { id: "docs.backend", candidateId: "backend", role: "implementation" as const,
+        signal: "independent backend runtime and deployment boundary", source },
+    ],
+    resourceObservations: [{ id: "evidence.table", candidateId: "table", sourceTool: "terraform" as const,
+      resourceType: "aws_dynamodb_table", address: "module.backend.aws_dynamodb_table.products", source }],
+  });
+  assert.deepEqual(result.recommendations.map((item) => [item.candidateId, item.schema?.type, item.status]), [
+    ["frontend", "Component", "suggested"],
+    ["backend", "Component", "suggested"],
+    ["table", undefined, "embedded"],
+  ]);
+  assert.equal(result.recommendations[2]?.parentCandidateId, "backend");
+});
+
 test("[AB-SCHEMA-031][AB-SCHEMA-036][AB-SCHEMA-048] standalone concepts share attributable evidence while embedded stays self-owned", () => {
   const noParent = resource("queue", "aws_sqs_queue", "embedded");
   assert.throws(() => getOkfAuthoringGuidance(noParent), /embedded candidate parent must name a concept candidate/);

@@ -45,6 +45,12 @@ Each destructive change shows the concept/path, reason, source revision/diff
 evidence, affected relations/navigation and any replacement. The reviewer sees
 the Markdown/Git diff but does not have to infer the reason from deleted bytes.
 
+Proposal inspection also presents the bounded changed-path accounting before
+these knowledge groups: one outcome/reason per returned source path, whether the
+accounting is partial, the number of omitted paths and exact source-diff
+limitations. This review metadata explains why source changes did or did not
+produce Hub changes without turning every path into shared knowledge.
+
 ## Implementation delta
 
 Omission or elapsed time does not authorize deletion. Destructive changes use

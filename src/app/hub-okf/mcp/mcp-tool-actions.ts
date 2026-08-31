@@ -2,6 +2,7 @@ import type { ConfirmedDomain, HubSearchOptions, OkfAuthoringGuidanceRequest } f
 import type { QuestionDeclaration } from "../authoring/questions.ts";
 import type { HubRemovalDeclaration } from "../../../core/knowledge/index.ts";
 import type { EnrichmentAnswer, EnrichmentCandidateInput } from "../enrichment/index.ts";
+import type { RefreshChangeOutcome } from "../authoring/refresh-change-accounting.ts";
 import type { ConfirmedDomain as BatchDomain } from "../../../core/knowledge/index.ts";
 
 export type HubToolActions = Readonly<{
@@ -21,7 +22,9 @@ export type HubToolActions = Readonly<{
     coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
     discoveryReceiptId?: string;
   }>): Promise<unknown>;
-  finalize(sessionId: string, questions?: readonly QuestionDeclaration[], removals?: readonly HubRemovalDeclaration[]): Promise<unknown>;
+  validate(sessionId: string): Promise<unknown>;
+  finalize(sessionId: string, questions?: readonly QuestionDeclaration[], removals?: readonly HubRemovalDeclaration[],
+    changeAccounting?: readonly RefreshChangeOutcome[]): Promise<unknown>;
   prepareBatch(input: Readonly<{ sourceRepositories: readonly string[]; proposedDomain: BatchDomain }>): Promise<unknown>;
   confirmBatch(input: Readonly<{ manifestId: string; manifestRevision: number; assessments: readonly Readonly<{
     memberId: string; decision: "match" | "override"; evidencePath: string;

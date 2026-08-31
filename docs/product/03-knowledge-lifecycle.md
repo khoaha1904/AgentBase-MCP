@@ -36,6 +36,12 @@ the contribution it can attribute to that repository. Absence in a later scan
 is not deletion evidence. A correction or removal must state the reason and
 source in the reviewable proposal.
 
+For the bounded changed paths exposed to Refresh, Finalize also requires one
+reviewable knowledge outcome per path. The outcome may be an evidenced concept
+update/new concept, embedded knowledge, an unresolved Question or an explicit
+ignored reason. This accounting makes processed change visible; it is not a
+claim that the bounded delta or the Hub is a complete model of the repository.
+
 Batch Initial Ingest isolates evidence and failure per repository, then produces
 one atomic proposal only after every selected member completes. Batch Refresh
 and mixed Init/Refresh batches are outside the current boundary.

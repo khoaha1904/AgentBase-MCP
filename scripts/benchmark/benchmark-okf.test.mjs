@@ -7,9 +7,11 @@ import { parseConceptDocument } from "../../src/core/knowledge/index.ts";
 import { assessOwnerReviewUsefulness, classifyInitialIngest, createAuthoringAssessment, createRunRegression,
   createPairComparison, scoreSemanticBenchmark } from "./benchmark-okf.mjs";
 import {
-  summarizeAgentEvents, validateBatchLifecycle, validateFinalChangeCoverage, validateRefreshKnowledge,
+  applyRefreshMutations, assessRefreshKnowledge, buildCodexArgs, summarizeAgentEvents, validateBatchLifecycle,
+  validateFinalChangeCoverage, validateRefreshAccounting, validateRefreshKnowledge,
   validateReceiptDiscoveryLifecycle, validateRefreshLifecycle, validateSkillInitialIngestLifecycle, validateV13Lifecycle,
 } from "./benchmark-agent.mjs";
+import { resolveBenchmarkSourceSnapshot } from "./benchmark-agentbase-mcp.mjs";
 import { benchmarkPath, benchmarkRoot } from "./benchmark-paths.mjs";
 
 const repositoryId = "repository-example-aaaaaaaaaaaa";
@@ -248,6 +250,108 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
   delete skillLifecycle.configure_hub;
   delete skillLifecycle.get_hub_status;
   assert.deepEqual(validateSkillInitialIngestLifecycle(skillLifecycle, corrected.attempts), []);
+});
+
+test("[AB-BENCH-091..095] feature recall uses versioned, placement-independent semantic obligations", async () => {
+  const source = fs.mkdtempSync(path.join(import.meta.dirname, "refresh-source-"));
+  const workspace = fs.mkdtempSync(path.join(import.meta.dirname, "refresh-assessment-"));
+  try {
+    const suiteRoot = path.join(benchmarkRoot(), "suites", "crawler", "refresh-retry-dlq");
+    const manifest = JSON.parse(fs.readFileSync(path.join(suiteRoot, "manifest.json"), "utf8"));
+    const [scenario] = manifest.repositories;
+    assert.equal(manifest.version, 7);
+    assert.equal(manifest.promptVersion, "okf-refresh-v7");
+    assert.equal(manifest.evaluationProfile, "refresh-semantic-recall-v1");
+    assert.ok(scenario.semanticObligations.length >= 3 && scenario.semanticObligations.length <= 5);
+    assert.ok(scenario.semanticObligations.every((item) => item.sourcePaths.length));
+    assert.equal(Object.hasOwn(scenario, "expectedRelationships"), false);
+    assert.equal(Object.hasOwn(scenario, "expectedKnowledge"), false);
+    assert.doesNotMatch(fs.readFileSync(path.join(benchmarkRoot(), "prompts", "feature-discovery-v8.md"), "utf8"),
+      /\*\*\* Update File:/);
+
+    fs.mkdirSync(path.join(source, "src"), { recursive: true });
+    fs.writeFileSync(path.join(source, "src", "worker.py"), "return {'processed': 1}\n");
+    applyRefreshMutations(source, [
+      { path: "src/worker.py", from: "processed", to: "batchItemFailures", count: 1 },
+      { path: "tests/test_worker.py", content: "def test_retry(): pass\n" },
+    ]);
+    assert.match(fs.readFileSync(path.join(source, "src", "worker.py"), "utf8"), /batchItemFailures/);
+    assert.equal(fs.readFileSync(path.join(source, "tests", "test_worker.py"), "utf8"), "def test_retry(): pass\n");
+    assert.throws(() => applyRefreshMutations(source, [
+      { path: "../escape", content: "no" },
+    ]), /invalid refresh mutation path/);
+
+    const baseline = path.join(suiteRoot, "baseline");
+    fs.cpSync(baseline, path.join(workspace, "okf"), { recursive: true });
+    const worker = path.join(workspace, "okf", "components", "crawler-worker.md");
+    fs.appendFileSync(worker, [
+      "", "# Failure and recovery", "",
+      "Partial batch response returns batchItemFailures for each failed record.",
+      "After three receives, failed records move to a DLQ monitored by a CloudWatch visible-message alarm.", "",
+    ].join("\n"));
+    const queue = path.join(workspace, "okf", "interfaces", "crawler-jobs-queue.md");
+    fs.appendFileSync(queue, "\nFailed identifiers are retried individually.\n");
+    const inspection = {
+      entries: [
+        { path: "components/crawler-worker.md", change: "modified" },
+        { path: "interfaces/crawler-jobs-queue.md", change: "modified" },
+      ],
+      changeAccounting: {
+        outcomes: [
+          { path: "src/handler.py", outcome: "updated", reason: "Durable retry behavior changed." },
+          { path: "tests/test_handler.py", outcome: "ignored", reason: "Verification only." },
+        ],
+        partial: false,
+        omitted: 0,
+        limitations: [],
+      },
+    };
+    const entry = {
+      repositoryId: scenario.repositoryId,
+      expectedChangeAccounting: { paths: {
+        "src/handler.py": ["updated", "embedded"],
+        "tests/test_handler.py": ["ignored", "embedded"],
+      } },
+      semanticObligations: [
+        { id: "partial-retry", priority: "critical",
+          termGroups: [["batchItemFailures"], ["retry"]], sourcePaths: ["src/handler.py"] },
+        { id: "dead-letter-recovery", priority: "critical",
+          termGroups: [["DLQ", "dead-letter"], ["three receives"]], sourcePaths: ["main.tf"] },
+        { id: "operational-visibility", priority: "important",
+          termGroups: [["CloudWatch"], ["visible message"], ["alarm"]], sourcePaths: ["main.tf"] },
+      ],
+      forbiddenClaims: [{ id: "unsupported-notification", priority: "critical",
+        termGroups: [["alarm sends a notification", "alarm pages the operator"]] }],
+    };
+    assert.doesNotThrow(() => validateRefreshAccounting(inspection, entry));
+    const assessment = assessRefreshKnowledge(workspace, inspection, entry, "refresh-semantic-recall-v1");
+    assert.equal(assessment.qualityStatus, "knowledge_recalled");
+    assert.equal(assessment.evaluationProfile, "refresh-semantic-recall-v1");
+    assert.deepEqual(assessment.tiers.critical, { matched: 3, total: 3 });
+    const missed = assessRefreshKnowledge(workspace, inspection, { ...entry,
+      semanticObligations: entry.semanticObligations.map((item, index) => index ? item : {
+        id: "missing-recovery-owner", priority: "critical",
+        termGroups: [["recovery owner"]], sourcePaths: ["main.tf"],
+      }) }, "refresh-semantic-recall-v1");
+    assert.equal(missed.qualityStatus, "needs_revision");
+    assert.deepEqual(missed.missingCritical, ["missing-recovery-owner"]);
+    assert.throws(() => assessRefreshKnowledge(workspace, inspection, entry), /versioned evaluation profile/);
+    assert.throws(() => assessRefreshKnowledge(workspace, inspection, { ...entry,
+      semanticObligations: entry.semanticObligations.slice(0, 2) }, "refresh-semantic-recall-v1"),
+    /between three and five obligations/);
+    const fixture = path.join(benchmarkRoot(), "repositories", "crawler", "crawler-worker");
+    const snapshot = await resolveBenchmarkSourceSnapshot({ requestedRoot: fixture,
+      repositoryId: "repository-crawler-worker-222222222222", hub: { host: "github.com" },
+      stateRoot: workspace, createdAt: "2026-08-31T00:00:00Z" });
+    assert.equal(snapshot.commit, "8cd506e999e897b9978b90affb55bef5826c385d");
+    assert.equal(snapshot.remote.canonicalHttpsUrl, "https://github.com/agentbase-benchmark/crawler-worker.git");
+    const args = buildCodexArgs({ workspace, finalMessage: path.join(workspace, "final.md"),
+      model: "gpt-5.6-terra", reasoningEffort: "medium", mcpEntryPoint: "/benchmark/mcp.mjs" });
+    assert.ok(args.includes('mcp_servers.agentbase.args=["/benchmark/mcp.mjs"]'));
+  } finally {
+    fs.rmSync(source, { recursive: true, force: true });
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
 });
 
 test("[AB-BENCH-046] released-skill trace proves source-to-Seed-to-Receipt handoff", () => {

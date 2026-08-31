@@ -31,6 +31,9 @@ bounded local Code Graph/source evidence.
   developer/source boundary, impact and non-goals.
   [`05-end-to-end-qualification.md`](05-end-to-end-qualification.md) — full
   Feature → US → Tasks comparison and its impact.
+- **Visual-context decision and readiness:**
+  [`07-useful-visual-context.md`](07-useful-visual-context.md) — the small
+  phase-prioritized diagram portfolio, current data support and missing slices.
 
 Qualification pages define bounded scenarios and summarize results. Durable run
 artifacts live in AgentBase-Benchmark; tests and retained reports are Validation

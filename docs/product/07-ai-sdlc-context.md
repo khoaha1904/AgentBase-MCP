@@ -32,8 +32,42 @@ Returned context prioritizes:
 - important Published constraints and source/document references;
 - conflicts, Questions, freshness limitations and missing knowledge.
 
+Published Markdown groups internal infrastructure with the runtime or ownership
+boundary that gives it meaning. Phase 1 promotes only boundaries that a Feature
+Discovery answer or impact view must identify independently. Phase 2 obtains
+files, symbols, calls and tests from current source/Code Graph rather than
+expanding Hub metadata into a stale implementation inventory.
+
+A Phase 1 impact view may expand a concrete, exactly sourced embedded resource
+as a presentation-only dependency reference without promoting it to a Hub
+concept. The view must label that distinction, preserve its parent context and
+must not infer a runtime relation or merge equal display names.
+
 The result remains bounded to the caller's question. Search/read data lives only
 in the host AI session under its policy; it is not written to Hub or Local Draft.
+
+## Decision-useful visual context
+
+AIT admits a visual only when it helps a named decision in one of its two
+phases. More diagrams are not better by themselves.
+
+| Phase | Priority | Visual | Decision it supports |
+|---|---:|---|---|
+| Feature Discovery | P0 | Discovery Impact Map | Which accepted systems, components, interfaces, resources and repositories are affected, how are they related, and which important Questions remain? |
+| Feature Discovery | P1, conditional | Existing Flow | How does the accepted journey work today when the proposed Feature actually changes that journey? |
+| Task Planning | P0 | Implementation Impact Map | Which exact files, symbols, dependency/call paths and tests bound the implementation work? |
+| Task Planning | P1, conditional | Exact trace/flow lens | In what runtime or delivery order must source changes and verification be reasoned about when order materially matters? |
+
+The Feature or User Story is session focus, not an AgentBase-owned Hub concept.
+Dependency edges are a lens within an impact map rather than a separate AIT
+deliverable. AgentBase does not own or render a Task dependency DAG because it
+does not own the Task lifecycle.
+
+Phase 1 visuals use the exact Published Hub boundary. Phase 2 implementation
+visuals may use authorized local Code Graph/source evidence and must stay
+revision-bound, derived and session-local. A missing or untraceable edge is an
+explicit limitation, not a reason to substitute a Published relation or an
+invented source path.
 
 ## Authority and degradation
 
@@ -81,6 +115,7 @@ old or sparse Hub cannot guarantee current implementation coverage.
 - Ingest temporary tickets as shared knowledge automatically.
 - Scan an entire repository for each context request.
 - Promise improvement for every AI workflow without qualification.
+- Produce diagrams that have no named decision in the current AIT phase.
 
 ## Downstream Capability Contract
 

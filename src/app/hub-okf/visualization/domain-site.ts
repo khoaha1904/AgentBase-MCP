@@ -8,7 +8,7 @@ import {
 } from "../../../core/knowledge/index.ts";
 
 const CYTOSCAPE_VERSION = "3.34.2";
-const DOMAIN_SITE_GENERATOR_VERSION = 3 as const;
+const DOMAIN_SITE_GENERATOR_VERSION = 6 as const;
 const BUILD_KEY_PLACEHOLDER = "__AGENTBASE_BUILD_KEY__";
 const GENERATED_PATHS = [
   "assets/app.css",
@@ -25,7 +25,7 @@ export type DomainSiteBuildReceipt = Readonly<{
   hub: string;
   commit: string;
   domain: string;
-  projectionVersion: 1;
+  projectionVersion: 3;
   counts: Readonly<{ nodes: number; edges: number; flows: number; questions: number }>;
   files: readonly Readonly<{ path: string; sha256: string }>[];
 }>;
