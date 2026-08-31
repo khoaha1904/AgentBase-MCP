@@ -53,6 +53,8 @@ after code and verification pass
 | Evidence drawer | Group repository citations by file with exact disclosure | Keeps auditability without a wall of line spans |
 | Domain/Repository layout | Domain in page header; compact Repository cards inside fixed renderer regions | Keeps repository content selectable without making the whole boundary a node |
 | Interaction | Constrain normal-node dragging to ownership zones; keep Repository cards/regions fixed and resettable | Lets reviewers untangle arrows without misrepresenting ownership |
+| Flow presentation | Show step arrows initially and render the Flow concept as a compact label | Makes ordered behavior visible without an isolated duplicate node |
+| System selection | Highlight direct `part-of` members from Published parent identities | Exposes membership on demand without drawing structural arrows |
 
 ## Validation Mapping
 
@@ -61,7 +63,7 @@ after code and verification pass
 | `AB-SCHEMA-057..059` | authoring guidance and three-shape skeleton/schema tests |
 | `AB-SCHEMA-060` | root-only navigation regression |
 | `AB-BENCH-091..095` | profile/semantic-assessment tests and corrected prompt fixture |
-| `AB-VIS-015..023`, `AB-CONTEXT-VIS-009` | embedded projection, identity, relation and static-site presentation tests |
+| `AB-VIS-008`, `AB-VIS-015..023`, `AB-CONTEXT-VIS-009` | embedded projection, identity, relation and static-site presentation tests |
 
 ## Complexity Tracking
 

@@ -30,7 +30,11 @@ Contract. The neighboring pages explain the behavior and supporting rationale.
   the selected page-context Domain, plus admitted embedded resource references,
   on first render, search, filters, 1–2
   hop focus, a right-side node-details drawer, text-only document overview, and
-  a default-off Flow-step toggle while Questions remain badges by default.
+  a default-on Flow-step toggle while Questions remain badges by default. A
+  Flow remains searchable and inspectable but renders as the compact label for
+  its ordered step arrows rather than an isolated circular node. Selecting a
+  System highlights its direct Published members without displaying hidden
+  structural edges as runtime topology.
 - **AB-VIS-009** — AgentBase adds at most one goal-level visualization MCP tool,
   two public skills and one internal renderer skill; no raw traversal/layout
   tools, database, watcher, daemon or live server are added.

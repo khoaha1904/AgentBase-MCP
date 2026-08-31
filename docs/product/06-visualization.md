@@ -59,6 +59,12 @@ its embedded references and exact admitted concept identities. They are
 presentation-only, never canonical OKF relationships, and unresolved endpoints,
 unsupported predicates or missing evidence are omitted rather than inferred.
 
+Ordered Flow steps are visible on first view and remain separately toggleable
+from stable runtime relations. A Flow is presented as the label for those
+ordered arrows rather than an isolated circular node. Selecting a System makes
+its direct Published members stand out without converting hidden structural
+containment into runtime topology.
+
 Presentation-only resources are scoped to their parent unless Published
 knowledge carries the same exact strong external identity. Equal names never
 cause grouping. Evidence summaries may group citations by repository file for

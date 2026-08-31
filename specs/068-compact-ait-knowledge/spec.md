@@ -74,6 +74,11 @@ possible; and stop benchmark fixtures from prescribing exact concept paths.
 - Structural containment links are hidden by default. Runtime arrows require an
   accepted relation, Flow step or an evidence-backed `Embedded Relations` row;
   containment alone never implies direction.
+- Flow steps are visible on first view and remain toggleable. A Flow keeps its
+  Published identity, search and document details but renders as a compact label
+  for its ordered arrows rather than an isolated circular node.
+- Selecting a System highlights its direct Published members without turning
+  structural containment into visible runtime arrows.
 - Embedded relation endpoints are `self`, an exact admitted concept identity or
   one unique same-parent embedded name. Presentation-only `monitors` and
   `redrives-to` are allowed alongside canonical runtime predicates.
@@ -131,8 +136,9 @@ direction inferred from containment.
 a compact card inside a fixed region containing its singly owned nodes, shared
 nodes are labeled and remain outside, normal nodes snap back into their valid
 ownership zone after dragging, reset restores deterministic positions,
-structural edges are hidden, and valid embedded writes, monitoring and redrive
-rows render directed arrows.
+structural edges are hidden, valid embedded writes, monitoring and redrive rows
+render directed arrows, Flow steps are initially visible under a compact Flow
+label, and selecting a System highlights its direct members.
 
 ## Requirements
 
@@ -177,6 +183,12 @@ rows render directed arrows.
 - **FR-018**: Evidence-backed embedded runtime relations MUST resolve only
   bounded endpoints and predicates, omit invalid rows visibly, and count toward
   deterministic projection limits.
+- **FR-019**: Flow-step arrows MUST be visible on first view and remain
+  explicitly toggleable without changing Published projection data.
+- **FR-020**: A Flow MUST remain searchable and inspectable but MUST render as a
+  compact label for its ordered arrows rather than an isolated circular node.
+- **FR-021**: Selecting a System MUST highlight its direct Published members
+  without exposing structural containment as runtime arrows.
 
 ## Success Criteria
 
@@ -196,3 +208,5 @@ rows render directed arrows.
   cards, hidden Domain and structural graph elements, ownership-constrained
   dragging, labeled outside placement for shared nodes, resettable positions
   and evidence-backed embedded arrows without unsupported topology.
+- **SC-009**: Focused generated-site tests prove default-visible Flow steps,
+  compact Flow labels, reset-preserved visibility and System-member highlighting.

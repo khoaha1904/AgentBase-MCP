@@ -45,7 +45,10 @@ reproducible.
 - deterministic resettable 2D layout with readable labels, pan and zoom; normal
   nodes may be repositioned only within their ownership zone while Repository
   cards and region boundaries remain fixed;
-- Flow-step edges hidden by default behind one explicit toggle;
+- Flow-step edges visible by default behind one explicit toggle, with each Flow
+  rendered as a compact label rather than an isolated circular node;
+- selecting a System highlights its direct Published members without exposing
+  structural containment arrows;
 - open Question counts as badges, not default nodes;
 - directed canonical and evidence-backed embedded runtime edges; structural
   links already represented by repository containment are hidden by default.

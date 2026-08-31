@@ -399,6 +399,11 @@ test("[AB-VIS-006..010][AB-VIS-012..022] static Domain site is reproducible, off
   assert.match(generatedApp, /clampToOwnership/);
   assert.match(generatedApp, /Shared \/ External/);
   assert.match(generatedApp, /flowToggle\.checked/);
+  assert.match(generatedIndex, /id="flow-toggle" type="checkbox" checked/);
+  assert.match(generatedApp, /node\.type === "Flow" \? `Flow · \$\{node\.title\}`/);
+  assert.match(generatedApp, /nodeById\.get\(selected\)\?\.type === "System"/);
+  assert.match(generatedApp, /candidate\.parentIds\.includes\(selected\)/);
+  assert.match(generatedApp, /flowToggle\.checked = true/);
   assert.match(generatedApp, /shape: "ellipse"/);
   assert.match(generatedApp, /initialVisible = \(\) => new Set\(graphNodes\.map/);
   assert.match(generatedIndex, /id="view-document"/);

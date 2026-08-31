@@ -49,3 +49,11 @@
 - [x] T030 [US5] Constrain normal-node dragging to ownership zones and reset generated positions.
 - [x] T031 [US5] Label shared/external nodes and add requirement-linked renderer regressions.
 - [x] T032 Run verification, regenerate C0/C1, inspect desktop/mobile and republish the review sites.
+
+## Flow-first presentation correction
+
+- [x] T033 Record the owner-approved default-visible Flow, Flow-label and System-member behavior.
+- [x] T034 [US5] Render Flow as a compact label and show its ordered arrows on first view and reset.
+- [x] T035 [US5] Highlight direct Published members when a System is selected without exposing structural arrows.
+- [x] T036 Add requirement-linked generated-site regression coverage and run `npm run verify`.
+- [ ] T037 Regenerate, publish and review the disposable Crawler Domain site.
