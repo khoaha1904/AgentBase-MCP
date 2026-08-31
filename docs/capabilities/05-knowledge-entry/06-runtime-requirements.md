@@ -407,9 +407,12 @@ Normative OKF source is pinned to commit
   active Seed plus the same guidance request. Inventory items do not repeat
   candidate evidence IDs. Bounded Seed source samples remain review context,
   not an exhaustive evidence allowlist. Known candidate evidence remains
-  source-validated at guidance/Question/Finalize boundaries. P0 ignored still
-  requires `duplicate-covered` against a materialized origin group. MCP returns
-  all bounded caller-correctable Inventory defects found in one retryable
+  source-validated at guidance/Question/Finalize boundaries. Multiple groups
+  that contribute evidence to one knowledge boundary materialize the same
+  candidate IDs; downstream candidate identity remains unique. P0 ignored is
+  reserved for a group that adds no distinct evidence and requires exact reason
+  `duplicate-covered` against a materialized origin group. MCP returns all
+  bounded caller-correctable Inventory defects found in one retryable
   `INVALID_ARGUMENT`. Old private Receipts may be discarded and re-ingested;
   no Published Hub/OKF migration is introduced.
 - **AB-INGEST-019** — Receipt-bound embedded materialization is proven by at

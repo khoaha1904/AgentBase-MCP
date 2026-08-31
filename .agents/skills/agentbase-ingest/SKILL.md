@@ -53,9 +53,13 @@ This workflow uses `preflight_hub_ingest`, the tools named by
    MCP-owned lane, priority or group IDs. Give each group exactly one
    `materialized`, `question` or `ignored` outcome. A materialized item names
    only `candidate_ids`; candidate records already declare concept/embedded and
-   parent. Put Question data directly in its origin item and select only
+   parent. When multiple groups contribute distinct evidence to the same
+   knowledge boundary, materialize the same candidate IDs from every such
+   group; MCP emits the candidate identity once. Put Question data directly in
+   its origin item and select only
    `candidate_key + evidence_id` already present in the same guidance request.
-   P0 may be ignored only as `duplicate-covered` naming a materialized
+   Reserve ignored P0 for a true duplicate that adds no distinct evidence; it
+   uses exact reason `duplicate-covered` and names a materialized
    `covered_by_origin_group_id`. Never create item/QuestionPlan IDs, output
    parents, item evidence lists, repository source resources or revisions; MCP
    derives all of them. Call `get_okf_authoring_schemas` with that Inventory, the qualified

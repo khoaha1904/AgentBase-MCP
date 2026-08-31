@@ -27,11 +27,13 @@ test("[AB-MCP-024..030] Receipt Prepare is idempotent and Finalize owns Question
       "resource \"aws_lambda_function\" \"worker\" {", "  function_name = \"worker\"", "}",
       "resource \"aws_sqs_queue\" \"jobs\" {}", "resource \"aws_sns_topic\" \"events\" {}", "",
     ].join("\n"));
+    fs.writeFileSync(path.join(source, "handler.py"), "def handle(event, context):\n    return {'status': 'ok'}\n");
     const groups = [
       ["1", "identity-product", "repository-identity", "Repository identity", "README.md", 1, "p0"],
       ["2", "runtime-entrypoint", "runtime-entrypoint", "Worker runtime", "main.tf", 1, "p0"],
       ["3", "integration-data-channel", "outbound-integration", "Job queue", "main.tf", 4, "p0"],
       ["4", "integration-data-channel", "relation-candidate", "Queue ownership question", "main.tf", 4, "p1"],
+      ["5", "runtime-entrypoint", "runtime-implementation", "Worker implementation", "handler.py", 1, "p0"],
     ].map(([number, lane, kind, title, sourcePath, line, priority]) => ({
       id: `discovery-group-${String(number).padStart(24, "0")}`,
       lane: lane as DiscoverySeed["groups"][number]["lane"], kind: String(kind),
@@ -60,7 +62,7 @@ test("[AB-MCP-024..030] Receipt Prepare is idempotent and Finalize owns Question
         { id: "repository", identityHint: "worker", identityBasis: "README", queryValue: "job worker repository",
           evidenceIds: ["readme"], disposition: "concept" as const, suggestedType: "Repository" },
         { id: "worker", identityHint: "worker", identityBasis: "Terraform address", queryValue: "job processing runtime",
-          evidenceIds: ["function"], disposition: "concept" as const },
+          evidenceIds: ["function", "handler"], disposition: "concept" as const },
         { id: "queue", identityHint: "jobs", identityBasis: "Terraform address", queryValue: "worker input transport",
           evidenceIds: ["queue-resource"], disposition: "embedded" as const, parentCandidateId: "worker" },
         { id: "topic", identityHint: "events", identityBasis: "Terraform address", queryValue: "worker event transport",
@@ -73,6 +75,8 @@ test("[AB-MCP-024..030] Receipt Prepare is idempotent and Finalize owns Question
           signal: "repository purpose", source: { path: "README.md", startLine: 1, endLine: 3 } },
         { id: "external-doc", candidateId: "external", role: "documentation" as const,
           signal: "calls upstream API", source: { path: "README.md", startLine: 3, endLine: 3 } },
+        { id: "handler", candidateId: "worker", role: "implementation" as const,
+          signal: "worker handler entrypoint", source: { path: "handler.py", startLine: 1, endLine: 2 } },
       ],
       resourceObservations: [
         { id: "function", candidateId: "worker", sourceTool: "terraform" as const,
@@ -100,6 +104,8 @@ test("[AB-MCP-024..030] Receipt Prepare is idempotent and Finalize owns Question
           outcome: "materialized" as const, outputs: [{ candidateId: "queue", parentCandidateId: "worker" }] },
         { id: createInventoryItemId(seed.id, groups[3]!.id), originGroupId: groups[3]!.id,
           outcome: "question" as const, outputs: [], questionPlanId: createQuestionPlanId(seed.id, groups[3]!.id) },
+        { id: createInventoryItemId(seed.id, groups[4]!.id), originGroupId: groups[4]!.id,
+          outcome: "materialized" as const, outputs: [{ candidateId: "worker" }] },
       ],
       questionPlans: [{
         id: createQuestionPlanId(seed.id, groups[3]!.id), kind: "relation-candidate" as const,
@@ -129,6 +135,8 @@ test("[AB-MCP-024..030] Receipt Prepare is idempotent and Finalize owns Question
     const first = beginHubAuthoringSession(options);
     const skeletons = materializeInitialIngestSessionSkeletons(stateRoot, first.id, hub,
       { id: repositoryId, displayName: "worker", remotes: [seed.source.remote], rootCommits: [commit] });
+    assert.equal(skeletons.filter((item) => item.candidateId === "worker").length, 1,
+      "overlapping Terraform and implementation groups must emit one runtime concept");
     const retry = beginHubAuthoringSession({ ...options, createdAt: "2026-08-26T00:00:00.000Z" });
     assert.equal(retry.id, first.id);
     assert.deepEqual(materializeInitialIngestSessionSkeletons(stateRoot, retry.id, hub,

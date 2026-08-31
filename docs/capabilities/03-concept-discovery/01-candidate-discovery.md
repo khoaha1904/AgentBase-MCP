@@ -105,10 +105,12 @@ describes the specific missing part instead of a falsely precise number.
 - Do not create a candidate merely to make the Hub more detailed.
 - A route, entrypoint, runtime root, API spec, IaC/deploy group, explicit service
   boundary, channel or datastore cannot disappear before an outcome is recorded.
-- MCP fixes P0 classification. A P0 ignored item accepts only
-  `duplicate-covered` pointing to a non-ignored item that will materialize.
-  Generated/out-of-scope items are placed below P0 when the Seed is created and
-  cannot be used as a P0 pass reason.
+- MCP fixes P0 classification. Distinct discovery groups may materialize the
+  same candidate when they contribute evidence to one knowledge boundary; the
+  candidate identity is emitted once. A P0 group is ignored only when it adds
+  no distinct evidence, using exact reason `duplicate-covered` and pointing to
+  an item that will materialize. Generated/out-of-scope items are placed below
+  P0 when the Seed is created and cannot be used as a P0 pass reason.
 - An explicit outbound/trigger/datastore boundary may create one P1 Flow
   candidate and representative trace; it does not create a process graph.
 - CRUD handlers, helpers, tests, generated/vendor rows and lockfile-only

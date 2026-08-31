@@ -172,6 +172,18 @@ test("[AB-MCP-019..023][AB-INGEST-017] armed Init derives one fixed bounded Seed
   assert.match((invalidValue as { error?: string }).error ?? "", /candidate evidence is invalid/);
   assert.match((invalidValue as { error?: string }).error ?? "", /unknown-candidate mapping is invalid/);
 
+  const invalidP0Inventory = structuredClone(inventory);
+  const invalidP0 = invalidP0Inventory.items[ignoredIndex] as typeof inventory.items[number] & { reason: string };
+  invalidP0.reason = "duplicate runtime evidence covered by infrastructure";
+  const invalidP0Guidance = await callOkfSchemaTool("get_okf_authoring_schemas", {
+    ...guidanceRequest, discovery_inventory: invalidP0Inventory,
+  }, { discovery });
+  assert.equal(invalidP0Guidance.isError, true);
+  const invalidP0Value = JSON.parse(invalidP0Guidance.content[0]?.type === "text"
+    ? invalidP0Guidance.content[0].text : "{}") as { error?: string };
+  assert.match(invalidP0Value.error ?? "", /materialize the same candidate IDs/);
+  assert.match(invalidP0Value.error ?? "", /exact reason duplicate-covered/);
+
   const guidance = await callOkfSchemaTool("get_okf_authoring_schemas", {
     ...guidanceRequest, discovery_inventory: inventory,
   }, { discovery });
@@ -189,6 +201,9 @@ test("[AB-MCP-019..023][AB-INGEST-017] armed Init derives one fixed bounded Seed
     { candidateId: `candidate-${parentIndex + 1}` },
     { candidateId: `candidate-${nestedIndex + 1}`, parentCandidateId: `candidate-${parentIndex + 1}` },
   ]);
+  assert.equal(receipt.inventory.items.filter((item) => item.outcome === "materialized"
+    && item.outputs.some((output) => output.candidateId === `candidate-${parentIndex + 1}`)).length, 2,
+  "multiple discovery groups may materialize one candidate identity");
   assert.equal(receipt.inventory.questionPlans[0]!.id,
     createQuestionPlanId(seed.id, seed.groups[questionIndex]!.id));
   assert.equal(receipt.inventory.items.find((item) => item.originGroupId === seed.groups[ignoredIndex]!.id)?.coveredByItemId,

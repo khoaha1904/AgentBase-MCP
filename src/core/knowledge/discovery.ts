@@ -335,7 +335,7 @@ export function validateDiscoveryInventory(
         if (group?.priority === "p0") {
           const target = item.coveredByItemId ? items.get(item.coveredByItemId) : undefined;
           if (item.reason !== "duplicate-covered" || !target || target.outcome !== "materialized" || !target.outputs.length) {
-            failures.push(`${item.id} cannot ignore P0 without a materialized duplicate`);
+            failures.push(`${item.id} cannot ignore P0: materialize the same candidate IDs when this group contributes evidence to an existing knowledge boundary; otherwise use exact reason duplicate-covered with a materialized covered_by_origin_group_id`);
           }
         } else if (!bounded(item.reason) || item.coveredByItemId !== undefined) {
           failures.push(`${item.id} ignored reason is invalid`);
