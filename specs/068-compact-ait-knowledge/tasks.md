@@ -56,4 +56,4 @@
 - [x] T034 [US5] Render Flow as a compact label and show its ordered arrows on first view and reset.
 - [x] T035 [US5] Highlight direct Published members when a System is selected without exposing structural arrows.
 - [x] T036 Add requirement-linked generated-site regression coverage and run `npm run verify`.
-- [ ] T037 Regenerate, publish and review the disposable Crawler Domain site.
+- [x] T037 Regenerate, publish and review the disposable Crawler Domain site.
