@@ -1,0 +1,7 @@
+interface:
+  display_name: "AgentBase Scan"
+  short_description: "Inventory repositories and suggest next work"
+  default_prompt: "Use $agentbase-scan to inspect this workspace and suggest which repositories need Ingest or Refresh."
+
+policy:
+  allow_implicit_invocation: false

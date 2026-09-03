@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "provider": "codebase-memory-mcp",
+  "provider_version": "0.10.8",
+  "upstream_commit": "46ae198fc11cda80e817acbc5f5908d7c2de7032",
+  "source_digest": "9c0634644e777be1c1997f203987fae9c0b703f4042c397353410cd01e300b68",
+  "profile_id": "agentbase-mvp-12-v1",
+  "profile_version": 1,
+  "profile_digest": "e976270b8996e30de83756bc6ef140f4e43cdc3b39e7909a9cebab2122650297",
+  "platform": "linux",
+  "architecture": "x64",
+  "executable_sha256": "f2405c60305951ea94670156923e412d743c35e4997d2f20362625ddd368356c",
+  "tool_manifest_sha256": "cea8a099ff8ffce55ac2b5b31ad64c6442429ec1fb47241ffc75d44b707ade5b",
+  "tool_schema_sha256": "e02c6bd225b2b107ec414b2d6888b907997d331c0991f01de86e013707a5ae50",
+  "adapter_version": 1,
+  "build_identity": {
+    "node": "v24.18.0",
+    "git": "git version 2.43.0",
+    "make": "GNU Make 4.3",
+    "patch": "GNU patch 2.7.6",
+    "cc": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "cxx": "c++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+  },
+  "omitted_grammar_factories": 147
+}

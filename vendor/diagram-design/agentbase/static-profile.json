@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "agentbase-static-html-svg-v1",
+  "status": "active-diagram-only",
+  "sourceTemplate": "upstream/skills/diagram-design/assets/template.html",
+  "allowedOutput": ["html", "svg"],
+  "fontPolicy": "system-only",
+  "excluded": [
+    "browser-download",
+    "playwright",
+    "chromium",
+    "png-automation",
+    "remote-font",
+    "remote-asset",
+    "url-onboarding"
+  ]
+}

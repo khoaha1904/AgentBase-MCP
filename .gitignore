@@ -1,0 +1,41 @@
+.DS_Store
+.cache/
+.local/
+coverage/
+dist/
+build/
+node_modules/
+test-results/
+tmp/
+*.log
+*.tmp
+*.swp
+.idea/
+.vscode/
+
+# Local credentials and configuration must never enter the repository.
+.env
+.env.*
+
+# Local detailed graphs are disposable machine state, not shared knowledge.
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+local-graphs/
+
+# AgentBase-owned evidence, proposals and recovery state are disposable/local.
+.agentbase/
+
+# Provider persistence is disabled, but ignore it defensively if a failed or
+# manually invoked provider run creates local graph artifacts.
+.codebase-memory/
+
+# Same-filesystem OKF switch siblings are local recovery machinery. The shared
+# okf/ directory itself remains visible to Git.
+.agentbase-okf-next-*/
+.agentbase-okf-backup-*/
+
+# Superseded documentation is kept locally for reference. Current, portable
+# documentation lives in the tracked files directly under docs/ and

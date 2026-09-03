@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "agentbase-mvp-12-v1",
+  "version": 1,
+  "upstreamCommit": "46ae198fc11cda80e817acbc5f5908d7c2de7032",
+  "supportedPlatforms": ["linux-x64", "darwin-arm64"],
+  "languages": [
+    { "id": "bash", "factory": "tree_sitter_bash" },
+    { "id": "dockerfile", "factory": "tree_sitter_dockerfile" },
+    { "id": "go", "factory": "tree_sitter_go" },
+    { "id": "hcl", "factory": "tree_sitter_hcl" },
+    { "id": "java", "factory": "tree_sitter_java" },
+    { "id": "javascript", "factory": "tree_sitter_javascript" },
+    { "id": "json", "factory": "tree_sitter_json" },
+    { "id": "markdown", "factory": "tree_sitter_markdown" },
+    { "id": "python", "factory": "tree_sitter_python" },
+    { "id": "tsx", "factory": "tree_sitter_tsx" },
+    { "id": "typescript", "factory": "tree_sitter_typescript" },
+    { "id": "yaml", "factory": "tree_sitter_yaml" }
+  ]
+}

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Draw AgentBase Diagram"
+  short_description: "Visualize focused Published Hub knowledge"
+  default_prompt: "Use $agentbase-diagram to draw a focused diagram from Published AgentBase Hub knowledge."
+
+policy:
+  allow_implicit_invocation: false

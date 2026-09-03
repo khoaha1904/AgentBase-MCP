@@ -1,0 +1,7 @@
+interface:
+  display_name: "AgentBase Internal: Code Graph"
+  short_description: "Internal graph support for AgentBase workflows"
+  default_prompt: "Use $use-codebase-memory as internal graph support for an active AgentBase workflow."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,13 @@
+{
+  "catalogVersion": "7.0.0",
+  "cases": [
+    { "type": "Repository", "signals": ["repository", "admitted repository identity"] },
+    { "type": "Domain", "signals": ["business domain", "business boundary or explicit owner guidance"] },
+    { "type": "System", "signals": ["software system", "recognizable capability and cooperating entity evidence"] },
+    { "type": "Component", "signals": ["software component", "independent workload, build, runtime, deployment or ownership boundary"] },
+    { "type": "Function", "signals": ["runtime function", "independent trigger, deployment, scaling, permission, failure or operational boundary"] },
+    { "type": "Interface", "signals": ["interface contract", "contract identity and producer, consumer or handler evidence"] },
+    { "type": "Flow", "signals": ["business flow", "trigger", "observable outcome", "supporting concept evidence"] },
+    { "type": "Resource", "signals": ["operated resource", "independent cross-boundary, ownership, lifecycle, failure, security or operational evidence"] }
+  ]
+}

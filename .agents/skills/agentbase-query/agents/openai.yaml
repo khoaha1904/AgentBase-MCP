@@ -1,0 +1,7 @@
+interface:
+  display_name: "Ask AgentBase"
+  short_description: "Answer a standalone question from Hub or code"
+  default_prompt: "Use $agentbase-query to answer this question from Published AgentBase knowledge and authorized local code."
+
+policy:
+  allow_implicit_invocation: false

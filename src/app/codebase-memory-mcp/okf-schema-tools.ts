@@ -1,0 +1,475 @@
+import type { CallToolResult } from "@modelcontextprotocol/server";
+import {
+  AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
+  createInventoryItemId,
+  createQuestionPlanId,
+  createRepositorySourceResource,
+  DiscoveryValidationError,
+  getOkfConceptSchema,
+  getOkfAuthoringGuidance,
+  listOkfConceptSchemas,
+  normalizeHubConceptPath,
+  OkfGuidanceInputError,
+  parseConceptDocument,
+  validateAgentBaseDraft,
+  validateConceptAgainstSchema,
+  validateOkfRelationships,
+  type ConceptDocument,
+  type DiscoveryInventory,
+  type DiscoverySourceIdentity,
+  type OkfAuthoringGuidanceRequest,
+  type OkfRelationshipTarget,
+} from "../../core/knowledge/index.ts";
+import type { DiscoverySession } from "./discovery-session.ts";
+
+export const OKF_SCHEMA_TOOL_NAMES = [
+  "list_okf_schemas", "get_okf_schema", "get_okf_authoring_schemas", "validate_okf_changes",
+] as const;
+export type OkfSchemaToolName = typeof OKF_SCHEMA_TOOL_NAMES[number];
+
+const conceptSetInputSchema = {
+  type: "object",
+  properties: {
+    concepts: {
+      type: "array", minItems: 1, maxItems: 64,
+      items: {
+        type: "object",
+        properties: {
+          identity: { type: "string", minLength: 1, maxLength: 256 },
+          path: { type: "string", minLength: 1, maxLength: 1024 },
+          content: {
+            type: "string", minLength: 1, maxLength: 262144,
+            description: "Complete Markdown document bytes, including frontmatter; never a file path or wrapper object.",
+          },
+        },
+        required: ["identity", "path", "content"], additionalProperties: false,
+      },
+    },
+  },
+  required: ["concepts"], additionalProperties: false,
+} as const;
+
+const targetSummarySchema = {
+  type: "array", maxItems: 512,
+  items: {
+    type: "object",
+    properties: {
+      identity: { type: "string", minLength: 1, maxLength: 256 },
+      path: { type: "string", minLength: 1, maxLength: 1024 },
+      type: { type: "string", minLength: 1, maxLength: 256 },
+    },
+    required: ["identity", "path", "type"], additionalProperties: false,
+  },
+} as const;
+
+export const OKF_SCHEMA_TOOLS = [
+  {
+    name: "list_okf_schemas",
+    description: "List the versioned AgentBase concept schema catalog layered on Google OKF v0.2.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+  },
+  {
+    name: "get_okf_schema",
+    description: "Read one AgentBase concept schema by its exact OKF type.",
+    inputSchema: {
+      type: "object", properties: { type: { type: "string", minLength: 1 } },
+      required: ["type"], additionalProperties: false,
+    },
+  },
+  {
+    name: "get_okf_authoring_schemas",
+    description: "Map bounded source-backed candidates and observations to provider-neutral OKF schema guidance in one advisory call. An exact supported structured resource mapping takes precedence over incidental semantic role words. Use a separate System candidate only when source evidence shows a recognizable capability plus cooperating entities; never rename a Repository or Service. candidate_id preserves an observation's primary attribution, while standalone concepts may share known observations. Embedded candidates may cite only their own observations.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        candidates: {
+          type: "array", minItems: 1, maxItems: 64, items: { type: "object", properties: {
+            id: { type: "string" }, identity_hint: { type: "string" }, identity_basis: { type: "string" },
+            query_value: { type: "string" }, disposition: {
+              type: "string", enum: ["concept", "embedded"],
+              description: "Create a standalone concept or embed this knowledge in one parent candidate.",
+            }, parent_candidate_id: {
+              type: "string",
+              description: "Required only for embedded knowledge; identifies its parent candidate in this request.",
+            }, suggested_type: {
+              type: "string",
+              description: "Optional released provider-neutral role proposed by the host agent; advisory, evidence-bound and never exact truth.",
+            }, promotion: {
+              type: "object",
+              description: "Evidence already cited by this candidate for standalone promotion intent. Interface/Resource must also include candidate-owned semantic boundary evidence; the field remains advisory.",
+              properties: {
+                basis: { type: "string", enum: ["shared-contract", "cross-boundary", "ownership", "lifecycle", "failure", "security", "operational"] },
+                evidence_ids: { type: "array", minItems: 1, maxItems: 64, items: { type: "string" } },
+              },
+              required: ["basis", "evidence_ids"], additionalProperties: false,
+            }, evidence_ids: {
+              type: "array", minItems: 1, maxItems: 64,
+              description: "IDs from known observations in this bounded request. Standalone concepts may share observations; embedded candidates may cite only their own. Never use repository:// source URIs here.",
+              items: { type: "string" },
+            },
+          }, required: ["id", "identity_hint", "identity_basis", "query_value", "evidence_ids", "disposition"], additionalProperties: false },
+        },
+        semantic_observations: {
+          type: "array", maxItems: 64, items: { type: "object", properties: {
+            id: { type: "string" }, candidate_id: { type: "string" },
+            role: { type: "string", enum: ["documentation", "implementation", "configuration"] },
+            signal: { type: "string" }, source: { type: "object", properties: {
+              path: { type: "string" }, start_line: { type: "integer", minimum: 1 }, end_line: { type: "integer", minimum: 1 },
+            }, required: ["path", "start_line", "end_line"], additionalProperties: false },
+          }, required: ["id", "candidate_id", "role", "signal", "source"], additionalProperties: false },
+        },
+        resource_observations: {
+          type: "array", maxItems: 64, items: { type: "object", properties: {
+            id: { type: "string" }, candidate_id: { type: "string" }, source_tool: {
+              type: "string", enum: ["terraform", "terragrunt"],
+              description: "Must match the exact source: Terraform uses .tf/.tf.json; Terragrunt uses terragrunt.hcl. Provider resources reached through Terragrunt cite the referenced Terraform file.",
+            },
+            resource_type: { type: "string" }, address: { type: "string" }, source: { type: "object", properties: {
+              path: { type: "string" }, start_line: { type: "integer", minimum: 1 }, end_line: { type: "integer", minimum: 1 },
+            }, required: ["path", "start_line", "end_line"], additionalProperties: false },
+          }, required: ["id", "candidate_id", "source_tool", "resource_type", "address", "source"], additionalProperties: false },
+        },
+        discovery_inventory: {
+          type: "object",
+          description: "Required only for an armed Initial Ingest; assigns one outcome to every group in the active MCP-derived Seed.",
+          properties: {
+            seed_id: { type: "string", pattern: "^discovery-seed-[a-f0-9]{24}$" },
+            items: { type: "array", maxItems: 64, items: { type: "object", properties: {
+              origin_group_id: { type: "string", pattern: "^discovery-group-[a-f0-9]{24}$" },
+              outcome: { type: "string", enum: ["materialized", "question", "ignored"] },
+              candidate_ids: { type: "array", maxItems: 16, items: { type: "string" },
+                description: "Required and non-empty for materialized; MCP derives concept/embedded disposition and parent. Candidate IDs may repeat across materialized origin groups when each group contributes evidence to the same knowledge boundary; the candidate identity is emitted once." },
+              question: { type: "object", properties: {
+                kind: { type: "string", enum: ["conflict", "missing-evidence", "relation-candidate", "identity-candidate", "maintainer-decision"] },
+                target_candidate_id: { type: "string" }, property: { type: "string" }, scope_key: { type: "string" },
+                candidate_evidence: { type: "array", minItems: 1, maxItems: 64, items: { type: "object", properties: {
+                  candidate_key: { type: "string" }, evidence_id: { type: "string" },
+                }, required: ["candidate_key", "evidence_id"], additionalProperties: false } },
+                missing_evidence: { type: "array", maxItems: 64, items: { type: "string" } },
+                limitations: { type: "array", maxItems: 64, items: { type: "string" } },
+              }, required: ["kind", "target_candidate_id", "property", "scope_key",
+                "candidate_evidence", "missing_evidence", "limitations"], additionalProperties: false,
+                description: "Required for question; MCP derives QuestionPlan identity, source resources and revision." },
+              reason: { type: "string", minLength: 1, maxLength: 512,
+                description: "Reason for an ignored lower-priority group. Ignored P0 accepts only exact duplicate-covered." },
+              covered_by_origin_group_id: { type: "string", pattern: "^discovery-group-[a-f0-9]{24}$",
+                description: "For ignored P0 only: a materialized group that covers a true duplicate which contributes no distinct evidence." },
+            }, required: ["origin_group_id", "outcome"], additionalProperties: false } },
+            limitations: { type: "array", maxItems: 64, items: { type: "string" } },
+          }, required: ["seed_id", "items", "limitations"], additionalProperties: false,
+        },
+      },
+      required: ["candidates", "semantic_observations", "resource_observations"], additionalProperties: false,
+    },
+  },
+  {
+    name: "validate_okf_changes",
+    description: "Validate changed concept documents only, excluding navigation index files, against bounded unchanged concept target summaries. Optionally bind the prepared authoring session so source revision and structural reachability defects are caught before Finalize. Apply relationship guidance from the exact frontmatter type; a display name or prose never changes the schema. Identity is the OKF-root-relative Markdown path without .md; targets are not changed concepts.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        session_id: { type: "string", pattern: "^hub-session-[a-f0-9]{24}$" },
+        changes: conceptSetInputSchema.properties.concepts,
+        targets: targetSummarySchema,
+      },
+      required: ["changes", "targets"], additionalProperties: false,
+    },
+  },
+] as const;
+
+function result(value: unknown, isError = false): CallToolResult {
+  const structuredContent = value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown> : undefined;
+  return {
+    content: [{ type: "text", text: JSON.stringify(value) }],
+    ...(structuredContent === undefined ? {} : { structuredContent }),
+    ...(isError ? { isError: true } : {}),
+  };
+}
+
+function guidanceRequest(args: Readonly<Record<string, unknown>>): OkfAuthoringGuidanceRequest {
+  const object = (value: unknown, name: string, expected: readonly string[]): Readonly<Record<string, unknown>> => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${name} must be an object`);
+    const item = value as Readonly<Record<string, unknown>>;
+    if (Object.keys(item).sort().join("\0") !== [...expected].sort().join("\0")) throw new Error(`${name} contains unknown or missing fields`);
+    return item;
+  };
+  const array = (value: unknown, name: string): readonly unknown[] => {
+    if (!Array.isArray(value)) throw new Error(`${name} must be a list`);
+    return value;
+  };
+  const source = (value: unknown) => {
+    const item = object(value, "observation source", ["path", "start_line", "end_line"]);
+    return { path: item.path as string, startLine: item.start_line as number, endLine: item.end_line as number };
+  };
+  object(args, "guidance request", ["candidates", "semantic_observations", "resource_observations"]);
+  return {
+    candidates: array(args.candidates, "candidates").map((value) => {
+      const raw = value as Readonly<Record<string, unknown>>;
+      const item = object(value, "candidate", ["id", "identity_hint", "identity_basis", "query_value", "evidence_ids", "disposition",
+        ...(raw?.parent_candidate_id === undefined ? [] : ["parent_candidate_id"]),
+        ...(raw?.suggested_type === undefined ? [] : ["suggested_type"]),
+        ...(raw?.promotion === undefined ? [] : ["promotion"])]);
+      const promotion = item.promotion === undefined ? undefined
+        : object(item.promotion, "candidate promotion", ["basis", "evidence_ids"]);
+      return { id: item.id as string, identityHint: item.identity_hint as string, identityBasis: item.identity_basis as string,
+        queryValue: item.query_value as string, evidenceIds: array(item.evidence_ids, "candidate evidence_ids") as string[],
+        disposition: item.disposition as "concept" | "embedded",
+        ...(item.parent_candidate_id === undefined ? {} : { parentCandidateId: item.parent_candidate_id as string }),
+        ...(item.suggested_type === undefined ? {} : { suggestedType: item.suggested_type as string }),
+        ...(promotion === undefined ? {} : { promotion: {
+          basis: promotion.basis as "shared-contract" | "cross-boundary" | "ownership" | "lifecycle" | "failure" | "security" | "operational",
+          evidenceIds: array(promotion.evidence_ids, "candidate promotion evidence_ids") as string[],
+        } }) };
+    }),
+    semanticObservations: array(args.semantic_observations, "semantic_observations").map((value) => {
+      const item = object(value, "semantic observation", ["id", "candidate_id", "role", "signal", "source"]);
+      return { id: item.id as string, candidateId: item.candidate_id as string,
+        role: item.role as "documentation" | "implementation" | "configuration", signal: item.signal as string, source: source(item.source) };
+    }),
+    resourceObservations: array(args.resource_observations, "resource_observations").map((value) => {
+      const item = object(value, "resource observation", ["id", "candidate_id", "source_tool", "resource_type", "address", "source"]);
+      return { id: item.id as string, candidateId: item.candidate_id as string, sourceTool: item.source_tool as "terraform" | "terragrunt",
+        resourceType: item.resource_type as string, address: item.address as string, source: source(item.source) };
+    }),
+  };
+}
+
+function discoveryInventory(value: unknown, request: OkfAuthoringGuidanceRequest,
+  source: DiscoverySourceIdentity): DiscoveryInventory {
+  const exact = (candidate: unknown, label: string, required: readonly string[], optional: readonly string[] = []) => {
+    if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) throw new Error(`${label} must be an object`);
+    const record = candidate as Record<string, unknown>, keys = Object.keys(record);
+    if (required.some((key) => !(key in record)) || keys.some((key) => !required.includes(key) && !optional.includes(key))) {
+      throw new Error(`${label} contains unknown or missing fields`);
+    }
+    return record;
+  };
+  const list = (candidate: unknown, label: string): readonly unknown[] => {
+    if (!Array.isArray(candidate)) throw new Error(`${label} must be a list`);
+    return candidate;
+  };
+  const root = exact(value, "discovery_inventory", ["seed_id", "items", "limitations"]);
+  const seedId = root.seed_id as string;
+  const candidates = new Map(request.candidates.map((candidate) => [candidate.id, candidate]));
+  const observations = new Map([...request.semanticObservations, ...request.resourceObservations]
+    .map((observation) => [observation.id, observation]));
+  const questionPlans: DiscoveryInventory["questionPlans"][number][] = [];
+  const items = list(root.items, "inventory items").map((candidate, index): DiscoveryInventory["items"][number] => {
+    const item = exact(candidate, `inventory item ${index + 1}`, ["origin_group_id", "outcome"],
+      ["candidate_ids", "question", "reason", "covered_by_origin_group_id"]);
+    const originGroupId = item.origin_group_id as string;
+    const outcome = item.outcome as "materialized" | "question" | "ignored";
+    const id = createInventoryItemId(seedId, originGroupId);
+    if (outcome === "materialized") {
+      const candidateIds = list(item.candidate_ids, "materialized candidate_ids") as string[];
+      return { id, originGroupId, outcome, outputs: candidateIds.map((candidateId) => {
+        const selected = candidates.get(candidateId);
+        return { candidateId, ...(selected?.disposition === "embedded"
+          ? { parentCandidateId: selected.parentCandidateId } : {}) };
+      }) };
+    }
+    if (outcome === "question") {
+      const plan = exact(item.question, `inventory item ${index + 1} question`,
+        ["kind", "target_candidate_id", "property", "scope_key", "candidate_evidence", "missing_evidence", "limitations"]);
+      const questionPlanId = createQuestionPlanId(seedId, originGroupId);
+      questionPlans.push({
+        id: questionPlanId,
+        kind: plan.kind as "conflict" | "missing-evidence" | "relation-candidate" | "identity-candidate" | "maintainer-decision",
+        originGroupId,
+        targetCandidateId: plan.target_candidate_id as string,
+        property: plan.property as string,
+        scopeKey: plan.scope_key as string,
+        candidateEvidence: list(plan.candidate_evidence, "candidate_evidence").map((evidence, evidenceIndex) => {
+          const entry = exact(evidence, `candidate evidence ${evidenceIndex + 1}`, ["candidate_key", "evidence_id"]);
+          const candidateKey = entry.candidate_key as string, evidenceId = entry.evidence_id as string;
+          const selected = candidates.get(candidateKey), observation = observations.get(evidenceId);
+          const valid = selected?.evidenceIds.includes(evidenceId) && observation;
+          return { candidateKey,
+            sourceResource: valid ? createRepositorySourceResource(source.repositoryId, observation.source.path,
+              observation.source.startLine, observation.source.endLine) : "",
+            observedRevision: source.commit };
+        }),
+        missingEvidence: list(plan.missing_evidence, "missing_evidence") as string[],
+        limitations: list(plan.limitations, "question limitations") as string[],
+      });
+      return { id, originGroupId, outcome, outputs: [], questionPlanId };
+    }
+    return { id, originGroupId, outcome, outputs: [],
+      ...(item.reason === undefined ? {} : { reason: item.reason as string }),
+      ...(item.covered_by_origin_group_id === undefined ? {}
+        : { coveredByItemId: createInventoryItemId(seedId, item.covered_by_origin_group_id as string) }) };
+  });
+  return {
+    seedId,
+    items,
+    questionPlans,
+    limitations: list(root.limitations, "inventory limitations") as string[],
+  };
+}
+
+type SuppliedConcept = Readonly<{ identity: string; path: string; content: string }>;
+type ParsedSuppliedConcept = Readonly<{ item: SuppliedConcept; concept: ConceptDocument }>
+  | Readonly<{ item: SuppliedConcept; error: string }>;
+
+function durableIdentity(pathValue: string): string {
+  const normalized = normalizeHubConceptPath(pathValue);
+  if (normalized !== pathValue || normalized.startsWith("okf/")) {
+    throw new Error("path must be normalized and relative to the OKF root without an okf/ prefix");
+  }
+  return normalized.slice(0, -3);
+}
+
+function suppliedConcepts(args: Readonly<Record<string, unknown>>, key = "concepts"): Readonly<{ entries?: SuppliedConcept[]; error?: string }> {
+  const supplied = args[key];
+  const valid = Array.isArray(supplied) && supplied.length >= 1 && supplied.length <= 64
+    && supplied.every((item) => item && typeof item === "object" && !Array.isArray(item)
+      && typeof item.identity === "string" && item.identity.length >= 1 && item.identity.length <= 256
+      && typeof item.path === "string" && item.path.length >= 1 && item.path.length <= 1024
+      && typeof item.content === "string" && item.content.length >= 1
+      && Buffer.byteLength(item.content) <= 262144);
+  if (!valid) return { error: `${key} must be a bounded list of identity, path and content strings` };
+  const entries = supplied as SuppliedConcept[];
+  if (entries.reduce((bytes, item) => bytes + Buffer.byteLength(item.content), 0) > 4 * 1024 * 1024) {
+    return { error: "concept content exceeds 4194304 bytes" };
+  }
+  return { entries };
+}
+
+function suppliedTargets(args: Readonly<Record<string, unknown>>): Readonly<{ entries?: OkfRelationshipTarget[]; error?: string }> {
+  const supplied = args.targets;
+  const validPath = (value: string) => {
+    try { return normalizeHubConceptPath(value) === value; } catch { return false; }
+  };
+  const valid = Array.isArray(supplied) && supplied.length <= 512
+    && supplied.every((item) => item && typeof item === "object" && !Array.isArray(item)
+      && typeof item.identity === "string" && item.identity.length >= 1 && item.identity.length <= 256
+      && typeof item.path === "string" && item.path.length >= 1 && item.path.length <= 1024 && validPath(item.path)
+      && item.identity === item.path.slice(0, -3) && !item.path.startsWith("okf/")
+      && typeof item.type === "string" && item.type.length >= 1 && item.type.length <= 256);
+  return valid ? { entries: supplied as OkfRelationshipTarget[] }
+    : { error: "targets must use normalized OKF-root-relative paths and path-derived identities" };
+}
+
+function validateBundle(entries: readonly SuppliedConcept[], targets: readonly OkfRelationshipTarget[] = []): CallToolResult {
+  const parsed: ParsedSuppliedConcept[] = entries.map((item) => {
+    try { return { item, concept: parseConceptDocument(item.path, item.content) }; }
+    catch (error) { return { item, error: error instanceof Error ? error.message : "concept parsing failed" }; }
+  });
+  const concepts = parsed.map((entry) => {
+    if ("error" in entry) return {
+      identity: entry.item.identity, path: entry.item.path, valid: false,
+      failures: [`${entry.item.path}: ${entry.error}`],
+    };
+    const failures = [...validateAgentBaseDraft(entry.concept), ...validateConceptAgainstSchema(entry.concept)];
+    try {
+      const expected = durableIdentity(entry.item.path);
+      if (entry.item.identity !== expected) failures.push(`${entry.item.path}: identity must equal ${expected}`);
+    } catch (error) {
+      failures.push(`${entry.item.path}: ${error instanceof Error ? error.message : "invalid durable path"}`);
+    }
+    return { identity: entry.item.identity, path: entry.item.path, type: entry.concept.type,
+      knownSchema: Boolean(getOkfConceptSchema(entry.concept.type)), valid: failures.length === 0, failures };
+  });
+  const parsedConcepts = parsed.flatMap((entry) => "concept" in entry
+    ? [{ identity: entry.item.identity, concept: entry.concept }] : []);
+  const relationshipValidation = parsedConcepts.length === entries.length
+    ? validateOkfRelationships(parsedConcepts, { targets, strictSourceIdentities: new Set(parsedConcepts.map((item) => item.identity)) })
+    : { failures: [] as readonly string[], relationships: [], flowSteps: [], warnings: [] as readonly string[] };
+  const valid = concepts.every((concept) => concept.valid) && relationshipValidation.failures.length === 0;
+  return result({ valid, concepts, relationshipFailures: relationshipValidation.failures,
+    relationshipWarnings: relationshipValidation.warnings, relationships: relationshipValidation.relationships,
+    flowSteps: relationshipValidation.flowSteps, relationshipValidationSkipped: parsedConcepts.length !== entries.length }, !valid);
+}
+
+export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record<string, unknown>>,
+  dependencies: Readonly<{
+    discovery?: DiscoverySession;
+    validateAuthoringSession?: (sessionId: string) => Promise<unknown>;
+  }> = {}): CallToolResult | Promise<CallToolResult> {
+  try {
+    if (name === "list_okf_schemas") return result({
+      catalogVersion: AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
+      okfVersion: "0.2",
+      schemas: listOkfConceptSchemas(),
+    });
+    if (name === "get_okf_schema") {
+      if (typeof args.type !== "string" || !args.type.trim()) {
+        return result({ error: "type must be non-empty" }, true);
+      }
+      const schema = getOkfConceptSchema(args.type);
+      return schema
+        ? result({ catalogVersion: AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, schema })
+        : result({ error: `unknown AgentBase schema: ${args.type}`, googleOkfAllowsUnknownTypes: true }, true);
+    }
+    if (name === "get_okf_authoring_schemas") {
+      let request: OkfAuthoringGuidanceRequest;
+      try {
+        const requestArgs = { ...args };
+        delete requestArgs.discovery_inventory;
+        request = guidanceRequest(requestArgs);
+      } catch (error) {
+        throw new OkfGuidanceInputError(error instanceof Error ? error.message : "guidance request is invalid");
+      }
+      const guidance = getOkfAuthoringGuidance(request);
+      const inventoryValue = args.discovery_inventory;
+      if (dependencies.discovery?.activeSeed && inventoryValue === undefined) {
+        throw new OkfGuidanceInputError("armed Initial Ingest requires discovery_inventory");
+      }
+      let receipt;
+      if (inventoryValue !== undefined) {
+        const discovery = dependencies.discovery, source = discovery?.activeSeed?.source;
+        if (!discovery || !source) throw new OkfGuidanceInputError("discovery_inventory requires one active Init Seed");
+        let inventory: DiscoveryInventory;
+        try {
+          inventory = discoveryInventory(inventoryValue, request, source);
+        } catch (error) {
+          throw new OkfGuidanceInputError(error instanceof Error ? error.message : "discovery_inventory is invalid");
+        }
+        try {
+          receipt = discovery.freezeReceipt({ inventory, guidanceRequest: request, guidance });
+        } catch (error) {
+          if (error instanceof DiscoveryValidationError && error.code === "INVALID_INVENTORY") {
+            throw new OkfGuidanceInputError(error.message);
+          }
+          throw error;
+        }
+      }
+      return result({ ...guidance,
+        okfVersion: "0.2",
+        identityContract: "identity equals the normalized OKF-root-relative Markdown path without .md; never prefix paths with okf/",
+        advisory: true,
+        ...(receipt ? { discovery_receipt_id: receipt.id, discovery_digest: receipt.digest,
+          coverage: { lanes: receipt.coverage.lanes, p0_acknowledged: receipt.coverage.p0Acknowledged.length,
+            ignored_counts: receipt.coverage.ignoredCounts, limitations: receipt.coverage.limitations } } : {}),
+      });
+    }
+    const supplied = suppliedConcepts(args, "changes");
+    if (!supplied.entries) return result({ error: supplied.error }, true);
+    const targets = suppliedTargets(args);
+    if (!targets.entries) return result({ error: targets.error }, true);
+    const validation = validateBundle(supplied.entries, targets.entries);
+    if (args.session_id === undefined) return validation;
+    if (typeof args.session_id !== "string" || !/^hub-session-[a-f0-9]{24}$/.test(args.session_id)) {
+      return result({ error: "session_id must identify one prepared Hub authoring session" }, true);
+    }
+    if (!dependencies.validateAuthoringSession) {
+      return result({ error: "session-bound authoring validation is unavailable" }, true);
+    }
+    return dependencies.validateAuthoringSession(args.session_id).then((sessionValidation) => result({
+      ...(validation.structuredContent ?? {}), sessionValidation,
+    }, Boolean(validation.isError)), (error) => result({
+      ...(validation.structuredContent ?? {}),
+      sessionValidation: {
+        valid: false,
+        error: error instanceof Error ? error.message : "session validation failed",
+      },
+    }, true));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "concept validation failed";
+    return name === "get_okf_authoring_schemas" && error instanceof OkfGuidanceInputError
+      ? result({ error: message, code: "INVALID_ARGUMENT", retryable: true,
+        recovery: "correct-and-retry-same-tool" }, true)
+      : result({ error: message }, true);
+  }
+}

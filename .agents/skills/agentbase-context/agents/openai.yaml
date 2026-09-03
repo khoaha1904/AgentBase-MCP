@@ -1,0 +1,7 @@
+interface:
+  display_name: "AgentBase Context"
+  short_description: "Add bounded Published Hub context manually"
+  default_prompt: "Use $agentbase-context to add concise Published AgentBase context to this request."
+
+policy:
+  allow_implicit_invocation: false
