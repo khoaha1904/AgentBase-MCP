@@ -1,26 +1,29 @@
 # Slide 01 — AgentBase
 
-> Status: canonical Vietnamese slide specification.
-
 ## Vai trò của slide
 
-Chào khán giả và đặt tên cho chủ đề. Đây chỉ là cover, chưa giải thích sản phẩm
-và chưa đưa vấn đề vào.
+Mở bài và định vị đây là một product story về shared system context.
+
+## Thông điệp duy nhất
+
+AgentBase giúp team duy trì system context mà cả con người và AI agent có thể
+kiểm tra và tiếp tục cải thiện.
 
 ## Nội dung hiển thị
 
+```text
 AgentBase
+Source-backed knowledge for AI-assisted teams
+```
 
 ## Lời thoại dự kiến
 
-“Xin chào mọi người. Hôm nay mình muốn chia sẻ về AgentBase.”
+“Hôm nay mình giới thiệu AgentBase: cách mình biến context nằm rải rác trong
+nhiều repository thành knowledge dùng chung, có nguồn và có thể được team sửa.
+Mình sẽ bắt đầu từ vấn đề sản phẩm, xem một kết quả cụ thể, rồi mới giải thích
+cơ chế đủ để đánh giá nó có đáng tin hay không.”
 
-## Câu chuyển sang slide 02
+## Câu chuyển
 
-Chuyển thẳng sang mental model đơn giản của AgentBase.
-
-## Không đưa vào slide này
-
-- Không tagline dài.
-- Không kiến trúc hoặc tên tính năng.
-- Không đưa các con số của hệ thống.
+“Vấn đề đầu tiên không phải thiếu code hay thiếu tài liệu; nó nằm ở những liên
+kết mà mỗi lần làm việc chúng ta phải dựng lại.”
