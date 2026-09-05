@@ -408,7 +408,12 @@ benchmarks.
   from `--root` or `AGENTBASE_BENCHMARK_ROOT`; the default is the sibling
   checkout. Suite, prompt, expectation and result paths resolve beneath that
   root and cannot escape it. `npm run demo`, `npm run verify` and ordinary MCP
-  startup do not require model-backed benchmark data.
+  startup do not require the sibling Benchmark checkout or model-backed
+  benchmark data. The canonical gate always runs self-contained benchmark
+  engine/scorer tests; tests that inspect sibling-owned suite metadata run only
+  when that checkout is explicitly available and report a visible skip
+  otherwise. Active MCP release requirements keep self-contained fixtures and
+  never rely on such a skip.
 - **AB-BENCH-082** — Repository registry entries pin domain, source kind,
   checkout path and exact clean Git revision. Public checkouts use source URL
   plus commit; local-only fixtures are explicitly marked and must still pass

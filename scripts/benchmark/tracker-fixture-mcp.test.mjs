@@ -1,12 +1,11 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 
 import { createTrackerMcpServer } from "./tracker-fixture-mcp.mjs";
-
-const fixture = path.resolve(import.meta.dirname, "../../../AgentBase-AIT-Tracker-Fixture");
 
 function result(call) {
   const text = call.content?.find((block) => block.type === "text")?.text;
@@ -14,7 +13,31 @@ function result(call) {
 }
 
 test("tracker fixture exposes only bounded read operations and linked artifacts", async () => {
-  assert.ok(fs.existsSync(fixture));
+  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-tracker-fixture-"));
+  fs.mkdirSync(path.join(fixture, "features"));
+  fs.mkdirSync(path.join(fixture, "user-stories"));
+  fs.writeFileSync(path.join(fixture, "features", "readiness.md"), `---
+type: Feature
+id: feature:readiness-health-contract
+title: Standardize the readiness health contract
+status: discovery
+relations:
+  - type: decomposes-to
+    target: us:health-endpoint
+---
+
+Readiness discovery context.
+`);
+  fs.writeFileSync(path.join(fixture, "user-stories", "health-endpoint.md"), `---
+type: User Story
+id: us:health-endpoint
+title: Expose a stable readiness endpoint
+status: drafted
+relations: []
+---
+
+Readiness endpoint acceptance criteria.
+`);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const current = createTrackerMcpServer(fixture);
   const client = new Client({ name: "tracker-fixture-test", version: "0.0.0" });
@@ -31,5 +54,6 @@ test("tracker fixture exposes only bounded read operations and linked artifacts"
   } finally {
     await client.close();
     await current.server.close();
+    fs.rmSync(fixture, { recursive: true, force: true });
   }
 });

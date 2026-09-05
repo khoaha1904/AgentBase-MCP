@@ -15,6 +15,7 @@ import { resolveBenchmarkSourceSnapshot } from "./benchmark-agentbase-mcp.mjs";
 import { benchmarkPath, benchmarkRoot } from "./benchmark-paths.mjs";
 
 const repositoryId = "repository-example-aaaaaaaaaaaa";
+const benchmarkDataTest = fs.existsSync(path.join(benchmarkRoot(), "repositories.lock.json")) ? test : test.skip;
 
 function concept(file, type, key, metadata, sources, body = "Evidence.") {
   return parseConceptDocument(file, [
@@ -141,7 +142,7 @@ test("[AB-BENCH-045] embedded infrastructure is scored through its useful parent
   }, repositoryId).embeddedKnowledgeCoveragePercent, 100);
 });
 
-test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraform-only", () => {
+benchmarkDataTest("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraform-only", () => {
   const root = path.join(benchmarkRoot(), "suites", "legacy", "aws-serverless");
   const manifest = JSON.parse(fs.readFileSync(path.join(root, "manifest.json"), "utf8"));
   assert.equal(manifest.version, 15);
@@ -252,7 +253,7 @@ test("[AB-BENCH-045][AB-BENCH-046] current qualification is catalog 7 and Terraf
   assert.deepEqual(validateSkillInitialIngestLifecycle(skillLifecycle, corrected.attempts), []);
 });
 
-test("[AB-BENCH-091..095] feature recall uses versioned, placement-independent semantic obligations", async () => {
+benchmarkDataTest("[AB-BENCH-091..095] feature recall uses versioned, placement-independent semantic obligations", async () => {
   const source = fs.mkdtempSync(path.join(import.meta.dirname, "refresh-source-"));
   const workspace = fs.mkdtempSync(path.join(import.meta.dirname, "refresh-assessment-"));
   try {
@@ -354,7 +355,7 @@ test("[AB-BENCH-091..095] feature recall uses versioned, placement-independent s
   }
 });
 
-test("[AB-BENCH-046] released-skill trace proves source-to-Seed-to-Receipt handoff", () => {
+benchmarkDataTest("[AB-BENCH-046] released-skill trace proves source-to-Seed-to-Receipt handoff", () => {
   const seedId = `discovery-seed-${"a".repeat(24)}`;
   const groupId = `discovery-group-${"b".repeat(24)}`;
   const receiptId = `discovery-receipt-${"c".repeat(24)}`;

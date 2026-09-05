@@ -27,15 +27,12 @@ const BENCHMARK_ROOT = path.resolve(
   process.env.AGENTBASE_BENCHMARK_ROOT ?? path.join(AGENTBASE_ROOT, "AgentBase-Benchmark"),
 );
 const FIXTURE_ROOT = path.join(BENCHMARK_ROOT, "repositories/crawler");
-const PIPELINE = path.join(FIXTURE_ROOT, "serverless-data-pipelines-demo");
-const PUBLISHER = path.join(FIXTURE_ROOT, "crawler-publisher");
-const WORKER = path.join(FIXTURE_ROOT, "crawler-worker");
 const COMMIT = "a".repeat(40);
 const ACCOUNT = "123456789012";
 const REGION = "ap-southeast-1";
 
-function source(repo, relative, id, sourceRepositoryId = repo) {
-  return { id, resource: `repository://${sourceRepositoryId}/${relative}#L1-L24`, observed_revision: gitHead(path.join(FIXTURE_ROOT, repo)) };
+function source(repo, relative, id, sourceRepositoryId = repo, fixtureRoot = FIXTURE_ROOT) {
+  return { id, resource: `repository://${sourceRepositoryId}/${relative}#L1-L24`, observed_revision: gitHead(path.join(fixtureRoot, repo)) };
 }
 
 function gitHead(root) {
@@ -59,12 +56,12 @@ function concept(pathname, type, title, description, sources, relationships = []
     verified: [], body: `# Overview\n\n${body}${links.length ? `\n\n# Relations\n\n${links.join("\n")}` : ""}\n` });
 }
 
-function repository(pathname, id, displayName, repo, description, domainSource) {
+function repository(pathname, id, displayName, repo, description, domainSource, fixtureRoot) {
   return renderConceptDocument({ conceptId: conceptIdentityFromPath(pathname), path: pathname, type: "Repository", status: "draft",
     frontmatter: { type: "Repository", title: displayName, description, status: "draft",
-      sources: [source(repo, "README.md", `${repo}-readme`, id), domainSource],
+      sources: [source(repo, "README.md", `${repo}-readme`, id, fixtureRoot), domainSource],
       relationships: [{ kind: "part-of", target: "domains/crawler", evidence: [domainSource.id] }],
-      agentbase: { repository: { id, display_name: displayName, aliases: { remotes: [], root_commits: [gitHead(path.join(FIXTURE_ROOT, repo))] }, observed_source: { commit: gitHead(path.join(FIXTURE_ROOT, repo)), dirty: false, dirty_digest: null, observed_at: "2026-08-28T00:00:00Z" } } } },
+      agentbase: { repository: { id, display_name: displayName, aliases: { remotes: [], root_commits: [gitHead(path.join(fixtureRoot, repo))] }, observed_source: { commit: gitHead(path.join(fixtureRoot, repo)), dirty: false, dirty_digest: null, observed_at: "2026-08-28T00:00:00Z" } } } },
     verified: [], body: `# Purpose\n\n${description}\n\nPrimary Domain: [Crawler](../index.md).\n` });
 }
 
@@ -78,15 +75,15 @@ function questionDocument(repoId) {
     title: "Confirm crawler-jobs producer relation", createdAt: "2026-08-28T00:00:00Z" }) };
 }
 
-function qualificationDocuments() {
+function qualificationDocuments(fixtureRoot = FIXTURE_ROOT) {
   const publisherId = "repository-crawler-publisher-111111111111";
   const workerId = "repository-crawler-worker-222222222222";
   const pipelineId = "repository-serverless-pipeline-333333333333";
   const owner = { id: "owner-domain", resource: "agentbase://owner-guidance/domains/crawler" };
-  const publisherTf = source("crawler-publisher", "main.tf", "publisher-terraform", publisherId);
-  const publisherHandler = source("crawler-publisher", "src/handler.py", "publisher-handler", publisherId);
-  const workerTf = source("crawler-worker", "main.tf", "worker-terraform", workerId);
-  const workerHandler = source("crawler-worker", "src/handler.py", "worker-handler", workerId);
+  const publisherTf = source("crawler-publisher", "main.tf", "publisher-terraform", publisherId, fixtureRoot);
+  const publisherHandler = source("crawler-publisher", "src/handler.py", "publisher-handler", publisherId, fixtureRoot);
+  const workerTf = source("crawler-worker", "main.tf", "worker-terraform", workerId, fixtureRoot);
+  const workerHandler = source("crawler-worker", "src/handler.py", "worker-handler", workerId, fixtureRoot);
   const documents = new Map();
   documents.set("index.md", "---\nokf_version: \"0.2\"\n---\n\n# AgentBase Hub\n\n* [Profile](shared/agentbase-profile.md) - Profile\n* [Shared](shared/index.md) - Shared knowledge\n* [Crawler](domains/crawler/index.md) - Domain\n");
   documents.set("shared/index.md", "# Shared\n\n* [Profile](agentbase-profile.md) - Profile\n");
@@ -100,9 +97,9 @@ function qualificationDocuments() {
   const tableResource = `${domainRoot}/knowledge/crawler-jobs-table`;
   const publisherFunction = `${domainRoot}/knowledge/crawler-publisher`;
   const workerFunction = `${domainRoot}/knowledge/crawler-worker`;
-  documents.set(`${publisherRepository}.md`, repository(`${publisherRepository}.md`, publisherId, "Crawler publisher", "crawler-publisher", "Publishes crawler jobs.", owner));
-  documents.set(`${workerRepository}.md`, repository(`${workerRepository}.md`, workerId, "Crawler worker", "crawler-worker", "Consumes and stores crawler jobs.", owner));
-  documents.set(`${pipelineRepository}.md`, repository(`${pipelineRepository}.md`, pipelineId, "Serverless data pipelines", "serverless-data-pipelines-demo", "Existing crawler data pipeline fixture.", owner));
+  documents.set(`${publisherRepository}.md`, repository(`${publisherRepository}.md`, publisherId, "Crawler publisher", "crawler-publisher", "Publishes crawler jobs.", owner, fixtureRoot));
+  documents.set(`${workerRepository}.md`, repository(`${workerRepository}.md`, workerId, "Crawler worker", "crawler-worker", "Consumes and stores crawler jobs.", owner, fixtureRoot));
+  documents.set(`${pipelineRepository}.md`, repository(`${pipelineRepository}.md`, pipelineId, "Serverless data pipelines", "serverless-data-pipelines-demo", "Existing crawler data pipeline fixture.", owner, fixtureRoot));
   documents.set(`${jobsResource}.md`, concept(`${jobsResource}.md`, "Resource", "crawler-jobs SQS queue", "Shared SQS queue carrying crawler jobs.", [publisherTf, workerTf, owner], [{ kind: "part-of", target: domainRoot, evidence: [owner.id] }], "The `crawler-jobs` queue is a first-class transport between publisher and worker."));
   documents.set(`${bucketResource}.md`, concept(`${bucketResource}.md`, "Resource", "Crawler results S3 bucket", "S3 bucket storing processed crawler payloads.", [workerTf, owner], [{ kind: "part-of", target: domainRoot, evidence: [owner.id] }]));
   documents.set(`${tableResource}.md`, concept(`${tableResource}.md`, "Resource", "Crawler jobs DynamoDB table", "DynamoDB table indexing processed crawler jobs.", [workerTf, owner], [{ kind: "part-of", target: domainRoot, evidence: [owner.id] }]));
@@ -139,11 +136,14 @@ function reader(documents) {
   } };
 }
 
-export async function qualify(outputDirectory) {
-  for (const root of [PIPELINE, PUBLISHER, WORKER]) assertClean(root);
-  assert.match(fs.readFileSync(path.join(PUBLISHER, "main.tf"), "utf8"), /crawler-jobs/);
-  assert.match(fs.readFileSync(path.join(WORKER, "main.tf"), "utf8"), /crawler-jobs/);
-  const fixture = qualificationDocuments();
+export async function qualify(outputDirectory, { fixtureRoot = FIXTURE_ROOT } = {}) {
+  const pipeline = path.join(fixtureRoot, "serverless-data-pipelines-demo");
+  const publisher = path.join(fixtureRoot, "crawler-publisher");
+  const worker = path.join(fixtureRoot, "crawler-worker");
+  for (const root of [pipeline, publisher, worker]) assertClean(root);
+  assert.match(fs.readFileSync(path.join(publisher, "main.tf"), "utf8"), /crawler-jobs/);
+  assert.match(fs.readFileSync(path.join(worker, "main.tf"), "utf8"), /crawler-jobs/);
+  const fixture = qualificationDocuments(fixtureRoot);
   const graph = await loadHubGraph(reader(fixture.documents), 256 * 1024);
   const projection = buildPublishedVisualizationProjection(graph, { hub: "fixture/crawler-qualification#main", domain: "domains/crawler" });
   assert.equal(projection.nodes.filter((node) => node.type === "Resource").length, 3);
@@ -178,7 +178,7 @@ export async function qualify(outputDirectory) {
   assert.equal(site.domain, "domains/crawler");
   const siteText = fs.readFileSync(path.join(outputDirectory, "data/domain.json"), "utf8");
   assert.equal(siteText.includes("arn:aws"), false);
-  return { sourceCommits: { publisher: gitHead(PUBLISHER), worker: gitHead(WORKER), pipeline: gitHead(PIPELINE) }, counts: receipt.counts, query: result.matches[0].path, enrichment: enrichment.outcomes[0].status, outputDirectory };
+  return { sourceCommits: { publisher: gitHead(publisher), worker: gitHead(worker), pipeline: gitHead(pipeline) }, counts: receipt.counts, query: result.matches[0].path, enrichment: enrichment.outcomes[0].status, outputDirectory };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)) {
