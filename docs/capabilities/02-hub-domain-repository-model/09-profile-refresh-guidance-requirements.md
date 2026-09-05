@@ -72,8 +72,10 @@ whole proposed bundle must remain Profile 1.0.
   continuity/proposal metadata expose that same identity; no Repository activity
   path is created.
 - **AB-PROFILE-LIFECYCLE-004** — Refresh rejects `home_plan` and performs no
-  automatic rehome. It preserves existing Profile paths/navigation and rejects
-  a proposed bundle that no longer passes the shared Profile 1.0 classifier.
+  automatic rehome. It preserves existing Profile paths/navigation, admits the
+  additive home-index link required by a valid new concept without treating
+  that navigation-only line as a new source contribution, and rejects a
+  proposed bundle that no longer passes the shared Profile 1.0 classifier.
 - **AB-PROFILE-LIFECYCLE-005** — Refresh Questions use
   `<subject-home>/questions/<stable-id>.md` when subject home is unambiguous and
   `shared/questions/<stable-id>.md` otherwise. Their immutable ID, origin,

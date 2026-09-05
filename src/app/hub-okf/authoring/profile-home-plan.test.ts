@@ -200,16 +200,23 @@ test("[AB-HOME-009..010][AB-PROFILE-LIFECYCLE-003..007][AB-COMPACT-011..012] Pro
   assert.equal([...bundle.concepts.values()].some((concept) =>
     concept.type === "Question" && concept.path.startsWith("domains/orders/questions/")), true);
   assert.equal(bundle.files.some((relative) => path.posix.basename(relative) === "log.md"), false);
+  const domainIndexPath = path.join(bundle.root, "domains", "orders", "index.md");
+  fs.writeFileSync(domainIndexPath, fs.readFileSync(domainIndexPath, "utf8").replace("sources:\n",
+    `sources:\n  - id: foreign-domain-source\n    resource: repository://repository-catalog-bbbbbbbbbbbb/README.md#L1-L1\n`));
   const refreshBase = "c".repeat(40);
   const refreshSession = beginHubAuthoringSession({
     stateRoot, mode: "refresh", hub, baseCommit: refreshBase, checkoutRoot: bundle.root,
     sourceRepositoryRoot: sourceRoot, sourceRepositoryId: repositoryId, sourceState: options.sourceState,
     evidenceDigest: `sha256:${"d".repeat(64)}`, subjectDirectory: resolved.subjectDirectory,
-    signals: [], selectedSchemas: ["Repository", "System", "Component", "Domain"],
+    signals: ["operated resource"], selectedSchemas: ["Repository", "System", "Component", "Domain", "Resource"],
     requireObservedRevision: true, createdAt: "2026-09-04T00:30:00.000Z",
   });
   const repositoryPath = path.join(refreshSession.bundleRoot, "domains", "orders", "repositories", "checkout.md");
   fs.appendFileSync(repositoryPath, "\nRefresh confirms the current Orders source.\n");
+  const refreshDomainIndex = path.join(refreshSession.bundleRoot, "domains", "orders", "index.md");
+  fs.appendFileSync(refreshDomainIndex, "\n* [Orders queue](knowledge/orders-queue.md) - Resource\n");
+  fs.writeFileSync(path.join(refreshSession.bundleRoot, "domains", "orders", "knowledge", "orders-queue.md"),
+    `---\ntype: Resource\ntitle: Orders queue\ndescription: Shared queue declared by the checkout repository.\nstatus: draft\ngenerated:\n  by: ${AGENTBASE_PRODUCER}\n  at: 2026-09-04T00:30:00.000Z\nsources:\n  - id: queue-source\n    resource: repository://${repositoryId}/README.md#L1-L1\n    observed_revision: ${commit}\nrelationships:\n  - kind: implemented-in\n    target: domains/orders/repositories/checkout\n    evidence: [queue-source]\n---\n\n# Purpose\n\nThe queue is declared by the [checkout repository](../repositories/checkout.md).\n\n# Kind and Technology\n\nA shared queue.\n\n# Users\n\nOrders workloads.\n\n# Operations\n\nRepository managed.\n\n# Evidence\n\nREADME line 1.\n\n# Limitations\n\nRuntime state is not observed.\n`);
   const refreshed = finalizeHubAuthoringSession(stateRoot, refreshSession.id, bundle.root, [], [],
     options.sourceState, refreshBase);
   assert.ok("proposal" in refreshed);
@@ -218,6 +225,9 @@ test("[AB-HOME-009..010][AB-PROFILE-LIFECYCLE-003..007][AB-COMPACT-011..012] Pro
   bundle = loadOkfBundle(path.join(stateRoot, "proposals", refreshed.proposal.id, "bundle"),
     { requireAgentBaseRootIndex: true });
   assert.equal(classifyAgentBaseHubProfile(bundle).kind, "profile-1.0");
+  assert.equal(bundle.concepts.get("domains/orders/knowledge/orders-queue")?.type, "Resource");
+  assert.match(fs.readFileSync(path.join(bundle.root, "domains/orders/index.md"), "utf8"),
+    /knowledge\/orders-queue\.md/);
   const invalidRefresh = beginHubAuthoringSession({
     stateRoot, mode: "refresh", hub, baseCommit: "e".repeat(40), checkoutRoot: bundle.root,
     sourceRepositoryRoot: sourceRoot, sourceRepositoryId: repositoryId, sourceState: options.sourceState,

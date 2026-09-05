@@ -160,9 +160,10 @@ function protectBase(
     let proposed = authored.files.includes(relative) ? bytes(bundleRoot, relative) : undefined;
     const changed = !proposed || !bytes(options.hubBundleRoot, relative).equals(proposed);
     const index = path.posix.basename(relative) === "index.md";
+    const additiveIndex = Boolean(index && proposed && preservesLines(bytes(options.hubBundleRoot, relative), proposed));
     const proposedConcept = authored.concepts.get(conceptId);
     const removal = removals.get(conceptId);
-    const sharedNormalized = Boolean(changed && concept && proposedConcept && mutable
+    const sharedNormalized = Boolean(changed && !additiveIndex && concept && proposedConcept && mutable
       && preserveSharedConcept(concept, proposedConcept, options.sourceRepositoryId, bundleRoot,
         removal?.kind === "repository-contribution"));
     if (sharedNormalized) proposed = bytes(bundleRoot, relative);
@@ -175,7 +176,6 @@ function protectBase(
       && conceptReferencesRepository(proposedConcept, options.sourceRepositoryId)
       && preservesObservedValueIdentities(concept, proposedConcept)
     );
-    const additiveIndex = Boolean(index && proposed && preservesLines(bytes(options.hubBundleRoot, relative), proposed));
     const governedQuestion = (options.questionPaths ?? []).includes(relative);
     const explicitOwnedDeletion = Boolean(mutable && !proposed && removal?.kind === "concept"
       && previousSources.length && previousSources.every((resource) => resource.startsWith(currentPrefix)));
@@ -274,7 +274,10 @@ function validateChangedSchemas(options: AnyRefreshOptions, bundleRoot: string):
     changedIdentities.add(concept.conceptId);
     const removesContribution = options.removals?.some((removal) =>
       removal.kind === "repository-contribution" && removal.conceptId === concept.conceptId);
-    const sourceFailure = !removesContribution && !conceptReferencesRepository(concept, options.sourceRepositoryId)
+    const additiveNavigation = Boolean(previous && path.posix.basename(concept.path) === "index.md"
+      && preservesLines(bytes(options.hubBundleRoot, previous.path), bytes(bundleRoot, concept.path)));
+    const sourceFailure = !removesContribution && !additiveNavigation
+      && !conceptReferencesRepository(concept, options.sourceRepositoryId)
       ? [`${concept.path}: changed concept must cite proposal source repository ${options.sourceRepositoryId}`]
       : [];
     const selectionFailure = !previous && !selected.has(concept.type)
