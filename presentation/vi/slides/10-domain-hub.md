@@ -14,7 +14,8 @@ ra một truth source mới.
 ```text
 Search/filter -> focus relation -> inspect document/evidence
 
-Snapshot: Iroco2 qualification · Hub bf2e99273acc
+Snapshot: Iroco2 qualification · Hub 040eb38df7fa
+AWS MOCK — provider identity is illustrative; relations cite source.
 Current compact Profile 1.0 UI
 
 Domain Hub = presentation projection
@@ -36,6 +37,7 @@ source có chọn lọc.”
 
 ## Nguồn
 
-- Local one-shot Iroco2 Domain-site receipt at Published Hub commit
-  `bf2e99273acc83469a70f2a5b1dd06c93d9d01d5` (22 nodes, 27 edges).
+- Public Iroco2 Domain-site screenshot and receipt at
+  https://khoaha1904.github.io/domain-hub/iroco2/ from Published Hub commit
+  `040eb38df7fa83ec771f1bef96d31d286338b020` (21 projected nodes, 26 edges; UI shows 20 non-Domain nodes and 6 runtime arrows).
 - `docs/product/06-visualization.md`

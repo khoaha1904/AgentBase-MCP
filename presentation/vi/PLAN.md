@@ -22,7 +22,7 @@ PROMISE
 Shared, source-backed knowledge for agents and people
 
 PROOF
-One concrete Crawler impact route, shown early
+One concrete Iroco2 impact route, shown early
 
 HOW
 Evidence -> proposal -> human review -> Published Hub -> use
@@ -42,11 +42,11 @@ after the close, not a toll every audience member must pay before seeing value.
 1. AgentBase.
 2. The multi-repository context problem.
 3. Simple promise: Markdown Knowledge Hub + MCP + AI agent.
-4. Early proof: one reviewed Crawler route narrows a change request.
+4. Early proof: one reviewed Iroco2 route narrows a change request.
 5. Why knowledge must compound.
 6. Foundation: OKF structure, MCP access and exact source evidence.
 7. Lifecycle: evidence to proposal to human-reviewed Published knowledge.
-8. Demo setup: retry and visibility for failed Crawler jobs.
+8. Demo setup: retry and visibility for the CUR Analyzer-to-backend path.
 9. Feature Discovery: accepted scope and visible unknowns.
 10. Domain Hub: human-readable projection with provenance.
 11. Task Planning: shared scope narrows exact-source investigation.
@@ -70,12 +70,13 @@ after the close, not a toll every audience member must pay before seeing value.
 
 - Use one Iroco2 CUR Analyzer-to-backend scenario across the main deck.
 - The main demo uses the current compact Profile qualification snapshot at
-  Published Hub commit `bf2e99273acc83469a70f2a5b1dd06c93d9d01d5` after the
+  Published Hub commit `040eb38df7fa83ec771f1bef96d31d286338b020` after the
   reviewed backend refreshes and an explicitly mocked provider qualification.
   It is not presented as live production state.
 - Retained Crawler artifacts may appear only as clearly historical technical
   evidence outside the main controlled story.
-- Curate the trace; never show a wall of raw transcript.
+- Label illustrative conversations and task lists explicitly; they are not retained agent-run transcripts.
+- The code-backed queue path is Published; AWS identity is a mock observation. Deployed identity, operational policy changes and recovery ownership still need real-environment confirmation.
 - Diagram and Domain Hub are projections of accepted knowledge, not inferred
   truth sources.
 - Unknowns remain visible.

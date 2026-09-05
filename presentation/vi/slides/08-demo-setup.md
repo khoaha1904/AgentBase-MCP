@@ -13,7 +13,7 @@ Một yêu cầu ngắn có thể cần context xuyên repository trước khi t
 
 ```text
 CHANGE REQUEST
-Bổ sung retry và operational visibility cho luồng CUR Analyzer -> backend.
+Yêu cầu minh hoạ: cải thiện retry và khả năng theo dõi lỗi cho luồng CUR Analyzer -> backend.
 
 1. Nó chạm vào đâu?
 2. Fact và unknown là gì?
@@ -37,4 +37,4 @@ biết.”
 ## Nguồn
 
 - Iroco2 qualification snapshot, Published Hub commit
-  `bf2e99273acc83469a70f2a5b1dd06c93d9d01d5`.
+  `040eb38df7fa83ec771f1bef96d31d286338b020`.

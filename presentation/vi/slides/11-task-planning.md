@@ -14,18 +14,20 @@ thực sự phải thay đổi.
 ```text
 FEATURE DISCOVERY HANDOFF
 CUR Analyzer -> analyzer SQS -> backend consumer
-owner decisions: shared identity · retry/redrive · alarm · recovery
+owner decisions: desired retry policy · alarm · recovery
+runtime check: deployed queue identity (AWS observation is mocked)
               ↓
 Lambdas + backend -> Code Graph -> exact source
               ↓
-TASKS
-queue identity · retry/redrive · operational visibility
+ILLUSTRATIVE TASKS — not an executed planning run
+confirm deployed queue · review retry changes · define visibility
 ```
 
 ## Lời thoại dự kiến
 
-“Sau khi owner xác nhận shared queue identity, retry/redrive, alarm và recovery
-ownership, Task Planning chọn đúng Lambdas và backend. Code Graph giúp tìm
+“Sau khi owner chốt retry policy, alarm và recovery ownership, Task Planning chọn
+Lambdas và backend để điều tra. Danh sách task ở đây là minh hoạ; identity triển
+khai thật vẫn phải kiểm tra vì provider observation dùng mock. Code Graph giúp tìm
 producer, consumer và dependency path, nhưng exact source mới quyết định file,
 test và thay đổi. AgentBase cung cấp bounded context; planning workflow vẫn sở
 hữu deliverable và approval của nó.”

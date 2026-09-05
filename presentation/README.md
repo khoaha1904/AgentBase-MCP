@@ -59,6 +59,10 @@ moving deep material out of the main story.
 - State release scope and non-claims explicitly. Do not present deferred
   benchmark, public-security or scale claims as shipped outcomes.
 - Every demo claim must name its source revision or Published Hub commit.
+- Explain Iroco2 in one sentence before the early proof: it estimates cloud carbon emissions; CUR is the AWS Cost and Usage Report.
+- Keep slides 6–7 at product level when PM/PO/SM attend: structured documents, agent access, evidence, then review. Reserve exact transition names for the appendix.
+- Label mock provider observations and illustrative agent conversations visibly. A source-backed graph does not establish deployed state or prove measured agent usefulness.
+- On slide 10 use the full map as orientation, then open the public site and focus the Analyzer Queue for readable evidence; do not try to read every node on a projector.
 - Read the talk track aloud and verify desktop, projector and mobile layouts
   before delivery.
 
