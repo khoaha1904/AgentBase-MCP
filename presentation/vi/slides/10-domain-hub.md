@@ -14,8 +14,8 @@ ra một truth source mới.
 ```text
 Search/filter -> focus relation -> inspect document/evidence
 
-Snapshot: Crawler qualification · Hub 45228292aa9e
-Historical layout — not the current compact Profile UI
+Snapshot: Iroco2 qualification · Hub bf2e99273acc
+Current compact Profile 1.0 UI
 
 Domain Hub = presentation projection
 Authority = Published OKF + source citations
@@ -24,10 +24,10 @@ Authority = Published OKF + source citations
 ## Lời thoại dự kiến
 
 “Domain Hub là projection tĩnh của Published OKF. Người review có thể search,
-lọc, focus một hoặc hai hop rồi mở document và provenance. Screenshot này là
-qualification snapshot được giữ lại từ Crawler C1, không phải claim về UI compact
-Profile hiện tại hay runtime production. Authority vẫn là Published OKF và exact
-source citation bên dưới.”
+lọc, focus một hoặc hai hop rồi mở document và provenance. Screenshot này được
+build từ Published Iroco2 bằng compact Profile hiện tại sau deep refresh và một
+provider qualification mock; nó không phải claim về runtime production.
+Authority vẫn là Published OKF và exact source citation bên dưới.”
 
 ## Câu chuyển
 
@@ -36,6 +36,6 @@ source có chọn lọc.”
 
 ## Nguồn
 
-- `AgentBase/domain-hub/crawler/`, Published Hub commit
-  `45228292aa9ed56ebeb1e42a5216cf6a07133a3c`.
+- Local one-shot Iroco2 Domain-site receipt at Published Hub commit
+  `bf2e99273acc83469a70f2a5b1dd06c93d9d01d5` (22 nodes, 27 edges).
 - `docs/product/06-visualization.md`

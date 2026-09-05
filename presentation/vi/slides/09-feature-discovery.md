@@ -7,26 +7,26 @@ Cho thấy knowledge giúp tìm scope mà không che giấu uncertainty.
 ## Thông điệp duy nhất
 
 Feature Discovery dùng Published Hub để xác định accepted impact surface và giữ
-unknown thành câu hỏi rõ ràng.
+unknown thành follow-up rõ ràng.
 
 ## Nội dung hiển thị
 
 ```text
 CURATED TRACE
 User: retry và visibility sẽ chạm vào đâu?
-Agent: bắt đầu từ Published Hub của Crawler Domain.
-Result: 2 repositories · 1 queue boundary · 2 downstream resources
+Agent: bắt đầu từ Published Hub của Iroco2 Domain.
+Result: 2 repositories · producer + consumer evidence
 
-Accepted route: publisher -> queue -> worker -> storage
-Still open: retry · DLQ/redrive · alarm · recovery owner
+Candidate route: CUR Analyzer -> Analyzer SQS -> Backend consumer
+Still open: shared identity · retry/redrive · alarm · recovery owner
 ```
 
 ## Lời thoại dự kiến
 
 “Agent bắt đầu từ Published Hub thay vì scan source không giới hạn. Route trả về
 là knowledge team đã review. Những phần chưa có evidence không được điền bằng
-suy đoán; chúng trở thành Question. Diagram cho thấy accepted scope, còn
-Question giữ phần cần owner quyết định.”
+suy đoán; chúng được giữ như điều cần xác nhận. Diagram cho thấy accepted
+scope, còn evidence boundary giới hạn điều agent được phép kết luận.”
 
 ## Câu chuyển
 
@@ -35,6 +35,6 @@ evidence.”
 
 ## Nguồn
 
-- Historical Crawler qualification snapshot at Hub commit
-  `45228292aa9ed56ebeb1e42a5216cf6a07133a3c`.
+- Iroco2 qualification snapshot at Hub commit
+  `bf2e99273acc83469a70f2a5b1dd06c93d9d01d5`.
 - `docs/product/07-ai-sdlc-context.md`

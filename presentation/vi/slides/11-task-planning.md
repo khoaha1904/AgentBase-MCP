@@ -13,20 +13,22 @@ thực sự phải thay đổi.
 
 ```text
 FEATURE DISCOVERY HANDOFF
-accepted route + owner decisions + remaining unknowns
+CUR Analyzer -> analyzer SQS -> backend consumer
+owner decisions: shared identity · retry/redrive · alarm · recovery
               ↓
-selected repositories -> Code Graph -> exact source
+Lambdas + backend -> Code Graph -> exact source
               ↓
 TASKS
-dependency · acceptance criteria · citation · remaining unknown
+queue identity · retry/redrive · operational visibility
 ```
 
 ## Lời thoại dự kiến
 
-“Sau khi owner chốt retry, DLQ, alarm và recovery ownership, Task Planning dùng
-route để chọn repository. Code Graph giúp tìm symbol và dependency path, nhưng
-exact source mới quyết định file, test và thay đổi. AgentBase cung cấp bounded
-context; planning workflow vẫn sở hữu deliverable và approval của nó.”
+“Sau khi owner xác nhận shared queue identity, retry/redrive, alarm và recovery
+ownership, Task Planning chọn đúng Lambdas và backend. Code Graph giúp tìm
+producer, consumer và dependency path, nhưng exact source mới quyết định file,
+test và thay đổi. AgentBase cung cấp bounded context; planning workflow vẫn sở
+hữu deliverable và approval của nó.”
 
 ## Câu chuyển
 

@@ -51,8 +51,9 @@ moving deep material out of the main story.
 - Target 20-22 minutes for the 15-slide main deck, then questions.
 - Enter the technical appendix only when the room or remaining time benefits.
 - One slide carries one sentence the audience should remember.
-- Use one controlled Crawler story across proof, discovery, visualization and
-  planning; label retained qualification snapshots as historical evidence.
+- Use one controlled Iroco2 story across proof, discovery, visualization and
+  planning. Label its provider observation as qualification data rather than
+  live production evidence; label retained Crawler artifacts as historical.
 - Never imply that structural validation proves completeness or current runtime
   state.
 - State release scope and non-claims explicitly. Do not present deferred

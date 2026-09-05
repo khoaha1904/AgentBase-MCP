@@ -13,7 +13,7 @@ Một yêu cầu ngắn có thể cần context xuyên repository trước khi t
 
 ```text
 CHANGE REQUEST
-Bổ sung retry và operational visibility cho các Crawler job bị lỗi.
+Bổ sung retry và operational visibility cho luồng CUR Analyzer -> backend.
 
 1. Nó chạm vào đâu?
 2. Fact và unknown là gì?
@@ -33,3 +33,8 @@ mới đi vào exact source của repository liên quan.”
 
 “Phase đầu tiên không cố viết plan; nó chỉ xác định đúng boundary và điều chưa
 biết.”
+
+## Nguồn
+
+- Iroco2 qualification snapshot, Published Hub commit
+  `bf2e99273acc83469a70f2a5b1dd06c93d9d01d5`.

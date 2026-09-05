@@ -68,10 +68,13 @@ after the close, not a toll every audience member must pay before seeing value.
 
 ## Demo and evidence rules
 
-- Use one safe Crawler scenario across the main deck.
-- The retained Crawler C1 artifact is a historical qualification snapshot at
-  Published Hub commit `45228292aa9ed56ebeb1e42a5216cf6a07133a3c`; it is not
-  presented as the current compact Profile layout or live production state.
+- Use one Iroco2 CUR Analyzer-to-backend scenario across the main deck.
+- The main demo uses the current compact Profile qualification snapshot at
+  Published Hub commit `bf2e99273acc83469a70f2a5b1dd06c93d9d01d5` after the
+  reviewed backend refreshes and an explicitly mocked provider qualification.
+  It is not presented as live production state.
+- Retained Crawler artifacts may appear only as clearly historical technical
+  evidence outside the main controlled story.
 - Curate the trace; never show a wall of raw transcript.
 - Diagram and Domain Hub are projections of accepted knowledge, not inferred
   truth sources.
