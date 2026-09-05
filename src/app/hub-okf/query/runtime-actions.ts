@@ -4,8 +4,8 @@ import os from "node:os";
 import path from "node:path";
 
 import {
-  getOkfAuthoringGuidance, getOkfConceptSchema, loadOkfBundle, parseConceptDocument,
-  readRepositoryIdentityRecord, repositorySourceResources, selectOkfConceptSchemas,
+  classifyAgentBaseHubProfile, getOkfAuthoringGuidance, getOkfConceptSchema, loadOkfBundle, parseConceptDocument,
+  readRepositoryIdentityRecord, readRepositoryRefreshCoverage, repositorySourceResources, selectOkfConceptSchemas,
   type HubContinuityGap, type HubContinuityManifest,
   type InventoryReceipt,
 } from "../../../core/knowledge/index.ts";
@@ -26,6 +26,7 @@ import {
   beginHubAuthoringSession, finalizeHubAuthoringSession, materializeInitialIngestSessionSkeletons,
   readHubAuthoringSession, validateHubAuthoringSession,
 } from "../authoring/authoring-session.ts";
+import { resolveProfileInitialIngestPlan, resolveProfileRefreshSubject } from "../authoring/profile-home-plan.ts";
 import { listHubQuestions } from "../authoring/questions.ts";
 import { acceptHubProposal } from "../review/accept.ts";
 import { resolveHubConfiguration, type OptionalHubConfiguration } from "../configuration/configuration.ts";
@@ -62,6 +63,7 @@ import {
   type BatchMember,
 } from "../batch-ingest/index.ts";
 import { initializeHub as executeHubInitialization, previewHubInitialization } from "../ci/upgrade.ts";
+import { finalizeProfileMigration, prepareProfileMigration } from "../migration/profile-migration.ts";
 
 export function defaultHubRuntimeStateRoot(): string {
   const target = agentBaseStorage().hubRuntime;
@@ -149,6 +151,12 @@ function continuityDocumentGaps(
   for (const summary of continuity.currentSource) {
     const concept = parseConceptDocument(summary.path,
       fs.readFileSync(path.join(localHub.root, ...summary.path.split("/")), "utf8"));
+    const refreshCoverage = readRepositoryRefreshCoverage(concept);
+    if (refreshCoverage) gaps.push({
+      kind: "limitation", subject: concept.conceptId,
+      detail: `Refresh coverage is partial after ${refreshCoverage.coveragePasses}/3 convergence passes; ${refreshCoverage.omittedChangedPaths} changed paths were omitted; ${refreshCoverage.limitations.join("; ") || "no additional limitation was recorded"}`,
+      updatedAt: refreshCoverage.observedAt,
+    });
     if (/^# Limitations\s*$/m.test(concept.body)) gaps.push({
       kind: "limitation", subject: concept.conceptId,
       detail: "accepted concept contains an explicit Limitations section",
@@ -388,6 +396,14 @@ export function createHubRuntimeActions(
         dirty: false, dirtyDigest: null, capturedAt: snapshot.createdAt }, ...context,
         source_authority: sourceAuthority(snapshot) };
     },
+    async prepareMigration() {
+      const localHub = await admit(false, true);
+      return prepareProfileMigration({ stateRoot, localHub });
+    },
+    async finalizeMigration(input) {
+      const localHub = await admit(false, true);
+      return finalizeProfileMigration({ stateRoot, localHub, sessionId: input.sessionId, moves: input.moves });
+    },
     async prepare(input) {
       if (!path.isAbsolute(input.sourceRepository) || !fs.statSync(input.sourceRepository).isDirectory()) {
         throw new Error("source repository must be an existing absolute directory");
@@ -397,6 +413,15 @@ export function createHubRuntimeActions(
       const identityRoot = pending?.requestedRoot ?? selectedInputRoot;
       const requestedSource = discoverRepositorySourceState(identityRoot);
       const localHub = await admit(true);
+      const profileAdmission = classifyAgentBaseHubProfile(loadOkfBundle(localHub.root,
+        { requireAgentBaseRootIndex: true }));
+      if (profileAdmission.kind === "unsupported") {
+        throw new Error(`Hub Profile is unsupported: ${profileAdmission.failures.join("; ")}`);
+      }
+      if (input.mode === "refresh" && input.homePlan) throw new Error("Refresh does not accept home_plan");
+      if (profileAdmission.kind === "legacy-unprofiled" && input.homePlan) {
+        throw new Error("home_plan requires an AgentBase OKF Profile 1.0 Hub");
+      }
       const repository = await inspectInitialIngestHubContext(localHub, {
         displayName: requestedSource.displayName,
         ...requestedSource.identityHints,
@@ -410,6 +435,9 @@ export function createHubRuntimeActions(
       if (input.mode === "new" && repository.repository.kind === "existing") {
         throw new Error("repository already exists in Published Hub; use Refresh");
       }
+      const subjectDirectory = input.mode === "refresh" && profileAdmission.kind === "profile-1.0"
+        ? resolveProfileRefreshSubject(input.subjectDirectory, repository.repositorySubject)
+        : input.subjectDirectory;
       const sourceRepositoryId = repository.repository.repository.id;
       const { snapshot, source } = await preparedSource(input.sourceRepository, sourceRepositoryId);
       const knownGaps = listHubQuestions(localHub, { status: "open", limit: 100 })
@@ -421,7 +449,7 @@ export function createHubRuntimeActions(
           detail: `${question.property}: ${question.missingEvidence.join("; ") || "conflicting evidence"}`,
           updatedAt: question.createdAt,
         }));
-      let continuity = await buildActiveHubContinuity(localHub, sourceRepositoryId, input.subjectDirectory, { knownGaps });
+      let continuity = await buildActiveHubContinuity(localHub, sourceRepositoryId, subjectDirectory, { knownGaps });
       const documentGaps = continuityDocumentGaps(localHub, continuity, snapshot.analysisRoot);
       continuity = { ...continuity, knownGaps: [...knownGaps, ...documentGaps].slice(0, 64) };
       const sourceChanges = input.mode === "refresh"
@@ -441,7 +469,7 @@ export function createHubRuntimeActions(
       const coverage = receipt ? { partial: receipt.coverage.limitations.length > 0,
         limitations: receipt.coverage.limitations } : input.coverage;
       const evidenceDigest = receipt?.digest ?? authoringEvidenceDigest(sourceRepositoryId, source,
-        input.guidanceRequest ?? { signals, coverage });
+        input.guidanceRequest ?? { signals, coverage, refreshScope: input.mode === "refresh" ? input.refreshScope ?? "delta" : undefined });
       const selectedSchemas = guidance
         ? [...new Set(guidance.recommendations.flatMap((item) => ["exact", "suggested"].includes(item.status) && item.schema ? [item.schema.type] : []))]
         : selectOkfConceptSchemas(signals).map((item) => item.type);
@@ -455,10 +483,22 @@ export function createHubRuntimeActions(
       }
       if (input.mode === "new" && !selectedSchemas.includes("Repository")) selectedSchemas.unshift("Repository");
       if (input.confirmedDomain && !selectedSchemas.includes("Domain")) selectedSchemas.push("Domain");
+      const profilePlan = input.mode === "new" && profileAdmission.kind === "profile-1.0"
+        ? resolveProfileInitialIngestPlan({
+          subjectDirectory,
+          ...(input.homePlan ? { homePlan: input.homePlan } : {}),
+          ...(input.confirmedDomain ? { confirmedDomain: input.confirmedDomain } : {}),
+          request: receipt!.guidanceRequest,
+          guidance: receipt!.guidance,
+        }) : undefined;
+      if (profilePlan && !selectedSchemas.includes("Domain") && (profilePlan.plan.defaultHome.kind === "domain"
+        || profilePlan.plan.exceptions.some((entry) => entry.home.kind === "domain")
+        || profilePlan.plan.participations.length > 0)) selectedSchemas.push("Domain");
       if (!selectedSchemas.length) throw new Error("authoring guidance did not establish any exact or suggested schema role");
       const session = beginHubAuthoringSession({
         stateRoot,
         mode: input.mode,
+        ...(input.mode === "refresh" ? { refreshScope: input.refreshScope ?? "delta" } : {}),
         hub: localHub.hub,
         baseCommit: localHub.activeHead,
         checkoutRoot: localHub.root,
@@ -466,8 +506,9 @@ export function createHubRuntimeActions(
         sourceRepositoryId,
         sourceState: { commit: source.commit, dirty: source.dirty, dirtyDigest: source.dirtyDigest },
         evidenceDigest,
-        subjectDirectory: input.subjectDirectory,
-        ...(input.confirmedDomain ? { confirmedDomain: input.confirmedDomain } : {}),
+        subjectDirectory: profilePlan?.subjectDirectory ?? subjectDirectory,
+        ...(input.confirmedDomain && !profilePlan ? { confirmedDomain: input.confirmedDomain } : {}),
+        ...(profilePlan ? { homePlan: profilePlan.plan } : {}),
         signals,
         selectedSchemas,
         ...(guidance ? { guidance } : {}),
@@ -492,12 +533,15 @@ export function createHubRuntimeActions(
         source,
         source_authority: sourceAuthority(snapshot),
         repositoryResolution: repository.repository,
-        ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),
+        ...(input.confirmedDomain ? { confirmedDomain: input.confirmedDomain } : {}),
+        ...(session.homePlan ? { homePlan: session.homePlan } : {}),
         continuity,
         ...(sourceChanges ? { sourceChanges } : {}),
+        ...(input.mode === "refresh" ? { refreshScope: input.refreshScope ?? "delta" } : {}),
         skeletons,
         ...(input.mode === "new" ? { authoringConstraints: [
           "Preserve generated sources, relationships, repository identity metadata and navigation; enrich the skeleton instead of rebuilding its frontmatter.",
+          "Use the Repository as the default dossier: add only applicable evidence-backed purpose/boundary, runtime/deployment, capability, interface/trigger, dependency/data, operations/recovery and known-gap sections; omit unsupported headings and avoid duplicating promoted knowledge.",
           "Add Embedded Relations only for exact evidenced runtime directions; containment and prose alone never create arrows.",
         ] } : {}),
       };
@@ -544,6 +588,7 @@ export function createHubRuntimeActions(
           sourceRepositoryId: session.sourceRepositoryId, sourceState: session.sourceState,
           evidenceDigest: replacementReceipt.digest, subjectDirectory: session.subjectDirectory,
           ...(session.confirmedDomain ? { confirmedDomain: session.confirmedDomain } : {}),
+          ...(session.homePlan ? { homePlan: session.homePlan } : {}),
           signals: session.signals, selectedSchemas: session.selectedSchemas,
           guidance: replacementReceipt.guidance,
           coverage: { partial: replacementReceipt.coverage.limitations.length > 0,

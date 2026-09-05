@@ -19,8 +19,10 @@ Normative OKF source is pinned to commit
   proposal and never mutates the shared `okf/` bundle.
 - **AB-MVP-010, AB-MVP-011** — Concept files have bounded parseable YAML
   frontmatter and non-empty `type`; reserved files follow OKF v0.2, root
-  `index.md` declares `okf_version: "0.2"`, IDs are bundle-relative paths and
-  ordinary Markdown links provide progressive disclosure.
+  `index.md` declares `okf_version: "0.2"`, and ordinary Markdown links provide
+  progressive disclosure. IDs are bundle-relative paths except the compact
+  Profile Domain concept at `domains/<slug>/index.md`, whose canonical identity
+  is the external selector `domains/<slug>`.
 - **AB-MVP-012** — New generated concepts are honest drafts with
   `generated.by: agentbase/<version>`, meaningful generation time, normalized
   sources and no invented verification.
@@ -49,11 +51,11 @@ Normative OKF source is pinned to commit
 - **AB-MVP-022** — Graph/direct-source comparison may record time, presented
   context, fact coverage and correction count; no unmeasured speed threshold is
   a product claim.
-- **AB-MVP-023** — Only root `index.md` carries OKF frontmatter. Architecture
-  category indexes are optional derived navigation and are not required Hub
-  authority; when present they contain Markdown without frontmatter. A
-  workflow-owned governance index such as `questions/index.md` may remain part
-  of its exact lifecycle.
+- **AB-MVP-023** — Root `index.md` carries base OKF frontmatter; under compact
+  Profile 1.0 each Domain `index.md` carries its Domain concept frontmatter and
+  navigation body. `shared/index.md` is navigation only. Repository,
+  `knowledge/` and `questions/` category indexes are not authored Hub files.
+  Legacy and foreign valid indexes remain readable under their admitted profile.
 
 ## Explicit observations
 
@@ -140,6 +142,12 @@ Normative OKF source is pinned to commit
 - A Repository concept may carry `agentbase.repository.observed_source` with the
   exact clean commit or dirty digest and observation time. It is a continuity
   checkpoint and freshness warning aid, not a truth score or copied source.
+- A Repository may also carry one MCP-owned
+  `agentbase.repository.refresh_coverage` value while Refresh coverage is
+  partial. It contains only partial status, bounded omitted-path count,
+  current-campaign Coverage pass count, limitations and observation time.
+  Refresh may change this governed lifecycle field without making other unknown
+  `agentbase.repository` fields mutable.
 - Refresh validates every added or changed current-repository source span
   against the authorized checkout. Foreign sources stay as references and are
   not dereferenced without separate authority.
@@ -172,7 +180,9 @@ Normative OKF source is pinned to commit
 - **AB-SCHEMA-008** — Selection recommends the smallest independently useful
   type supported by evidence. Concrete implementation detail remains inside its
   useful parent unless an independent contract, ownership, lifecycle, failure,
-  operational, audience or graph boundary is evidenced.
+  operational, audience, reading or graph boundary is evidenced. Under compact
+  Profile 1.0 the Repository dossier is the default parent for repository-local
+  knowledge.
 - **AB-SCHEMA-009** — Concrete concepts preserve provenance and important
   uncertainty. Cross-repository relationships need evidence for both endpoints
   and the relationship.
@@ -200,10 +210,11 @@ Normative OKF source is pinned to commit
   words never override the standalone/embedded boundary or reject an explicit
   evidence-bound suggested role. Keyword matches are diagnostics, not validity
   gates. Repository names and benchmark identities are never selection rules.
-- **AB-SCHEMA-016** — Canonical Domain, System, Component, Function, Interface,
-  Flow, Resource and Repository paths classify one identity per useful entity;
-  links express relationships and evidence. Entity/Metric paths are added only
-  during enrichment.
+- **AB-SCHEMA-016** — Compact canonical placement distinguishes Domain
+  `domains/<slug>`, Repository `<home>/repositories/<slug>`, Question
+  `<home>/questions/<id>` and all other standalone types
+  `<home>/knowledge/<slug>`. Frontmatter type classifies role; links express
+  relationships and evidence. Entity/Metric remain enrichment-only roles.
 - **AB-SCHEMA-017** — Related operations and events share one Interface when
   they form a consumer or cross-boundary contract. Implementation-only handlers,
   routes and infrastructure declarations stay in their useful parent.
@@ -236,19 +247,21 @@ Normative OKF source is pinned to commit
   no dependency on total Hub size and receives no unchanged concept body.
 - **AB-SCHEMA-022** — Architecture nodes and useful knowledge units are not
   forced into technology-shaped granularity. Operationally independent
-  Functions remain concepts; implementation-only handlers stay in their
-  parent. Compute hosts are hosting evidence; evidenced workloads become
-  Components, not children of an automatically authored Server concept.
+  Functions may remain concepts when they pass the compact independent-reading
+  gate; implementation-only handlers stay in their dossier/parent. Compute
+  hosts are hosting evidence; evidenced workloads do not become children of an
+  automatically authored Server concept.
 - **AB-SCHEMA-023** — A persisted concept identity is its normalized path
-  relative to the OKF root with `.md` removed. Changed concepts and unchanged
-  target summaries MUST use that identity, and validation rejects ephemeral
-  type-prefixed aliases or paths beginning with the outer `okf/` directory.
-- **AB-SCHEMA-024** — Hub prepare accepts at most one optional owner-confirmed
-  Domain with exact `domains/<slug>` identity and title. It validates before
-  session creation, selects Domain guidance and returns deterministic
-  `agentbase://owner-guidance/<identity>` evidence. Finalization requires the
-  Domain plus a current-source Repository `part-of` edge citing that owner evidence;
-  absent input never authorizes Domain inference.
+  relative to the OKF root with `.md` removed, except compact Domain
+  `domains/<slug>/index.md` normalizes to `domains/<slug>`. Changed concepts and
+  unchanged target summaries MUST use the canonical identity; validation rejects
+  ephemeral type-prefixed aliases or paths beginning with the outer `okf/`
+  directory.
+- **AB-SCHEMA-024** — Legacy `confirmed_domain` accepts at most one exact
+  owner-confirmed `domains/<slug>` identity/title and translates to the grouped
+  one-Domain home/participation form. Profile authoring uses the bounded home
+  plan. Owner guidance is deterministic; absent input never authorizes Domain
+  home or participation inference.
 - **AB-SCHEMA-025** — Product and authoring language distinguishes a reusable
   catalog Concept Schema/template from a repository-specific Concept Instance.
   One schema may yield many instances; each instance declares one catalog type.
@@ -303,10 +316,10 @@ Normative OKF source is pinned to commit
   reports those ignored hints without creating a standalone identity. Parent,
   evidence ownership and field-shape validation remain strict.
 - **AB-SCHEMA-037** — Queue, topic, event-bus, table, bucket, database and host
-  evidence defaults to a searchable evidence table inside its Function,
-  Component or System parent. It may promote to Interface for an independent
-  shared contract, or Resource for cross-boundary/independently operated value.
-  A declaration alone is insufficient promotion evidence.
+  evidence defaults to a searchable evidence table inside its Repository dossier
+  or another independently useful parent. It may promote to Interface for an
+  independent shared contract, or Resource for cross-boundary/independently
+  operated value. A declaration alone is insufficient promotion evidence.
 - **AB-SCHEMA-038** — EC2, VM and physical-host evidence describes hosting.
   Independently evidenced services, workers and processes running there become
   Component concepts. If no workload is evidenced, retain a reference or
@@ -337,18 +350,21 @@ Normative OKF source is pinned to commit
 
 - **AB-INGEST-001, AB-INGEST-002** — Ingest binds one explicit authorized local
   root, resolves its durable Hub Repository identity, reads at most five/256 KiB
-  introductory documents and requires explicit primary-Domain confirmation
-  after showing evidence and mismatches.
+  introductory documents and requires explicit grouped-home confirmation after
+  showing Domain/shared evidence and mismatches.
 - **AB-INGEST-003, AB-INGEST-004** — The host skill runs Preflight, Discover,
-  Investigate, Author and Validate. Code Graph is a private map; promoted claims
-  and relations resolve to exact source. Before proposal state exists, one
+  Investigate, Author, semantic Quality Admission and deterministic Validate.
+  Code Graph is a private map; promoted claims and relations resolve to exact
+  source. Before proposal state exists, one
   retryable `INVALID_ARGUMENT` guidance request may be corrected; after state
   exists, at most one separate changed-document validation repair runs. Sparse
   ambiguous/unsupported guidance continues without retry, while authority,
   integrity, internal or uncertain-mutation failures stop Incomplete.
-- **AB-INGEST-005, AB-INGEST-006** — Every candidate needs stable identity and
-  independent query/link value. One bounded Hub match pass reuses identity only
-  from strong evidence; name/prose similarity never auto-merges.
+- **AB-INGEST-005, AB-INGEST-006** — Every standalone candidate needs stable
+  identity, independent query/link value and independent reading/boundary value.
+  Evidence lacking the third gate remains in a Repository dossier/useful parent.
+  One bounded Hub match pass reuses identity only from strong evidence;
+  name/prose similarity never auto-merges.
 - **AB-INGEST-007** — Limited graph/language evidence may produce a valid
   explicitly partial proposal with concrete limitations. Source mutation,
   cleanup uncertainty or integrity failure is Incomplete and exposes no
@@ -356,26 +372,27 @@ Normative OKF source is pinned to commit
 - **AB-INGEST-008, AB-INGEST-009** — No-change is success; change stops at one
   inspectable proposal preview. The agent-operated workflow never calls a
   provider CLI, clones another repository, Accepts or Publishes.
-- **AB-INGEST-010** — Confirmed ownership is stored as one owner-evidenced
+- **AB-INGEST-010** — Confirmed physical home and semantic Domain participation
+  remain separate. Participation is stored only as an evidenced
   `Repository part-of Domain` relation. New preparation derives its evidence
-  digest from the validated guidance request and exact repository source state;
-  the agent does not supply an opaque digest.
+  digest from validated guidance and exact repository source state; the agent
+  does not supply an opaque digest.
 - **AB-INGEST-011** — Concept Schema defines what knowledge belongs in a
   concept; the shared OKF document template defines its encoding. New Initial
-  Ingest preparation renders editable skeleton files for exact and suggested recommendations,
-  Repository, confirmed Domain and navigation with canonical paths, valid
-  lifecycle fields and normalized sources. Suggested files state that their
-  role requires proposal review. A prepared System carries the owner-evidenced
-  primary-Domain relation so inbound Domain navigation is derivable. The agent
-  enriches these files rather than reconstructing OKF frontmatter.
-- **AB-INGEST-012** — A new confirmed Domain skeleton lists every System newly
-  prepared under it. Preparation never rewrites an existing Domain document.
-  Its initial overview stays sparse and describes only current owner/repository
-  evidence; later ingests may build it up without inventing a complete domain.
-- **AB-INGEST-013** — Initial Ingest Prepare owns and pre-populates required
-  root/category navigation. Agent authoring preserves those rows rather than
-  appending known targets, and bundle validation rejects a repeated normalized
-  navigation target within one index.
+  Ingest preparation renders one editable Repository dossier, compact Domain
+  index/navigation when needed and skeleton files only for independently
+  promoted recommendations. Paths follow AB-COMPACT; lifecycle fields and
+  normalized sources remain canonical. Suggested files state that their role
+  requires proposal review. The agent enriches these files rather than
+  reconstructing OKF frontmatter.
+- **AB-INGEST-012** — A new confirmed Domain `index.md` is both sparse Domain
+  concept and capsule navigation. It describes only current owner/repository
+  evidence and links useful dossiers/knowledge/Questions; later ingests may
+  build it up without inventing a complete Domain.
+- **AB-INGEST-013** — Initial Ingest Prepare owns and pre-populates required root,
+  shared and Domain navigation. It creates no category index. Agent authoring
+  preserves exact known rows, and bundle validation rejects a repeated
+  normalized navigation target within one index.
 - **AB-INGEST-014** — Initial Ingest Finalize checks every new citation for the
   authorized current repository against its private local checkout. The path
   resolves beneath that checkout to a regular file and the cited end line is
@@ -402,7 +419,7 @@ Normative OKF source is pinned to commit
   revisions. Final SharedQuestion candidate-evidence shape is unchanged.
 - **AB-INGEST-018** — Agent-facing Discovery Inventory has only three group
   outcomes: `materialized`, `question` and `ignored`. A materialized item names
-  candidate IDs; MCP derives candidate concept/embedded disposition, embedded
+  candidate IDs; MCP derives candidate standalone/dossier disposition, embedded
   parent, Inventory/QuestionPlan IDs and canonical internal references from the
   active Seed plus the same guidance request. Inventory items do not repeat
   candidate evidence IDs. Bounded Seed source samples remain review context,
@@ -496,9 +513,10 @@ Normative OKF source is pinned to commit
   changes. The session field is optional so standalone changed-set schema
   validation retains its bounded, total-Hub-independent behavior.
 - **AB-SCHEMA-057** — Knowledge sharing one runtime, deployment and ownership
-  boundary remains in one Function, Component or System parent. Provider
-  resource count never forces standalone concepts. A one-runtime repository
-  normally contributes one Repository plus that runtime concept.
+  boundary remains in one Repository dossier or independently justified useful
+  parent. Provider resource count never forces standalone concepts. A
+  one-runtime repository normally needs no duplicate runtime document unless it
+  independently passes the compact promotion gate.
 - **AB-SCHEMA-058** — Consolidation preserves independently deployed frontend,
   backend, worker and shared integration boundaries. Interface, Flow and
   Resource promotion still requires independent contract, ordered-behavior,
@@ -509,6 +527,7 @@ Normative OKF source is pinned to commit
   promoted Interface or Resource targets. Internal embedded items remain
   searchable parent content and never become relation endpoints merely to
   complete a graph or diagram.
-- **AB-SCHEMA-060** — New Initial Ingest skeletons add direct Domain entrypoints
-  to root navigation, or a Repository entrypoint when no Domain is confirmed.
-  Architecture category listings are derived and not authored proposal files.
+- **AB-SCHEMA-060** — New Initial Ingest skeletons add direct compact Domain
+  entrypoints to root navigation and direct Repository/knowledge/Question links
+  to the owning home index. Category listings are derived presentation and not
+  authored proposal files.

@@ -4,6 +4,11 @@
 transactionally registers the current checkout as user-global stdio MCP in
 selected clients. Installation never selects/creates a Hub or asks for a token.
 
+> Status: Installation is implemented. Group 1 treats the existing runtime
+> shared token as the built-in trusted-enterprise credential provider; Group 2
+> owns transactional skill upgrade/uninstall and release-integrity changes from
+> the accepted Product Contract sequence.
+
 ## Credential and non-interactive behavior
 
 - **AB-INSTALL-001** — Interactive selection changes exactly available selected
@@ -12,11 +17,13 @@ selected clients. Installation never selects/creates a Hub or asks for a token.
 - **AB-INSTALL-003 (retired)** — Installer token skip/local-Hub choice is removed.
 - **AB-INSTALL-004 (retired)** — Installer global token persistence is removed.
 - **AB-INSTALL-005 (retired)** — Installer token replacement is removed.
-- **AB-INSTALL-006 (retired)** — Ambient/global token precedence is removed.
+- **AB-INSTALL-006 (retired)** — Installer-owned ambient/global token precedence
+  is removed. Runtime credential reuse belongs to the configured provider and is
+  owned by `AB-HUB-SETUP-032..037`.
 
-Token entry and replacement belong only to the later owner-private
-`agentbase-hub` profile connection flow; no ambient/global token becomes a
-default for every Hub.
+Token entry and replacement belong only to the later owner-private Hub
+connection flow. Installation does not collect credentials; runtime may reuse
+one provider credential across Hub profiles.
 
 ## Client registration transaction
 

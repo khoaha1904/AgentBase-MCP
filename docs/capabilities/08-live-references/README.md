@@ -2,7 +2,8 @@
 
 > Status: Repository snapshots, bounded AWS/SQS observations, freshness
 > projection and read-only Hub CI are implemented; remote repository reads with
-> an MCP token remain outside the MVP.
+> an MCP token remain outside the MVP. G3-C1 uniform context freshness is
+> implemented and verified.
 
 Product Contract:
 [Trust, conflicts and freshness](../../product/04-trust-conflicts-and-freshness.md)
@@ -22,3 +23,6 @@ Product Contract:
   Domain Enrichment, not during Ingest.
 - [`07-capability-requirements.md`](07-capability-requirements.md) — normative
   routes for observation, value safety, freshness and degraded reads.
+- [`08-freshness-envelope-requirements.md`](08-freshness-envelope-requirements.md)
+  — implemented G3-C1 uniform response metadata, deterministic status and additive
+  compatibility requirements.

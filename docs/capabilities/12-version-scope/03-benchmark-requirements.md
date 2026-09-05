@@ -1,5 +1,11 @@
 # Benchmark requirements
 
+> Release status: Benchmark design, deterministic tests, opt-in runners and
+> retained historical evidence remain supported. New real-model usefulness,
+> onboarding and longitudinal stewardship campaigns are deferred and are not a
+> current internal enterprise release gate. Ordinary `npm run verify`, contract
+> checks, release CI and artifact qualification remain required.
+
 This file owns the shared benchmark execution and evidence boundary. The
 historical requirements below qualify OKF authoring. The proposed Feature
 Discovery context comparison is governed by

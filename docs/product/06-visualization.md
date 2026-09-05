@@ -1,7 +1,10 @@
 # 06 — Visualization
 
 > Status: Published projection, focused diagrams and explicit static Domain-site
-> generation are implemented.
+> generation are implemented. Exact-proposal semantic impact and its bounded
+> text preview are implemented; optional visual proposal rendering remains
+> deferred. G4-C4 Profile Domain projection and G5-C1 compact
+> Domain/Repository projection are implemented and verified.
 
 ## Outcome
 
@@ -32,11 +35,39 @@ Pages automatically.
 New Published knowledge requires a new generation. The site is not a watcher,
 dashboard or live mirror.
 
+Every generated site visibly identifies its exact Published Hub commit and
+states that it is generated presentation rather than AgentBase-Hub authority.
+Removing that marker is a downstream publishing decision outside AgentBase; the
+generator never presents a hosted page as proof that the underlying Hub is
+public or current.
+
+## Proposal review impact preview
+
+The Knowledge Lifecycle may request one deterministic before/after view for an
+exact finalized proposal. It may show changed concepts, accepted relation
+direction, affected Domain/Repository boundaries, Questions, dangling
+references and omissions. It reads the exact proposal/base only, carries their
+digests and is discarded after review. Local Draft never enters ordinary
+Published visualization, and the preview never substitutes for Git diff or
+maintainer approval.
+
 ## Knowledge and presentation boundary
 
 Concepts, accepted relation direction, provenance, Flows, Questions and visible
 omissions come from the Published projection. Colors, layout and coordinates are
 presentation state and never enter the Hub.
+
+After Group 4 delivery, a Domain view starts from the corresponding Domain
+Capsule. Shared and other-Domain concepts appear only as evidenced boundary
+endpoints. Their visual placement never rehomes, copies or imports their
+knowledge into the selected capsule.
+
+The compact Profile target discovers roles from frontmatter rather than folder
+names. Domain `index.md` supplies page context; Repository dossiers supply the
+default human-readable Repository view, while independently useful documents in
+`knowledge/` become graph/detail views only when their accepted identities and
+relations justify them. Embedded dossier sections may be presented as bounded
+details but never become synthetic canonical nodes.
 
 The Domain is page context rather than a repeated graph node. A Repository is
 shown as a compact selectable card inside its fixed grouping region, whose
@@ -92,6 +123,8 @@ be at least as restricted as the Published knowledge it copies.
 - Another graph database, watcher, daemon or live server.
 - Automatic Domain-site repository creation, push or publication.
 - Writing presentation settings into OKF.
+- Treating generated site or proposal-preview visibility as knowledge
+  authority, access policy or publication state.
 
 ## Downstream Capability Contract
 

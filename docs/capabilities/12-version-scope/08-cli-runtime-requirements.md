@@ -1,7 +1,7 @@
 # CLI runtime requirements
 
-> Status: implemented baseline — `abs` public dispatch and shared-token Hub
-> connect are verified by the repository gate.
+> Status: `abs` public dispatch and the Group 1 built-in single-credential
+> provider behavior are implemented.
 
 High-level authority: [`docs/product/00-scope-and-authority.md`](../../product/00-scope-and-authority.md)
 and [`docs/product/README.md`](../../product/README.md).
@@ -10,7 +10,7 @@ and [`docs/product/README.md`](../../product/README.md).
 
 Before this capability, `src/cli.ts` exposed the internal `okf`, `mcp`,
 observation, benchmark and foundation routes directly. Hub connection also
-required a separate masked token helper and per-profile credential lookup.
+used one shared token without naming its credential-provider boundary.
 That baseline was functional for developers but too broad and confusing for an
 owner-facing product command.
 
@@ -36,39 +36,40 @@ existing synchronization action; it does not connect or publish.
 
 ```text
 parse URL + branch
-  → load shared token (or active legacy profile token)
-  → masked prompt
-       blank ───────────────→ reuse loaded token
-       non-empty ───────────→ stage replacement token
+  → resolve the configured default enterprise credential
+       found ───────────────→ masked prompt accepts blank reuse
+       missing/replacement ─→ masked prompt requires provider credential
   → validate remote + Hub through existing attach action
-       success ─────────────→ destination profile active; shared token kept
-       reported failure ────→ prior profile/token restored
+       success ─────────────→ destination profile active; credential retained
+       reported failure ────→ prior profile/default credential restored
 ```
 
-The token is owner-private process input and the existing `config/hub/env`
-credential file. It never enters arguments, authenticated URLs, MCP inputs,
-output, errors, Git configuration, Hub files or knowledge records. The same
-shared token is the default for every configured repository/branch; the remote
-permission check remains authoritative.
+The token is owner-private process input stored once by the built-in
+single-credential provider. It never enters arguments, authenticated
+URLs, MCP inputs, output, errors, Git configuration, Hub files or knowledge
+records. Every Hub profile may resolve the same configured credential.
 
-Profile configuration stores only exact remote identity and independent local
-state; it does not store a production/test rank. Environment-specific labels
-remain outside the public CLI contract. Switching profiles never clones
-knowledge from one Hub into another.
+Profile configuration stores exact remote identity and independent local state;
+it does not store or duplicate token bytes or a production/test rank.
+Environment-specific labels remain outside the public CLI contract. Switching
+profiles never clones knowledge from one Hub into another.
 
-If no shared token exists, a blank prompt is rejected unless the active legacy
-profile has a credential that can be promoted. Per-profile credential files are
-legacy compatibility input, not the current selection model.
+If a default credential already exists, connecting or switching to another Hub
+reuses it without entering the token again. Otherwise connect requires the first
+token. Future scoped or
+multi-account providers may replace this implementation through the same
+boundary without changing Hub profiles or connect semantics.
 
 ## Error and recovery contract
 
-- Missing URL/branch, malformed URL, empty token or non-interactive setup without
-  a stored token returns exit code `1` with bounded guidance.
+- Missing URL/branch, malformed URL or non-interactive setup without a resolved
+  provider credential returns exit code `1` with bounded guidance.
 - Remote permission, unavailable branch or invalid Hub returns exit code `1`;
-  the previous active profile and shared token remain unchanged.
-- A replacement token is rolled back on reported failure. An uncatchable process
-  termination may leave owner-private credential state, but never activates the
-  destination profile.
+  the previous active profile and credential-provider state remain unchanged.
+- A replacement provider credential is rolled back on reported failure. An
+  uncatchable process termination may leave owner-private staged credential
+  state, but never activates the destination profile or changes another
+  profile's credential.
 - Unknown public commands return a non-zero result and do not expose internal
   command inventory.
 
@@ -83,8 +84,9 @@ legacy compatibility input, not the current selection model.
 
 ## Verification
 
-Focused tests cover help, status, sync, first token entry, blank reuse,
-shared-token defaulting, rollback and token redaction. The repository gate is:
+Focused tests cover help, status, sync, first token entry, blank-input Hub
+switching, cross-profile knowledge isolation, rollback and token redaction. The
+repository gate is:
 
 ```bash
 npm run verify

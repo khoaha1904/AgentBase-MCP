@@ -1,6 +1,8 @@
 # 06.07 — Capability requirements
 
 > Status: The first AWS/SQS slice is implemented with deterministic offline E2E.
+> Group 1 retains bounded provider execution while resolving executable and
+> credentials through the verified trusted-enterprise adapter boundary.
 
 These `AB-ENRICH-*` requirements are the normative Cross-Repository Relations
 Capability Contract for the released bounded enrichment slice.
@@ -9,13 +11,15 @@ Capability Contract for the released bounded enrichment slice.
   confirmed Domain, 1–32 Published Repository IDs, exact candidate/Question
   revisions and released profile versions. Local pending commits/open PRs are
   not input.
-- **AB-ENRICH-002** — Provider access starts only after the user confirms an
-  authenticated AWS CLI session, expected account and bounded regions. MCP does
-  not login, read/store credentials, change config/profile or use default region
-  as knowledge.
+- **AB-ENRICH-002** — An explicit Domain Enrichment workflow resolves the
+  configured authenticated AWS CLI session and records exact account/profile,
+  bounded regions and manifest digest for evidence consistency. MCP does not
+  login, store credentials, change config/profile or use default region as
+  knowledge.
 - **AB-ENRICH-003** — AWS provider exposes only released typed read-only
-  profiles and direct argv without shell. Arbitrary executable/command/flag and
-  account, service or unspecified-region enumeration are forbidden.
+  profiles through the configured provider executable, bounded environment and
+  direct argv without shell. Arbitrary command/flag and account, service or
+  unspecified-region enumeration are forbidden.
 - **AB-ENRICH-004** — Provider success admits only a normalized safe observation
   with authority, location, native identity, allowlisted fields, profile version,
   time and digest. Raw output, credential context and secret-like values never
@@ -52,6 +56,15 @@ Capability Contract for the released bounded enrichment slice.
 - **AB-ENRICH-014** — Mock qualification MUST exercise deterministic confirmed,
   rejected, unresolved/failed and retry outcomes without network, real
   credentials or account-wide enumeration.
+- **AB-ENRICH-RUNTIME-001** — Immediately before execution, the adapter records
+  the resolved provider/account, regions, released profile and immutable
+  manifest revision/digest. Drift creates no observation and returns the
+  workflow for review; no separate security ticket is required in the trusted
+  profile.
+- **AB-ENRICH-RUNTIME-002** — Offline tests cover configured executable and
+  credential availability, changed account/region/manifest, bounded direct
+  read-only argv, normalized output, timeout and absence of account-wide
+  enumeration.
 
 AWS v1 releases only `aws.sts.caller-identity@1` and `aws.sqs.queue@1`. Azure/
 GCP, account scan, concept redirect/merge, background enrichment and provider

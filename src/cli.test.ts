@@ -55,7 +55,7 @@ test("abs status and sync dispatch bounded owner actions", async () => {
   assert.match(syncIo.output.join(""), /synchronized/);
 });
 
-test("hub connect stores one shared token and reuses it on blank input", async () => {
+test("[AB-HUB-SETUP-030][AB-HUB-SETUP-033][AB-HUB-SETUP-037] hub connect stores one shared token and reuses it on blank input", async () => {
   const env = environment();
   let calls = 0;
   const connect = actions({ configure: async () => { calls += 1; return { connected: true }; } });
@@ -70,7 +70,7 @@ test("hub connect stores one shared token and reuses it on blank input", async (
   assert.doesNotMatch(firstIo.output.join("") + firstIo.errors.join(""), /shared-token-canary/);
 });
 
-test("hub connect restores the previous shared token after a reported failure", async () => {
+test("[AB-HUB-SETUP-031][AB-HUB-SETUP-037] hub connect restores the previous shared token after a reported failure", async () => {
   const env = environment();
   writeGlobalHubToken("old-token-canary", env);
   const connect = actions({ configure: async () => { throw new Error("destination rejected"); } });
@@ -81,7 +81,7 @@ test("hub connect restores the previous shared token after a reported failure", 
   assert.doesNotMatch(connectIo.errors.join(""), /new-token-canary|old-token-canary/);
 });
 
-test("the shared token is the default credential for every Hub profile", () => {
+test("[AB-HUB-SETUP-033][AB-HUB-SETUP-037] the shared token is the default credential for every Hub profile", () => {
   const env = environment();
   const profileId = "a".repeat(24);
   writeHubProfileToken(profileId, "legacy-profile-token", env);

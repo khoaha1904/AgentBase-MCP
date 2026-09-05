@@ -5,17 +5,10 @@ import type { LocalHubState } from "../../../core/hub/index.ts";
 import { runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
 import {
   acquireHubMutationLock,
-  readHubProposalState,
+  hubMutationProfileId,
   releaseHubMutationLock,
 } from "../review/proposal-state.ts";
-import { submitHubProposal, type HubPublicationReceipt, type SubmitHubOptions } from "./submit.ts";
 import { HUB_PUBLISHED_REF } from "../workspace/local-hub.ts";
-
-export async function recoverHubSubmission(options: SubmitHubOptions): Promise<HubPublicationReceipt> {
-  const proposal = readHubProposalState(options.proposalRoot);
-  if (proposal.phase === "prepared") throw new Error("proposal has no interrupted publication to recover");
-  return submitHubProposal(options);
-}
 
 export type HubSynchronizationRecovery = Readonly<{
   transactionId: string;
@@ -59,7 +52,7 @@ export async function recoverSynchronizationTransaction(
   git: (request: GitRequest) => Promise<GitOutput> = runGit,
 ): Promise<HubSynchronizationRecovery> {
   if (!/^sync-[a-z0-9]+$/.test(transactionId)) throw new Error("synchronization transaction ID is invalid");
-  const lock = acquireHubMutationLock(stateRoot, transactionId, { recoverStaleOwner: true });
+  const lock = acquireHubMutationLock(stateRoot, hubMutationProfileId(localHub), transactionId);
   try {
   const transactionRoot = path.join(path.resolve(stateRoot), "transactions", transactionId);
   const state = JSON.parse(fs.readFileSync(path.join(transactionRoot, "transaction.json"), "utf8")) as TransactionState;

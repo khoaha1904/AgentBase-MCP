@@ -3,7 +3,7 @@ import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
 import { computeOkfTreeDigest, loadOkfBundle } from "../documents/okf-bundle.ts";
-import { validateAgentBaseDraft, type ConceptDocument, type OkfValue } from "../documents/okf-document.ts";
+import { conceptIdentityFromPath, validateAgentBaseDraft, type ConceptDocument, type OkfValue } from "../documents/okf-document.ts";
 import { parseQuestionDocument, validateQuestionTransition } from "../governance/questions.ts";
 import { validateBundleExternalIdentities } from "../governance/external-identities.ts";
 import { validateBundleObservedValues } from "../governance/observed-values.ts";
@@ -160,7 +160,7 @@ function protectedModificationFailures(currentRoot: string, proposedRoot: string
     if (!proposed.files.includes(relative)) continue;
     if (bytes(currentRoot, relative).equals(bytes(proposedRoot, relative))) continue;
     if (path.posix.basename(relative) === "index.md") continue;
-    const concept = current.concepts.get(relative.endsWith(".md") ? relative.slice(0, -3) : "");
+    const concept = current.concepts.get(relative.endsWith(".md") ? conceptIdentityFromPath(relative) : "");
     if (!concept || !isMutableAgentBaseDraft(concept)) failures.push(`${relative}: protected existing bytes were modified`);
   }
   return failures;
@@ -183,6 +183,7 @@ function unknownValueFailures(base: ConceptDocument, proposed: ConceptDocument):
         const previousRepository = { ...(mapping(previous.repository) ?? {}) };
         const nextRepository = { ...(mapping(next.repository) ?? {}) };
         delete previousRepository.observed_source; delete nextRepository.observed_source;
+        delete previousRepository.refresh_coverage; delete nextRepository.refresh_coverage;
         previous.repository = previousRepository; next.repository = nextRepository;
       }
       if (!isDeepStrictEqual(previous, next)) {
@@ -279,7 +280,7 @@ export function diffBundleProposal(currentBundleRoot: string, proposalRoot: stri
       return { path: relative, change: "preserved", allowed: true };
     }
     if (inProposed) return { path: relative, change: "modified", allowed: true };
-    const concept = current.concepts.get(relative.endsWith(".md") ? relative.slice(0, -3) : "");
+    const concept = current.concepts.get(relative.endsWith(".md") ? conceptIdentityFromPath(relative) : "");
     if (concept?.type === "Question") return { path: relative, change: "prohibited-deletion", allowed: false,
       reason: "Question documents require a dedicated governed transition" };
     if (concept && isMutableAgentBaseDraft(concept)) return { path: relative, change: "deleted-agentbase-draft", allowed: true };

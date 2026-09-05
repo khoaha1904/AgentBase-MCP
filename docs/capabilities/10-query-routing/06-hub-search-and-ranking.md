@@ -139,6 +139,13 @@ Structural Repository association follows only accepted `part-of`,
 `implemented-in` and `declared-by` direction toward a Repository. Boundary
 expansion stops after one endpoint and never imports its Domain neighborhood.
 
+For compact Profile 1.0, external selector and actual Domain identity are both
+`domains/<slug>`, backed by the capsule `index.md`. Capsule home also makes a
+concept eligible but does not make it a canonical member. Additive scope detail keeps `home`,
+`participant` and `boundary` separately visible as defined by
+[10.08](08-profile-domain-projection-requirements.md); legacy roles above remain
+compatible.
+
 Portable links, backlinks and accepted direct relations enrich the selected
 result after lexical retrieval. They do not recursively expand the candidate
 set or invent relation types. Returned relation context preserves stored

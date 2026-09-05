@@ -14,6 +14,65 @@ When implementation evidence conflicts with this contract, record the gap and
 route the product decision here before changing downstream contracts. Do not
 silently redefine product behavior in architecture, capability or source docs.
 
+## Product-first initiative gate
+
+Related changes that can affect the same user outcome, authority, data model or
+lifecycle form one product design group. All identified groups in the current
+product horizon are reviewed across every affected Product Contract before new
+delivery work descends to Architecture or Capability design. This exposes
+cross-group effects while they are still inexpensive Product decisions.
+
+Each group records two concise decision views:
+
+1. **Current → Target** — the relevant current behavior and the observable
+   product behavior that will replace it.
+2. **Benefit → Impact** — why the target is better and which workflows,
+   compatibility, migration, authority, data or operations it may disturb.
+
+Those views are supported by, rather than substituted for, the required product
+content:
+
+- the user/owner problem and observable outcome;
+- current evidence and the gap it demonstrates;
+- accepted scope, authority, trade-offs and non-goals;
+- success, stop and evidence gates; and
+- the downstream Architecture and Capability owners that may design it.
+
+A product horizon with an unresolved group does not proceed to new delivery
+work. After all Product groups are accepted, delivery returns to the earliest
+open group and revalidates its Architecture against the complete Product
+horizon. Inside that group, one bounded Capability is taken from contract to
+implementation and verification before the next Capability begins. The whole
+group is released/closed before Architecture or Capability delivery begins for
+the next group.
+
+This vertical sequence may use small dependency-ordered commits, but it must not
+pre-design a stack of Capability Contracts whose earlier assumptions have not
+met code. If implementation evidence changes an Architecture or Product
+assumption, update the owning living contract before continuing. This is the
+entry condition for the mandatory lifecycle in [`AGENTS.md`](../../AGENTS.md),
+not a second process or a license to duplicate decisions in a roadmap/spec file.
+
+## Default deployment assumption
+
+Product design targets a **trusted enterprise workspace** by default: the
+operator, machine, network, MCP client/AI service and enterprise identity
+providers are managed for the intended company work. This is a deployment
+assumption, not a claim that bugs, mistakes or unsafe publication cannot occur.
+
+Every later product group must therefore:
+
+- prefer correctness, provenance, review and recovery over repeated security
+  prompts in the normal internal workflow;
+- avoid per-repository installation or persistent source allowlists when the
+  selected repository is already accessible to the operator's process; and
+- preserve clear source, credential, workflow and transport boundaries so a
+  separately qualified hardened/public profile can add stricter policy later
+  without changing AgentBase's core knowledge model or user workflows.
+
+The default profile does not claim safe public, hostile-client or multi-tenant
+operation. Such deployment requires an explicit Product Contract expansion.
+
 ## Product outcome
 
 Knowledge about a system is scattered across code, infrastructure,

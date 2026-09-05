@@ -8,6 +8,8 @@ import {
 } from "../../../core/hub/index.ts";
 import {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
+  classifyAgentBaseHubProfile,
+  conceptIdentityFromPath,
   conceptReferencesRepository,
   diffBundleProposal,
   loadOkfBundle,
@@ -37,7 +39,6 @@ export type PrepareNewHubOptions = Readonly<{
   signals: readonly string[];
   selectedSchemas?: readonly string[];
   questionPaths?: readonly string[];
-  activityPaths?: readonly string[];
   createdAt: string;
 }>;
 export type PrepareNewLocalHubOptions = Omit<PrepareNewHubOptions, "hub"> & Readonly<{ localHubId: string }>;
@@ -77,6 +78,15 @@ export function prepareNewHubProposal(
     : selectOkfConceptSchemas(options.signals).map((item) => item.type);
   const authored = loadOkfBundle(options.authoredBundleRoot, { requireAgentBaseRootIndex: true });
   const base = loadOkfBundle(options.hubBundleRoot);
+  const baseProfile = classifyAgentBaseHubProfile(base);
+  if (baseProfile.kind === "unsupported") throw new Error(`Hub Profile is unsupported: ${baseProfile.failures.join("; ")}`);
+  if (baseProfile.kind === "profile-1.0") {
+    const authoredProfile = classifyAgentBaseHubProfile(authored);
+    if (authoredProfile.kind !== "profile-1.0") {
+      throw new Error(`authored Profile layout failed validation: ${authoredProfile.kind === "unsupported"
+        ? authoredProfile.failures.join("; ") : "Profile declaration disappeared"}`);
+    }
+  }
   const observedValueFailures = validateBundleObservedValues(authored.concepts.values());
   if (observedValueFailures.length) throw new Error(`authored observed values failed validation: ${observedValueFailures.join("; ")}`);
   for (const relative of base.files.filter((item) => path.posix.basename(item) === "index.md")) {
@@ -88,7 +98,6 @@ export function prepareNewHubProposal(
   }
   const createdIdentities = new Set<string>();
   const questionPaths = new Set(options.questionPaths ?? []);
-  const activityPaths = new Set(options.activityPaths ?? []);
   for (const concept of authored.concepts.values()) {
     if (concept.type === "Question") {
       const previous = base.concepts.get(concept.conceptId);
@@ -138,7 +147,7 @@ export function prepareNewHubProposal(
     if (entry.change === "modified") return path.posix.basename(entry.path) !== "index.md";
     if (entry.change === "created") {
       const isIndex = path.posix.basename(entry.path) === "index.md";
-      return !isIndex && !authored.concepts.has(entry.path.slice(0, -3)) && !activityPaths.has(entry.path);
+      return !isIndex && !authored.concepts.has(conceptIdentityFromPath(entry.path));
     }
     return true;
   });

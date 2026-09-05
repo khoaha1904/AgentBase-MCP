@@ -18,7 +18,12 @@ import {
   selectPendingProposals,
   type PendingHubProposal,
 } from "../review/pending.ts";
-import { acquireHubMutationLock, releaseHubMutationLock, writeAtomicJson } from "../review/proposal-state.ts";
+import {
+  acquireHubMutationLock,
+  hubMutationProfileId,
+  releaseHubMutationLock,
+  writeAtomicJson,
+} from "../review/proposal-state.ts";
 import { renderPublicationReview } from "./review-summary.ts";
 
 export type PublishGitHub = Readonly<{
@@ -120,16 +125,19 @@ function publicationUnits(
     };
   }
   const positions = new Map(pending.map((proposal, index) => [proposal.id, index]));
-  const repositories = new Set(selected.flatMap((proposal) => proposal.mode === "enrichment" || proposal.mode === "batch-new" ? [] : [proposal.sourceRepositoryId]));
+  const repositories = new Set(selected.flatMap((proposal) => proposal.mode === "enrichment"
+    || proposal.mode === "batch-new" || proposal.mode === "migration" ? [] : [proposal.sourceRepositoryId]));
   return {
-    mode: selected.every((proposal) => proposal.mode !== "enrichment" && proposal.mode !== "batch-new") && repositories.size === 1 && selected.length > 1 ? "stack" : "independent",
+    mode: selected.every((proposal) => proposal.mode !== "enrichment" && proposal.mode !== "batch-new"
+      && proposal.mode !== "migration") && repositories.size === 1 && selected.length > 1 ? "stack" : "independent",
     units: selected.map((proposal) => {
       if (!proposal.mode) throw new Error("legacy pending proposals require explicit batch publication");
-      if (proposal.mode === "enrichment" || proposal.mode === "batch-new") return {
+      if (proposal.mode === "enrichment" || proposal.mode === "batch-new" || proposal.mode === "migration") return {
         proposals: [proposal], branch: `agentbase/okf-${proposal.id}`, baseBranch: localHub.hub.targetBranch,
       };
       const position = positions.get(proposal.id)!;
       const prior = pending.slice(0, position).filter((item) => item.mode !== "enrichment" && item.mode !== "batch-new"
+        && item.mode !== "migration"
         && item.sourceRepositoryId === proposal.sourceRepositoryId).at(-1);
       if (proposal.mode === "new" && prior) throw new Error("a Repository cannot contain a second pending Init proposal");
       return {
@@ -422,7 +430,7 @@ export async function publishPendingHubProposals(
   if (!options.token) throw new Error("Hub publication requires the dedicated token");
   checkpoint(options.signal);
   const git = options.git ?? runGit;
-  const lock = acquireHubMutationLock(options.stateRoot, `publish:${Date.now().toString(36)}`);
+  const lock = acquireHubMutationLock(options.stateRoot, hubMutationProfileId(options.localHub), `publish:${Date.now().toString(36)}`);
   try {
     const pending = await listPendingHubProposals(options.localHub, git);
     const batch = options.publicationMode === "batch";

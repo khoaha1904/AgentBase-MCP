@@ -2,7 +2,9 @@
 
 > Status: Provenance-preserving conflicts, shared Questions, exact Maintainer
 > Guidance, observed snapshots, warning-only freshness and sensitive-value
-> filtering are implemented.
+> filtering are implemented. A uniform machine-readable freshness envelope is
+> implemented by G3-C1. Its real-model usefulness campaign is deferred and does
+> not block the current internal enterprise release.
 
 ## Outcome
 
@@ -54,6 +56,13 @@ Freshness is warning-only context. It does not declare knowledge false, trigger
 Refresh, hide content or block publication. A broken source reference preserves
 the historical observation and may produce a reviewable Question.
 
+Every Group 3 context response that relies on Published knowledge or an observed
+snapshot carries a uniform freshness envelope: exact Published commit, observed
+source revision when available, observation time, whether current source was
+verified, and `fresh`, `stale` or `unknown` status with a bounded reason. This
+metadata describes verification state rather than truth and never grants source
+access or triggers background work.
+
 ## Sensitive information
 
 Hub access is a shared trust boundary. Credentials, tokens, secrets, signed
@@ -80,6 +89,7 @@ other safe knowledge. Deferred and partial outcomes remain explicit.
 - A private Question ledger as knowledge authority.
 - Broad implicit Maintainer Guidance scopes.
 - A universal live-reference engine or automatic source polling.
+- A freshness score that silently ranks conflicting claims or hides `unknown`.
 - Secret storage or incident-management automation.
 
 ## Downstream Capability Contracts

@@ -13,6 +13,8 @@ sequence grammars for offline AgentBase output.
   remote fonts or remote assets.
 - Boundary nodes use a muted dashed treatment and never imply that their
   external Domain was traversed.
+- When supplied, Profile `home` and `participant` labels remain distinct; home
+  never authorizes a relation or arrow.
 - A Question is a badge or note on its subject. An omission is a visible note.
 
 ## Architecture

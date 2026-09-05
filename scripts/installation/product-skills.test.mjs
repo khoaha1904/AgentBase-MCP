@@ -12,6 +12,10 @@ import {
   PUBLIC_PRODUCT_SKILL_NAMES,
   rollbackProductSkills,
 } from "./product-skills.mjs";
+import { HUB_OKF_TOOLS } from "../../src/app/hub-okf/mcp/mcp-tools.ts";
+import { OKF_SCHEMA_TOOLS } from "../../src/app/codebase-memory-mcp/okf-schema-tools.ts";
+import { SAFE_TOOLS } from "../../src/app/codebase-memory-mcp/tool-manifest.ts";
+import { TRUSTED_ENTERPRISE_CAPABILITY_POLICY } from "../../src/app/codebase-memory-mcp/capability-policy.ts";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -55,7 +59,34 @@ test("[AB-QUERY-021][AB-INSTALL-043] keeps the AgentBase catalog explicit-only",
   assert.match(query, /only when the user explicitly names `\$agentbase-query`/);
 });
 
-test("[AB-INSTALL-025..031][AB-QUESTION-006] installs only product skills with safe rerun, preflight and rollback", async (context) => {
+test("[AB-SURFACE-001..005] freezes an owned release skill and tool surface", () => {
+  const skillsRoot = path.join(repositoryRoot, ".agents", "skills");
+  const skills = new Map(PRODUCT_SKILL_NAMES.map((name) => [name,
+    fs.readFileSync(path.join(skillsRoot, name, "SKILL.md"), "utf8")]));
+  const tools = [
+    ...HUB_OKF_TOOLS.map((tool) => ({ name: tool.name, capability: "hub" })),
+    ...OKF_SCHEMA_TOOLS.map((tool) => ({ name: tool.name, capability: "schema" })),
+    ...SAFE_TOOLS.map((tool) => ({ name: tool.name, capability: "graph" })),
+  ];
+
+  assert.equal(PUBLIC_PRODUCT_SKILL_NAMES.length, 10);
+  assert.equal(INTERNAL_PRODUCT_SKILL_NAMES.length, 3);
+  assert.equal(tools.length, 46);
+  assert.equal(new Set(tools.map((tool) => tool.name)).size, tools.length, "advertised tool names must be unique");
+  for (const tool of tools) {
+    const owners = [...skills].filter(([, skill]) => skill.includes(`\`${tool.name}\``)).map(([name]) => name);
+    assert.ok(owners.length > 0, `${tool.name} must be named by a shipped workflow skill`);
+    assert.equal(TRUSTED_ENTERPRISE_CAPABILITY_POLICY.allows(tool), true,
+      `${tool.name} must remain in trusted-enterprise composition`);
+  }
+
+  assert.deepEqual([...skills].filter(([, skill]) => skill.includes("`preflight_hub_ingest`")).map(([name]) => name),
+    ["agentbase-ingest", "agentbase-refresh", "agentbase-batch-ingest"]);
+  assert.deepEqual([...skills].filter(([, skill]) => skill.includes("`inspect_hub_okf_proposal`")).map(([name]) => name),
+    ["agentbase-ingest", "agentbase-refresh", "agentbase-batch-ingest", "agentbase-domain-enrichment", "agentbase-hub"]);
+});
+
+test("[AB-INSTALL-025..031][AB-QUESTION-006][AB-FRESH-010] installs only product skills with safe rerun, preflight and rollback", async (context) => {
   const temporaryRoots = [];
   context.after(() => temporaryRoots.forEach((root) => fs.rmSync(root, { recursive: true, force: true })));
   const environment = () => {
@@ -78,10 +109,15 @@ test("[AB-INSTALL-025..031][AB-QUESTION-006] installs only product skills with s
   assert.match(contextSkill, /Call `search_hub_okf` exactly once/);
   assert.match(contextSkill, /`global: true`/);
   assert.match(contextSkill, /do not call\s+`read_hub_okf_concept`/i);
+  assert.match(contextSkill, /freshness line containing\s+`status`, `published_commit`, `current_source_verified` and `reason`/i);
+  assert.match(contextSkill, /missing envelope from an older\s+runtime is `unknown`/i);
   assert.match(contextMetadata, /allow_implicit_invocation: false/);
   const querySkill = fs.readFileSync(path.join(repositoryRoot, ".agents", "skills", "agentbase-query", "SKILL.md"), "utf8");
   assert.match(querySkill, /read-only answer is the requested deliverable/i);
   assert.match(querySkill, /Do not replace Feature or User Story\s+discovery, task planning, diagram/i);
+  assert.match(querySkill, /report its `status`,\s+`published_commit`, `current_source_verified` and `reason`/i);
+  assert.match(querySkill, /age alone never means stale or fresh/i);
+  assert.match(querySkill, /equal is `fresh`, different is\s+`stale`/i);
   const hubSkill = fs.readFileSync(path.join(repositoryRoot, ".agents", "skills", "agentbase-hub", "SKILL.md"), "utf8");
   assert.match(hubSkill, /`list_hub_questions`/);
   assert.match(hubSkill, /`answer_hub_question`/);

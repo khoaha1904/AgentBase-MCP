@@ -1,7 +1,9 @@
 # 06 — Cross-repository relations
 
-> Status: AWS/SQS runtime slice implemented offline; Published merge/redirect is
-> deferred beyond MVP; separate real-provider qualification remains.
+> Status: AWS/SQS runtime slice and G4-C6 Profile-aware Enrichment are
+> implemented and verified, including G5-C1 compact path consumption. Published
+> merge/redirect is deferred beyond MVP; separate real-provider qualification
+> remains.
 
 Product Contract:
 [Knowledge model and relations](../../product/02-knowledge-model-and-relations.md)
@@ -27,6 +29,8 @@ Product Contract:
 - [`08-mock-provider-qualification.md`](08-mock-provider-qualification.md) —
   fixture-only mock CLI/provider path for cross-repository candidates without
   creating fake provider truth in the Published Hub.
+- [`09-profile-enrichment-requirements.md`](09-profile-enrichment-requirements.md)
+  — Profile Domain identity, home-preserving mutation and shared Question rules.
 
 ## Current dependency
 

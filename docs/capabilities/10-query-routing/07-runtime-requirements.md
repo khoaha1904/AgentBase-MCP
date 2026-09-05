@@ -1,7 +1,10 @@
 # 10.07 — Capability requirements
 
 > Status: AB-QUERY-001..020 implemented; AB-QUERY-021 is the owner-approved
-> standalone routing boundary.
+> standalone routing boundary. Profile Domain projection requirements are
+> owned by [10.08](08-profile-domain-projection-requirements.md). G5-C1 compact
+> requirements are implemented and verified; G5-C2
+> draft-quality probes are deferred and add no current query behavior.
 
 These `AB-QUERY-*` requirements are the normative Query Routing Capability
 Contract.
@@ -28,9 +31,11 @@ Contract.
   cache, graph database or second knowledge source. One complete in-memory
   search projection may be reused only for its exact commit; changed commits
   rebuild lazily and replace it atomically, never by stale fallback.
-- **AB-QUERY-005** — Root navigation links bounded Domain and fallback System/
-  Repository entrypoints. Domain concepts navigate Systems and critical flows;
-  System concepts navigate useful entities without copying their knowledge.
+- **AB-QUERY-005** — Root navigation links bounded compact Domain and fallback
+  Repository entrypoints. A Domain `index.md` links its Repository dossiers,
+  independently useful `knowledge/` and Questions directly. Query determines
+  semantic role from frontmatter and relations without copying knowledge or
+  relying on a type-shaped directory.
 - **AB-QUERY-006** — Exact Published concept Markdown includes bounded
   `agentbase.observed_values` with value, role, source resource and observed
   source state/time. Ordinary query performs no credential/access probe.
@@ -58,7 +63,8 @@ Contract.
 - **AB-QUERY-011** — The bounded Repository freshness projection remains an
   internal Hub CI/reporting primitive. Ordinary MCP and Hub CLI query expose no
   dedicated freshness action and perform no source/provider/network probe,
-  threshold, Question, Refresh or write.
+  threshold, Question, Refresh or write. Public Published search/read instead
+  carry the additive warning-only envelope defined by `AB-FRESH-001..012`.
 - **AB-QUERY-012** — An active remote profile's public Hub search/read uses only
   exact synchronized `remoteBase`. No-profile access fails clearly because no
   Published authority exists; accepted Local Draft never becomes queryable

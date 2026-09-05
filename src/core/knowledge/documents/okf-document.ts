@@ -34,12 +34,31 @@ const FRONTMATTER_LIMIT = 64 * 1024;
 const MAX_DEPTH = 16;
 const MAX_NODES = 4096;
 const MAX_SCALAR_BYTES = 32 * 1024;
+const DOMAIN_INDEX_PATH = /^domains\/[a-z0-9]+(?:-[a-z0-9]+)*\/index\.md$/;
+
+export function isDomainConceptPath(documentPath: string): boolean {
+  return DOMAIN_INDEX_PATH.test(documentPath);
+}
+
+export function isDomainConceptDocument(documentPath: string, source: string): boolean {
+  return isDomainConceptPath(documentPath)
+    && parseReservedFrontmatter(documentPath, source).frontmatter?.type === "Domain";
+}
+
+export function conceptIdentityFromPath(documentPath: string): string {
+  const normalized = path.posix.normalize(documentPath);
+  if (!documentPath.endsWith(".md") || documentPath.startsWith("/") || normalized !== documentPath) {
+    throw new OkfValidationError("INVALID_CONCEPT_PATH", "concept path must be a normalized bundle-relative .md path", documentPath);
+  }
+  return isDomainConceptPath(documentPath) ? path.posix.dirname(documentPath) : documentPath.slice(0, -3);
+}
 
 function requireConceptPath(documentPath: string): void {
   const normalized = path.posix.normalize(documentPath);
   if (!documentPath.endsWith(".md") || documentPath.startsWith("/") || normalized !== documentPath
     || documentPath.split("/").some((part) => !part || part === "." || part === "..")
-    || ["index.md", "log.md"].includes(path.posix.basename(documentPath))) {
+    || (path.posix.basename(documentPath) === "index.md" && !isDomainConceptPath(documentPath))
+    || path.posix.basename(documentPath) === "log.md") {
     throw new OkfValidationError("INVALID_CONCEPT_PATH", "concept path must be a normalized non-reserved bundle-relative .md path", documentPath);
   }
 }
@@ -140,7 +159,7 @@ export function parseConceptDocument(documentPath: string, source: string): Conc
     throw new OkfValidationError("STATUS_INVALID", "status must be a non-empty string when present", documentPath);
   }
   return {
-    conceptId: documentPath.slice(0, -3),
+    conceptId: conceptIdentityFromPath(documentPath),
     path: documentPath,
     type,
     status,

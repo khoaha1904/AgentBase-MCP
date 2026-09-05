@@ -1,7 +1,9 @@
 # 11.02 — Review preview
 
-> Status: Structured inspection, including atomic Batch Initial Ingest, is
-> implemented; optional visual review is deferred.
+> Status: Structured byte and semantic inspection, including atomic Batch
+> Initial Ingest, is implemented and verified; optional visual review remains
+> deferred. G5-C1 activity-log removal is implemented and verified; G5-C2
+> pre-Finalize quality summary is deferred and inactive.
 
 ## Outcome
 
@@ -31,6 +33,10 @@ not enter review or the pull request. Each entry retains its path, change kind,
 allowed state, reason when available, bounded before/after bytes and digest. A
 destructive entry must retain its correction/removal reason/evidence; preview
 does not infer the reason from the Git diff.
+
+The deferred G5-C2 design adds no quality policy/packet/report, findings/probes,
+repair count or owner override to current inspection. Optional external AI
+review notes remain outside AgentBase state and the Hub.
 
 ## Atomic selection rule
 
@@ -69,18 +75,22 @@ return to authoring and be Finalized again.
 - Proposal bytes/base changing after inspection makes Accept fail closed.
 - Preview does not read source, probe credentials, Refresh, Accept or Publish.
 
-## Knowledge activity summaries
+## Operational history
 
-Successful proposal materializes concise newest-first entries in
-`repositories/<slug>/log.md` for repository-owned activity and
-`domains/<slug>/log.md` only for Enrichment, cross-repository relation/Flow or
-explicit Domain correction. Routine Repository membership does not duplicate a
-Domain log entry. Existing Hub log grammar remains authoritative. Do not log query,
-tool call, raw Inventory or failed/Incomplete attempt. Git commit, PR and exact
-diff remain the complete audit history.
+Compact Profile 1.0 materializes no Repository or Domain activity `log.md`.
+Git commits, pull requests and their exact diffs remain complete shared history.
+Discovery and proposal-operation records stay in owner-private workflow state
+and are retained only for review/publication/recovery. Optional external review
+notes are not AgentBase inspection evidence or Published knowledge.
 
 ## Current implementation gap
 
-Structured inspection, grouped changes, bounded content and exact-digest Accept
-exist. The host workflow must clearly express the return-to-authoring step when
-review fails. Static HTML/graph review is outside the MVP and needs no runtime capability yet.
+Structured inspection now retains grouped byte changes, bounded content and one
+digest-bound semantic projection covering concepts, relations, Flows,
+Questions, navigation, canonical scope, dangling references, strong-identity
+duplicates and explicit omissions. Inspect and Accept rederive it before use;
+newly prepared legacy evidence fails before mutation, while already accepted
+legacy proposals retain the bounded publication warning. The host workflow
+must still clearly express the return-to-authoring step when review fails.
+Static HTML/graph review and Group 5 quality summary remain outside the current
+implemented delivery.

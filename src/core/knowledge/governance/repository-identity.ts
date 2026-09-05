@@ -23,6 +23,14 @@ export type RepositoryObservedSource = Readonly<{
   observedAt: string;
 }>;
 
+export type RepositoryRefreshCoverage = Readonly<{
+  status: "partial";
+  omittedChangedPaths: number;
+  coveragePasses: number;
+  limitations: readonly string[];
+  observedAt: string;
+}>;
+
 export type RepositoryIdentityResolution =
   | Readonly<{ kind: "existing"; repository: RepositoryIdentityRecord; matchedBy: "forge-id" | "remote" | "lineage" }>
   | Readonly<{ kind: "new"; repository: RepositoryIdentityRecord }>
@@ -67,6 +75,26 @@ export function readRepositoryObservedSource(concept: ConceptDocument): Reposito
     dirty: observed.dirty,
     dirtyDigest: observed.dirty_digest as string | null,
     observedAt: observed.observed_at,
+  };
+}
+
+export function readRepositoryRefreshCoverage(concept: ConceptDocument): RepositoryRefreshCoverage | undefined {
+  if (concept.type !== "Repository") return undefined;
+  const repository = mapping(mapping(concept.frontmatter.agentbase)?.repository);
+  const coverage = mapping(repository?.refresh_coverage);
+  const coveragePasses = coverage?.coverage_passes ?? 0;
+  if (!coverage || coverage.status !== "partial"
+    || !Number.isSafeInteger(coverage.omitted_changed_paths) || Number(coverage.omitted_changed_paths) < 0
+    || !Number.isSafeInteger(coveragePasses) || Number(coveragePasses) < 0 || Number(coveragePasses) > 3
+    || !Array.isArray(coverage.limitations) || coverage.limitations.length > 64
+    || coverage.limitations.some((item) => typeof item !== "string" || !item || item.length > 512)
+    || typeof coverage.observed_at !== "string" || !Number.isFinite(Date.parse(coverage.observed_at))) return undefined;
+  return {
+    status: "partial",
+    omittedChangedPaths: Number(coverage.omitted_changed_paths),
+    coveragePasses: Number(coveragePasses),
+    limitations: coverage.limitations as string[],
+    observedAt: coverage.observed_at,
   };
 }
 

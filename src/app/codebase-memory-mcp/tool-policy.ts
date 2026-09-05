@@ -13,6 +13,22 @@ export class McpPolicyError extends Error {
   }
 }
 
+function selectedGitRoot(candidate: string): string {
+  let current = fs.realpathSync(candidate);
+  while (true) {
+    const marker = path.join(current, ".git");
+    try {
+      const stat = fs.lstatSync(marker);
+      if (stat.isDirectory() || stat.isFile()) return current;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+    const parent = path.dirname(current);
+    if (parent === current) throw new McpPolicyError("repo_path must be inside an existing Git repository");
+    current = parent;
+  }
+}
+
 export function controlledIndex(argumentsValue: Readonly<Record<string, unknown>>): ControlledIndex {
   const candidate = argumentsValue.repo_path;
   if (typeof candidate !== "string" || !path.isAbsolute(candidate)) {
@@ -20,10 +36,17 @@ export function controlledIndex(argumentsValue: Readonly<Record<string, unknown>
   }
   let repositoryRoot: string;
   try {
-    repositoryRoot = fs.realpathSync(candidate);
-    if (!fs.statSync(repositoryRoot).isDirectory()) throw new Error("not a directory");
+    const selected = fs.realpathSync(candidate);
+    if (!fs.statSync(selected).isDirectory()) throw new Error("not a directory");
+    repositoryRoot = selectedGitRoot(selected);
+  } catch (error) {
+    if (error instanceof McpPolicyError) throw error;
+    throw new McpPolicyError("repo_path must resolve to a readable repository directory");
+  }
+  try {
+    fs.accessSync(repositoryRoot, fs.constants.R_OK);
   } catch {
-    throw new McpPolicyError("repo_path must resolve to an existing repository directory");
+    throw new McpPolicyError("repo_path must resolve to a readable repository directory");
   }
   if (argumentsValue.persistence === true) throw new McpPolicyError("source-local persistence is disabled");
   if (argumentsValue.mode === "cross-repo-intelligence" || argumentsValue.target_projects !== undefined) {

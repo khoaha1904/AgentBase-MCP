@@ -41,14 +41,14 @@ function exists(target) {
   catch (error) { if (error?.code === "ENOENT") return false; throw error; }
 }
 
-function skillRoot(client, environment) {
+export function productSkillRoot(client, environment) {
   if (!environment.HOME) throw new ProductSkillInstallError("HOME_UNAVAILABLE", client, "HOME is unavailable");
   return client === "codex"
     ? path.join(environment.CODEX_HOME || path.join(environment.HOME, ".codex"), "skills")
     : path.join(environment.HOME, ".claude", "skills");
 }
 
-function directoryDigest(root, client) {
+export function productSkillDirectoryDigest(root, client) {
   const hash = crypto.createHash("sha256");
   const walk = (directory, relative = "") => {
     const stat = fs.lstatSync(directory);
@@ -79,7 +79,7 @@ function directoryDigest(root, client) {
 function rollbackCreated(created) {
   for (const item of [...created].reverse()) {
     if (!exists(item.target)) continue;
-    if (directoryDigest(item.target, item.client) !== item.digest) {
+    if (productSkillDirectoryDigest(item.target, item.client) !== item.digest) {
       throw new ProductSkillInstallError("SKILL_ROLLBACK_CONFLICT", item.client, `installed skill changed before rollback: ${item.target}`);
     }
     fs.rmSync(item.target, { recursive: true });
@@ -101,19 +101,19 @@ export function installProductSkills({ clients, repositoryRoot, environment = pr
     if (!exists(path.join(source, "SKILL.md"))) {
       throw new ProductSkillInstallError("PRODUCT_SKILL_INVALID", undefined, `product skill is unavailable: ${name}`);
     }
-    return { name, source, digest: directoryDigest(source) };
+    return { name, source, digest: productSkillDirectoryDigest(source) };
   });
 
   const pending = [], clientsResult = {};
   for (const client of selected) {
-    const root = skillRoot(client, environment);
+    const root = productSkillRoot(client, environment);
     let missing = 0;
     for (const source of sources) {
       const target = path.join(root, source.name);
       if (!exists(target)) {
         pending.push({ ...source, target, client });
         missing += 1;
-      } else if (directoryDigest(target, client) !== source.digest) {
+      } else if (productSkillDirectoryDigest(target, client) !== source.digest) {
         throw new ProductSkillInstallError("SKILL_CONFLICT", client, `${client} already has a different skill named ${source.name}`);
       }
     }

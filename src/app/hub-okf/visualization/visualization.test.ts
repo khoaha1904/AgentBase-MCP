@@ -5,11 +5,13 @@ import path from "node:path";
 import test from "node:test";
 
 import {
+  AGENTBASE_OKF_PROFILE_PATH,
   buildPublishedVisualizationProjection,
   createQuestionId,
   displayEndpoints,
   loadHubGraph,
   renderQuestionDocument,
+  renderAgentBaseOkfProfileDocument,
   serializePublishedVisualizationProjection,
   type QuestionKind,
   type QuestionState,
@@ -260,6 +262,81 @@ test("[AB-VIS-001..004][AB-VIS-011..019][AB-VIS-023] projection is deterministic
   assert.throws(() => buildPublishedVisualizationProjection(graph, { ...options, domain: "domains/missing" }), /exact Published Domain/);
 });
 
+test("[AB-PROFILE-READ-002..004][AB-PROFILE-READ-007..008] Profile visualization uses the shared Domain projection", async (context) => {
+  const active = question({ kind: "missing-evidence", state: "open",
+    subject: "domains/orders/knowledge/api", property: "owner" });
+  const documents = new Map([
+    ["index.md", `---\nokf_version: "0.2"\n---\n\n# Hub\n\n* [Profile](${AGENTBASE_OKF_PROFILE_PATH}) - Profile\n* [Shared](shared/index.md) - Shared knowledge\n* [Orders](domains/orders/) - Domain Capsule\n* [Fulfillment](domains/fulfillment/) - Domain Capsule\n`],
+    ["shared/index.md", "# Shared\n\n* [Profile](agentbase-profile.md) - Profile\n* [Shared Stream](knowledge/stream.md) - Resource\n"],
+    [AGENTBASE_OKF_PROFILE_PATH, renderAgentBaseOkfProfileDocument()],
+    ["domains/orders/index.md", `${concept({ type: "Domain", title: "Orders" }).trimEnd()}\n\n* [Orders repository](repositories/orders.md) - Repository\n* [Orders API](knowledge/api.md) - Component\n* [Question](questions/${path.posix.basename(active.path)}) - Question\n`],
+    ["domains/fulfillment/index.md", `${concept({ type: "Domain", title: "Fulfillment" }).trimEnd()}\n\n* [Fulfillment Worker](knowledge/worker.md) - Component\n`],
+    ["domains/orders/repositories/orders.md", concept({ type: "Repository", title: "Orders repository",
+      body: "[Orders](../index.md)", relationships: `
+  - kind: part-of
+    target: domains/orders
+    evidence: [${SOURCE_ID}]` })],
+    ["domains/orders/knowledge/api.md", concept({ type: "Component", title: "Orders API",
+      body: "[Repository](../repositories/orders.md) [Worker](../../fulfillment/knowledge/worker.md)", relationships: `
+  - kind: implemented-in
+    target: domains/orders/repositories/orders
+    evidence: [${SOURCE_ID}]
+  - kind: publishes-to
+    target: domains/fulfillment/knowledge/worker
+    evidence: [${SOURCE_ID}]` })],
+    ["shared/knowledge/stream.md", concept({ type: "Resource", title: "Shared Stream",
+      body: "[Orders](../../domains/orders/index.md)", relationships: `
+  - kind: part-of
+    target: domains/orders
+    evidence: [${SOURCE_ID}]` })],
+    ["domains/fulfillment/knowledge/worker.md", concept({ type: "Component", title: "Fulfillment Worker",
+      body: "[Fulfillment](../index.md)", relationships: `
+  - kind: part-of
+    target: domains/fulfillment
+    evidence: [${SOURCE_ID}]` })],
+    [`domains/orders/${active.path}`, active.content],
+  ]);
+  const graph = await loadHubGraph({
+    commit: "6".repeat(40),
+    async listMarkdownPaths() { return [...documents.keys()]; },
+    async readMarkdown(relativePath: string) { return documents.get(relativePath)!; },
+  }, 256 * 1024);
+  const projection = buildPublishedVisualizationProjection(graph, {
+    hub: "github.com/acme/hub#main", domain: "domains/orders",
+  });
+
+  assert.equal(projection.profile, "profile-1.0");
+  assert.deepEqual(projection.domain, {
+    id: "domains/orders", path: "domains/orders/index.md", title: "Orders", selector: "domains/orders",
+  });
+  const api = projection.nodes.find((node) => node.id === "domains/orders/knowledge/api");
+  assert.equal(api?.home, "domains/orders");
+  assert.deepEqual(api?.domainIds, []);
+  assert.deepEqual(api?.scopeRoles, ["home", "participant"]);
+  assert.deepEqual(projection.nodes.find((node) => node.id === "shared/knowledge/stream")?.scopeRoles,
+    ["participant"]);
+  assert.deepEqual(projection.nodes.find((node) => node.id === "domains/fulfillment/knowledge/worker")?.scopeRoles,
+    ["boundary"]);
+  assert.equal(projection.nodes.some((node) => node.id === "domains/fulfillment"), false);
+  assert.deepEqual(projection.questions.map((item) => item.subject), ["domains/orders/knowledge/api"]);
+  const packet = prepareDiagramPacket(projection, {
+    diagramType: "architecture",
+    conceptIds: ["domains/orders/knowledge/api", "domains/fulfillment/knowledge/worker"],
+  });
+  assert.equal(packet.status === "ready" ? packet.packet.profile : undefined, "profile-1.0");
+
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-profile-domain-site-"));
+  context.after(() => fs.rmSync(temporary, { recursive: true, force: true }));
+  const output = path.join(temporary, "site");
+  buildStaticDomainSite(projection, { outputDirectory: output, visibilityAcknowledged: true });
+  const generated = fs.readFileSync(path.join(output, "data/domain.json"), "utf8");
+  const browser = fs.readFileSync(path.join(output, "assets/app.js"), "utf8");
+  assert.match(generated, /"profile": "profile-1\.0"/);
+  assert.match(generated, /"scopeRoles": \[/);
+  assert.match(browser, /Selected Domain roles/);
+  assert.match(browser, /projection\.profile/);
+});
+
 test("[AB-REFRESH-018][AB-VIS-015] repository-anchored new Resource enters its Domain projection", async () => {
   const documents = new Map([
     ["domains/crawler.md", concept({ type: "Domain", title: "Crawler" })],
@@ -379,7 +456,7 @@ test("[AB-VIS-006..010][AB-VIS-012..024] static Domain site is reproducible, off
   assert.doesNotMatch(generatedText, /ghp_[A-Za-z0-9]{20,}|search_hub_okf|prepare_hub_visualization/);
   const generatedIndex = fs.readFileSync(path.join(first, "index.html"), "utf8");
   const generatedApp = fs.readFileSync(path.join(first, "assets/app.js"), "utf8");
-  const browserBuildKey = `7-${graph.commit}`;
+  const browserBuildKey = `8-${graph.commit}`;
   assert.match(generatedIndex, /Interactive 2D Domain knowledge map/);
   assert.equal(generatedIndex.includes(`assets/app.css?build=${browserBuildKey}`), true);
   assert.equal(generatedIndex.includes(`assets/cytoscape.min.js?build=${browserBuildKey}`), true);

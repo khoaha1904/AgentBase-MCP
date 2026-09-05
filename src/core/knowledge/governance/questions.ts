@@ -1,7 +1,9 @@
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 
+import { AGENTBASE_PRODUCER } from "../../../product-version.ts";
 import {
+  conceptIdentityFromPath,
   renderConceptDocument,
   type ConceptDocument,
   type OkfFrontmatter,
@@ -45,7 +47,7 @@ export type SharedQuestion = Readonly<{
 }>;
 
 const QUESTION_ID = /^question-[a-f0-9]{24}$/;
-const SUBJECT = /^(?:domains|systems|components|functions|interfaces|flows|resources|infrastructure|deployments|repositories|relationships|capabilities|guidance)\/[a-z0-9][a-z0-9./-]*$/;
+const SUBJECT = /^(?:shared|domains|systems|components|functions|interfaces|flows|resources|infrastructure|deployments|repositories|relationships|capabilities|guidance)\/[a-z0-9][a-z0-9./-]*$/;
 const TOKEN = /^[A-Za-z0-9][A-Za-z0-9._:/-]*$/;
 const STATES = new Set<QuestionState>(["open", "resolved", "needs-review"]);
 const KINDS = new Set<QuestionKind>(["conflict", "missing-evidence", "relation-candidate", "identity-candidate", "maintainer-decision"]);
@@ -152,7 +154,7 @@ export function renderQuestionDocument(question: SharedQuestion): string {
   const frontmatter: OkfFrontmatter = {
     type: "Question", title: question.title,
     description: `Governed ${question.kind} question for ${question.subject} ${question.property}`,
-    status: "draft", generated: { by: "agentbase/0.0.0", at: question.createdAt },
+    status: "draft", generated: { by: AGENTBASE_PRODUCER, at: question.createdAt },
     agentbase: { question: {
       id: question.id, revision: question.revision, state: question.state, kind: question.kind,
       origin_subject: question.originSubject, origin_property: question.originProperty,
@@ -166,7 +168,8 @@ export function renderQuestionDocument(question: SharedQuestion): string {
 }
 
 export function parseQuestionDocument(concept: ConceptDocument): SharedQuestion {
-  if (concept.type !== "Question" || !concept.path.startsWith("questions/") || concept.status !== "draft") {
+  const pathMatch = /^(?:questions|shared\/questions|domains\/[a-z0-9]+(?:-[a-z0-9]+)*\/questions)\/(question-[a-f0-9]{24})\.md$/.exec(concept.path);
+  if (concept.type !== "Question" || !pathMatch || concept.status !== "draft") {
     throw new Error(`${concept.path}: shared Question document identity is invalid`);
   }
   const generated = mapping(concept.frontmatter.generated), agentbase = mapping(concept.frontmatter.agentbase);
@@ -176,7 +179,7 @@ export function parseQuestionDocument(concept: ConceptDocument): SharedQuestion 
   const originSubject = question.origin_subject, originProperty = question.origin_property;
   const subject = question.subject, property = question.property, scopeKey = question.scope_key;
   const title = concept.frontmatter.title;
-  if (!bounded(id) || !QUESTION_ID.test(id) || concept.conceptId !== `questions/${id}`
+  if (!bounded(id) || !QUESTION_ID.test(id) || pathMatch[1] !== id || concept.conceptId !== conceptIdentityFromPath(concept.path)
     || !Number.isSafeInteger(revision) || Number(revision) < 1
     || typeof state !== "string" || !STATES.has(state as QuestionState)
     || typeof kind !== "string" || !KINDS.has(kind as QuestionKind)
@@ -243,7 +246,9 @@ export function mergeOpenQuestion(previous: SharedQuestion, incoming: Pick<Share
 
 export function resolveQuestion(previous: SharedQuestion, guidanceId: string): SharedQuestion {
   if (previous.state !== "open" && previous.state !== "needs-review") throw new Error("Question is not awaiting resolution");
-  if (!/^guidance\/[a-z0-9][a-z0-9./-]*$/.test(guidanceId)) throw new Error("Question Guidance identity is invalid");
+  if (!/^(?:guidance|(?:shared|domains\/[a-z0-9]+(?:-[a-z0-9]+)*)\/knowledge)\/[a-z0-9][a-z0-9./-]*$/.test(guidanceId)) {
+    throw new Error("Question Guidance identity is invalid");
+  }
   return { ...previous, revision: previous.revision + 1, state: "resolved",
     missingEvidence: [], guidance: uniqueSorted([...previous.guidance, guidanceId]) };
 }

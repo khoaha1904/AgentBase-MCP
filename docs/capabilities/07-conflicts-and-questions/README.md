@@ -1,6 +1,8 @@
 # 07 — Conflicts, Questions and Guidance
 
-> Status: Shared Questions/exact Guidance and three-tier AWS/SQS enrichment are implemented; broader conflict composition is deferred.
+> Status: Shared Questions/exact Guidance and three-tier AWS/SQS enrichment are
+> implemented, including G5-C1 compact Question/Guidance placement. Broader
+> conflict composition is deferred.
 
 Product Contract:
 [Trust, conflicts and freshness](../../product/04-trust-conflicts-and-freshness.md)

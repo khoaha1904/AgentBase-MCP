@@ -102,6 +102,43 @@ function equivalent(actual, expected) {
     && (actual.envVars ?? []).length === 0;
 }
 
+function sameEntry(actual, expected) {
+  return actual === undefined && expected === undefined
+    || actual !== undefined && expected !== undefined && equivalent(actual, expected);
+}
+
+export function clientEntriesEqual(actual, expected) {
+  return sameEntry(actual, expected);
+}
+
+export function stableClientEntry(stableLauncher) {
+  if (!path.isAbsolute(stableLauncher)) {
+    throw new RegistrationError("LAUNCHER_INVALID", undefined, "AgentBase stable launcher path must be absolute");
+  }
+  return { name: "agentbase", transport: "stdio", command: path.normalize(stableLauncher), args: ["mcp"], env: {}, envVars: [] };
+}
+
+export function isRecognizedCheckoutClientEntry(entry) {
+  try {
+    if (entry?.transport !== "stdio" || !path.isAbsolute(entry.command)
+      || !Array.isArray(entry.args) || entry.args.length !== 2 || entry.args[1] !== "mcp"
+      || !path.isAbsolute(entry.args[0]) || Object.keys(entry.env ?? {}).length !== 0
+      || (entry.envVars ?? []).length !== 0) return false;
+    const entrypoint = path.normalize(entry.args[0]);
+    if (path.basename(entrypoint) !== "cli.ts" || path.basename(path.dirname(entrypoint)) !== "src") return false;
+    const checkout = path.dirname(path.dirname(entrypoint));
+    const entryMetadata = fs.lstatSync(entrypoint), commandMetadata = fs.lstatSync(entry.command);
+    const packageFile = path.join(checkout, "package.json"), packageMetadata = fs.lstatSync(packageFile);
+    if (!entryMetadata.isFile() || entryMetadata.isSymbolicLink()
+      || !commandMetadata.isFile() || commandMetadata.isSymbolicLink() || !(commandMetadata.mode & 0o111)
+      || !packageMetadata.isFile() || packageMetadata.isSymbolicLink()) return false;
+    const manifest = JSON.parse(fs.readFileSync(packageFile, "utf8"));
+    return manifest?.name === "agentbase-mcp" && manifest?.type === "module" && manifest?.bin?.abs === "./src/cli.ts";
+  } catch {
+    return false;
+  }
+}
+
 function clientConfig(client, environment) {
   return client === "codex"
     ? path.join(environment.CODEX_HOME || path.join(environment.HOME, ".codex"), "config.toml")
@@ -203,6 +240,40 @@ async function remove(descriptor, environment) {
     ? ["mcp", "remove", "agentbase"]
     : ["mcp", "remove", "--scope", "user", "agentbase"];
   await invoke(descriptor, args, environment);
+}
+
+export function createReleaseClientAdapter(environment = process.env) {
+  const descriptors = new Map();
+  const descriptorFor = async (client) => {
+    if (!descriptors.has(client)) descriptors.set(client, (await admit([client], environment))[0]);
+    return descriptors.get(client);
+  };
+  return Object.freeze({
+    async inspect(client) {
+      return inspect(await descriptorFor(client), environment);
+    },
+    async transition(client, from, to, options = {}) {
+      const descriptor = await descriptorFor(client);
+      let actual = await inspect(descriptor, environment);
+      if (sameEntry(actual, to)) return;
+      const interruptedReplacement = options.allowIntermediateAbsent
+        && actual === undefined && from !== undefined && to !== undefined;
+      if (!sameEntry(actual, from) && !interruptedReplacement) {
+        throw new RegistrationError("CONCURRENT_CONFIG_CHANGE", client, `${client} agentbase entry changed during release integration`);
+      }
+      assertExecutableIdentity(descriptor);
+      if (actual !== undefined) {
+        await remove(descriptor, environment);
+        actual = await inspect(descriptor, environment);
+        if (actual !== undefined) throw new RegistrationError("VERIFY_MISMATCH", client, `${client} agentbase entry removal failed`);
+      }
+      if (to !== undefined) {
+        await add(descriptor, to, environment);
+        actual = await inspect(descriptor, environment);
+        if (!sameEntry(actual, to)) throw new RegistrationError("VERIFY_MISMATCH", client, `${client} agentbase entry update failed`);
+      }
+    },
+  });
 }
 
 async function rollback(receipt, descriptors, expected, environment) {

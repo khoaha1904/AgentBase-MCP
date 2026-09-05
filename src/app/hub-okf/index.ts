@@ -34,7 +34,9 @@ export {
 export { checkoutHub, type GitRunner, type HubCheckout } from "./workspace/checkout.ts";
 export { prepareNewHubProposal, type PreparedHubProposal, type PrepareNewHubOptions } from "./authoring/prepare.ts";
 export {
+  bindHubProposalInspection,
   inspectHubProposal,
+  readVerifiedHubProposalInspection,
   type HubInspectedContent,
   type HubInspectionOptions,
   type HubChangeEntry,
@@ -47,13 +49,6 @@ export {
 } from "./authoring/refresh.ts";
 export { readHubProposalState, writeHubProposalState } from "./review/proposal-state.ts";
 export {
-  submitHubProposal,
-  type HubPublicationReceipt,
-  type SubmissionGit,
-  type SubmissionGitHub,
-  type SubmitHubOptions,
-} from "./publication/submit.ts";
-export {
   beginHubAuthoringSession,
   finalizeHubAuthoringSession,
   materializeInitialIngestSessionSkeletons,
@@ -65,6 +60,19 @@ export {
 } from "./authoring/authoring-session.ts";
 export { admitPersistentLocalHub, type LocalHubGit } from "./workspace/local-hub.ts";
 export { acceptHubProposal, type AcceptHubOptions } from "./review/accept.ts";
+export { admitHubKnowledgeMutation } from "./review/mutation-admission.ts";
+export {
+  finalizeProfileMigration,
+  prepareProfileMigration,
+  profileMigrationDigest,
+  verifyRetainedProfileMigration,
+  type FinalizedProfileMigration,
+  type PreparedProfileMigration,
+  type ProfileMigrationManifest,
+  type ProfileMigrationMove,
+  type ProfileMigrationSession,
+  type RetainedProfileMigrationManifest,
+} from "./migration/profile-migration.ts";
 export {
   readPublishedHubConcept,
   readPublishedRepositoryInventory,
@@ -109,7 +117,6 @@ export {
 } from "./publication/synchronize.ts";
 export { recognizePublishedProposals, stablePatchIdentity } from "./publication/synchronization-recognition.ts";
 export {
-  recoverHubSubmission,
   recoverSynchronizationTransaction,
   type HubSynchronizationRecovery,
 } from "./publication/recovery.ts";

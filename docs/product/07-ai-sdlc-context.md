@@ -2,7 +2,11 @@
 
 > Status: Product direction, bounded qualification and an explicit manual
 > context workflow are accepted. Automatic host-workflow integration remains
-> deferred.
+> deferred. Group 3 Product design is accepted and narrows product proof to
+> cross-repository impact and requirement clarification before any broader
+> claim; G3-C1 uniform freshness and G3-C2 proposal impact are implemented,
+> while G3-C3 real-model usefulness qualification is deferred and does not
+> block the current internal enterprise release.
 
 ## Outcome
 
@@ -17,6 +21,21 @@ Published Hub → scope → local source/Code Graph for developer Task Planning
 A BA, PO or DM can understand existing systems and cross-repository relations
 without a source checkout. A developer can add authorized local source when
 exact implementation, impact and tests matter.
+
+## Current product wedge
+
+The next product claim is intentionally narrow: AgentBase helps a BA/PO/DM or
+developer clarify the impact of a change whose ownership, interface, dependency
+or failure boundary spans repositories. It is not a general promise that Hub or
+Code Graph improves every planning, implementation, incident or onboarding
+task.
+
+The deferred product-proof campaign qualifies this wedge in at least two
+materially different Domains, one multi-product monorepo/shared-platform
+boundary and one longitudinal Refresh cycle. A small onboarding study asks
+business, ownership and data-lineage questions without expanding knowledge
+until a decision-critical gap is found. These cases remain the accepted future
+evidence boundary, not a gate or claim for the current release.
 
 ## Manual, on-demand context
 
@@ -94,7 +113,13 @@ described as current implementation.
 The context boundary adds no credential or read permission. Local Draft and
 unaccepted relations never enter ordinary context.
 
-## Productization gate
+## Deferred product-proof gate
+
+The real-model A/B campaign, onboarding study and longitudinal stewardship
+measurement are deferred. They do not block packaging or internal enterprise
+use of already implemented explicit workflows. Existing harnesses and retained
+results remain historical or candidate evidence; no pending, dirty or
+unreviewed result supports a generalized product claim or automatic invocation.
 
 Qualification compares the same workflow with and without AgentBase. Adoption
 requires no critical quality regression, no unsupported claims and at least one
@@ -129,6 +154,17 @@ Qualification harnesses, prompts, fixtures, tool traces, timestamps and model
 results are Validation Evidence. They belong to the relevant Capability
 Contract and AgentBase-Benchmark, not this Product Contract.
 
+AgentBase-Benchmark owns the source registry, expectations and immutable
+comparison results/dispositions used as qualification evidence. It is neither
+runtime nor Product/knowledge authority. The generated `domain-hub` repository
+is presentation output only and cannot substitute for Hub state, benchmark
+evidence or an owner decision.
+
+Candidate runs and owner decisions remain distinct. A product claim requires a
+clean, committed immutable comparison artifact with pinned inputs, both arms,
+quality/cost results and machine-readable owner disposition. Product summaries
+must not describe pending or uncommitted evidence as accepted release proof.
+
 The accepted first productization step is one small, explicit-only integration
 skill backed by the qualified one-search profile. Automatic invocation from a
 host workflow requires separate evidence and owner approval. Productization
@@ -140,6 +176,11 @@ Prepared Published knowledge can reduce repeated repository discovery, narrow
 source reading and expose relationships a single repository cannot show. The
 trade-off is that teams must Ingest, review, Publish and Refresh knowledge; an
 old or sparse Hub cannot guarantee current implementation coverage.
+
+Group 3 reports outcome quality first, then retrieval omission/unsupported
+claims, freshness visibility, reviewer/steward effort, source fallback, tokens
+and latency. Token or time savings never compensate for a critical quality
+regression, and one positive fixture never authorizes automatic invocation.
 
 ## Non-goals
 

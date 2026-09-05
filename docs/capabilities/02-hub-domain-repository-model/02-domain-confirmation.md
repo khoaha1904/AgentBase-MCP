@@ -1,14 +1,14 @@
 # 02.02 — Domain confirmation preflight
 
-> Status: Single-repository and Batch Initial Ingest confirmation are
-> implemented.
+> Status: Single-repository and Batch grouped-home confirmation plus compact
+> materialization are implemented and verified.
 
 ## Workflow
 
 ```text
 explicit repository root
 → read bounded root documentation
-→ resolve existing Repository assignment
+→ resolve existing Repository home and Domain participations
 → search existing Domain summaries
 → present candidate + evidence + warnings
 → user confirms/corrects
@@ -30,8 +30,8 @@ not recursively scan all docs or need Code Graph merely to confirm a Domain.
 
 Preflight returns:
 
-- repository identity and any existing primary Domain;
-- proposed exact Domain identity/title;
+- repository identity, existing physical home and Domain participations;
+- proposed exact Domain/shared default home plus evidenced participations;
 - match kind: existing, new or ambiguous/near-name;
 - source paths/excerpts used for the proposal;
 - a warning when user input and repository evidence diverge.
@@ -45,14 +45,15 @@ separately for each repository.
 
 ## New, Refresh and correction
 
-- Initial Ingest creates/reuses the Domain and Repository assignment after
-  confirmation.
-- Refresh uses the existing assignment by default and still displays a preflight
+- Initial Ingest creates/reuses the Domain and Repository home plus explicit
+  participation relations after confirmation.
+- Refresh preserves the existing home by default and still displays a preflight
   summary.
-- A different Domain from the existing assignment stops ordinary Refresh. An
-  explicit correction proposal changes the relation while preserving owner
-  evidence and Git history; it does not change silently.
+- A proposed rehome stops ordinary Refresh. A participation relation may change
+  only through an explicit correction preserving evidence and Git history; home
+  and participation never change each other silently.
 - If the Repository concept is protected, the Agent reports the exact mismatch;
   a maintainer must perform a reviewed Hub correction before Refresh continues.
-- Exact identity/title is passed into existing `confirmed_domain`; runtime does
-  not run a model or classification service automatically.
+- Profile Initial Ingest uses the grouped home plan; `confirmed_domain` remains
+  only its one-Domain compatibility input. Runtime does not run a Domain model or
+  classification service automatically.

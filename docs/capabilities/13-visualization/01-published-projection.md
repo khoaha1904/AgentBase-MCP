@@ -18,6 +18,13 @@ governance documents are not expanded. `Resource` concept nodes continue to use
 a provider-neutral role and may represent a queue/topic when identity,
 query/link value and boundary evidence are sufficient.
 
+Under compact Profile 1.0, the projection discovers every standalone role from
+frontmatter below `knowledge/`; directory names never imply type or graph
+membership. The selected Domain `index.md` remains page context rather than a
+normal node, and each Repository dossier is the default Repository detail view.
+Sourced dossier sections remain parent-owned details unless a separately
+accepted standalone identity/relationship justifies a node.
+
 ## Output
 
 One deterministic projection contains:
@@ -51,10 +58,12 @@ bounded predicates are canonical runtime predicates plus `monitors` and
 resolve through the containing Published concept. Unresolved, ambiguous,
 unsupported or unevidenced rows are omitted with a warning.
 
-The selected Domain owns primary nodes. A valid accepted edge from a primary
-node to another Domain retains the direct endpoint as a boundary node and stops
-there. Its Domain membership remains unchanged; the projection does not traverse
-or import the external Domain neighborhood.
+The selected Domain owns primary nodes. In Profile 1.0, primary includes
+concepts physically homed in its capsule and semantic participants; node detail
+keeps those roles separate. A valid accepted edge from a primary node to
+another Domain retains the direct endpoint as a boundary node and stops there.
+Its Domain membership remains unchanged; the projection does not traverse or
+import the external Domain neighborhood.
 
 ## Predicate directions
 
@@ -94,3 +103,8 @@ that Domain, render Repository concepts as fixed grouping regions, and suppress
 structural links already expressed by containment. Multi-repository, shared and
 external nodes remain outside repository regions. This changes no projection
 membership, identity or canonical relationship.
+
+The compact layout changes no ownership inference: placement inside a Domain is
+physical home, while Repository ownership/association still comes from the
+Repository dossier and accepted relations. The renderer never creates a node
+for a dossier heading merely to reproduce a former type folder.

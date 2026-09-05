@@ -23,12 +23,22 @@ npm run demo
 npm run verify
 ```
 
+Those commands remain the developer-checkout setup path. The `0.1.0`
+`linux-x64` release archive now carries its own application installer and stable
+launcher lifecycle. A distributable archive is admitted only when the exact
+`v0.1.0` tag passes the required GitHub Actions gate; CI retains only the
+qualified archive and adjacent checksum. Its installer explicitly selects
+Codex, Claude Code or both; MCP registration then remains on the stable launcher
+while the thirteen released skills upgrade and roll back with the application.
+
 Interactive installation can register the current checkout as user-global
 `agentbase` stdio MCP in Codex, Claude Code or both and installs the thirteen
 AgentBase product skills for every selected client. An exact rerun is a no-op; a conflicting
 same-name MCP entry or skill fails before replacement. Hub token input is not
-part of installation; the owner enters one shared token later through the
-masked `abs hub connect` prompt outside Git. Non-interactive installation prepares
+part of installation; the current baseline accepts one shared token later
+through the masked `abs hub connect` prompt outside Git. The accepted Group 1
+contract treats that shared token as the built-in trusted-enterprise credential
+provider so Hub profiles reuse it without entering the token again. Non-interactive installation prepares
 dependencies and activates the bundled native Code Graph provider but performs
 no skill or client mutation. npm dependencies use only the configured HTTPS registry;
 public registry fallback is rejected.

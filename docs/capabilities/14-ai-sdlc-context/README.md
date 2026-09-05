@@ -1,7 +1,10 @@
 # 14 — Context for AI SDLC workflows
 
 > Status: The explicit Phase 1 context skill and Phase 2 planning and
-> implementation qualification harnesses are implemented.
+> implementation qualification harnesses are implemented. G3-C1 freshness
+> presentation is implemented and verified. New real-model A/B, onboarding and
+> longitudinal stewardship campaigns are deferred and are not current internal
+> enterprise release gates; retained harnesses and evidence remain available.
 
 Product Contract:
 [`AI SDLC context`](../../product/07-ai-sdlc-context.md)
@@ -41,6 +44,11 @@ implementation benefit from bounded local Code Graph/source evidence.
 Qualification pages define bounded scenarios and summarize results. Durable run
 artifacts live in AgentBase-Benchmark; tests and retained reports are Validation
 Evidence and do not override the `AB-CONTEXT-*` requirements.
+
+G3-C1 uses the shared
+[uniform freshness envelope](../08-live-references/08-freshness-envelope-requirements.md)
+from Published query results. Context presentation preserves that envelope; it
+does not create an independent freshness model or source-access path.
 
 The first qualification exposes only current Published search/read to the
 assisted arm and reuses the existing Crawler fixture. It does not prebuild

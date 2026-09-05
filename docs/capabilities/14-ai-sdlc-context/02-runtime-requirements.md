@@ -4,6 +4,12 @@ These `AB-CONTEXT-*` requirements are the normative AI SDLC Context Capability
 Contract. Qualification results are Validation Evidence, not requirement
 authority.
 
+New real-model A/B, onboarding and longitudinal stewardship execution is
+deferred and is not a current internal enterprise release gate. Implemented
+explicit context behavior, deterministic qualification support and all existing
+`AB-CONTEXT-*` boundaries remain active for retained evidence and any later
+campaign.
+
 > Status: AB-CONTEXT-001..010 qualification baseline approved;
 > AB-CONTEXT-011..016 manual runtime composition owner-approved after two
 > bounded Crawler-Domain Feature qualifications; AB-CONTEXT-017..018 harden

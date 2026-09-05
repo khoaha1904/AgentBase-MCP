@@ -70,9 +70,10 @@ function addEvidenceBlock(parent, values) {
 }
 
 function nodeType(node) {
+  const scope = node.scopeRoles?.length ? node.scopeRoles.join(" + ") : node.membership;
   return node.representation === "embedded"
     ? `${node.type} / ${node.resourceKind} · embedded`
-    : `${node.type} · ${node.membership}`;
+    : `${node.type} · ${scope}`;
 }
 
 function showFallback(error) {
@@ -262,7 +263,7 @@ async function start() {
   }
 
   document.querySelector("#domain-title").textContent = projection.domain.title;
-  document.querySelector("#snapshot").textContent = `${projection.hub} · ${projection.commit.slice(0, 12)}`;
+  document.querySelector("#snapshot").textContent = `${projection.hub} · ${projection.commit.slice(0, 12)} · ${projection.profile}`;
   for (const type of [...new Set(graphNodes.map((node) => node.type))].sort()) {
     const option = document.createElement("option");
     option.value = type;
@@ -444,6 +445,8 @@ async function start() {
     const meta = document.querySelector("#detail-meta");
     meta.replaceChildren();
     addTextBlock(meta, "Identity", [node.externalIdentity ?? node.id, node.path]);
+    addTextBlock(meta, "Physical home", node.home ? [node.home] : []);
+    addTextBlock(meta, "Selected Domain roles", node.scopeRoles ?? []);
     if (node.representation === "embedded") addTextBlock(meta, "Published parents", node.parentIds);
     addEvidenceBlock(meta, node.sources);
     addTextBlock(meta, "Active questions", (questionsBySubject.get(id) ?? []).map((item) => `${item.state}: ${item.property}`));
@@ -480,6 +483,8 @@ async function start() {
     const meta = document.querySelector("#document-meta");
     meta.replaceChildren();
     addTextBlock(meta, "Identity", [node.id, node.path]);
+    addTextBlock(meta, "Physical home", node.home ? [node.home] : []);
+    addTextBlock(meta, "Selected Domain roles", node.scopeRoles ?? []);
     addEvidenceBlock(meta, node.sources);
     addTextBlock(meta, "Direct relations", allEdges.filter((edge) => edge.displaySource === id || edge.displayTarget === id)
       .map((edge) => `${nodeById.get(edge.displaySource)?.title ?? edge.displaySource} — ${edge.predicate} → ${nodeById.get(edge.displayTarget)?.title ?? edge.displayTarget}`));

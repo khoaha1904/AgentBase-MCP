@@ -4,9 +4,11 @@ import path from "node:path";
 
 import type { AdmittedLocalHubState } from "../../../core/hub/index.ts";
 import {
-  createQuestionId, loadOkfBundle, mergeOpenQuestion, parseQuestionDocument,
+  AGENTBASE_OKF_PROFILE_CONCEPT_ID, agentBaseProfileConceptPath, createQuestionId, loadOkfBundle,
+  mergeOpenQuestion, parseQuestionDocument,
   parseRepositorySourceResource, readObservedValues, readRepositoryIdentityRecord,
   renderQuestionDocument, renderQuestionIndex,
+  type AgentBaseConceptHome,
   type InventoryReceipt,
   type ObservedValue, type ObservedValueRole, type OkfValue,
   type OwnedItemQuestionReference, type QuestionState, type SharedQuestion,
@@ -23,7 +25,7 @@ export type GovernedQuestion = SharedQuestion & Readonly<{
   observations: readonly ObservedValue[];
 }>;
 
-const SUBJECT_ROOT = "(?:domains|systems|components|functions|interfaces|flows|resources|infrastructure|deployments|repositories|relationships|capabilities)";
+const SUBJECT_ROOT = "(?:shared|domains|systems|components|functions|interfaces|flows|resources|infrastructure|deployments|repositories|relationships|capabilities)";
 const SUBJECT = new RegExp(`^${SUBJECT_ROOT}/[a-z0-9][a-z0-9./-]*$`);
 const PROPERTY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const SOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
@@ -81,6 +83,39 @@ function questionDocuments(root: string): readonly SharedQuestion[] {
   return [...loadOkfBundle(root).concepts.values()].filter((concept) => concept.type === "Question")
     .map(parseQuestionDocument).sort((left, right) => left.id.localeCompare(right.id));
 }
+
+function questionPath(root: string, question: SharedQuestion): string {
+  const bundle = loadOkfBundle(root);
+  if (!bundle.concepts.has(AGENTBASE_OKF_PROFILE_CONCEPT_ID)) return `questions/${question.id}.md`;
+  const subjectPath = bundle.concepts.get(question.subject)?.path;
+  const domain = subjectPath ? /^domains\/([a-z0-9]+(?:-[a-z0-9]+)*)\//.exec(subjectPath)?.[1] : undefined;
+  const home: AgentBaseConceptHome = domain ? { kind: "domain", selector: `domains/${domain}` } : { kind: "shared" };
+  return agentBaseProfileConceptPath(home, "Question", question.id);
+}
+
+export function questionDocumentPaths(root: string, questions: readonly SharedQuestion[]): readonly string[] {
+  if (!questions.length) return [];
+  const concepts = [...loadOkfBundle(root).concepts.values()].filter((concept) => concept.type === "Question");
+  return questions.map((question) => concepts.find((concept) => parseQuestionDocument(concept).id === question.id)?.path
+    ?? questionPath(root, question)).sort();
+}
+
+function appendProfileQuestionNavigation(root: string, questions: readonly SharedQuestion[]): void {
+  if (!questions.length) return;
+  const bundle = loadOkfBundle(root);
+  if (!bundle.concepts.has(AGENTBASE_OKF_PROFILE_CONCEPT_ID)) return;
+  const concepts = [...bundle.concepts.values()].filter((concept) => concept.type === "Question");
+  for (const question of questions) {
+    const concept = concepts.find((item) => parseQuestionDocument(item).id === question.id);
+    if (!concept) throw new Error(`Question document is missing after materialization: ${question.id}`);
+    const domain = /^domains\/([a-z0-9]+(?:-[a-z0-9]+)*)\//.exec(concept.path)?.[1];
+    const indexPath = domain ? `domains/${domain}/index.md` : "shared/index.md";
+    const target = path.join(root, ...indexPath.split("/")), current = fs.readFileSync(target, "utf8");
+    const relative = path.posix.relative(path.posix.dirname(indexPath), concept.path);
+    const line = `* [${question.title}](${relative}) - Question`;
+    if (!current.split(/\r?\n/).includes(line)) fs.writeFileSync(target, `${current.trimEnd()}\n\n${line}\n`);
+  }
+}
 function observedRevision(value: ObservedValue): string | undefined {
   return value.observed.evidenceDigest ?? value.observed.dirtyDigest ?? value.observed.commit ?? undefined;
 }
@@ -109,11 +144,15 @@ function writePrivateFile(root: string, relative: string, content: string): void
 
 export function assertQuestionAuthoringUntouched(baseRoot: string, authoredRoot: string): void {
   const base = loadOkfBundle(baseRoot), authored = loadOkfBundle(authoredRoot);
-  const paths = new Set([...base.files, ...authored.files].filter((file) => file.startsWith("questions/")));
+  const paths = new Set([
+    ...[...base.concepts.values(), ...authored.concepts.values()]
+      .filter((concept) => concept.type === "Question").map((concept) => concept.path),
+    ...[...base.files, ...authored.files].filter((relative) => /(?:^|\/)questions\//.test(relative)),
+  ]);
   for (const relative of paths) {
     const before = path.join(baseRoot, ...relative.split("/")), after = path.join(authoredRoot, ...relative.split("/"));
     if (!fs.existsSync(before) || !fs.existsSync(after) || !fs.readFileSync(before).equals(fs.readFileSync(after))) {
-      throw new Error("Question documents are MCP-owned; generic Ingest/Refresh cannot edit questions/ bytes");
+      throw new Error("Question documents are MCP-owned; generic Ingest/Refresh cannot edit Question bytes");
     }
   }
 }
@@ -123,14 +162,19 @@ export function materializeQuestionDeclarations(
   observations: readonly ObservedValue[], createdAt: string,
 ): readonly SharedQuestion[] {
   const current = new Map(questionDocuments(targetRoot).map((question) => [question.id, question]));
+  const currentPaths = new Map([...loadOkfBundle(targetRoot).concepts.values()].filter((concept) => concept.type === "Question")
+    .map((concept) => [parseQuestionDocument(concept).id, concept.path]));
   const affected: SharedQuestion[] = [];
   for (const declaration of declarations) {
     const incoming = incomingQuestion(declaration, observations, createdAt), existing = current.get(incoming.id);
     const next = existing ? mergeOpenQuestion(existing, incoming) : incoming;
     current.set(next.id, next); affected.push(next);
-    writePrivateFile(targetRoot, `questions/${next.id}.md`, renderQuestionDocument(next));
+    writePrivateFile(targetRoot, currentPaths.get(next.id) ?? questionPath(targetRoot, next), renderQuestionDocument(next));
   }
-  if (declarations.length) writePrivateFile(targetRoot, "questions/index.md", renderQuestionIndex([...current.values()]));
+  if (declarations.length && !loadOkfBundle(targetRoot).concepts.has(AGENTBASE_OKF_PROFILE_CONCEPT_ID)) {
+    writePrivateFile(targetRoot, "questions/index.md", renderQuestionIndex([...current.values()]));
+  }
+  appendProfileQuestionNavigation(targetRoot, affected);
   validateSharedQuestionBundle(targetRoot);
   return affected;
 }
@@ -168,6 +212,8 @@ export function materializeReceiptQuestionPlans(
     ? [[skeleton.candidateId, skeleton] as const] : []));
   const candidates = new Map(receipt.guidanceRequest.candidates.map((candidate) => [candidate.id, candidate]));
   const current = new Map(questionDocuments(targetRoot).map((question) => [question.id, question]));
+  const currentPaths = new Map([...loadOkfBundle(targetRoot).concepts.values()].filter((concept) => concept.type === "Question")
+    .map((concept) => [parseQuestionDocument(concept).id, concept.path]));
   const affected: SharedQuestion[] = [];
   for (const plan of receipt.inventory.questionPlans) {
     const candidate = candidates.get(plan.targetCandidateId);
@@ -185,15 +231,21 @@ export function materializeReceiptQuestionPlans(
     const next = existing ? mergeOpenQuestion(existing, incoming) : incoming;
     current.set(next.id, next);
     affected.push(next);
-    writePrivateFile(targetRoot, `questions/${next.id}.md`, renderQuestionDocument(next));
+    writePrivateFile(targetRoot, currentPaths.get(next.id) ?? questionPath(targetRoot, next), renderQuestionDocument(next));
   }
-  if (affected.length) writePrivateFile(targetRoot, "questions/index.md", renderQuestionIndex([...current.values()]));
+  if (affected.length && !loadOkfBundle(targetRoot).concepts.has(AGENTBASE_OKF_PROFILE_CONCEPT_ID)) {
+    writePrivateFile(targetRoot, "questions/index.md", renderQuestionIndex([...current.values()]));
+  }
+  appendProfileQuestionNavigation(targetRoot, affected);
   validateSharedQuestionBundle(targetRoot);
   return affected;
 }
 
 export function validateSharedQuestionBundle(root: string): void {
-  const bundle = loadOkfBundle(root), questions = questionDocuments(root), failures: string[] = [];
+  const bundle = loadOkfBundle(root), profile = bundle.concepts.has(AGENTBASE_OKF_PROFILE_CONCEPT_ID);
+  const questionConcepts = [...bundle.concepts.values()].filter((concept) => concept.type === "Question");
+  const questions = questionConcepts.map(parseQuestionDocument).sort((left, right) => left.id.localeCompare(right.id));
+  const failures: string[] = [];
   const repositoryIds = new Set([...bundle.concepts.values()].flatMap((concept) => {
     const repository = readRepositoryIdentityRecord(concept);
     return repository ? [repository.id] : [];
@@ -216,9 +268,17 @@ export function validateSharedQuestionBundle(root: string): void {
       failures.push(`${question.id}: observed-value item is unresolved: ${reference.itemKey}`);
     }
   }
-  const indexPath = path.join(root, "questions", "index.md");
-  if (questions.length && (!fs.existsSync(indexPath) || fs.readFileSync(indexPath, "utf8") !== renderQuestionIndex(questions))) {
-    failures.push("questions/index.md is missing or stale");
+  if (profile) {
+    for (const question of questions) {
+      const concept = questionConcepts.find((item) => parseQuestionDocument(item).id === question.id)!;
+      const expected = questionPath(root, question);
+      if (concept.path !== expected) failures.push(`${concept.path}: Question does not use its subject home ${expected}`);
+    }
+  } else {
+    const indexPath = path.join(root, "questions", "index.md");
+    if (questions.length && (!fs.existsSync(indexPath) || fs.readFileSync(indexPath, "utf8") !== renderQuestionIndex(questions))) {
+      failures.push("questions/index.md is missing or stale");
+    }
   }
   if (failures.length) throw new Error(`shared Question validation failed: ${failures.join("; ")}`);
 }

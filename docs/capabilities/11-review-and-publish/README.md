@@ -1,7 +1,13 @@
 # 11 — Review and Publish
 
 > Status: Independent Init pull requests, same-Repository Init/Refresh stacks,
-> atomic Batch Initial Ingest pull requests and existing-PR reconciliation are implemented.
+> atomic Batch Initial Ingest pull requests, existing-PR reconciliation and
+> exact profile-scoped local writer exclusion, G3-C2 semantic-impact evidence
+> and the G4-C5 Profile home/scope extension are implemented and verified.
+> G4-C7 adds verified report-first migration and final common Profile mutation
+> admission without a second publication lifecycle. G5-C1 removes Published
+> activity logs and is implemented and verified. G5-C2
+> pre-Finalize semantic quality evidence is deferred and inactive.
 
 Product Contract:
 [Knowledge lifecycle](../../product/03-knowledge-lifecycle.md)
@@ -24,8 +30,15 @@ Product Contract:
 - [`07-failure-recovery-and-permissions.md`](07-failure-recovery-and-permissions.md) — retry, partial outcomes and Git authority.
 - [`08-domain-enrichment-changes.md`](08-domain-enrichment-changes.md) — a dependency-safe Draft/pull request containing updates
   from multiple repositories in the same Domain.
-- [`09-profile-migration-changes.md`](09-profile-migration-changes.md) — an impact scan, Migration Draft and one Hub pull request
-  for a semantic profile upgrade.
+- [`09-profile-migration-changes.md`](09-profile-migration-changes.md) — the
+  report-first legacy-to-Profile workspace, reviewed Migration proposal and
+  common final mutation admission gate.
+- [`10-concurrency-requirements.md`](10-concurrency-requirements.md) — exact
+  profile-scoped local writer exclusion and Git-based team coordination.
+- [`11-proposal-impact-requirements.md`](11-proposal-impact-requirements.md) —
+  exact before/after semantic impact retained with newly finalized proposals.
+- [Deferred semantic quality design](../09-ingest-and-refresh/11-semantic-quality-admission-requirements.md)
+  — retained future design; no current inspection/publication behavior.
 
 ## Cross-section decision from Refresh
 
@@ -44,8 +57,8 @@ dedicated MCP Hub token. A created PR must summarize:
 2. **Scope** — Domain, repositories, source revisions and proposal IDs.
 3. **Knowledge changes** — Added, Updated, Removed.
 4. **Uncertainty** — Questions, Limitations, conflicts and unresolved evidence.
-5. **Evidence and validation** — important sources, catalog/profile versions,
-   deterministic validation and qualification status.
+5. **Evidence and validation** — important sources, catalog/profile versions and
+   deterministic validation.
 6. **Reviewer action** — what needs confirmation and what was intentionally not
    verified/published.
 

@@ -2,6 +2,10 @@
 
 These `AB-VIS-*` requirements are the normative Visualization Capability
 Contract. The neighboring pages explain the behavior and supporting rationale.
+Profile Domain selector and role behavior is owned by
+[`AB-PROFILE-READ-001..010`](../10-query-routing/08-profile-domain-projection-requirements.md).
+Compact Profile placement and document density are owned by
+[`AB-COMPACT-001..015`](../02-hub-domain-repository-model/10-compact-profile-layout-requirements.md).
 
 - **AB-VIS-001** — Visualization reads one exact synchronized Published commit
   and never mixes Local Draft or proposal bytes.
@@ -100,3 +104,8 @@ Contract. The neighboring pages explain the behavior and supporting rationale.
   unrelated Repository region in the three-Repository qualification topology;
   one- and two-Repository views retain a compact linear placement. Layout uses
   Published relation endpoints only and never changes knowledge topology.
+- **AB-VIS-025** — Compact Profile visualization reads Domain page context from
+  `domains/<slug>/index.md`, uses Repository dossiers as Repository detail and
+  discovers all other standalone roles from `knowledge/` frontmatter. Dossier
+  sections remain parent details; former type directories and headings never
+  synthesize canonical nodes, ownership or topology.

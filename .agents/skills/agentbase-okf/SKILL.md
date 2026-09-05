@@ -26,10 +26,11 @@ skill.
 ## Workflow
 
 1. Read the proposal metadata and bounded repository evidence before authoring.
-   When prepare returns `confirmedDomain`, treat its exact identity/title as
-   owner guidance: create or reuse that Domain and use the returned
-   `evidenceResource` for Domain membership rather than attributing the business
-   boundary to repository code.
+   When Prepare returns `homePlan`, preserve its exact home-qualified subject
+   and skeleton paths; home is placement only, and only its participation
+   entries authorize Domain membership. When Prepare instead returns
+   `confirmedDomain`, treat its exact identity/title as compatibility owner
+   guidance and preserve its generated Domain membership.
 2. Read prior concept bodies only at the exact `currentSource`, `subject`,
    `neighbors` and `navigationPaths` named by the prepare result's continuity
    manifest. The full copied Hub is lifecycle state, not authoring context.
@@ -76,19 +77,22 @@ skill.
    metadata as generic prose.
    Preserve exact `sources[].observed_revision`; a newer observation must use a
    revision-distinct source ID. Receipt-bound Questions are renderer-owned and
-   must not be authored under `questions/`.
+   must not be authored under either legacy `questions/` or Profile
+   `shared/questions/`.
    For Refresh, investigate `sourceChanges`, then `continuity.knownGaps`, then
    one small discovery pass. Omitted files, old observations and search/graph
-   absence preserve accepted knowledge. Declare destructive removal only at
-   Finalize with an exact reason and current-repository evidence.
+   absence preserve accepted knowledge. Keep the prepared Profile paths and
+   Repository home; Refresh never rehomes a concept. Declare destructive
+   removal only at Finalize with an exact reason and current-repository
+   evidence.
 5. Keep the prepared navigation progressive. The root `index.md` carries
-   `okf_version: "0.2"` and links directly to existing Domain entrypoints, or a
-   Repository entrypoint when no Domain is confirmed. Architecture category
-   indexes are optional derived presentation and must not be created during
-   authoring. Preserve every existing nonblank root line exactly and in order.
-   A workflow-owned governance index such as `questions/index.md` remains under
-   its exact renderer. Never edit or generate `log.md`; successful lifecycle
-   Finalize owns its concise activity entry.
+   `okf_version: "0.2"`. In Profile 1.0, preserve its Profile and Domain Capsule
+   links plus the prepared capsule/shared indexes; in a legacy Hub, preserve
+   its direct Domain or fallback Repository entrypoint. Do not create unrelated
+   indexes. Preserve every existing nonblank root line exactly and in order.
+   Workflow-owned Question documents remain under their exact prepared home;
+   compact Profile homes have no category indexes. Never edit or generate
+   AgentBase activity `log.md`; Git and pull requests own shared history.
 6. Validate created/modified concepts with `validate_okf_changes`, supplying
    the prepared `session_id` when the invoking workflow returned one, and
    only their full Markdown plus unchanged target summaries from continuity or

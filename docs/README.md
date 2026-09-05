@@ -39,17 +39,32 @@ Current requirement routes:
 - Foundation: `docs/capabilities/12-version-scope/01-foundation-requirements.md`
 - Code Graph: `docs/capabilities/01-repository-reading/05-runtime-requirements.md`
 - Hub/Domain/Repository model: `docs/capabilities/02-hub-domain-repository-model/06-capability-requirements.md`
+- Profile 1.0 and Domain Capsule admission: `docs/capabilities/02-hub-domain-repository-model/07-profile-layout-requirements.md`
+- Profile 1.0 bootstrap and grouped-home Initial Ingest: `docs/capabilities/02-hub-domain-repository-model/08-profile-bootstrap-home-plan-requirements.md`
+- Profile Repository Refresh and Question guidance: `docs/capabilities/02-hub-domain-repository-model/09-profile-refresh-guidance-requirements.md`
+- Compact Profile 1.0 and Repository dossiers: `docs/capabilities/02-hub-domain-repository-model/10-compact-profile-layout-requirements.md`
+- Profile Domain query/visualization projection: `docs/capabilities/10-query-routing/08-profile-domain-projection-requirements.md`
 - Concept discovery: `docs/capabilities/03-concept-discovery/06-capability-requirements.md`
 - Schema selection: `docs/capabilities/04-schema-selection/07-capability-requirements.md`
 - OKF: `docs/capabilities/05-knowledge-entry/06-runtime-requirements.md`
 - Domain Enrichment: `docs/capabilities/06-cross-repository-relations/07-runtime-requirements.md`
+- Profile-aware Domain Enrichment: `docs/capabilities/06-cross-repository-relations/09-profile-enrichment-requirements.md`
 - Conflicts and Questions: `docs/capabilities/07-conflicts-and-questions/07-capability-requirements.md`
 - Observed snapshots: `docs/capabilities/08-live-references/07-capability-requirements.md`
+- Uniform context freshness: `docs/capabilities/08-live-references/08-freshness-envelope-requirements.md`
 - Batch Initial Ingest: `docs/capabilities/09-ingest-and-refresh/09-runtime-requirements.md`
+- Deferred semantic quality design: `docs/capabilities/09-ingest-and-refresh/11-semantic-quality-admission-requirements.md`
 - Local Hub and publication: `docs/capabilities/11-review-and-publish/01-runtime-requirements.md`
+- Local writer and Git concurrency: `docs/capabilities/11-review-and-publish/10-concurrency-requirements.md`
+- Proposal semantic impact: `docs/capabilities/11-review-and-publish/11-proposal-impact-requirements.md`
+- Profile migration and final mutation admission: `docs/capabilities/11-review-and-publish/09-profile-migration-changes.md`
 - Installation: `docs/capabilities/12-version-scope/02-installation-requirements.md`
 - CLI: `docs/capabilities/12-version-scope/08-cli-runtime-requirements.md`
 - MCP protocol: `docs/capabilities/12-version-scope/09-mcp-protocol-requirements.md`
+- Release artifact: `docs/capabilities/12-version-scope/10-release-artifact-requirements.md`
+- Application lifecycle: `docs/capabilities/12-version-scope/11-application-lifecycle-requirements.md`
+- Client and skill integration: `docs/capabilities/12-version-scope/12-client-and-skill-integration-requirements.md`
+- Release CI and evidence: `docs/capabilities/12-version-scope/13-release-ci-requirements.md`
 - Benchmark: `docs/capabilities/12-version-scope/03-benchmark-requirements.md`
 - Published visualization: `docs/capabilities/13-visualization/04-runtime-requirements.md`
 - AI SDLC context: `docs/capabilities/14-ai-sdlc-context/02-runtime-requirements.md`
@@ -178,6 +193,60 @@ clean source publication because its accepted outcomes already live here.
   and evidence-bound System-to-Interface consumption are historical evidence;
   the generated snapshot was reset before capability 052's resource-node
   qualification.
+- Release artifact assembly now gives the product identity `0.1.0`, packages
+  only the installed production closure and current `linux-x64` native provider,
+  and emits a reproducible manifest/SBOM/checksum-qualified archive. Repository
+  CI now runs the canonical gate, proves every active release requirement has
+  test evidence and retains only exact-tag CI-qualified archives. A public
+  release page or registry adapter remains deferred.
+- The application lifecycle now installs that archive below owner-private
+  `runtime/releases/`, routes through one stable launcher, retains current and
+  previous releases, and recovers install/upgrade/rollback/uninstall through a
+  durable receipt. Selected Codex/Claude Code entries now use that launcher;
+  recognized checkout entries migrate once, and the exact released skill set
+  upgrades, rolls back and uninstalls in the same transaction.
+- Local accepted/remote Hub writers now use exact profile-scoped locks with
+  live-owner exclusion, safe dead-owner and legacy-lock recovery, while
+  different Hub profiles remain independent. Team coordination continues
+  through deterministic proposal PRs and exact sequential synchronization; the
+  unused checkout-mutating publication path was removed.
+- Group 3 runtime scope is closed for the current internal enterprise release:
+  G3-C1 uniform freshness and G3-C2 proposal semantic impact are implemented
+  and verified. G3-C3 real-model usefulness qualification is explicitly
+  deferred and is not a release gate. Its accepted campaign design and prior
+  evidence remain available for later qualification, but this release makes no
+  generalized benchmark-proven usefulness claim.
+- Group 4 is closed for the current internal enterprise release. G4-C1 through
+  G4-C7 implement and verify Profile 1.0 admission, grouped-home authoring,
+  lifecycle/query/visualization projection, semantic impact, Profile-aware
+  Enrichment, reviewed legacy migration and final common mutation admission.
+  Capacity and real-model qualification remain deferred; the release keeps
+  `qualified_scale: null` and makes no benchmark-proven scale claim.
+- Group 5's current release scope is G5-C1: compact Domain indexes, Repository
+  dossiers, type-neutral `knowledge/` and no Published activity logs. It is
+  implemented and verified; Group 5 is closed for the current internal
+  enterprise release. G5-C2 product-integrated
+  semantic quality admission is deferred, inactive and not a release gate;
+  optional AI draft review remains operator practice. Qualification Hub data
+  may be reset/re-ingested, while no owner-declared durable Hub receives
+  implicit deletion or migration.
+- Group 6 is the final release-hardening horizon. G6-C1 is implemented and
+  verified; it keeps one Refresh skill/tool surface while adding explicit
+  bounded Coverage Refresh and visible Repository coverage debt. Coverage stops
+  early on a clean confirming pass and caps a non-converged campaign at three
+  reviewed passes. G6-C2 freezes the audited ten public skills, three internal
+  skills and forty-six owned tools. Release evidence rejects orphan or
+  accidental surface drift without combining safety-critical lifecycle
+  transitions. Both phases are implemented and verified; Group 6 is closed for
+  the current internal enterprise release.
 
 Update current truth once in the narrowest high- or low-level document. Do not
 add handoff, roadmap, ADR or evidence-diary files that repeat it.
+
+The accepted product-readiness groups are maintained in
+[`docs/product/00-scope-and-authority.md`](product/00-scope-and-authority.md#accepted-product-design-groups).
+The complete Product horizon is accepted before new delivery work begins. Work
+then returns to the earliest open group, revalidates its Architecture and takes
+one Capability from contract through code and verification before the next
+Capability starts. The group is released/closed before delivery begins for the
+next group; no separate roadmap file is authority.

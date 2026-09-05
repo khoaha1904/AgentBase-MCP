@@ -127,9 +127,9 @@ The standard README is human onboarding only; canonical knowledge navigation
 remains in `index.md`. Exact-empty bootstrap uses the same released support
 bytes directly only because no target branch exists for a PR.
 
-## Current implementation gap
+## Deferred presentation boundary
 
-The core workflow and deterministic pull-request summary are implemented. Batch
-Ingest and Domain Enrichment publication units still depend on their corresponding
-capabilities. Visual HTML review and explicit lifecycle presentation belong to
-Sections 11.02 and 11.05 and do not make Git transport more complex.
+The core workflow, deterministic pull-request summary, Batch Ingest and Domain
+Enrichment publication units are implemented. Visual HTML review and explicit
+lifecycle presentation belong to Sections 11.02 and 11.05 and do not make Git
+transport more complex.

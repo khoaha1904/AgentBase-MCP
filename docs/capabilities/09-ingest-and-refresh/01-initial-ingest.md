@@ -1,7 +1,8 @@
 # 09.01 — Initial Ingest
 
-> Status: The baseline is qualified and the Capability 046 discovery coverage
-> runtime is implemented; released-skill requalification is pending.
+> Status: The baseline, Capability 046 discovery coverage runtime and G5-C1
+> compact dossier authoring are implemented and verified. G5-C2 semantic quality
+> admission is deferred and inactive.
 
 ## User interaction
 
@@ -15,8 +16,9 @@ it does not require a custom prompt, provider login or cross-repository investig
 1. Preflight   Hub + repository/Domain + exact remote-default source
 2. Discover    graph + MCP fixed baseline/census → private Discovery Seed
 3. Investigate five lanes + exact source → submitted Inventory
-4. Author      freeze Receipt → guidance/skeletons → OKF proposal
-5. Validate    Seed/Receipt coverage + OKF integrity + preview
+4. Author      freeze Receipt → Repository dossier + independent knowledge
+5. Validate    deterministic coverage + source/evidence/OKF/Profile integrity
+6. Finalize    immutable proposal → preview
 ```
 
 Stage boundaries/checkpoints are deterministic. Agent reasoning occurs only in
@@ -35,10 +37,10 @@ graph. Without a Remote Hub there is no OKF Init/Local Draft.
 ## Success
 
 Success does not require full repository coverage or a concept quota. A run
-succeeds when every discovery lane is covered, absent-after-check or limited,
-every P0 group has an outcome and the proposal is valid, useful and
-provenance-bearing. Missing P1/P2 coverage can still be `Ready for review` with
-a Question/limitation.
+succeeds when every discovery lane is covered, absent-after-check or visibly
+limited, every important group has a dossier/standalone/Question/ignored
+outcome and the proposal is valid, useful and provenance-bearing. Missing
+lower-priority coverage can still be reviewable with a Question/limitation.
 
 Missing low-value details are diagnostics. Important ambiguity becomes a
 Question. An integrity/validation failure creates an Incomplete run and does not
@@ -47,9 +49,9 @@ diagnostic, or unresolved P0 overflow also creates an Incomplete run.
 
 ## Repair budget
 
-Validation permits at most one Agent repair round for exact failures. If failures
-remain, retain the repairable session/diagnostics and stop; do not open another
-discovery loop automatically.
+Changed-document validation retains the implemented single automatic authoring
+repair budget. If deterministic failures remain, retain the repairable/
+Incomplete session and stop; do not open another discovery loop automatically.
 
 ## Exit boundary
 
@@ -59,13 +61,11 @@ repositories when one repository fails.
 
 ## Implementation/qualification note
 
-MCP renders canonical Repository, confirmed Domain, selected concept and index
-skeletons before the Agent enriches them; the Agent does not build frontmatter
-from scratch. Catalog 7 qualification with Sol creates a valid partial seven-concept
-ECS full-stack bundle with a System, frontend/backend Components, an Interface
-and a delivery Flow; internal AWS resources remain embedded. Explicit Batch
-Initial Ingest is implemented offline with isolated sequential member checkpoints
-and one atomic proposal.
+The implemented baseline renders a rich Repository dossier, compact Domain
+index and selected `knowledge/` skeletons before the Agent enriches them; the
+Agent still does not build frontmatter from scratch. Explicit Batch Initial
+Ingest remains isolated per member and atomic after every member satisfies the
+current deterministic structural/evidence admission.
 
 Prepared embedded rows are Receipt-bound mechanics. The Agent can improve labels
 and prose but must retain candidate-owned source evidence; Finalize checks that

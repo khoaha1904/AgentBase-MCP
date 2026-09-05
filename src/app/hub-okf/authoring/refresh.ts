@@ -8,6 +8,8 @@ import {
 } from "../../../core/hub/index.ts";
 import {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
+  classifyAgentBaseHubProfile,
+  conceptIdentityFromPath,
   conceptReferencesRepository,
   diffBundleProposal,
   isMutableAgentBaseDraft,
@@ -131,12 +133,11 @@ function preserveSharedConcept(
     && readRepositoryIdentityRecord(proposed)?.id === sourceRepositoryId) {
     const previousRepository = mapping(previousAgentbase.repository) ?? {};
     const proposedRepository = mapping(proposedAgentbase.repository) ?? {};
-    if (proposedRepository.observed_source !== undefined) frontmatter = {
-      ...frontmatter,
-      agentbase: { ...previousAgentbase, repository: {
-        ...previousRepository, observed_source: proposedRepository.observed_source,
-      } },
-    };
+    const repository = { ...previousRepository };
+    if (proposedRepository.observed_source !== undefined) repository.observed_source = proposedRepository.observed_source;
+    if (proposedRepository.refresh_coverage === undefined) delete repository.refresh_coverage;
+    else repository.refresh_coverage = proposedRepository.refresh_coverage;
+    frontmatter = { ...frontmatter, agentbase: { ...previousAgentbase, repository } };
   }
   writeBytes(bundleRoot, previous.path, Buffer.from(renderConceptDocument({
     ...previous, frontmatter, body: replaceObservedSection(previous.body, proposed.body),
@@ -153,7 +154,7 @@ function protectBase(
   const removals = new Map((options.removals ?? []).map((removal) => [removal.conceptId, removal]));
   for (const relative of base.files) {
     const inSubject = withinSubject(relative, options.subjectDirectory);
-    const conceptId = relative.endsWith(".md") ? relative.slice(0, -3) : "";
+    const conceptId = relative.endsWith(".md") ? conceptIdentityFromPath(relative) : "";
     const concept = base.concepts.get(conceptId);
     const mutable = Boolean(concept && isMutableAgentBaseDraft(concept));
     let proposed = authored.files.includes(relative) ? bytes(bundleRoot, relative) : undefined;
@@ -295,6 +296,10 @@ export function prepareRefreshHubProposal(
 ): Omit<PreparedRefreshHubProposal, "proposal"> & Readonly<{ proposal: AnyHubProposal }> {
   if (!isHubProposalSubject(options.subjectDirectory)) throw new Error("invalid Hub subject");
   if (!subjectExists(options.hubBundleRoot, options.subjectDirectory)) throw new Error("refresh subject is absent; use new");
+  const baseProfile = classifyAgentBaseHubProfile(loadOkfBundle(options.hubBundleRoot));
+  if (baseProfile.kind === "unsupported") {
+    throw new Error(`Hub Profile is unsupported: ${baseProfile.failures.join("; ")}`);
+  }
   const normalizedRemovals = normalizeHubRemovalDeclarations(options.removals ?? []);
   options = { ...options, removals: normalizedRemovals };
   const selected = [...(options.selectedSchemas
@@ -312,6 +317,13 @@ export function prepareRefreshHubProposal(
   if (unknownConflicts.length) validation = validateBundleProposal(options.hubBundleRoot, options.proposalRoot);
   if (!validation.producerValidation?.passed) {
     throw new Error(`Hub refresh failed validation: ${validation.producerValidation?.failures.join("; ")}`);
+  }
+  if (baseProfile.kind === "profile-1.0") {
+    const proposedProfile = classifyAgentBaseHubProfile(loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true }));
+    if (proposedProfile.kind !== "profile-1.0") {
+      throw new Error(`refreshed Profile layout failed validation: ${proposedProfile.kind === "unsupported"
+        ? proposedProfile.failures.join("; ") : "Profile declaration disappeared"}`);
+    }
   }
   validateChangedSchemas(options, bundleRoot);
   assertConfirmedDomainAssignment(

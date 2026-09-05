@@ -1,12 +1,15 @@
 # 11.03 — Dependency validation
 
-> Status: Core structural validation is implemented; the Batch membership workflow is designed.
+> Status: Core structural validation is implemented. G5-C2 semantic quality
+> admission is deferred and inactive.
 
 ## Outcome
 
-Finalize blocks a structurally broken proposal but does not require complete
-knowledge. AI edits the editable draft and decides when to ask the user; MCP
-Finalize runs only deterministic validation over the exact supplied bytes/evidence.
+Finalize blocks a structurally broken proposal and remains model-free. Existing
+discovery coverage checks expose important dispositions without claiming
+repository completeness. AI edits the editable draft and decides when to ask
+the user; MCP Finalize runs only deterministic validation over exact supplied
+bytes and evidence.
 
 ## Hard dependencies
 
@@ -34,18 +37,18 @@ The following are not hard dependencies while the structure remains valid:
 - insufficient evidence to create an optional concept/relation.
 
 They are retained as an attributed Question/Limitation or simply remain
-unauthored. Finalize does not turn completeness into a gate.
+unauthored. Deterministic Finalize does not turn completeness into a gate.
 
 ## AI and MCP responsibilities
 
 ```text
 AI edits the authoring draft
         ↓
-MCP Finalize validates exact structure and evidence
-        ↓ deterministic failures
-AI repairs mechanical issues or asks one bounded owner question
+MCP validates deterministic discovery coverage, structure and evidence
         ↓
-MCP Finalize runs again
+AI performs the existing bounded mechanical repair or asks one owner question
+        ↓
+MCP Finalizes deterministic structure/evidence
 ```
 
 - AI repairs a mechanical error with one clear outcome: a dangling index, a

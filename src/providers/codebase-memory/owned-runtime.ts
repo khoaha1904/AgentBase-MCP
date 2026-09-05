@@ -9,6 +9,7 @@ import { runBoundedProcess } from "./process.ts";
 const PROVIDER = "codebase-memory-mcp";
 const PROVIDER_VERSION = "0.10.8";
 const UPSTREAM_COMMIT = "46ae198fc11cda80e817acbc5f5908d7c2de7032";
+const SOURCE_INVENTORY_SHA256 = "9c0634644e777be1c1997f203987fae9c0b703f4042c397353410cd01e300b68";
 const PROFILE_ID = "agentbase-mvp-12-v1";
 const PROFILE_VERSION = 1;
 const ADAPTER_VERSION = 1;
@@ -84,6 +85,13 @@ function verifySource(vendorRoot: string): string {
   let lines: string[];
   try { lines = fs.readFileSync(inventoryFile, "utf8").trimEnd().split("\n").filter(Boolean); }
   catch (cause) { return failure("SOURCE_INTEGRITY_FAILED", "admit-owned-runtime", "source inventory is missing", cause); }
+  const inventoryDigest = sha256File(inventoryFile);
+  if (!fs.existsSync(upstreamRoot)) {
+    if (inventoryDigest !== SOURCE_INVENTORY_SHA256) {
+      failure("SOURCE_INTEGRITY_FAILED", "admit-owned-runtime", "release source inventory identity does not match");
+    }
+    return inventoryDigest;
+  }
   const expected = new Map<string, string>();
   for (const line of lines) {
     const match = /^([a-f0-9]{64})  upstream\/(.+)$/.exec(line);
@@ -102,7 +110,7 @@ function verifySource(vendorRoot: string): string {
       failure("SOURCE_INTEGRITY_FAILED", "admit-owned-runtime", `source inventory mismatch: ${relative}`);
     }
   }
-  return sha256File(inventoryFile);
+  return inventoryDigest;
 }
 
 function expectedProfile(vendorRoot: string): Readonly<{ digest: string; profile: Record<string, unknown> }> {

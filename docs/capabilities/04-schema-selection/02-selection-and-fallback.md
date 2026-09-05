@@ -1,11 +1,12 @@
 # 04.02 — Selection, disposition and uncertainty
 
-> Status: Implemented for single-repository Init; enrichment remains deferred.
+> Status: Implemented for single-repository Init; Group 5 dossier disposition is
+> implemented and verified.
 
 ```text
 evidence-bearing candidates/observations
         ↓ one bounded guidance call
-technology detection → standalone/embedded disposition → generic role
+technology detection → standalone/dossier disposition → generic role
         ↓
 MCP-rendered editable OKF skeletons
         ↓
@@ -18,10 +19,15 @@ override mapping. Outcomes are `exact`, `suggested`, `embedded`, `ambiguous` or
 `unsupported`; there is no confidence number.
 
 - `exact/suggested`: may create a skeleton for a released role.
-- `embedded`: keep it in a useful parent; do not create a separate file.
+- `embedded`: keep it in the Repository dossier or another useful parent; do not
+  create a separate file.
 - `ambiguous/unsupported`: retain evidence plus limitation/Question; do not
   force it into a similar type.
 
 A suggested role always carries a proposal-review limitation. Exact structured
 mapping is preferred when source supports it, but omitted low-value evidence is
 only a coverage diagnostic and does not make a truthful partial proposal invalid.
+
+Schema selection occurs only after standalone promotion. A catalog role does not
+justify a document or path; compact Profile placement uses `knowledge/` for all
+promoted non-Repository/non-Domain/non-Question roles.

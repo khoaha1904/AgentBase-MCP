@@ -2,6 +2,8 @@
 
 > Status: Implemented. Prior eight-repository qualification is historical; the
 > generated snapshot is disposable validation output rather than authority.
+> G4-C4 Profile Domain projection and G5-C1 compact projection are implemented
+> and verified.
 
 Product Contract:
 [Visualization](../../product/06-visualization.md).

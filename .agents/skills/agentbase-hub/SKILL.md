@@ -1,6 +1,6 @@
 ---
 name: agentbase-hub
-description: Explicit-only AgentBase Hub control. Use only when the user names $agentbase-hub for Hub status, connection, Questions, acceptance, synchronization, recovery, initialization, or publication readiness; never infer a lifecycle action from an ordinary request.
+description: Explicit-only AgentBase Hub control. Use only when the user names $agentbase-hub for Hub status, connection, Profile migration, Questions, acceptance, synchronization, recovery, initialization, or publication readiness; never infer a lifecycle action from an ordinary request.
 ---
 
 # AgentBase Hub control
@@ -10,6 +10,7 @@ remote, PR and recovery states without exposing machine paths or credentials.
 
 Lifecycle tools are `get_hub_status`, `configure_hub`, `preview_hub_bootstrap`,
 `bootstrap_hub`, `preview_hub_initialization`, `initialize_hub`,
+`prepare_hub_profile_migration`, `finalize_hub_profile_migration_proposal`,
 `list_hub_questions`, `answer_hub_question`, `inspect_hub_okf_proposal`,
 `accept_hub_okf_proposal`, `list_pending_hub_okf`,
 `submit_hub_okf_proposals`, `synchronize_hub_okf` and `recover_hub_okf`. Invoke
@@ -34,6 +35,12 @@ only the action explicitly requested after status establishes its preconditions.
   call `recover_hub_okf` with the chosen `transaction_id` before retrying sync.
 - Initialization, Accept and PR creation are distinct. MCP may create a branch
   or PR only when the user requested that action; it never merges a PR.
+- For an explicit legacy Profile migration request, Prepare first and show its
+  report plus private `bundle_root`. Never infer homes or moves. The owner or
+  authoring agent edits that full-tree workspace, then Finalize receives every
+  exact `from_path` to `to_path` move. Inspect, Accept and Publish remain
+  separate explicit actions. A pending accepted migration blocks later normal
+  Accept until merge and synchronization.
 - For an exactly empty remote Hub, preview then bootstrap the complete README,
   root index and CI baseline directly once. Bootstrap has no mode choice and
   never includes pending knowledge; later knowledge changes use normal PRs.

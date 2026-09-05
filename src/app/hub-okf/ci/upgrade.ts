@@ -7,7 +7,7 @@ import {
   createCandidateWorktree, removeCandidateWorktree, runGit,
   type GitOutput, type GitRequest, type GitHubPullRequest, type GitHubRef, type GitHubRepository,
 } from "../../../providers/github-hub/index.ts";
-import { acquireHubMutationLock, releaseHubMutationLock } from "../review/proposal-state.ts";
+import { acquireHubMutationLock, hubMutationProfileId, releaseHubMutationLock } from "../review/proposal-state.ts";
 import { HUB_README_PATH, renderHubReadme } from "../workspace/readme.ts";
 import { renderHubCiBundle, type HubCiBundle } from "./artifact.ts";
 import { HUB_CI_FORMAT_VERSION } from "./workflow.ts";
@@ -164,7 +164,8 @@ export async function initializeHub(
     throw new Error("Hub initialization preview changed");
   }
   if (intent.state === "current") return { intent, result: "current" };
-  const lock = acquireHubMutationLock(options.stateRoot, `hub-init:${intent.initialization_digest.slice(7, 19)}`);
+  const lock = acquireHubMutationLock(options.stateRoot, hubMutationProfileId(options.localHub),
+    `hub-init:${intent.initialization_digest.slice(7, 19)}`);
   try {
     const existing = await options.github.findBranchRef(intent.head_branch);
     if (existing) {

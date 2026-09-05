@@ -11,10 +11,14 @@ import { computeOkfTreeDigest, loadOkfBundle, readProposalMetadata } from "../..
 import { runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
 import {
   acquireHubMutationLock,
+  hubMutationProfileId,
   readHubProposalState,
   releaseHubMutationLock,
   writeAtomicJson,
 } from "./proposal-state.ts";
+import { readVerifiedHubProposalInspection } from "./inspect.ts";
+import { admitHubKnowledgeMutation } from "./mutation-admission.ts";
+import { listPendingHubProposals } from "./pending.ts";
 
 export type AcceptHubOptions = Readonly<{
   stateRoot: string;
@@ -49,7 +53,9 @@ function proposalMessage(proposal: ReturnType<typeof readHubProposalState>): str
     "",
     `${HUB_PROPOSAL_TRAILERS.id}: ${proposal.id}`,
     `${HUB_PROPOSAL_TRAILERS.subject}: ${proposal.subject}`,
-    ...(["enrichment", "batch-new"].includes(proposal.mode) ? [
+    ...(proposal.mode === "migration"
+      ? [`${HUB_PROPOSAL_TRAILERS.migrationDigest}: ${proposal.migrationDigest}`]
+      : ["enrichment", "batch-new"].includes(proposal.mode) ? [
       `${HUB_PROPOSAL_TRAILERS.domainId}: ${proposal.domainId}`,
       `${HUB_PROPOSAL_TRAILERS.sourceIds}: ${proposal.sourceRepositoryIds?.join(",")}`,
       `${HUB_PROPOSAL_TRAILERS.manifestDigest}: ${proposal.manifestDigest}`,
@@ -84,7 +90,16 @@ export async function acceptHubProposal(options: AcceptHubOptions): Promise<Loca
   if (proposal.baseCommit !== options.localHub.activeHead) throw new Error("local Hub advanced after proposal review");
   const bundleRoot = path.join(options.proposalRoot, "bundle");
   if (computeOkfTreeDigest(bundleRoot) !== proposal.treeDigest) throw new Error("reviewed proposal bytes changed after inspection");
-  const lock = acquireHubMutationLock(options.stateRoot, `accept:${proposal.id}`);
+  readVerifiedHubProposalInspection(options.proposalRoot, proposal);
+  await admitHubKnowledgeMutation(options.proposalRoot, proposal);
+  const pending = await listPendingHubProposals(options.localHub, git);
+  if (proposal.mode === "migration" && pending.length) {
+    throw new Error("Profile migration must be the sole pending change over Published");
+  }
+  if (proposal.mode !== "migration" && pending.some((item) => item.mode === "migration")) {
+    throw new Error("normal Hub mutation is blocked until the accepted Profile migration is published and synchronized");
+  }
+  const lock = acquireHubMutationLock(options.stateRoot, hubMutationProfileId(options.localHub), `accept:${proposal.id}`);
   const transactionRoot = path.join(path.resolve(options.stateRoot), "transactions", `accept-${proposal.id}`);
   const candidateRoot = path.join(transactionRoot, "candidate");
   const transactionPath = path.join(transactionRoot, "transaction.json");
@@ -130,7 +145,8 @@ export async function acceptHubProposal(options: AcceptHubOptions): Promise<Loca
       id: proposal.id,
       mode: proposal.mode,
       subject: proposal.subject,
-      ...(["enrichment", "batch-new"].includes(proposal.mode) ? {
+      ...(proposal.mode === "migration" ? { migrationDigest: proposal.migrationDigest! }
+        : ["enrichment", "batch-new"].includes(proposal.mode) ? {
         domainId: proposal.domainId!,
         sourceRepositoryIds: proposal.sourceRepositoryIds!,
         manifestDigest: proposal.manifestDigest!,

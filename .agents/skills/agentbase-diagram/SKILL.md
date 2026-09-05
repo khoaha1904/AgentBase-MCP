@@ -13,12 +13,14 @@ Keep this workflow lightweight and read-only.
 2. Choose `architecture`, `dependency`, or `sequence`. Sequence selection must
    include exactly one Published Flow. Prefer 4–9 concepts; never exceed 64.
 3. Call `prepare_hub_visualization` once with `mode: diagram`, the exact Domain,
-   type and concept IDs.
+   type and concept IDs. Pass the stable `domains/<slug>` selector; compact
+   Profile results use that same value as the Domain concept identity.
 4. If it returns `insufficient-data`, explain the missing Published topology and
    stop. Do not repair it from memory, Local Draft or source code.
 5. For a `ready` packet, follow internal `use-diagram-design` and create one
    self-contained local HTML/SVG artifact. Report its path and exact Published
-   commit.
+   commit. Preserve any supplied `home`, `participant` and `boundary` labels;
+   they do not create topology.
 
 Do not update Hub, invoke Domain-site generation, publish the artifact, or add
 topology beyond the packet. Ordinary knowledge questions remain with

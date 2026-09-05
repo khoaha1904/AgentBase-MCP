@@ -39,6 +39,23 @@ Hub reads use only the exact synchronized Published commit. Local Draft remains
 proposal-review state. Follow useful Markdown links through bounded search and
 exact concept reads; no separate relation traversal is needed.
 
+Use `domains/<slug>` as both the stable Domain selector and compact Profile
+Domain identity. Preserve the returned actual identity and keep `home`,
+`participant` and `boundary` scope roles distinct; physical home is navigation,
+not evidence of a `part-of` relation. Report a visible `legacy-unprofiled`
+profile marker without inventing Profile behavior.
+
+Preserve the query result's freshness envelope and report its `status`,
+`published_commit`, `current_source_verified` and `reason`. A missing envelope
+from an older runtime is `unknown`. Published-only evidence must remain
+`unknown` unless an independently authorized current-source workflow returns an
+exact identity-matched revision; age alone never means stale or fresh.
+When such a receipt is available, compare it only with the matching strong
+Repository identity and observed revision: equal is `fresh`, different is
+`stale`, and a missing identity or comparable revision remains `unknown`. Apply
+the same rule to the freshness line in the answer without rewriting the
+underlying Published result.
+
 Keep Published concept path/commit attribution separate from local source path
 attribution. Label any synthesis between them as inference. If they disagree,
 present both positions with provenance and do not choose a winner.

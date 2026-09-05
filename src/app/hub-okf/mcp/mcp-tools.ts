@@ -1,6 +1,35 @@
 import { HUB_PROPOSAL_SUBJECT_PATTERN } from "../../../core/hub/index.ts";
 import { HUB_OKF_QUERY_TOOLS } from "./mcp-query-tools.ts";
 
+const DOMAIN_HOME_SCHEMA = {
+  type: "object",
+  properties: {
+    kind: { type: "string", enum: ["domain"] },
+    identity: { type: "string", pattern: "^domains/[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    title: { type: "string", minLength: 1, maxLength: 120 },
+  },
+  required: ["kind", "identity", "title"],
+  additionalProperties: false,
+} as const;
+
+const HOME_SELECTION_SCHEMA = {
+  oneOf: [
+    { type: "object", properties: { kind: { type: "string", enum: ["shared"] } },
+      required: ["kind"], additionalProperties: false },
+    DOMAIN_HOME_SCHEMA,
+  ],
+} as const;
+
+const CONFIRMED_DOMAIN_SCHEMA = {
+  type: "object",
+  properties: {
+    identity: { type: "string", pattern: "^domains/[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    title: { type: "string", minLength: 1, maxLength: 120 },
+  },
+  required: ["identity", "title"],
+  additionalProperties: false,
+} as const;
+
 const ENRICHMENT_CANDIDATE_SCHEMA = {
   type: "object",
   properties: {
@@ -87,12 +116,32 @@ export const HUB_OKF_TOOLS = [
     },
   },
   {
+    name: "prepare_hub_profile_migration",
+    description: "Report an exact legacy Published Hub and create a private editable full-tree workspace. Never infers homes or mutates Hub knowledge.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+  },
+  {
+    name: "finalize_hub_profile_migration_proposal",
+    description: "Validate an explicitly authored legacy-to-Profile 1.0 workspace and exact file moves into one immutable reviewed migration proposal.",
+    inputSchema: { type: "object", properties: {
+      session_id: { type: "string", pattern: "^profile-migration-[a-f0-9]{24}$" },
+      moves: { type: "array", maxItems: 4096, items: { type: "object", properties: {
+        from_path: { type: "string", minLength: 1, maxLength: 512 },
+        to_path: { type: "string", minLength: 1, maxLength: 512 },
+      }, required: ["from_path", "to_path"], additionalProperties: false } },
+    }, required: ["session_id", "moves"], additionalProperties: false },
+  },
+  {
     name: "prepare_hub_okf",
-    description: "Prepare a local new or refresh AgentBase Hub OKF proposal without publishing. New Initial Ingest consumes one frozen discovery receipt. Refresh returns bounded changed paths, observed source state and known gaps through its change-first guidance. Preserve generated sources, relationships, repository identity metadata and navigation while enriching returned skeletons.",
+    description: "Prepare a local new or refresh AgentBase Hub OKF proposal without publishing. New Initial Ingest consumes one frozen discovery receipt. Refresh returns bounded changed paths, observed source state and known gaps; delta is default and explicit coverage binds a broad bounded coverage account. Preserve generated sources, relationships, repository identity metadata and navigation while enriching returned skeletons.",
     inputSchema: {
       type: "object",
       properties: {
         mode: { type: "string", enum: ["new", "refresh"] },
+        refresh_scope: {
+          type: "string", enum: ["delta", "coverage"],
+          description: "Refresh-only scope. Delta is backward-compatible default; coverage is explicit broad bounded recovery and requires coverage.",
+        },
         source_repository: { type: "string", minLength: 1 },
         subject_directory: {
           type: "string",
@@ -101,12 +150,37 @@ export const HUB_OKF_TOOLS = [
         },
         confirmed_domain: {
           type: "object",
-          description: "Optional owner-confirmed business Domain; never inferred from the repository name.",
+          description: "Legacy-compatible owner-confirmed Domain default. Profile Initial Ingest accepts this or home_plan, never both.",
           properties: {
             identity: { type: "string", pattern: "^domains/[a-z0-9]+(?:-[a-z0-9]+)*$" },
             title: { type: "string", minLength: 1, maxLength: 120 },
           },
           required: ["identity", "title"], additionalProperties: false,
+        },
+        home_plan: {
+          type: "object",
+          description: "One owner-confirmed Profile 1.0 placement plan. Home controls physical path; participations alone create Domain relations.",
+          properties: {
+            default_home: HOME_SELECTION_SCHEMA,
+            exceptions: {
+              type: "array", maxItems: 64, items: {
+                type: "object", properties: {
+                  candidate_id: { type: "string", minLength: 1, maxLength: 128 },
+                  home: HOME_SELECTION_SCHEMA,
+                }, required: ["candidate_id", "home"], additionalProperties: false,
+              },
+            },
+            participations: {
+              type: "array", maxItems: 64, items: {
+                type: "object", properties: {
+                  candidate_id: { type: "string", minLength: 1, maxLength: 128 },
+                  domain: CONFIRMED_DOMAIN_SCHEMA,
+                }, required: ["candidate_id", "domain"], additionalProperties: false,
+              },
+            },
+          },
+          required: ["default_home", "exceptions", "participations"],
+          additionalProperties: false,
         },
         discovery_receipt_id: {
           type: "string", pattern: "^discovery-receipt-[a-f0-9]{24}$",
@@ -139,7 +213,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "finalize_hub_okf_proposal",
-    description: "Validate and lock an authored Hub workspace into one immutable local proposal. Receipt-bound Init derives Questions and Repository activity from its frozen Inventory; Refresh Questions may reference only exact existing agentbase.observed_values.",
+    description: "Validate and lock an authored Hub workspace into one immutable local proposal. Receipt-bound Init derives Questions from its frozen Inventory; Refresh Questions may reference only exact existing agentbase.observed_values.",
     inputSchema: {
       type: "object",
       properties: {
@@ -293,7 +367,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "inspect_hub_okf_proposal",
-    description: "Inspect one immutable local Hub proposal and its bounded full diff.",
+    description: "Inspect one immutable local Hub proposal with its bounded byte diff and exact semantic impact.",
     inputSchema: {
       type: "object",
       properties: { proposal_id: { type: "string", minLength: 1 } },
@@ -315,7 +389,7 @@ export const HUB_OKF_TOOLS = [
   ...HUB_OKF_QUERY_TOOLS,
   {
     name: "read_hub_okf_concept",
-    description: "Read one exact Markdown path from the synchronized Published AgentBase-Hub commit.",
+    description: "Read one exact Markdown path from the synchronized Published AgentBase-Hub commit with warning-only freshness metadata.",
     inputSchema: {
       type: "object",
       properties: { path: { type: "string", minLength: 1, maxLength: 512 } },

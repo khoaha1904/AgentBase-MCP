@@ -39,7 +39,10 @@ or retry system.
 
 - Same request is idempotent by proposal, branch, base/head and PR identity.
 - Retry never creates a second PR merely because the first response was lost.
-- One mutation lock serializes Accept, Publish, Synchronize and Recovery.
+- One exact profile-scoped mutation lock serializes Maintainer-answer proposal
+  creation, Accept, Publish, Synchronize, Initialization, Bootstrap and Recovery.
+  Another Hub profile has an independent lock; the former global lock remains a
+  safe upgrade exclusion boundary until a dead owner is proven.
 - Successful recovery removes temporary worktree/transaction state.
 - Recovery never resets accepted Local Drafts, closes PRs or rewrites remote
   `main`.

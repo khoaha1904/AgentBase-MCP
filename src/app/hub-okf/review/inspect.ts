@@ -1,14 +1,20 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { isDeepStrictEqual } from "node:util";
 
-import type { ProposalDiffEntry } from "../../../core/knowledge/index.ts";
+import type { AnyHubProposal } from "../../../core/hub/index.ts";
+import {
+  buildProposalSemanticImpact,
+  type ProposalDiffEntry,
+  type ProposalSemanticImpact,
+} from "../../../core/knowledge/index.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
 import type { RefreshChangeAccounting } from "../authoring/refresh-change-accounting.ts";
 
 export type HubChangeEntry = Readonly<{
   path: string;
-  change: ProposalDiffEntry["change"] | "conflict" | "removed-contribution";
+  change: ProposalDiffEntry["change"] | "conflict" | "removed-contribution" | "migration-move-source";
   allowed: boolean;
   reason?: string;
   evidenceResources?: readonly string[];
@@ -39,8 +45,8 @@ export type HubProposalInspection = Readonly<{
     ignoredReasons: readonly string[];
     limitations: readonly string[];
   }>;
-  activity?: Readonly<{ repositoryLog: string; domainLog: null }>;
   changeAccounting?: RefreshChangeAccounting;
+  semanticImpact?: ProposalSemanticImpact;
   groups: HubInspectionGroups;
   batch?: Readonly<{
     members: readonly Readonly<{ repositoryId: string; paths: readonly string[];
@@ -67,7 +73,7 @@ function groups(
   return {
     added: entries.filter((entry) => entry.change === "created"),
     updated: entries.filter((entry) => ["modified", "conflict"].includes(entry.change)),
-    removed: entries.filter((entry) => ["deleted-agentbase-draft", "removed-contribution"].includes(entry.change)),
+    removed: entries.filter((entry) => ["deleted-agentbase-draft", "removed-contribution", "migration-move-source"].includes(entry.change)),
     questionsAndLimitations: { questions, limitations },
   };
 }
@@ -76,14 +82,13 @@ export function attachHubInspectionContext(
   inspection: HubProposalInspection,
   questions: readonly QuestionDeclaration[] = inspection.questions ?? [],
   coverage: HubProposalInspection["coverage"] = inspection.coverage,
-  context: Readonly<Pick<HubProposalInspection, "discovery" | "activity" | "changeAccounting">> = {},
+  context: Readonly<Pick<HubProposalInspection, "discovery" | "changeAccounting">> = {},
 ): HubProposalInspection {
   return {
     ...inspection,
     ...(questions.length ? { questions } : {}),
     ...(coverage ? { coverage } : {}),
     ...(context.discovery ? { discovery: context.discovery } : {}),
-    ...(context.activity ? { activity: context.activity } : {}),
     ...(context.changeAccounting ? { changeAccounting: context.changeAccounting } : {}),
     groups: groups(inspection.entries, questions, coverage?.limitations ?? []),
   };
@@ -122,7 +127,70 @@ export function inspectHubProposal(
     "prohibited-deletion": 0,
     conflict: 0,
     "removed-contribution": 0,
+    "migration-move-source": 0,
   };
   for (const entry of ordered) counts[entry.change] += 1;
   return { entries: ordered, counts, applicable: ordered.every((entry) => entry.allowed), groups: groups(ordered) };
+}
+
+function proposalRepositoryIds(proposal: AnyHubProposal): readonly string[] {
+  return proposal.mode === "enrichment" || proposal.mode === "batch-new"
+    ? proposal.sourceRepositoryIds ?? [] : proposal.sourceRepositoryId ? [proposal.sourceRepositoryId] : [];
+}
+
+function semanticImpact(
+  inspection: HubProposalInspection,
+  baseRoot: string,
+  proposedRoot: string,
+  proposal: AnyHubProposal,
+): ProposalSemanticImpact {
+  const digest = (value: unknown) => `sha256:${createHash("sha256").update(JSON.stringify(value)).digest("hex")}`;
+  const byteEntries = inspection.entries.map(({ before: _before, after: _after, ...entry }) => entry)
+    .sort((left, right) => left.path < right.path ? -1 : left.path > right.path ? 1 : 0);
+  if (![digest(inspection.entries), digest(byteEntries)].includes(proposal.diffDigest)) {
+    throw new Error("proposal inspection byte-diff digest does not match proposal identity");
+  }
+  const impact = buildProposalSemanticImpact({
+    baseRoot,
+    proposedRoot,
+    identity: {
+      proposalId: proposal.id,
+      mode: proposal.mode,
+      baseCommit: proposal.baseCommit,
+      diffDigest: proposal.diffDigest,
+      sourceRepositoryIds: proposalRepositoryIds(proposal),
+    },
+  });
+  if (impact.identity.proposedTreeDigest !== proposal.treeDigest) {
+    throw new Error("proposal semantic impact does not match proposed tree digest");
+  }
+  return impact;
+}
+
+export function bindHubProposalInspection(
+  inspection: HubProposalInspection,
+  options: Readonly<{ baseRoot: string; proposedRoot: string; proposal: AnyHubProposal }>,
+): HubProposalInspection {
+  if (!inspection.applicable || inspection.entries.some((entry) => !entry.allowed)) {
+    throw new Error("an inapplicable proposal inspection cannot be finalized");
+  }
+  return { ...inspection, semanticImpact: semanticImpact(inspection, options.baseRoot, options.proposedRoot, options.proposal) };
+}
+
+export function readVerifiedHubProposalInspection(
+  proposalRoot: string,
+  proposal: AnyHubProposal,
+): HubProposalInspection {
+  const value = JSON.parse(fs.readFileSync(path.join(proposalRoot, "inspection.json"), "utf8")) as HubProposalInspection;
+  if (!value || typeof value !== "object" || !Array.isArray(value.entries) || value.semanticImpact?.formatVersion !== 1) {
+    throw new Error("proposal semantic impact is unavailable; regenerate the prepared proposal");
+  }
+  if (!value.applicable || value.entries.some((entry) => !entry || typeof entry !== "object" || !entry.allowed)) {
+    throw new Error("proposal inspection is not applicable");
+  }
+  const expected = semanticImpact(value, path.join(proposalRoot, "base"), path.join(proposalRoot, "bundle"), proposal);
+  if (!isDeepStrictEqual(value.semanticImpact, expected)) {
+    throw new Error("proposal semantic impact changed after finalization");
+  }
+  return value;
 }

@@ -25,7 +25,8 @@ a confirmed batch.
    `preflight_hub_ingest` on its original root to arm the exact SourceSnapshot
    already selected by Batch, then follow the Seed → Inventory → Receipt rules
    from `agentbase-ingest`. Call `prepare_hub_okf` in `new` mode with that
-   member's Receipt and the same confirmed Domain, edit only that
+   member's Receipt and either the same confirmed Domain compatibility input or
+   that member's explicitly confirmed grouped `home_plan`, edit only that
    session's bundle, then call `record_batch_hub_ingest_member` instead of the
    ordinary Finalize tool. Never reuse a Seed, Receipt or evidence across
    members and never call provider CLI or investigate another repository.

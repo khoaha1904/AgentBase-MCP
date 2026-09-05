@@ -1,6 +1,8 @@
 # 04 — Current baseline and impact
 
-> Status: Catalog 7 implementation is the current authority.
+> Status: Catalog 7 implementation is the current role authority. G5-C1 removes
+> path/type coupling through compact layout classification. G5-C2 standalone
+> semantic-quality admission is deferred and inactive.
 
 ## Current baseline
 
@@ -29,3 +31,9 @@ the OKF document model, relationships and Hub lifecycle remain unchanged.
 
 Azure/GCP profiles, the SAM/CloudFormation detector, provider verification and
 semantic profile migration are not in the current MVP.
+
+Independent from provider coverage, Catalog role selection must no longer imply
+a standalone file or type-relative directory. Compact Profile authoring defaults
+repository-local facts to the Repository dossier and promotes only an
+independently useful reading boundary. Catalog types and technology metadata are
+reused unchanged.

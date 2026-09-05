@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { AGENTBASE_OKF_PROFILE_PATH, renderAgentBaseOkfProfileDocument } from "../documents/agentbase-profile.ts";
 import { readHubFreshness } from "./hub-freshness.ts";
 import { normalizeHubConceptPath, readHubConcept, searchHubConcepts } from "./hub-query.ts";
 import { resetHubSearchProjectionCache } from "./hub-query-search-index.ts";
@@ -62,6 +63,7 @@ const reader = {
 test("[AB-QUERY-002][AB-QUERY-004] search ranks metadata and scopes duplicate terms to one Domain", async () => {
   const scoped = await searchHubConcepts(reader, "order", { domain: "domains/commerce", limit: 5 });
   assert.equal(scoped.status, "ok");
+  assert.equal(scoped.profile, "legacy-unprofiled");
   assert.deepEqual(scoped.status === "ok" ? scoped.matches.map((match) => match.identity) : [], [
     "components/orders-api", "resources/orders-queue", "systems/orders",
   ]);
@@ -70,6 +72,70 @@ test("[AB-QUERY-002][AB-QUERY-004] search ranks metadata and scopes duplicate te
   assert.equal(exact.status, "ok");
   assert.equal(exact.status === "ok" ? exact.matches[0]?.matchedBy : undefined, "identity");
   assert.equal((await readHubConcept(reader, "components/orders-api.md")).path, "components/orders-api.md");
+});
+
+test("[AB-PROFILE-READ-002][AB-PROFILE-READ-005..006][AB-PROFILE-READ-009] Profile search maps selectors and exposes exact roles", async () => {
+  resetHubSearchProjectionCache();
+  const values = new Map([
+    ["index.md", `---\nokf_version: "0.2"\n---\n\n# Hub\n\n* [Profile](${AGENTBASE_OKF_PROFILE_PATH}) - Profile\n* [Shared](shared/index.md) - Shared knowledge\n* [Orders](domains/orders/) - Domain Capsule\n* [Fulfillment](domains/fulfillment/) - Domain Capsule\n`],
+    ["shared/index.md", "# Shared\n\n* [Profile](agentbase-profile.md) - Profile\n* [Shared Stream](knowledge/stream.md) - Resource\n"],
+    [AGENTBASE_OKF_PROFILE_PATH, renderAgentBaseOkfProfileDocument()],
+    ["domains/orders/index.md", `${concept("Domain", "Orders", "Orders domain.", "Orders knowledge.").trimEnd()}\n\n* [Orders Repository](repositories/orders.md) - Repository\n* [Orders API](knowledge/api.md) - Component\n`],
+    ["domains/fulfillment/index.md", `${concept("Domain", "Fulfillment", "Fulfillment domain.", "Fulfillment knowledge.").trimEnd()}\n\n* [Worker](knowledge/worker.md) - Component\n`],
+    ["domains/orders/repositories/orders.md", concept("Repository", "Orders Repository", "Profile term repository.", "Profile term. [Orders](../index.md)", `
+  - kind: part-of
+    target: domains/orders
+    evidence: []`)],
+    ["domains/orders/knowledge/api.md", concept("Component", "Orders API", "Profile term crossscope.", "Profile term crossscope. [Repository](../repositories/orders.md)", `
+  - kind: implemented-in
+    target: domains/orders/repositories/orders
+    evidence: []`)],
+    ["shared/knowledge/stream.md", concept("Resource", "Shared Stream", "Profile term shared.", "Profile term. [Orders](../../domains/orders/index.md)", `
+  - kind: part-of
+    target: domains/orders
+    evidence: []`)],
+    ["domains/fulfillment/knowledge/worker.md", concept("Component", "Worker", "crossscope fulfillment.", "crossscope.")],
+  ]);
+  const profileReader = {
+    commit: "p".repeat(40),
+    async listMarkdownPaths() { return [...values.keys()]; },
+    async readMarkdown(relativePath: string) { return values.get(relativePath)!; },
+  };
+
+  const result = await searchHubConcepts(profileReader, "profile term", { domain: "domains/orders" });
+  assert.equal(result.status, "ok");
+  assert.equal(result.profile, "profile-1.0");
+  const matches = result.status === "ok" ? result.matches : [];
+  assert.deepEqual(matches.find((match) => match.identity === "domains/orders/knowledge/api")?.scope, {
+    domain: "domains/orders",
+    selector: "domains/orders",
+    role: "repository-associated",
+    roles: ["home", "participant"],
+  });
+  assert.deepEqual(matches.find((match) => match.identity === "shared/knowledge/stream")?.scope?.roles,
+    ["participant"]);
+  assert.equal((await searchHubConcepts(profileReader, "profile term",
+    { domain: "domains/orders" })).status, "ok");
+  await assert.rejects(() => searchHubConcepts(profileReader, "profile term",
+    { domain: "domains/missing" }), /exact Domain/);
+
+  const ambiguous = await searchHubConcepts(profileReader, "crossscope");
+  assert.equal(ambiguous.status, "scope_required");
+  if (ambiguous.status === "scope_required") assert.deepEqual(
+    ambiguous.candidateDomains.map((domain) => [domain.identity, domain.domainSelector]), [
+      ["domains/fulfillment", "domains/fulfillment"],
+      ["domains/orders", "domains/orders"],
+    ]);
+
+  resetHubSearchProjectionCache();
+  const unsupported = new Map(values);
+  unsupported.set(AGENTBASE_OKF_PROFILE_PATH,
+    renderAgentBaseOkfProfileDocument().replace('version: "1.0"', 'version: "2.0"'));
+  await assert.rejects(() => searchHubConcepts({
+    commit: "u".repeat(40),
+    async listMarkdownPaths() { return [...unsupported.keys()]; },
+    async readMarkdown(relativePath: string) { return unsupported.get(relativePath)!; },
+  }, "profile term", { domain: "domains/orders" }), /Published Hub Profile is unsupported/);
 });
 
 test("[AB-QUERY-017] search exposes bounded oversized-document omissions", async () => {

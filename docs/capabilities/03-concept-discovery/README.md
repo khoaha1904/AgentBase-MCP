@@ -1,7 +1,9 @@
 # 03 — Concept discovery
 
 > Status: Candidate/guidance foundation and Capability 046 Discovery
-> Seed/Inventory coverage are implemented.
+> Seed/Inventory coverage and G5-C1 dossier disposition are implemented and
+> verified. G5-C2 semantic-quality accounting is deferred
+> and inactive.
 
 Product Contract:
 [Repository understanding](../../product/01-repository-understanding.md)
@@ -34,4 +36,6 @@ belongs to Domain Enrichment.
 Runtime checks coverage before schema selection: every important discovery group
 must map to a concept, embedded item, Question or ignored reason. This is a
 private session/Receipt contract, not a candidate registry, UI or new public
-tool.
+tool. Under Group 5, `embedded` normally means a sourced Repository-dossier or
+useful-parent section; standalone promotion additionally requires an independent
+reading boundary and is reviewed through ordinary proposal Inspect/Accept.

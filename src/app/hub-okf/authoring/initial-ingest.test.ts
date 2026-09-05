@@ -6,7 +6,8 @@ import test from "node:test";
 
 import { createHubIdentity, hubProfileId } from "../../../core/hub/index.ts";
 import {
-  getOkfAuthoringGuidance, loadOkfBundle, parseConceptDocument, readRepositoryObservedSource, validateOkfRelationships,
+  AGENTBASE_OKF_PROFILE_PATH, getOkfAuthoringGuidance, loadOkfBundle, parseConceptDocument,
+  readRepositoryObservedSource, readRepositoryRefreshCoverage, renderAgentBaseOkfProfileDocument, validateOkfRelationships,
   type InventoryReceipt,
 } from "../../../core/knowledge/index.ts";
 import { runGit, type SourceSnapshot } from "../../../providers/github-hub/index.ts";
@@ -15,6 +16,18 @@ import { readPersistedHubConfiguration, replacePersistedHubConfiguration } from 
 import { createLocalHub } from "../workspace/setup.ts";
 import { createTestInventoryReceipt } from "../test-support.ts";
 import { writeInitialIngestSkeletons } from "./initial-ingest-skeleton.ts";
+
+async function enableProfileHub(root: string): Promise<void> {
+  fs.mkdirSync(path.join(root, "shared"), { recursive: true });
+  fs.writeFileSync(path.join(root, "index.md"), `---\nokf_version: "0.2"\n---\n\n# Hub\n\n* [Profile](${AGENTBASE_OKF_PROFILE_PATH}) - Profile\n* [Shared](shared/index.md) - Shared knowledge\n`);
+  fs.writeFileSync(path.join(root, "shared/index.md"), "# Shared\n\n* [Profile](agentbase-profile.md) - Profile\n");
+  fs.writeFileSync(path.join(root, AGENTBASE_OKF_PROFILE_PATH), renderAgentBaseOkfProfileDocument());
+  await runGit({ args: ["add", "index.md", "shared"], cwd: root, operation: "stage Profile test baseline" });
+  await runGit({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit", "-m", "Profile test baseline"],
+    cwd: root, operation: "commit Profile test baseline", commitTimestamp: "2026-08-20T00:00:00Z" });
+  const head = (await runGit({ args: ["rev-parse", "HEAD"], cwd: root, operation: "resolve Profile test baseline" })).stdout.trim();
+  await runGit({ args: ["update-ref", "refs/agentbase/published", head], cwd: root, operation: "publish Profile test baseline" });
+}
 
 async function localSourceSnapshot(input: Readonly<{
   requestedRoot: string; repositoryId: string; hub: ReturnType<typeof createHubIdentity>; stateRoot: string;
@@ -99,7 +112,7 @@ test("[AB-SCHEMA-057][AB-SCHEMA-060] one runtime keeps internal resources embedd
   }
 });
 
-test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] preparation renders one generic inspectable skeleton bundle and stops", async () => {
+test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-REFRESH-019..023] preparation renders one generic inspectable skeleton bundle and recoverable Refresh", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-initial-ingest-"));
   const source = path.join(root, "vehicle-events");
   const environment = { HOME: root, XDG_CONFIG_HOME: path.join(root, "config"), XDG_DATA_HOME: path.join(root, "data") };
@@ -127,6 +140,7 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] pre
       operation: "attach ingest test Hub remote" });
     replacePersistedHubConfiguration(current, { ...current, kind: "remote", localHubId,
       host: hub.host, repository: hub.repository, targetBranch: hub.targetBranch }, environment, { retireExpected: true });
+    await enableProfileHub(local.localRoot);
     const preflight = await actions.preflight(source) as {
       repository: { kind: string; repository: { id: string; displayName: string; remotes: string[]; rootCommits: string[] } };
       source_authority: { remote: string; default_branch: string; commit: string };
@@ -204,70 +218,72 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] pre
     }) as { sessionId: string; bundleRoot: string; sourceRepositoryId: string; selectedSchemas: string[];
       skeletons: readonly { identity: string; path: string; type: string }[]; authoringConstraints: readonly string[] };
     assert.match(prepared.authoringConstraints.join("\n"), /Preserve generated sources, relationships, repository identity metadata and navigation/);
+    assert.match(prepared.authoringConstraints.join("\n"), /Repository as the default dossier/);
     assert.deepEqual(prepared.selectedSchemas.sort(), ["Domain", "Flow", "Function", "Repository", "System"]);
     assert.deepEqual(prepared.skeletons.map((item) => item.type).sort(), ["Domain", "Flow", "Function", "Repository", "System"]);
     const skeletonBundle = loadOkfBundle(prepared.bundleRoot, { requireAgentBaseRootIndex: true });
     assert.deepEqual([...skeletonBundle.concepts.values()].map((concept) => concept.type).sort(),
-      ["Domain", "Flow", "Function", "Repository", "System"]);
-    const initialObserved = readRepositoryObservedSource(skeletonBundle.concepts.get("repositories/vehicle-events")!);
+      ["AgentBase OKF Profile", "Domain", "Flow", "Function", "Repository", "System"]);
+    const initialObserved = readRepositoryObservedSource(skeletonBundle.concepts.get("domains/vehicle-data/repositories/vehicle-events")!);
     assert.match(initialObserved?.commit ?? "", /^[a-f0-9]{40}$/);
-    assert.deepEqual(skeletonBundle.concepts.get("components/publisher")?.frontmatter.agentbase, {
+    assert.deepEqual(skeletonBundle.concepts.get("domains/vehicle-data/knowledge/publisher")?.frontmatter.agentbase, {
       technology: { kind: "runtime-function", provider: "aws", product: "lambda",
         sourceTool: "terraform", resourceType: "aws_lambda_function" },
     });
-    assert.equal(skeletonBundle.concepts.get("repositories/vehicle-events")?.body.includes("components/publisher.md"), true);
-    const publisherBody = skeletonBundle.concepts.get("components/publisher")?.body ?? "";
+    assert.equal(skeletonBundle.concepts.get("domains/vehicle-data/repositories/vehicle-events")?.body.includes("../knowledge/publisher.md"), true);
+    const publisherBody = skeletonBundle.concepts.get("domains/vehicle-data/knowledge/publisher")?.body ?? "";
     assert.match(publisherBody, /# Embedded Knowledge/);
     assert.match(publisherBody, /Vehicle-events \| Internal trigger transport for the publisher \| message-queue \| aws \/ sqs; terraform:aws_sqs_queue/i);
     assert.match(publisherBody, /\| `queue` \|/);
     assert.match(publisherBody, /## Exact Evidence[\s\S]*`queue` - `repository:\/\/repository-[a-z0-9-]+\/main\.tf#L4-L6`/);
     assert.doesNotMatch(publisherBody.split("## Exact Evidence")[0]!, /repository:\/\//);
-    assert.equal(skeletonBundle.concepts.has("resources/vehicle-events"), false);
+    assert.equal([...skeletonBundle.concepts.values()].some((concept) => concept.type === "Resource"), false);
     assert.equal(prepared.skeletons.some((item) => item.identity.includes("events") && item.type === "Resource"), false);
-    assert.match(skeletonBundle.concepts.get("systems/vehicle-events")?.body ?? "", /suggested.*proposal review/i);
-    assert.deepEqual(skeletonBundle.concepts.get("systems/vehicle-events")?.frontmatter.relationships, [
-      { kind: "part-of", target: "domains/vehicle-data", evidence: ["owner-domain"] },
+    assert.match(skeletonBundle.concepts.get("domains/vehicle-data/knowledge/vehicle-events")?.body ?? "", /suggested.*proposal review/i);
+    assert.deepEqual(skeletonBundle.concepts.get("domains/vehicle-data/knowledge/vehicle-events")?.frontmatter.relationships, [
+      { kind: "part-of", target: "domains/vehicle-data", evidence: ["owner-domain-vehicle-data"] },
     ]);
     assert.match(skeletonBundle.concepts.get("domains/vehicle-data")?.body ?? "",
-      /# Systems[\s\S]*\[Vehicle-events\]\(\.\.\/systems\/vehicle-events\.md\)/);
-    assert.deepEqual(skeletonBundle.files.filter((file) => file.endsWith("/index.md")), []);
+      /Owner-confirmed business boundary related to \[vehicle-events\]\(repositories\/vehicle-events\.md\)/);
+    assert.deepEqual(skeletonBundle.files.filter((file) => file.endsWith("/index.md")),
+      ["domains/vehicle-data/index.md", "shared/index.md"]);
     const rootNavigation = fs.readFileSync(path.join(prepared.bundleRoot, "index.md"), "utf8");
-    assert.match(rootNavigation, /\[Vehicle Data\]\(domains\/vehicle-data\.md\) - Domain/);
+    assert.match(rootNavigation, /\[Vehicle Data\]\(domains\/vehicle-data\/\) - Domain Capsule/);
     assert.doesNotMatch(rootNavigation, /repositories\/vehicle-events\.md/);
-    const flow = skeletonBundle.concepts.get("flows/publish-vehicle-event");
+    const flow = skeletonBundle.concepts.get("domains/vehicle-data/knowledge/publish-vehicle-event");
     assert.deepEqual(flow?.frontmatter.flow_steps, []);
     const unfilled = validateOkfRelationships(
       [...skeletonBundle.concepts].map(([identity, concept]) => ({ identity, concept })),
-      { sourceIdentities: new Set(["flows/publish-vehicle-event"]),
-        strictSourceIdentities: new Set(["flows/publish-vehicle-event"]) },
+      { sourceIdentities: new Set(["domains/vehicle-data/knowledge/publish-vehicle-event"]),
+        strictSourceIdentities: new Set(["domains/vehicle-data/knowledge/publish-vehicle-event"]) },
     );
     assert.match(unfilled.failures.join("\n"), /flow_steps must be a non-empty list/);
     const malformedFlow = parseConceptDocument("flows/malformed.md", fs.readFileSync(
-      path.join(prepared.bundleRoot, "flows/publish-vehicle-event.md"), "utf8",
-    ).replace("flow_steps: []", "flow_steps:\n  - { order: 1, from: systems/vehicle-events, action: invokes, to: components/publisher, mode: asynchronous, evidence: [flow-docs] }"));
+      path.join(prepared.bundleRoot, "domains/vehicle-data/knowledge/publish-vehicle-event.md"), "utf8",
+    ).replace("flow_steps: []", "flow_steps:\n  - { order: 1, from: domains/vehicle-data/knowledge/vehicle-events, action: invokes, to: domains/vehicle-data/knowledge/publisher, mode: asynchronous, evidence: [flow-docs] }"));
     assert.match(validateOkfRelationships([{ identity: "flows/malformed", concept: malformedFlow }]).failures.join("\n"),
       /requires order \(positive integer\), source, action, target and mode/);
-    const flowPath = path.join(prepared.bundleRoot, "flows/publish-vehicle-event.md");
+    const flowPath = path.join(prepared.bundleRoot, "domains/vehicle-data/knowledge/publish-vehicle-event.md");
     fs.writeFileSync(flowPath, fs.readFileSync(flowPath, "utf8")
       .replace("flow_steps: []", [
         "flow_steps:",
         "  - order: 1",
-        "    source: systems/vehicle-events",
+        "    source: domains/vehicle-data/knowledge/vehicle-events",
         "    action: invokes",
-        "    target: components/publisher",
+        "    target: domains/vehicle-data/knowledge/publisher",
         "    mode: asynchronous",
         "    evidence: [flow-docs]",
       ].join("\n"))
       .replace("# Limitations", [
-        "[Vehicle events](../systems/vehicle-events.md) invokes the [publisher](../components/publisher.md).",
+        "[Vehicle events](vehicle-events.md) invokes the [publisher](publisher.md).",
         "", "# Limitations",
       ].join("\n")));
 
-    const publisherPath = path.join(prepared.bundleRoot, "components", "publisher.md");
+    const publisherPath = path.join(prepared.bundleRoot, "domains", "vehicle-data", "knowledge", "publisher.md");
     const validPublisher = fs.readFileSync(publisherPath, "utf8");
     fs.writeFileSync(publisherPath, validPublisher.replace("main.tf#L1-L3", "main.tf#L1-L99"));
     await assert.rejects(actions.finalize(prepared.sessionId),
-      /components\/publisher\.md: source span exceeds main\.tf \(6 lines\)/);
+      /domains\/vehicle-data\/knowledge\/publisher\.md: source span exceeds main\.tf \(6 lines\)/);
     fs.writeFileSync(publisherPath, validPublisher);
 
     const finalized = await actions.finalize(prepared.sessionId) as {
@@ -290,14 +306,14 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] pre
       source: { commit: string }; sourceChanges: { paths: string[] } };
     assert.deepEqual(refresh.sourceChanges.paths, ["README.md"]);
     assert.deepEqual(refresh.selectedSchemas.sort(), ["Domain", "Flow", "Function", "Repository", "System"]);
-    const repositoryPath = path.join(refresh.bundleRoot, "repositories", "vehicle-events.md");
+    const repositoryPath = path.join(refresh.bundleRoot, "domains", "vehicle-data", "repositories", "vehicle-events.md");
     fs.appendFileSync(repositoryPath, "\nRefresh evidence confirms delivery ownership.\n");
     await assert.rejects(actions.finalize(refresh.sessionId), /missing outcome for README\.md/);
     assert.equal(fs.existsSync(refresh.bundleRoot), true, "failed accounting keeps the session repairable");
     const refreshed = await actions.finalize(refresh.sessionId, [], [], [{
       path: "README.md", outcome: "updated", reason: "Updates the Repository delivery-ownership overview.",
     }]) as {
-      proposal: { selectedSchemas: string[] };
+      proposal: { id: string; diffDigest: string; selectedSchemas: string[] };
       inspection: {
         changeAccounting: { partial: boolean; omitted: number; limitations: string[];
           outcomes: readonly { path: string; outcome: string; reason: string }[] };
@@ -309,11 +325,117 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015] pre
       outcomes: [{ path: "README.md", outcome: "updated", reason: "Updates the Repository delivery-ownership overview." }],
       partial: false, omitted: 0, limitations: [],
     });
-    const updatedRepository = refreshed.inspection.groups.updated.find((entry) => entry.path === "repositories/vehicle-events.md");
+    const updatedRepository = refreshed.inspection.groups.updated.find((entry) => entry.path === "domains/vehicle-data/repositories/vehicle-events.md");
     assert.ok(updatedRepository?.after);
     assert.equal(readRepositoryObservedSource(parseConceptDocument(updatedRepository.path, updatedRepository.after.content))?.commit,
       refresh.source.commit);
+    await actions.accept(refreshed.proposal.id, refreshed.proposal.diffDigest);
+
+    fs.mkdirSync(path.join(source, "bulk"));
+    for (let index = 0; index < 129; index += 1) {
+      fs.writeFileSync(path.join(source, "bulk", `file-${String(index).padStart(3, "0")}.ts`), `export const value${index} = ${index};\n`);
+    }
+    await runGit({ args: ["add", "bulk"], cwd: source, operation: "stage bounded Refresh fixture" });
+    await runGit({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit", "-m", "bounded refresh fixture"],
+      cwd: source, operation: "commit bounded Refresh fixture", commitTimestamp: "2026-08-23T00:00:00Z" });
+    const partial = await actions.prepare({
+      mode: "refresh", sourceRepository: source, subjectDirectory: "repositories/vehicle-events", signals: ["repository"],
+    }) as { sessionId: string; sourceChanges: { paths: string[]; omitted: number; limitations: string[] }; refreshScope: string };
+    assert.equal(partial.refreshScope, "delta");
+    assert.equal(partial.sourceChanges.paths.length, 128);
+    assert.equal(partial.sourceChanges.omitted, 1);
+    const partialFinalized = await actions.finalize(partial.sessionId, [], [], partial.sourceChanges.paths.map((changedPath) => ({
+      path: changedPath, outcome: "ignored" as const, reason: "Synthetic fixture file has no shared-knowledge effect.",
+    }))) as { proposal: { id: string; diffDigest: string }; inspection: { groups: { updated: readonly { path: string; after?: { content: string } }[] } } };
+    const partialRepository = partialFinalized.inspection.groups.updated.find((entry) =>
+      entry.path === "domains/vehicle-data/repositories/vehicle-events.md");
+    assert.ok(partialRepository?.after);
+    const partialCoverage = readRepositoryRefreshCoverage(parseConceptDocument(partialRepository.path, partialRepository.after.content));
+    assert.equal(partialCoverage?.status, "partial");
+    assert.equal(partialCoverage?.omittedChangedPaths, 1);
+    assert.equal(partialCoverage?.coveragePasses, 0);
+    assert.deepEqual(partialCoverage?.limitations, []);
+    assert.equal(Number.isFinite(Date.parse(partialCoverage?.observedAt ?? "")), true);
+    await actions.accept(partialFinalized.proposal.id, partialFinalized.proposal.diffDigest);
+
+    fs.appendFileSync(path.join(source, "bulk", "file-000.ts"), "export const current = true;\n");
+    await runGit({ args: ["add", "bulk/file-000.ts"], cwd: source, operation: "stage complete Delta fixture" });
+    await runGit({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit", "-m", "complete delta fixture"],
+      cwd: source, operation: "commit complete Delta fixture", commitTimestamp: "2026-08-24T00:00:00Z" });
+    const completeDelta = await actions.prepare({
+      mode: "refresh", sourceRepository: source, subjectDirectory: "repositories/vehicle-events", signals: ["repository"],
+    }) as { sessionId: string; sourceChanges: { paths: string[] } };
+    assert.deepEqual(completeDelta.sourceChanges.paths, ["bulk/file-000.ts"]);
+    const completeDeltaFinalized = await actions.finalize(completeDelta.sessionId, [], [], [{
+      path: "bulk/file-000.ts", outcome: "ignored", reason: "Synthetic fixture file has no shared-knowledge effect.",
+    }]) as { proposal: { id: string; diffDigest: string }; inspection: { groups: { updated: readonly { path: string; after?: { content: string } }[] } } };
+    const completeDeltaRepository = completeDeltaFinalized.inspection.groups.updated.find((entry) =>
+      entry.path === "domains/vehicle-data/repositories/vehicle-events.md");
+    assert.ok(completeDeltaRepository?.after);
+    assert.equal(readRepositoryRefreshCoverage(parseConceptDocument(
+      completeDeltaRepository.path, completeDeltaRepository.after.content))?.omittedChangedPaths, 1);
+    await actions.accept(completeDeltaFinalized.proposal.id, completeDeltaFinalized.proposal.diffDigest);
+
+    const partialCoverageRefresh = await actions.prepare({
+      mode: "refresh", refreshScope: "coverage",
+      coverage: { partial: true, limitations: ["runtime entrypoint coverage remained partial"] },
+      sourceRepository: source, subjectDirectory: "repositories/vehicle-events", signals: ["repository"],
+    }) as { sessionId: string; sourceChanges: { paths: string[] } };
+    assert.deepEqual(partialCoverageRefresh.sourceChanges.paths, []);
+    const partialCoverageFinalized = await actions.finalize(partialCoverageRefresh.sessionId) as {
+      proposal: { id: string; diffDigest: string };
+      inspection: { groups: { updated: readonly { path: string; after?: { content: string } }[] } };
+    };
+    const partialCoverageRepository = partialCoverageFinalized.inspection.groups.updated.find((entry) =>
+      entry.path === "domains/vehicle-data/repositories/vehicle-events.md");
+    assert.ok(partialCoverageRepository?.after);
+    const retainedCoverage = readRepositoryRefreshCoverage(parseConceptDocument(
+      partialCoverageRepository.path, partialCoverageRepository.after.content));
+    assert.equal(retainedCoverage?.omittedChangedPaths, 1);
+    assert.equal(retainedCoverage?.coveragePasses, 1);
+    assert.deepEqual(retainedCoverage?.limitations, ["runtime entrypoint coverage remained partial"]);
+    await actions.accept(partialCoverageFinalized.proposal.id, partialCoverageFinalized.proposal.diffDigest);
+
+    const coverageRefresh = await actions.prepare({
+      mode: "refresh", refreshScope: "coverage", coverage: { partial: false, limitations: [] },
+      sourceRepository: source, subjectDirectory: "repositories/vehicle-events", signals: ["repository"],
+    }) as { sessionId: string; bundleRoot: string; sourceChanges: { paths: string[] }; refreshScope: string;
+      continuity: { knownGaps: readonly { detail: string }[] } };
+    assert.equal(coverageRefresh.refreshScope, "coverage");
+    assert.deepEqual(coverageRefresh.sourceChanges.paths, []);
+    assert.equal(coverageRefresh.continuity.knownGaps.some((gap) => /Refresh coverage is partial/.test(gap.detail)), true);
+    const coverageRepositoryPath = path.join(coverageRefresh.bundleRoot, "domains", "vehicle-data", "repositories", "vehicle-events.md");
+    fs.appendFileSync(coverageRepositoryPath, "\nCoverage Refresh adds previously omitted recovery guidance.\n");
+    const coverageFinalized = await actions.finalize(coverageRefresh.sessionId) as {
+      proposal: { id: string; diffDigest: string };
+      inspection: { groups: { updated: readonly { path: string; after?: { content: string } }[] } };
+    };
+    const coverageRepository = coverageFinalized.inspection.groups.updated.find((entry) =>
+      entry.path === "domains/vehicle-data/repositories/vehicle-events.md");
+    assert.ok(coverageRepository?.after);
+    assert.match(coverageRepository.after.content, /previously omitted recovery guidance/);
+    const convergingCoverage = readRepositoryRefreshCoverage(parseConceptDocument(
+      coverageRepository.path, coverageRepository.after.content));
+    assert.equal(convergingCoverage?.omittedChangedPaths, 0);
+    assert.equal(convergingCoverage?.coveragePasses, 2);
+    assert.deepEqual(convergingCoverage?.limitations,
+      ["Coverage Refresh found new knowledge; another bounded convergence pass is required."]);
+    await actions.accept(coverageFinalized.proposal.id, coverageFinalized.proposal.diffDigest);
+
+    const confirmingCoverage = await actions.prepare({
+      mode: "refresh", refreshScope: "coverage", coverage: { partial: false, limitations: [] },
+      sourceRepository: source, subjectDirectory: "repositories/vehicle-events", signals: ["repository"],
+    }) as { sessionId: string; sourceChanges: { paths: string[] } };
+    assert.deepEqual(confirmingCoverage.sourceChanges.paths, []);
+    const confirmedCoverage = await actions.finalize(confirmingCoverage.sessionId) as {
+      inspection: { groups: { updated: readonly { path: string; after?: { content: string } }[] } };
+    };
+    const confirmedRepository = confirmedCoverage.inspection.groups.updated.find((entry) =>
+      entry.path === "domains/vehicle-data/repositories/vehicle-events.md");
+    assert.ok(confirmedRepository?.after);
+    assert.equal(readRepositoryRefreshCoverage(parseConceptDocument(
+      confirmedRepository.path, confirmedRepository.after.content)), undefined);
     const status = await actions.status() as { local: { draft_count: number } };
-    assert.equal(status.local.draft_count, 1, "Initial Ingest was accepted locally; Refresh remained an unaccepted preview");
+    assert.equal(status.local.draft_count, 6, "six accepted changes remain local; confirming Coverage Refresh is only a preview");
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });

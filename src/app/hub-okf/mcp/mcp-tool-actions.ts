@@ -1,9 +1,15 @@
-import type { ConfirmedDomain, HubSearchOptions, OkfAuthoringGuidanceRequest } from "../../../core/knowledge/index.ts";
+import type {
+  AgentBaseInitialIngestHomePlan,
+  ConfirmedDomain,
+  HubSearchOptions,
+  OkfAuthoringGuidanceRequest,
+} from "../../../core/knowledge/index.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
 import type { HubRemovalDeclaration } from "../../../core/knowledge/index.ts";
 import type { EnrichmentAnswer, EnrichmentCandidateInput } from "../enrichment/index.ts";
 import type { RefreshChangeOutcome } from "../authoring/refresh-change-accounting.ts";
 import type { ConfirmedDomain as BatchDomain } from "../../../core/knowledge/index.ts";
+import type { ProfileMigrationMove } from "../migration/profile-migration.ts";
 
 export type HubToolActions = Readonly<{
   status(): Promise<unknown>;
@@ -12,11 +18,15 @@ export type HubToolActions = Readonly<{
   bootstrap(repositoryUrl: string, targetBranch: string): Promise<unknown>;
   scan(workspaceRoot: string): Promise<unknown>;
   preflight(sourceRepository: string): Promise<unknown>;
+  prepareMigration(): Promise<unknown>;
+  finalizeMigration(input: Readonly<{ sessionId: string; moves: readonly ProfileMigrationMove[] }>): Promise<unknown>;
   prepare(input: Readonly<{
     mode: "new" | "refresh";
+    refreshScope?: "delta" | "coverage";
     sourceRepository: string;
     subjectDirectory: string;
     confirmedDomain?: ConfirmedDomain;
+    homePlan?: AgentBaseInitialIngestHomePlan;
     signals?: readonly string[];
     guidanceRequest?: OkfAuthoringGuidanceRequest;
     coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;

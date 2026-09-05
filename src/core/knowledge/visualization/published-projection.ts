@@ -1,10 +1,16 @@
 import { createHash } from "node:crypto";
 
+import { agentBaseDomainSelector } from "../documents/agentbase-profile.ts";
 import type { OkfValue } from "../documents/okf-document.ts";
 import { validateOkfRelationships } from "../documents/okf-relationships.ts";
 import { isCanonicalRelationshipKind } from "../documents/relationship-vocabulary.ts";
 import { parseQuestionDocument, type QuestionKind, type QuestionState } from "../governance/questions.ts";
-import type { HubGraph, HubGraphConcept } from "../query/hub-query-graph.ts";
+import {
+  resolveHubDomainIdentity,
+  type HubGraph,
+  type HubGraphConcept,
+  type HubProfileDomainRole,
+} from "../query/hub-query-graph.ts";
 import { displayEndpoints, relationshipDisplayDescriptor, type RelationshipDisplayClass } from "./predicate-descriptors.ts";
 
 const GOVERNANCE_TYPES = new Set(["Question", "Open Question", "Maintainer Guidance"]);
@@ -26,6 +32,8 @@ export type VisualizationNode = Readonly<{
   repositoryIds: readonly string[];
   sources: readonly string[];
   membership: "primary" | "boundary";
+  home?: string;
+  scopeRoles?: readonly HubProfileDomainRole[];
   expandable: boolean;
 }>;
 
@@ -67,9 +75,10 @@ export type VisualizationOmission = Readonly<{
 
 export type PublishedVisualizationProjection = Readonly<{
   schemaVersion: 3;
+  profile: HubGraph["profile"];
   hub: string;
   commit: string;
-  domain: Readonly<{ id: string; path: string; title: string }>;
+  domain: Readonly<{ id: string; path: string; title: string; selector?: string }>;
   nodes: readonly VisualizationNode[];
   edges: readonly VisualizationEdge[];
   flows: readonly VisualizationFlow[];
@@ -243,17 +252,22 @@ export function buildPublishedVisualizationProjection(
   options: PublishedVisualizationProjectionOptions,
 ): PublishedVisualizationProjection {
   if (!options.hub.trim()) throw new Error("visualization Hub identity is required");
+  if (graph.profile === "unsupported") {
+    throw new Error(`Published Hub Profile is unsupported: ${graph.profileFailures.join("; ")}`);
+  }
   const maximumNodes = boundedInteger(options.maximumNodes, DEFAULT_MAXIMUM_NODES, "maximumNodes");
   const maximumEdges = boundedInteger(options.maximumEdges, DEFAULT_MAXIMUM_EDGES, "maximumEdges");
   const concepts = visibleConcepts(graph);
-  const domain = concepts.get(options.domain);
+  const domainId = resolveHubDomainIdentity(graph, options.domain);
+  if (!domainId) throw new Error("visualization requires an exact Published Domain");
+  const domain = concepts.get(domainId);
   if (!domain || domain.document.type !== "Domain") throw new Error("visualization requires an exact Published Domain");
 
   const primary = new Set([...concepts.keys()].filter((id) => {
-    const role = graph.domainScopes.get(options.domain)?.get(id);
-    return role === "member" || role === "repository-associated";
+    const role = graph.domainScopes.get(domainId)?.get(id);
+    return role === "member" || role === "repository-associated" || role === "home";
   }));
-  primary.add(options.domain);
+  primary.add(domainId);
   const validation = validateOkfRelationships([...concepts].map(([identity, concept]) => ({
     identity, concept: concept.document,
   })));
@@ -319,6 +333,8 @@ export function buildPublishedVisualizationProjection(
   const conceptNodes = [...included].map((id): VisualizationNode => {
     const concept = concepts.get(id)!;
     const membership = primary.has(id) ? "primary" as const : "boundary" as const;
+    const home = graph.homes.get(id);
+    const scopeRoles = graph.profile === "profile-1.0" ? graph.domainRoles.get(domainId)?.get(id) : undefined;
     return {
       id,
       path: concept.document.path,
@@ -332,6 +348,8 @@ export function buildPublishedVisualizationProjection(
       repositoryIds: groupIds(id, "Repository"),
       sources: sourceResources(concept),
       membership,
+      ...(home ? { home: home.kind === "shared" ? "shared" : home.selector } : {}),
+      ...(scopeRoles?.length ? { scopeRoles } : {}),
       expandable: membership === "primary",
     };
   }).sort((left, right) => left.id.localeCompare(right.id));
@@ -462,7 +480,7 @@ export function buildPublishedVisualizationProjection(
 
   const questions: VisualizationQuestion[] = [];
   const omissions: VisualizationOmission[] = [...embeddedWarnings, ...validation.warnings.map((warning) => ({
-    code: "relationship-warning", subject: options.domain, detail: warning,
+    code: "relationship-warning", subject: domainId, detail: warning,
   } as const))];
   for (const [, concept] of graph.concepts) {
     if (concept.document.type !== "Question") continue;
@@ -482,9 +500,16 @@ export function buildPublishedVisualizationProjection(
 
   return {
     schemaVersion: 3,
+    profile: graph.profile,
     hub: options.hub,
     commit: graph.commit,
-    domain: { id: options.domain, path: domain.document.path, title: domain.title },
+    domain: {
+      id: domainId,
+      path: domain.document.path,
+      title: domain.title,
+      ...(graph.profile === "profile-1.0" ? { selector: options.domain.startsWith("domains/")
+        && options.domain.split("/").length === 2 ? options.domain : agentBaseDomainSelector(domainId) } : {}),
+    },
     nodes,
     edges: allEdges,
     flows,

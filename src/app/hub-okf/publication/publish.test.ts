@@ -90,7 +90,7 @@ function retainedProposal(stateRoot: string, root: string, id: string, commit: s
   } })}\n`);
 }
 
-test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021] MCP creates independent, stacked and recoverable Hub PRs", async () => {
+test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021][AB-CONCURRENCY-008..010][AB-CONCURRENCY-012][AB-IMPACT-011] MCP creates independent, stacked and recoverable Hub PRs", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-publish-test-"));
   const remote = path.join(root, "hub.git"), hubRoot = path.join(root, "hub"), stateRoot = path.join(root, "state");
   try {
@@ -352,8 +352,9 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021] MCP creat
       candidateRoot: path.join(recoveryRoot, "candidate"),
     })}\n`);
     const staleLock = path.join(stateRoot, "mutation.lock");
-    fs.mkdirSync(staleLock, { recursive: true });
-    fs.writeFileSync(path.join(staleLock, "owner.json"), `${JSON.stringify({ ownerId: recoveryId, pid: 2_147_483_647 })}\n`);
+    fs.mkdirSync(staleLock, { recursive: true, mode: 0o700 });
+    fs.chmodSync(staleLock, 0o700);
+    fs.writeFileSync(path.join(staleLock, "owner.json"), `${JSON.stringify({ ownerId: recoveryId, pid: 2_147_483_647 })}\n`, { mode: 0o600 });
     git(hubRoot, ["checkout", "--detach", synchronization.activeHead]);
     assert.equal((await recoverSynchronizationTransaction(stateRoot, recoveryId, synchronizedHub, gitRunner)).outcome, "already-advanced");
     assert.equal(git(hubRoot, ["symbolic-ref", "--short", "HEAD"]), "main");

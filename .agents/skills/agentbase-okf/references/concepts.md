@@ -41,12 +41,13 @@ For every new or modified AgentBase concept:
   both endpoints must exist in the changed concept set or supplied target
   summaries; embedded knowledge and free text are never Flow endpoints, and
   must not be promoted merely to complete a Flow;
-- use one canonical path per entity under the role-oriented roots `domains/`,
-  `entities/`, `systems/`, `components/`, `interfaces/`, `flows/`, `metrics/`,
-  `resources/` or `repositories/`;
-- treat directory placement as classification, not ownership or containment;
-  express containment and implementation through evidenced structured
-  relationships plus resolving Markdown links;
+- use the exact prepared compact Profile path below one physical home:
+  `domains/<slug>/` or `shared/`; the Domain concept/navigation is
+  `domains/<slug>/index.md`, Repository dossiers use `repositories/`, Questions
+  use `questions/`, and every other standalone concept uses `knowledge/`;
+- treat home as stewardship and default navigation, not semantic
+  participation; express Domain participation, containment and implementation
+  through evidenced structured relationships plus resolving Markdown links;
 - never duplicate a component, interface, flow or resource beneath both a
   system and repository tree.
 

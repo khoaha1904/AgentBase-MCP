@@ -9,7 +9,8 @@ Candidates exist only during Ingest/Refresh proposal preparation and review:
 
 ```text
 candidate
-  ├─ qualified + evidenced → concept/relation/evidence update
+  ├─ qualified independent boundary → standalone knowledge
+  ├─ useful repository-local evidence → dossier/parent section
   ├─ useful but unresolved → Question
   └─ no independent value  → discard
 ```
@@ -19,7 +20,10 @@ no candidate database, Published Candidate or candidate migration.
 
 ## Review outcome
 
-- Promote creates only a knowledge item that passed schema/evidence validation.
+- Promote creates only a standalone reading unit that passed identity,
+  independent-value, boundary, schema and evidence validation.
+- Embed retains the exact evidence in a Repository dossier or another useful
+  parent; it is successful coverage and not a lower-quality placeholder.
 - Question retains the exact ambiguity, candidate references and next
   verification action.
 - Discard leaves no Hub content; run diagnostics may count or summarize discard

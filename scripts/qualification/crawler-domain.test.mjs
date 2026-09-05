@@ -10,7 +10,7 @@ test("[AB-BATCH-014..015][AB-QUERY-020][AB-VIS-016] Crawler qualification covers
   const output = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-crawler-site-"));
   try {
     const report = await qualify(output);
-    assert.equal(report.query, "resources/crawler-jobs.md");
+    assert.equal(report.query, "domains/crawler/knowledge/crawler-jobs.md");
     assert.equal(report.enrichment, "confirmed");
     assert.equal(report.counts.nodes >= 8, true);
   } finally {

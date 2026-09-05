@@ -1,6 +1,7 @@
 # 05.01 — Knowledge item and proposal identities
 
-> Status: Technical design draft.
+> Status: Implemented identity baseline. Group 5 compact Profile identities are
+> implemented and verified.
 
 ## Decision
 
@@ -13,13 +14,16 @@ the review and publication unit.
 | Concept | normalized OKF path without `.md` | proposal changes that file |
 | Structured claim | stable claim ID in the concept | proposal changes the concept |
 | Relation | source concept + predicate + target identity | proposal contains the edge |
-| Question | stable ID + `questions/<id>.md` | proposal changes shared document |
+| Question | stable ID + compact `<home>/questions/<id>.md` or legacy path | proposal changes that document |
 | Evidence | source ID in concept + repository URI | proposal contains evidence |
-| Navigation index | exact path/line dependency | proposal contains navigation change |
+| Domain concept/navigation | compact `domains/<slug>/index.md` | proposal changes the Domain reading entry |
+| Other navigation index | exact path/line dependency | proposal contains navigation change |
 | Proposal/change set | proposal ID + accepted Git commit + diff digest | publication unit |
 
 Prose has no identity merely to support item-level state; it belongs to its
-concept document. Do not add IDs to every paragraph or YAML field.
+concept document. Repository-local prose defaults to the Repository dossier.
+Do not add IDs to every paragraph or YAML field, and do not create a document
+merely to serialize one schema instance.
 
 ## Invariants
 

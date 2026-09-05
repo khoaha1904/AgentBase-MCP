@@ -27,6 +27,11 @@ user supplied one exact canonical Domain, pass that Domain; otherwise set
 `global: true`. Call `search_hub_okf` exactly once with `limit` no greater than
 `5`.
 
+Read the result's `freshness` envelope. Preserve its exact Published commit,
+status and reason in the context contribution. A missing envelope from an older
+runtime is `unknown`; never infer `fresh`. This workflow performs no current
+source verification, so it must not upgrade the returned status.
+
 For this AgentBase context contribution, do not call
 `read_hub_okf_concept`, Code Graph or source tools, provider tools, shell, web,
 Local Draft, lifecycle or mutation tools. Do not restrict tools that the paired
@@ -43,6 +48,10 @@ only what can affect the current decision:
 - accepted relations, journey context, constraints and failure behavior;
 - important Questions, missing knowledge and freshness limitations;
 - exact Published concept paths and commit provenance.
+
+End the contributed context with one compact freshness line containing
+`status`, `published_commit`, `current_source_verified` and `reason`. Do not
+turn Repository observation age into a freshness threshold.
 
 Prefer canonical identities. Treat embedded rows as parent-scoped presentation
 context unless the result provides a canonical identity. Never merge equal

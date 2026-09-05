@@ -8,6 +8,8 @@ import {
   type OkfValue,
 } from "../../../core/knowledge/index.ts";
 import type { PendingHubProposal } from "../review/pending.ts";
+import { readVerifiedHubProposalInspection } from "../review/inspect.ts";
+import { readHubProposalState } from "../review/proposal-state.ts";
 
 const ITEM_LIMIT = 20;
 
@@ -28,6 +30,8 @@ type InspectionSummary = Readonly<{
   batchMembers: readonly string[];
   sharedPaths: readonly string[];
   discovery: readonly string[];
+  semantic: readonly string[];
+  semanticAvailable: boolean;
 }>;
 
 type RepositoryScope = Readonly<{ domains: readonly string[]; revision?: string }>;
@@ -74,11 +78,17 @@ function readInspection(stateRoot: string, proposal: PendingHubProposal): Inspec
     const root = path.join(path.resolve(stateRoot), "proposals", proposal.id);
     const accepted = record(JSON.parse(fs.readFileSync(path.join(root, "accepted.json"), "utf8")));
     if (accepted?.id !== proposal.id || accepted.mode !== proposal.mode
-      || (proposal.mode === "enrichment" || proposal.mode === "batch-new"
+      || (proposal.mode === "migration"
+        ? accepted.migrationDigest !== proposal.migrationDigest
+        : proposal.mode === "enrichment" || proposal.mode === "batch-new"
         ? accepted.domainId !== proposal.domainId || JSON.stringify(accepted.sourceRepositoryIds) !== JSON.stringify(proposal.sourceRepositoryIds)
         : accepted.sourceRepositoryId !== proposal.sourceRepositoryId)
       || accepted.diffDigest !== proposal.diffDigest || accepted.acceptedCommit !== proposal.commit) return undefined;
-    const inspection = record(JSON.parse(fs.readFileSync(path.join(root, "inspection.json"), "utf8")));
+    const rawInspection = record(JSON.parse(fs.readFileSync(path.join(root, "inspection.json"), "utf8")));
+    const semanticAvailable = record(rawInspection?.semanticImpact)?.formatVersion === 1;
+    const inspection = semanticAvailable
+      ? record(readVerifiedHubProposalInspection(root, readHubProposalState(root)))
+      : rawInspection;
     const groups = record(inspection?.groups), uncertainty = record(groups?.questionsAndLimitations);
     const discovery = record(inspection?.discovery);
     const questions = [...(Array.isArray(uncertainty?.questions) ? uncertainty.questions.flatMap((item) => {
@@ -114,6 +124,40 @@ function readInspection(stateRoot: string, proposal: PendingHubProposal): Inspec
       return repositoryId ? [`${repositoryId}: ${paths.length ? paths.join(", ") : "shared navigation only"}${memberDiscovery
         ? `; source ${safeText(memberDiscovery.sourceRevision)}; lanes ${memberLanes}; limitations ${memberLimitations}` : ""}`] : [];
     }) : [];
+    const impact = record(inspection?.semanticImpact), affected = record(impact?.affected);
+    const changeCounts = (value: unknown): string => {
+      const group = record(value);
+      return `+${Array.isArray(group?.added) ? group.added.length : 0} ~${Array.isArray(group?.updated) ? group.updated.length : 0} -${Array.isArray(group?.removed) ? group.removed.length : 0}`;
+    };
+    const domains = Array.isArray(affected?.domains) ? affected.domains.flatMap((item) => {
+      const value = record(item); return typeof value?.identity === "string"
+        ? [`Affected semantic Domain: ${safeText(value.identity)}`] : [];
+    }) : [];
+    const homes = Array.isArray(affected?.homes) ? affected.homes.flatMap((item) => {
+      const value = record(item);
+      if (value?.kind === "shared" && value.selector === "shared") return ["Physical home: shared"];
+      return value?.kind === "domain" && typeof value.selector === "string" && typeof value.domainIdentity === "string"
+        ? [`Physical home: ${safeText(value.selector)} (${safeText(value.domainIdentity)})`] : [];
+    }) : [];
+    const repositories = Array.isArray(affected?.repositories) ? affected.repositories.flatMap((item) => {
+      const value = record(item); return typeof value?.repositoryId === "string"
+        ? [`Affected Repository: ${safeText(value.repositoryId)} (${safeText(value.identity)})`] : [];
+    }) : [];
+    const dangling = Array.isArray(impact?.danglingReferences) ? impact.danglingReferences : [];
+    const duplicates = Array.isArray(impact?.duplicateCandidates) ? impact.duplicateCandidates : [];
+    const omissions = Array.isArray(impact?.omissions) ? impact.omissions.flatMap((item) => {
+      const value = record(item);
+      return value ? [`Omission: ${safeText(value.category)} — ${safeText(value.reason)} (${safeText(String(value.count))})`] : [];
+    }) : [];
+    const semantic = bounded([
+      `Concepts ${changeCounts(impact?.concepts)}; relations ${changeCounts(impact?.relations)}; Flow steps ${changeCounts(impact?.flowSteps)}; Questions ${changeCounts(impact?.questions)}; navigation links ${changeCounts(record(impact?.navigation)?.links)}`,
+      ...homes,
+      ...domains,
+      ...repositories,
+      ...(dangling.length ? [`Dangling references: ${dangling.length}`] : []),
+      ...(duplicates.length ? [`Strong-identity duplicate candidates: ${duplicates.length}`] : []),
+      ...omissions,
+    ]);
     return {
       added: groupPaths(groups?.added),
       updated: groupPaths(groups?.updated),
@@ -124,6 +168,8 @@ function readInspection(stateRoot: string, proposal: PendingHubProposal): Inspec
       sharedPaths: groupPaths(Array.isArray(batch?.sharedPaths)
         ? batch.sharedPaths.map((pathValue) => ({ path: pathValue })) : []),
       discovery: discoverySummary,
+      semantic,
+      semanticAvailable,
     };
   } catch {
     return undefined;
@@ -136,6 +182,7 @@ function mapping(value: OkfValue | undefined): Readonly<Record<string, OkfValue>
 }
 
 function readRepositoryScope(stateRoot: string, proposal: PendingHubProposal): RepositoryScope {
+  if (proposal.mode === "migration") return { domains: [] };
   if (proposal.mode === "enrichment" || proposal.mode === "batch-new") return { domains: proposal.domainId ? [proposal.domainId] : [] };
   try {
     const bundle = loadOkfBundle(path.join(path.resolve(stateRoot), "proposals", proposal.id, "bundle"));
@@ -185,15 +232,19 @@ export function renderPublicationReview(options: PublicationReviewOptions): Publ
   }));
   const role = options.publicationMode !== "batch" && options.proposals.length === 1
     ? options.proposals[0]!.mode === "new" ? "Init" : options.proposals[0]!.mode === "refresh" ? "Refresh"
-      : options.proposals[0]!.mode === "batch-new" ? "Batch Init" : "Enrichment"
+      : options.proposals[0]!.mode === "batch-new" ? "Batch Init"
+        : options.proposals[0]!.mode === "migration" ? "Profile Migration" : "Enrichment"
     : "Publication";
-  const title = `AgentBase Hub ${role}: ${safeText(options.proposals[0]!.mode === "enrichment" || options.proposals[0]!.mode === "batch-new"
-    ? options.proposals[0]!.domainId : options.proposals[0]!.sourceRepositoryId)}`.slice(0, 120);
+  const title = `AgentBase Hub ${role}: ${safeText(options.proposals[0]!.mode === "migration" ? "legacy to Profile 1.0"
+    : options.proposals[0]!.mode === "enrichment" || options.proposals[0]!.mode === "batch-new"
+      ? options.proposals[0]!.domainId : options.proposals[0]!.sourceRepositoryId)}`.slice(0, 120);
   const scope = details.slice(0, ITEM_LIMIT).flatMap(({ proposal, scope: repository, enrichment }) => {
     const multiRepository = proposal.mode === "enrichment" || proposal.mode === "batch-new";
     return [
       `Proposal \`${proposal.id}\` — mode: ${proposal.mode ?? "unknown"}; subject: \`${safeText(proposal.subject)}\``,
-      ...(multiRepository
+      ...(proposal.mode === "migration"
+        ? [`Migration digest: \`${safeText(proposal.migrationDigest)}\`; rollback commit: \`${safeText(proposal.parentCommit)}\`.`]
+        : multiRepository
         ? [`Repositories: ${proposal.sourceRepositoryIds?.length ?? 0}.`,
           ...(proposal.sourceRepositoryIds ?? []).map((id) => `Repository: \`${safeText(id)}\``)]
         : [`Source: \`${safeText(proposal.sourceRepositoryId)}\``]),
@@ -203,13 +254,15 @@ export function renderPublicationReview(options: PublicationReviewOptions): Publ
   });
   if (details.length > ITEM_LIMIT) scope.push(`… ${details.length - ITEM_LIMIT} more proposal(s)`);
   const inspections = details.flatMap((item) => item.inspection ? [item.inspection] : []);
-  const unavailable = inspections.length !== details.length;
+  const unavailable = inspections.length !== details.length || inspections.some((item) => !item.semanticAvailable);
   const changes = [
     ...(inspections.some((item) => item.batchMembers.length || item.sharedPaths.length)
       ? ["### Batch Attribution", bullets(bounded(inspections.flatMap((item) => item.batchMembers))),
         "### Shared Navigation", bullets(bounded(inspections.flatMap((item) => item.sharedPaths)))] : []),
     ...(inspections.some((item) => item.discovery.length)
       ? ["### Discovery", bullets(bounded(inspections.flatMap((item) => item.discovery)))] : []),
+    ...(inspections.some((item) => item.semantic.length)
+      ? ["### Semantic Impact", bullets(bounded(inspections.flatMap((item) => item.semantic)))] : []),
     "### Added", bullets(bounded(inspections.flatMap((item) => item.added))),
     "### Updated", bullets(bounded(inspections.flatMap((item) => item.updated))),
     "### Removed", bullets(bounded(inspections.flatMap((item) => item.removed))),

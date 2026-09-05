@@ -7,7 +7,7 @@ import test from "node:test";
 import {
   createInventoryItemId, createInventoryReceipt, createQuestionPlanId,
   createRepositorySourceResource, getOkfAuthoringGuidance, loadOkfBundle,
-  parseKnowledgeActivityLog, parseQuestionDocument, validateInventoryReceipt, type DiscoverySeed,
+  parseQuestionDocument, validateInventoryReceipt, type DiscoverySeed,
 } from "../../../core/knowledge/index.ts";
 import {
   beginHubAuthoringSession, finalizeHubAuthoringSession, materializeInitialIngestSessionSkeletons,
@@ -16,7 +16,7 @@ import {
 const commit = "a".repeat(40), baseCommit = "b".repeat(40);
 const repositoryId = "repository-worker-aaaaaaaaaaaa";
 
-test("[AB-MCP-024..030] Receipt Prepare is idempotent and Finalize owns Questions, provenance and activity", () => {
+test("[AB-MCP-024..030][AB-COMPACT-012] Receipt Prepare is idempotent and Finalize owns Questions and provenance", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-receipt-authoring-"));
   const hub = path.join(root, "hub"), source = path.join(root, "source"), stateRoot = path.join(root, "state");
   try {
@@ -182,13 +182,9 @@ test("[AB-MCP-024..030] Receipt Prepare is idempotent and Finalize owns Question
         ? concept.frontmatter.sources.filter((entry) => JSON.stringify(entry).includes(`repository://${repositoryId}/`)) : [];
       assert.equal(repositorySources.every((entry) => (entry as Record<string, unknown>).observed_revision === commit), true);
     }
-    const activityPath = path.join(bundleRoot, "repositories", "worker", "log.md");
-    const activity = parseKnowledgeActivityLog(fs.readFileSync(activityPath, "utf8"));
-    assert.equal(activity.length, 1);
-    assert.match(activity[0]!.summary, /2 concept output\(s\), 3 embedded output\(s\)/);
+    assert.equal(bundle.files.some((relative) => path.posix.basename(relative) === "log.md"), false);
     assert.equal(finalized.inspection.discovery?.sourceRevision, commit);
     assert.equal(finalized.inspection.discovery?.questions.length, 1);
-    assert.deepEqual(finalized.inspection.activity, { repositoryLog: "repositories/worker/log.md", domainLog: null });
     assert.throws(() => beginHubAuthoringSession(options), /already finalized/);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
