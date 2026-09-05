@@ -1,4 +1,4 @@
-# Slide 23 — Runtime architecture
+# Slide 24 — Runtime architecture
 
 ## Vai trò của slide
 

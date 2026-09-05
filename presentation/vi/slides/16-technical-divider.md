@@ -22,7 +22,7 @@ Agent reasons · MCP validates boundaries · Humans publish
 
 ## Lời thoại dự kiến
 
-“Main story đã kết thúc. Bảy slide tiếp theo đi sâu vào pipeline và runtime cho
+“Main story đã kết thúc. Tám slide tiếp theo đi sâu vào pipeline và runtime cho
 engineer hoặc Q&A. Nếu không cần theo phần này, takeaway duy nhất là reasoning,
 validation boundary và publication authority thuộc ba chủ thể khác nhau.”
 

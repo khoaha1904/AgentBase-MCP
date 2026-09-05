@@ -6,7 +6,7 @@
 - Engineers are the primary audience; prior AgentBase, MCP, OKF and Code Graph
   knowledge is not assumed.
 - Main deck: 15 slides, 20-22 minutes, then questions.
-- Optional technical appendix: one divider plus seven slides, about seven
+- Optional technical appendix: one divider, a pipeline overview and seven detail slides, about seven
   minutes when the room benefits.
 - Product and architecture story, not a benchmark report.
 - Current internal enterprise release only. No perfect-completeness,
@@ -55,16 +55,17 @@ after the close, not a toll every audience member must pay before seeing value.
 14. Release boundary and proposed internal pilot.
 15. Close: context agents can explain; knowledge teams can correct.
 
-## Optional technical appendix — 8 slides
+## Optional technical appendix — 9 slides
 
 16. Technical deep-dive divider and takeaway for non-engineers.
-17. Preflight.
-18. Discover.
-19. Investigate.
-20. Author.
-21. Validate.
-22. Human review and Publish.
-23. Runtime architecture and trust boundaries.
+17. Five-stage overview before the detailed walkthrough.
+18. Preflight.
+19. Discover.
+20. Investigate.
+21. Author.
+22. Validate.
+23. Human review and Publish.
+24. Runtime architecture and trust boundaries.
 
 ## Demo and evidence rules
 

@@ -1,4 +1,4 @@
-# Slide 18 — Discover
+# Slide 19 — Discover
 
 ## Vai trò của slide
 

@@ -1,4 +1,4 @@
-# Slide 22 — Human review và Publish
+# Slide 23 — Human review và Publish
 
 ## Vai trò của slide
 

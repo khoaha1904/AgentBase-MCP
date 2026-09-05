@@ -1,7 +1,7 @@
 # AgentBase — nguồn thuyết trình tiếng Việt
 
 [`PLAN.md`](PLAN.md) là narrative contract. [`slides/`](slides/) chứa 15 slide
-chính và 8 slide appendix theo đúng thứ tự số.
+chính và 9 slide appendix theo đúng thứ tự số.
 
 Mỗi slide giữ các phần sau khi phù hợp:
 
@@ -40,10 +40,11 @@ thế Markdown source và không phải product authority.
 ## Optional technical appendix
 
 16. [`16-technical-divider.md`](slides/16-technical-divider.md)
-17. [`17-preflight.md`](slides/17-preflight.md)
-18. [`18-discover.md`](slides/18-discover.md)
-19. [`19-investigate.md`](slides/19-investigate.md)
-20. [`20-author.md`](slides/20-author.md)
-21. [`21-validate.md`](slides/21-validate.md)
-22. [`22-review-publish.md`](slides/22-review-publish.md)
-23. [`23-runtime-architecture.md`](slides/23-runtime-architecture.md)
+17. [`17-pipeline-overview.md`](slides/17-pipeline-overview.md)
+18. [`18-preflight.md`](slides/18-preflight.md)
+19. [`19-discover.md`](slides/19-discover.md)
+20. [`20-investigate.md`](slides/20-investigate.md)
+21. [`21-author.md`](slides/21-author.md)
+22. [`22-validate.md`](slides/22-validate.md)
+23. [`23-review-publish.md`](slides/23-review-publish.md)
+24. [`24-runtime-architecture.md`](slides/24-runtime-architecture.md)

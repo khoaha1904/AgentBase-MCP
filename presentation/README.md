@@ -38,7 +38,8 @@ This is deliberate:
 2. State the simple product promise, then show one concrete proof early.
 3. Explain only enough mechanism to make the proof credible.
 4. Keep human authority, limitations and the adoption ask in the main deck.
-5. Put implementation stages and runtime architecture after the close as an
+5. Introduce the five-stage overview before Stage 1 so the audience has a map of the process.
+6. Put implementation stages and runtime architecture after the close as an
    explicitly optional technical appendix.
 
 Do not turn the main deck into a component tour or a rigid What/Why/How list.

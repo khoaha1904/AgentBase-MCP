@@ -1,4 +1,4 @@
-# Slide 21 — Validate
+# Slide 22 — Validate
 
 ## Vai trò của slide
 
