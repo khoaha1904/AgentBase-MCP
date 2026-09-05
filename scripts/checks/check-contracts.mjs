@@ -121,6 +121,7 @@ const ACTIVE_NAMING_RULES = [
   { code: "CONTRACT-TEMP-SUBJECT", pattern: /repositories\/agentbase-next[^\n]*(?:default|generated|subject)/i, message: "a rebuild worktree must not become a generated subject" },
 ];
 const LANGUAGE_EXCLUSIONS = ["assets/hub-ci/", "presentation/vi/", "vendor/"];
+const LANGUAGE_FILE_EXCLUSIONS = new Set(["presentation/preview.html"]);
 const VIETNAMESE_TEXT = /[\u0102\u0103\u0110\u0111\u01A0\u01A1\u01AF\u01B0\u1EA0-\u1EF9]|\b(?:c\u00f3|c\u1ee7a|\u0111\u01b0\u1ee3c|kh\u00f4ng|m\u1ed9t|nh\u1eefng|ph\u1ea3i|tr\u006fng|v\u00e0|v\u1edbi)\b/iu;
 const CURRENT_AUTHORITY = /^(?:AGENTS\.md|README\.md|docs\/(?:README\.md|architecture\/|product\/|capabilities\/))/;
 const OBSOLETE_DOCUMENTATION_ROUTE = /docs\/(?:present|design)\//;
@@ -132,7 +133,7 @@ function read(root, relative) {
 
 export function checkRepositoryLanguageEntries(entries) {
   return entries.flatMap(({ relative, source }) => {
-    if (LANGUAGE_EXCLUSIONS.some((prefix) => relative.startsWith(prefix)) || source.includes("\0")) return [];
+    if (LANGUAGE_FILE_EXCLUSIONS.has(relative) || LANGUAGE_EXCLUSIONS.some((prefix) => relative.startsWith(prefix)) || source.includes("\0")) return [];
     const match = VIETNAMESE_TEXT.exec(source);
     if (!match) return [];
     const line = source.slice(0, match.index).split("\n").length;

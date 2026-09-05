@@ -9,10 +9,11 @@ user, but user conversation does not change the repository language.
 
 Third-party vendor snapshots and generated output retain their original bytes
 and are excluded from translation. The Vietnamese
-presentation source under `presentation/vi/` is an explicit localized-content
-exception; it is not Product, Architecture or Capability Contract authority. A
-translation must preserve requirements, identifiers, links, code examples and
-observable runtime behavior.
+presentation source under `presentation/vi/` and its generated standalone
+snapshot at `presentation/preview.html` are explicit localized-content
+exceptions; they are not Product, Architecture or Capability Contract
+authority. A translation must preserve requirements, identifiers, links, code
+examples and observable runtime behavior.
 
 All current product documentation lives in this repository at three contract levels:
 
