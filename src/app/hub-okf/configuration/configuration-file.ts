@@ -25,6 +25,7 @@ export type PersistedRemoteHubConfiguration = Readonly<{
   host: string;
   repository: string;
   targetBranch: string;
+  publicationPolicy?: "direct" | "pr";
 }>;
 
 export type PersistedHubConfiguration = PersistedLocalHubConfiguration | PersistedRemoteHubConfiguration;
@@ -89,7 +90,7 @@ function parse(value: unknown): PersistedHubConfiguration {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("global Hub configuration is invalid");
   const input = value as Record<string, unknown>;
   const common = ["formatVersion", "kind", "localHubId", "localRoot", "baseCommit", "catalogVersion"];
-  const allowed = input.kind === "remote" ? [...common, "host", "repository", "targetBranch"] : common;
+  const allowed = input.kind === "remote" ? [...common, "host", "repository", "targetBranch", "publicationPolicy"] : common;
   if (Object.keys(input).some((key) => !allowed.includes(key)) || input.formatVersion !== 1
     || (input.kind !== "local-only" && input.kind !== "remote")
     || typeof input.localHubId !== "string" || !/^[a-f0-9]{24}$/.test(input.localHubId)
@@ -99,6 +100,9 @@ function parse(value: unknown): PersistedHubConfiguration {
   }
   assertCommit(input.baseCommit, "base commit");
   if (input.kind === "remote") {
+    if (input.publicationPolicy !== undefined && input.publicationPolicy !== "direct" && input.publicationPolicy !== "pr") {
+      throw new Error("Hub publication policy must be direct or pr");
+    }
     if (typeof input.repository !== "string" || typeof input.targetBranch !== "string") throw new Error("global Hub remote configuration is invalid");
     if (input.host === undefined) input.host = "github.com";
     if (typeof input.host !== "string") throw new Error("global Hub remote configuration is invalid");

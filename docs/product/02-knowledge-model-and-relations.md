@@ -7,6 +7,21 @@
 > admission and G5-C1 compact Profile 1.0 layout are implemented and verified.
 > G5-C2 semantic-quality admission and scale qualification remain deferred.
 
+## Accepted follow-up — Groups 7 and 9
+
+Owner-approved targets, not implemented: relation changes use the simplified
+[publication lifecycle](03-knowledge-lifecycle.md#accepted-simplification-target--group-7).
+Domain Enrichment becomes a bounded strategy under Update knowledge rather
+than an obligatory user-facing workflow choice. Source and provider scope,
+interaction evidence and identity requirements remain explicit; no automatic
+provider scan, concept merge, schema or layout rewrite is approved.
+
+Keep the distinction between a source-backed logical integration and an
+observed deployment identity visible. Code/configuration may establish intended
+producer/consumer behavior; a provider observation establishes only its stated
+environment and time. Neither silently proves the other. This distinction
+does not permit name-only identity matching or invented relations.
+
 ## Outcome
 
 One AgentBase-Hub provides a sparse knowledge network across many Domains and

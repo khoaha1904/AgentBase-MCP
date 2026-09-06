@@ -1,7 +1,7 @@
 interface:
-  display_name: "AgentBase Ingest"
-  short_description: "Create a reviewable OKF draft from one repo"
-  default_prompt: "Use $agentbase-ingest to ingest this local repository into a reviewable AgentBase OKF proposal."
+  display_name: "AgentBase Add repository"
+  short_description: "Add one repository as reviewable knowledge"
+  default_prompt: "Use $agentbase-ingest to add this repository to AgentBase, or update it if already known; stop before Publish."
 
 policy:
   allow_implicit_invocation: false

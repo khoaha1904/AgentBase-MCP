@@ -1,6 +1,6 @@
 ---
 name: agentbase-batch-ingest
-description: Explicit-only AgentBase batch ingest. Use only when the user names $agentbase-batch-ingest for 2-32 authorized local repositories in one confirmed Domain; never for ordinary repository reading, Batch Refresh, scanning, enrichment, Accept, or Publish.
+description: Explicit-only AgentBase batch ingest. Use only when the user names $agentbase-batch-ingest for 2-32 authorized local repositories in one confirmed Domain; never for ordinary repository reading, Batch Refresh, scanning, enrichment, or Publish.
 ---
 
 # Batch Initial Ingest
@@ -43,6 +43,6 @@ a confirmed batch.
    per-repository source revision and lane coverage, shared Domain/index
    navigation, Questions, ignored reasons and limitations.
 
-Stop before Accept, submit, synchronization, provider enrichment or model
+Stop before Publish, synchronization, provider enrichment or model
 benchmark. Do not scan the workspace, run members in parallel, split a finalized
 proposal or convert an existing canonical Repository into Init.

@@ -13,6 +13,23 @@ Discovery context comparison is governed by
 the same opt-in, isolated, pinned-input and durable-result principles without
 changing OKF-authoring semantics or the public `abs` CLI.
 
+## Read selectively
+
+This page is not required startup context. Use the relevant section below;
+follow its linked owner rather than loading unrelated sections.
+
+- [Current adaptive evaluation profile](#current-adaptive-evaluation-profile)
+- [Agent-driven OKF authoring](#agent-driven-okf-authoring)
+- [Context A/B interpretation](#context-ab-interpretation)
+- [Historical v1 baseline](#historical-v1-baseline)
+- [First real context A/B evidence](#first-real-context-ab-evidence)
+- [First v2 authoring-quality evidence](#first-v2-authoring-quality-evidence)
+- [v3 heterogeneous evidence](#v3-heterogeneous-evidence)
+- [v4 batch-authoring checkpoint](#v4-batch-authoring-checkpoint)
+- [v5 offline qualification](#v5-offline-qualification)
+- [Confirmed-Domain qualification](#confirmed-domain-qualification)
+- [V13 Initial Ingest qualification](#v13-initial-ingest-qualification)
+
 ## Current adaptive evaluation profile
 
 - **AB-BENCH-091** — Every active suite names one explicit versioned evaluation

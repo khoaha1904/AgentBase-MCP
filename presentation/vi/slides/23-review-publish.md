@@ -6,7 +6,7 @@ Chi tiết hóa publication boundary mà main deck chỉ tóm tắt.
 
 ## Thông điệp duy nhất
 
-Chỉ reviewed Git history và explicit sync mới tạo Published query authority.
+Một xác nhận Publish chia sẻ đúng kết quả đã xem, theo policy Direct hoặc PR.
 
 ## Nội dung hiển thị
 
@@ -14,11 +14,10 @@ Chỉ reviewed Git history và explicit sync mới tạo Published query authori
 VALIDATED WORKSPACE
   -> Finalize + Inspect
 FINALIZED PROPOSAL
-  -> Human Accept
-LOCAL DRAFT
-  -> Publish selected drafts
-PULL REQUEST
-  -> Human review + Merge + Explicit sync
+  -> Preview + Confirm Publish
+HUB POLICY
+  -> Direct: push complete commit + recognize Published
+  -> PR: team review + merge + sync
 PUBLISHED OKF
 
 MCP NEVER APPROVES OR MERGES
@@ -26,10 +25,12 @@ MCP NEVER APPROVES OR MERGES
 
 ## Lời thoại dự kiến
 
-“Finalize khóa bytes và digest để inspect chính xác. Human Accept tạo Local
-Draft nhưng ordinary query vẫn không thấy nó. Publish selected drafts tạo PR để
-team review bằng Git diff. Sau merge, explicit sync ghi nhận Published commit.
-MCP không approve và không merge.”
+“Finalize khóa bytes và digest để inspect chính xác. Người dùng xem thay đổi
+quan trọng rồi xác nhận Publish. Direct đẩy commit hoàn chỉnh và ghi nhận nó
+cho query; PR tạo pull request, chờ team merge rồi sync. Nếu remote đã nhận
+nhưng local chưa ghi nhận được, báo rõ và recovery, không nói publish thất bại
+hoàn toàn. MCP không tự approve hay merge PR, không tự chuyển policy khi bị từ
+chối. Workspace đang soạn vẫn riêng tư, không xuất hiện trong ordinary query.”
 
 ## Câu chuyển
 

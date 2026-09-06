@@ -76,7 +76,7 @@ one provider credential across Hub profiles.
 
 - **AB-INSTALL-025** — Every interactively selected client receives exactly
   thirteen released product skills named by `.agents/skills/README.md`: ten
-  public user-goal workflows including explicit context and visualization, and
+  public entry names including one Context compatibility entry and visualization, and
   three internal supporting workflows.
 - **AB-INSTALL-026** — A fixed allowlist is release authority; no skill outside
   the released product catalog is installed.
@@ -93,7 +93,8 @@ one provider credential across Hub profiles.
 - **AB-INSTALL-031** — Non-interactive setup remains preparation-only and never
   installs product skills or registers clients.
 - **AB-INSTALL-043** — Every released AgentBase skill disables Codex implicit
-  invocation. Public skill descriptions require the exact user-named skill;
+  invocation. Public skill descriptions require the exact user-named skill or
+  the explicitly approved, narrowly scoped handoff defined by `AB-USE-004..006`;
   internal skill descriptions require delegation from an already active
   explicitly invoked public AgentBase workflow. Ordinary repository work MUST
   NOT activate any AgentBase skill merely because the MCP or skills are

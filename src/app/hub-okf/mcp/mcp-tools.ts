@@ -375,15 +375,16 @@ export const HUB_OKF_TOOLS = [
     },
   },
   {
-    name: "accept_hub_okf_proposal",
-    description: "Accept exactly one reviewed proposal as a local AgentBase-Hub main commit without remote publication.",
+    name: "publish_hub_okf_proposal",
+    description: "Publish one exact reviewed proposal under the confirmed Hub policy: direct commit or PR. Requires explicit sharing confirmation; never accepts a separate Local Draft or merges a PR.",
     inputSchema: {
       type: "object",
       properties: {
         proposal_id: { type: "string", minLength: 1 },
         proposal_digest: { type: "string", pattern: "^sha256:[a-f0-9]{64}$" },
+        publication_mode: { type: "string", enum: ["direct", "pr"] },
       },
-      required: ["proposal_id", "proposal_digest"], additionalProperties: false,
+      required: ["proposal_id", "proposal_digest", "publication_mode"], additionalProperties: false,
     },
   },
   ...HUB_OKF_QUERY_TOOLS,
@@ -448,24 +449,6 @@ export const HUB_OKF_TOOLS = [
         answer: { type: "string", minLength: 1, maxLength: 4096 },
         maintainer: { type: "string", pattern: "^human:[A-Za-z0-9][A-Za-z0-9._@-]{0,127}$" },
       }, required: ["question_id", "question_revision", "answer", "maintainer"], additionalProperties: false,
-    },
-  },
-  {
-    name: "list_pending_hub_okf",
-    description: "List ordered accepted local proposal commits not yet admitted in the remote target branch.",
-    inputSchema: { type: "object", properties: {}, additionalProperties: false },
-  },
-  {
-    name: "submit_hub_okf_proposals",
-    description: "Publish selected accepted proposals as independent Repository Init PRs or same-Repository Init/Refresh PR chains, using MCP's dedicated Hub credential.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        proposal_ids: {
-          type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: 100,
-        },
-      },
-      required: ["proposal_ids"], additionalProperties: false,
     },
   },
   {

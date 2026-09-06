@@ -75,7 +75,7 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
       [...HUB_OKF_TOOLS, ...OKF_SCHEMA_TOOLS, ...SAFE_TOOLS].map((tool) => tool.name),
     );
     const toolNames = tools.tools.map((tool) => tool.name);
-    assert.equal(toolNames.length, 46);
+    assert.equal(toolNames.length, 44);
     assert.equal(tools.tools.every((tool) => tool.annotations
       && typeof tool.annotations.readOnlyHint === "boolean"
       && typeof tool.annotations.destructiveHint === "boolean"
@@ -100,14 +100,14 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
     });
     assert.deepEqual(Object.keys(tools.tools.find((tool) => tool.name === "search_hub_okf")?.inputSchema.properties ?? {}).sort(),
       ["domain", "global", "limit", "query", "types"]);
-    assert.deepEqual(tools.tools.find((tool) => tool.name === "accept_hub_okf_proposal")?.annotations, {
-      readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false,
-    });
+    assert.equal(toolNames.includes("accept_hub_okf_proposal"), false);
+    assert.equal(toolNames.includes("submit_hub_okf_proposals"), false);
+    assert.equal(toolNames.includes("list_pending_hub_okf"), false);
     assert.deepEqual(tools.tools.find((tool) => tool.name === "prepare_hub_profile_migration")?.annotations, {
       readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false,
     });
-    assert.deepEqual(tools.tools.find((tool) => tool.name === "submit_hub_okf_proposals")?.annotations, {
-      readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true,
+    assert.deepEqual(tools.tools.find((tool) => tool.name === "publish_hub_okf_proposal")?.annotations, {
+      readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true,
     });
     for (const graphTool of tools.tools.filter((tool) => tool.name !== "index_repository"
       && (SAFE_TOOL_NAMES as readonly string[]).includes(tool.name))) {
@@ -349,7 +349,7 @@ test("[AB-MCPMOD-007..011] capability policy filters composition without changin
     await client.connect(clientTransport);
     const tools = await client.listTools(undefined, { cacheMode: "bypass" });
     assert.equal(tools.tools.some((tool) => tool.name === "bootstrap_hub"), false);
-    assert.equal(tools.tools.length, 45);
+    assert.equal(tools.tools.length, 43);
     assert.equal(seen.some((tool) => tool.name === "search_hub_okf" && tool.capability === "hub"), true);
     assert.equal(seen.some((tool) => tool.name === "list_okf_schemas" && tool.capability === "schema"), true);
     assert.equal(seen.some((tool) => tool.name === "index_repository" && tool.capability === "graph"), true);

@@ -368,6 +368,9 @@ export function validateDiscoveryInventory(
     const lowerPriorityMissing = seed.groups.filter((group) => group.priority !== "p0"
       && missingOutcomeIds.includes(group.id)).length;
     const limitations = [...new Set([...seed.capture.limitations, ...inventory.limitations,
+      ...seed.lanes.flatMap((lane) => lane.status === "limited" ? [`${lane.lane}: ${lane.limitation}`] : []),
+      ...seed.groups.flatMap((group) => group.limitations.map((limitation) =>
+        `${group.lane} (${group.kind}, ${group.count} signals): ${limitation}`)),
       ...(lowerPriorityMissing ? [`${lowerPriorityMissing} lower-priority discovery group(s) lack an explicit outcome`] : []),
     ])].sort();
     return {

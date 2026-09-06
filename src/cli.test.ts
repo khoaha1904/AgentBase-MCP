@@ -40,7 +40,37 @@ test("abs help exposes only the small public surface", async () => {
   assert.match(output.join(""), /abs status/);
   assert.match(output.join(""), /abs hub connect/);
   assert.match(output.join(""), /abs hub sync/);
-  assert.doesNotMatch(output.join(""), /okf|benchmark|proposal|mcp/);
+  assert.match(output.join(""), /abs hub policy/);
+  assert.match(output.join(""), /abs hub publish/);
+  assert.doesNotMatch(output.join(""), /okf|benchmark|mcp/);
+});
+
+test("[AB-DIRECT-008] public Publish binds confirmation and reports split outcomes without Accept", async () => {
+  const env = environment();
+  try {
+    let calls = 0;
+    const args = ["hub", "publish", "--proposal", "a".repeat(24), "--digest", `sha256:${"b".repeat(64)}`, "--mode", "direct"];
+    const output: string[] = [];
+    for (const remote of ["published", "unknown"] as const) {
+      for (const local of ["recognized", "pending"] as const) {
+        const code = await executeCli(args, actions(), { environment: env, writeOutput: (s) => output.push(s),
+          publishHub: async (input, environment) => {
+            calls += 1;
+            assert.equal(environment, env);
+            assert.deepEqual(input, { proposalId: "a".repeat(24), diffDigest: `sha256:${"b".repeat(64)}`, mode: "direct" });
+            return { proposalId: input.proposalId, commit: "c".repeat(40), remote, local };
+          } });
+        assert.equal(code, remote === "published" && local === "recognized" ? 0 : 1);
+      }
+    }
+    assert.equal(calls, 4);
+    for (const bad of [args.slice(0, -2), [...args.slice(0, -1), "invalid"], [...args, "--mode", "direct"]]) {
+      assert.equal(await executeCli(bad, actions(), { environment: env, writeError: () => {}, publishHub: async () => {
+        throw new Error("must not execute malformed Publish");
+      } }), 1);
+    }
+    assert.match(output.join(""), /unknown/);
+  } finally { fs.rmSync(env.AGENTBASE_HOME!, { recursive: true, force: true }); }
 });
 
 test("abs status and sync dispatch bounded owner actions", async () => {

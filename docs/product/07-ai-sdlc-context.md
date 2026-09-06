@@ -8,6 +8,23 @@
 > while G3-C3 real-model usefulness qualification is deferred and does not
 > block the current internal enterprise release.
 
+## Accepted composition target — Group 8
+
+G8-C1 is implemented and verified: use the single explicit
+AgentBase entry defined in [Query and context](05-query-and-context.md#accepted-unified-use-target--group-8)
+for both standalone answers and support within an active primary workflow.
+The `agentbase-context` invocation remains a compatibility entry, not a
+required choice. G8-C2 scoped repair handoff is implemented and verified for
+the current scope. Preserve host-workflow
+ownership, read-only defaults and source-access boundaries.
+
+A concrete knowledge gap discovered during use may offer an owner-approved
+repair handoff under that contract. It never silently ingests a Feature, Task
+or generated answer. Technical knowledge helps stakeholders ask better
+questions; existing implementation alone does not establish business intent,
+customer commitments or desired policy. The product promise is known impact
+and next checks, not exhaustive impact or autonomous requirement approval.
+
 ## Outcome
 
 AgentBase supplies concise, sourced system context to external AI workflows
@@ -39,19 +56,20 @@ evidence boundary, not a gate or claim for the current release.
 
 ## Manual, on-demand context
 
-The first released composition is explicit: the user invokes
-`$agentbase-context` beside the primary workflow skill when Published system
+Composition is explicit: the user invokes
+`$agentbase-query` beside the primary workflow skill when Published system
 context is wanted. For example:
 
 ```text
-$fpt-discover $agentbase-context Clarify this Feature into User Stories ...
+$fpt-discover $agentbase-query Clarify this Feature into User Stories ...
 ```
 
 The primary workflow still owns its lifecycle and final deliverable;
-`agentbase-context` contributes only bounded evidence. It does not prefetch the
+AgentBase contributes only bounded evidence. It does not prefetch the
 entire Hub, push unsolicited context or create a prepared context store.
-The standalone `agentbase-query` workflow must not substitute for this explicit
-modifier or take over the primary workflow's output.
+The same entry answers standalone questions when no primary workflow exists;
+it never takes over a primary workflow's output. Existing `agentbase-context`
+invocations resolve the shared guidance without a separate read workflow.
 
 Returned context prioritizes:
 
@@ -165,8 +183,9 @@ clean, committed immutable comparison artifact with pinned inputs, both arms,
 quality/cost results and machine-readable owner disposition. Product summaries
 must not describe pending or uncommitted evidence as accepted release proof.
 
-The accepted first productization step is one small, explicit-only integration
-skill backed by the qualified one-search profile. Automatic invocation from a
+The original productization used an explicit-only integration skill backed by
+the qualified one-search profile. G8-C1 consolidates installed read guidance;
+it does not reinterpret historical qualification results. Automatic invocation from a
 host workflow requires separate evidence and owner approval. Productization
 does not require a Hub schema migration or ownership of an external workflow.
 
@@ -193,8 +212,8 @@ regression, and one positive fixture never authorizes automatic invocation.
 - Produce diagrams that have no named decision in the current AIT phase.
 - Automatically invoke AgentBase from an external discovery workflow in this
   release.
-- Route an explicitly selected discovery or planning deliverable through the
-  standalone AgentBase question workflow.
+- Replace an explicitly selected discovery or planning deliverable with an
+  AgentBase report.
 
 ## Downstream Capability Contract
 

@@ -7,7 +7,7 @@ import test from "node:test";
 
 import { createHubIdentity, createLocalHubState, HUB_PROPOSAL_TRAILERS } from "../../../core/hub/index.ts";
 import { GitHubHubApi, type GitRequest, type GitHubPullRequest } from "../../../providers/github-hub/index.ts";
-import { publishPendingHubProposals, type PublishGitHub } from "./publish.ts";
+import { publishPendingHubProposals, type PublishGitHub } from "./test-support.ts";
 import { synchronizeLocalHub } from "./synchronize.ts";
 import { recoverSynchronizationTransaction } from "./recovery.ts";
 import {

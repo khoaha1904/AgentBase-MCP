@@ -1,4 +1,4 @@
-# Slide 12 — Hai chế độ duy trì knowledge
+# Slide 12 — Update knowledge: thay đổi và phần còn thiếu
 
 ## Vai trò của slide
 
@@ -6,30 +6,29 @@ Giải thích freshness và khả năng bổ sung phần ingest còn thiếu.
 
 ## Thông điệp duy nhất
 
-Delta Refresh giữ knowledge theo thay đổi mới; bounded Coverage Refresh phục hồi
-knowledge còn mỏng mà không tạo một workflow thứ ba.
+Bạn nói muốn cập nhật hay bổ sung điều gì; AgentBase chọn phạm vi điều tra phù
+hợp trong cùng Update knowledge.
 
 ## Nội dung hiển thị
 
 ```text
-DELTA REFRESH                     COVERAGE REFRESH
-exact Git delta                  re-check weak/sparse coverage
-fast default                     explicit recovery mode
-new and changed evidence         may run with unchanged source
+UPDATE KNOWLEDGE
+Cập nhật thay đổi                Bổ sung phần thiếu
+Theo Git delta                   Điều tra lại có giới hạn khi được yêu cầu
+Mặc định                         Source không đổi vẫn bổ sung được
 
-coverage_passes: 0 -> 1 -> 2 -> 3 max
-clean no-new-knowledge pass -> stop early
+Giữ rõ phần chưa kiểm tra · xem preview trước Publish
 
 Freshness warns · user starts · absence != deletion evidence
 ```
 
 ## Lời thoại dự kiến
 
-“Default vẫn là Delta Refresh trên exact Git delta. Nhưng nếu ingest đầu còn
-mỏng, Coverage Refresh có thể điều tra lại phạm vi yếu kể cả khi source chưa đổi.
-Coverage debt được nhìn thấy, campaign dừng sớm khi một pass sạch không tìm ra
-knowledge mới và tối đa ba reviewed passes. Đây là recovery bounded, không phải
-cam kết completeness.”
+“Repo mới thì Add repository; repo đã có thì Update knowledge. Bạn không cần
+chọn thuật ngữ kỹ thuật: cập nhật source dùng Delta; yêu cầu bổ sung kiến thức
+thiếu dùng Coverage có giới hạn, kể cả source không đổi. Phần chưa kiểm tra được
+giữ lại để lần sau tiếp tục. Không tự đọc cloud hay Publish. Ba lượt chỉ là giới
+hạn chi phí, không chứng minh đã đủ kiến thức; cũng không tự chạy ba lượt.”
 
 ## Câu chuyển
 

@@ -40,6 +40,7 @@ src/app/
     provider/                     isolated provider workspace
     workflow/                     orchestration and recovery
   hub-okf/                        local Hub lifecycle and publication
+    runtime-actions.ts            Hub-wide action composition for CLI/MCP
     configuration/                settings and credentials
     workspace/                    checkout, setup and bootstrap
     authoring/                    proposals, refresh and Questions
@@ -65,6 +66,21 @@ The source layout is the ownership registry. Do not create a duplicate
 ownership manifest or speculative `common`, `utils` or `helpers` owner. Split
 only responsibilities with independent reasons to change; file size, density,
 line length and import count are not architecture boundaries.
+
+Within Hub authoring, `authoring-session.ts` owns session persistence and the
+ordered Prepare/Finalize lifecycle. `authoring-validation.ts` owns source and
+structural-reachability checks; `receipt-materialization.ts` owns Receipt-bound
+embedded knowledge, materialization checks, inspection context and initial
+coverage debt. These internal modules accept narrow data contexts and never
+import the session orchestrator. The existing application entrypoints, state
+format, validation order and recovery/publication boundaries stay unchanged.
+The adjacent lifecycle and Receipt tests exercise the same public session API.
+
+`hub-okf/runtime-actions.ts` composes Hub configuration, authoring, query,
+enrichment and publication actions. It belongs at the Hub application root,
+not under Query; its public exports remain routed through `hub-okf/index.ts`.
+This placement changes no action API, source-snapshot state or admission order.
+Capability modules do not import this composition root in production.
 
 Group 2 adds no runtime service. `scripts/installation/` owns the stable
 launcher and local release transaction; `scripts/release/` owns maintainer/CI

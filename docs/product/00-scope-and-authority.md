@@ -3,6 +3,52 @@
 > Status: Product identity, authority, MVP scope and migration boundaries are
 > accepted and implemented unless an item is explicitly marked deferred.
 
+## Read selectively
+
+This page is not required startup context. Use the relevant section below;
+follow its linked owner rather than loading unrelated sections.
+
+- [Approved product simplification horizon](#approved-product-simplification-horizon)
+- [Outcome and ownership](#outcome-and-ownership)
+- [Durable team knowledge boundary](#durable-team-knowledge-boundary)
+- [Default deployment trust](#default-deployment-trust)
+- [AgentBase CLI boundary](#agentbase-cli-boundary)
+- [Accepted release and operating model](#accepted-release-and-operating-model)
+- [Current flow](#current-flow)
+- [Knowledge model](#knowledge-model)
+- [MCP protocol direction](#mcp-protocol-direction)
+- [Governance and authority](#governance-and-authority)
+- [Stable product requirements](#stable-product-requirements)
+- [Current non-goals](#current-non-goals)
+- [Accepted current limits](#accepted-current-limits)
+- [Accepted product design groups](#accepted-product-design-groups)
+- [Downstream Product Contracts](#downstream-product-contracts)
+
+## Approved product simplification horizon
+
+Groups 7–9 are implemented and verified for the current internal release.
+The current experience is:
+
+```text
+Add / update knowledge → private preparation → validate + preview → Publish
+Use knowledge → standalone answer or workflow context → optional scoped repair
+```
+
+Publish defaults to one complete direct remote commit where Hub policy and
+permissions allow; PR publication is an optional per-Hub policy. Private
+resumable preparation remains, but user-managed Local Draft acceptance is no
+longer required. One Publish confirmation approves sharing the exact prepared
+change. It neither certifies semantic completeness nor authorizes future
+unattended updates.
+
+The owning decisions are [Knowledge lifecycle](03-knowledge-lifecycle.md#accepted-simplification-target--group-7)
+and [Query and context](05-query-and-context.md#accepted-unified-use-target--group-8).
+Trusted-enterprise access, source provenance, deterministic validation,
+Published-only query, explicit provider scope and recoverable Git history remain.
+Do not replace Git/Markdown, the graph engine, schema/layout or visualization
+to deliver this horizon. Automatic publication, continuous whole-Hub refresh,
+mandatory AI review and broad new provider integration are not approved work.
+
 ## Outcome and ownership
 
 AgentBase has two products:
@@ -26,7 +72,7 @@ Code Graph/source investigation after Hub context identifies the relevant scope.
 AgentBase is a Git-native knowledge publishing system for a team, not a general
 living-context database. A team connects a bounded set of repositories to one
 Hub and improves that Hub over time through Ingest, Refresh, Questions, Domain
-Enrichment and ordinary pull-request review.
+Enrichment and explicit policy-bound Publish.
 
 Repository graphs, provider reads and source investigation are rebuildable
 inputs. Their useful conclusions are reduced into consistent, human-readable
@@ -72,13 +118,20 @@ policy later without changing the knowledge model or normal workflows.
 
 The CLI is the small owner control surface, not a second API for every MCP
 workflow. Its product name is `abs`; OKF remains the shared knowledge-format
-standard. The public MVP intentionally exposes only:
+standard. The baseline public MVP exposes:
 
 ```text
 abs status                         read local AgentBase state
 abs hub connect --url ... --branch ...  select/validate one Hub
 abs hub sync                       explicitly pull the active Hub
 ```
+
+Group 7 adds `abs hub policy [--mode direct|pr]` for visible per-Hub policy
+and `abs hub publish --proposal <id> --digest <digest> --mode direct` for
+explicit exact-content publication. CLI also accepts `--mode pr`, and MCP uses
+the same policy-bound Publish. Accept/pending/submit public actions are removed.
+Production legacy helpers are retired; candidate cleanup and retry recovery
+are implemented without migrating old test work.
 
 Group 2 adds three owner lifecycle commands after its downstream contracts and
 implementation are complete:
@@ -93,7 +146,7 @@ Initial installation remains the release bundle's `install.sh`. Automatic
 update discovery, a background updater and a release-coordination service are
 not part of this group.
 
-Ingest, Refresh, Enrichment, Query, Questions, Accept, Publish, benchmark and
+Ingest, Refresh, Enrichment, Query, Questions, Publish, benchmark and
 recovery are selected by product skills/MCP or developer verification. The
 technical `mcp` launcher and legacy `okf` routes remain hidden compatibility
 paths so client registration and existing automation are not broken.
@@ -105,14 +158,14 @@ AgentBase never writes a secret into Hub knowledge or accepts one through model
 content. Connect and sync remain separate workflow boundaries.
 
 A user can investigate source through a disposable local graph, turn bounded
-evidence into a reviewed OKF proposal, accept it as Local Draft and later
-publish selected pending commits through a pull request. Ordinary Hub query
+evidence into a private OKF proposal, review its material changes and explicitly
+Publish through the configured Direct/PR policy. Ordinary Hub query
 reads only synchronized Published knowledge.
 
 Installation selects no Hub and Code Graph never requires one. OKF authoring and
 Hub query require an explicitly configured remote profile identified by exact
 GitHub host, repository and target branch. Each profile keeps independent
-Published/Draft state while one profile is active; credential resolution remains
+Published/private-proposal state while one profile is active; credential resolution remains
 the responsibility of the configured enterprise or local provider. Changing
 the active Hub never merges or copies knowledge between profiles.
 
@@ -173,9 +226,8 @@ source repository
   -> normalize bounded provenance-bearing observations
   -> author a rich Repository dossier plus independently useful knowledge
   -> deterministic Finalize and explicit human review
-  -> accept into Local Draft
-  -> publish user-selected dependency-safe proposal units through MCP-owned PRs
-  -> after merge, synchronize and rebase remaining pending commits safely
+  -> explicit policy-bound Publish of one complete reviewed proposal
+  -> direct commit + local recognition, or external PR merge + explicit sync
   -> query synchronized Published knowledge
 ```
 
@@ -340,7 +392,7 @@ baseline after preview/confirmation.
 
 ## Accepted current limits
 
-- There is no backup or shared Local Draft; unpublished work remains local and
+- There is no backup or shared private preparation; unpublished work remains local and
   can be lost with the owning machine.
 - Refresh reads one repository and never treats absence as deletion evidence.
 - Batch Refresh and mixed Init/Refresh are deferred.
@@ -352,7 +404,7 @@ baseline after preview/confirmation.
   field-level ACL.
 - Structured infrastructure evidence currently supports Terraform/Terragrunt;
   SAM/CloudFormation and additional provider profiles are deferred.
-- Ordinary Hub query is Published-only. Local Draft exists for review.
+- Ordinary Hub query is Published-only. Private proposals exist for review.
 - The Published Hub graph and every search index are rebuildable read-only
   projections, not additional sources of truth.
 - Real model/provider qualification is opt-in evidence and is not required by
@@ -363,172 +415,34 @@ limit requires an explicit Product/Architecture/Capability Contract delta.
 
 ## Accepted product design groups
 
-These groups are the accepted order for closing current product-readiness gaps.
-Each group collects related decisions that may affect one another. The complete
-Product horizon is accepted first so a later group can still reshape an earlier
-Product decision before delivery makes that change expensive.
+Groups 1–9 are closed for the current internal release. The table records current
+outcomes, not an implementation backlog; Git retains the replaced designs.
 
-### Group 1 — Authority and trust
+| Group | Current outcome | Contract owner |
+|---|---|---|
+| 1 — Authority and trust | Trusted enterprise; readable per-workflow source scope; shared enterprise credential | [Trust](04-trust-conflicts-and-freshness.md) |
+| 2 — Release and operations | Immutable Linux x64 artifact, transactional lifecycle, profile locks and CI qualification | [Release](../capabilities/12-version-scope/10-release-artifact-requirements.md) |
+| 3 — Usefulness | Freshness and semantic-impact preview; real-model/longitudinal proof deferred | [AI SDLC](07-ai-sdlc-context.md) |
+| 4 — Interoperability | Profile 1.0, Domain homes, cross-home participation and reviewed migration; scale unqualified | [Knowledge model](02-knowledge-model-and-relations.md) |
+| 5 — Compact knowledge | Rich Repository dossiers, type-neutral knowledge and no activity logs; AI admission deferred | [Understanding](01-repository-understanding.md) |
+| 6 — Hardening | Delta/Coverage recovery, visible debt and governed skill/tool surface | [Refresh](../capabilities/09-ingest-and-refresh/02-refresh-and-change-detection.md) |
+| 7 — Publish | Private preparation, material preview, explicit Direct/PR Publish and recovery; no Accept | [Lifecycle](03-knowledge-lifecycle.md) |
+| 8 — Use and repair | Unified read entry; approved scoped repair; host workflow keeps ownership | [Query](05-query-and-context.md) |
+| 9 — Add and Update | Existing Ingest/Refresh commands expose two user intentions; provider reads require separate approval | [Lifecycle](03-knowledge-lifecycle.md) |
 
-**Group status:** Closed across Product, Architecture, Capability,
-implementation and verification.
+### Horizon close and presentation
 
-- **Current → Target:** The deployment trust model is implicit, while proposed
-  hardening would add persistent source admission and per-action grants to every
-  environment. Make trusted enterprise the explicit default: select readable
-  repositories per workflow, use configured enterprise identities, retain
-  review/state boundaries and keep one Hub as one read trust zone. Reserve a
-  stable policy boundary for a future hardened/public profile.
-- **Benefit → Impact:** Internal teams can change repositories and use normal
-  workflows without repeated security setup, while later hardening need not
-  replace the knowledge model or workflow contracts. The default inherits the
-  operator's machine/network/provider access and must not be exposed as a safe
-  public or hostile-client service; separate audiences still require separate
-  Hubs.
+No new feature, mandatory AI critic or benchmark campaign is required to close
+this implementation. Markdown and standalone presentation HTML describe the
+delivered workflow. Final source publication still requires the clean exact-tag
+CI/artifact gate, not merely a local test pass.
 
-### Group 2 — Release and operations
-
-**Group status:** Closed across Product, Architecture, Capability,
-implementation and verification. The deterministic `linux-x64` release
-artifact, stable-launcher application lifecycle, client/skill integration,
-release-CI evidence and local/Git concurrency capabilities are implemented.
-
-- **Current → Target:** Replace checkout-coupled `0.0.0` installation and
-  primarily local verification with immutable versioned releases, a stable
-  launcher, transactional install/upgrade/uninstall with rollback, required CI,
-  manifest/checksum/SBOM evidence and requirement-to-test traceability. Permit
-  one local writer per Hub profile and use Git PR/rebase for team concurrency;
-  add no central AgentBase server.
-- **Benefit → Impact:** Releases become reproducible, supportable and recoverable
-  while Git remains the shared concurrency mechanism. Installer storage, client
-  registration, skills, artifacts and compatibility handling change; existing
-  installations migrate once, and concurrent Hub edits may require rebase and
-  re-review.
-
-### Group 3 — Knowledge usefulness and product proof
-
-**Group status:** Closed for the current internal enterprise release scope.
-G3-C1 uniform freshness and G3-C2 proposal semantic impact are implemented and
-verified. G3-C3 real-model usefulness qualification is explicitly deferred and
-is not a release gate. The accepted campaign design remains current for later
-use, but this release makes no generalized benchmark-proven usefulness claim.
-
-- **Current → Target:** Useful results are qualified mainly in one Crawler
-  Domain, while freshness visibility, proposal review effort, stewardship cost,
-  retrieval omissions and onboarding value remain partially measured. Replace
-  this with one explicit cross-repository impact/requirement-clarification wedge
-  qualified across different Domains, a monorepo and a longitudinal Refresh,
-  with a uniform freshness envelope and bounded proposal impact preview.
-- **Benefit → Impact:** This proves where AgentBase creates repeatable value and
-  exposes its maintenance cost before broader adoption. Evidence may invalidate
-  current query limits, knowledge scope, default workflow assumptions or a
-  proposed feature; Benchmark and presentation repositories must keep clean,
-  explicit authority roles.
-
-### Group 4 — Scale and interoperability
-
-**Group status:** G4-C1 through G4-C7 are implemented and verified. Profile 1.0
-admission, grouped-home authoring, lifecycle/query/visualization projection,
-semantic impact, Profile-aware Enrichment, reviewed migration and final common
-mutation admission now form one closed internal enterprise release boundary.
-Capacity and real-model qualification remain explicitly deferred.
-
-- **Current → Target:** Replace the type-first Hub layout and one-primary-Domain
-  rule with a Domain Capsule layout: every document has one physical home under
-  `domains/<slug>/` or `shared/`, while evidenced relations may cross Domains
-  and one Repository may contribute to several. Define AgentBase OKF Profile
-  1.0, retain base-OKF validity and keep one-Hub trust zones, lexical retrieval
-  and the current AWS profile until measured evidence requires expansion.
-- **Benefit → Impact:** This gives consumers an honest compatibility boundary
-  and makes Domain ownership, browsing and future extraction visible in Git.
-  Paths, concept IDs, links, indexes, validation, authoring, query and
-  visualization change. Current Crawler knowledge is test data and may be reset
-  and re-ingested instead of receiving a compatibility migration; real Hub data
-  still requires a reviewed migration and recovery path. Fine-grained ACL,
-  federation, automatic invocation, semantic retrieval and broader provider
-  expansion remain evidence-gated. Capacity benchmarking is deferred; releases
-  keep `qualified_scale: null` and make no 100-repository/25-Domain/10,000-
-  document/50,000-relation performance claim until a later explicit campaign.
-
-### Group 5 — Compact knowledge and semantic ingest quality
-
-**Group status:** G5-C1 compact Profile 1.0 layout and dossier authoring are
-implemented and verified. Group 5 is closed for the current internal enterprise
-release.
-G5-C2 semantic quality admission is deferred, inactive and not a release gate;
-it may resume only after observed ingest defects justify its workflow cost and
-the owner explicitly reopens Product review. Existing Profile 1.0 Hub contents
-are qualification data and may be reset and re-ingested; this decision
-authorizes no deletion of an owner-declared durable Hub.
-
-- **Current → Target:** The Domain Capsule boundary is correct, but its
-  type-relative directories and separate Domain document encourage many thin
-  concept files, while Repository activity directories look like repository
-  knowledge and contain only `log.md`. Initial Ingest validates evidence and
-  structure but can still Finalize a semantically shallow bundle. Keep the
-  Domain Capsule while reducing each home to a Domain `index.md`, rich
-  Repository dossiers, one type-neutral `knowledge/` collection and
-  lifecycle-owned `questions/`; remove Published activity logs. For the current
-  release, use existing deterministic validation plus explicit Inspect/Accept
-  review. A provider-neutral independent AI review remains optional operator
-  practice, not product workflow state or Finalize admission.
-- **Benefit → Impact:** Readers get fewer, denser documents and one useful
-  Repository view without turning the Hub into a source-tree mirror. Review can
-  catch missing boundaries, weak evidence, unusable retrieval and unjustified
-  thin concepts while the proposal is still repairable. Profile paths,
-  identities, navigation, authoring, CI, query and visualization change. The
-  deterministic validator, explicit owner review and Git publication authority
-  remain unchanged. No quality-packet, model-review, override or repair state
-  is added to the current release.
-
-### Group 6 — Release hardening
-
-**Group status:** G6-C1 Refresh recoverability and G6-C2 skill/tool surface
-governance are implemented and verified; Group 6 is closed for the current
-internal enterprise release. This group adds no provider, benchmark campaign,
-background service, semantic critic or publication lifecycle.
-
-- **G6-C1 — Refresh recoverability. Current → Target:** Normal Refresh can add
-  knowledge from changed source, known gaps and one small discovery pass, but a
-  semantic omission that created no Question/limitation has no dependable
-  recovery route. A bounded source delta may also report omitted paths while
-  advancing the Repository observation. Keep one public `agentbase-refresh`
-  workflow and one `prepare_hub_okf` tool, with `delta` as the default scope and
-  an explicit `coverage` scope for broad bounded re-investigation after a weak
-  Init, skill/model upgrade or owner concern. Partial delta or coverage records
-  one compact current coverage debt on the Repository. Coverage stops early
-  when a non-partial pass adds no knowledge; otherwise the debt permits at most
-  three owner-reviewed convergence passes before returning to Delta with any
-  remainder visible. Neither the cap nor either scope claims completeness or
-  treats absence as deletion evidence.
-- **G6-C1 — Benefit → Impact:** Teams can improve a sparse Hub without deleting
-  durable knowledge or pretending every Refresh rereads the repository. Delta
-  stays cheap; Coverage reuses the exact source and fresh graph cache, then
-  reads only evidence needed for broad candidates and known gaps. The existing
-  Refresh skill, Prepare input/session, Repository metadata, continuity and
-  focused tests change. No new skill, MCP tool, model service or quality packet
-  is introduced.
-- **G6-C2 — Skill/tool surface governance. Current → Target:** The release
-  exposes ten public skills, three internal skills and forty-six MCP tools. The
-  audit found no orphan tool or duplicate user outcome worth compatibility and
-  lifecycle risk: shared tools are deliberate primitives, while state-changing
-  Prepare/Finalize/Inspect/Accept boundaries remain explicit. Freeze this
-  release surface and require every advertised tool to be named by at least one
-  shipped workflow skill. Any added skill/tool needs explicit Product approval
-  or an accepted replacement/consolidation.
-- **G6-C2 — Benefit → Impact:** Operators and Agents see fewer overlapping
-  choices because ten outcome-level skills remain the entry surface, while tool
-  ownership and count drift become release-tested. No runtime route, tool schema
-  or installed skill is removed for cosmetic count reduction. Existing trusted
-  capability policy remains the extension point for narrower deployments. This
-  adds no capability, provider, benchmark or broad rewrite.
-
-Several groups may be under Product review in the same horizon. After the whole
-horizon is accepted, only one delivery group is active at a time. Its
-Architecture is revalidated against all Product decisions, then each affected
-Capability proceeds through contract, implementation and verification before
-the next Capability begins. The group closes/releases as one consistent outcome
-before delivery starts for the next group.
+A separately approved real-use session should use one bounded Domain to check
+whether agents retrieve useful context, expose important omissions and repair
+knowledge without excessive effort. Different-model routing and semantic quality
+are unqualified until exercised explicitly. No model run starts automatically.
+Linux x64 pilot readiness is not a claim of public/multitenant security, macOS
+qualification, general scale, completeness or measured ROI.
 
 ## Downstream Product Contracts
 

@@ -8,7 +8,7 @@ import {
   readRepositoryIdentityRecord, readRepositoryRefreshCoverage, repositorySourceResources, selectOkfConceptSchemas,
   type HubContinuityGap, type HubContinuityManifest,
   type InventoryReceipt,
-} from "../../../core/knowledge/index.ts";
+} from "../../core/knowledge/index.ts";
 import {
   createCandidateWorktree,
   GitHubApiError,
@@ -16,25 +16,24 @@ import {
   removeCandidateWorktree,
   resolveSourceSnapshot,
   type SourceSnapshot,
-} from "../../../providers/github-hub/index.ts";
-import { AwsCliAdapter, AWS_SQS_PROFILE, AWS_STS_PROFILE } from "../../../providers/aws-cli/index.ts";
-import { hubProfileId, type AdmittedLocalHubState } from "../../../core/hub/index.ts";
+} from "../../providers/github-hub/index.ts";
+import { AwsCliAdapter, AWS_SQS_PROFILE, AWS_STS_PROFILE } from "../../providers/aws-cli/index.ts";
+import { hubProfileId, type AdmittedLocalHubState } from "../../core/hub/index.ts";
 import {
   discoverRepositorySourceChanges, discoverRepositorySourceState, resolveRepositorySourceRoot,
-} from "../../repository-okf/index.ts";
+} from "../repository-okf/index.ts";
 import {
   beginHubAuthoringSession, finalizeHubAuthoringSession, materializeInitialIngestSessionSkeletons,
   readHubAuthoringSession, validateHubAuthoringSession,
-} from "../authoring/authoring-session.ts";
-import { resolveProfileInitialIngestPlan, resolveProfileRefreshSubject } from "../authoring/profile-home-plan.ts";
-import { listHubQuestions } from "../authoring/questions.ts";
-import { acceptHubProposal } from "../review/accept.ts";
-import { resolveHubConfiguration, type OptionalHubConfiguration } from "../configuration/configuration.ts";
-import { migratePersistedHubConfiguration, readPersistedHubProfile } from "../configuration/configuration-file.ts";
-import { copyHubProfileToken, migrateHubProfileToken, removeHubProfileToken } from "../configuration/credential-file.ts";
-import { admitPersistentLocalHub } from "../workspace/local-hub.ts";
-import type { HubToolActions } from "../mcp/mcp-tools.ts";
-import { recoverSynchronizationTransaction } from "../publication/recovery.ts";
+} from "./authoring/authoring-session.ts";
+import { resolveProfileInitialIngestPlan, resolveProfileRefreshSubject } from "./authoring/profile-home-plan.ts";
+import { listHubQuestions } from "./authoring/questions.ts";
+import { resolveHubConfiguration, type OptionalHubConfiguration } from "./configuration/configuration.ts";
+import { migratePersistedHubConfiguration, readPersistedHubProfile } from "./configuration/configuration-file.ts";
+import { copyHubProfileToken, migrateHubProfileToken, removeHubProfileToken } from "./configuration/credential-file.ts";
+import { admitPersistentLocalHub } from "./workspace/local-hub.ts";
+import type { HubToolActions } from "./mcp/mcp-tools.ts";
+import { recoverSynchronizationTransaction } from "./publication/recovery.ts";
 import {
   buildActiveHubContinuity,
   inspectInitialIngestHubContext,
@@ -42,28 +41,28 @@ import {
   readPublishedHubConcept,
   projectPublishedHubDomain,
   searchPublishedHub,
-} from "./query.ts";
-import { prepareDiagramPacket } from "../visualization/diagram-packet.ts";
-import { buildStaticDomainSite } from "../visualization/domain-site.ts";
-import { agentBaseStorage, copyLegacyDirectory } from "../../local-storage/index.ts";
-import { readInReviewProposalIds, scanWorkspaceRepositories } from "./workspace-scan.ts";
-import { listPendingHubProposals } from "../review/pending.ts";
-import { publishPendingHubProposals } from "../publication/publish.ts";
-import { synchronizeLocalHub } from "../publication/synchronize.ts";
-import { attachExistingHub } from "../workspace/setup.ts";
-import { executeHubBootstrap, previewHubBootstrap } from "../workspace/bootstrap.ts";
-import { createReviewActions } from "../review/review-actions.ts";
-import { writeAtomicJson } from "../review/proposal-state.ts";
+} from "./query/query.ts";
+import { prepareDiagramPacket } from "./visualization/diagram-packet.ts";
+import { buildStaticDomainSite } from "./visualization/domain-site.ts";
+import { agentBaseStorage, copyLegacyDirectory } from "../local-storage/index.ts";
+import { readInReviewProposalIds, scanWorkspaceRepositories } from "./query/workspace-scan.ts";
+import { listPendingHubProposals } from "./review/pending.ts";
+import { publishConfiguredHubProposal } from "./publication/configured-publish.ts";
+import { synchronizeLocalHub } from "./publication/synchronize.ts";
+import { attachExistingHub } from "./workspace/setup.ts";
+import { executeHubBootstrap, previewHubBootstrap } from "./workspace/bootstrap.ts";
+import { createReviewActions } from "./review/review-actions.ts";
+import { writeAtomicJson } from "./review/proposal-state.ts";
 import {
   finalizeDomainEnrichment, prepareDomainEnrichment, readEnrichmentManifest, runDomainEnrichment,
-} from "../enrichment/index.ts";
+} from "./enrichment/index.ts";
 import {
   batchMemberId, confirmBatchIngest, finalizeBatchIngest, prepareBatchIngest,
   readBatchManifest, recordBatchMember, retryBatchMember, reviseBatchMembership,
   type BatchMember,
-} from "../batch-ingest/index.ts";
-import { initializeHub as executeHubInitialization, previewHubInitialization } from "../ci/upgrade.ts";
-import { finalizeProfileMigration, prepareProfileMigration } from "../migration/profile-migration.ts";
+} from "./batch-ingest/index.ts";
+import { initializeHub as executeHubInitialization, previewHubInitialization } from "./ci/upgrade.ts";
+import { finalizeProfileMigration, prepareProfileMigration } from "./migration/profile-migration.ts";
 
 export function defaultHubRuntimeStateRoot(): string {
   const target = agentBaseStorage().hubRuntime;
@@ -346,6 +345,7 @@ export function createHubRuntimeActions(
       return {
         kind: "remote",
         hub: { host: configuration.host, repository: configuration.repository, branch: configuration.targetBranch },
+        publication: { policy: configuration.publicationPolicy ?? "direct", modes: ["direct", "pr"] },
         local, credential, remote, open_pr_count: openPrCount,
         sync: recovery.length ? { state: "recovery-required", transaction_ids: recovery }
           : recoveryInventoryError ? { state: "blocked", detail: "recovery inventory is unavailable" }
@@ -716,15 +716,7 @@ export function createHubRuntimeActions(
       }));
     },
     ...createReviewActions(stateRoot, (proposalId) => proposalRoot(stateRoot, proposalId), () => admit(false, true)),
-    async accept(proposalId, proposalDigest) {
-      const localHub = await admit(false, true);
-      return acceptHubProposal({
-        stateRoot,
-        localHub,
-        proposalRoot: proposalRoot(stateRoot, proposalId),
-        expectedDiffDigest: proposalDigest,
-      });
-    },
+    async publish(input) { return publishConfiguredHubProposal(input, environment); },
     async search(query, options) {
       const localHub = await admit();
       return searchPublishedHub(localHub, query, options);
@@ -754,26 +746,6 @@ export function createHubRuntimeActions(
       try { return await executeHubInitialization({ stateRoot, localHub, token, github: new GitHubHubApi(configuration.hub, token) }, {
         baseCommit: input.expectedBase, initializationDigest: input.expectedInitializationDigest,
       }); } catch (error) { throw remoteFailure(error, token); }
-    },
-    async listPending() {
-      const localHub = await admit();
-      return listPendingHubProposals(localHub);
-    },
-    async submitMany(proposalIds) {
-      const configuration = configured(true);
-      if (configuration.kind !== "remote" || !configuration.hub) throw new Error("local-only Hub requires first bootstrap before normal publication");
-      const token = requireHubToken(configuration.token);
-      const github = new GitHubHubApi(configuration.hub, token);
-      const localHub = await admitPersistentLocalHub(configuration);
-      try {
-        return await publishPendingHubProposals({
-          stateRoot,
-          localHub,
-          selectedProposalIds: proposalIds,
-          token,
-          github,
-        });
-      } catch (error) { throw remoteFailure(error, token); }
     },
     async synchronize() {
       const configuration = configured(true);

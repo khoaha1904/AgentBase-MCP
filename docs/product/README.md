@@ -14,6 +14,33 @@ When implementation evidence conflicts with this contract, record the gap and
 route the product decision here before changing downstream contracts. Do not
 silently redefine product behavior in architecture, capability or source docs.
 
+## Find the decision
+
+| Question | Read | Owns |
+|---|---|---|
+| What is AgentBase, who is it for, and what can ship? | [Scope](00-scope-and-authority.md) | Business scope, trust profile, release limits |
+| What should ingest retain or omit? | [Understanding](01-repository-understanding.md) | Evidence, selective knowledge and completeness limits |
+| Where does knowledge belong and how is it connected? | [Model](02-knowledge-model-and-relations.md) | Domain, Repository, concept identity and placement |
+| How is knowledge added, updated and shared? | [Lifecycle](03-knowledge-lifecycle.md) | Authoring intentions, preview, Publish and recovery |
+| What do freshness, conflicts and human answers mean? | [Trust](04-trust-conflicts-and-freshness.md) | Uncertainty, snapshots and authority |
+| How should an agent use knowledge or request repair? | [Query](05-query-and-context.md) | Read routing, evidence and scoped handoffs |
+| What does a Domain site/graph prove? | [Visualization](06-visualization.md) | Read-only projections and non-claims |
+| What belongs to AgentBase versus the caller's workflow? | [AI SDLC](07-ai-sdlc-context.md) | Context composition and host ownership |
+
+Select one row; do not read all Product files. The mapping below links each
+outcome to its detailed Capability owners.
+
+## Current product
+
+Groups 1–9 are implemented for the bounded internal enterprise release.
+[Scope and authority](00-scope-and-authority.md) owns current limits and deferred
+evidence; there is no active product redesign backlog.
+
+- Add repository / Update knowledge prepare source-backed private proposals.
+- One material preview and explicit Publish use the Hub's Direct/PR policy.
+- One read entry supplies standalone answers or context inside the host workflow.
+- A concrete gap may lead to an explicitly approved repair, never implicit Publish.
+
 ## Product-first initiative gate
 
 Related changes that can affect the same user outcome, authority, data model or
@@ -80,9 +107,9 @@ configuration and documentation in many repositories. AgentBase helps AI find,
 verify and connect that knowledge into a shared map with clear sources.
 
 ```text
-Local/workspace source → private Code Graph + evidence → Local Draft
-                                                         ↓ review + PR
-                                                   Published Hub
+Local/workspace source → private Code Graph + evidence → private proposal
+                                                         ↓ preview + Publish
+                                                   Published Hub (Direct/PR)
 ```
 
 - Source and Code Graph answer exact current-implementation questions.
@@ -100,7 +127,7 @@ abs hub connect --url <repository-url> --branch <branch>
 abs hub sync
 ```
 
-Ingest, Refresh, Enrichment, Query, Questions, Accept and Publish are agent
+Ingest, Refresh, Enrichment, Query, Questions and Publish are agent
 workflows over skills/MCP rather than a long public command list. Every
 conclusion retains provenance; AgentBase does not automatically resolve
 conflicts or publish without explicit authorization.
@@ -114,7 +141,7 @@ conflicts or publish without explicit authorization.
 - **Relation:** an evidenced connection between concepts.
 - **Claim:** an assertion whose evidence/provenance identifies its support.
 - **Question:** an unresolved item retained for investigation or confirmation.
-- **Local Draft / Published:** accepted local proposal / synchronized merged Hub knowledge.
+- **Private proposal / Published:** unpublished preparation / complete remote knowledge recognized locally.
 - **Maintainer Guidance:** scoped human evidence for a Question or subject.
 
 ## Product Contracts and capability ownership

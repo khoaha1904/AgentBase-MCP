@@ -9,6 +9,18 @@
 > G5-C2 semantic-quality admission is deferred and is
 > not a current release requirement.
 
+## Accepted follow-up — Groups 7 and 9
+
+Publication follows the simplified
+[Knowledge lifecycle](03-knowledge-lifecycle.md#accepted-simplification-target--group-7).
+G9-C1 implements Add repository and Update knowledge in installed guidance;
+Initial Ingest, Delta and Coverage remain bounded internal strategies.
+Evidence selection, sparse promotion and source authority remain unchanged.
+Coverage's no-new-knowledge stop and three-pass cap bound effort, not proof of
+completeness. No mandatory semantic reviewer is part of this horizon; the
+required-review failure bullet in the baseline below is deferred, not an
+active admission requirement.
+
 ## Outcome
 
 AgentBase turns a repository into a selective, evidence-backed system overview.
@@ -59,6 +71,15 @@ Discovery is broad enough to expose important system, runtime, interface,
 integration and operational signals, but publication remains selective. Each
 important signal must have a visible outcome; repository-wide completeness and
 concept count are not success metrics.
+
+Discovery signals are a bounded map, not a completeness certificate. An empty
+heuristic result means not detected, not verified absent. File/entry limits,
+oversized admitted files and sampled evidence stay visible. Distinct evidenced
+runtime/entrypoint locations must remain individually accountable even when
+they eventually share one dossier; a directory alone does not prove a service.
+Initial Ingest carries unresolved discovery limits into the existing Repository
+coverage debt so later Refresh can recover them without re-ingesting or adding
+a reviewer, skill or quality-score subsystem.
 
 Every Initial Ingest produces a semantic coverage account over the exact
 discovery input. Applicable product/runtime boundaries, capabilities,
@@ -130,7 +151,7 @@ Questions retain a lifecycle-owned collection. Knowledge that fails independent
 promotion stays embedded in the dossier rather than receiving a thin file.
 
 For the current release, deterministic discovery coverage, evidence/Profile
-validation and explicit Inspect/Accept review remain the quality boundary. An
+validation and material-change preview before explicit Publish remain the quality boundary. An
 operator may ask a separate fresh-context agent to review an editable draft,
 but that advice creates no product state, Finalize gate, automatic repair or
 override path. A product-integrated semantic reviewer remains deferred until

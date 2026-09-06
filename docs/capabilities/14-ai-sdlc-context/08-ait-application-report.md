@@ -11,6 +11,21 @@
 > and [`AB-CONTEXT-*` requirements](02-runtime-requirements.md). Phase 3 remains
 > an owner-directed application hypothesis, not an accepted runtime workflow.
 
+## Read selectively
+
+This page is not required startup context. Use the relevant section below;
+follow its linked owner rather than loading unrelated sections.
+
+- [Purpose](#purpose)
+- [Executive assessment](#executive-assessment)
+- [Shared AgentBase flow](#shared-agentbase-flow)
+- [Phase 1 — Requirement Discovery](#phase-1--requirement-discovery)
+- [Phase 2 — Implementation](#phase-2--implementation)
+- [Phase 3 — Cross-repository investigation and onboarding](#phase-3--cross-repository-investigation-and-onboarding)
+- [Knowledge investment by value](#knowledge-investment-by-value)
+- [Recommended qualification order](#recommended-qualification-order)
+- [Product decision summary](#product-decision-summary)
+
 ## Purpose
 
 This report separates AIT use by the evidence available to the person doing the

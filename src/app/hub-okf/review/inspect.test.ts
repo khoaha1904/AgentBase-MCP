@@ -7,7 +7,7 @@ import test from "node:test";
 
 import { createHubProposal, createLocalOnlyHubState } from "../../../core/hub/index.ts";
 import { computeOkfTreeDigest, renderAgentBaseOkfProfileDocument } from "../../../core/knowledge/index.ts";
-import { acceptHubProposal } from "./accept.ts";
+import { acceptHubProposal } from "./test-support/accept.ts";
 import { renderPublicationReview } from "../publication/review-summary.ts";
 import {
   bindHubProposalInspection,

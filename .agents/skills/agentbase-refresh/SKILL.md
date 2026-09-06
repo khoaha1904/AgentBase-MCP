@@ -1,13 +1,33 @@
 ---
 name: agentbase-refresh
-description: Explicit-only AgentBase refresh. Use only when the user names $agentbase-refresh to refresh one existing Hub Repository contribution from an authorized checkout; never for ordinary repository reading, Batch, Domain Enrichment, publication, or provider enrichment.
+description: Explicit-only AgentBase Update knowledge. Use only when the user names $agentbase-refresh, enters from Add repository for the same approved existing repository, or approves a scoped Refresh handoff from AgentBase query; never infer it from ordinary reading or authorize publication/provider access.
 ---
 
-# Refresh one AgentBase repository
+# Update knowledge
 
-Produce either `no_change`, one reviewable partial/complete Local Draft, or an
-Incomplete result. Never Accept, publish, submit, synchronize, clone another
+Produce either `no_change`, one reviewable partial/complete private proposal, or an
+Incomplete result. Never publish, synchronize, clone another
 repository, or invoke provider CLI from this workflow.
+
+The installed command remains `$agentbase-refresh`. Users describe the desired
+update, not the internal strategy. Briefly explain the selection: source changes
+use Delta; requested missing-knowledge repair uses Coverage, even on unchanged
+source. Age, low concept count or retained debt alone does not authorize a broad
+pass. Neither strategy automatically updates other repositories.
+
+If a relation gap needs provider evidence, offer
+[Domain Enrichment](../agentbase-domain-enrichment/SKILL.md)
+for the named Published Domain and exact supported SQS candidates. Continue
+there only after explicit scope approval; its account, region and provider-
+session confirmations remain required. Unsupported evidence stays a limitation.
+Do not automatically combine Refresh and enrichment or treat an update request
+as permission for provider reads.
+
+An approved Query handoff supplies a concrete gap, subject and source scope.
+Revalidate them through normal Preflight; reuse exact evidence only when its
+identity/revision still matches. Approval grants preparation only. A changed Hub,
+Repository or broader required scope needs renewed agreement. Cancellation stops
+further work and preserves any private proposal without deletion or Publish.
 
 Use `delta` scope unless the owner explicitly asks to repair weak/sparse
 knowledge, rerun broad discovery, or refresh coverage after a skill/model/profile
@@ -22,7 +42,10 @@ This workflow uses `preflight_hub_ingest`, the tools named by
 ## Workflow
 
 1. Run `preflight_hub_ingest` for the exact local checkout. Continue only for
-   one existing canonical Repository match. Route a new match to Initial Ingest;
+   one existing canonical Repository match. For a new match, explain that it
+   must first be added and follow [Add repository](../agentbase-ingest/SKILL.md) for the same approved scope
+   without requiring another command. Do not prepare Refresh for a new match
+   or recursively retry conflicting identity results;
    ask the owner to resolve an ambiguous fork/mirror match. Use the returned
    exact Repository concept identity as the Refresh subject; never derive its
    Profile home from the checkout path or current source evidence.
@@ -80,15 +103,19 @@ This workflow uses `preflight_hub_ingest`, the tools named by
    otherwise inspect and review each proposal before the next pass. Stop after
    three non-converged passes, leave remaining debt visible for owner review and
    return ordinary work to Delta. The cap is not a completeness claim.
-6. Validate changed concepts once with the prepared `session_id` and perform at
-   most one content repair. Session-bound validation must pass before Finalize.
+6. When concept documents change, validate them once with the prepared `session_id`
+   and perform at most one content repair. That validation must pass before Finalize.
+   With no changed concepts, skip `validate_okf_changes` (it requires a non-empty
+   change set); do not invent edits or submit unchanged concepts. Finalize still
+   validates the normalized session bundle and runtime-materialized updates.
    Call `finalize_hub_okf_proposal` once with the complete `change_accounting`,
    Questions and any destructive `removals` bound to the final bytes. Every
    removal needs a bounded reason and exact existing current-Repository evidence
    resources. Corrections are ordinary edits; do not invent evidence to make a
    removal or materialized change outcome pass.
-7. Call `inspect_hub_okf_proposal`, then present `no_change` or the complete
-   grouped inspection. Stop before Accept.
+7. If Finalize returns `no_change`, report it without calling inspection. Otherwise
+   call `inspect_hub_okf_proposal` for the returned proposal and present the complete
+   grouped inspection. Stop before Publish.
 
 ## Recovery
 

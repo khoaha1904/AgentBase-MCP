@@ -11,7 +11,10 @@ import {
   type InventoryReceipt,
 } from "../../../core/knowledge/index.ts";
 import { runGit, type SourceSnapshot } from "../../../providers/github-hub/index.ts";
-import { createHubRuntimeActions } from "../query/runtime-actions.ts";
+import { createHubRuntimeActions } from "../runtime-actions.ts";
+import { agentBaseStorage } from "../../local-storage/index.ts";
+import { publishConfiguredHubProposal } from "../publication/configured-publish.ts";
+import { writeGlobalHubToken } from "../configuration/credential-file.ts";
 import { readPersistedHubConfiguration, replacePersistedHubConfiguration } from "../configuration/configuration-file.ts";
 import { createLocalHub } from "../workspace/setup.ts";
 import { createTestInventoryReceipt } from "../test-support.ts";
@@ -112,7 +115,7 @@ test("[AB-SCHEMA-057][AB-SCHEMA-060] one runtime keeps internal resources embedd
   }
 });
 
-test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-REFRESH-019..023] preparation renders one generic inspectable skeleton bundle and recoverable Refresh", async () => {
+test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-REFRESH-019..023][AB-USE-006] preparation renders one generic inspectable skeleton bundle and recoverable Refresh", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-initial-ingest-"));
   const source = path.join(root, "vehicle-events");
   const environment = { HOME: root, XDG_CONFIG_HOME: path.join(root, "config"), XDG_DATA_HOME: path.join(root, "data") };
@@ -128,7 +131,7 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     await runGit({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit", "-m", "fixture"],
       cwd: source, operation: "commit ingest fixture", commitTimestamp: "2026-08-21T00:00:00Z" });
 
-    const stateRoot = path.join(root, "state"), receipts = new Map<string, InventoryReceipt>();
+    const stateRoot = agentBaseStorage(environment).hubRuntime, receipts = new Map<string, InventoryReceipt>();
     const actions = createHubRuntimeActions(environment, stateRoot, {
       sourceSnapshotResolver: localSourceSnapshot,
       discoveryReceiptResolver: (id) => receipts.get(id),
@@ -141,6 +144,22 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     replacePersistedHubConfiguration(current, { ...current, kind: "remote", localHubId,
       host: hub.host, repository: hub.repository, targetBranch: hub.targetBranch }, environment, { retireExpected: true });
     await enableProfileHub(local.localRoot);
+    const remote = path.join(root, "publication-remote.git");
+    await runGit({ args: ["-c", "protocol.file.allow=always", "clone", "--bare", local.localRoot, remote], cwd: root, operation: "create isolated publication remote" });
+    writeGlobalHubToken("fixture-only", environment);
+    const publish = async (proposalId: string, diffDigest: string) => {
+      const result = await publishConfiguredHubProposal({ proposalId, diffDigest, mode: "direct" }, environment, {
+        git: (request) => {
+          const { token: _token, ...localRequest } = request;
+          return runGit({ ...localRequest,
+            args: ["-c", "protocol.file.allow=always", ...request.args.map((arg) => arg === hub.canonicalHttpsUrl ? remote : arg)] });
+        },
+      });
+      assert.equal(result.remote, "published");
+      assert.equal(result.local, "recognized");
+      assert.equal(fs.existsSync(path.join(stateRoot, "proposals", proposalId, "accepted.json")), false);
+      return result;
+    };
     const preflight = await actions.preflight(source) as {
       repository: { kind: string; repository: { id: string; displayName: string; remotes: string[]; rootCommits: string[] } };
       source_authority: { remote: string; default_branch: string; commit: string };
@@ -294,7 +313,10 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     assert.equal(finalized.inspection.applicable, true);
     assert.equal(finalized.inspection.coverage.partial, true);
     assert.deepEqual(finalized.inspection.coverage.limitations, ["runtime consumers were not present in this repository"]);
-    await actions.accept(finalized.proposal.id, finalized.proposal.diffDigest);
+    const initialPublication = await publish(finalized.proposal.id, finalized.proposal.diffDigest);
+    const correctionSubject = "domains/vehicle-data/repositories/vehicle-events.md";
+    const beforeCorrection = await actions.read(correctionSubject) as { commit: string; excerpt: string };
+    assert.doesNotMatch(JSON.stringify(beforeCorrection), /Refresh evidence confirms delivery ownership/);
     fs.appendFileSync(path.join(source, "README.md"), "\nThe publisher now exposes delivery ownership.\n");
     await runGit({ args: ["add", "README.md"], cwd: source, operation: "stage refresh fixture" });
     await runGit({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit", "-m", "refresh fixture"],
@@ -303,10 +325,16 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
       mode: "refresh", sourceRepository: source, subjectDirectory: "repositories/vehicle-events",
       signals: ["repository"],
     }) as { sessionId: string; bundleRoot: string; selectedSchemas: string[];
-      source: { commit: string }; sourceChanges: { paths: string[] } };
+      source: { commit: string }; sourceChanges: { paths: string[] };
+      continuity: { knownGaps: readonly { detail: string }[] } };
     assert.deepEqual(refresh.sourceChanges.paths, ["README.md"]);
+    assert.match(refresh.continuity.knownGaps.map((gap) => gap.detail).join("\n"), /runtime consumers were not present/);
     assert.deepEqual(refresh.selectedSchemas.sort(), ["Domain", "Flow", "Function", "Repository", "System"]);
     const repositoryPath = path.join(refresh.bundleRoot, "domains", "vehicle-data", "repositories", "vehicle-events.md");
+    const initialDebt = readRepositoryRefreshCoverage(parseConceptDocument(correctionSubject, fs.readFileSync(repositoryPath, "utf8")));
+    assert.equal(initialDebt?.coveragePasses, 0);
+    assert.equal(initialDebt?.omittedChangedPaths, 0);
+    assert.deepEqual(initialDebt?.limitations, receipt.coverage.limitations);
     fs.appendFileSync(repositoryPath, "\nRefresh evidence confirms delivery ownership.\n");
     await assert.rejects(actions.finalize(refresh.sessionId), /missing outcome for README\.md/);
     assert.equal(fs.existsSync(refresh.bundleRoot), true, "failed accounting keeps the session repairable");
@@ -327,9 +355,20 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     });
     const updatedRepository = refreshed.inspection.groups.updated.find((entry) => entry.path === "domains/vehicle-data/repositories/vehicle-events.md");
     assert.ok(updatedRepository?.after);
+    assert.deepEqual(readRepositoryRefreshCoverage(parseConceptDocument(updatedRepository.path, updatedRepository.after.content)), initialDebt,
+      "a complete Delta must preserve the Published Initial-Ingest discovery debt");
     assert.equal(readRepositoryObservedSource(parseConceptDocument(updatedRepository.path, updatedRepository.after.content))?.commit,
       refresh.source.commit);
-    await actions.accept(refreshed.proposal.id, refreshed.proposal.diffDigest);
+    // Preparation/inspection and a paused or cancelled conversation do not
+    // publish. Query remains on the old snapshot until a separate Publish call.
+    const privateCorrectionRead = await actions.read(correctionSubject) as { commit: string; excerpt: string };
+    assert.equal(privateCorrectionRead.commit, beforeCorrection.commit);
+    assert.equal(privateCorrectionRead.excerpt, beforeCorrection.excerpt);
+    assert.equal((await runGit({ args: ["rev-parse", "refs/heads/main"], cwd: remote,
+      operation: "verify private correction did not publish" })).stdout.trim(), initialPublication.commit);
+    assert.match(updatedRepository.after.content, /Refresh evidence confirms delivery ownership/);
+    await publish(refreshed.proposal.id, refreshed.proposal.diffDigest);
+    assert.match(JSON.stringify(await actions.read(correctionSubject)), /Refresh evidence confirms delivery ownership/);
 
     fs.mkdirSync(path.join(source, "bulk"));
     for (let index = 0; index < 129; index += 1) {
@@ -354,9 +393,9 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     assert.equal(partialCoverage?.status, "partial");
     assert.equal(partialCoverage?.omittedChangedPaths, 1);
     assert.equal(partialCoverage?.coveragePasses, 0);
-    assert.deepEqual(partialCoverage?.limitations, []);
+    assert.deepEqual(partialCoverage?.limitations, receipt.coverage.limitations);
     assert.equal(Number.isFinite(Date.parse(partialCoverage?.observedAt ?? "")), true);
-    await actions.accept(partialFinalized.proposal.id, partialFinalized.proposal.diffDigest);
+    await publish(partialFinalized.proposal.id, partialFinalized.proposal.diffDigest);
 
     fs.appendFileSync(path.join(source, "bulk", "file-000.ts"), "export const current = true;\n");
     await runGit({ args: ["add", "bulk/file-000.ts"], cwd: source, operation: "stage complete Delta fixture" });
@@ -374,7 +413,7 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     assert.ok(completeDeltaRepository?.after);
     assert.equal(readRepositoryRefreshCoverage(parseConceptDocument(
       completeDeltaRepository.path, completeDeltaRepository.after.content))?.omittedChangedPaths, 1);
-    await actions.accept(completeDeltaFinalized.proposal.id, completeDeltaFinalized.proposal.diffDigest);
+    await publish(completeDeltaFinalized.proposal.id, completeDeltaFinalized.proposal.diffDigest);
 
     const partialCoverageRefresh = await actions.prepare({
       mode: "refresh", refreshScope: "coverage",
@@ -393,8 +432,9 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
       partialCoverageRepository.path, partialCoverageRepository.after.content));
     assert.equal(retainedCoverage?.omittedChangedPaths, 1);
     assert.equal(retainedCoverage?.coveragePasses, 1);
-    assert.deepEqual(retainedCoverage?.limitations, ["runtime entrypoint coverage remained partial"]);
-    await actions.accept(partialCoverageFinalized.proposal.id, partialCoverageFinalized.proposal.diffDigest);
+    assert.deepEqual(retainedCoverage?.limitations,
+      ["runtime entrypoint coverage remained partial", ...receipt.coverage.limitations]);
+    await publish(partialCoverageFinalized.proposal.id, partialCoverageFinalized.proposal.diffDigest);
 
     const coverageRefresh = await actions.prepare({
       mode: "refresh", refreshScope: "coverage", coverage: { partial: false, limitations: [] },
@@ -420,7 +460,7 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     assert.equal(convergingCoverage?.coveragePasses, 2);
     assert.deepEqual(convergingCoverage?.limitations,
       ["Coverage Refresh found new knowledge; another bounded convergence pass is required."]);
-    await actions.accept(coverageFinalized.proposal.id, coverageFinalized.proposal.diffDigest);
+    await publish(coverageFinalized.proposal.id, coverageFinalized.proposal.diffDigest);
 
     const confirmingCoverage = await actions.prepare({
       mode: "refresh", refreshScope: "coverage", coverage: { partial: false, limitations: [] },
@@ -436,6 +476,6 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     assert.equal(readRepositoryRefreshCoverage(parseConceptDocument(
       confirmedRepository.path, confirmedRepository.after.content)), undefined);
     const status = await actions.status() as { local: { draft_count: number } };
-    assert.equal(status.local.draft_count, 6, "six accepted changes remain local; confirming Coverage Refresh is only a preview");
+    assert.equal(status.local.draft_count, 0, "six changes are Published; confirming Coverage Refresh is only a preview");
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });

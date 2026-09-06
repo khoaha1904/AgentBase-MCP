@@ -10,7 +10,11 @@ Read only the authorized repository root, in this order:
 Keep the read bounded to five files and 256 KiB total. Do not recursively scan
 docs and do not index the graph only to classify Domain.
 
-Present:
+Resolve identity first. For an existing canonical Repository, return to the
+Add entry's Update handoff without proposing a new home. Ambiguous identity
+stops for clarification. Only new repositories need the home plan below.
+
+Present for a new repository:
 
 - the canonical Repository resolution (`existing`, `new` or `ambiguous`);
 - proposed exact default Domain identity/title and whether it already exists;

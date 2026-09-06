@@ -20,6 +20,14 @@ Published/Draft state, MCP tools and lifecycle ownership remain unchanged.
 
 ## Public grammar
 
+Group 7 extends this grammar with `abs hub policy [--mode direct|pr]` and
+`abs hub publish --proposal <id> --digest <digest> --mode direct|pr` under
+[Direct publication](../11-review-and-publish/12-direct-publication-requirements.md).
+Policy selection never publishes. Publish rejects policy mismatch;
+CLI/MCP use the same Direct/PR entry. Hidden Accept/pending/submit routes are
+removed, not aliased. The exact digest comes from
+proposal inspection; executing Publish is confirmation to share those bytes.
+
 ```text
 abs --help
 abs status

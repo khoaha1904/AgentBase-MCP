@@ -138,6 +138,10 @@ test("[AB-RELEASE-001..011][AB-RELEASE-CI-008] builds and verifies an exact repr
   assert.equal(fs.existsSync(path.join(extracted, "vendor/codebase-memory/upstream")), false);
   assert.equal(fs.existsSync(path.join(extracted, "node_modules/@swc/core")), false);
   assert.equal(fs.existsSync(path.join(extracted, "src/cli.test.ts")), false);
+  for (const retired of ["review/accept.ts", "publication/publish.ts", "review/test-support.ts",
+    "review/test-support/accept.ts", "publication/test-support.ts"]) {
+    assert.equal(fs.existsSync(path.join(extracted, "src/app/hub-okf", retired)), false);
+  }
   assert.equal("devDependencies" in JSON.parse(fs.readFileSync(path.join(extracted, "package.json"), "utf8")), false);
   assert.deepEqual(fs.readdirSync(path.join(extracted, "vendor/codebase-memory/artifacts")), [target]);
 

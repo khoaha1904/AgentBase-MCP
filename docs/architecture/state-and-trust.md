@@ -91,10 +91,46 @@ deployment policy can be added later without entering the knowledge core:
 | Credential provider | Resolve credentials through the configured enterprise or local provider for the exact remote operation | Add managed identity, Vault or narrower target policy |
 | Capability policy | Make normal AgentBase workflows available within the trusted deployment | Filter tools/actions using authenticated deployment context |
 
-These boundaries do not replace lifecycle invariants. Finalize, Accept, Publish,
-external merge and Sync remain distinct correctness transitions in every
-deployment profile. The trusted profile adds no persistent source admission,
+These boundaries do not replace lifecycle invariants: Finalize, exact-content
+preview and explicit Publish remain required; PR policy adds external merge and
+Sync. There is no user-facing Accept step. The trusted profile adds no persistent source admission,
 separate capability activation or per-action security ticket.
+
+## Group 7 direct-publication boundary
+
+The approved target keeps private preparation and exact-content validation,
+but one Publish confirmation authorizes publication. The application-level
+direct-publication primitive is now reachable through a configured CLI entry;
+MCP and shipped skills now use the same Publish boundary. Review/Publish owns its profile-scoped transaction and
+reuses existing proposal inspection, Profile admission and Git transport.
+
+A candidate commit is built outside local `main`. A durable receipt records its
+exact identity before any remote write. A normal non-forced push to the exact
+configured branch is the shared authority transition; local Published recognition
+follows within the same operation. Remote success with failed local recognition
+is a split outcome, never reported as an unpublished change. Retries inspect
+remote ancestry before writing. Git remains authority; receipts only recover
+the operation. The slice refuses pending legacy changes and changed bases; it
+does not migrate them, rebase approved content, change Hub policy or merge PRs.
+
+Per-Hub policy is persisted locally as `direct` or `pr`, with an unset value
+resolving visibly to `direct` for CLI and MCP. PR mode shares candidate admission
+but opens one independent PR without advancing local main/Published. Policy changes use the Hub
+activation lock; configured publication holds that lock through completion,
+then nests the profile mutation lock. Policy changes alone never publish.
+Simplified MCP/skill and unified PR public cutover are implemented. The owner approves a pre-release clean break: retire the old
+Accept/Local Draft entrypoints and discard exactly identified old test work,
+without migration adapters or dual-lifecycle support. Cleanup must not alter
+Published commits, source checkouts or credentials. Private resumable authoring
+and direct-publication recovery remain required for new work. Optional PR
+policy belongs to the new workflow, not a retained legacy compatibility path.
+Old public entrypoints and production Accept/stacked-publication dependencies
+are removed. Historical helpers are isolated in release-excluded test support.
+The one-time authorized test-state disposal is complete and preserved Published.
+New candidate transactions record exact ownership before construction; retry
+rebuilds only a proven disposable candidate. Committed candidates are pinned
+in private Git refs before clean worktree removal. A cleanup failure is visible
+and retryable; small receipts/refs remain without a new garbage-collection service.
 
 ## Group 2 installation state
 

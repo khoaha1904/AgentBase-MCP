@@ -12,11 +12,11 @@ ra một truth source mới.
 ## Nội dung hiển thị
 
 ```text
-Search/filter -> focus relation -> inspect document/evidence
+System map / By repository -> select a connection -> inspect evidence
 
 Snapshot: Iroco2 qualification · Hub 040eb38df7fa
 AWS MOCK — provider identity is illustrative; relations cite source.
-Current compact Profile 1.0 UI
+Embedded resources visible · light/dark theme
 
 Domain Hub = presentation projection
 Authority = Published OKF + source citations
@@ -24,8 +24,11 @@ Authority = Published OKF + source citations
 
 ## Lời thoại dự kiến
 
-“Domain Hub là projection tĩnh của Published OKF. Người review có thể search,
-lọc, focus một hoặc hai hop rồi mở document và provenance. Screenshot này được
+“Domain Hub là projection tĩnh của Published OKF. System map ưu tiên kết nối;
+By repository nhóm theo nơi chứa source, không phải deployment boundary.
+Embedded resource bật sẵn; người xem có thể thu gọn, tìm node, bấm các card kết nối
+và đọc evidence. Theme chỉ đổi cách trình bày. Thiếu cạnh không chứng minh không
+có dependency. Screenshot này được
 build từ Published Iroco2 bằng compact Profile hiện tại sau deep refresh và một
 provider qualification mock; nó không phải claim về runtime production.
 Authority vẫn là Published OKF và exact source citation bên dưới.”
@@ -37,7 +40,8 @@ source có chọn lọc.”
 
 ## Nguồn
 
-- Public Iroco2 Domain-site screenshot and receipt at
-  https://khoaha1904.github.io/domain-hub/iroco2/ from Published Hub commit
-  `040eb38df7fa83ec771f1bef96d31d286338b020` (21 projected nodes, 26 edges; UI shows 20 non-Domain nodes and 6 runtime arrows).
+- Iroco2 System-map screenshot and receipt at
+  https://learn.khoa.cc/domain-hub-expanded-review/ from Published Hub commit
+  `040eb38df7fa83ec771f1bef96d31d286338b020` (System map: 15 visible nodes,
+  6 runtime arrows; By repository: 20 non-Domain nodes).
 - `docs/product/06-visualization.md`

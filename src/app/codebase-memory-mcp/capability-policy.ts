@@ -28,7 +28,6 @@ const READ_ONLY_HUB_TOOLS = new Set([
   "read_hub_okf_concept",
   "preview_hub_initialization",
   "list_hub_questions",
-  "list_pending_hub_okf",
 ]);
 
 const IDEMPOTENT_HUB_TOOLS = new Set([
@@ -39,7 +38,7 @@ const IDEMPOTENT_HUB_TOOLS = new Set([
   "preflight_hub_ingest",
   "prepare_hub_profile_migration",
   "initialize_hub",
-  "submit_hub_okf_proposals",
+  "publish_hub_okf_proposal",
   "synchronize_hub_okf",
   "recover_hub_okf",
 ]);
@@ -55,7 +54,7 @@ const OPEN_WORLD_HUB_TOOLS = new Set([
   "run_domain_enrichment",
   "preview_hub_initialization",
   "initialize_hub",
-  "submit_hub_okf_proposals",
+  "publish_hub_okf_proposal",
   "synchronize_hub_okf",
   "recover_hub_okf",
 ]);
@@ -75,7 +74,7 @@ export function agentBaseToolAnnotations(tool: AgentBaseToolReference): AgentBas
   }
   return {
     readOnlyHint: READ_ONLY_HUB_TOOLS.has(tool.name),
-    destructiveHint: tool.name === "accept_hub_okf_proposal",
+    destructiveHint: tool.name === "publish_hub_okf_proposal",
     idempotentHint: IDEMPOTENT_HUB_TOOLS.has(tool.name),
     openWorldHint: OPEN_WORLD_HUB_TOOLS.has(tool.name),
   };

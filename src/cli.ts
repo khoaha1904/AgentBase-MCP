@@ -9,6 +9,7 @@ import {
   executeHubCiCli, executeHubCli, tryCreateHubRuntimeActions,
   loadExactHubProfileToken, loadGlobalHubToken, readPersistedHubConfiguration,
   removeGlobalHubToken, writeGlobalHubToken, type HubToolActions,
+  hubPublicationPolicy, publishConfiguredHubProposal,
 } from "./app/hub-okf/index.ts";
 import { executeGraphBenchmarkCli, executeObservationCli, executeOkfCli, executeRealEvidenceCli } from "./app/repository-okf/index.ts";
 
@@ -18,9 +19,10 @@ type CliDependencies = Readonly<{
   writeOutput?: Writer;
   writeError?: Writer;
   promptToken?: (existing: string | undefined) => Promise<string>;
+  publishHub?: typeof publishConfiguredHubProposal;
 }>;
 
-const HELP = `AgentBase CLI\n\nUsage:\n  abs status\n  abs hub connect --url <repository-url> --branch <branch>\n  abs hub sync\n`;
+const HELP = `AgentBase CLI\n\nUsage:\n  abs status\n  abs hub connect --url <repository-url> --branch <branch>\n  abs hub sync\n  abs hub policy [--mode direct|pr]\n  abs hub publish --proposal <id> --digest <reviewed-digest> --mode direct|pr\n\nPublish confirms sharing the exact reviewed change.\n`;
 
 function sharedToken(environment: NodeJS.ProcessEnv): string | undefined {
   const current = loadGlobalHubToken(environment);
@@ -131,6 +133,42 @@ export async function executeCli(
       });
     } catch (error) {
       writeError(`AgentBase Hub connect failed: ${error instanceof Error ? error.message : "unknown failure"}\n`);
+      return 1;
+    }
+  }
+  if (command === "hub" && rest[0] === "policy") {
+    try {
+      const mode = rest[2];
+      if (rest.length !== 1 && (rest.length !== 3 || rest[1] !== "--mode" || (mode !== "direct" && mode !== "pr"))) {
+        throw new Error("Hub policy accepts only --mode direct|pr, or no arguments to inspect");
+      }
+      writeOutput(`${JSON.stringify(hubPublicationPolicy(environment, rest.length === 1 ? undefined : mode as "direct" | "pr"), null, 2)}\n`);
+      return 0;
+    } catch (error) {
+      writeError(`AgentBase Hub policy failed: ${error instanceof Error ? error.message : "unknown failure"}\n`);
+      return 1;
+    }
+  }
+  if (command === "hub" && rest[0] === "publish") {
+    try {
+      const values: Record<string, string> = {};
+      if (rest.length !== 7) throw new Error("Publish requires --proposal, --digest and --mode direct|pr");
+      for (let i = 1; i < rest.length; i += 2) {
+        const key = rest[i]!, value = rest[i + 1]!;
+        if (!["--proposal", "--digest", "--mode"].includes(key) || values[key]) throw new Error("invalid Publish arguments");
+        values[key] = value;
+      }
+      if (!/^[a-f0-9]{24}$/.test(values["--proposal"] ?? "")
+        || !/^sha256:[a-f0-9]{64}$/.test(values["--digest"] ?? "") || !["direct", "pr"].includes(values["--mode"] ?? "")) {
+        throw new Error("Publish requires an exact proposal ID, reviewed SHA-256 digest and --mode direct|pr");
+      }
+      const result = await (cliDependencies.publishHub ?? publishConfiguredHubProposal)({
+        proposalId: values["--proposal"]!, diffDigest: values["--digest"]!, mode: values["--mode"] as "direct" | "pr",
+      }, environment);
+      writeOutput(`${JSON.stringify(result, null, 2)}\n`);
+      return result.remote === "in-review" || (result.remote === "published" && result.local === "recognized") ? 0 : 1;
+    } catch (error) {
+      writeError(`AgentBase Hub Publish failed: ${error instanceof Error ? error.message : "unknown failure"}\n`);
       return 1;
     }
   }

@@ -30,7 +30,11 @@ Compact Profile placement and document density are owned by
   no MCP or network source after generation. Browser resource URLs bind the
   exact generator version and Published commit so one rendered page never mixes
   files from different builds.
-- **AB-VIS-008** — Domain sites expose all non-governance concept nodes except
+- **AB-VIS-008** — Domain sites make all non-governance concepts accessible via search/details.
+  System map is default: Repository cards/regions are omitted, embedded references
+  are visible by default with an explicit collapse toggle, and unconnected nodes remain in a separate
+  layout area. By repository retains source grouping, never deployment semantics.
+  The By repository view exposes all non-governance concept nodes except
   the selected page-context Domain, plus admitted embedded resource references,
   on first render, search, filters, 1–2
   hop focus, a right-side node-details drawer, text-only document overview, and
@@ -39,6 +43,10 @@ Compact Profile placement and document density are owned by
   its ordered step arrows rather than an isolated circular node. Selecting a
   System highlights its direct Published members without displaying hidden
   structural edges as runtime topology.
+  Search MUST present selectable results, a visible result bound and a no-match
+  state instead of auto-selecting its first match. Selection-dependent focus
+  actions MUST be disabled without a graph selection. Fit preserves filters and
+  positions; Reset view clears filtering/focus and restores generated positions.
 - **AB-VIS-009** — AgentBase adds at most one goal-level visualization MCP tool,
   two public skills and one internal renderer skill; no raw traversal/layout
   tools, database, watcher, daemon or live server are added.
@@ -75,7 +83,7 @@ Compact Profile placement and document density are owned by
 - **AB-VIS-019** — Projection bounds and deterministic ordering include derived
   embedded references and links. Malformed, generic or unresolved embedded rows
   are omitted without becoming unsupported topology.
-- **AB-VIS-020** — The static Domain site represents the selected Domain as page
+- **AB-VIS-020** — In By repository, the static Domain site represents the selected Domain as page
   context rather than a graph node. Each Repository concept renders as a compact
   selectable card inside a fixed labeled region; singly owned nodes appear
   inside while visibly labeled shared, multi-repository and external nodes
@@ -85,7 +93,7 @@ Compact Profile placement and document density are owned by
   Placement is deterministic and uses only Published relation endpoints;
   Repository and Domain documents remain inspectable without changing
   Published projection authority.
-- **AB-VIS-021** — Normal Domain-site nodes may be repositioned only within
+- **AB-VIS-021** — In By repository, normal Domain-site nodes may be repositioned only within
   their ownership zone. Repository cards and region boundaries remain fixed;
   regions never resize, and reset or reload restores the deterministic layout.
   Pan, zoom, selection, filters and focus remain interactive.
@@ -98,7 +106,7 @@ Compact Profile placement and document density are owned by
   the bounded runtime predicate set, and cites evidence resolved by the parent
   Published concept. Invalid rows are deterministically omitted with warnings
   and valid rows count toward projection bounds.
-- **AB-VIS-024** — A Domain site with three or more visible Repository regions
+- **AB-VIS-024** — In By repository, a Domain site with three or more visible Repository regions
   places them on a deterministic relation-aware ring with enough separation for
   their fixed bounds. Cross-Repository runtime arrows must not pass through an
   unrelated Repository region in the three-Repository qualification topology;

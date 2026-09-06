@@ -12,6 +12,7 @@ import type { ConfirmedDomain as BatchDomain } from "../../../core/knowledge/ind
 import type { ProfileMigrationMove } from "../migration/profile-migration.ts";
 
 export type HubToolActions = Readonly<{
+  publish(input: Readonly<{ proposalId: string; diffDigest: string; mode: "direct" | "pr" }>): Promise<import("../publication/direct-publish.ts").DirectPublicationResult>;
   status(): Promise<unknown>;
   configure(input: Readonly<{ repositoryUrl: string; targetBranch: string }>): Promise<unknown>;
   previewBootstrap(repositoryUrl: string, targetBranch: string): Promise<unknown>;
@@ -60,7 +61,6 @@ export type HubToolActions = Readonly<{
     manifestId: string; manifestRevision: number; answers: readonly EnrichmentAnswer[];
   }>): Promise<unknown>;
   inspect(proposalId: string): Promise<unknown>;
-  accept(proposalId: string, proposalDigest: string): Promise<unknown>;
   search(query: string, options?: HubSearchOptions): Promise<unknown>;
   read(relativePath: string): Promise<unknown>;
   visualize(input: Readonly<{
@@ -80,8 +80,6 @@ export type HubToolActions = Readonly<{
   answerQuestion(input: Readonly<{
     questionId: string; revision: number; answer: string; maintainer: string;
   }>): Promise<unknown>;
-  listPending(): Promise<unknown>;
-  submitMany(proposalIds: readonly string[]): Promise<unknown>;
   synchronize(): Promise<unknown>;
   recover(transactionId: string): Promise<unknown>;
 }>;

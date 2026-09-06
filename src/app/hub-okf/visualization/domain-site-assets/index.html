@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'sha256-pgvDUBa4IjFA2yuSJ2cqcyxmNYJMborsd0ORcRv9vw8='; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'">
   <title>AgentBase Domain Map</title>
   <link rel="stylesheet" href="assets/app.css?build=__AGENTBASE_BUILD_KEY__">
 </head>
@@ -15,27 +15,31 @@
         <h1 id="domain-title">Domain map</h1>
         <button id="domain-details" class="text-button" type="button">About this Domain</button>
       </div>
-      <div class="snapshot" id="snapshot"></div>
+      <div class="header-actions"><div class="snapshot" id="snapshot"></div><button id="theme-toggle" type="button" aria-pressed="false">Dark theme</button></div>
     </header>
     <section class="workspace">
       <aside class="controls" aria-label="Map controls">
-        <label class="search-label" for="search">Find knowledge</label>
+        <p class="eyebrow">Explore the domain</p>
+        <label>Map view<select id="map-view"><option value="system">System map</option><option value="repository">By repository</option></select></label>
+        <p id="map-explanation" class="hint">Recorded connections, not deployment boundaries. Repository documents stay in the list.</p>
+        <label class="search-label" for="search">Find a service, repository or resource</label>
         <input id="search" type="search" placeholder="System, repository, component…" autocomplete="off">
         <div class="control-grid">
-          <label>Type<select id="type-filter"><option value="all">All types</option></select></label>
           <label>Repository<select id="repository-filter"><option value="all">All repositories</option></select></label>
-          <label>Membership<select id="membership-filter"><option value="all">All</option><option value="primary">Primary</option><option value="boundary">Boundary</option></select></label>
+        </div>
+        <details class="view-options"><summary>Refine this view</summary>
+        <label class="toggle"><input id="embedded-toggle" type="checkbox" checked> Show embedded resources</label>
+        <div class="control-grid">
+          <label>Knowledge type<select id="type-filter"><option value="all">All types</option></select></label>
+          <label>Domain scope<select id="membership-filter"><option value="all">Include connected boundaries</option><option value="primary">Inside this domain</option><option value="boundary">Boundary endpoints</option></select></label>
         </div>
         <label class="toggle"><input id="flow-toggle" type="checkbox" checked> Show Flow steps</label>
-        <p class="section-label">Focus</p>
-        <div class="button-row">
-          <button id="focus-one" type="button">1 hop</button>
-          <button id="focus-two" type="button">2 hops</button>
-          <button id="reset" type="button">Reset layout</button>
-        </div>
-        <p class="hint">Drag the canvas to pan · drag nodes within their ownership zone · scroll to zoom · select a node to inspect it.</p>
-        <p class="hint">Profile details keep physical home, semantic participation and boundary roles separate.</p>
+        </details>
+        <p id="result-count" class="section-label" aria-live="polite"></p>
+        <div id="search-results" class="search-results" aria-label="Knowledge results"></div>
         <div id="stats" class="stats" aria-live="polite"></div>
+        <details class="view-options"><summary>How to read this map</summary>
+        <p class="hint">Regions group repositories. Arrows show recorded connections, not inferred topology. Select an item to read its evidence. Drag to pan; scroll to zoom.</p>
         <div class="legend" aria-label="Map legend">
           <span><i class="swatch system"></i>System</span>
           <span><i class="swatch repository"></i>Repository card and region</span>
@@ -44,8 +48,10 @@
           <span><i class="swatch runtime"></i>Runtime relation</span>
           <span><i class="swatch boundary"></i>Shared / External</span>
         </div>
+        </details>
       </aside>
       <section class="stage" aria-label="Interactive 2D Domain knowledge map">
+        <div class="map-toolbar"><span id="view-state">Domain overview</span><div><button id="fit" type="button">Fit map</button><button id="reset" type="button">Reset view</button></div></div>
         <div id="graph" role="img" aria-label="Published Domain concepts and accepted relations" tabindex="0"></div>
         <div id="fallback" class="fallback" hidden>
           <h2>Knowledge map unavailable</h2>
@@ -60,6 +66,10 @@
         <h2 id="detail-title">Choose a node</h2>
         <p id="detail-type" class="detail-type">Published concept details appear here.</p>
         <p id="detail-description" class="detail-description"></p>
+        <div class="button-row focus-actions">
+          <button id="focus-one" type="button" disabled>Direct connections</button>
+          <button id="focus-two" type="button" disabled>Wider neighborhood</button>
+        </div>
         <button id="view-document" class="primary-button" type="button" disabled>View document</button>
         <div id="detail-meta"></div>
       </aside>

@@ -19,10 +19,11 @@ import {
   finalizeDomainEnrichment, prepareDomainEnrichment, runDomainEnrichment,
 } from "../enrichment/index.ts";
 import {
-  HUB_CI_MANIFEST_PATH, HUB_CI_VALIDATOR_PATH, HUB_CI_WORKFLOW_PATH, createHubRuntimeActions,
+  HUB_CI_MANIFEST_PATH, HUB_CI_VALIDATOR_PATH, HUB_CI_WORKFLOW_PATH,
   executeHubBootstrap, previewHubBootstrap, readPersistedHubConfiguration, renderHubCiBundle,
   replacePersistedHubConfiguration, validateHubCi, writePersistedHubConfiguration,
 } from "../index.ts";
+import { createLegacyTestActions as createHubRuntimeActions } from "../review/test-support.ts";
 import { attachExistingHub, createLocalHub } from "./setup.ts";
 import {
   hubProfileCredentialPath, loadExactHubProfileToken, writeGlobalHubToken, writeHubProfileToken,

@@ -10,6 +10,22 @@ const closeDetails = document.querySelector("#close-details");
 const viewDocument = document.querySelector("#view-document");
 const documentDialog = document.querySelector("#document-dialog");
 const domainDetails = document.querySelector("#domain-details");
+const mapView = document.querySelector("#map-view");
+const embeddedToggle = document.querySelector("#embedded-toggle");
+const themeToggle = document.querySelector("#theme-toggle");
+let theme = globalThis.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+try { const stored = localStorage.getItem("agentbase-domain-theme"); if (stored === "dark" || stored === "light") theme = stored; } catch {}
+function applyTheme() {
+  document.documentElement.dataset.theme = theme;
+  themeToggle.setAttribute("aria-pressed", String(theme === "dark"));
+  themeToggle.textContent = theme === "dark" ? "Light theme" : "Dark theme";
+}
+applyTheme();
+themeToggle.addEventListener("click", () => {
+  theme = theme === "dark" ? "light" : "dark";
+  applyTheme();
+  try { localStorage.setItem("agentbase-domain-theme", theme); } catch {}
+});
 
 function addTextBlock(parent, title, values) {
   if (!values.length) return;
@@ -65,7 +81,11 @@ function addEvidenceBlock(parent, values) {
     item.textContent = value; citations.append(item);
   }
   disclosure.append(disclosureLabel, citations);
-  block.append(heading, summary, files, disclosure);
+  const fileDisclosure = document.createElement("details");
+  const fileLabel = document.createElement("summary");
+  fileLabel.textContent = "Browse source files";
+  fileDisclosure.append(fileLabel, files);
+  block.append(heading, summary, fileDisclosure, disclosure);
   parent.append(block);
 }
 
@@ -281,7 +301,7 @@ async function start() {
 
   const elements = [
     ...repositories.map((repository) => ({
-      data: { id: repositoryRegionId(repository.id), repositoryId: repository.id,
+      data: { id: repositoryRegionId(repository.id), repositoryId: repository.id, label: "",
         regionWidth: regions.get(repository.id)?.width, regionHeight: regions.get(repository.id)?.height },
       position: positions.get(repositoryRegionId(repository.id)),
       classes: "repository-region",
@@ -308,7 +328,6 @@ async function start() {
     elements,
     minZoom: .12,
     maxZoom: 2.5,
-    wheelSensitivity: .22,
     boxSelectionEnabled: false,
     autoungrabify: false,
     layout: { name: "preset", fit: false },
@@ -322,11 +341,11 @@ async function start() {
         "text-margin-y": 27, "text-valign": "bottom", "text-wrap": "wrap", width: 34, "z-index": 10,
       } },
       { selector: 'node[type = "System"]', style: { "background-color": "#337ec8", "border-color": "#8bc5ff", width: 38, height: 38, "text-margin-y": 29 } },
-      { selector: "node.repository-region", style: { "background-color": "#7552b9", "background-opacity": .1,
-        "border-color": "#7552b9", "border-width": 2, events: "no", height: "data(regionHeight)",
+      { selector: "node.repository-region", style: { "background-color": "#8297a5", "background-opacity": .05,
+        "border-color": "#647c8c", "border-width": 1, events: "no", height: "data(regionHeight)",
         shape: "roundrectangle", width: "data(regionWidth)", "z-index": 0 } },
-      { selector: 'node[type = "Repository"]', style: { "background-color": "#7552b9", "background-opacity": .92,
-        "border-color": "#c5adff", "border-width": 1.5, "font-size": 11, "font-weight": 700,
+      { selector: 'node[type = "Repository"]', style: { "background-color": "#344d5e", "background-opacity": .92,
+        "border-color": "#94acb9", "border-width": 1.5, "font-size": 11, "font-weight": 700,
         height: 34, shape: "roundrectangle", "text-margin-y": 0, "text-outline-opacity": 0,
         "text-max-width": 116, "text-valign": "center", "text-wrap": "ellipsis", width: 132, "z-index": 8 } },
       { selector: 'node[type = "Flow"]', style: { "background-color": "#b77a18", "background-opacity": .16,
@@ -361,21 +380,72 @@ async function start() {
   let visible = initialVisible();
   let selected;
 
+  function layoutView() {
+    if (mapView.value === "repository") {
+      for (const [id, position] of initialPositions) cy.$id(id).position(position);
+    } else {
+      // Position only visible evidence endpoints; layout adds no relationships.
+      const nodes = cy.nodes().not(".hidden");
+      const linked = nodes.filter((node) => node.connectedEdges().not(".hidden").length > 0);
+      if (linked.length) linked.union(cy.edges().not(".hidden")).layout({
+        name: "breadthfirst", directed: false, circle: false, grid: true,
+        fit: false, spacingFactor: 1.1, avoidOverlap: true,
+        boundingBox: { x1: 0, y1: 0, w: Math.max(480, linked.length * 75), h: 260 },
+      }).run();
+      const isolated = nodes.difference(linked);
+      const bottom = linked.length ? linked.boundingBox().y2 + 140 : 0;
+      isolated.sort((a, b) => a.id().localeCompare(b.id())).forEach((node, index) =>
+        node.position({ x: (index % 4) * 220, y: bottom + Math.floor(index / 4) * 140 }));
+    }
+    cy.fit(cy.elements().not(".hidden"), 65);
+  }
+
+  function renderResults() {
+    const query = search.value.trim().toLowerCase();
+    const matches = projection.nodes.filter((node) =>
+      (typeFilter.value === "all" || node.type === typeFilter.value)
+      && (repositoryFilter.value === "all" || node.id === repositoryFilter.value || node.repositoryIds.includes(repositoryFilter.value))
+      && (membershipFilter.value === "all" || node.membership === membershipFilter.value)
+      && `${node.title} ${node.id} ${node.description} ${node.resourceKind ?? ""}`.toLowerCase().includes(query));
+    document.querySelector("#result-count").textContent = matches.length ? `${matches.length} results${matches.length > 60 ? " · first 60 shown" : ""}` : "No matches · try another search or clear filters";
+    const list = document.querySelector("#search-results");
+    list.replaceChildren();
+    for (const node of matches.slice(0, 60)) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "result-item";
+      button.setAttribute("aria-pressed", String(selected === node.id));
+      const title = document.createElement("strong"), type = document.createElement("span");
+      title.textContent = node.title; type.textContent = nodeType(node);
+      button.append(title, type);
+      button.addEventListener("click", () => {
+        visible = initialVisible();
+        document.querySelector("#view-state").textContent = "Domain overview";
+        showDetails(node.id);
+        if (graphNodeIds.has(node.id)) cy.animate({ zoom: Math.max(cy.zoom(), .85), center: { eles: cy.$id(node.id) }, duration: 200 });
+      });
+      list.append(button);
+    }
+  }
+
   function shownNodeIds() {
     const shown = new Set([...visible].filter((id) => {
       const node = nodeById.get(id);
-      return node && (typeFilter.value === "all" || node.type === typeFilter.value)
+      return node && (mapView.value !== "system" || node.type !== "Repository")
+        && (mapView.value === "repository" || embeddedToggle.checked || node.representation !== "embedded" || id === selected)
+        && (typeFilter.value === "all" || node.type === typeFilter.value)
         && (repositoryFilter.value === "all" || node.repositoryIds.includes(repositoryFilter.value))
         && (membershipFilter.value === "all" || node.membership === membershipFilter.value);
     }));
-    for (const id of [...shown]) {
+    if (mapView.value === "repository") for (const id of [...shown]) {
       for (const repositoryId of nodeById.get(id)?.repositoryIds ?? []) if (graphNodeIds.has(repositoryId)) shown.add(repositoryId);
     }
-    for (const repository of repositories) if (shown.has(repository.id)) shown.add(repositoryRegionId(repository.id));
+    if (mapView.value === "repository") for (const repository of repositories) if (shown.has(repository.id)) shown.add(repositoryRegionId(repository.id));
     return shown;
   }
 
   function clampToOwnership(graphNode) {
+    if (mapView.value === "system") return;
     const node = nodeById.get(graphNode.id());
     if (!node || node.type === "Repository") return;
     const position = graphNode.position(), padding = 52;
@@ -417,6 +487,7 @@ async function start() {
   }
 
   function applyVisibility({ fit = true } = {}) {
+    embeddedToggle.disabled = mapView.value === "repository";
     const shown = shownNodeIds();
     cy.nodes().forEach((node) => node.toggleClass("hidden", !shown.has(node.id())));
     cy.edges().forEach((edge) => {
@@ -428,7 +499,66 @@ async function start() {
       if (fit) cy.fit(displayed, 80);
     }
     applyHighlight();
+    renderResults();
+    const isolatedCount = displayed.nodes().not(".repository-region").filter((node) => !node.connectedEdges().not(".hidden").length).length;
+    document.querySelector("#map-explanation").textContent = mapView.value === "system"
+      ? `${isolatedCount} items have no visible connections and sit below the connected map. Expand embedded resources for more detail.`
+      : "Grouped by source repository, not deployment. Shared and external knowledge stays outside repository regions.";
+    document.querySelector("#focus-one").disabled = !graphNodeIds.has(selected);
+    document.querySelector("#focus-two").disabled = !graphNodeIds.has(selected);
     document.querySelector("#stats").textContent = `${displayed.nodes().not(".repository-region").length} shown / ${graphNodes.length} nodes\n${displayed.edges().length} shown / ${visualEdges.length} arrows\n${projection.questions.length} active questions`;
+  }
+
+  function renderNodeContent(meta, node) {
+    const connections = allEdges.filter((edge) => edge.displaySource === node.id || edge.displayTarget === node.id);
+    const summary = document.createElement("div");
+    summary.className = "node-summary";
+    const questions = questionsBySubject.get(node.id) ?? [];
+    for (const value of [`${connections.length} recorded connections`, `${node.sources.length} citations`, `${questions.length} open questions`]) {
+      const badge = document.createElement("span"); badge.textContent = value; summary.append(badge);
+    }
+    meta.append(summary);
+    const section = document.createElement("section");
+    section.className = "meta-block connections";
+    const heading = document.createElement("h3"); heading.textContent = "Connected knowledge"; section.append(heading);
+    function link(id, caption) {
+      const target = nodeById.get(id);
+      if (!target) return;
+      const button = document.createElement("button"); button.type = "button"; button.className = "connection-card";
+      const direction = document.createElement("span"), title = document.createElement("strong");
+      direction.textContent = caption; title.textContent = target.title;
+      button.append(direction, title);
+      button.addEventListener("click", () => {
+        if (documentDialog.open) documentDialog.close();
+        showDetails(id);
+      });
+      section.append(button);
+    }
+    for (const edge of connections) {
+      const outgoing = edge.displaySource === node.id;
+      link(outgoing ? edge.displayTarget : edge.displaySource,
+        `${outgoing ? "Outgoing →" : "Incoming ←"} ${edge.predicate}${edge.displayClass === "structural" ? " · structure" : edge.displayClass === "flow-step" ? " · flow step" : ""}`);
+    }
+    if (!connections.length) {
+      const empty = document.createElement("p"); empty.className = "hint";
+      empty.textContent = "No connections recorded in this snapshot. This does not mean the system has no dependencies.";
+      section.append(empty);
+    }
+    if (node.representation === "embedded") for (const id of node.parentIds) link(id, "Contained in Published parent");
+    meta.append(section);
+    if (questions.length) addTextBlock(meta, "Needs clarification", questions.map((item) => `${item.state}: ${item.property}`));
+    addEvidenceBlock(meta, node.sources);
+    if (!node.sources.length) addTextBlock(meta, "Evidence", ["No source citations supplied in this projection."]);
+    const technical = document.createElement("details"); technical.className = "technical-details";
+    const label = document.createElement("summary"); label.textContent = "Identity & storage details";
+    technical.append(label);
+    addTextBlock(technical, "Identity", [node.externalIdentity ?? node.id, node.path].filter(Boolean));
+    addTextBlock(technical, "Physical home", node.home ? [node.home] : []);
+    addTextBlock(technical, "Domain roles", node.scopeRoles ?? []);
+    meta.append(technical);
+    const boundary = document.createElement("p"); boundary.className = "snapshot-note";
+    boundary.textContent = `Published snapshot · ${projection.commit.slice(0, 12)}. Overview only; not live runtime verification.`;
+    meta.append(boundary);
   }
 
   function showDetails(id) {
@@ -444,23 +574,12 @@ async function start() {
     document.querySelector("#detail-description").textContent = node.description || "No Published description.";
     const meta = document.querySelector("#detail-meta");
     meta.replaceChildren();
-    addTextBlock(meta, "Identity", [node.externalIdentity ?? node.id, node.path]);
-    addTextBlock(meta, "Physical home", node.home ? [node.home] : []);
-    addTextBlock(meta, "Selected Domain roles", node.scopeRoles ?? []);
-    if (node.representation === "embedded") addTextBlock(meta, "Published parents", node.parentIds);
-    addEvidenceBlock(meta, node.sources);
-    addTextBlock(meta, "Active questions", (questionsBySubject.get(id) ?? []).map((item) => `${item.state}: ${item.property}`));
-    addTextBlock(meta, "Direct relations", allEdges.filter((edge) => edge.displaySource === id || edge.displayTarget === id)
-      .map((edge) => {
-        const source = nodeById.get(edge.displaySource)?.title ?? edge.displaySource;
-        const target = nodeById.get(edge.displayTarget)?.title ?? edge.displayTarget;
-        return `${source} — ${edge.predicate} → ${target}`;
-      }));
+    renderNodeContent(meta, node);
     viewDocument.disabled = node.representation === "embedded";
     viewDocument.textContent = node.representation === "embedded" ? "Contained in parent document" : "View document";
     cy.nodes().unselect();
     if (graphNodeIds.has(id)) cy.$id(id).select();
-    applyVisibility();
+    applyVisibility({ fit: false });
   }
 
   function clearDetails() {
@@ -482,12 +601,7 @@ async function start() {
     document.querySelector("#document-description").textContent = node.description || "No Published description.";
     const meta = document.querySelector("#document-meta");
     meta.replaceChildren();
-    addTextBlock(meta, "Identity", [node.id, node.path]);
-    addTextBlock(meta, "Physical home", node.home ? [node.home] : []);
-    addTextBlock(meta, "Selected Domain roles", node.scopeRoles ?? []);
-    addEvidenceBlock(meta, node.sources);
-    addTextBlock(meta, "Direct relations", allEdges.filter((edge) => edge.displaySource === id || edge.displayTarget === id)
-      .map((edge) => `${nodeById.get(edge.displaySource)?.title ?? edge.displaySource} — ${edge.predicate} → ${nodeById.get(edge.displayTarget)?.title ?? edge.displayTarget}`));
+    renderNodeContent(meta, node);
     documentDialog.showModal();
   }
 
@@ -503,41 +617,47 @@ async function start() {
       frontier = next;
     }
     visible = found;
+    document.querySelector("#view-state").textContent = `${hops === 1 ? "Direct connections" : "Wider neighborhood"} · ${nodeById.get(selected).title}`;
     applyVisibility();
   }
 
   cy.on("tap", "node", (event) => showDetails(event.target.id()));
+  mapView.addEventListener("change", () => { visible = initialVisible(); applyVisibility({ fit: false }); layoutView(); });
+  embeddedToggle.addEventListener("change", () => { applyVisibility({ fit: false }); layoutView(); });
   cy.on("dragfree", "node", (event) => clampToOwnership(event.target));
   domainDetails.addEventListener("click", () => showDetails(projection.domain.id));
   closeDetails.addEventListener("click", () => { selected = undefined; cy.nodes().unselect(); clearDetails(); applyVisibility({ fit: false }); });
   viewDocument.addEventListener("click", () => showDocument(selected));
-  search.addEventListener("input", () => {
-    const query = search.value.trim().toLowerCase();
-    if (!query) return;
-    const match = projection.nodes.find((node) => `${node.title} ${node.id} ${node.description} ${node.resourceKind ?? ""} ${node.externalIdentity ?? ""}`.toLowerCase().includes(query));
-    if (match) showDetails(match.id);
+  search.addEventListener("input", renderResults);
+  document.querySelector("#fit").addEventListener("click", () => cy.fit(cy.elements().not(".hidden"), 60));
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !documentDialog.open) closeDetails.click();
   });
-  typeFilter.addEventListener("change", () => applyVisibility());
-  repositoryFilter.addEventListener("change", () => applyVisibility());
-  membershipFilter.addEventListener("change", () => applyVisibility());
+  typeFilter.addEventListener("change", () => { applyVisibility(); layoutView(); });
+  repositoryFilter.addEventListener("change", () => { applyVisibility(); layoutView(); });
+  membershipFilter.addEventListener("change", () => { applyVisibility(); layoutView(); });
   flowToggle.addEventListener("change", () => applyVisibility({ fit: false }));
   document.querySelector("#focus-one").addEventListener("click", () => focus(1));
   document.querySelector("#focus-two").addEventListener("click", () => focus(2));
   document.querySelector("#reset").addEventListener("click", () => {
     selected = undefined;
+    document.querySelector("#view-state").textContent = "Domain overview";
     search.value = "";
     typeFilter.value = "all";
     repositoryFilter.value = "all";
     membershipFilter.value = "all";
     flowToggle.checked = true;
+    embeddedToggle.checked = true;
     visible = initialVisible();
     cy.nodes().unselect();
     for (const [id, position] of initialPositions) cy.$id(id).position(position);
     clearDetails();
     applyVisibility();
+    layoutView();
   });
   new ResizeObserver(() => cy.resize()).observe(graphHost);
   applyVisibility();
+  layoutView();
 }
 
 start().catch(showFallback);

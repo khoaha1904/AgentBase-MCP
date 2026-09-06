@@ -25,8 +25,8 @@ Optional technical appendix follows
 
 “AgentBase không cố làm AI nhớ toàn bộ hệ thống và không tạo một knowledge base
 hoàn hảo trong lần đầu. Nó giữ evidence đủ gần để agent giải thích, giữ human
-review ở publication boundary để team sửa, và duy trì knowledge qua Delta hoặc
-Coverage Refresh. Agent không cần biết mọi thứ; nó cần tìm đúng context mà team
+review ở publication boundary để team sửa, và dùng Update knowledge để cập nhật
+thay đổi hoặc bổ sung phần thiếu. Agent không cần biết mọi thứ; nó cần tìm đúng context mà team
 có thể kiểm tra và tiếp tục cải thiện. Từ đây mình dừng main talk và nhận câu hỏi;
 phần sau là technical appendix nếu mọi người muốn đi sâu.”
 

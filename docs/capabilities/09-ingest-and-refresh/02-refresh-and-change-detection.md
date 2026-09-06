@@ -35,10 +35,16 @@ do not become a completeness claim.
 
 ## Pre-Finalize validation and structural reachability
 
-Refresh passes its prepared session ID to changed-set validation before its one
-Finalize call. This lets the same authoring boundary reject a reused source ID
-whose repository observation moved to a new revision, instead of discovering
-that defect only at Finalize.
+When concept documents change, Refresh passes its prepared session ID to
+changed-set validation before its one Finalize call. This lets the same authoring
+boundary reject a reused source ID whose repository observation moved to a new
+revision, instead of discovering that defect only at Finalize.
+
+With no changed concept documents, skip changed-set validation: its input requires
+at least one concept. Finalize still validates the normalized session bundle and
+complete change accounting, including runtime-materialized observation or coverage
+updates. Only Finalize determines `no_change`; inspect a proposal only when one is
+returned. Do not invent edits or submit unchanged concepts to satisfy the validator.
 
 A new known standalone concept must have an evidenced structural path through
 `part-of`, `implemented-in` or `declared-by` to a Repository or Domain in the
@@ -81,6 +87,12 @@ skill; it does not generalize the Initial-Ingest Seed/Receipt materializer or
 add a semantic critic.
 
 ## Coverage debt
+
+Receipt-bound Initial Ingest also seeds this existing debt from its retained
+discovery limitations. Later Prepare exposes the unverified lanes and sampled
+or uninspected source scope as known gaps, even when source has not changed.
+Legacy Published repositories are not retroactively classified. A Coverage
+account must consider those gaps; no-new-output alone proves no completeness.
 
 When the bounded source delta omits paths or has derivation limitations, the
 Repository records one compact `agentbase.repository.refresh_coverage` debt.

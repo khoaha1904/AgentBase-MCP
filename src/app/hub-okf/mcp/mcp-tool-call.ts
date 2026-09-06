@@ -472,21 +472,18 @@ export async function callHubOkfTool(
         answer: required(args, "answer"), maintainer: required(args, "maintainer"),
       }));
     }
-    if (name === "list_pending_hub_okf") return result(await actions.listPending());
-    if (name === "submit_hub_okf_proposals") {
-      if (!Array.isArray(args.proposal_ids) || !args.proposal_ids.length
-        || !args.proposal_ids.every((value) => typeof value === "string" && value.length > 0)) {
-        throw new Error("proposal_ids must be a non-empty string list");
-      }
-      return result(await actions.submitMany(args.proposal_ids as string[]));
+    if (name === "publish_hub_okf_proposal") {
+      const mode = args.publication_mode;
+      if (mode !== "direct" && mode !== "pr") throw new Error("publication_mode must be direct or pr");
+      const publication = await actions.publish({ proposalId: required(args, "proposal_id"),
+        diffDigest: required(args, "proposal_digest"), mode });
+      return result(publication, publication.remote !== "in-review"
+        && !(publication.remote === "published" && publication.local === "recognized"));
     }
     if (name === "synchronize_hub_okf") return result(await actions.synchronize());
     if (name === "recover_hub_okf") return result(await actions.recover(required(args, "transaction_id")));
     const proposalId = required(args, "proposal_id");
     if (name === "inspect_hub_okf_proposal") return result(await actions.inspect(proposalId));
-    if (name === "accept_hub_okf_proposal") {
-      return result(await actions.accept(proposalId, required(args, "proposal_digest")));
-    }
     throw new Error(`unsupported Hub action: ${name}`);
   } catch (error) {
     return result({ error: error instanceof Error ? error.message : "Hub action failed" }, true);

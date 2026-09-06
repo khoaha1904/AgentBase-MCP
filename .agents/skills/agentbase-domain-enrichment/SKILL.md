@@ -1,13 +1,19 @@
 ---
 name: agentbase-domain-enrichment
-description: Explicit-only AgentBase Domain enrichment. Use only when the user names $agentbase-domain-enrichment for one Published Domain and selected repositories; never for ordinary provider exploration, Ingest/Refresh, Accept, publication, or cloud mutation.
+description: Explicit-only AgentBase Domain enrichment. Use only when the user names $agentbase-domain-enrichment or explicitly approves a scoped Enrichment handoff from AgentBase query or Update knowledge; never infer provider exploration, publication, or cloud mutation.
 ---
 
 # Enrich one Published Domain
 
 Produce one private manifest and, after reviewable evidence collection, one
 ordinary Enrichment proposal. Never log in for the user, read credentials,
-Accept, Publish, mutate cloud resources, scan an account, or infer completeness.
+Publish, mutate cloud resources, scan an account, or infer completeness.
+
+An approved Query or Update knowledge handoff authorizes preparation for the named gap only, not
+provider execution or Publish. Revalidate the Hub, Domain and repository/resource
+identities. Keep the account, regions and provider-session confirmations below.
+Changed or broader scope needs renewed agreement; cancellation preserves private
+work without further calls, publication or deletion.
 
 Use only `prepare_domain_enrichment`, `revise_domain_enrichment_membership`,
 `run_domain_enrichment`, `finalize_domain_enrichment_proposal` and
@@ -42,7 +48,7 @@ Use only `prepare_domain_enrichment`, `revise_domain_enrichment_membership`,
    the exact current revision; never hide a retry loop.
 7. Call `finalize_domain_enrichment_proposal` with selected human decisions.
    Call `inspect_hub_okf_proposal` for the grouped proposal and stop before
-   Accept. Verify that Profile paths/homes are preserved and review physical
+   Publish. Verify that Profile paths/homes are preserved and review physical
    home separately from semantic Domain impact. Open Questions and limitations
    are valid output; do not force completeness.
 

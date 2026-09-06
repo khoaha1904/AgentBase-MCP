@@ -8,7 +8,7 @@ import {
 } from "../../../core/knowledge/index.ts";
 
 const CYTOSCAPE_VERSION = "3.34.2";
-const DOMAIN_SITE_GENERATOR_VERSION = 8 as const;
+const DOMAIN_SITE_GENERATOR_VERSION = 12 as const;
 const BUILD_KEY_PLACEHOLDER = "__AGENTBASE_BUILD_KEY__";
 const GENERATED_PATHS = [
   "assets/app.css",

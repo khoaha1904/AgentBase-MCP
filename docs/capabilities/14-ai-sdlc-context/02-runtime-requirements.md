@@ -65,36 +65,37 @@ campaign.
   requires passing evidence and later owner approval; failure returns to Hub
   coverage or minimal query guidance, not a new retrieval subsystem.
 - **AB-CONTEXT-011** — The released `agentbase-context` skill is a public,
-  explicit-only context modifier. Codex metadata MUST disable implicit
+  explicit-only compatibility entry to `agentbase-query`. Codex metadata MUST disable implicit
   invocation, and the skill instructions MUST require explicit invocation for
   clients without an equivalent policy field.
-- **AB-CONTEXT-012** — One invocation MUST perform exactly one
-  `search_hub_okf` call with `limit <= 5`. It scopes to an exact canonical
-  Domain supplied by the user and otherwise searches globally. It MUST NOT
-  perform an exact concept read.
+- **AB-CONTEXT-012** — Unified use starts with one `search_hub_okf` call with
+  `limit <= 5`, scoped to the supplied exact Domain or explicitly global.
+  Further bounded search/read requires a concrete evidence need under
+  `AB-USE-002`; the historical one-search qualification remains unchanged.
 - **AB-CONTEXT-013** — The search query MUST use the request's Feature, User
-  Story or question, selecting one or two distinctive anchors, three to six
-  journey stages or handoffs, the intended outcome and at most two material
-  lenses such as failure or ownership. It MUST omit guessed technologies and
-  generic request wording.
+  Story or question, selecting distinctive capability anchors, relevant journey
+  stages or handoffs and the actual decision. It MUST omit guessed technologies
+  and generic request wording; simple questions do not require invented stages.
 - **AB-CONTEXT-014** — When composed with another explicitly invoked skill,
   that primary skill owns the lifecycle and final deliverable.
   `agentbase-context` contributes only relevant Domain/System purpose,
   material Repository or Interface boundaries, accepted relations or Flow
   context, constraints, Questions, provenance and explicit unknowns without a
   duplicate report unless requested.
-- **AB-CONTEXT-015** — Runtime context MUST use synchronized Published Hub only.
-  It MUST NOT use Local Draft, application source, Code Graph, provider, shell,
-  web, mutation or lifecycle tools, and MUST identify the result as a Published
-  snapshot rather than current implementation or live state.
+- **AB-CONTEXT-015** — Business/Feature context MUST use synchronized Published
+  Hub only and identify snapshots, never live state. Explicit implementation
+  verification MAY read an independently authorized local repository under
+  `AB-USE-002`; compatibility invocation alone grants no source permission.
+  No Local Draft, provider, web, mutation or lifecycle access is added. Host
+  workflows retain their independently authorized tools.
 - **AB-CONTEXT-016** — The manual skill adds no context store, schema, ranking
   subsystem, MCP tool, diagram or automatic integration with `fpt-discover` or
   another host workflow. Automatic invocation requires separate qualification
   and owner approval.
 - **AB-CONTEXT-017** — An explicitly invoked primary workflow owns lifecycle
-  and final output, while explicit `agentbase-context` owns only its bounded
-  evidence contribution. `agentbase-query` remains unavailable unless the user
-  separately names it and MUST NOT replace either role.
+  and final output. Explicit `agentbase-query` or its `agentbase-context`
+  compatibility entry supplies the same bounded evidence contribution, with
+  no second invocation or duplicate report. Neither may replace host ownership.
 - **AB-CONTEXT-018** — Real AIT qualification arms MUST run with an isolated
   Codex home. Global personal or product skills outside the suite's pinned
   workspace capability set MUST be unavailable to both arms.

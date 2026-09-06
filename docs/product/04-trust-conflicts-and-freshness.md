@@ -6,6 +6,23 @@
 > implemented by G3-C1. Its real-model usefulness campaign is deferred and does
 > not block the current internal enterprise release.
 
+## Accepted authority change — Group 7
+
+Owner-approved Product target; direct-publication primitive implemented,
+configured Direct/PR CLI/MCP and skill public cutover implemented: one explicit Publish
+confirmation may authorize a complete direct remote commit under configured
+Hub policy. PR review is optional per Hub. The
+[Lifecycle target](03-knowledge-lifecycle.md#accepted-simplification-target--group-7)
+owns exact-content confirmation, concurrency, recovery and compatibility.
+Questions and Guidance use the same policy-bound publication boundary;
+there is no separate Accept or mandatory Local Draft transition.
+
+Published means authorized for sharing, not exhaustive expert review or current
+runtime truth. Provenance, conflicts and validation remain visible. Independently
+refreshed repositories can represent different source times; freshness metadata
+does not prove that a cross-repository relationship was jointly reverified or
+that the combined snapshot ever existed as one deployed system.
+
 ## Outcome
 
 AgentBase makes uncertainty visible instead of selecting a convenient truth.
@@ -38,7 +55,7 @@ the Question to `Needs Review` while preserving prior guidance and history.
 
 A maintainer answer is scoped human evidence. In the current product it applies
 to the exact Question or subject/property being reviewed; broader policy is a
-normal concept update. Answers and state transitions create a new Local Draft
+normal concept update. Answers and state transitions create a private proposal
 and never publish automatically.
 
 ## Observed snapshots

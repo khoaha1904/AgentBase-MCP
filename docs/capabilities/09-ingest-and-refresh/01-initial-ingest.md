@@ -42,6 +42,13 @@ limited, every important group has a dossier/standalone/Question/ignored
 outcome and the proposal is valid, useful and provenance-bearing. Missing
 lower-priority coverage can still be reviewable with a Question/limitation.
 
+The current heuristic Seed uses a not-detected `limited` result for empty lanes;
+it cannot establish verified absence. Runtime source locations remain separately
+accountable without imposing a concept count. Capture, limited-lane and sampled-
+group limitations survive into the Receipt and the Repository's existing
+coverage-debt field at Finalize (zero Coverage passes and zero omitted changed
+paths for Initial Ingest). This is recovery context, not a semantic score.
+
 Missing low-value details are diagnostics. Important ambiguity becomes a
 Question. An integrity/validation failure creates an Incomplete run and does not
 enter query/publish. A P0 source/authority/adapter gap, P0-hiding pagination or

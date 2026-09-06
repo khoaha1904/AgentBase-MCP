@@ -32,6 +32,22 @@ Provider credentials and network access stay behind their owning adapters.
 Reusable adapters do not themselves choose a deployment policy or open a
 production service.
 
+Group 7 provides `publishHubProposalDirect` at the existing Hub
+application entrypoint. Direct and PR policy share Git transport and proposal
+admission; the primitive never changes installed configuration.
+The configured entry exposes it through explicit CLI direct publication
+and profile-local policy selection. The configuration activation lock spans
+policy resolution and publication; the primitive retains the nested profile
+mutation lock. Neither boundary may acquire these locks in reverse order.
+MCP/skill public cutover and unified PR publication are implemented. No runtime service
+is introduced.
+The approved cutover removes legacy Accept/Local Draft routes without a
+pending-work migration adapter; old test state is discarded separately from
+Published data. Optional PR mode uses the replacement workflow.
+Accept and stacked submit no longer belong to runtime actions or the public
+application entrypoint. Historical implementations live in test-support paths
+excluded from the release artifact.
+
 Group 1 standardizes three composition seams rather than a full authorization
 framework:
 
@@ -107,7 +123,7 @@ database. It composes three existing boundaries:
    current-source receipt; Hub query never initiates that access.
 2. Proposal review derives one semantic impact projection from the exact
    finalized proposal and admitted base. Text and any optional visualization
-   render the same projection; Git diff and the existing Accept digest remain
+   render the same projection; Git diff and the exact Publish confirmation digest remain
    the review authorities.
 3. Qualification runners in this repository execute pinned cases, while the
    sibling AgentBase-Benchmark repository owns source registrations, semantic
@@ -172,6 +188,6 @@ complete path is verified.
 The production MCP remains model-provider-neutral and does not call a model
 API. Authoring reuses the implemented deterministic Discovery Receipt,
 coverage, source, evidence, OKF and Profile checks before Finalize; Inspect and
-Accept remain the human quality and authority boundaries. Optional external AI
+explicit Publish remain the material-change review and sharing boundaries. Optional external AI
 review can advise draft edits but creates no packet/report API, persisted state,
 automatic repair, override, Batch gate or release dependency.

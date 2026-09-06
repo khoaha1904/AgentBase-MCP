@@ -7,8 +7,27 @@ AgentBase-MCP gives coding agents two complementary knowledge surfaces:
   cross-repository knowledge.
 
 The graph is disposable and never published. Hub knowledge is ordinary linked
-Markdown and Git history. Local Draft is explicit review state; ordinary Hub
+Markdown and Git history. Preparation is private resumable work; ordinary Hub
 query reads only the synchronized Published commit.
+
+Publication uses one inspected proposal and explicit confirmation, with Direct
+or PR policy per Hub:
+
+```text
+abs hub policy
+abs hub policy --mode direct
+abs hub publish --proposal <id> --digest <reviewed-sha256-digest> --mode direct
+```
+
+Use the exact ID/digest from proposal inspection. Publish confirms sharing
+those bytes; it never performs ingest automatically. Repeating the same command
+recovers an uncertain publication without creating a duplicate. Inspect its
+`remote` and `local` outcome: direct success is `published` plus `recognized`.
+For per-Hub `pr` policy, pass `--mode pr`; `in-review` exits zero and includes
+the PR URL, but does not mean Published. MCP exposes the same workflow through
+`publish_hub_okf_proposal`; Accept/pending/submit tools are removed. Skills
+require explicit Publish confirmation after the prepared result is inspected.
+Selecting policy alone does not publish, remove drafts or change remote settings.
 
 ## Install and verify
 
@@ -43,16 +62,30 @@ dependencies and activates the bundled native Code Graph provider but performs
 no skill or client mutation. npm dependencies use only the configured HTTPS registry;
 public registry fallback is rejected.
 
-The released catalog has ten explicit-only public workflows—Ask, Context, Scan,
-Ingest, Refresh, Batch Ingest, Domain Enrichment, focused Diagram, explicit
+The released catalog has ten explicit-only public entry names—Use, Context compatibility, Scan,
+Add repository, Update knowledge, Batch Ingest, Domain Enrichment, focused Diagram, explicit
 Domain Site and Hub lifecycle—plus three internal supporting skills. Ask
 AgentBase by selecting the skill in the client, invoking `$agentbase-query` in
 Codex, or invoking `/agentbase-query` in Claude Code. These
 are client syntaxes for the same canonical skill; AgentBase installs no
 `abs-*` alias. Ordinary repository work never activates AgentBase merely because
-the catalog is installed. Add `$agentbase-context` in Codex or
-`/agentbase-context` in Claude Code beside the primary workflow skill in the
-same request.
+the catalog is installed. Use the same Query entry beside a primary workflow
+to contribute evidence without taking over its deliverable. Existing
+`agentbase-context` invocations remain a compatibility entry to that shared
+guidance; new requests need not choose Query versus Context.
+
+For authoring, use `$agentbase-ingest` to **Add repository** or
+`$agentbase-refresh` to **Update knowledge** (use `/` in Claude Code).
+The installed command names are unchanged. Add recognizes an existing repository
+and routes to Update without creating another identity. Update follows source
+changes by default; ask to investigate missing knowledge for a bounded Coverage
+pass, even when source has not changed. Neither automatically updates other
+repositories, reads cloud providers or publishes. Provider-dependent relation
+gaps require a separately approved, supported Domain Enrichment scope.
+
+If a concrete knowledge gap is found, AgentBase may offer a scoped repair.
+Your agreement starts preparation through the existing authoring workflow;
+it does not publish. Review the resulting proposal and confirm Publish separately.
 
 ## Main entrypoints
 

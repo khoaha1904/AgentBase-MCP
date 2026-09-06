@@ -7,7 +7,7 @@ import test from "node:test";
 import {
   createInventoryItemId, createInventoryReceipt, createQuestionPlanId,
   createRepositorySourceResource, getOkfAuthoringGuidance, loadOkfBundle,
-  parseQuestionDocument, validateInventoryReceipt, type DiscoverySeed,
+  parseQuestionDocument, readRepositoryRefreshCoverage, validateInventoryReceipt, type DiscoverySeed,
 } from "../../../core/knowledge/index.ts";
 import {
   beginHubAuthoringSession, finalizeHubAuthoringSession, materializeInitialIngestSessionSkeletons,
@@ -16,7 +16,7 @@ import {
 const commit = "a".repeat(40), baseCommit = "b".repeat(40);
 const repositoryId = "repository-worker-aaaaaaaaaaaa";
 
-test("[AB-MCP-024..030][AB-COMPACT-012] Receipt Prepare is idempotent and Finalize owns Questions and provenance", () => {
+for (const partial of [false, true]) test(`[AB-MCP-024..030][AB-COMPACT-012][AB-REFRESH-021] Receipt Prepare and Finalize retain provenance and ${partial ? "bounded discovery debt" : "clean coverage"}`, () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-receipt-authoring-"));
   const hub = path.join(root, "hub"), source = path.join(root, "source"), stateRoot = path.join(root, "state");
   try {
@@ -54,7 +54,7 @@ test("[AB-MCP-024..030][AB-COMPACT-012] Receipt Prepare is idempotent and Finali
       ],
       groups,
       capture: { nodeCount: 12, edgeCount: 8, coverageTerminal: true, truncated: false,
-        p1P2Overflow: 0, limitations: [] },
+        p1P2Overflow: 0, limitations: partial ? ["Additional uninspected scope: " + "x".repeat(900)] : [] },
       state: "ready",
     };
     const request = {
@@ -115,7 +115,7 @@ test("[AB-MCP-024..030][AB-COMPACT-012] Receipt Prepare is idempotent and Finali
           sourceResource: createRepositorySourceResource(repositoryId, "main.tf", 4, 4), observedRevision: commit }],
         missingEvidence: ["consumer ownership is not explicit"], limitations: [],
       }],
-      limitations: [],
+      limitations: partial ? Array.from({ length: 64 }, (_, index) => `Uninspected scope ${index}`) : [],
     };
     const guidance = getOkfAuthoringGuidance(request);
     const receipt = createInventoryReceipt({ seed, inventory, guidanceRequest: request, guidance,
@@ -133,6 +133,9 @@ test("[AB-MCP-024..030][AB-COMPACT-012] Receipt Prepare is idempotent and Finali
       requireObservedRevision: true, createdAt: "2026-08-25T00:00:00.000Z",
     };
     const first = beginHubAuthoringSession(options);
+    assert.equal(first.coverage?.partial, partial, "Receipt coverage wins over a caller's clean account");
+    assert.ok(first.coverage!.limitations.every((item) => item.length <= 512));
+    assert.equal(first.coverage?.limitations.length, partial ? 64 : 0);
     const skeletons = materializeInitialIngestSessionSkeletons(stateRoot, first.id, hub,
       { id: repositoryId, displayName: "worker", remotes: [seed.source.remote], rootCommits: [commit] });
     assert.equal(skeletons.filter((item) => item.candidateId === "worker").length, 1,
@@ -164,6 +167,15 @@ test("[AB-MCP-024..030][AB-COMPACT-012] Receipt Prepare is idempotent and Finali
     if (!("proposal" in finalized)) return;
     const bundleRoot = path.join(stateRoot, "proposals", finalized.proposal.id, "bundle");
     const bundle = loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true });
+    const repository = [...bundle.concepts.values()].find((concept) => concept.type === "Repository")!;
+    const debt = readRepositoryRefreshCoverage(repository);
+    if (partial) {
+      assert.equal(debt?.coveragePasses, 0);
+      assert.deepEqual(debt?.limitations, first.coverage?.limitations);
+      assert.match(debt!.limitations.join("\n"), /shortened; full detail retained in Receipt/);
+      assert.match(debt!.limitations.at(-1)!, /additional discovery limitations retained in Receipt/);
+      assert.equal(receipt.coverage.limitations.length, 65, "private Receipt keeps full diagnostics");
+    } else assert.equal(debt, undefined, "clean Initial Ingest must not invent debt");
     const question = [...bundle.concepts.values()].find((concept) => concept.type === "Question");
     assert.ok(question);
     const authoredWorkerConcept = bundle.concepts.get(skeletons.find((item) => item.candidateId === "worker")!.identity)!;

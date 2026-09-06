@@ -13,7 +13,7 @@ runtime and its explanation cannot silently diverge.
   deck without a renderer. It is presentation output, not Product,
   Architecture or Capability Contract authority.
 - The local renderer workspace is
-  `../presentation/agentbase-mcp-deck/` relative to the `AgentBase/` workspace.
+  `presentation/agentbase-mcp-deck/` relative to the `AgentBase/` workspace.
   It also publishes the same snapshot at
   `https://learn.khoa.cc/agentbase-mcp-deck/preview.html`.
 
@@ -49,6 +49,16 @@ moving deep material out of the main story.
 
 ## Delivery rules
 
+- Lead with Add repository / Update knowledge; command names remain
+  `agentbase-ingest` / `agentbase-refresh`. Delta/Coverage are bounded strategies,
+  not choices a first-time audience must diagnose. Advanced entries still exist.
+- Show private preparation -> material-change preview -> explicit Publish.
+  Direct policy writes and recognizes one complete remote commit; PR policy
+  waits for team merge and sync. There is no required Accept/Local Draft step.
+  Human approval authorizes sharing; it does not certify every claim or omission.
+- Keep the optional five-stage technical explanation, but never imply three
+  Coverage passes prove completeness or ordinary Update authorizes cloud reads.
+
 - Target 20-22 minutes for the 15-slide main deck, then questions.
 - Enter the technical appendix only when the room or remaining time benefits.
 - One slide carries one sentence the audience should remember.
@@ -68,6 +78,13 @@ moving deep material out of the main story.
   before delivery.
 
 ## Rebuild and review
+
+Current owner checkpoint: Markdown and standalone HTML are aligned for Add/Update
+and Direct/PR publication. The renderer reads speaker notes directly from canonical
+slide Markdown; visible layouts remain renderer-owned and require comparison after
+content changes. Preserve the 15-main/9-appendix sequence and existing mock labels.
+Do not restore the retired Accept/Local Draft lifecycle from older fragments.
+PowerPoint is an optional export of the same deck, not a runtime release gate.
 
 From the local renderer workspace:
 

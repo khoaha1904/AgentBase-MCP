@@ -23,6 +23,8 @@ default home · exceptions · separate Domain participation
 ## Lời thoại dự kiến
 
 “Preflight khóa repository identity, exact revision và preliminary home scope.
+Đây là nhánh Add cho repo mới: repo đã có chuyển sang Update, giữ home hiện tại;
+identity mơ hồ phải hỏi lại, không tạo bản trùng.
 Sau discovery, owner xác nhận một grouped home plan cho default home, exception
 và Domain participation riêng. Physical home không đồng nghĩa semantic
 participation; vì vậy workflow không ép mọi repository vào một primary Domain.”

@@ -57,7 +57,9 @@ system boundary between business tools and protocol adapters.
 ## Release surface governance
 
 - **AB-SURFACE-001** — The current release freezes ten public outcome-level
-  skills, three internal delegation skills and forty-six advertised MCP tools.
+  skills, three internal delegation skills and forty-four advertised MCP tools.
+  Group 7 replaces Accept/pending/submit with one exact-confirmation Publish
+  action; no retired action remains as a public compatibility alias.
   A count increase requires explicit Product approval or an accepted
   replacement/consolidation; a lower count is not itself a quality objective.
 - **AB-SURFACE-002** — Every advertised MCP tool is named by at least one shipped
@@ -67,6 +69,12 @@ system boundary between business tools and protocol adapters.
   context, scan, single Init, Refresh, Batch Init, Domain Enrichment, focused
   diagram, Domain site and Hub lifecycle. Internal graph, OKF-authoring and
   diagram-rendering skills remain delegation-only.
+  G9-C1 presents existing Init/Refresh commands as Add repository/Update knowledge.
+  Their instructions route new/existing identity mismatches within the same
+  approved repository, without recursive handoff on ambiguity. Delta is the
+  ordinary update strategy; requested missing-knowledge repair selects Coverage.
+  Provider-dependent gaps only offer scoped Domain Enrichment until approved.
+  Command IDs, explicit-only policy and separate Publish confirmation remain.
 - **AB-SURFACE-004** — Shared tools such as Preflight, Prepare, validation,
   Inspect and Published query are deliberate workflow primitives, not duplicate
   public outcomes. State-changing lifecycle transitions remain separate instead

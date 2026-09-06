@@ -9,6 +9,60 @@
 > implemented and verified. G5-C2 private draft-quality
 > probes are deferred and are not part of current query behavior.
 
+## Accepted unified-use target — Group 8
+
+Status: G8-C1 unified read routing and G8-C2 scoped repair handoff are
+implemented and verified for the current scope. In the installed interface, `agentbase-query` is canonical and the
+installed `agentbase-context` name delegates to the same read guidance.
+
+**Current → Target:** One explicit “use AgentBase” entry answers a standalone
+question or contributes bounded context to the user's active primary workflow.
+The user need not distinguish Query from Context. The primary workflow retains
+its deliverable, decisions and approvals.
+
+**Benefit → Impact:** Reduce skill-selection burden and connect useful answers
+with targeted knowledge repair. Update routing, installed skills and
+compatibility while retaining read-only defaults, Published-only retrieval and
+existing source permissions. Ordinary unrelated work does not activate
+AgentBase automatically.
+
+### Use-to-repair loop
+
+When a question reveals a concrete missing or incorrect claim, the answer may
+offer a scoped repair: the subject, known gap and source/repository needed.
+Only owner agreement opens the corresponding authoring workflow. That agreement
+authorizes preparation, not publication; Group 7's preview and Publish
+confirmation still apply. Existing explicit authorization may be reused only
+within its actual scope.
+
+Agreement to the concrete offer is an explicit entry into its named authoring
+workflow; the user need not repeat a skill command. This exception is scoped
+to the active AgentBase conversation, not automatic skill discovery. A rejected,
+cancelled or ambiguous offer leaves the read result usable and creates no work.
+If the required source, Hub or repair scope changes, ask again. Cancellation
+after preparation stops further actions and preserves the private proposal;
+it neither publishes nor silently deletes it.
+
+The handoff reuses the specific finding and available evidence, then verifies
+source authority under normal authoring rules. It creates no persistent
+query-history store, automatic Question backlog or automatic answer-to-Hub
+write. Missing source or provider access remains visible; the answer and its
+primary workflow remain usable without completing repair.
+
+### Decision boundary
+
+Sparse Published knowledge identifies known impact and useful next checks; it
+does not establish an exhaustive impact set. Citation accuracy cannot prove
+that undiscovered consumers or dependencies do not exist. “Sufficient” depends
+on the decision: orientation may stop at Hub knowledge, while a current change
+or deployment-safety conclusion requires verification of relevant source or
+environment boundaries. Unknown omissions cannot be promised as detected
+Questions. These limits apply equally to standalone and workflow context.
+
+## Unified read behavior
+
+The old Context name remains a compatibility input, not a second workflow.
+
 ## Outcome
 
 The user explicitly invokes `agentbase-query`; the Agent then selects the Hub,
@@ -26,17 +80,17 @@ debug/impact work requires exact code or the Hub cannot support a safe answer.
 
 No ordinary repository-reading, explanation, research or coding request
 implicitly activates an AgentBase product skill. Public skills require their
-exact explicit invocation. Internal skills run only when an already active
+exact explicit invocation or the approved scoped repair handoff described above.
+Internal skills run only when an already active
 explicit public AgentBase workflow delegates to them.
 
-The ordinary query workflow owns only a standalone read-only AgentBase answer.
+Without a primary workflow, the entry owns a standalone read-only AgentBase answer.
 When the user explicitly selects Feature or User Story discovery, planning,
 diagramming or another primary workflow, that workflow retains the deliverable;
-bounded AgentBase support is supplied only through its explicit context route.
-If the user explicitly selects the wrong AgentBase workflow, it returns compact
-routing guidance and stops; it does not silently activate a more privileged
-workflow. Standalone `agentbase-query` remains the one front door that chooses
-among already authorized Hub/source evidence for an ordinary AgentBase question.
+the same explicitly invoked entry supplies bounded AgentBase support. It does
+not take over the primary workflow or require a second skill invocation. The
+entry chooses among already authorized Hub/source evidence, never silently
+activating an authoring, lifecycle or provider workflow.
 
 ## Published authority
 

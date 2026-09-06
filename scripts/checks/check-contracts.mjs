@@ -9,6 +9,25 @@ const ids = (prefix, count, start = 1) => Array.from(
   (_, index) => `${prefix}-${String(index + start).padStart(3, "0")}`,
 );
 
+export function reachableDocumentation(readDocument, start = "docs/README.md") {
+  const seen = new Set();
+  const queue = [start];
+  while (queue.length) {
+    const current = queue.shift();
+    if (seen.has(current)) continue;
+    const source = readDocument(current);
+    if (source === null || source === undefined) continue;
+    seen.add(current);
+    for (const match of source.matchAll(/\]\(([^\s)]+)\)/g)) {
+      const target = match[1].split("#")[0];
+      if (!target || /^[a-z]+:/i.test(target)) continue;
+      const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(current), target));
+      if (resolved.startsWith("docs/") && resolved.endsWith(".md")) queue.push(resolved);
+    }
+  }
+  return seen;
+}
+
 const DOCUMENT_ROUTES = [
   "docs/product/README.md",
   "docs/product/00-scope-and-authority.md",
@@ -296,9 +315,10 @@ export function checkContracts(root) {
     }
   }
 
+  const documentationRoutes = reachableDocumentation((file) => read(root, file));
   if (!docsIndex) errors.push({ code: "CONTRACT-DOCS-INDEX-MISSING", message: "docs/README.md is required" });
   else for (const route of DOCUMENT_ROUTES) {
-    if (!docsIndex.includes(route)) errors.push({ code: "CONTRACT-ROUTE-MISSING", message: `docs/README.md does not route to ${route}` });
+    if (!documentationRoutes.has(route)) errors.push({ code: "CONTRACT-ROUTE-MISSING", message: `docs/README.md has no linked route to ${route}` });
     if (!read(root, route)) errors.push({ code: "CONTRACT-CURRENT-DOC-MISSING", message: `${route} is required` });
   }
 

@@ -1,12 +1,25 @@
 ---
 name: agentbase-ingest
-description: Explicit-only AgentBase ingest. Use only when the user names $agentbase-ingest to ingest one authorized local repository into a sparse OKF proposal preview; never for ordinary repository reading, Refresh, batches, enrichment, Accept, or Publish.
+description: Explicit-only AgentBase Add repository. Use only when the user names $agentbase-ingest, enters from Update knowledge for the same approved new repository, or approves a scoped Ingest handoff from AgentBase query; never infer it from ordinary reading or authorize Publish.
 ---
 
-# Ingest one repository
+# Add repository
 
 Create one reviewable proposal from bounded source evidence. The user supplies
-the repository, not an authoring prompt. Stop before Accept or Publish.
+the repository, not an authoring prompt. Stop before Publish.
+
+The installed command remains `$agentbase-ingest`. If Preflight finds one
+existing canonical Published Repository, explain that it needs an update and
+follow [Update knowledge](../agentbase-refresh/SKILL.md) for that same approved scope without asking for a
+repeated command. Do not create a duplicate. Ambiguous identity stops for
+clarification, never a loop between skills. New repositories follow the stages
+below, including all home confirmations.
+
+An approved Query handoff is preparation-only for its named Hub/repository and
+gap. Revalidate source authority and retain all Preflight/home confirmations;
+carried evidence is a starting point, not a substitute for discovery admission.
+Changed or broader scope needs renewed agreement. Cancellation preserves private
+work without publishing or deleting it.
 
 This workflow uses `preflight_hub_ingest`, the tools named by
 `use-codebase-memory`, `get_okf_authoring_schemas`, `prepare_hub_okf`,
@@ -16,7 +29,9 @@ This workflow uses `preflight_hub_ingest`, the tools named by
 ## Workflow
 
 1. **Preflight** — Read [`references/preflight.md`](references/preflight.md).
-   Call `preflight_hub_ingest`, compare the repository documents with returned
+   Call `preflight_hub_ingest` and resolve new/existing/ambiguous identity first.
+   Apply the existing-repository handoff above before asking for a new home.
+   For a new repository, compare its documents with returned
    Domain summaries, show evidence and warnings, then obtain one explicit
    preliminary Repository default-home confirmation.
 2. **Discover** — Index exactly the `analysis_source_repository` returned by
@@ -137,7 +152,7 @@ This workflow uses `preflight_hub_ingest`, the tools named by
 - After one exact validation failure, make at most one repair. A second failure
   is Incomplete and requires an explicit user retry; never start another hidden
   reasoning pass.
-- Do not call a provider CLI, clone another repository, Accept, submit,
+- Do not call a provider CLI, clone another repository,
   synchronize, rebuild a PR or publish from this skill.
 - Do not store source blocks, graph output, secrets or arbitrary config dumps in
   Hub. A small directly evidenced snapshot is optional and remains an observed,

@@ -6,6 +6,21 @@
 > deferred. G4-C4 Profile Domain projection and G5-C1 compact
 > Domain/Repository projection are implemented and verified.
 
+## Accepted follow-up — Group 7
+
+The approved publication simplification changes how knowledge becomes
+Published, not visualization authority. Private preparation remains excluded
+from ordinary diagrams and sites; exact-change preview remains review support.
+The Domain-site UI is task-oriented: find knowledge, understand its connections
+and inspect evidence. Search presents selectable results and explicit empty
+states. Secondary filters are disclosed on demand; selection-only actions are
+disabled until applicable. Fit changes only the viewport; reset clears view
+filters, selection and manual positions. Neither changes Published knowledge.
+Light/dark appearance is a browser-local preference. Node inspection leads with
+purpose, navigable recorded connections and evidence; technical identity is
+secondary disclosure. The expanded reader remains a bounded snapshot overview,
+not a replacement for full Markdown or live source.
+
 ## Outcome
 
 AgentBase turns the same exact Published knowledge into two visual products:
@@ -69,7 +84,14 @@ default human-readable Repository view, while independently useful documents in
 relations justify them. Embedded dossier sections may be presented as bounded
 details but never become synthetic canonical nodes.
 
-The Domain is page context rather than a repeated graph node. A Repository is
+The default System map emphasizes recorded connections between non-Repository
+concepts, with embedded resources visible by default and optionally collapsed. Unconnected items
+remain available and are placed separately, never connected by inference.
+Repository dossiers remain searchable; source grouping is a separate By repository
+view, not a deployment claim. Colors distinguish primary concepts, subdued
+source regions, dashed embedded references and labeled external endpoints.
+
+The Domain is page context rather than a repeated graph node. In By repository, a Repository is
 shown as a compact selectable card inside its fixed grouping region, whose
 boundary does not grow during interaction. Repository-owned knowledge may be
 repositioned within that region, while shared, multi-repository and external
@@ -83,7 +105,7 @@ only an outside node with no related Repository falls back to the shared
 external lane. Placement uses Published relation endpoints and never changes
 membership or infers topology.
 
-Repository regions use a deterministic relation-aware ring when three or more
+In By repository, Repository regions use a deterministic relation-aware ring when three or more
 Repositories are visible. The ring keeps cross-repository arrows out of
 unrelated Repository regions; one- and two-Repository maps retain the compact
 linear arrangement. This is presentation state only and does not imply an

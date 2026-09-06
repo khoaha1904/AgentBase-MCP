@@ -12,7 +12,7 @@ import {
   prepareBundleProposal,
   renderAgentBaseOkfProfileDocument,
 } from "../../../core/knowledge/index.ts";
-import { acceptHubProposal } from "../review/accept.ts";
+import { acceptHubProposal } from "../review/test-support/accept.ts";
 import { bindHubProposalInspection, inspectHubProposal } from "../review/inspect.ts";
 import { admitHubKnowledgeMutation } from "../review/mutation-admission.ts";
 import { writeHubProposalState } from "../review/proposal-state.ts";

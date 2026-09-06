@@ -59,7 +59,8 @@ export {
   type HubAuthoringSession,
 } from "./authoring/authoring-session.ts";
 export { admitPersistentLocalHub, type LocalHubGit } from "./workspace/local-hub.ts";
-export { acceptHubProposal, type AcceptHubOptions } from "./review/accept.ts";
+export { publishHubProposalDirect, type DirectPublishOptions, type DirectPublicationResult } from "./publication/direct-publish.ts";
+export { hubPublicationPolicy, publishConfiguredHubProposal } from "./publication/configured-publish.ts";
 export { admitHubKnowledgeMutation } from "./review/mutation-admission.ts";
 export {
   finalizeProfileMigration,
@@ -104,12 +105,6 @@ export {
 } from "./query/workspace-scan.ts";
 export { listPendingHubProposals, selectPendingPrefix, type PendingHubProposal } from "./review/pending.ts";
 export {
-  publishPendingHubProposals,
-  type HubBatchPublicationReceipt,
-  type PublishGitHub,
-  type PublishHubOptions,
-} from "./publication/publish.ts";
-export {
   synchronizeLocalHub,
   type HubSynchronizationReceipt,
   type SynchronizeGit,
@@ -127,7 +122,7 @@ export {
   type HubOkfToolName,
   type HubToolActions,
 } from "./mcp/mcp-tools.ts";
-export { createHubRuntimeActions, defaultHubRuntimeStateRoot, tryCreateHubRuntimeActions } from "./query/runtime-actions.ts";
+export { createHubRuntimeActions, defaultHubRuntimeStateRoot, tryCreateHubRuntimeActions } from "./runtime-actions.ts";
 export {
   finalizeDomainEnrichment, prepareDomainEnrichment, runDomainEnrichment,
   type EnrichmentAnswer, type EnrichmentRunState,

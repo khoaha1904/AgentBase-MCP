@@ -50,7 +50,7 @@ after the close, not a toll every audience member must pay before seeing value.
 9. Feature Discovery: accepted scope and visible unknowns.
 10. Domain Hub: human-readable projection with provenance.
 11. Task Planning: shared scope narrows exact-source investigation.
-12. Maintenance: Delta Refresh and bounded Coverage Refresh.
+12. Update knowledge: changed source and requested missing-knowledge repair.
 13. Positioning: AgentBase adds a lifecycle beside Markdown and RAG.
 14. Release boundary and proposed internal pilot.
 15. Close: context agents can explain; knowledge teams can correct.
@@ -91,8 +91,9 @@ after the close, not a toll every audience member must pay before seeing value.
 1. One slide, one sentence the audience should remember.
 2. The useful outcome appears by slide 4.
 3. Each transition asks the question answered by the next slide.
-4. Stable vocabulary: Repository, Domain, evidence, proposal, Local Draft,
-   Published Hub, Delta Refresh and Coverage Refresh.
+4. Stable vocabulary: Add repository, Update knowledge, Repository, Domain,
+   evidence, private proposal, Confirm Publish and Published Hub. Explain
+   Delta/Coverage only as internal strategies; Direct/PR are Hub policies.
 5. Verify every factual claim and sample commit.
 6. Read the main talk aloud in under 22 minutes without the appendix.
 7. Validate standalone HTML on desktop, projector-sized viewport and mobile.

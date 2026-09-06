@@ -17,6 +17,13 @@ bounds and failure recovery remain in the linked Capability Contracts.
 
 ## Repository knowledge flow
 
+G9-C1 keeps Add/Update routing in installed instructions, not a runtime router.
+Preflight resolves repository identity; Ingest/Refresh retain their own admission
+and recovery. Ordinary source updates use Delta, requested missing-knowledge
+repair uses Coverage. Provider-dependent relation gaps require a scoped offer
+to Domain Enrichment; approval does not replace provider-session confirmation
+or Publish authorization.
+
 ```text
 Repository Reading
         ↓ bounded source evidence
@@ -43,6 +50,14 @@ checks one outcome for every returned path and retains that accounting in the
 proposal inspection beside omitted counts and source-diff limitations. The
 accounting is review context, not an OKF concept or independent state authority.
 
+The discovery gateway preserves distinct runtime evidence locations before
+semantic consolidation and discloses source-census bounds. Core coverage carries
+lane, group-sampling and capture limitations into the frozen Receipt. Initial
+Ingest Finalize derives the existing Repository coverage-debt marker from that
+Receipt in the normalized proposal; author prose cannot silently discard it.
+This reuses the current authoring and Refresh owners, adds no public tool or
+state collection, and does not rewrite previously Published repositories.
+
 Release-hardening keeps one Refresh flow with two scopes. Delta follows the
 existing change-first sequence. Explicit Coverage performs its broad bounded
 five-lane graph/source investigation before preparing the same authoring
@@ -66,6 +81,18 @@ Routes: [Repository Reading](../capabilities/01-repository-reading/README.md),
 [Review/Publish](../capabilities/11-review-and-publish/README.md).
 
 ## Query and context flow
+
+Group 8 uses one installed instruction owner, `agentbase-query`, for standalone
+answers and evidence inside a primary workflow. The retained `agentbase-context`
+entry links to that same owner; it adds no second retrieval or runtime router.
+Composition chooses output ownership, not new permissions. Existing bounded
+Published search/read and authorized single-repository graph tools remain the
+only evidence routes. Missing evidence degrades the answer without mutation;
+G8-C2 carries a concrete finding, Published identity/revision, needed source and
+agreed scope in the current conversation into an existing authoring owner.
+There is no stored handoff object or runtime router. Authoring revalidates source
+and current Hub identity, then returns a private proposal through its existing
+validation/inspection path. Preparation agreement never authorizes Publish.
 
 ```text
 Exact Published Hub commit
@@ -125,23 +152,54 @@ Routes: [Relations and Enrichment](../capabilities/06-cross-repository-relations
 Local proposal
     ↓ inspect
 Review
-    ↓ explicit Accept workflow transition
-Accepted local change
     ↓ explicit Publish workflow transition
-Git branch / pull request
-    ↓ external merge + explicit synchronization
+Direct remote commit / Git branch + pull request
+    ↓ local recognition / external merge + explicit synchronization
 Published Hub commit
 ```
 
-Prepare, review, Accept, Publish, external merge and synchronization remain
-distinct correctness transitions. Failure preserves the last valid state and
+Prepare, review and Publish remain distinct correctness transitions; PR policy
+additionally requires external merge and synchronization. Failure preserves the last valid state and
 exposes a recovery action; no lower layer silently skips a transition.
 
 In the trusted-enterprise profile, selecting the workflow is sufficient to use
 the operator's existing process and enterprise identity access; no independent
 security ticket is added to each transition. Capability policy may restrict a
 future hardened deployment, but it cannot skip, merge or redefine these core
-lifecycle transitions.
+lifecycle transitions within that path.
+
+## Group 7 direct-publication flow
+
+The replacement public flow adds a policy branch after the same validated
+candidate: direct mode advances the remote target and recognizes Published;
+PR mode pushes a deterministic branch and opens/reuses an exact PR without
+advancing either local main or Published. CLI and MCP share configured policy
+resolution and publication ownership. Old Accept/pending/submit public routes
+are removed, not aliased. PR merge remains external and Sync remains explicit.
+
+The first application slice implements:
+
+```text
+Prepared proposal + exact preview confirmation + explicit direct authorization
+    -> revalidate inspection / Profile / unchanged base
+    -> isolated complete candidate commit + durable receipt
+    -> inspect remote -> normal direct push (or recognize an earlier success)
+    -> fast-forward clean local main + recognize Published
+```
+
+A remote advance stops for reconciliation and renewed review, without editing
+the approved proposal. A network failure is not proof of rejection: recover by
+checking whether the recorded candidate is already in target ancestry. Local
+recognition failure after remote success preserves the receipt for retry.
+CLI/MCP and per-Hub policy are implemented for Direct and PR. Shipped skills
+use preview then explicit Publish. Old test-state disposal and production helper
+retirement are complete; no action silently changes publication mode. Interrupted
+candidate construction retries only with proven transaction ownership. After a
+candidate is committed, a private ref preserves it while its worktree is removed;
+cleanup failure remains visible and retryable without republishing.
+Cutover discards owner-authorized old test work and removes the Accept/Local
+Draft flow. It introduces no migration or dual-lifecycle compatibility branch;
+new private preparation, failure recovery and optional PR publication remain.
 
 ## Release and upgrade flow
 
@@ -211,7 +269,7 @@ exact Published commit + relied-upon Repository observations
 exact finalized proposal + exact admitted base
     -> semantic before/after impact projection
     -> bounded text / optional disposable visual preview
-    -> Accept all or return to authoring
+    -> confirm Publish for the exact proposal or return to authoring
 
 pinned Benchmark suite + exact source/Hub inputs
     -> comparable control and AgentBase-assisted runs
@@ -252,7 +310,7 @@ bounded Initial Ingest candidates
     -> show Domain matches, shared choices and participation relations
     -> one owner confirmation
     -> materialize Profile 1.0 paths and navigation
-    -> Finalize -> semantic impact -> Accept -> Publish -> Sync
+    -> Finalize -> semantic impact -> policy-bound Publish
 ```
 
 Physical home and Domain participation are separate inputs. A home move is not
@@ -266,7 +324,7 @@ legacy Published commit
     -> read-only profile/layout report
     -> owner/agent authors exact moves + link/endpoint rewrites
     -> ordinary migration proposal with rollback commit
-    -> semantic impact -> Accept -> Publish -> Sync
+    -> semantic impact -> policy-bound Publish
     -> Profile 1.0 authoring enabled
 ```
 
@@ -298,7 +356,7 @@ generalize that permission to a durable Hub.
 ```text
 exact source + Discovery Receipt + editable compact bundle
     -> deterministic coverage/source/evidence/OKF/Profile validation
-    -> Finalize -> Inspect -> Accept -> Publish -> Sync
+    -> Finalize -> Inspect -> policy-bound Publish
 ```
 
 Optional external AI review may advise draft edits before Finalize. The deferred

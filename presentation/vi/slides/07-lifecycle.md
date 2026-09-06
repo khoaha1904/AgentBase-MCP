@@ -15,9 +15,9 @@ knowledge dùng chung.
 EXACT SOURCE
     -> Discover · Investigate · Author · Validate
 REVIEWABLE PROPOSAL
-    -> Finalize · Inspect · Human Accept
-LOCAL DRAFT
-    -> Publish PR · Human review/merge · Explicit sync
+    -> Preview · Confirm Publish
+HUB POLICY
+    -> Direct publish, hoặc PR · team merge · sync
 PUBLISHED HUB
 
 Valid structure/evidence != complete knowledge
@@ -28,9 +28,10 @@ MCP never approves or merges
 
 “Agent điều tra source và viết vào workspace có cấu trúc. MCP validate citation,
 relation và schema, nhưng một proposal hợp lệ vẫn có thể chưa đầy đủ. Finalize
-khóa đúng bytes để inspect; con người Accept thành Local Draft. Publish tạo PR,
-team review và merge, rồi explicit sync mới làm Published Hub trở thành query
-authority. MCP không approve hoặc merge.”
+khóa đúng bytes để inspect; người dùng xem thay đổi quan trọng rồi xác nhận
+Publish. Theo policy của Hub, MCP đẩy một commit hoàn chỉnh và ghi nhận Published,
+hoặc tạo PR để team merge rồi sync. Không còn bước Accept hay Local Draft bắt
+buộc. Xác nhận chia sẻ không có nghĩa kiểm chứng hết mọi câu hay phần bỏ sót.”
 
 ## Câu chuyển
 

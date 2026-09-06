@@ -1,7 +1,7 @@
 # 10.07 — Capability requirements
 
 > Status: AB-QUERY-001..020 implemented; AB-QUERY-021 is the owner-approved
-> standalone routing boundary. Profile Domain projection requirements are
+> unified explicit-use routing boundary. Profile Domain projection requirements are
 > owned by [10.08](08-profile-domain-projection-requirements.md). G5-C1 compact
 > requirements are implemented and verified; G5-C2
 > draft-quality probes are deferred and add no current query behavior.
@@ -108,7 +108,88 @@ Contract.
   producer/consumer relation context; a mock provider ARN is never required for
   query eligibility and never enters the Published search corpus.
 - **AB-QUERY-021** — `agentbase-query` activates only when the user explicitly
-  names that skill and requests a standalone read-only AgentBase answer. An
+  names that skill, or its installed `agentbase-context` compatibility entry,
+  for a read-only answer or contribution to an active primary workflow. An
   ordinary request to inspect, explain, research or modify a repository MUST
-  NOT select it. It also MUST NOT act as context for another primary workflow;
-  that requires separately explicit `agentbase-context`.
+  NOT select it. The primary workflow retains its deliverable and approvals;
+  no second invocation is required to contribute context.
+
+## Group 8 unified-use delivery
+
+G8-C1 owns installed skill routing, not a new runtime router. `agentbase-query`
+is the canonical entry; `agentbase-context` is a shipped compatibility wrapper
+linking to its exact installed instructions. Both remain explicit-only. The
+installer/release keep ten public entry names (one is compatibility-only), three
+internal skills and the existing 44 MCP tools. No retrieval, schema, authority or
+permission API changes are required.
+
+- **AB-USE-001** — Both installed entries MUST resolve the same read guidance
+  for Codex and Claude Code. Standalone use returns an answer; an active host
+  workflow receives only relevant evidence without duplicate output or ownership
+  takeover. Missing intent asks one clarification before retrieval. Invoking
+  both names MUST NOT cause two retrieval passes.
+- **AB-USE-002** — Start with a bounded Published search (`limit <= 5`), scoped
+  to the supplied canonical Domain or explicitly global. Stop when sufficient;
+  exact concept reads or another targeted search require a concrete evidence
+  need. Feature/business context stays snapshot-only. Current implementation
+  questions MAY reuse source/Code Graph only in the user's authorized local
+  repository; a Hub reference never authorizes cloning or workspace scanning.
+  Missing source returns the supported answer and a visible unverified boundary.
+  Preserve Published provenance, freshness, omissions and host tool authority.
+- **AB-USE-003** — Use remains read-only until an explicitly approved handoff.
+  Missing/incorrect knowledge alone MUST NOT
+  trigger preparation, a Question backlog, provider lookup, Sync or Publish.
+  The scoped repair handoff requires the G8-C2 authorization below.
+  No query-history or persistent context store is introduced.
+
+Verification combines installed-link/packaging tests, existing Published
+search/read and degradation tests, and manual instruction scenario review
+(standalone, host-owned output, both names, absent source, unrelated request).
+Static skill/package tests do not claim real-model behavioral qualification.
+
+## Group 8 scoped repair handoff
+
+G8-C2 reuses installed Ingest, Refresh, Domain Enrichment and exact-revision
+Question authoring. The conversation carries scope/evidence, not a new tool
+input, persistent task, queue or authorization token. No source permission or
+Publish admission is weakened. Skill instructions enforce conversational
+consent; existing runtime admission validates source/content, not natural-language
+agreement. No new server-side consent ledger is claimed.
+
+- **AB-USE-004** — A repair offer MUST name the exact known subject/Hub,
+  missing or contradicted claim, available Published/source evidence and needed
+  repository/provider scope. A search miss alone is not proof of missing data.
+  Decline, cancellation or ambiguity MUST NOT start preparation. An accepted
+  concrete offer may enter its named authoring instructions without another
+  exact skill invocation, but no unrelated lifecycle action is authorized.
+- **AB-USE-005** — Authoring MUST revalidate the selected Hub, Repository/source
+  identity and revision before using carried evidence. Missing source returns
+  the supported answer and blocker, not a clone or invented correction. A changed
+  target or broader required scope needs renewed agreement. Refresh reuses Delta
+  for changed-source work and explicit bounded Coverage for unchanged omissions;
+  its accounting and campaign bounds remain unchanged. Unknown Repository
+  identity requires Ingest/home confirmation, not duplicate Refresh. Provider
+  access and human Question answers retain their own confirmations.
+- **AB-USE-006** — Preparation ends at the existing validated proposal preview,
+  showing how the specific gap was addressed or remains unresolved. Publish
+  requires a subsequent exact proposal/digest/mode confirmation. Cancellation
+  after preparation preserves private work, with no deletion or sharing. Query
+  still reads Published before Publish and can read the correction afterward.
+
+Verification: installed handoff links resolve for both clients; existing
+Ingest/Refresh integration verifies a concrete correction stays absent from
+Published reads and remote Git until a separate Publish call, then becomes
+readable. Manual skill review covers decline, ambiguity, missing source,
+cancellation, scope changes and no inherited Publish. These are instruction
+and runtime-boundary checks, not real-model consent/routing qualification.
+
+G8-C2 is implemented and verified: all five changed skills pass validation;
+installed links resolve for both clients, the correction-isolation integration
+passes, and `npm run verify` passes with 244/244 tests. No real Hub was modified
+and no model campaign was run. Group 8 is closed for the current scope.
+
+G8-C1 is implemented and verified: both skill validators, installed-link tests
+for both clients, contract checks and `npm run verify` pass (244/244 tests).
+Manual instruction review covers standalone output, host ownership, duplicate
+invocation, absent source and unrelated requests. This is not a real-model
+forward-test or proof of autonomous routing reliability.

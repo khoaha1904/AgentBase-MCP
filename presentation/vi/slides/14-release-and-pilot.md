@@ -13,7 +13,7 @@ trong một Domain thật, không mở thêm feature vô hạn.
 
 ```text
 READY NOW
-source-backed ingest/refresh/query · review/publish · compact Profile
+Add repository · Update knowledge · Query · Confirm Publish
 Linux x64 internal enterprise release · verified release lifecycle
 
 NOT CLAIMED

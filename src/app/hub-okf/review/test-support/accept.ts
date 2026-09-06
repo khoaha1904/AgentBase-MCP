@@ -6,19 +6,19 @@ import {
   HUB_PROPOSAL_TRAILERS,
   type AdmittedLocalHubState,
   type LocalProposal,
-} from "../../../core/hub/index.ts";
-import { computeOkfTreeDigest, loadOkfBundle, readProposalMetadata } from "../../../core/knowledge/index.ts";
-import { runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
+} from "../../../../core/hub/index.ts";
+import { computeOkfTreeDigest, loadOkfBundle, readProposalMetadata } from "../../../../core/knowledge/index.ts";
+import { runGit, type GitOutput, type GitRequest } from "../../../../providers/github-hub/index.ts";
 import {
   acquireHubMutationLock,
   hubMutationProfileId,
   readHubProposalState,
   releaseHubMutationLock,
   writeAtomicJson,
-} from "./proposal-state.ts";
-import { readVerifiedHubProposalInspection } from "./inspect.ts";
-import { admitHubKnowledgeMutation } from "./mutation-admission.ts";
-import { listPendingHubProposals } from "./pending.ts";
+} from "../proposal-state.ts";
+import { readVerifiedHubProposalInspection } from "../inspect.ts";
+import { admitHubKnowledgeMutation } from "../mutation-admission.ts";
+import { listPendingHubProposals } from "../pending.ts";
 
 export type AcceptHubOptions = Readonly<{
   stateRoot: string;

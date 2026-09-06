@@ -14,6 +14,12 @@ Architecture Contract:
 
 ## Scope
 
+G8-C1 manual runtime use is owned by the shared `agentbase-query` instructions;
+`agentbase-context` is a compatibility entry. See
+[unified-use requirements](../10-query-routing/07-runtime-requirements.md#group-8-unified-use-delivery).
+The fixed qualification profiles below retain their original tool bounds and
+do not become a second installed read workflow.
+
 Phase 1 tests whether BA/PO/DM Discovery benefits from Published Hub without
 source. Phase 2 separately tests whether developer Task Planning and actual
 implementation benefit from bounded local Code Graph/source evidence.

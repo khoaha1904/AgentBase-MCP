@@ -333,7 +333,7 @@ test("[AB-PROFILE-READ-002..004][AB-PROFILE-READ-007..008] Profile visualization
   const browser = fs.readFileSync(path.join(output, "assets/app.js"), "utf8");
   assert.match(generated, /"profile": "profile-1\.0"/);
   assert.match(generated, /"scopeRoles": \[/);
-  assert.match(browser, /Selected Domain roles/);
+  assert.match(browser, /Domain roles/);
   assert.match(browser, /projection\.profile/);
 });
 
@@ -456,7 +456,7 @@ test("[AB-VIS-006..010][AB-VIS-012..024] static Domain site is reproducible, off
   assert.doesNotMatch(generatedText, /ghp_[A-Za-z0-9]{20,}|search_hub_okf|prepare_hub_visualization/);
   const generatedIndex = fs.readFileSync(path.join(first, "index.html"), "utf8");
   const generatedApp = fs.readFileSync(path.join(first, "assets/app.js"), "utf8");
-  const browserBuildKey = `8-${graph.commit}`;
+  const browserBuildKey = `12-${graph.commit}`;
   assert.match(generatedIndex, /Interactive 2D Domain knowledge map/);
   assert.equal(generatedIndex.includes(`assets/app.css?build=${browserBuildKey}`), true);
   assert.equal(generatedIndex.includes(`assets/cytoscape.min.js?build=${browserBuildKey}`), true);
@@ -502,7 +502,11 @@ test("[AB-VIS-006..010][AB-VIS-012..024] static Domain site is reproducible, off
   assert.match(generatedCss, /\.details\.is-open \{ display: block; \}/);
   assert.doesNotMatch(generatedIndex, />Domain<\/span>/);
   assert.match(generatedIndex, /Repository card and region/);
-  assert.match(generatedIndex, /Reset layout/);
+  assert.match(generatedIndex, /Reset view/);
+  assert.match(generatedIndex, /id="embedded-toggle" type="checkbox" checked/);
+  assert.match(generatedApp, /embeddedToggle.checked = true/);
+  assert.match(generatedIndex, /id="search-results"/);
+  assert.match(generatedIndex, /id="focus-one" type="button" disabled/);
   assert.match(generatedIndex, /About this Domain/);
   assert.equal(fs.existsSync(path.join(first, "assets/three.module.min.js")), false);
 

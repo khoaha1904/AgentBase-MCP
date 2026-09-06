@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  reachableDocumentation,
   checkArchitectureContractEntries,
   checkCapabilityContractEntries,
   checkCurrentDocumentationPathEntries,
@@ -9,6 +10,17 @@ import {
   checkRepositoryLanguageEntries,
   checkRequirementDefinitionEntries,
 } from "./check-contracts.mjs";
+
+test("documentation routes through layer indexes without requiring flat startup context", () => {
+  const pages = {
+    "docs/README.md": "[Product](product/README.md)",
+    "docs/product/README.md": "[Scope](scope.md#outcome) [Root](../README.md)",
+    "docs/product/scope.md": "[Missing](missing.md) [External](https://example.com/docs.md)",
+    "docs/orphan.md": "Not linked",
+  };
+  assert.deepEqual([...reachableDocumentation((file) => pages[file])].sort(),
+    ["docs/README.md", "docs/product/README.md", "docs/product/scope.md"]);
+});
 
 test("normative requirement IDs have one definition owner", () => {
   assert.deepEqual(checkRequirementDefinitionEntries([

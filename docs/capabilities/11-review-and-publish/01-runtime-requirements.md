@@ -10,6 +10,12 @@ queries and ordinary coding never create Hub state, commits or publication.
 > Status: The lifecycle baseline, Group 1 single enterprise credential reuse and
 > trusted capability composition are implemented and verified.
 
+Accept/submit requirements below govern release-excluded historical test fixtures only,
+not public routes. Group 7's CLI/MCP and skill replacement is governed by
+[Prepared publication](12-direct-publication-requirements.md). Old public
+Accept/pending/submit actions and their production helpers are removed;
+authorized old test-state disposal is complete without a migration adapter.
+
 ## Local active knowledge
 
 - **AB-LOCAL-HUB-001** — Exactly one state is active: no Hub or one configured
@@ -33,7 +39,9 @@ queries and ordinary coding never create Hub state, commits or publication.
   as deterministic per-Repository publication units and opens/recovers their PRs.
 - **AB-LOCAL-HUB-007** — Only externally authorized attach, bootstrap, submit,
   synchronize and Hub Initialization actions may use the exact active-profile
-  owner-private Hub credential. Normal operation never writes the remote target branch, merges,
+  owner-private Hub credential. The Group 7 direct primitive additionally permits
+  an explicitly authorized exact target write under AB-DIRECT-001..006.
+  The legacy PR path never writes the remote target branch, merges,
   approves, force-pushes, deletes branches, changes settings or overrides target.
 - **AB-LOCAL-HUB-008** — Synchronization fetches the exact configured remote target, recognizes
   published identity, rebases remaining commits in an isolated candidate and
@@ -284,6 +292,11 @@ queries and ordinary coding never create Hub state, commits or publication.
   Future Prepare exposes valid debt as a known gap. Complete Delta preserves
   older debt, and no debt state authorizes deletion or claims unprocessed paths
   are current knowledge.
+  Receipt-bound Initial Ingest Finalize also derives this same debt from retained
+  discovery limitations in the normalized Repository, with zero Coverage passes
+  and zero omitted changed paths. Compact storage retains at most 64 unique
+  512-character limitations; any overflow is explicitly summarized, while the
+  private Receipt retains full diagnostics. A clean Initial Ingest adds no debt.
 - **AB-REFRESH-022** — A non-partial explicit Coverage pass clears existing debt
   only when it adds no knowledge. A pass that adds knowledge or remains partial
   retains debt and increments its bounded current-campaign pass count. Stop
@@ -294,6 +307,8 @@ queries and ordinary coding never create Hub state, commits or publication.
   default scope, invalid scope/account admission, partial-delta debt creation,
   subsequent Prepare visibility, complete-Delta preservation, unchanged-source
   Coverage addition, retained convergence debt and clean-pass debt clearing.
+  It also covers Initial-Ingest debt persistence through publication, later
+  Prepare visibility and complete-Delta preservation without source re-ingest.
 
 ## Lazy setup and first bootstrap
 

@@ -71,7 +71,7 @@ test("[AB-SURFACE-001..005] freezes an owned release skill and tool surface", ()
 
   assert.equal(PUBLIC_PRODUCT_SKILL_NAMES.length, 10);
   assert.equal(INTERNAL_PRODUCT_SKILL_NAMES.length, 3);
-  assert.equal(tools.length, 46);
+  assert.equal(tools.length, 44);
   assert.equal(new Set(tools.map((tool) => tool.name)).size, tools.length, "advertised tool names must be unique");
   for (const tool of tools) {
     const owners = [...skills].filter(([, skill]) => skill.includes(`\`${tool.name}\``)).map(([name]) => name);
@@ -86,7 +86,7 @@ test("[AB-SURFACE-001..005] freezes an owned release skill and tool surface", ()
     ["agentbase-ingest", "agentbase-refresh", "agentbase-batch-ingest", "agentbase-domain-enrichment", "agentbase-hub"]);
 });
 
-test("[AB-INSTALL-025..031][AB-QUESTION-006][AB-FRESH-010] installs only product skills with safe rerun, preflight and rollback", async (context) => {
+test("[AB-INSTALL-025..031][AB-QUESTION-006][AB-FRESH-010][AB-USE-001..005] installs shared read guidance and product skills with safe rerun, preflight and rollback", async (context) => {
   const temporaryRoots = [];
   context.after(() => temporaryRoots.forEach((root) => fs.rmSync(root, { recursive: true, force: true })));
   const environment = () => {
@@ -106,15 +106,33 @@ test("[AB-INSTALL-025..031][AB-QUESTION-006][AB-FRESH-010] installs only product
   assert.equal(PRODUCT_SKILL_NAMES.length, 13);
   const contextSkill = fs.readFileSync(path.join(repositoryRoot, ".agents", "skills", "agentbase-context", "SKILL.md"), "utf8");
   const contextMetadata = fs.readFileSync(path.join(repositoryRoot, ".agents", "skills", "agentbase-context", "agents", "openai.yaml"), "utf8");
-  assert.match(contextSkill, /Call `search_hub_okf` exactly once/);
-  assert.match(contextSkill, /`global: true`/);
-  assert.match(contextSkill, /do not call\s+`read_hub_okf_concept`/i);
-  assert.match(contextSkill, /freshness line containing\s+`status`, `published_commit`, `current_source_verified` and `reason`/i);
-  assert.match(contextSkill, /missing envelope from an older\s+runtime is `unknown`/i);
+  const sharedLink = /\]\((\.\.\/agentbase-query\/SKILL\.md)\)/.exec(contextSkill)?.[1];
+  assert.ok(sharedLink, "compatibility entry must link the shared installed owner");
   assert.match(contextMetadata, /allow_implicit_invocation: false/);
   const querySkill = fs.readFileSync(path.join(repositoryRoot, ".agents", "skills", "agentbase-query", "SKILL.md"), "utf8");
-  assert.match(querySkill, /read-only answer is the requested deliverable/i);
-  assert.match(querySkill, /Do not replace Feature or User Story\s+discovery, task planning, diagram/i);
+  for (const installedRoot of [path.join(both.CODEX_HOME, "skills"), path.join(both.HOME, ".claude", "skills")]) {
+    for (const [owner, target] of [["agentbase-ingest", "agentbase-refresh"],
+      ["agentbase-refresh", "agentbase-ingest"], ["agentbase-refresh", "agentbase-domain-enrichment"]]) {
+      const ownerPath = path.join(installedRoot, owner, "SKILL.md");
+      const relative = `../${target}/SKILL.md`;
+      assert.ok(fs.readFileSync(ownerPath, "utf8").includes(`](${relative})`),
+        `Add/Update handoff must resolve an installed owner: ${owner} -> ${target}`);
+      assert.equal(fs.readFileSync(path.resolve(path.dirname(ownerPath), relative), "utf8"),
+        fs.readFileSync(path.join(repositoryRoot, ".agents", "skills", target, "SKILL.md"), "utf8"));
+      assert.equal(fs.readFileSync(path.join(installedRoot, owner, "agents", "openai.yaml"), "utf8"),
+        fs.readFileSync(path.join(repositoryRoot, ".agents", "skills", owner, "agents", "openai.yaml"), "utf8"));
+    }
+    const sharedPath = path.resolve(installedRoot, "agentbase-context", sharedLink);
+    assert.equal(fs.readFileSync(sharedPath, "utf8"), querySkill,
+      "each client must resolve the same shipped read instructions, not a checkout path");
+    assert.equal(fs.readFileSync(path.join(installedRoot, "agentbase-context", "SKILL.md"), "utf8"), contextSkill);
+    for (const target of ["agentbase-ingest", "agentbase-refresh", "agentbase-domain-enrichment", "agentbase-hub"]) {
+      const relative = `../${target}/SKILL.md`;
+      assert.ok(querySkill.includes(`](${relative})`), `repair must route to installed owner ${target}`);
+      assert.equal(fs.readFileSync(path.resolve(installedRoot, "agentbase-query", relative), "utf8"),
+        fs.readFileSync(path.join(repositoryRoot, ".agents", "skills", target, "SKILL.md"), "utf8"));
+    }
+  }
   assert.match(querySkill, /report its `status`,\s+`published_commit`, `current_source_verified` and `reason`/i);
   assert.match(querySkill, /age alone never means stale or fresh/i);
   assert.match(querySkill, /equal is `fresh`, different is\s+`stale`/i);

@@ -56,9 +56,7 @@ export async function executeHubCli(
       });
     } else if (command === "finalize") output = await actions.finalize(required(values, "--session"));
     else if (command === "inspect") output = await actions.inspect(required(values, "--proposal"));
-    else if (command === "accept") {
-      output = await actions.accept(required(values, "--proposal"), required(values, "--digest"));
-    } else if (command === "search") {
+    else if (command === "search") {
       const limit = values["--limit"] === undefined ? undefined : Number(values["--limit"]);
       const global = values["--global"];
       if (global !== undefined && global !== "true" && global !== "false") throw new Error("--global must be true or false");
@@ -69,14 +67,11 @@ export async function executeHubCli(
         ...(limit === undefined ? {} : { limit }),
       });
     } else if (command === "read") output = await actions.read(required(values, "--path"));
-    else if (command === "pending") output = await actions.listPending();
-    else if (command === "submit") {
-      output = await actions.submitMany(required(values, "--proposals").split(",").filter(Boolean));
-    } else if (command === "synchronize") output = await actions.synchronize();
+    else if (command === "synchronize") output = await actions.synchronize();
     else if (command === "recover") output = await actions.recover(required(values, "--transaction"));
     else throw new Error(
       "Hub command must be status, configure, bootstrap-preview, bootstrap, prepare, finalize, inspect, "
-      + "accept, search, read, pending, submit, synchronize or recover",
+      + "search, read, synchronize or recover",
     );
     writeOutput(`${JSON.stringify(output, null, 2)}\n`);
     return 0;

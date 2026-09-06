@@ -10,6 +10,18 @@ Normative OKF source is pinned to commit
 `3fcbb9f828c2f23d109c855ee403c3a4c81f3a96`:
 <https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/3fcbb9f828c2f23d109c855ee403c3a4c81f3a96/okf/SPEC.md>.
 
+## Read selectively
+
+This page is not required startup context. Use the relevant section below;
+follow its linked owner rather than loading unrelated sections.
+
+- [Repository proposal lifecycle](#repository-proposal-lifecycle)
+- [Explicit observations](#explicit-observations)
+- [Observed values](#observed-values)
+- [Refresh contribution lifecycle](#refresh-contribution-lifecycle)
+- [Concrete schema catalog](#concrete-schema-catalog)
+- [Single-repository Initial Ingest](#single-repository-initial-ingest)
+
 ## Repository proposal lifecycle
 
 - **AB-MVP-008** — The current host coding agent performs synthesis through the

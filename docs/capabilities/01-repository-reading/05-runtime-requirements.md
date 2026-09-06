@@ -186,6 +186,12 @@ fixture cost, so no incremental-speed or scale claim is accepted.
   field on source/provider upgrades. Unsupported or partial output produces an
   explicit lane limitation or failure according to P0 impact; it never silently
   appears as an empty repository.
+  A census stopped inside its current directory must report truncation, even
+  with no queued subdirectories. Oversized otherwise-admitted files produce a
+  counted limitation. An empty heuristic lane is `limited` with a not-detected
+  explanation, never `absent-after-check`. Known groups may remain reviewable
+  with census limitations; non-terminal/unavailable provider diagnostics retain
+  the existing Incomplete boundary.
 - **AB-MCP-022** — An AgentBase-owned hard-deny patch at the pinned provider's
   admission/read boundary excludes symlink escapes, generated/vendor/build output
   and secret-like paths (including `.env*`, credential/key/cert and Agent state)
@@ -208,6 +214,13 @@ fixture cost, so no incremental-speed or scale claim is accepted.
   baseline are either promoted into bounded discovery groups or reported as
   explicitly not promoted. Boundary/layer promotion cannot create an unbounded
   source crawl, candidate list or model context.
+  Runtime/entrypoint groups preserve each distinct source path/line rather than
+  sampling several runtime locations into one group. They are evidence scopes,
+  not inferred services or mandatory standalone concepts. Same-location signals
+  may coalesce; different groups may map to one useful dossier. Existing group
+  limits fail visibly on overflow; they must not silently drop runtime evidence.
+  Other sampled groups retain their sample limits in Receipt coverage, together
+  with limited-lane and capture diagnostics.
 - **AB-SOURCE-RESOLVE-001** — Source resolution canonicalizes the selected path,
   resolves its containing Git root and records exact source state before graph
   work. Missing, unreadable or non-Git paths fail before provider start or cache

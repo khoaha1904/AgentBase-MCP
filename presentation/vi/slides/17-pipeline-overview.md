@@ -13,7 +13,7 @@ Từ source đến knowledge có thể review.
 Đúng repo       Chọn điều     Kiểm chứng       Viết         Kiểm tra
 và revision     đáng giữ      bằng source      knowledge    contract
 
-Sau 5 bước: Finalize · Inspect → Human Accept → PR · review · merge
+Sau 5 bước: Finalize · Inspect → Confirm Publish → Direct hoặc PR
 ```
 
 ## Lời thoại dự kiến
@@ -22,7 +22,7 @@ Sau 5 bước: Finalize · Inspect → Human Accept → PR · review · merge
 và revision. Discover chọn phần đáng giữ. Investigate kiểm chứng bằng source.
 Author viết knowledge. Validate kiểm tra contract trước khi đưa ra review.
 Đi hết năm bước vẫn chưa tự publish: sau đó mới Finalize, Inspect và con người
-quyết định Accept, review PR rồi merge.”
+quyết định Publish theo policy Direct hoặc PR của Hub.”
 
 ## Câu chuyển
 
