@@ -2,7 +2,10 @@
 
 > Status: Published-only Hub query, MiniSearch retrieval, Repository-aware Domain
 > scope, bounded relation discovery and Capability 051 failure visibility/
-> qualification hardening are implemented; MCP remains deterministic.
+> qualification hardening are implemented; G3-C1 additive freshness is
+> implemented and MCP remains deterministic. G4-C4 Profile Domain projection
+> and G5-C1 compact layout are implemented and verified. G5-C2 private
+> draft-quality probes are deferred and inactive.
 
 Product Contract:
 [Query and context](../../product/05-query-and-context.md)
@@ -26,3 +29,9 @@ Product Contract:
   Domain context, relation results and bounds.
 - [`07-runtime-requirements.md`](07-runtime-requirements.md) — current
   `AB-QUERY-*` authority; query requirements no longer reside under Review/Publish.
+- [`08-profile-domain-projection-requirements.md`](08-profile-domain-projection-requirements.md)
+  — Profile selector and shared home/participation/boundary projection.
+- [Deferred semantic quality design](../09-ingest-and-refresh/11-semantic-quality-admission-requirements.md)
+  — retained future draft-probe design; no current query behavior.
+- [Uniform context freshness](../08-live-references/08-freshness-envelope-requirements.md)
+  — G3-C1 additive freshness metadata returned by Published search/read.

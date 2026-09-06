@@ -55,7 +55,7 @@ Example:
 
 ```text
 The two concepts appear to represent the same Vehicle Events interface.
-Recommended: merge into interfaces/vehicle-events
+Recommended: merge into domains/vehicle-data/knowledge/vehicle-events
 Reason: they have the same Queue ARN and contract; only the repository names differ.
 Other: keep separate / more evidence needed.
 ```

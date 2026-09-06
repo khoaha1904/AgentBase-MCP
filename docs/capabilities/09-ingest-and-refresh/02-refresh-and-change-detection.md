@@ -35,10 +35,16 @@ do not become a completeness claim.
 
 ## Pre-Finalize validation and structural reachability
 
-Refresh passes its prepared session ID to changed-set validation before its one
-Finalize call. This lets the same authoring boundary reject a reused source ID
-whose repository observation moved to a new revision, instead of discovering
-that defect only at Finalize.
+When concept documents change, Refresh passes its prepared session ID to
+changed-set validation before its one Finalize call. This lets the same authoring
+boundary reject a reused source ID whose repository observation moved to a new
+revision, instead of discovering that defect only at Finalize.
+
+With no changed concept documents, skip changed-set validation: its input requires
+at least one concept. Finalize still validates the normalized session bundle and
+complete change accounting, including runtime-materialized observation or coverage
+updates. Only Finalize determines `no_change`; inspect a proposal only when one is
+returned. Do not invent edits or submit unchanged concepts to satisfy the validator.
 
 A new known standalone concept must have an evidenced structural path through
 `part-of`, `implemented-in` or `declared-by` to a Repository or Domain in the
@@ -60,20 +66,57 @@ or diagrams.
   disappeared. An exact Git/source diff can create an evidence-backed removal
   candidate but does not materialize deletion outside proposal review.
 
-## Explicit full refresh
+## Explicit Coverage Refresh
 
-The user can request a full refresh to rerun broad discovery, for example after a
-skill/profile upgrade or when repository knowledge is clearly incomplete. Full
-means a broad bounded investigation, not reading every file or requiring 100% completeness.
+The user can request `coverage` scope to rerun broad discovery, for example after
+a skill/model/profile upgrade or when repository knowledge is clearly
+incomplete. Coverage means a broad bounded investigation, not reading every
+file or requiring 100% completeness. It reuses the same public
+`agentbase-refresh` skill and MCP tools.
 
-A full refresh retains source authority, candidate gates, one guidance call,
-validation and the one-repair budget from normal Refresh.
+A Coverage Refresh checks the five provider-neutral discovery lanes, reuses a
+fresh graph cache where possible and resolves retained findings to exact source.
+It retains source authority, candidate gates, one guidance call, validation and
+the one-repair budget from normal Refresh. It may add knowledge when source is
+unchanged.
 
-This is the approved future **Full Discovery Refresh**, not implemented by
-Capability 046. Capability 046 only brings exact remote-default SourceSnapshot
-authority into normal Refresh and broad discovery into new Init; it does not
-silently reinitialize a Published repository. A qualification Hub can
-intentionally reset/reingest disposable data to measure the new Init.
+`delta` remains the default. Coverage is never selected automatically merely
+because knowledge is old or sparse, and it does not silently reinitialize a
+Published Repository. Coverage orchestration stays in the packaged Refresh
+skill; it does not generalize the Initial-Ingest Seed/Receipt materializer or
+add a semantic critic.
+
+## Coverage debt
+
+Receipt-bound Initial Ingest also seeds this existing debt from its retained
+discovery limitations. Later Prepare exposes the unverified lanes and sampled
+or uninspected source scope as known gaps, even when source has not changed.
+Legacy Published repositories are not retroactively classified. A Coverage
+account must consider those gaps; no-new-output alone proves no completeness.
+
+When the bounded source delta omits paths or has derivation limitations, the
+Repository records one compact `agentbase.repository.refresh_coverage` debt.
+An explicit Coverage Refresh also records debt when its bounded investigation
+is partial or finds knowledge that requires a confirming pass. Future Refresh
+Prepare returns this state as a known gap. A non-partial Coverage Refresh clears
+it through an ordinary reviewed proposal only when it adds no knowledge.
+Ordinary complete Delta Refresh preserves existing debt because it does not
+prove the previously missed surface was reviewed.
+
+Coverage debt is current recovery state, not an activity log or completeness
+score. It contains a bounded omitted count, current-campaign Coverage pass
+count, limitations and observation time; it does not retain source content,
+model reports or a history of runs.
+
+## Coverage convergence
+
+Do not run three passes automatically. Stop at the first non-partial Coverage
+pass that adds no knowledge and reports no limitation. When a pass adds
+knowledge or remains partial, review its proposal before requesting the next
+pass. Coverage debt stores only a bounded pass count for the current campaign.
+After three non-converged passes, stop Coverage, keep the remaining debt visible
+for owner review and use Delta for ordinary changes. The cap bounds cost; it is
+not statistical proof or a completeness claim.
 
 ## Reconciliation
 

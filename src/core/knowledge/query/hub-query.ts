@@ -1,13 +1,14 @@
 import {
   loadHubGraph,
   normalizeHubConceptPath,
-  resolveHubIdentity,
+  resolveHubDomainIdentity,
   summarizeHubConcept,
   type HubConceptSummary,
   type HubDomainScopeRole,
   type HubGraph,
   type HubGraphConcept,
   type HubGraphOmission,
+  type HubProfileDomainRole,
   type HubQueryReader,
 } from "./hub-query-graph.ts";
 import {
@@ -16,6 +17,11 @@ import {
   type HubSearchContext,
 } from "./hub-query-search-index.ts";
 import { parseConceptDocument } from "../documents/okf-document.ts";
+import {
+  buildExactConceptFreshness,
+  buildHubContextFreshness,
+  type ContextFreshnessEnvelope,
+} from "./context-freshness.ts";
 
 export { normalizeHubConceptPath, type HubConceptSummary, type HubQueryReader } from "./hub-query-graph.ts";
 
@@ -24,6 +30,8 @@ export type HubQueryMatch = Readonly<{
   path: string;
   excerpt: string;
 }>;
+
+export type FreshHubQueryMatch = HubQueryMatch & Readonly<{ freshness: ContextFreshnessEnvelope }>;
 
 export type HubSearchMatch = HubConceptSummary & Readonly<{
   rank: number;
@@ -40,7 +48,12 @@ export type HubSearchMatch = HubConceptSummary & Readonly<{
     ordinal: number;
     omittedMatches: number;
   }>;
-  scope?: Readonly<{ domain: string; role: HubDomainScopeRole }>;
+  scope?: Readonly<{
+    domain: string;
+    selector?: string;
+    role: HubDomainScopeRole;
+    roles?: readonly HubProfileDomainRole[];
+  }>;
   context?: readonly HubSearchContext[];
   contextOmitted?: number;
 }>;
@@ -48,13 +61,17 @@ export type HubSearchMatch = HubConceptSummary & Readonly<{
 export type HubSearchResult = Readonly<{
   status: "ok";
   commit: string;
+  profile: HubGraph["profile"];
   matches: readonly HubSearchMatch[];
   omissions?: readonly HubGraphOmission[];
 }> | Readonly<{
   status: "scope_required";
   commit: string;
+  profile: HubGraph["profile"];
   candidateDomains: readonly HubConceptSummary[];
 }>;
+
+export type FreshHubSearchResult = HubSearchResult & Readonly<{ freshness: ContextFreshnessEnvelope }>;
 
 export type HubSearchOptions = Readonly<{
   domain?: string;
@@ -78,13 +95,33 @@ function validateList(values: readonly string[] | undefined, name: string): Read
   return new Set(values);
 }
 
-export async function readHubConcept(reader: HubQueryReader, relativePath: string, maximumBytes = 256 * 1024): Promise<HubQueryMatch> {
+async function readHubConceptProjection(reader: HubQueryReader, relativePath: string, maximumBytes = 256 * 1024): Promise<Readonly<{
+  result: HubQueryMatch;
+  document: ReturnType<typeof parseConceptDocument>;
+}>> {
   const admittedPath = normalizeHubConceptPath(relativePath);
   const content = await reader.readMarkdown(admittedPath);
   if (Buffer.byteLength(content) > maximumBytes) throw new Error("Hub concept exceeds read limit");
-  try { parseConceptDocument(admittedPath, content); }
+  let document: ReturnType<typeof parseConceptDocument>;
+  try { document = parseConceptDocument(admittedPath, content); }
   catch { throw new Error(`Published Hub concept is invalid: ${admittedPath}`); }
-  return { commit: reader.commit, path: admittedPath, excerpt: content };
+  return { result: { commit: reader.commit, path: admittedPath, excerpt: content }, document };
+}
+
+export async function readHubConcept(reader: HubQueryReader, relativePath: string, maximumBytes = 256 * 1024): Promise<HubQueryMatch> {
+  return (await readHubConceptProjection(reader, relativePath, maximumBytes)).result;
+}
+
+export async function readHubConceptWithFreshness(
+  reader: HubQueryReader,
+  relativePath: string,
+  maximumBytes = 256 * 1024,
+): Promise<FreshHubQueryMatch> {
+  const projection = await readHubConceptProjection(reader, relativePath, maximumBytes);
+  return {
+    ...projection.result,
+    freshness: buildExactConceptFreshness(reader.commit, projection.document),
+  };
 }
 
 function exactKind(concept: HubGraphConcept, needle: string): Readonly<{
@@ -146,20 +183,33 @@ function commonDetail(
   contexts: ReadonlyMap<string, readonly HubSearchContext[]>,
   omissions: ReadonlyMap<string, number>,
 ): Readonly<{
-  scope?: Readonly<{ domain: string; role: HubDomainScopeRole }>;
+  scope?: NonNullable<HubSearchMatch["scope"]>;
   context?: readonly HubSearchContext[];
   contextOmitted?: number;
 }> {
   const context = contexts.get(identity) ?? [], contextOmitted = omissions.get(identity) ?? 0;
   const role = domain ? graph.domainScopes.get(domain)?.get(identity) : undefined;
+  const roles = domain && graph.profile === "profile-1.0"
+    ? graph.domainRoles.get(domain)?.get(identity) : undefined;
+  const selector = domain && graph.profile === "profile-1.0"
+    ? summarizeHubConcept(graph, domain).domainSelector : undefined;
   return {
-    ...(domain && role ? { scope: { domain, role } } : {}),
+    ...(domain && role ? { scope: {
+      domain,
+      ...(selector ? { selector } : {}),
+      role,
+      ...(roles?.length ? { roles } : {}),
+    } } : {}),
     ...(context.length ? { context } : {}),
     ...(contextOmitted ? { contextOmitted } : {}),
   };
 }
 
-export async function searchHubConcepts(reader: HubQueryReader, query: string, options: HubSearchOptions = {}): Promise<HubSearchResult> {
+async function searchHubConceptProjection(
+  reader: HubQueryReader,
+  query: string,
+  options: HubSearchOptions = {},
+): Promise<Readonly<{ result: HubSearchResult; graph: HubGraph }>> {
   const needle = query.trim().toLowerCase();
   if (!needle || needle.length > 256) throw new Error("Hub query must contain 1..256 characters");
   const limit = options.limit ?? 20;
@@ -167,7 +217,10 @@ export async function searchHubConcepts(reader: HubQueryReader, query: string, o
   const types = validateList(options.types, "types");
   const projection = await loadHubSearchProjection(reader, options.maximumDocumentBytes ?? 256 * 1024);
   const graph = projection.graph;
-  const domain = options.domain === undefined ? undefined : resolveHubIdentity(graph, options.domain);
+  if (graph.profile === "unsupported") {
+    throw new Error(`Published Hub Profile is unsupported: ${graph.profileFailures.join("; ")}`);
+  }
+  const domain = options.domain === undefined ? undefined : resolveHubDomainIdentity(graph, options.domain);
   if (options.domain !== undefined && (!domain || graph.concepts.get(domain)?.document.type !== "Domain")) {
     throw new Error("domain must identify one exact Domain concept identity or path");
   }
@@ -233,16 +286,41 @@ export async function searchHubConcepts(reader: HubQueryReader, query: string, o
   if (!domain && !options.global && !exactIdentity) {
     const domainIds = [...new Set(matches.flatMap((match) => scopedDomains(graph, match.identity)))].sort();
     if (domainIds.length > 1) {
-      return {
-        status: "scope_required",
-        commit: reader.commit,
+      return { graph, result: {
+        status: "scope_required", commit: reader.commit, profile: graph.profile,
         candidateDomains: domainIds.map((identity) => summarizeHubConcept(graph, identity)),
-      };
+      } };
     }
   }
-  return {
-    status: "ok", commit: reader.commit, matches: matches.slice(0, limit),
+  return { graph, result: {
+    status: "ok", commit: reader.commit, profile: graph.profile, matches: matches.slice(0, limit),
     ...(graph.omissions.length ? { omissions: graph.omissions } : {}),
+  } };
+}
+
+export async function searchHubConcepts(reader: HubQueryReader, query: string, options: HubSearchOptions = {}): Promise<HubSearchResult> {
+  return (await searchHubConceptProjection(reader, query, options)).result;
+}
+
+function contextIdentities(result: HubSearchResult): readonly string[] {
+  if (result.status === "scope_required") return result.candidateDomains.map((domain) => domain.identity);
+  return result.matches.flatMap((match) => [
+    match.identity,
+    ...(match.context ?? []).flatMap((context) => context.kind === "flow-step"
+      ? [context.flow, context.source, context.target]
+      : [context.source, context.target]),
+  ]);
+}
+
+export async function searchHubConceptsWithFreshness(
+  reader: HubQueryReader,
+  query: string,
+  options: HubSearchOptions = {},
+): Promise<FreshHubSearchResult> {
+  const projection = await searchHubConceptProjection(reader, query, options);
+  return {
+    ...projection.result,
+    freshness: buildHubContextFreshness(projection.graph, contextIdentities(projection.result)),
   };
 }
 

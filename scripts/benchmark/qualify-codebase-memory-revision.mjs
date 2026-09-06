@@ -58,7 +58,7 @@ if (reportedVersion !== `codebase-memory-mcp ${version}`) {
 const scope = fs.mkdtempSync(path.join(os.tmpdir(), `agentbase-cbm-${version}-`));
 const repository = path.join(scope, "repository");
 const cache = path.join(scope, "cache");
-fs.cpSync(path.join(root, "fixtures", "typescript-modular-monolith"), repository, { recursive: true });
+fs.cpSync(path.join(root, "scripts/benchmark/testdata/typescript-modular-monolith"), repository, { recursive: true });
 const sourceBefore = digestTree(repository);
 const project = "agentbase-typescript-fixture";
 const transport = new StdioClientTransport({

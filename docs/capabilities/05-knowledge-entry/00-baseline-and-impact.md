@@ -37,10 +37,10 @@ recognized commits are removed from pending ancestry
 Baseline sources:
 
 - [Hub requirements](../11-review-and-publish/01-runtime-requirements.md)
-- [Atomic local accept](../../../src/app/hub-okf/review/accept.ts)
+- [Historical local-accept fixture](../../../../src/app/hub-okf/review/test-support/accept.ts) (test-only after Group 7)
 - [Pending ancestry and prefix selection](../../../src/app/hub-okf/review/pending.ts)
 - [Active-head query](../../../src/app/hub-okf/query/query.ts)
-- [Batch publication](../../../src/app/hub-okf/publication/publish.ts)
+- [Historical stacked-publication fixture](../../../../src/app/hub-okf/publication/test-support.ts) (test-only after Group 7)
 - [Synchronization](../../../src/app/hub-okf/publication/synchronize.ts)
 
 ## Reusable parts

@@ -1,13 +1,6 @@
 export const OKF_VERSION = "0.2" as const;
 export const OKF_SHARED_DIRECTORY = "okf" as const;
 export {
-  appendKnowledgeActivity,
-  parseKnowledgeActivityLog,
-  renderKnowledgeActivityLog,
-  repositoryActivityLogPath,
-  type KnowledgeActivityEntry,
-} from "./documents/activity-log.ts";
-export {
   createInventoryReceipt,
   createInventoryItemId,
   createQuestionPlanId,
@@ -46,7 +39,11 @@ export {
   normalizeHubConceptPath,
   listHubConcepts,
   readHubConcept,
+  readHubConceptWithFreshness,
   searchHubConcepts,
+  searchHubConceptsWithFreshness,
+  type FreshHubQueryMatch,
+  type FreshHubSearchResult,
   type HubConceptSummary,
   type HubQueryMatch,
   type HubListOptions,
@@ -56,12 +53,27 @@ export {
   type HubSearchResult,
 } from "./query/hub-query.ts";
 export {
+  buildContextFreshnessEnvelope,
+  buildExactConceptFreshness,
+  buildHubContextFreshness,
+  type ContextFreshnessEnvelope,
+  type ContextFreshnessOptions,
+  type ContextFreshnessReason,
+  type ContextFreshnessRepository,
+  type ContextFreshnessRepositoryReason,
+  type ContextFreshnessStatus,
+  type CurrentSourceFreshnessReceipt,
+  type PublishedRepositoryObservation,
+} from "./query/context-freshness.ts";
+export {
   loadHubGraph,
+  resolveHubDomainIdentity,
   resolveHubIdentity,
   summarizeHubConcept,
   type HubGraph,
   type HubGraphConcept,
   type HubGraphEdge,
+  type HubProfileDomainRole,
 } from "./query/hub-query-graph.ts";
 export {
   buildHubContinuity,
@@ -96,7 +108,9 @@ export { AWS_PROVIDER_PROFILE, listAwsResourceMappings, mapAwsResource } from ".
 export { TERRAFORM_FAMILY_DETECTOR_PROFILE, detectTerraformResource } from "./schemas/profiles/terraform.ts";
 export {
   conceptReferencesRepository,
+  conceptIdentityFromPath,
   createRepositorySourceResource,
+  isDomainConceptPath,
   OkfValidationError,
   parseConceptDocument,
   parseRepositorySourceResource,
@@ -112,6 +126,34 @@ export {
   type VerificationEvent,
 } from "./documents/okf-document.ts";
 export { computeOkfTreeDigest, loadOkfBundle, type LoadOkfBundleOptions, type OkfBundle } from "./documents/okf-bundle.ts";
+export {
+  AGENTBASE_OKF_PROFILE,
+  AGENTBASE_OKF_PROFILE_CONCEPT_ID,
+  AGENTBASE_OKF_PROFILE_EXTENSIONS,
+  AGENTBASE_OKF_PROFILE_PATH,
+  AGENTBASE_OKF_PROFILE_RESOURCE,
+  AGENTBASE_OKF_PROFILE_TYPE,
+  agentBaseDomainConceptIdentity,
+  agentBaseDomainConceptPath,
+  agentBaseDomainSelector,
+  classifyAgentBaseHubProfile,
+  classifyAgentBaseHubProfileSnapshot,
+  renderAgentBaseOkfProfileDocument,
+  type AgentBaseConceptHome,
+  type AgentBaseHubProfileAdmission,
+  type AgentBaseHubProfileSnapshot,
+  type AgentBaseOkfProfile,
+  type AgentBaseProfileConceptHome,
+  agentBaseProfileConceptPath,
+} from "./documents/agentbase-profile.ts";
+export {
+  agentBaseCandidateHome,
+  legacyConfirmedDomainHomePlan,
+  normalizeAgentBaseInitialIngestHomePlan,
+  validateAgentBaseInitialIngestHomePlan,
+  type AgentBaseHomeSelection,
+  type AgentBaseInitialIngestHomePlan,
+} from "./governance/initial-ingest-home-plan.ts";
 export {
   validateOkfRelationships,
   type OkfRelationshipConcept,
@@ -161,6 +203,27 @@ export {
   type ValidateProposalOptions,
 } from "./proposals/proposal.ts";
 export {
+  buildProposalSemanticImpact,
+  type ProposalImpactAffectedDomain,
+  type ProposalImpactAffectedRepository,
+  type ProposalImpactConcept,
+  type ProposalImpactDelta,
+  type ProposalImpactDuplicateCandidate,
+  type ProposalImpactFlowStep,
+  type ProposalImpactIdentity,
+  type ProposalImpactHome,
+  type ProposalImpactNavigationDocument,
+  type ProposalImpactNavigationLink,
+  type ProposalImpactOmission,
+  type ProposalImpactQuestion,
+  type ProposalImpactProfileKind,
+  type ProposalImpactReferenceIssue,
+  type ProposalImpactRelation,
+  type ProposalImpactTransition,
+  type ProposalImpactUpdate,
+  type ProposalSemanticImpact,
+} from "./proposals/proposal-impact.ts";
+export {
   readMaintainerDirectives,
   type MaintainerDirective,
   type MaintainerDirectiveSet,
@@ -168,10 +231,12 @@ export {
 export {
   readRepositoryIdentityRecord,
   readRepositoryObservedSource,
+  readRepositoryRefreshCoverage,
   resolveRepositoryIdentity,
   type RepositoryIdentityHints,
   type RepositoryIdentityRecord,
   type RepositoryObservedSource,
+  type RepositoryRefreshCoverage,
   type RepositoryIdentityResolution,
 } from "./governance/repository-identity.ts";
 export {

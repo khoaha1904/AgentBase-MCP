@@ -1,6 +1,6 @@
 ---
 name: use-codebase-memory
-description: Support an AgentBase workflow with bounded Code Graph navigation for one authorized local repository. Use when a public AgentBase workflow needs architecture, symbol, caller/callee, impact, snippet, freshness, or coverage evidence; ordinary user questions belong to agentbase-query.
+description: Internal explicit delegation only. Use $use-codebase-memory only after an explicitly invoked public AgentBase workflow delegates bounded Code Graph navigation for one authorized repository; never select it for ordinary repository inspection or questions.
 ---
 
 # Use the managed code graph

@@ -1,6 +1,8 @@
 # 04 — Schema selection
 
-> Status: Catalog 7 is implemented; the catalog 6 design is superseded.
+> Status: Catalog 7 and G5-C1 type-neutral placement/dossier materialization are
+> implemented and verified; the catalog 6 design is
+> superseded. G5-C2 semantic promotion admission is deferred and inactive.
 
 Product Contract:
 [Repository understanding](../../product/01-repository-understanding.md)
@@ -34,4 +36,6 @@ technology from concept role; internal resources default to embedded, while
 shared/independently operated resources may promote to Resource through the
 node-eligibility gate. Terraform/Terragrunt are supported; SAM/CloudFormation
 are not. Legacy/foreign types remain readable, but AgentBase no longer authors
-the retired type.
+the retired type. Under the accepted compact Profile target, these roles select
+frontmatter/body guidance only; they never select a directory or require a
+standalone file.

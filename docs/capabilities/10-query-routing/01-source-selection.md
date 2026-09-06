@@ -97,8 +97,8 @@ Part 10.04 conflict presentation; query does not Refresh or write back automatic
   repository; a shared-knowledge question states that the Hub is unavailable.
 - Graph unavailable/stale: return what the Hub knows and state that implementation
   is unverified; reindex only when a current-source question genuinely requires it.
-- Referenced repository not local/authorized: return Hub knowledge/snapshot; do
-  not clone, use ambient credentials or guess at code.
+- Referenced repository not local/readable: return Hub knowledge/snapshot; do
+  not clone, start a remote source workflow or guess at code.
 - No source is sufficient: ask one short clarification about the Domain/repository
   or state what evidence is missing.
 
@@ -111,5 +111,5 @@ Those actions always use a separate reviewed workflow.
 - Reuses AB-QUERY-002..004 and AB-QUERY-012..013 for bounded exact-Published reads.
 - Reuses AB-MCP-015 and AB-QUERY-006..009 for snapshot/current-source separation.
 - Capability 041 implements this routing in `agentbase-query`; the current
-  released MCP surface contains 44 tools. Visualization remains an explicit
+  released MCP surface contains 46 tools. Visualization remains an explicit
   separate workflow and ordinary query does not generate an artifact.

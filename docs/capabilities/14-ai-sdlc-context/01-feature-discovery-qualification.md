@@ -10,8 +10,9 @@
   summaries/excerpts, direct relation context and exact revision identity.
 - Exact read already returns one validated Published Markdown concept with
   provenance.
-- The released `agentbase-query` workflow already routes ordinary Domain and
-  cross-repository questions through search then exact read.
+- When explicitly invoked, the released `agentbase-query` workflow already
+  routes standalone Domain and cross-repository questions through search then
+  exact read. It is not eligible merely because another workflow needs context.
 - The Crawler fixture contains three repositories, two Lambda functions, the
   shared `crawler-jobs` SQS Resource, result storage and directed relations.
 - The ECS Full-Stack fixture is a pinned public AWS/Terraform application with
@@ -44,7 +45,7 @@ Both arms receive the same synthetic tracker context:
 > Discovery should identify affected system boundaries and unresolved product,
 > operational and ownership questions; it must not prescribe implementation.
 
-The pinned Published input is `khoaha1904/hub-3`, branch `main`, commit
+The pinned Published input is the operator-approved qualification Hub at commit
 `3d0127bf2dee3eddbc54d72576e2d81fb94a9790`. That snapshot has been audited: it
 contains the publisher → `crawler-jobs` queue → worker path, the worker's
 S3/DynamoDB effects and source references. It does not contain accepted

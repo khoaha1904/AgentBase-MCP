@@ -7,6 +7,7 @@ import {
   createHubRuntimeActions,
   defaultHubRuntimeStateRoot,
 } from "../../src/app/hub-okf/index.ts";
+import { createHubIdentity } from "../../src/core/hub/index.ts";
 import { createMockAwsSqsRunner } from "../../src/app/hub-okf/test-support/mock-aws-sqs.ts";
 import { AwsCliAdapter } from "../../src/providers/aws-cli/index.ts";
 
@@ -16,19 +17,26 @@ const QUEUE = "crawler-jobs";
 const QUESTION = "question-42e7cd074990c6c54fa0be6c";
 const PUBLISHER = "repository-crawler-publisher-111111111111";
 const WORKER = "repository-crawler-worker-222222222222";
-const CANDIDATE = `candidate-${createHash("sha256").update("hub-3/crawler-jobs/provider-identity").digest("hex").slice(0, 24)}`;
+const CANDIDATE = `candidate-${createHash("sha256").update("qualification-hub/crawler-jobs/provider-identity").digest("hex").slice(0, 24)}`;
 
 function record(value) {
   return value && typeof value === "object" && !Array.isArray(value) ? value : undefined;
 }
 
-export function assertHub3QualificationStatus(value) {
+export function qualificationTarget(environment) {
+  const repository = environment.AGENTBASE_QUALIFICATION_HUB_REPOSITORY;
+  if (!repository) throw new Error("fixture qualification requires AGENTBASE_QUALIFICATION_HUB_REPOSITORY");
+  return createHubIdentity(repository, environment.AGENTBASE_QUALIFICATION_HUB_BRANCH ?? "main",
+    environment.AGENTBASE_QUALIFICATION_HUB_HOST ?? "github.com");
+}
+
+export function assertHub3QualificationStatus(value, target) {
   const status = record(value), hub = record(status?.hub), local = record(status?.local);
   const remote = record(status?.remote), sync = record(status?.sync);
-  const valid = status?.kind === "remote"
-    && hub?.host === "github.com"
-    && hub?.repository === "khoaha1904/hub-3"
-    && hub?.branch === "main"
+  const valid = target && status?.kind === "remote"
+    && hub?.host === target.host
+    && hub?.repository === target.repository
+    && hub?.branch === target.targetBranch
     && local?.state === "ready"
     && local?.draft_count === 0
     && typeof local?.published_head === "string"
@@ -37,7 +45,7 @@ export function assertHub3QualificationStatus(value) {
     && remote?.state === "current"
     && remote.head === local.published_head
     && sync?.state === "ready";
-  if (!valid) throw new Error("hub-3 fixture qualification requires the exact current khoaha1904/hub-3#main target with no Local Draft or recovery");
+  if (!valid) throw new Error("fixture qualification requires the exact configured Hub target with no Local Draft or recovery");
 }
 
 export function createHub3FixtureInput() {
@@ -58,8 +66,8 @@ export function createHub3FixtureInput() {
   };
 }
 
-export async function runHub3FixtureQualification(actions, awsCalls) {
-  assertHub3QualificationStatus(await actions.status());
+export async function runHub3FixtureQualification(actions, awsCalls, target) {
+  assertHub3QualificationStatus(await actions.status(), target);
   const input = createHub3FixtureInput();
   const prepared = await actions.prepareEnrichment(input);
   const manifest = record(prepared)?.manifest;
@@ -91,18 +99,19 @@ export async function runHub3FixtureQualification(actions, awsCalls) {
 }
 
 export async function main(environment = process.env) {
+  const target = qualificationTarget(environment);
   const fixture = createMockAwsSqsRunner({ accountId: ACCOUNT,
     queues: [{ name: QUEUE, accountId: ACCOUNT, region: REGION }] });
   const actions = createHubRuntimeActions(environment, defaultHubRuntimeStateRoot(), {
     enrichmentAdapter: new AwsCliAdapter(fixture.runner),
   });
-  return runHub3FixtureQualification(actions, fixture.calls);
+  return runHub3FixtureQualification(actions, fixture.calls, target);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try { process.stdout.write(`${JSON.stringify(await main(), null, 2)}\n`); }
   catch (error) {
-    process.stderr.write(`hub-3 SQS fixture qualification failed: ${error instanceof Error ? error.message : "unknown failure"}\n`);
+    process.stderr.write(`SQS fixture qualification failed: ${error instanceof Error ? error.message : "unknown failure"}\n`);
     process.exitCode = 1;
   }
 }

@@ -16,7 +16,7 @@ The default response for a conflict should be concise and direct:
 ⚠ TTL currently has multiple sources:
 - 7 days — repository configuration, observed at commit abc…
 - 30 days — repository documentation, observed at commit def…
-- Maintainer Guidance: 7 days — human:khoa, reviewed 2026-08-22
+- Maintainer Guidance: 7 days — human:maintainer, reviewed 2026-08-22
 Question: Needs Review — guidance conflicts with new evidence.
 ```
 

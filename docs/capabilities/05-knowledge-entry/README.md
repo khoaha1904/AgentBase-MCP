@@ -1,7 +1,9 @@
 # 05 — Knowledge entry
 
 > Status: Proposal/template, Published-only query, remote-required OKF
-> authority and exact profile isolation are implemented.
+> authority, exact profile isolation and G5-C1 compact document identity are
+> implemented and verified. G5-C2 pre-Finalize quality
+> admission is deferred and inactive.
 
 Product Contract:
 [Knowledge lifecycle](../../product/03-knowledge-lifecycle.md)
@@ -29,4 +31,6 @@ Git-backed proposals, exact Markdown skeleton/template, Local Draft commits,
 inspection and publication receipts exist; there is no database or raw graph
 store. Ordinary query is Published-only. Without remote configuration, only
 Code Graph works; each normalized remote URL + branch keeps separate
-Published/Draft state.
+Published/Draft state. Compact Profile paths are owned by Capability 02. The
+deferred G5-C2 design adds no quality packet/report state or second knowledge
+store.

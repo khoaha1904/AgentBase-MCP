@@ -3,14 +3,17 @@
 ## Repository language
 
 English is the canonical language for every AgentBase-owned repository
-artifact: documentation, specifications, source text, comments, tests and
+artifact: documentation, source text, comments, tests and
 commit messages. Agents communicate with users in the language used by the
 user, but user conversation does not change the repository language.
 
-Third-party vendor snapshots, generated output and immutable external evidence
-retain their original bytes and are excluded from translation. A translation
-must preserve requirements, identifiers, links, code examples and observable
-runtime behavior.
+Third-party vendor snapshots and generated output retain their original bytes
+and are excluded from translation. The Vietnamese
+presentation source under `presentation/vi/` and its generated standalone
+snapshot at `presentation/preview.html` are explicit localized-content
+exceptions; they are not Product, Architecture or Capability Contract
+authority. A translation must preserve requirements, identifiers, links, code
+examples and observable runtime behavior.
 
 All current product documentation lives in this repository at three contract levels:
 
@@ -20,52 +23,30 @@ docs/architecture/   system ownership, flows and boundary direction
 docs/capabilities/  behavior, low-level design and current AB-* requirements
 ```
 
-Numbered `specs/` record feature changes. They are historical after completion
-and do not form a third current-documentation layer.
-
 ## Session route
 
-At session start read only `AGENTS.md`, this file, `specs/CURRENT.md` and Git
-status. Then load the smallest relevant route:
+At session start read only `AGENTS.md`, this file and Git status. Then load the
+smallest relevant route:
 
 | Need | Read next |
 |---|---|
-| Product outcome, terminology, scope or authority | `docs/product/README.md` and the affected Product Contract |
-| Source ownership or dependency boundary | `docs/architecture/README.md` |
-| Low-level behavior or requirement IDs | the affected numbered directory under `docs/capabilities/` |
-| Current feature implementation | the active artifact selected by `specs/CURRENT.md` |
+| Business overview, product rules, scope or authority | [Product index](product/README.md) |
+| Architecture, source ownership or dependency direction | [Architecture index](architecture/README.md) |
+| Detailed behavior, limits or requirement IDs | [Capability index](capabilities/README.md) |
+| Concrete implementation | owning source module, adjacent tests and affected Capability Contract |
 
-Current requirement routes:
-
-- Foundation: `docs/capabilities/12-version-scope/01-foundation-requirements.md`
-- Code Graph: `docs/capabilities/01-repository-reading/05-runtime-requirements.md`
-- Hub/Domain/Repository model: `docs/capabilities/02-hub-domain-repository-model/06-capability-requirements.md`
-- Concept discovery: `docs/capabilities/03-concept-discovery/06-capability-requirements.md`
-- Schema selection: `docs/capabilities/04-schema-selection/07-capability-requirements.md`
-- OKF: `docs/capabilities/05-knowledge-entry/06-runtime-requirements.md`
-- Domain Enrichment: `docs/capabilities/06-cross-repository-relations/07-runtime-requirements.md`
-- Conflicts and Questions: `docs/capabilities/07-conflicts-and-questions/07-capability-requirements.md`
-- Observed snapshots: `docs/capabilities/08-live-references/07-capability-requirements.md`
-- Batch Initial Ingest: `docs/capabilities/09-ingest-and-refresh/09-runtime-requirements.md`
-- Local Hub and publication: `docs/capabilities/11-review-and-publish/01-runtime-requirements.md`
-- Installation: `docs/capabilities/12-version-scope/02-installation-requirements.md`
-- CLI: `docs/capabilities/12-version-scope/08-cli-runtime-requirements.md`
-- MCP protocol: `docs/capabilities/12-version-scope/09-mcp-protocol-requirements.md`
-- Benchmark: `docs/capabilities/12-version-scope/03-benchmark-requirements.md`
-- Published visualization: `docs/capabilities/13-visualization/04-runtime-requirements.md`
-- AI SDLC context: `docs/capabilities/14-ai-sdlc-context/02-runtime-requirements.md`
-- Query: `docs/capabilities/10-query-routing/07-runtime-requirements.md`
-- Product scope: `docs/product/00-scope-and-authority.md`
-- Architecture ownership: `docs/architecture/README.md`
+Do not enumerate or preload child documents. Read the selected layer index,
+then the one owning contract. Follow cross-layer links only when the task changes
+that layer's decision. Reports and deferred benchmark designs are opt-in evidence,
+not startup reading.
 
 ## Authority order
 
 1. Latest owner decision.
 2. Affected Product Contract.
 3. Affected Architecture and Capability Contracts, in that order when both apply.
-4. Approved active capability for not-yet-accepted change scope.
-5. Code and focused verification as evidence of implemented behavior.
-6. Completed capabilities and Git history as historical explanation.
+4. Code and focused verification as evidence of implemented behavior.
+5. Git history as historical explanation.
 
 The mandatory high-level → low-level → implementation lifecycle and its
 anti-dead-spec gap loop are defined in the repository
@@ -75,37 +56,27 @@ lifecycle. Every implementation session must follow the repository rule.
 
 ## Documentation contract
 
-AgentBase uses four decision levels plus validation evidence:
+Every directory index routes a concrete question to its owning file and states
+what that file owns. Keep one authoritative definition; link instead of copying.
+Delete replaced designs and completed implementation plans; Git retains history.
+Split long files by independently queried responsibility, not a line quota.
+
+
+AgentBase uses three durable decision levels plus validation evidence:
 
 ```text
 Product Contract       WHAT
         ↓
 Architecture Contract  SYSTEM HOW
         ↓
-Capability Contract    BEHAVIOR / BOUNDARY
-        ↓
-Feature-scoped Implementation Contract CODE HOW
+Capability Contract    BEHAVIOR / BOUNDARY / CODE OWNERSHIP
         ↓
 Validation Evidence    TEST / VERIFY
 ```
 
-“Feature-scoped” describes where the existing Implementation Contract lives; it
-does not add a fifth decision level or a separate “Feature Contract.” Spec Kit
-artifacts connect the levels in this direction:
-
-```text
-specs/CURRENT.md → spec.md
-plan.md → spec.md + affected Product/Architecture/Capability Contracts
-tasks.md → plan.md
-verification.md → requirements + tests
-```
-
-`spec.md` records the accepted change requirements and a Contract Delta linking
-the affected current contracts. `$speckit-plan` reads it and creates `plan.md`;
-that plan links back to the spec and upstream contracts and is the
-feature-scoped Implementation Contract. Generated tasks synchronize an accepted
-current-contract delta before behavior implementation and finish by mapping
-requirements to Validation Evidence.
+Implementation plans are temporary working state. Durable decisions are written
+once in the narrowest affected living contract; source ownership and adjacent
+tests supply concrete implementation and validation evidence.
 
 The current paths map to those levels as follows:
 
@@ -114,7 +85,6 @@ The current paths map to those levels as follows:
 | Product Contract | `docs/product/` | Product outcome, scope, authority, workflows and non-goals |
 | Architecture Contract | `docs/architecture/` | System boundaries, ownership, cross-capability flows, state/trust boundaries and runtime shape |
 | Capability Contract | `docs/capabilities/<area>/` | Capability behavior, contracts, bounds, failure/recovery and `AB-*` requirements |
-| Feature-scoped Implementation Contract | Active `specs/<feature>/plan.md` | Concrete modules, libraries, interfaces and coding/migration decisions for one accepted change |
 | Validation Evidence | Tests, verification reports and `npm run verify` output | Evidence that implementation matches accepted contracts |
 
 The Product-to-Capability mapping is many-to-one:
@@ -138,9 +108,7 @@ ownership.
 `docs/architecture/` may mention implementation baseline as
 evidence, but architectural decisions remain separate from file-, class- and
 package-level implementation choices. A separate global implementation tree is
-not required unless repeated cross-capability decisions justify it. New active
-features use `plan.md` as their feature-scoped Implementation Contract; completed
-plans remain historical and are not migrated to the current template.
+not required; module ownership and adjacent tests keep CODE HOW close to source.
 
 ## Change impact gate
 
@@ -149,11 +117,11 @@ be affected, then check upward before accepting a lower-level decision:
 
 | Change shape | Required review |
 |---|---|
-| Internal implementation with unchanged behavior | Affected capability and implementation contract |
+| Internal implementation with unchanged behavior | Affected capability, source owner and tests |
 | Tool, workflow or user outcome change | Product, architecture and affected capability |
 | Boundary, ownership, state or data-flow change | Architecture and affected capability |
 | Schema, provider, security, credential, migration or recovery change | Product, architecture and affected capability |
-| Package, module pattern or file-structure change only | Implementation contract |
+| Package, module pattern or file-structure change only | Architecture ownership when boundaries change; otherwise source owner and tests |
 | Tests or documentation with no contract change | Affected artifact only |
 
 If a lower-level change reveals an upstream gap, stop and route the decision to
@@ -162,64 +130,40 @@ changing product scope or architecture.
 
 ## Current versus historical references
 
-`docs/` is mutable current truth. `specs/<id>/` is an immutable Spec Kit/SDD
-change package containing the delta, plan, tasks and verification for one
-capability change; it does not replace or duplicate all current docs.
-
-New specs should keep both kinds of reference:
-
-```yaml
-current_refs:
-  - docs/product/00-scope-and-authority.md
-baseline:
-  - path: docs/product/00-scope-and-authority.md
-    commit: <git-sha-before-implementation>
-```
-
-`current_refs` is for navigation and may change when current docs evolve.
-`baseline` preserves the exact historical input and must use a Git commit SHA.
-Completed specs are not rewritten when current docs change. A later behavior
-change creates a new spec with `supersedes` or `amends`; its `verification.md`
-may record the landed/source-snapshot commit after completion.
-
-The former presentation and low-level-design trees were removed after their
-current content moved to Product, Architecture and Capability Contracts.
-Current links use the canonical paths. Completed specs and historical bug
-records keep their original path text and resolve it through their pinned Git
-baselines and repository history; do not bulk-edit historical spec content.
+`docs/` is mutable current truth. Git history explains prior decisions but does
+not override the current Product, Architecture or Capability Contracts. The
+former per-change specification archive was intentionally removed before the
+clean source publication because its accepted outcomes already live here.
 
 ## Current checkpoint
 
-- Catalog 7 Initial Ingest, single-repository Refresh, Batch Initial Ingest and
-  bounded AWS/SQS Domain Enrichment are implemented.
-- Sol Initial Ingest plus two sequential Terra Refresh runs qualify the pinned
-  ECS full-stack Terraform fixture without Accept, Publish or provider CLI.
-- Independent Repository Init PRs, exact same-Repository Init/Refresh stacks and
-  existing-PR reconciliation are implemented. First bootstrap retains one batch
-  PR. Batch Refresh and additional provider profiles remain deferred.
-- Repository observed values are snapshot-first: Finalize owns stable identity,
-  exact source state and readable tables; query performs no repository probe.
-  AWS/SQS provider observations are implemented through explicit Domain
-  Enrichment. A local warning-only Repository freshness report and read-only
-  scheduled Hub CI are implemented. Existing-Hub Initialization adds only a
-  missing standard README and/or non-current CI through one support-only PR.
-- Questions are shared Hub Markdown with exact state/revision and no private
-  ledger authority. Exact-revision answers propose Guidance plus Question update
-  atomically; Accept remains the state-change boundary. Broad Guidance,
-  automatic conflict inference, ordinary-query freshness marks and visual
-  review are post-MVP capabilities. Ordinary Hub query is deliberately
-  Published-only; Local Draft is reviewed through proposal workflows.
-- Codebase Memory now comes from AgentBase's attributed `v0.10.8` source snapshot
-  and 12-language profile rather than an npm postinstall binary. Ordinary setup
-  verifies and activates a reviewed repository-contained platform bundle; it
-  never compiles the provider. Linux x64 is bundled and qualified; the reviewed
-  macOS arm64 bundle remains an explicit company-environment release gate.
-  The Codebase Memory Graph UI frontend is excluded. Capability 045 now owns an
-  implemented Published projection, focused diagram and static Domain-site
-  workflow. Its prior eight-repository qualification Domain, source-backed Flows
-  and evidence-bound System-to-Interface consumption are historical evidence;
-  the generated snapshot was reset before capability 052's resource-node
-  qualification.
+- Groups 1–9 are implemented for a bounded trusted-enterprise Linux x64 pilot.
+  Current outcomes and deferred evidence live in
+  [Scope and authority](product/00-scope-and-authority.md#accepted-product-design-groups).
+- User workflow: Add repository / Update knowledge → private proposal →
+  material preview → explicit Direct/PR Publish. Query reads Published only.
+  No Accept or stacked-publication public entrypoint remains.
+- The installed surface is ten public skills, three internal skills and
+  forty-four owned tools. Query owns standalone and host-workflow reads;
+  Context delegates to it. Repair approval never grants publication or provider access.
+- Deterministic discovery discloses bounds and unsupported lanes; Initial Ingest
+  retains limitations as Repository coverage debt. Delta preserves that debt;
+  explicit Coverage can repair it without re-ingesting. No completeness guarantee.
+- Latest local verification: 248/248 tests. Exact final source/tag still requires
+  CI and artifact qualification. See [Release CI](capabilities/12-version-scope/13-release-ci-requirements.md).
+- Presentation Markdown and standalone HTML are aligned. Real-model routing,
+  semantic usefulness across models, long-term stewardship, scale and macOS
+  qualification are not established by these deterministic tests.
+- No model benchmark runs automatically. Deferred campaigns/reports are
+  task-specific evidence, not startup context or current feature requirements.
 
 Update current truth once in the narrowest high- or low-level document. Do not
 add handoff, roadmap, ADR or evidence-diary files that repeat it.
+
+The accepted product-readiness groups are maintained in
+[`docs/product/00-scope-and-authority.md`](product/00-scope-and-authority.md#accepted-product-design-groups).
+The complete Product horizon is accepted before new delivery work begins. Work
+then returns to the earliest open group, revalidates its Architecture and takes
+one Capability from contract through code and verification before the next
+Capability starts. The group is released/closed before delivery begins for the
+next group; no separate roadmap file is authority.

@@ -1,6 +1,7 @@
 # 07.02 — Shared Question lifecycle
 
-> Status: The Shared Question MVP is implemented and verified through the local lifecycle.
+> Status: The Shared Question MVP and Group 5 compact home-aware placement are
+> implemented and verified.
 
 ## Decision summary
 
@@ -17,8 +18,10 @@ the complete current Question state.
 
 ## Shared representation
 
-Each Question is a bounded Markdown document under `questions/` and appears in
-`questions/index.md`. The document retains:
+Each Question is a bounded Markdown document. Compact Profile 1.0 places it at
+`<subject-home>/questions/` when subject home is unambiguous and under
+`shared/questions/` otherwise; a legacy-unprofiled Hub retains `questions/`.
+The owning home index links useful open Questions directly. The document retains:
 
 - a stable Question ID and human-readable title;
 - a kind: conflict, missing evidence, relation candidate, identity candidate or
@@ -31,9 +34,9 @@ Each Question is a bounded Markdown document under `questions/` and appears in
 - a visible short explanation for a human reviewer.
 
 A Question is an MCP-rendered governance document with `type: Question`, not a
-Concept Schema/role for the model to select during Ingest. Its canonical path is
-`questions/<question-id>.md`; `questions/index.md` is navigation managed by the
-renderer.
+Concept Schema/role for the model to select during Ingest. Its compact canonical
+path is `<home>/questions/<question-id>.md`; the legacy path is
+`questions/<question-id>.md`. Compact Profile creates no category index.
 
 Top-level `status` remains the ordinary OKF document lifecycle (`draft`,
 `stable`, ...), independent of publication and governance. The current Question
@@ -87,8 +90,8 @@ value. Candidate references never invent a placeholder owner concept.
 One Question has at most 64 references, 64 missing-evidence entries, 64
 limitations and 16 Guidance links. IDs/keys are at most 256 UTF-8 bytes; human
 summaries/reasons are at most 512 bytes each; the ordinary 64 KiB frontmatter
-and 256 KiB concept-document bounds still apply. `questions/index.md` contains
-each normalized Question target exactly once. These are safety bounds, not
+and 256 KiB concept-document bounds still apply. The owning home index contains
+each rendered Question target at most once. These are safety bounds, not
 completeness targets.
 
 A Question does not contain raw source, a provider response dump, a secret or
@@ -105,9 +108,10 @@ rename/redirect. The Git Hub is already the namespace, so the input contains no
 machine-local Hub ID or remote name. The scope key contains no wording, evidence
 list, timestamp or current display name.
 
-The ID and `questions/<id>.md` path do not change after creation. A subject
-rename/redirect updates only the current reference through a reviewed proposal;
-it does not derive the ID again.
+The ID and its layout-qualified path do not change after creation. A future
+reviewed legacy-to-Profile migration may rewrite the directory while preserving
+the ID; a subject rename/redirect updates only the current reference and does
+not derive the ID again.
 
 New Question starts at revision `1`. Every accepted modification to the Question
 document—including title/body wording—must increment revision by exactly one;

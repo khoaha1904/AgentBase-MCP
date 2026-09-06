@@ -1,6 +1,7 @@
 import type { CallToolResult } from "@modelcontextprotocol/server";
 import {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
+  conceptIdentityFromPath,
   createInventoryItemId,
   createQuestionPlanId,
   createRepositorySourceResource,
@@ -317,7 +318,7 @@ function durableIdentity(pathValue: string): string {
   if (normalized !== pathValue || normalized.startsWith("okf/")) {
     throw new Error("path must be normalized and relative to the OKF root without an okf/ prefix");
   }
-  return normalized.slice(0, -3);
+  return conceptIdentityFromPath(normalized);
 }
 
 function suppliedConcepts(args: Readonly<Record<string, unknown>>, key = "concepts"): Readonly<{ entries?: SuppliedConcept[]; error?: string }> {
@@ -345,7 +346,7 @@ function suppliedTargets(args: Readonly<Record<string, unknown>>): Readonly<{ en
     && supplied.every((item) => item && typeof item === "object" && !Array.isArray(item)
       && typeof item.identity === "string" && item.identity.length >= 1 && item.identity.length <= 256
       && typeof item.path === "string" && item.path.length >= 1 && item.path.length <= 1024 && validPath(item.path)
-      && item.identity === item.path.slice(0, -3) && !item.path.startsWith("okf/")
+      && item.identity === conceptIdentityFromPath(item.path) && !item.path.startsWith("okf/")
       && typeof item.type === "string" && item.type.length >= 1 && item.type.length <= 256);
   return valid ? { entries: supplied as OkfRelationshipTarget[] }
     : { error: "targets must use normalized OKF-root-relative paths and path-derived identities" };

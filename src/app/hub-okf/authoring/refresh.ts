@@ -8,6 +8,8 @@ import {
 } from "../../../core/hub/index.ts";
 import {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
+  classifyAgentBaseHubProfile,
+  conceptIdentityFromPath,
   conceptReferencesRepository,
   diffBundleProposal,
   isMutableAgentBaseDraft,
@@ -131,12 +133,11 @@ function preserveSharedConcept(
     && readRepositoryIdentityRecord(proposed)?.id === sourceRepositoryId) {
     const previousRepository = mapping(previousAgentbase.repository) ?? {};
     const proposedRepository = mapping(proposedAgentbase.repository) ?? {};
-    if (proposedRepository.observed_source !== undefined) frontmatter = {
-      ...frontmatter,
-      agentbase: { ...previousAgentbase, repository: {
-        ...previousRepository, observed_source: proposedRepository.observed_source,
-      } },
-    };
+    const repository = { ...previousRepository };
+    if (proposedRepository.observed_source !== undefined) repository.observed_source = proposedRepository.observed_source;
+    if (proposedRepository.refresh_coverage === undefined) delete repository.refresh_coverage;
+    else repository.refresh_coverage = proposedRepository.refresh_coverage;
+    frontmatter = { ...frontmatter, agentbase: { ...previousAgentbase, repository } };
   }
   writeBytes(bundleRoot, previous.path, Buffer.from(renderConceptDocument({
     ...previous, frontmatter, body: replaceObservedSection(previous.body, proposed.body),
@@ -153,15 +154,16 @@ function protectBase(
   const removals = new Map((options.removals ?? []).map((removal) => [removal.conceptId, removal]));
   for (const relative of base.files) {
     const inSubject = withinSubject(relative, options.subjectDirectory);
-    const conceptId = relative.endsWith(".md") ? relative.slice(0, -3) : "";
+    const conceptId = relative.endsWith(".md") ? conceptIdentityFromPath(relative) : "";
     const concept = base.concepts.get(conceptId);
     const mutable = Boolean(concept && isMutableAgentBaseDraft(concept));
     let proposed = authored.files.includes(relative) ? bytes(bundleRoot, relative) : undefined;
     const changed = !proposed || !bytes(options.hubBundleRoot, relative).equals(proposed);
     const index = path.posix.basename(relative) === "index.md";
+    const additiveIndex = Boolean(index && proposed && preservesLines(bytes(options.hubBundleRoot, relative), proposed));
     const proposedConcept = authored.concepts.get(conceptId);
     const removal = removals.get(conceptId);
-    const sharedNormalized = Boolean(changed && concept && proposedConcept && mutable
+    const sharedNormalized = Boolean(changed && !additiveIndex && concept && proposedConcept && mutable
       && preserveSharedConcept(concept, proposedConcept, options.sourceRepositoryId, bundleRoot,
         removal?.kind === "repository-contribution"));
     if (sharedNormalized) proposed = bytes(bundleRoot, relative);
@@ -174,7 +176,6 @@ function protectBase(
       && conceptReferencesRepository(proposedConcept, options.sourceRepositoryId)
       && preservesObservedValueIdentities(concept, proposedConcept)
     );
-    const additiveIndex = Boolean(index && proposed && preservesLines(bytes(options.hubBundleRoot, relative), proposed));
     const governedQuestion = (options.questionPaths ?? []).includes(relative);
     const explicitOwnedDeletion = Boolean(mutable && !proposed && removal?.kind === "concept"
       && previousSources.length && previousSources.every((resource) => resource.startsWith(currentPrefix)));
@@ -273,7 +274,10 @@ function validateChangedSchemas(options: AnyRefreshOptions, bundleRoot: string):
     changedIdentities.add(concept.conceptId);
     const removesContribution = options.removals?.some((removal) =>
       removal.kind === "repository-contribution" && removal.conceptId === concept.conceptId);
-    const sourceFailure = !removesContribution && !conceptReferencesRepository(concept, options.sourceRepositoryId)
+    const additiveNavigation = Boolean(previous && path.posix.basename(concept.path) === "index.md"
+      && preservesLines(bytes(options.hubBundleRoot, previous.path), bytes(bundleRoot, concept.path)));
+    const sourceFailure = !removesContribution && !additiveNavigation
+      && !conceptReferencesRepository(concept, options.sourceRepositoryId)
       ? [`${concept.path}: changed concept must cite proposal source repository ${options.sourceRepositoryId}`]
       : [];
     const selectionFailure = !previous && !selected.has(concept.type)
@@ -295,6 +299,10 @@ export function prepareRefreshHubProposal(
 ): Omit<PreparedRefreshHubProposal, "proposal"> & Readonly<{ proposal: AnyHubProposal }> {
   if (!isHubProposalSubject(options.subjectDirectory)) throw new Error("invalid Hub subject");
   if (!subjectExists(options.hubBundleRoot, options.subjectDirectory)) throw new Error("refresh subject is absent; use new");
+  const baseProfile = classifyAgentBaseHubProfile(loadOkfBundle(options.hubBundleRoot));
+  if (baseProfile.kind === "unsupported") {
+    throw new Error(`Hub Profile is unsupported: ${baseProfile.failures.join("; ")}`);
+  }
   const normalizedRemovals = normalizeHubRemovalDeclarations(options.removals ?? []);
   options = { ...options, removals: normalizedRemovals };
   const selected = [...(options.selectedSchemas
@@ -312,6 +320,13 @@ export function prepareRefreshHubProposal(
   if (unknownConflicts.length) validation = validateBundleProposal(options.hubBundleRoot, options.proposalRoot);
   if (!validation.producerValidation?.passed) {
     throw new Error(`Hub refresh failed validation: ${validation.producerValidation?.failures.join("; ")}`);
+  }
+  if (baseProfile.kind === "profile-1.0") {
+    const proposedProfile = classifyAgentBaseHubProfile(loadOkfBundle(bundleRoot, { requireAgentBaseRootIndex: true }));
+    if (proposedProfile.kind !== "profile-1.0") {
+      throw new Error(`refreshed Profile layout failed validation: ${proposedProfile.kind === "unsupported"
+        ? proposedProfile.failures.join("; ") : "Profile declaration disappeared"}`);
+    }
   }
   validateChangedSchemas(options, bundleRoot);
   assertConfirmedDomainAssignment(

@@ -5,8 +5,8 @@
 
 ## Outcome
 
-Hub knowledge and snapshots are always read independently of source permission.
-Source authority is checked only for an explicit current-value/code request or
+Hub knowledge and snapshots are always read independently of source availability.
+Source is resolved only for an explicit current-value/code request or
 when implementation/debugging/impact work genuinely requires code. If source
 cannot be read, the answer degrades to the Hub/snapshot instead of failing
 entirely or guessing.
@@ -15,11 +15,12 @@ entirely or guessing.
 
 - **Hub access**: Hub access permits reading the entire Hub; there is no separate
   Domain, concept or field ACL.
-- **Local source access**: the user selected an exact local/workspace repository
-  root for the current MCP connection.
+- **Local source access**: the trusted-enterprise profile resolves the selected
+  readable local/workspace path to one exact Git repository for the current
+  connection.
 - **Remote source access**: a post-MVP bounded MCP action uses the active
-  MCP-managed GitHub.com/GitHub Enterprise token;
-  the calling Agent does not receive the token or use `gh`/ambient credentials.
+  credential provider for GitHub.com/GitHub Enterprise; the calling Agent does
+  not receive the credential.
 - **Provider access**: does not belong to the normal query route; provider CLI
   observations run only in an explicit Domain Enrichment workflow.
 
@@ -40,7 +41,7 @@ An old snapshot, an existing conflict/Question or available local source does
 not trigger step 3 automatically. This is an Agent semantic stopping rule, not a
 quota or source-read counter in MCP.
 
-The absence of a suitable snapshot does not forbid an explicit authorized source
+The absence of a suitable snapshot does not forbid an explicit source
 read, but query does not create a snapshot or proposal automatically.
 
 ## Access and resolution states
@@ -50,7 +51,7 @@ Source access and value resolution are separate:
 | State | Meaning |
 |---|---|
 | `not-checked` | Snapshot-only query; source/credentials were not probed. |
-| `available` | The exact repository binding/path is authorized for this read. |
+| `available` | The exact repository binding/path is readable for this workflow. |
 | `unavailable` | Repository is not local, the binding mismatches, the path is missing or graph/file reading is unavailable. |
 | `unauthorized` | A future remote action tried an MCP credential and the provider denied permission. |
 
@@ -66,17 +67,17 @@ does not expose a local absolute path, token or provider response body.
 ## Local and workspace repositories
 
 - One connection binds exactly one explicit repository root.
-- A referenced Repository ID must match the binding's admitted identity before
+- A referenced Repository ID must match the binding's resolved identity before
   using the relative path.
 - A relative path must remain inside the root; do not follow a symlink/path escape.
-- Another repository in the workspace is read only after the user/host identifies
-  its exact root and reconnects to it. Do not scan the parent workspace or build
-  a cross-repository graph.
+- Another repository in the workspace is read after the workflow identifies its
+  exact root and switches the connection cleanly. Do not build a
+  cross-repository graph.
 - A missing referenced path degrades to `path-missing`; do not run broad
   moved-symbol recovery or guess a replacement file.
 
 A graph with insufficient coverage can use a bounded direct-source fallback in
-the same authorized root. If freshness is genuinely needed for the current
+the same resolved root. If freshness is genuinely needed for the current
 question, the Agent can explicitly reindex; ordinary Hub/snapshot query does not index.
 
 ## Remote references
@@ -91,11 +92,12 @@ this phase. Until that action exists:
 - do not clone a repository, call GitHub directly or repurpose publication
   transport as a hidden reader.
 
-The remote-reader capability uses an exact canonical Repository identity, bounded
-file/revision reference and shared owner-private Hub token. The token remains only
-on the MCP server and is not given to the Agent; GitHub.com and GitHub Enterprise
-have different base APIs but use the same product contract. It does not clone a
-repository, use `gh`, scan a repository or turn a local path into shared authority.
+The remote-reader capability uses an exact canonical Repository identity,
+bounded file/revision reference and the configured enterprise credential provider.
+The credential remains only inside its provider adapter and is not given to the Agent;
+GitHub.com and GitHub Enterprise have different base APIs but use the same
+product contract. It does not clone a repository, use `gh`, scan a repository
+or turn a local path into shared authority.
 
 The remote default branch/head is suitable for an explicit current-source request;
 an exact historical revision is suitable for checking provenance. Transport,

@@ -10,13 +10,20 @@ Read only the authorized repository root, in this order:
 Keep the read bounded to five files and 256 KiB total. Do not recursively scan
 docs and do not index the graph only to classify Domain.
 
-Present:
+Resolve identity first. For an existing canonical Repository, return to the
+Add entry's Update handoff without proposing a new home. Ambiguous identity
+stops for clarification. Only new repositories need the home plan below.
+
+Present for a new repository:
 
 - the canonical Repository resolution (`existing`, `new` or `ambiguous`);
-- proposed exact Domain identity/title and whether it already exists;
+- proposed exact default Domain identity/title and whether it already exists;
 - supporting relative paths and a short excerpt;
 - any mismatch between the user's label, repository evidence and Hub Domain;
 - one confirmation/correction question.
 
-Do not continue on ambiguous Repository identity or without an explicit Domain
-answer. The user's answer is authoritative only after visible mismatch warnings.
+Do not continue on ambiguous Repository identity or without an explicit
+default-home answer. This is the preliminary Repository default; after
+Discovery exposes the materialized candidates, the workflow presents one final
+grouped home/participation plan. The user's answer is authoritative only after
+visible mismatch warnings.

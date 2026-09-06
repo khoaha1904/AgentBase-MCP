@@ -7,11 +7,13 @@ import { execFileSync } from "node:child_process";
 
 import {
   buildPublishedVisualizationProjection,
+  conceptIdentityFromPath,
   createQuestionId,
   loadHubGraph,
   loadOkfBundle,
   parseConceptDocument,
   renderConceptDocument,
+  renderAgentBaseOkfProfileDocument,
   renderQuestionDocument,
   searchHubConcepts,
 } from "../../src/core/knowledge/index.ts";
@@ -25,15 +27,12 @@ const BENCHMARK_ROOT = path.resolve(
   process.env.AGENTBASE_BENCHMARK_ROOT ?? path.join(AGENTBASE_ROOT, "AgentBase-Benchmark"),
 );
 const FIXTURE_ROOT = path.join(BENCHMARK_ROOT, "repositories/crawler");
-const PIPELINE = path.join(FIXTURE_ROOT, "serverless-data-pipelines-demo");
-const PUBLISHER = path.join(FIXTURE_ROOT, "crawler-publisher");
-const WORKER = path.join(FIXTURE_ROOT, "crawler-worker");
 const COMMIT = "a".repeat(40);
 const ACCOUNT = "123456789012";
 const REGION = "ap-southeast-1";
 
-function source(repo, relative, id, sourceRepositoryId = repo) {
-  return { id, resource: `repository://${sourceRepositoryId}/${relative}#L1-L24`, observed_revision: gitHead(path.join(FIXTURE_ROOT, repo)) };
+function source(repo, relative, id, sourceRepositoryId = repo, fixtureRoot = FIXTURE_ROOT) {
+  return { id, resource: `repository://${sourceRepositoryId}/${relative}#L1-L24`, observed_revision: gitHead(path.join(fixtureRoot, repo)) };
 }
 
 function gitHead(root) {
@@ -47,26 +46,27 @@ function assertClean(root) {
 
 function concept(pathname, type, title, description, sources, relationships = [], body = description) {
   const links = relationships.map((relationship) => {
-    const target = `${relationship.target}.md`;
+    const target = /^domains\/[^/]+$/.test(relationship.target)
+      ? `${relationship.target}/index.md` : `${relationship.target}.md`;
     const relative = path.posix.relative(path.posix.dirname(pathname), target);
     return `- [${relationship.target}](${relative}) (${relationship.kind})`;
   });
-  return renderConceptDocument({ conceptId: pathname.slice(0, -3), path: pathname, type, status: "draft",
+  return renderConceptDocument({ conceptId: conceptIdentityFromPath(pathname), path: pathname, type, status: "draft",
     frontmatter: { type, title, description, status: "draft", sources, ...(relationships.length ? { relationships } : {}) },
     verified: [], body: `# Overview\n\n${body}${links.length ? `\n\n# Relations\n\n${links.join("\n")}` : ""}\n` });
 }
 
-function repository(pathname, id, displayName, repo, description, domainSource) {
-  return renderConceptDocument({ conceptId: pathname.slice(0, -3), path: pathname, type: "Repository", status: "draft",
+function repository(pathname, id, displayName, repo, description, domainSource, fixtureRoot) {
+  return renderConceptDocument({ conceptId: conceptIdentityFromPath(pathname), path: pathname, type: "Repository", status: "draft",
     frontmatter: { type: "Repository", title: displayName, description, status: "draft",
-      sources: [source(repo, "README.md", `${repo}-readme`, id), domainSource],
+      sources: [source(repo, "README.md", `${repo}-readme`, id, fixtureRoot), domainSource],
       relationships: [{ kind: "part-of", target: "domains/crawler", evidence: [domainSource.id] }],
-      agentbase: { repository: { id, display_name: displayName, aliases: { remotes: [], root_commits: [gitHead(path.join(FIXTURE_ROOT, repo))] }, observed_source: { commit: gitHead(path.join(FIXTURE_ROOT, repo)), dirty: false, dirty_digest: null, observed_at: "2026-08-28T00:00:00Z" } } } },
-    verified: [], body: `# Purpose\n\n${description}\n\nPrimary Domain: [Crawler](../domains/crawler.md).\n` });
+      agentbase: { repository: { id, display_name: displayName, aliases: { remotes: [], root_commits: [gitHead(path.join(fixtureRoot, repo))] }, observed_source: { commit: gitHead(path.join(fixtureRoot, repo)), dirty: false, dirty_digest: null, observed_at: "2026-08-28T00:00:00Z" } } } },
+    verified: [], body: `# Purpose\n\n${description}\n\nPrimary Domain: [Crawler](../index.md).\n` });
 }
 
 function questionDocument(repoId) {
-  const origin = { kind: "relation-candidate", originSubject: "components/crawler-publisher", originProperty: "queue", scopeKey: "crawler-jobs" };
+  const origin = { kind: "relation-candidate", originSubject: "domains/crawler/knowledge/crawler-publisher", originProperty: "queue", scopeKey: "crawler-jobs" };
   const id = createQuestionId(origin);
   return { id, content: renderQuestionDocument({ id, revision: 1, state: "open", ...origin,
     subject: origin.originSubject, property: origin.originProperty,
@@ -75,39 +75,58 @@ function questionDocument(repoId) {
     title: "Confirm crawler-jobs producer relation", createdAt: "2026-08-28T00:00:00Z" }) };
 }
 
-function qualificationDocuments() {
+function qualificationDocuments(fixtureRoot = FIXTURE_ROOT) {
   const publisherId = "repository-crawler-publisher-111111111111";
   const workerId = "repository-crawler-worker-222222222222";
   const pipelineId = "repository-serverless-pipeline-333333333333";
   const owner = { id: "owner-domain", resource: "agentbase://owner-guidance/domains/crawler" };
-  const publisherTf = source("crawler-publisher", "main.tf", "publisher-terraform", publisherId);
-  const publisherHandler = source("crawler-publisher", "src/handler.py", "publisher-handler", publisherId);
-  const workerTf = source("crawler-worker", "main.tf", "worker-terraform", workerId);
-  const workerHandler = source("crawler-worker", "src/handler.py", "worker-handler", workerId);
+  const publisherTf = source("crawler-publisher", "main.tf", "publisher-terraform", publisherId, fixtureRoot);
+  const publisherHandler = source("crawler-publisher", "src/handler.py", "publisher-handler", publisherId, fixtureRoot);
+  const workerTf = source("crawler-worker", "main.tf", "worker-terraform", workerId, fixtureRoot);
+  const workerHandler = source("crawler-worker", "src/handler.py", "worker-handler", workerId, fixtureRoot);
   const documents = new Map();
-  documents.set("index.md", "---\nokf_version: \"0.2\"\n---\n\n# AgentBase Hub\n\n* [Crawler](domains/crawler.md) - Domain\n* [Repositories](repositories/index.md) - Repositories\n");
-  documents.set("domains/crawler.md", concept("domains/crawler.md", "Domain", "Crawler", "Crawler qualification Domain", [owner]));
-  documents.set("domains/index.md", "# Domains\n\n* [Crawler](crawler.md) - Domain\n");
-  documents.set("repositories/crawler-publisher.md", repository("repositories/crawler-publisher.md", publisherId, "Crawler publisher", "crawler-publisher", "Publishes crawler jobs.", owner));
-  documents.set("repositories/crawler-worker.md", repository("repositories/crawler-worker.md", workerId, "Crawler worker", "crawler-worker", "Consumes and stores crawler jobs.", owner));
-  documents.set("repositories/serverless-data-pipelines-demo.md", repository("repositories/serverless-data-pipelines-demo.md", pipelineId, "Serverless data pipelines", "serverless-data-pipelines-demo", "Existing crawler data pipeline fixture.", owner));
-  documents.set("repositories/index.md", "# Repositories\n\n* [Crawler publisher](crawler-publisher.md) - Repository\n* [Crawler worker](crawler-worker.md) - Repository\n* [Serverless data pipelines](serverless-data-pipelines-demo.md) - Repository\n");
-  documents.set("resources/crawler-jobs.md", concept("resources/crawler-jobs.md", "Resource", "crawler-jobs SQS queue", "Shared SQS queue carrying crawler jobs.", [publisherTf, workerTf, owner], [{ kind: "part-of", target: "domains/crawler", evidence: [owner.id] }], "The `crawler-jobs` queue is a first-class transport between publisher and worker."));
-  documents.set("resources/crawler-results-bucket.md", concept("resources/crawler-results-bucket.md", "Resource", "Crawler results S3 bucket", "S3 bucket storing processed crawler payloads.", [workerTf, owner], [{ kind: "part-of", target: "domains/crawler", evidence: [owner.id] }]));
-  documents.set("resources/crawler-jobs-table.md", concept("resources/crawler-jobs-table.md", "Resource", "Crawler jobs DynamoDB table", "DynamoDB table indexing processed crawler jobs.", [workerTf, owner], [{ kind: "part-of", target: "domains/crawler", evidence: [owner.id] }]));
-  documents.set("components/crawler-publisher.md", concept("components/crawler-publisher.md", "Function", "Crawler publisher Lambda", "Lambda that sends crawler jobs to SQS.", [publisherTf, publisherHandler], [
-    { kind: "implemented-in", target: "repositories/crawler-publisher", evidence: [publisherTf.id] },
-    { kind: "publishes-to", target: "resources/crawler-jobs", evidence: [publisherTf.id, publisherHandler.id] },
+  documents.set("index.md", "---\nokf_version: \"0.2\"\n---\n\n# AgentBase Hub\n\n* [Profile](shared/agentbase-profile.md) - Profile\n* [Shared](shared/index.md) - Shared knowledge\n* [Crawler](domains/crawler/index.md) - Domain\n");
+  documents.set("shared/index.md", "# Shared\n\n* [Profile](agentbase-profile.md) - Profile\n");
+  documents.set("shared/agentbase-profile.md", renderAgentBaseOkfProfileDocument());
+  const domainRoot = "domains/crawler";
+  const publisherRepository = `${domainRoot}/repositories/crawler-publisher`;
+  const workerRepository = `${domainRoot}/repositories/crawler-worker`;
+  const pipelineRepository = `${domainRoot}/repositories/serverless-data-pipelines-demo`;
+  const jobsResource = `${domainRoot}/knowledge/crawler-jobs`;
+  const bucketResource = `${domainRoot}/knowledge/crawler-results-bucket`;
+  const tableResource = `${domainRoot}/knowledge/crawler-jobs-table`;
+  const publisherFunction = `${domainRoot}/knowledge/crawler-publisher`;
+  const workerFunction = `${domainRoot}/knowledge/crawler-worker`;
+  documents.set(`${publisherRepository}.md`, repository(`${publisherRepository}.md`, publisherId, "Crawler publisher", "crawler-publisher", "Publishes crawler jobs.", owner, fixtureRoot));
+  documents.set(`${workerRepository}.md`, repository(`${workerRepository}.md`, workerId, "Crawler worker", "crawler-worker", "Consumes and stores crawler jobs.", owner, fixtureRoot));
+  documents.set(`${pipelineRepository}.md`, repository(`${pipelineRepository}.md`, pipelineId, "Serverless data pipelines", "serverless-data-pipelines-demo", "Existing crawler data pipeline fixture.", owner, fixtureRoot));
+  documents.set(`${jobsResource}.md`, concept(`${jobsResource}.md`, "Resource", "crawler-jobs SQS queue", "Shared SQS queue carrying crawler jobs.", [publisherTf, workerTf, owner], [{ kind: "part-of", target: domainRoot, evidence: [owner.id] }], "The `crawler-jobs` queue is a first-class transport between publisher and worker."));
+  documents.set(`${bucketResource}.md`, concept(`${bucketResource}.md`, "Resource", "Crawler results S3 bucket", "S3 bucket storing processed crawler payloads.", [workerTf, owner], [{ kind: "part-of", target: domainRoot, evidence: [owner.id] }]));
+  documents.set(`${tableResource}.md`, concept(`${tableResource}.md`, "Resource", "Crawler jobs DynamoDB table", "DynamoDB table indexing processed crawler jobs.", [workerTf, owner], [{ kind: "part-of", target: domainRoot, evidence: [owner.id] }]));
+  documents.set(`${publisherFunction}.md`, concept(`${publisherFunction}.md`, "Function", "Crawler publisher Lambda", "Lambda that sends crawler jobs to SQS.", [publisherTf, publisherHandler], [
+    { kind: "implemented-in", target: publisherRepository, evidence: [publisherTf.id] },
+    { kind: "publishes-to", target: jobsResource, evidence: [publisherTf.id, publisherHandler.id] },
   ], "The publisher calls `send_message` with `CRAWLER_QUEUE_URL`."));
-  documents.set("components/crawler-worker.md", concept("components/crawler-worker.md", "Function", "Crawler worker Lambda", "Lambda triggered by SQS and writing results.", [workerTf, workerHandler], [
-    { kind: "implemented-in", target: "repositories/crawler-worker", evidence: [workerTf.id] },
-    { kind: "triggered-by", target: "resources/crawler-jobs", evidence: [workerTf.id, workerHandler.id] },
-    { kind: "writes-to", target: "resources/crawler-results-bucket", evidence: [workerTf.id] },
-    { kind: "writes-to", target: "resources/crawler-jobs-table", evidence: [workerTf.id] },
+  documents.set(`${workerFunction}.md`, concept(`${workerFunction}.md`, "Function", "Crawler worker Lambda", "Lambda triggered by SQS and writing results.", [workerTf, workerHandler], [
+    { kind: "implemented-in", target: workerRepository, evidence: [workerTf.id] },
+    { kind: "triggered-by", target: jobsResource, evidence: [workerTf.id, workerHandler.id] },
+    { kind: "writes-to", target: bucketResource, evidence: [workerTf.id] },
+    { kind: "writes-to", target: tableResource, evidence: [workerTf.id] },
   ], "The worker consumes SQS records and persists payloads to S3 and DynamoDB."));
   const question = questionDocument(publisherId);
-  documents.set(`questions/${question.id}.md`, question.content);
-  documents.set("questions/index.md", `# Questions\n\n* [Confirm crawler-jobs producer relation](${question.id}.md)\n`);
+  documents.set(`${domainRoot}/questions/${question.id}.md`, question.content);
+  const navigation = [
+    [publisherRepository, "Crawler publisher", "Repository"],
+    [workerRepository, "Crawler worker", "Repository"],
+    [pipelineRepository, "Serverless data pipelines", "Repository"],
+    [jobsResource, "crawler-jobs SQS queue", "Resource"],
+    [bucketResource, "Crawler results S3 bucket", "Resource"],
+    [tableResource, "Crawler jobs DynamoDB table", "Resource"],
+    [publisherFunction, "Crawler publisher Lambda", "Function"],
+    [workerFunction, "Crawler worker Lambda", "Function"],
+  ].map(([identity, title, type]) => `* [${title}](${path.posix.relative(domainRoot, `${identity}.md`)}) - ${type}`);
+  navigation.push(`* [Confirm crawler-jobs producer relation](questions/${question.id}.md) - Question`);
+  documents.set(`${domainRoot}/index.md`, concept(`${domainRoot}/index.md`, "Domain", "Crawler", "Crawler qualification Domain", [owner], [], `Crawler qualification Domain.\n\n# Knowledge\n\n${navigation.join("\n")}`));
   return { documents, publisherId, workerId, pipelineId, questionId: question.id, publisherTf, workerTf };
 }
 
@@ -117,11 +136,14 @@ function reader(documents) {
   } };
 }
 
-export async function qualify(outputDirectory) {
-  for (const root of [PIPELINE, PUBLISHER, WORKER]) assertClean(root);
-  assert.match(fs.readFileSync(path.join(PUBLISHER, "main.tf"), "utf8"), /crawler-jobs/);
-  assert.match(fs.readFileSync(path.join(WORKER, "main.tf"), "utf8"), /crawler-jobs/);
-  const fixture = qualificationDocuments();
+export async function qualify(outputDirectory, { fixtureRoot = FIXTURE_ROOT } = {}) {
+  const pipeline = path.join(fixtureRoot, "serverless-data-pipelines-demo");
+  const publisher = path.join(fixtureRoot, "crawler-publisher");
+  const worker = path.join(fixtureRoot, "crawler-worker");
+  for (const root of [pipeline, publisher, worker]) assertClean(root);
+  assert.match(fs.readFileSync(path.join(publisher, "main.tf"), "utf8"), /crawler-jobs/);
+  assert.match(fs.readFileSync(path.join(worker, "main.tf"), "utf8"), /crawler-jobs/);
+  const fixture = qualificationDocuments(fixtureRoot);
   const graph = await loadHubGraph(reader(fixture.documents), 256 * 1024);
   const projection = buildPublishedVisualizationProjection(graph, { hub: "fixture/crawler-qualification#main", domain: "domains/crawler" });
   assert.equal(projection.nodes.filter((node) => node.type === "Resource").length, 3);
@@ -131,7 +153,7 @@ export async function qualify(outputDirectory) {
   const result = await searchHubConcepts(reader(fixture.documents), "shared SQS queue", { domain: "domains/crawler", types: ["Resource"], limit: 5 });
   assert.equal(result.status, "ok");
   assert.equal(result.matches.length, 1);
-  assert.equal(result.matches[0].path, "resources/crawler-jobs.md");
+  assert.equal(result.matches[0].path, "domains/crawler/knowledge/crawler-jobs.md");
   assert.ok(result.matches[0].context?.some((relation) => relation.predicate === "part-of"));
 
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-crawler-qualification-"));
@@ -140,7 +162,7 @@ export async function qualify(outputDirectory) {
   const bundle = loadOkfBundle(hubRoot, { requireAgentBaseRootIndex: true });
   const before = bundle.treeDigest;
   const stateRoot = path.join(temp, "state");
-  const candidate = { id: `candidate-${"a".repeat(24)}`, kind: "relation", sourceConceptId: "components/crawler-publisher", targetConceptId: "resources/crawler-jobs", predicate: "publishes-to", queue: { name: "crawler-jobs", accountId: ACCOUNT, region: REGION }, identityEvidenceIds: ["publisher-terraform", "worker-terraform"], interactionEvidenceIds: ["publisher-terraform"], question: { id: fixture.questionId, revision: 1 } };
+  const candidate = { id: `candidate-${"a".repeat(24)}`, kind: "relation", sourceConceptId: "domains/crawler/knowledge/crawler-publisher", targetConceptId: "domains/crawler/knowledge/crawler-jobs", predicate: "publishes-to", queue: { name: "crawler-jobs", accountId: ACCOUNT, region: REGION }, identityEvidenceIds: ["publisher-terraform", "worker-terraform"], interactionEvidenceIds: ["publisher-terraform"], question: { id: fixture.questionId, revision: 1 } };
   assert.equal(fixture.documents.has(candidate.sourceConceptId + ".md"), true);
   const manifest = prepareDomainEnrichment({ stateRoot, publishedRoot: hubRoot, baseCommit: COMMIT, domainId: "domains/crawler", repositoryIds: [fixture.publisherId, fixture.workerId, fixture.pipelineId], candidates: [candidate], accountId: ACCOUNT, regions: [REGION], createdAt: "2026-08-28T00:00:00Z" });
   const mock = createMockAwsSqsRunner({ accountId: ACCOUNT, queues: [{ name: "crawler-jobs", accountId: ACCOUNT, region: REGION }] });
@@ -156,7 +178,7 @@ export async function qualify(outputDirectory) {
   assert.equal(site.domain, "domains/crawler");
   const siteText = fs.readFileSync(path.join(outputDirectory, "data/domain.json"), "utf8");
   assert.equal(siteText.includes("arn:aws"), false);
-  return { sourceCommits: { publisher: gitHead(PUBLISHER), worker: gitHead(WORKER), pipeline: gitHead(PIPELINE) }, counts: receipt.counts, query: result.matches[0].path, enrichment: enrichment.outcomes[0].status, outputDirectory };
+  return { sourceCommits: { publisher: gitHead(publisher), worker: gitHead(worker), pipeline: gitHead(pipeline) }, counts: receipt.counts, query: result.matches[0].path, enrichment: enrichment.outcomes[0].status, outputDirectory };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)) {

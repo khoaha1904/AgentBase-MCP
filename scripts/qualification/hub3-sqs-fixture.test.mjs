@@ -4,27 +4,38 @@ import test from "node:test";
 import {
   assertHub3QualificationStatus,
   createHub3FixtureInput,
+  qualificationTarget,
   runHub3FixtureQualification,
 } from "./hub3-sqs-fixture.mjs";
 
+const TARGET = {
+  host: "github.example.com",
+  repository: "agentbase-fixtures/qualification-hub",
+  targetBranch: "main",
+};
 const READY = {
   kind: "remote",
-  hub: { host: "github.com", repository: "khoaha1904/hub-3", branch: "main" },
+  hub: { host: TARGET.host, repository: TARGET.repository, branch: TARGET.targetBranch },
   local: { state: "ready", published_head: "a".repeat(40), active_head: "a".repeat(40), draft_count: 0 },
   credential: "ready",
   remote: { state: "current", head: "a".repeat(40) },
   sync: { state: "ready" },
 };
 
-test("[AB-ENRICH-016] hub-3 fixture target guard fails before authoring", () => {
-  assert.doesNotThrow(() => assertHub3QualificationStatus(READY));
+test("[AB-ENRICH-016] configured fixture target guard fails before authoring", () => {
+  assert.deepEqual(qualificationTarget({
+    AGENTBASE_QUALIFICATION_HUB_HOST: TARGET.host,
+    AGENTBASE_QUALIFICATION_HUB_REPOSITORY: TARGET.repository,
+  }), { ...TARGET, canonicalHttpsUrl: `https://${TARGET.host}/${TARGET.repository}.git` });
+  assert.throws(() => qualificationTarget({}), /AGENTBASE_QUALIFICATION_HUB_REPOSITORY/);
+  assert.doesNotThrow(() => assertHub3QualificationStatus(READY, TARGET));
   for (const status of [
-    { ...READY, hub: { ...READY.hub, repository: "khoaha1904/AgentBase-Hub" } },
+    { ...READY, hub: { ...READY.hub, repository: "agentbase-fixtures/another-hub" } },
     { ...READY, hub: { ...READY.hub, branch: "develop" } },
     { ...READY, remote: { state: "updates-available", head: "b".repeat(40) } },
     { ...READY, local: { ...READY.local, draft_count: 1, active_head: "b".repeat(40) } },
     { ...READY, sync: { state: "blocked" } },
-  ]) assert.throws(() => assertHub3QualificationStatus(status), /hub-3 fixture qualification/);
+  ]) assert.throws(() => assertHub3QualificationStatus(status, TARGET), /fixture qualification/);
 });
 
 test("[AB-ENRICH-015][AB-ENRICH-018] fixture input targets only the factual queue Question", () => {
@@ -58,7 +69,7 @@ test("[AB-ENRICH-017..018] qualification stops at a reviewable proposal and supp
       return { proposal: { id: "2".repeat(24), diffDigest: `sha256:${"3".repeat(64)}` }, inspection: { entries: [] } };
     },
   };
-  const report = await runHub3FixtureQualification(actions, [["--version"], ["sts", "get-caller-identity"], ["sqs", "get-queue-url"], ["sqs", "get-queue-attributes"]]);
+  const report = await runHub3FixtureQualification(actions, [["--version"], ["sts", "get-caller-identity"], ["sqs", "get-queue-url"], ["sqs", "get-queue-attributes"]], TARGET);
   assert.deepEqual(calls.map((call) => Array.isArray(call) ? call[0] : call), ["status", "prepare", "run", "finalize"]);
   assert.deepEqual(calls[3][1].answers, []);
   assert.equal(report.providerOutcome, "confirmed");

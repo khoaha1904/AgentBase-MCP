@@ -87,29 +87,37 @@ export function isDeniedDiscoveryPath(value: string): boolean {
 function candidateFile(relative: string): boolean {
   const name = path.posix.basename(relative).toLowerCase();
   const extension = path.posix.extname(name);
-  return /^readme(?:\.|$)/i.test(name) || ["codeowners", "dockerfile", "makefile", "terragrunt.hcl"].includes(name)
+  return /^readme(?:\.|$)/i.test(name) || ["codeowners", "dockerfile", "makefile", "terragrunt.hcl", "go.mod"].includes(name)
     || [".tf", ".hcl", ".yaml", ".yml", ".json", ".toml", ".md", ".ts", ".tsx", ".js", ".mjs",
       ".cjs", ".py", ".go", ".java", ".sh"].includes(extension);
 }
 
-function walkCensusFiles(root: string): Readonly<{ files: readonly string[]; truncated: boolean }> {
+function walkCensusFiles(root: string): Readonly<{ files: readonly string[]; truncated: boolean; oversized: number }> {
   const pending = [""];
   const files: string[] = [];
   let entries = 0;
+  let truncated = false, oversized = 0;
   while (pending.length && entries < MAX_CENSUS_ENTRIES && files.length < MAX_CENSUS_FILES) {
     const relativeDirectory = pending.pop()!;
     const absoluteDirectory = relativeDirectory ? path.join(root, relativeDirectory) : root;
-    for (const entry of fs.readdirSync(absoluteDirectory, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
+    const children = fs.readdirSync(absoluteDirectory, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name));
+    for (const [index, entry] of children.entries()) {
       entries += 1;
       if (entries > MAX_CENSUS_ENTRIES) break;
       const relative = normalizedPath(relativeDirectory ? `${relativeDirectory}/${entry.name}` : entry.name);
       if (!relative || isDeniedDiscoveryPath(relative) || entry.isSymbolicLink()) continue;
       if (entry.isDirectory()) pending.push(relative);
-      else if (entry.isFile() && candidateFile(relative) && fs.lstatSync(path.join(root, relative)).size <= MAX_FILE_BYTES) files.push(relative);
-      if (files.length >= MAX_CENSUS_FILES) break;
+      else if (entry.isFile() && candidateFile(relative)) {
+        if (fs.lstatSync(path.join(root, relative)).size <= MAX_FILE_BYTES) files.push(relative);
+        else oversized += 1;
+      }
+      if (files.length >= MAX_CENSUS_FILES) {
+        truncated = index < children.length - 1;
+        break;
+      }
     }
   }
-  return { files: files.sort(), truncated: Boolean(pending.length) || entries >= MAX_CENSUS_ENTRIES };
+  return { files: files.sort(), truncated: truncated || Boolean(pending.length) || entries >= MAX_CENSUS_ENTRIES, oversized };
 }
 
 function addMatchSignals(signals: CensusSignal[], relative: string, lines: readonly string[]): void {
@@ -158,7 +166,7 @@ export function redactDiscoveryHint(value: string): string {
   return redacted.slice(0, 240);
 }
 
-function census(root: string): Readonly<{ signals: readonly CensusSignal[]; truncated: boolean }> {
+function census(root: string): Readonly<{ signals: readonly CensusSignal[]; truncated: boolean; oversized: number }> {
   const discovered = walkCensusFiles(root);
   const signals: CensusSignal[] = [];
   for (const relative of discovered.files) {
@@ -168,7 +176,7 @@ function census(root: string): Readonly<{ signals: readonly CensusSignal[]; trun
     if (!stat.isFile() || stat.isSymbolicLink() || stat.size > MAX_FILE_BYTES) continue;
     addMatchSignals(signals, relative, fs.readFileSync(absolute, "utf8").split(/\r?\n/));
   }
-  return { signals, truncated: discovered.truncated };
+  return { signals, truncated: discovered.truncated, oversized: discovered.oversized };
 }
 
 function architectureSignals(architecture: ArchitectureCapture, root: string): CensusSignal[] {
@@ -191,7 +199,9 @@ function architectureSignals(architecture: ArchitectureCapture, root: string): C
 function compactGroups(signals: readonly CensusSignal[]): readonly DiscoveryGroup[] {
   const grouped = new Map<string, CensusSignal[]>();
   for (const signal of signals) {
-    const key = `${signal.lane}\u0000${signal.kind}\u0000${signal.priority}\u0000${signal.title}`;
+    // Preserve evidenced entrypoint locations, not guessed directory/service identities.
+    const scope = signal.lane === "runtime-entrypoint" ? `${signal.path}:${signal.line}` : "";
+    const key = `${signal.lane}\u0000${signal.kind}\u0000${signal.priority}\u0000${signal.title}\u0000${scope}`;
     grouped.set(key, [...(grouped.get(key) ?? []), signal]);
   }
   return [...grouped.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([, values]) => {
@@ -224,6 +234,7 @@ function buildSeed(input: Readonly<{
   coverageEntries: readonly CoverageEntry[];
   coverageUnavailable: boolean;
   censusTruncated: boolean;
+  censusOversized: number;
   signals: readonly CensusSignal[];
 }>): DiscoverySeed {
   const limitations: string[] = [];
@@ -234,6 +245,7 @@ function buildSeed(input: Readonly<{
   if (!input.coverageTerminal) limitations.push("Codebase Memory coverage paging did not reach a terminal page");
   if (input.coverageUnavailable) limitations.push("Codebase Memory coverage metadata is unavailable or stale");
   if (input.censusTruncated) limitations.push("bounded source census reached its entry/file limit");
+  if (input.censusOversized) limitations.push(`${input.censusOversized} admitted source files exceeded the 64 KiB census read limit`);
   if (input.coverageEntries.length) limitations.push(`${input.coverageEntries.length} recorded coverage gaps require source qualification`);
   for (const section of ["boundaries", "layers", "hotspots", "clusters"] as const) {
     if ((input.architecture.sections[section]?.length ?? 0) > 0) {
@@ -255,7 +267,9 @@ function buildSeed(input: Readonly<{
   const lanes = DISCOVERY_LANES.map((lane) => {
     const laneGroups = groups.filter((group) => group.lane === lane);
     if (p0Hiding) return { lane, status: "limited" as const, limitation: "provider diagnostics cannot prove this lane is complete" };
-    return { lane, status: laneGroups.length ? "covered" as const : "absent-after-check" as const };
+    if (laneGroups.length) return { lane, status: "covered" as const };
+    return { lane, status: "limited" as const,
+      limitation: "not detected by bounded graph/source heuristics; source qualification is required before claiming absence" };
   });
   const body = {
     source: sourceIdentity(input.snapshot),
@@ -403,7 +417,7 @@ export class DiscoverySession {
     }
     const direct = census(armed.snapshot.analysisRoot);
     const seed = buildSeed({ snapshot: armed.snapshot, diagnostic, architecture, coverageTerminal,
-      coverageEntries: entries, coverageUnavailable, censusTruncated: direct.truncated,
+      coverageEntries: entries, coverageUnavailable, censusTruncated: direct.truncated, censusOversized: direct.oversized,
       signals: [...direct.signals, ...architectureSignals(architecture, armed.snapshot.analysisRoot)] });
     this.#seed = seed;
     return appendSeed(input.result, seed);

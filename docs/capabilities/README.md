@@ -19,12 +19,14 @@ normative `AB-*` requirements; there is no parallel contracts tree.
 - `*-requirements.md` is normative. Other child pages explain behavior,
   rationale or constraints; a baseline/qualification page is supporting
   evidence and must not silently become implementation authority.
-- Concrete modules, packages, functions, file layouts and migration steps for
-  an active change belong in `specs/<feature>/plan.md`.
+- Concrete modules, packages, functions and file layouts remain with their
+  owning source area; durable migration decisions belong in the affected
+  Capability Contract.
 - A child file may describe a current, implemented or deferred boundary; its
   opening status or area index must distinguish that state.
-- Superseded historical designs remain traceable but must not be described as
-  the current baseline.
+- Remove superseded designs from living contracts; Git retains their history.
+- Each area index routes questions to individual files; qualification evidence is
+  explicitly separate from current requirements. Do not preload the whole area.
 
 ## Baseline-first principle
 
@@ -79,20 +81,26 @@ implementation, benchmark, PR and capability commit.
 
 ## Index
 
-1. [Repository reading](01-repository-reading/README.md)
-2. [Hub, Domain and Repository model](02-hub-domain-repository-model/README.md)
-3. [Concept discovery](03-concept-discovery/README.md)
-4. [Schema selection](04-schema-selection/README.md)
-5. [Knowledge entry](05-knowledge-entry/README.md)
-6. [Cross-repository relations](06-cross-repository-relations/README.md)
-7. [Conflicts, Questions and Guidance](07-conflicts-and-questions/README.md)
-8. [Observed snapshots and source references](08-live-references/README.md)
-9. [Ingest and Refresh](09-ingest-and-refresh/README.md)
-10. [Query routing](10-query-routing/README.md)
-11. [Review and Publish](11-review-and-publish/README.md)
-12. [Version scope](12-version-scope/README.md)
-13. [Published visualization](13-visualization/README.md)
-14. [Context for AI SDLC workflows](14-ai-sdlc-context/README.md)
+| Need | Area and responsibility |
+|---|---|
+| Select source, build/query a private graph | [Repository reading](01-repository-reading/README.md) |
+| Resolve identity, Domain home or Profile layout | [Hub, Domain and Repository model](02-hub-domain-repository-model/README.md) |
+| Discover candidate knowledge and disclose omissions | [Concept discovery](03-concept-discovery/README.md) |
+| Choose concept type and promotion rules | [Schema selection](04-schema-selection/README.md) |
+| Author and validate evidence-backed OKF | [Knowledge entry](05-knowledge-entry/README.md) |
+| Establish cross-repo relations or bounded provider evidence | [Cross-repository relations](06-cross-repository-relations/README.md) |
+| Resolve Questions and retain human Guidance | [Conflicts, Questions and Guidance](07-conflicts-and-questions/README.md) |
+| Represent observed values and freshness | [Observed snapshots and source references](08-live-references/README.md) |
+| Add repositories or update missing/changed knowledge | [Ingest and Refresh](09-ingest-and-refresh/README.md) |
+| Search/read Published knowledge | [Query routing](10-query-routing/README.md) |
+| Preview, Publish, synchronize or recover | [Review and Publish](11-review-and-publish/README.md) |
+| Install, configure, package, release or qualify | [Version scope](12-version-scope/README.md) |
+| Generate a read-only Domain site or diagram | [Published visualization](13-visualization/README.md) |
+| Supply context to another AI workflow | [Context for AI SDLC workflows](14-ai-sdlc-context/README.md) |
+
+Choose one area, then use its child index. Normative requirements define behavior;
+qualification reports document bounded observations and are read only for an
+explicit evidence/benchmark question.
 
 The current [MCP protocol Capability Contract](12-version-scope/09-mcp-protocol-requirements.md)
 owns modern stdio negotiation, stateless Streamable HTTP, legacy compatibility,
@@ -101,7 +109,6 @@ owns only its system boundary.
 
 Current runtime authority lives in `docs/`; `docs/architecture/` holds system
 ownership and `docs/capabilities/` holds capability contracts, while code and
-tests are evidence. The active spec holds change intent and its feature-scoped
-Implementation Contract only while a capability is being changed. Explanatory
-pages in this directory describe behavior and trade-offs and must be updated
-when implementation evidence invalidates an old assumption.
+tests are validation evidence. Explanatory pages in this directory describe
+behavior and trade-offs and must be updated when implementation evidence
+invalidates an old assumption.

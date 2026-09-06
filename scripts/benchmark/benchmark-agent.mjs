@@ -17,8 +17,12 @@ import { renderHubCiBundle } from "../../src/app/hub-okf/ci/artifact.ts";
 import { renderHubReadme } from "../../src/app/hub-okf/workspace/readme.ts";
 import { PRODUCT_SKILL_NAMES } from "../installation/product-skills.mjs";
 import { benchmarkRoot, projectRoot } from "./benchmark-paths.mjs";
-import { buildCodexArgs, portableAgentText, renderAgentPrompt } from "./benchmark-agent-command.mjs";
-export { buildCodexArgs, portableAgentText, renderAgentPrompt } from "./benchmark-agent-command.mjs";
+import {
+  buildCodexArgs, isolateCodexEnvironment, portableAgentText, renderAgentPrompt,
+} from "./benchmark-agent-command.mjs";
+export {
+  buildCodexArgs, isolateCodexEnvironment, portableAgentText, renderAgentPrompt,
+} from "./benchmark-agent-command.mjs";
 
 const requiredTools = ["index_repository", "list_okf_schemas", "select_okf_schemas", "get_okf_schema", "validate_okf_concept"];
 const v3RequiredTools = [...requiredTools, "validate_okf_relationships"];
@@ -821,13 +825,14 @@ export function runAgentRepository({
     encoding: "utf8",
     timeout: manifest.agent.timeoutMs,
     maxBuffer: 50 * 1024 * 1024,
-    env: {
+    env: isolateCodexEnvironment(runtimeRoot, {
       ...process.env,
+      HOME: path.join(runtimeRoot, "home"),
       TMPDIR: runtimeTmp,
       AGENTBASE_HOME: path.join(runtimeRoot, "agentbase"),
       XDG_CONFIG_HOME: path.join(runtimeRoot, "config"),
       XDG_DATA_HOME: path.join(runtimeRoot, "data"),
-    },
+    }),
   });
   const portable = (value) => portableAgentText(value, { repository: sourceRepository, workspace, runtimeRoot });
   fs.writeFileSync(eventsFile, portable(result.stdout || ""));
@@ -963,8 +968,9 @@ export function runAgentBatch({ manifest, repositories, root, executable = manif
     runtimeRoot, enabledTools: batchEnabledTools }), {
     cwd: projectRoot, input: prompt, encoding: "utf8", timeout: manifest.agent.timeoutMs,
     maxBuffer: 50 * 1024 * 1024,
-    env: { ...process.env, TMPDIR: runtimeTmp, AGENTBASE_HOME: path.join(runtimeRoot, "agentbase"), XDG_CONFIG_HOME: path.join(runtimeRoot, "config"),
-      XDG_DATA_HOME: path.join(runtimeRoot, "data") },
+    env: isolateCodexEnvironment(runtimeRoot, { ...process.env, HOME: path.join(runtimeRoot, "home"),
+      TMPDIR: runtimeTmp, AGENTBASE_HOME: path.join(runtimeRoot, "agentbase"), XDG_CONFIG_HOME: path.join(runtimeRoot, "config"),
+      XDG_DATA_HOME: path.join(runtimeRoot, "data") }),
   });
   const portable = (value) => sources.reduce((text, item, index) => text.split(item.repository)
     .join(`<SOURCE_${index + 1}_ROOT>`), portableAgentText(value, { repository: "\0", workspace, runtimeRoot }));

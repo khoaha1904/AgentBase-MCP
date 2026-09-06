@@ -40,7 +40,37 @@ test("abs help exposes only the small public surface", async () => {
   assert.match(output.join(""), /abs status/);
   assert.match(output.join(""), /abs hub connect/);
   assert.match(output.join(""), /abs hub sync/);
-  assert.doesNotMatch(output.join(""), /okf|benchmark|proposal|mcp/);
+  assert.match(output.join(""), /abs hub policy/);
+  assert.match(output.join(""), /abs hub publish/);
+  assert.doesNotMatch(output.join(""), /okf|benchmark|mcp/);
+});
+
+test("[AB-DIRECT-008] public Publish binds confirmation and reports split outcomes without Accept", async () => {
+  const env = environment();
+  try {
+    let calls = 0;
+    const args = ["hub", "publish", "--proposal", "a".repeat(24), "--digest", `sha256:${"b".repeat(64)}`, "--mode", "direct"];
+    const output: string[] = [];
+    for (const remote of ["published", "unknown"] as const) {
+      for (const local of ["recognized", "pending"] as const) {
+        const code = await executeCli(args, actions(), { environment: env, writeOutput: (s) => output.push(s),
+          publishHub: async (input, environment) => {
+            calls += 1;
+            assert.equal(environment, env);
+            assert.deepEqual(input, { proposalId: "a".repeat(24), diffDigest: `sha256:${"b".repeat(64)}`, mode: "direct" });
+            return { proposalId: input.proposalId, commit: "c".repeat(40), remote, local };
+          } });
+        assert.equal(code, remote === "published" && local === "recognized" ? 0 : 1);
+      }
+    }
+    assert.equal(calls, 4);
+    for (const bad of [args.slice(0, -2), [...args.slice(0, -1), "invalid"], [...args, "--mode", "direct"]]) {
+      assert.equal(await executeCli(bad, actions(), { environment: env, writeError: () => {}, publishHub: async () => {
+        throw new Error("must not execute malformed Publish");
+      } }), 1);
+    }
+    assert.match(output.join(""), /unknown/);
+  } finally { fs.rmSync(env.AGENTBASE_HOME!, { recursive: true, force: true }); }
 });
 
 test("abs status and sync dispatch bounded owner actions", async () => {
@@ -55,7 +85,7 @@ test("abs status and sync dispatch bounded owner actions", async () => {
   assert.match(syncIo.output.join(""), /synchronized/);
 });
 
-test("hub connect stores one shared token and reuses it on blank input", async () => {
+test("[AB-HUB-SETUP-030][AB-HUB-SETUP-033][AB-HUB-SETUP-037] hub connect stores one shared token and reuses it on blank input", async () => {
   const env = environment();
   let calls = 0;
   const connect = actions({ configure: async () => { calls += 1; return { connected: true }; } });
@@ -70,7 +100,7 @@ test("hub connect stores one shared token and reuses it on blank input", async (
   assert.doesNotMatch(firstIo.output.join("") + firstIo.errors.join(""), /shared-token-canary/);
 });
 
-test("hub connect restores the previous shared token after a reported failure", async () => {
+test("[AB-HUB-SETUP-031][AB-HUB-SETUP-037] hub connect restores the previous shared token after a reported failure", async () => {
   const env = environment();
   writeGlobalHubToken("old-token-canary", env);
   const connect = actions({ configure: async () => { throw new Error("destination rejected"); } });
@@ -81,7 +111,7 @@ test("hub connect restores the previous shared token after a reported failure", 
   assert.doesNotMatch(connectIo.errors.join(""), /new-token-canary|old-token-canary/);
 });
 
-test("the shared token is the default credential for every Hub profile", () => {
+test("[AB-HUB-SETUP-033][AB-HUB-SETUP-037] the shared token is the default credential for every Hub profile", () => {
   const env = environment();
   const profileId = "a".repeat(24);
   writeHubProfileToken(profileId, "legacy-profile-token", env);

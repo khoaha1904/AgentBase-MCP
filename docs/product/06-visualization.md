@@ -1,7 +1,25 @@
 # 06 — Visualization
 
 > Status: Published projection, focused diagrams and explicit static Domain-site
-> generation are implemented.
+> generation are implemented. Exact-proposal semantic impact and its bounded
+> text preview are implemented; optional visual proposal rendering remains
+> deferred. G4-C4 Profile Domain projection and G5-C1 compact
+> Domain/Repository projection are implemented and verified.
+
+## Accepted follow-up — Group 7
+
+The approved publication simplification changes how knowledge becomes
+Published, not visualization authority. Private preparation remains excluded
+from ordinary diagrams and sites; exact-change preview remains review support.
+The Domain-site UI is task-oriented: find knowledge, understand its connections
+and inspect evidence. Search presents selectable results and explicit empty
+states. Secondary filters are disclosed on demand; selection-only actions are
+disabled until applicable. Fit changes only the viewport; reset clears view
+filters, selection and manual positions. Neither changes Published knowledge.
+Light/dark appearance is a browser-local preference. Node inspection leads with
+purpose, navigable recorded connections and evidence; technical identity is
+secondary disclosure. The expanded reader remains a bounded snapshot overview,
+not a replacement for full Markdown or live source.
 
 ## Outcome
 
@@ -32,13 +50,48 @@ Pages automatically.
 New Published knowledge requires a new generation. The site is not a watcher,
 dashboard or live mirror.
 
+Every generated site visibly identifies its exact Published Hub commit and
+states that it is generated presentation rather than AgentBase-Hub authority.
+Removing that marker is a downstream publishing decision outside AgentBase; the
+generator never presents a hosted page as proof that the underlying Hub is
+public or current.
+
+## Proposal review impact preview
+
+The Knowledge Lifecycle may request one deterministic before/after view for an
+exact finalized proposal. It may show changed concepts, accepted relation
+direction, affected Domain/Repository boundaries, Questions, dangling
+references and omissions. It reads the exact proposal/base only, carries their
+digests and is discarded after review. Local Draft never enters ordinary
+Published visualization, and the preview never substitutes for Git diff or
+maintainer approval.
+
 ## Knowledge and presentation boundary
 
 Concepts, accepted relation direction, provenance, Flows, Questions and visible
 omissions come from the Published projection. Colors, layout and coordinates are
 presentation state and never enter the Hub.
 
-The Domain is page context rather than a repeated graph node. A Repository is
+After Group 4 delivery, a Domain view starts from the corresponding Domain
+Capsule. Shared and other-Domain concepts appear only as evidenced boundary
+endpoints. Their visual placement never rehomes, copies or imports their
+knowledge into the selected capsule.
+
+The compact Profile target discovers roles from frontmatter rather than folder
+names. Domain `index.md` supplies page context; Repository dossiers supply the
+default human-readable Repository view, while independently useful documents in
+`knowledge/` become graph/detail views only when their accepted identities and
+relations justify them. Embedded dossier sections may be presented as bounded
+details but never become synthetic canonical nodes.
+
+The default System map emphasizes recorded connections between non-Repository
+concepts, with embedded resources visible by default and optionally collapsed. Unconnected items
+remain available and are placed separately, never connected by inference.
+Repository dossiers remain searchable; source grouping is a separate By repository
+view, not a deployment claim. Colors distinguish primary concepts, subdued
+source regions, dashed embedded references and labeled external endpoints.
+
+The Domain is page context rather than a repeated graph node. In By repository, a Repository is
 shown as a compact selectable card inside its fixed grouping region, whose
 boundary does not grow during interaction. Repository-owned knowledge may be
 repositioned within that region, while shared, multi-repository and external
@@ -52,7 +105,7 @@ only an outside node with no related Repository falls back to the shared
 external lane. Placement uses Published relation endpoints and never changes
 membership or infers topology.
 
-Repository regions use a deterministic relation-aware ring when three or more
+In By repository, Repository regions use a deterministic relation-aware ring when three or more
 Repositories are visible. The ring keeps cross-repository arrows out of
 unrelated Repository regions; one- and two-Repository maps retain the compact
 linear arrangement. This is presentation state only and does not imply an
@@ -92,6 +145,8 @@ be at least as restricted as the Published knowledge it copies.
 - Another graph database, watcher, daemon or live server.
 - Automatic Domain-site repository creation, push or publication.
 - Writing presentation settings into OKF.
+- Treating generated site or proposal-preview visibility as knowledge
+  authority, access policy or publication state.
 
 ## Downstream Capability Contract
 

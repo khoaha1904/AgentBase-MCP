@@ -55,8 +55,38 @@ reproducible.
 - directed canonical and evidence-backed embedded runtime edges; structural
   links already represented by repository containment are hidden by default.
 
+## Interaction hierarchy
+
+The default System map uses recorded runtime/Flow edges, hides Repository cards
+and regions, and initially shows embedded references with an option to collapse them. Unconnected visible
+concepts are placed below connected components with a visible count; no layout
+edge is inferred. By repository restores all embedded references and fixed source
+regions. The grouping is source ownership, never deployment. Repository dossiers
+remain available in search/details in both views. The embedded toggle affects
+System map only. Reset preserves the selected view and restores its defaults.
+
+Search and Repository scope are primary controls. Search lists matching titles
+and types without automatically selecting the first result; zero matches are
+explicit. Type, boundary scope and Flow display are secondary options. A selected
+node offers direct connections or a wider two-step neighborhood; these controls
+are disabled without an eligible graph selection. Fit preserves view state;
+Reset view restores the generated layout and clears filtering/focus. Selection
+preserves the viewport instead of fitting the entire map after every click.
+Keyboard users can select search results and dismiss details with Escape.
+On narrow screens, search precedes the map and provenance remains visible.
+Light/dark selection defaults to the OS preference and persists locally when
+browser storage is available; storage failure never blocks rendering. Both the
+selection drawer and expanded overview show purpose, navigable relation cards,
+open Questions, evidence, then collapsed identity/home metadata. Relation cards
+retain the exact predicate and direction; missing connections are explicitly
+unrecorded, not proof of absence. Embedded references link to their recorded
+parents. The reader labels snapshot and partial-content authority visibly.
+
 The site uses bundled local Cytoscape.js and system fonts. It works from a static web
-host with no Hub/MCP access. Local preview is allowed with a warning that this
+host. Its CSP admits only local assets and the exact SHA-256 of the pinned
+Cytoscape container-position style; arbitrary inline styles/scripts remain blocked.
+It requires no runtime model, external UI library service or Hub/MCP access.
+Local preview is allowed with a warning that this
 is a fixed snapshot. AgentBase does not create a Domain-Hub repo, push, publish
 Pages, watch Hub changes or refresh the site automatically.
 

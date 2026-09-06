@@ -18,10 +18,10 @@ type EvidenceFixture = Readonly<{
   mustNotCreate: readonly string[];
 }>;
 
-const fixtureRoot = path.resolve(import.meta.dirname, "../../../../fixtures/okf-schema-catalog");
+const testDataRoot = path.resolve(import.meta.dirname, "./testdata/okf-schema-catalog");
 
 test("[AB-SCHEMA-007] every initial concrete schema has a validation/selection fixture", () => {
-  const fixture = JSON.parse(fs.readFileSync(path.join(fixtureRoot, "catalog-cases.json"), "utf8")) as {
+  const fixture = JSON.parse(fs.readFileSync(path.join(testDataRoot, "catalog-cases.json"), "utf8")) as {
     catalogVersion: string;
     cases: readonly CatalogCase[];
   };
@@ -37,7 +37,7 @@ test("[AB-SCHEMA-007] every initial concrete schema has a validation/selection f
 });
 
 test("[AB-SCHEMA-002][AB-SCHEMA-003][AB-SCHEMA-008][SC-005] provider-neutral runtime rehearsal is sparse and supports repeated types", () => {
-  const fixture = JSON.parse(fs.readFileSync(path.join(fixtureRoot, "aws-server-evidence.json"), "utf8")) as EvidenceFixture;
+  const fixture = JSON.parse(fs.readFileSync(path.join(testDataRoot, "aws-server-evidence.json"), "utf8")) as EvidenceFixture;
   const selected = selectOkfConceptSchemas(fixture.signals).map((item) => item.type);
   assert.deepEqual(selected, ["Function", "Component"]);
   assert.equal(fixture.instances.filter((item) => item.type === "Function").length, 2);

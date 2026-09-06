@@ -1,12 +1,15 @@
 # 03.02 — Concept qualification and identity
 
-> Status: Identity/query-value qualification is implemented.
+> Status: Identity/query-value qualification and Group 5's independent-reading
+> gate are implemented and verified.
 
 ## Qualification
 
-A candidate becomes a concept only with both stable identity and independent
-query/link value. A schema role, source file or technology keyword cannot replace
-either gate.
+A candidate becomes standalone knowledge only with stable identity, independent
+query/link value and the independent reading boundary defined by the compact
+Profile contract. A schema role, source file, endpoint count or technology
+keyword cannot replace a gate. Evidence that matters but lacks a separate
+reading boundary stays in the Repository dossier/useful parent.
 
 ## Identity precedence
 
@@ -27,7 +30,7 @@ candidate/Question for later Domain Enrichment verification.
 The Hub path is a logical human-readable identity, for example:
 
 ```text
-resources/vehicle-events-queue
+domains/vehicle-data/knowledge/vehicle-events-queue
 ```
 
 ARN, Terraform address, provider account/region or API route are attributed

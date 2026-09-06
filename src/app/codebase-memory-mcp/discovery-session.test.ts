@@ -9,18 +9,18 @@ import type { CallToolResult } from "@modelcontextprotocol/server";
 import type { ScopedSession } from "../../providers/codebase-memory/index.ts";
 import type { SourceSnapshot } from "../../providers/github-hub/index.ts";
 import { createInventoryItemId, createQuestionPlanId, createRepositorySourceResource, DiscoveryValidationError,
-  validateDiscoverySeed } from "../../core/knowledge/index.ts";
+  validateDiscoverySeed, validateDiscoveryInventory } from "../../core/knowledge/index.ts";
 import { DiscoverySession, DISCOVERY_ARCHITECTURE_ASPECTS, redactDiscoveryHint } from "./discovery-session.ts";
 import { callOkfSchemaTool } from "./okf-schema-tools.ts";
 
-const fixtureRoot = new URL("../../../fixtures/codebase-memory-v0.10.8/discovery/", import.meta.url);
+const testDataRoot = new URL("./testdata/discovery/", import.meta.url);
 
 function envelope(value: unknown): CallToolResult {
   return { content: [{ type: "text", text: typeof value === "string" ? value : JSON.stringify(value) }] };
 }
 
 function readFixture(name: string): unknown {
-  const value = fs.readFileSync(new URL(name, fixtureRoot), "utf8");
+  const value = fs.readFileSync(new URL(name, testDataRoot), "utf8");
   return name.endsWith(".json") ? JSON.parse(value) as unknown : value;
 }
 
@@ -38,6 +38,93 @@ function snapshot(root: string): SourceSnapshot {
     privateRoot: path.join(path.dirname(root), "private"),
   };
 }
+
+async function captureCensus(root: string) {
+  const page = (readFixture("coverage-pages.json") as Record<string, unknown>[])[1]!;
+  const provider: ScopedSession = {
+    pid: 1, tools: [],
+    async invoke(name) {
+      if (name === "index_status") return envelope(readFixture("index-status.json"));
+      if (name === "check_index_coverage") return envelope({ ...page,
+        scopes: [{ requested_scope: ".", scope: ".", total: 0, has_more: false,
+          entries: [], status: "no_recorded_issue" }] });
+      if (name === "get_architecture") return envelope("project: fixture\ntotal_nodes: 12\ntotal_edges: 15\n");
+      throw new Error(`unexpected provider call: ${name}`);
+    },
+    async close() { return { status: "clean", pid: 1, graceful: true, forced: false, stderrBytes: 0 }; },
+  };
+  const discovery = new DiscoverySession();
+  discovery.arm(snapshot(root), "new");
+  await discovery.captureAfterIndex({ repositoryRoot: root, project: "fixture", provider, result: envelope("indexed") });
+  assert.ok(discovery.activeSeed);
+  return discovery.activeSeed;
+}
+
+test("[AB-MCP-021] census reports a file cap inside the final directory, not at an exact complete boundary", async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-census-cap-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "README.md"), "# Flat repository\n");
+  for (let index = 0; index < 255; index += 1) fs.writeFileSync(path.join(root, `z-${index}.ts`), "export {};\n");
+  assert.equal((await captureCensus(root)).capture.truncated, false);
+  fs.writeFileSync(path.join(root, "zz-entry.ts"), "const handler = () => 1;\n");
+  const seed = await captureCensus(root);
+  assert.equal(seed.state, "ready", "a disclosed census bound does not invalidate observed groups");
+  assert.equal(seed.capture.truncated, true);
+  assert.match(seed.capture.limitations.join("\n"), /entry\/file limit/);
+  assert.equal(seed.lanes.find((lane) => lane.lane === "runtime-entrypoint")?.status, "limited");
+});
+
+test("[AB-MCP-021] census discloses entry and oversized-file limits without claiming heuristic absence", async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-census-limits-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "go.mod"), "module example.test/service\n");
+  fs.writeFileSync(path.join(root, "large.java"), "x".repeat(64 * 1024 + 1));
+  fs.writeFileSync(path.join(root, "Application.java"), "@SpringBootApplication\nclass Application { public static void main(String[] args) {} }\n");
+  fs.writeFileSync(path.join(root, "Controller.java"), '@RestController\n@RequestMapping("/orders")\nclass Controller {}\n');
+  const seed = await captureCensus(root);
+  assert.equal(seed.state, "ready");
+  assert.equal(seed.groups.some((group) => group.sources.some((source) => source.path === "go.mod")), true);
+  assert.match(seed.capture.limitations.join("\n"), /1 admitted source files exceeded/);
+  assert.equal(seed.lanes.some((lane) => lane.status === "absent-after-check"), false);
+  assert.match(seed.lanes.find((lane) => lane.lane === "interface-event-trigger")?.limitation ?? "", /not detected/);
+  for (let index = 0; index < 4096; index += 1) fs.writeFileSync(path.join(root, `z-${index}.txt`), "");
+  assert.equal((await captureCensus(root)).capture.truncated, true);
+});
+
+test("[AB-MCP-026] runtime evidence stays accountable across files and within one deployment file", async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-census-runtimes-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "README.md"), "# Workers\n");
+  for (let index = 0; index < 12; index += 1) {
+    const directory = path.join(root, `services/worker-${index}`);
+    fs.mkdirSync(directory, { recursive: true });
+    fs.writeFileSync(path.join(directory, "main.tf"), `resource "aws_lambda_function" "worker_${index}" {}\n`);
+  }
+  fs.writeFileSync(path.join(root, "main.tf"), 'resource "aws_lambda_function" "first" {}\nresource "aws_lambda_function" "second" {}\n');
+  const seed = await captureCensus(root);
+  const runtimes = seed.groups.filter((group) => group.lane === "runtime-entrypoint");
+  assert.equal(runtimes.length, 14);
+  assert.equal(runtimes.every((group) => group.sources.length === 1), true);
+  assert.equal(new Set(runtimes.map((group) => `${group.sources[0]!.path}:${group.sources[0]!.startLine}`)).size, 14);
+  const inventory = { seedId: seed.id, questionPlans: [], limitations: [],
+    items: seed.groups.map((group) => ({ id: createInventoryItemId(seed.id, group.id), originGroupId: group.id,
+      outcome: "materialized" as const, outputs: [{ candidateId: "repository" }] })) };
+  const request = { candidates: [{ id: "repository", identityHint: "workers", identityBasis: "README",
+    queryValue: "worker overview", evidenceIds: ["readme"], disposition: "concept" as const, suggestedType: "Repository" }],
+    semanticObservations: [{ id: "readme", candidateId: "repository", role: "documentation" as const,
+      signal: "repository overview", source: { path: "README.md", startLine: 1, endLine: 1 } }], resourceObservations: [] };
+  const coverage = validateDiscoveryInventory(seed, inventory, request);
+  assert.equal(coverage.outcome, "ready-for-review", "separate evidence groups may share one dossier");
+  assert.match(coverage.limitations.join("\n"), /group samples are bounded/);
+  assert.match(coverage.limitations.join("\n"), /interface-event-trigger: not detected/);
+  const missing = validateDiscoveryInventory(seed, { ...inventory,
+    items: inventory.items.filter((item) => item.originGroupId !== runtimes[13]!.id) }, request);
+  assert.deepEqual(missing.p0Missing, [runtimes[13]!.id]);
+  assert.equal(missing.outcome, "incomplete");
+  fs.writeFileSync(path.join(root, "overflow.tf"), Array.from({ length: 65 }, (_, index) =>
+    `resource "aws_lambda_function" "overflow_${index}" {}`).join("\n"));
+  await assert.rejects(captureCensus(root), /exceeds 64 groups/);
+});
 
 test("[AB-MCP-019..023][AB-INGEST-017] armed Init derives one fixed bounded Seed without changing provider blocks", async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-discovery-"));

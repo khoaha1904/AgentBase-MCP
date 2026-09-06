@@ -7,6 +7,15 @@ route to shared groups without copying their IDs.
 AgentBase-Hub is optional until the first Hub-dependent action. Indexing, graph
 queries and ordinary coding never create Hub state, commits or publication.
 
+> Status: The lifecycle baseline, Group 1 single enterprise credential reuse and
+> trusted capability composition are implemented and verified.
+
+Accept/submit requirements below govern release-excluded historical test fixtures only,
+not public routes. Group 7's CLI/MCP and skill replacement is governed by
+[Prepared publication](12-direct-publication-requirements.md). Old public
+Accept/pending/submit actions and their production helpers are removed;
+authorized old test-state disposal is complete without a migration adapter.
+
 ## Local active knowledge
 
 - **AB-LOCAL-HUB-001** — Exactly one state is active: no Hub or one configured
@@ -28,8 +37,11 @@ queries and ordinary coding never create Hub state, commits or publication.
   ancestry after the admitted base; sidecars cannot invent pending commits.
 - **AB-LOCAL-HUB-006** — Submit publishes one non-empty dependency-safe selection
   as deterministic per-Repository publication units and opens/recovers their PRs.
-- **AB-LOCAL-HUB-007** — Only explicit attach, bootstrap, submit, synchronize and
-  Hub Initialization actions may use the shared owner-private Hub token. Normal operation never writes the remote target branch, merges,
+- **AB-LOCAL-HUB-007** — Only externally authorized attach, bootstrap, submit,
+  synchronize and Hub Initialization actions may use the exact active-profile
+  owner-private Hub credential. The Group 7 direct primitive additionally permits
+  an explicitly authorized exact target write under AB-DIRECT-001..006.
+  The legacy PR path never writes the remote target branch, merges,
   approves, force-pushes, deletes branches, changes settings or overrides target.
 - **AB-LOCAL-HUB-008** — Synchronization fetches the exact configured remote target, recognizes
   published identity, rebases remaining commits in an isolated candidate and
@@ -44,8 +56,9 @@ queries and ordinary coding never create Hub state, commits or publication.
   one atomic owner lock; cancellation never silently resets or drops knowledge.
 - **AB-LOCAL-HUB-012** — A proposal subject is a logical canonical review focus,
   while `sourceRepositoryId` independently records the evidence source. New
-  selected concepts may be created across canonical entity roots; their paths
-  are not forced beneath the repository concept.
+  selected concepts may be created across admitted compact homes; standalone
+  paths are not forced beneath the Repository concept, while repository-local
+  evidence defaults to that Repository dossier.
 - **AB-LOCAL-HUB-013** — Refresh may change an unverified AgentBase draft across
   canonical roots only when the proposed concept cites the current source and
   retains exact foreign-repository source resources. Protected bytes remain
@@ -57,9 +70,10 @@ queries and ordinary coding never create Hub state, commits or publication.
   complete checkout remains lifecycle state and is not serialized as authoring
   context.
 - **AB-LOCAL-HUB-015** — A new repository proposal may append navigation to an
-  existing root or category `index.md`, but every accepted nonblank line remains
-  byte-exact and ordered. Renaming the Hub/category heading, deleting, replacing
-  or reordering existing navigation fails before proposal acceptance.
+  existing root/shared/home `index.md`, but every accepted protected line
+  remains byte-exact and ordered. Compact category indexes are not authored.
+  Renaming protected headings, deleting/replacing protected knowledge or
+  reordering existing navigation fails before proposal acceptance.
 - **AB-LOCAL-HUB-016** — Hub assigns one canonical Repository ID once and stores
   strong remote/forge/lineage aliases in the Repository concept. Checkout path,
   display name and current remote are hints, not regenerated identity. One
@@ -84,8 +98,10 @@ queries and ordinary coding never create Hub state, commits or publication.
 ## Reviewable PR publication
 
 - **AB-PUBLISH-001** — `submit_hub_okf_proposals` is the only public action that
-  pushes accepted Hub knowledge and creates PRs. It uses the dedicated Hub token;
-  the caller never receives the token or substitutes `gh`.
+  pushes accepted Hub knowledge and creates PRs. It requires separately
+  activated publication authority for the exact profile and proposal selection,
+  uses that profile's dedicated credential, and never exposes the credential or
+  substitutes `gh`.
 - **AB-PUBLISH-002, AB-PUBLISH-003, AB-PUBLISH-004** — Every new PR deterministically presents Purpose,
   Scope, Knowledge Changes, Uncertainty, Evidence and Validation, and Reviewer
   Action. Scope identifies exact proposals, source Repositories, available
@@ -126,8 +142,9 @@ queries and ordinary coding never create Hub state, commits or publication.
   [`AB-INGEST-010`](../05-knowledge-entry/06-runtime-requirements.md#single-repository-initial-ingest);
   publication adds no side registry or System-name inference.
 - **AB-QUESTION-001** — Question is an MCP-rendered shared Hub governance
-  document at `questions/<stable-id>.md`, with navigation in
-  `questions/index.md`. It is part of the ordinary proposal tree/digest and
+  document at Profile `shared/questions/<stable-id>.md` or legacy
+  `questions/<stable-id>.md`, with navigation in the matching Question index.
+  It is part of the ordinary proposal tree/digest and
   becomes visible to another machine through normal Git synchronization; no
   private ledger or attachment is knowledge authority.
 - **AB-QUESTION-002** — Stable Question identity is created once from immutable
@@ -258,6 +275,40 @@ queries and ordinary coding never create Hub state, commits or publication.
   schema does not admit `declared-by` or Resource-to-Resource `depends-on`. An
   unanchored candidate remains embedded or limited instead of becoming an
   isolated Hub node that ordinary graph/query/visualization projection can omit.
+- **AB-REFRESH-019** — One public `agentbase-refresh` skill owns both scopes:
+  `delta` is default; owner-requested `coverage` performs broad bounded
+  provider-neutral investigation over identity/product, runtime/entrypoint,
+  interface/event/trigger, integration/data/channel and deploy/operations. It
+  reuses the exact source and graph cache, reads exact evidence for retained
+  findings and adds no skill, MCP tool, model service or completeness claim.
+- **AB-REFRESH-020** — Existing `prepare_hub_okf` accepts optional
+  `refresh_scope: delta|coverage`. Initial Ingest rejects it. Coverage requires
+  one normalized coverage account; the exact scope and account are bound into
+  the authoring session and evidence identity. Existing callers default to
+  `delta` without compatibility change.
+- **AB-REFRESH-021** — A Refresh with omitted changed paths, source-diff
+  limitations or partial explicit Coverage records one bounded current
+  `agentbase.repository.refresh_coverage` debt in its canonical Repository.
+  Future Prepare exposes valid debt as a known gap. Complete Delta preserves
+  older debt, and no debt state authorizes deletion or claims unprocessed paths
+  are current knowledge.
+  Receipt-bound Initial Ingest Finalize also derives this same debt from retained
+  discovery limitations in the normalized Repository, with zero Coverage passes
+  and zero omitted changed paths. Compact storage retains at most 64 unique
+  512-character limitations; any overflow is explicitly summarized, while the
+  private Receipt retains full diagnostics. A clean Initial Ingest adds no debt.
+- **AB-REFRESH-022** — A non-partial explicit Coverage pass clears existing debt
+  only when it adds no knowledge. A pass that adds knowledge or remains partial
+  retains debt and increments its bounded current-campaign pass count. Stop
+  early on a clean confirming pass or after three non-converged owner-reviewed
+  passes; the cap leaves debt visible and makes no completeness claim. Debt
+  stores no source bytes, model output, run history or numeric semantic score.
+- **AB-REFRESH-023** — Focused release evidence covers backward-compatible
+  default scope, invalid scope/account admission, partial-delta debt creation,
+  subsequent Prepare visibility, complete-Delta preservation, unchanged-source
+  Coverage addition, retained convergence debt and clean-pass debt clearing.
+  It also covers Initial-Ingest debt persistence through publication, later
+  Prepare visibility and complete-Delta preservation without source re-ingest.
 
 ## Lazy setup and first bootstrap
 
@@ -297,11 +348,12 @@ queries and ordinary coding never create Hub state, commits or publication.
 - **AB-HUB-SETUP-013** — Private non-secret phase receipts bind repository,
   target, baseline digest and commit so retry accepts only the exact ref created
   by that intent and never rewrites a changed target.
-- **AB-HUB-SETUP-014** — After the remote target is fetched/admitted, configuration
+- **AB-HUB-SETUP-014** — After the remote target is fetched and validated, configuration
   becomes `remote` and later work uses normal PR publication/synchronization.
-- **AB-HUB-SETUP-015** — The shared owner-private Hub token never enters tool
-  arguments, Git URLs, repositories, configuration metadata, receipts or errors.
-  Missing permissions preserve local work and request credential repair.
+- **AB-HUB-SETUP-015** — Credential bytes remain inside the configured provider
+  and never enter tool arguments, Git URLs,
+  repositories, profile metadata, receipts or errors. Missing permissions
+  preserve local work and request credential repair.
 - **AB-HUB-SETUP-016** — Configuration/receipts are owner-private, non-symlink,
   atomic and share the serialized Hub mutation boundary.
 - **AB-HUB-SETUP-017** — Offline verification covers no-Hub graph/scan use,
@@ -312,29 +364,30 @@ queries and ordinary coding never create Hub state, commits or publication.
   Graph and workspace inventory never create Hub authority.
 - **AB-HUB-SETUP-023** — A remote profile is identified by normalized HTTPS
   GitHub host, repository and exact target branch. Each identity owns isolated
-  local checkout and configuration; exactly one profile is active. One
-  owner-private shared Hub token is reused across profiles, while activation
-  never merges, replays or copies knowledge from another profile.
+  local checkout and knowledge/workflow configuration; exactly one profile is
+  active. Profiles do not own or duplicate token bytes, while activation never
+  merges, replays or copies knowledge from another profile.
 - **AB-HUB-SETUP-024** — Remote connection accepts credential-free repository
-  URL plus target branch. Token entry occurs only through an owner-private
-  masked terminal flow; blank input reuses the shared token and non-empty input
-  stages a replacement. The token is never a model/tool argument. GitHub.com
-  uses its public API; another admitted HTTPS GitHub host uses the standard
-  Enterprise API on that host. Clone, API, PR URL and permission checks bind the
-  same host.
+  URL plus target branch. It first resolves the default enterprise credential
+  and prompts through a masked terminal only when none is available
+  or replacement is explicitly requested. The token is never a model/tool
+  argument. GitHub.com uses its public API; another configured HTTPS GitHub host
+  uses the standard Enterprise API on that host. Clone, API, PR URL and
+  permission checks bind the same host.
 - **AB-HUB-SETUP-025** — Internal accepted ancestry may stay on local `main`
   while every remote read/write, pull request, initialization and CI target uses
   the configured branch. A profile change is staged and validated before one
   atomic active-pointer update; failure preserves the prior active profile.
 - **AB-HUB-SETUP-026** — The packaged Hub control skill presents compact status,
-  guides secure profile/credential setup and calls synchronization only after
+  guides profile/credential setup and calls synchronization only after
   explicit user intent. The MVP has no daemon, periodic task, hidden first-call
   pull, simultaneous multi-Hub query or cross-Hub merge.
 - **AB-HUB-SETUP-027** — Status is byte-for-byte read-only. Legacy profile,
   credential and transaction migration runs only before an explicit mutation;
   it canonicalizes host/repository/branch identity without moving the checkout
-  or losing drafts. Active remote actions read the shared owner-private Hub token;
-  no GitHub CLI or ambient credential fallback is used.
+  or losing drafts. A validated legacy shared credential becomes the default
+  built-in single-credential provider instead of being copied into every Hub
+  profile.
 - **AB-HUB-SETUP-028** — Bootstrap holds mutation and activation ownership,
   rechecks remote emptiness and active intent before its sole direct target write,
   then admits the canonical profile and Published baseline atomically/recoverably.
@@ -347,17 +400,45 @@ queries and ordinary coding never create Hub state, commits or publication.
   matching dead-process lock; legacy transactions remain idempotent.
 - **AB-HUB-SETUP-030** — One explicit owner-terminal Hub connect command accepts
   only a credential-free GitHub HTTPS repository URL and exact target branch,
-  prompts for an optional masked shared token, reuses the prior token when the
-  prompt is blank, and invokes the ordinary validated attach/activation
-  boundary. Token bytes never enter chat, MCP/tool inputs, process arguments,
-  output, errors, repositories or Git configuration. MCP tools never obtain a
-  token or gain ambient credential fallback.
+  resolves the existing default enterprise credential before using a
+  masked prompt, and invokes the ordinary validated attach/activation boundary.
+  Token bytes never enter chat, MCP/tool inputs, process arguments, output,
+  errors, repositories or Git configuration. Connecting another Hub with the
+  same credential identity accepts blank input instead of requiring the token
+  again.
 - **AB-HUB-SETUP-031** — Connect activates the destination profile only after
-  token admission, remote access and exact Hub validation all succeed. A
-  missing token, denied or malformed token, unavailable branch, invalid Hub or
-  interrupted attach preserves the previously active profile and shared token;
-  a reported failure restores any replacement staged by that attempt. An
+  credential resolution, remote access and exact Hub validation all succeed. A
+  missing, denied or malformed credential, unavailable branch, invalid Hub or
+  interrupted attach preserves the previously active profile and credential
+  provider state; a reported failure restores any credential replacement staged
+  by that attempt. An
   uncatchable process termination may leave only owner-private staged state, but
   never activates the destination. Connect does not synchronize, copy/replay
   Local Draft, or merge knowledge across profiles; the packaged Hub-control
   skill directs connect/switch requests through this single terminal flow.
+
+## Group 1 trusted-enterprise composition
+
+- **AB-HUB-SETUP-032** — `abs hub connect` owns creating or switching the active
+  normalized host/repository/branch profile. MCP workflows consume the active
+  profile and cannot merge or copy state between profiles.
+- **AB-HUB-SETUP-033** — The built-in trusted-enterprise provider stores one
+  default credential reused by every Hub profile, so switching repositories
+  does not require entering the token again. Explicit replacement updates that credential
+  transactionally. Future scoped or multi-account providers may replace it
+  without changing Hub profile identity or connect semantics.
+- **AB-HUB-SETUP-034** — The shipped trusted-enterprise capability policy
+  exposes normal Hub query, authoring, lifecycle, publication and recovery
+  tools. Tool annotations remain truthful and future policies may filter this
+  catalog without changing business handlers.
+- **AB-HUB-SETUP-035** — Prepare, Finalize, Accept, Publish, external merge and
+  Sync retain exact active-profile, base, proposal/selection digest and state
+  checks. These are lifecycle correctness invariants, not expiring security
+  tickets, and no transition implies or skips the next.
+- **AB-HUB-SETUP-036** — Capability policy is applied at MCP composition while
+  profile, credential and lifecycle validation remain in their owning adapters
+  and handlers. The trusted policy adds no per-action authorization state.
+- **AB-HUB-SETUP-037** — Focused evidence covers same-credential Hub switching
+  through blank prompt reuse, missing/replaced credentials, global-provider
+  precedence over legacy profile credentials, cross-profile knowledge isolation, lifecycle drift and
+  capability-policy composition with fake GitHub and disposable Git.

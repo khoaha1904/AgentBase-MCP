@@ -7,7 +7,7 @@ import { createMockAwsSqsRunner } from "./mock-aws-sqs.ts";
 const ACCOUNT = "123456789012";
 const REGION = "ap-southeast-1";
 
-test("[AB-ENRICH-011][AB-ENRICH-014] mock runner follows bounded SQS CLI contract", async () => {
+test("[AB-ENRICH-011][AB-ENRICH-014][AB-ENRICH-RUNTIME-001..002] mock runner follows bounded SQS CLI contract", async () => {
   const mock = createMockAwsSqsRunner({ accountId: ACCOUNT, queues: [{ name: "crawler-events", accountId: ACCOUNT, region: REGION }] });
   const adapter = new AwsCliAdapter(mock.runner);
   assert.deepEqual(await adapter.preflight(ACCOUNT), { accountId: ACCOUNT, cliVersion: "2.30.0" });
@@ -18,7 +18,7 @@ test("[AB-ENRICH-011][AB-ENRICH-014] mock runner follows bounded SQS CLI contrac
   await assert.rejects(mock.runner(["sqs", "list-queues", "--region", REGION]), (error: unknown) => error instanceof AwsCliError && error.kind === "failed");
 });
 
-test("[AB-ENRICH-011][AB-ENRICH-014] mock runner preserves unresolved and retryable outcomes", async () => {
+test("[AB-ENRICH-011][AB-ENRICH-014][AB-ENRICH-RUNTIME-002] mock runner preserves unresolved and retryable outcomes", async () => {
   const mock = createMockAwsSqsRunner({ accountId: ACCOUNT, queues: [
     { name: "denied", accountId: ACCOUNT, region: REGION },
     { name: "eventual", accountId: ACCOUNT, region: REGION },

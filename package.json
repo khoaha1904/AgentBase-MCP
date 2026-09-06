@@ -1,8 +1,9 @@
 {
   "name": "agentbase-mcp",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "AgentBase-MCP for local Code Graph access and governed AgentBase-Hub OKF knowledge",
+  "license": "Apache-2.0",
   "bin": {
     "abs": "./src/cli.ts"
   },
@@ -11,10 +12,13 @@
     "node": ">=24.12 <25"
   },
   "scripts": {
-    "spec:check": "node scripts/checks/check-specs.mjs",
+    "contract:check": "node scripts/checks/check-contracts.mjs",
+    "check:release-evidence": "node scripts/checks/check-release-evidence.mjs",
     "configure:hub-token": "node scripts/installation/configure-hub-token.mjs",
     "prepare:codebase-memory": "node scripts/upstream/prepare-codebase-memory.mjs",
     "package:codebase-memory": "node scripts/upstream/package-codebase-memory.mjs",
+    "release:build": "node scripts/release/build-release.mjs",
+    "release:qualify": "node scripts/release/qualify-release.mjs",
     "check:codebase-memory-bundle": "node scripts/upstream/check-codebase-memory-bundle.mjs",
     "verify:upstreams": "node scripts/upstream/manage-upstreams.mjs verify codebase-memory && node scripts/upstream/manage-upstreams.mjs verify diagram-design",
     "check:upstream-foundations": "node scripts/upstream/check-inactive-foundations.mjs",
@@ -34,8 +38,10 @@
     "benchmark:okf": "node scripts/benchmark/benchmark-okf.mjs",
     "benchmark:context": "node scripts/benchmark/benchmark-context.mjs",
     "benchmark:task": "node scripts/benchmark/benchmark-task.mjs",
+    "benchmark:implementation": "node scripts/benchmark/benchmark-implementation.mjs",
+    "benchmark:incident": "node scripts/benchmark/benchmark-incident.mjs",
     "benchmark:e2e": "node scripts/benchmark/benchmark-e2e.mjs",
-    "check": "npm run spec:check && npm run check:upstream-foundations && npm run check:codebase-memory-bundle && npm run check:hub-validator && npm run typecheck && npm run depcruise && npm run knip && npm run gitleaks && npm test",
+    "check": "npm run contract:check && npm run check:release-evidence && npm run check:upstream-foundations && npm run check:codebase-memory-bundle && npm run check:hub-validator && npm run typecheck && npm run depcruise && npm run knip && npm run gitleaks && npm test",
     "verify": "npm run check && git diff --check"
   },
   "devDependencies": {

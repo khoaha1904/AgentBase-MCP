@@ -2,14 +2,16 @@
 
 ## Navigation
 
-- Only the root `index.md` carries OKF frontmatter. Initial Ingest Prepare adds a
-  direct Domain entrypoint, or a Repository entrypoint when no Domain is
-  confirmed. Preserve those rows and never append the same target twice.
-- Architecture category indexes are derived presentation and MUST NOT be
-  created during authoring. Workflow-owned governance indexes remain under
-  their exact renderer.
+- Only the root `index.md` carries OKF frontmatter. Profile Initial Ingest
+  Prepare preserves the Profile link and adds Domain Capsule entrypoints;
+  legacy Prepare adds a direct Domain or fallback Repository entrypoint.
+  Preserve prepared root, capsule and shared rows and never append one target
+  twice.
+- Create or update only the home indexes prepared for the exact skeletons.
+  Workflow-owned governance indexes remain under their exact renderer.
 - Keep one canonical concept file; root and concept links never copy it.
-- Root navigation grows with Domain and fallback entrypoints, not every entity.
+- Root navigation grows with Profile/Domain Capsule entrypoints, or legacy
+  Domain/fallback entrypoints, not every entity.
 - A Domain concept links its Systems and critical Flows. A System concept links
   the components, functions, interfaces, flows and independently useful
   resources needed to understand that system.
@@ -29,9 +31,9 @@
 - A new Domain may be navigation-first. Summarize only the scope contributed by
   current evidence and let later repository ingest build it up; never invent a
   full domain definition to make the first draft look complete.
-- For a prepare-confirmed Domain, add its returned owner-guidance resource to
-  `sources`, and make each System `part-of` relationship cite the matching
-  source ID. Repository resources still support code/system claims; they do not
+- Preserve the owner-guidance sources and Domain relations prepared from the
+  exact grouped plan. A physical home alone never authorizes a `part-of`
+  relation. Repository resources still support code/system claims; they do not
   become evidence for the maintainer's business classification.
 - Create a System when cooperating entities deliver one recognizable
   capability. A library or reusable module need not belong to a known system.

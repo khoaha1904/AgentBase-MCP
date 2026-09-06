@@ -1,6 +1,7 @@
 # 04.06 — Node eligibility and provider coverage
 
 > Status: Implemented and verified with capability-052 conformance fixtures.
+> Group 5's independent-reading/dossier refinement is implemented and verified.
 
 ## Node and concept
 
@@ -22,11 +23,16 @@ A candidate may be authored as a standalone node only with all of:
    security, cross-boundary usage or contract evidence appropriate to the role.
 4. **Interaction evidence for an edge** — source proves producer, consumer,
    trigger or access; identity alone does not create a relation.
+5. **Independent reading value** — the document adds a stable contract,
+   relationship endpoint, Flow, stewardship unit or separately useful boundary
+   rather than fragmenting a Repository dossier/useful parent.
 
 Without identity or query value, do not create a node. With value but insufficient
-boundary, keep embedded knowledge in the parent. With evidence but ambiguous
+boundary or reading value, keep embedded knowledge in the parent. With evidence but ambiguous
 identity or interaction, keep a candidate/Question. Do not create a placeholder
-node to make the graph look fuller.
+node to make the graph look fuller. A detected type or long section is not
+independent reading evidence, and a short document is not invalid when its
+boundary is genuinely independent.
 
 ## Resource and Interface
 

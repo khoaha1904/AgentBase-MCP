@@ -71,7 +71,7 @@ export type NormalizeProviderObservedValuesOptions = Readonly<{
 }>;
 
 const VALUE_ID = /^AB-OBS-[a-f0-9]{24}$/;
-const SUBJECT_ROOT = "(?:domains|systems|components|interfaces|flows|resources|infrastructure|deployments|repositories|relationships|capabilities|guidance)";
+const SUBJECT_ROOT = "(?:shared|domains|systems|components|interfaces|flows|resources|infrastructure|deployments|repositories|relationships|capabilities|guidance)";
 const SUBJECT = new RegExp(`^${SUBJECT_ROOT}/[a-z0-9][a-z0-9./-]*$`);
 const PROPERTY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const SOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;

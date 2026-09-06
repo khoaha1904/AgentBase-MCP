@@ -1,7 +1,8 @@
 # 09.09 — Capability requirements
 
 > Status: Baseline Batch Initial Ingest and Capability 046 per-member
-> SourceSnapshot/Seed/Receipt additions are implemented offline.
+> SourceSnapshot/Seed/Receipt additions are implemented offline. G5-C2
+> per-member quality admission is deferred and inactive.
 
 These `AB-BATCH-*` requirements are the normative Batch Initial Ingest portion
 of the Ingest and Refresh Capability Contract. Single-repository authoring
@@ -21,11 +22,13 @@ requirements remain enforced by the shared OKF authoring runtime.
   does not mutate the user workspace.
 - **AB-BATCH-004** — Members run sequentially in manifest order and retain separate
   source, graph/evidence, Questions, limitations and staging.
-- **AB-BATCH-005** — A truthful sparse member is a success. Completeness,
-  cross-repository inference and provider verification are not batch gates.
+- **AB-BATCH-005** — A truthful sparse member may succeed without a concept
+  quota, cross-repository inference or provider verification, but it must satisfy
+  compact dossier, deterministic coverage and validation with visible limitations.
 - **AB-BATCH-006** — Finalize composes exact completed member diffs onto one base.
   Only shared append-only indexes and navigation for the confirmed Domain are
-  built deterministically; every other authored overlap is rejected. The result is an atomic
+  built deterministically; a Profile shared Question index is rebuilt from all
+  composed Question documents in canonical Question-ID order; every other authored overlap is rejected. The result is an atomic
   `batch-new` proposal.
 - **AB-BATCH-007** — A member failure keeps the batch Incomplete. An explicit retry
   reuses a sibling only while source/base/input/staging remain exact; there is no
@@ -35,8 +38,9 @@ requirements remain enforced by the shared OKF authoring runtime.
 - **AB-BATCH-009** — Inspect, Accept, pending reconstruction and publication keep
   the entire batch as one unit with every Repository ID; an independent pull
   request targets `main` and is not split or merged by MCP.
-- **AB-BATCH-010** — Single-repository Ingest/Refresh and Domain Enrichment do not
-  change. MCP adds no database, daemon, parallel runner, dependency or model.
+- **AB-BATCH-010** — Domain Enrichment authority does not change. MCP adds no
+  model SDK, database, daemon or parallel runner. Optional external AI review
+  creates no Batch state or Finalize gate.
 - **AB-BATCH-011** — `agentbase-scan` does not build a graph. Each member creates
   or reuses a graph after source selection and has an isolated Discovery Seed,
   Inventory Receipt, staging and coverage result; one member's evidence does not
@@ -55,3 +59,6 @@ requirements remain enforced by the shared OKF authoring runtime.
   resource/relation query, static Domain-site build and proposal safety; every step
   reports deterministic counts/limitations without adding a production dependency,
   model call or provider scan.
+- **AB-BATCH-016** — Batch Finalize emits one `Batch Navigation` section and at
+  most one bullet for each canonical navigation target. It moves matching
+  member-skeleton bullets into that section without changing other Domain prose.

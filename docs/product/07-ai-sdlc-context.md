@@ -1,7 +1,29 @@
 # 07 — AI SDLC context
 
-> Status: Product direction and bounded qualification are accepted; AgentBase
-> context is not yet a separately productized runtime workflow.
+> Status: Product direction, bounded qualification and an explicit manual
+> context workflow are accepted. Automatic host-workflow integration remains
+> deferred. Group 3 Product design is accepted and narrows product proof to
+> cross-repository impact and requirement clarification before any broader
+> claim; G3-C1 uniform freshness and G3-C2 proposal impact are implemented,
+> while G3-C3 real-model usefulness qualification is deferred and does not
+> block the current internal enterprise release.
+
+## Accepted composition target — Group 8
+
+G8-C1 is implemented and verified: use the single explicit
+AgentBase entry defined in [Query and context](05-query-and-context.md#accepted-unified-use-target--group-8)
+for both standalone answers and support within an active primary workflow.
+The `agentbase-context` invocation remains a compatibility entry, not a
+required choice. G8-C2 scoped repair handoff is implemented and verified for
+the current scope. Preserve host-workflow
+ownership, read-only defaults and source-access boundaries.
+
+A concrete knowledge gap discovered during use may offer an owner-approved
+repair handoff under that contract. It never silently ingests a Feature, Task
+or generated answer. Technical knowledge helps stakeholders ask better
+questions; existing implementation alone does not establish business intent,
+customer commitments or desired policy. The product promise is known impact
+and next checks, not exhaustive impact or autonomous requirement approval.
 
 ## Outcome
 
@@ -17,12 +39,37 @@ A BA, PO or DM can understand existing systems and cross-repository relations
 without a source checkout. A developer can add authorized local source when
 exact implementation, impact and tests matter.
 
-## On-demand context
+## Current product wedge
 
-The primary workflow asks AgentBase only after it encounters a concrete gap
-about a capability, repository, dependency, Flow or constraint. AgentBase does
-not prefetch the entire Hub, push unsolicited context or create a new prepared
-context store.
+The next product claim is intentionally narrow: AgentBase helps a BA/PO/DM or
+developer clarify the impact of a change whose ownership, interface, dependency
+or failure boundary spans repositories. It is not a general promise that Hub or
+Code Graph improves every planning, implementation, incident or onboarding
+task.
+
+The deferred product-proof campaign qualifies this wedge in at least two
+materially different Domains, one multi-product monorepo/shared-platform
+boundary and one longitudinal Refresh cycle. A small onboarding study asks
+business, ownership and data-lineage questions without expanding knowledge
+until a decision-critical gap is found. These cases remain the accepted future
+evidence boundary, not a gate or claim for the current release.
+
+## Manual, on-demand context
+
+Composition is explicit: the user invokes
+`$agentbase-query` beside the primary workflow skill when Published system
+context is wanted. For example:
+
+```text
+$fpt-discover $agentbase-query Clarify this Feature into User Stories ...
+```
+
+The primary workflow still owns its lifecycle and final deliverable;
+AgentBase contributes only bounded evidence. It does not prefetch the
+entire Hub, push unsolicited context or create a prepared context store.
+The same entry answers standalone questions when no primary workflow exists;
+it never takes over a primary workflow's output. Existing `agentbase-context`
+invocations resolve the shared guidance without a separate read workflow.
 
 Returned context prioritizes:
 
@@ -84,7 +131,13 @@ described as current implementation.
 The context boundary adds no credential or read permission. Local Draft and
 unaccepted relations never enter ordinary context.
 
-## Productization gate
+## Deferred product-proof gate
+
+The real-model A/B campaign, onboarding study and longitudinal stewardship
+measurement are deferred. They do not block packaging or internal enterprise
+use of already implemented explicit workflows. Existing harnesses and retained
+results remain historical or candidate evidence; no pending, dirty or
+unreviewed result supports a generalized product claim or automatic invocation.
 
 Qualification compares the same workflow with and without AgentBase. Adoption
 requires no critical quality regression, no unsupported claims and at least one
@@ -92,13 +145,49 @@ meaningful improvement in impact coverage, questions or traceability. Time,
 token use and tool-result size are diagnostics rather than substitutes for
 quality or owner review.
 
+Phase 2 Task Planning always starts with a two-arm audit: the realistic baseline
+reads the same pinned source normally and the second arm adds Code Graph. A
+third exact-Published-Hub arm is admitted only for a named cross-repository,
+ownership or accepted-contract gap; it is not run merely to repeat local
+implementation terms. No Phase 2 product claim is accepted from a control that
+lacks source or from a comparison that changes the User Story, source revision,
+model, output contract or read-only boundary between comparable arms.
+
+Implementation is qualified separately in two editable disposable copies of
+the same pinned repository. Normal source reading remains the default. Code
+Graph is added only when unfamiliar structure, callers, dependency paths or
+coverage create a concrete navigation need; Hub remains absent unless the work
+has a named cross-repository knowledge gap. A graph-assisted patch must pass the
+same focused, hidden-semantic and repository verification as the control before
+time or token savings count.
+
+The first three-repository Phase 3 incident replay gave both arms identical
+source authority. Hub returned the correct cross-repository route but produced
+no quality, source-command or first-root-evidence gain and added time and model
+tokens. Incident use therefore remains selective and unproductized; another
+qualification is justified only by a harder routing problem, not by repeating
+the same small source set.
+
 Qualification harnesses, prompts, fixtures, tool traces, timestamps and model
 results are Validation Evidence. They belong to the relevant Capability
 Contract and AgentBase-Benchmark, not this Product Contract.
 
-If host-agent orchestration is insufficient after qualification, a small
-integration skill may be considered. Productization does not require a Hub
-schema migration or ownership of an external workflow.
+AgentBase-Benchmark owns the source registry, expectations and immutable
+comparison results/dispositions used as qualification evidence. It is neither
+runtime nor Product/knowledge authority. The generated `domain-hub` repository
+is presentation output only and cannot substitute for Hub state, benchmark
+evidence or an owner decision.
+
+Candidate runs and owner decisions remain distinct. A product claim requires a
+clean, committed immutable comparison artifact with pinned inputs, both arms,
+quality/cost results and machine-readable owner disposition. Product summaries
+must not describe pending or uncommitted evidence as accepted release proof.
+
+The original productization used an explicit-only integration skill backed by
+the qualified one-search profile. G8-C1 consolidates installed read guidance;
+it does not reinterpret historical qualification results. Automatic invocation from a
+host workflow requires separate evidence and owner approval. Productization
+does not require a Hub schema migration or ownership of an external workflow.
 
 ## Value and trade-offs
 
@@ -106,6 +195,11 @@ Prepared Published knowledge can reduce repeated repository discovery, narrow
 source reading and expose relationships a single repository cannot show. The
 trade-off is that teams must Ingest, review, Publish and Refresh knowledge; an
 old or sparse Hub cannot guarantee current implementation coverage.
+
+Group 3 reports outcome quality first, then retrieval omission/unsupported
+claims, freshness visibility, reviewer/steward effort, source fallback, tokens
+and latency. Token or time savings never compensate for a critical quality
+regression, and one positive fixture never authorizes automatic invocation.
 
 ## Non-goals
 
@@ -116,6 +210,10 @@ old or sparse Hub cannot guarantee current implementation coverage.
 - Scan an entire repository for each context request.
 - Promise improvement for every AI workflow without qualification.
 - Produce diagrams that have no named decision in the current AIT phase.
+- Automatically invoke AgentBase from an external discovery workflow in this
+  release.
+- Replace an explicitly selected discovery or planning deliverable with an
+  AgentBase report.
 
 ## Downstream Capability Contract
 

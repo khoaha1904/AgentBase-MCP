@@ -3,7 +3,11 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { createHubIdentity, hubProfileId } from "../../../core/hub/index.ts";
-import { AGENTBASE_OKF_SCHEMA_CATALOG_VERSION } from "../../../core/knowledge/index.ts";
+import {
+  AGENTBASE_OKF_PROFILE_PATH,
+  AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
+  renderAgentBaseOkfProfileDocument,
+} from "../../../core/knowledge/index.ts";
 import { listRemoteRefs, runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
 import { renderHubCiBundle } from "../ci/artifact.ts";
 import {
@@ -48,7 +52,16 @@ export type HubBootstrapReceipt = Readonly<{
   remoteTarget?: string;
 }>;
 
-const ROOT_INDEX = "---\nokf_version: \"0.2\"\n---\n\n# AgentBase-Hub\n";
+const ROOT_INDEX = `---
+okf_version: "0.2"
+---
+
+# AgentBase-Hub
+
+* [AgentBase OKF Profile 1.0](${AGENTBASE_OKF_PROFILE_PATH}) - Hub profile
+* [Shared knowledge](shared/index.md) - Shared knowledge
+`;
+const SHARED_INDEX = "# Shared\n\n* [AgentBase OKF Profile 1.0](agentbase-profile.md) - Hub profile\n";
 
 function stateRoot(environment: NodeJS.ProcessEnv): string {
   const target = path.join(agentBaseStorage(environment).state, "hub-bootstrap");
@@ -108,6 +121,8 @@ function writeReceipt(environment: NodeJS.ProcessEnv, receipt: HubBootstrapRecei
 
 function baselineFiles(targetBranch: string): Readonly<Record<string, Buffer>> {
   return { [HUB_README_PATH]: Buffer.from(renderHubReadme()), "index.md": Buffer.from(ROOT_INDEX),
+    "shared/index.md": Buffer.from(SHARED_INDEX),
+    [AGENTBASE_OKF_PROFILE_PATH]: Buffer.from(renderAgentBaseOkfProfileDocument()),
     ...renderHubCiBundle(targetBranch).files };
 }
 
@@ -272,7 +287,7 @@ export async function executeHubBootstrap(
   let receipt = readReceipt(environment, preview.remoteHubId);
   if (!receipt) throw new Error("prepared Hub bootstrap receipt is absent");
   const pinnedConfiguration = readPersistedHubConfiguration(environment);
-  const lock = acquireHubMutationLock(stateRoot(environment), `bootstrap:${preview.remoteHubId}`);
+  const lock = acquireHubMutationLock(stateRoot(environment), preview.remoteHubId, `bootstrap:${preview.remoteHubId}`);
   let activationLock: ReturnType<typeof acquireHubActivationLock> | undefined;
   try {
     activationLock = acquireHubActivationLock(environment);

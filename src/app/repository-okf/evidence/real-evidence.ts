@@ -14,7 +14,7 @@ import { prepareProviderWorkspace } from "../provider/provider-workspace.ts";
 import { discoverRepositorySourceState } from "./source-state.ts";
 
 const agentBaseRoot = path.resolve(import.meta.dirname, "../../../..");
-const fixtureRoot = path.join(agentBaseRoot, "fixtures", "typescript-modular-monolith");
+const benchmarkTestDataRoot = path.join(agentBaseRoot, "scripts/benchmark/testdata/typescript-modular-monolith");
 
 function task(symbol: string) {
   return {
@@ -69,7 +69,7 @@ export async function benchmarkRealGraphLifecycle() {
   const runId = `${process.pid}-${Date.now().toString(36)}`.toLowerCase();
   const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-graph-benchmark-"));
   const repository = path.join(temporaryRoot, "typescript-modular-monolith");
-  fs.cpSync(fixtureRoot, repository, { recursive: true });
+  fs.cpSync(benchmarkTestDataRoot, repository, { recursive: true });
   try {
     return await benchmarkGraphLifecycle(
       (transport, pair, order) => prepareRealRepositoryEvidence(
@@ -178,7 +178,7 @@ export async function executeGraphBenchmarkCli(
     return result.arms.some((arm) => arm.outcome === "failed") || !result.parity ? 1 : 0;
   } catch (error) {
     const message = error instanceof Error
-      ? messageWithoutLocalRoot(error.message, fixtureRoot)
+      ? messageWithoutLocalRoot(error.message, benchmarkTestDataRoot)
       : "unknown provider failure";
     writeError(`Codebase Memory benchmark failed: ${message}\n`);
     return 1;

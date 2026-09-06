@@ -1,5 +1,6 @@
 import path from "node:path";
 
+import { AGENTBASE_OKF_PROFILE_CONCEPT_ID } from "../documents/agentbase-profile.ts";
 import { conceptReferencesRepository } from "../documents/okf-document.ts";
 import { readRepositoryIdentityRecord, readRepositoryObservedSource, type RepositoryObservedSource } from "../governance/repository-identity.ts";
 import {
@@ -65,6 +66,15 @@ function sortedEdges(edges: readonly HubGraphEdge[]): readonly HubGraphEdge[] {
     || left.kind.localeCompare(right.kind) || left.target.localeCompare(right.target));
 }
 
+function navigationCandidates(relative: string): readonly string[] {
+  const parts = relative.split("/");
+  const candidates = ["index.md"];
+  for (let index = 1; index < parts.length; index += 1) {
+    candidates.push(`${parts.slice(0, index).join("/")}/index.md`);
+  }
+  return candidates;
+}
+
 export async function buildHubContinuity(
   reader: HubQueryReader,
   sourceRepositoryId: string,
@@ -95,8 +105,9 @@ export async function buildHubContinuity(
   const edges = admittedEdgeCandidates.slice(0, edgeLimit);
   const conceptPaths = [...currentIds, ...neighborIds, ...(subjectId ? [subjectId] : [])]
     .map((identity) => graph.concepts.get(identity)?.document.path).filter((value): value is string => Boolean(value));
-  const wantedIndexes = new Set(["index.md", `${subjectDirectory}/index.md`,
-    ...conceptPaths.map((value) => `${value.split("/")[0]}/index.md`)]);
+  const wantedIndexes = new Set([`${subjectDirectory}/index.md`,
+    ...conceptPaths.flatMap(navigationCandidates)]);
+  if (graph.concepts.has(AGENTBASE_OKF_PROFILE_CONCEPT_ID)) wantedIndexes.add("shared/index.md");
   const allNavigation = graph.markdownPaths.filter((value) => wantedIndexes.has(value)).sort();
   const navigationPaths = allNavigation.slice(0, navigationLimit);
   const omitted = {

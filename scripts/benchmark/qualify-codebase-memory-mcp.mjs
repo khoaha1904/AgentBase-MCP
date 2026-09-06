@@ -10,7 +10,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 const root = path.resolve(import.meta.dirname, "../..");
 const scope = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-mcp-qualification-"));
 const repository = path.join(scope, "selected-repository");
-fs.cpSync(path.join(root, "fixtures", "typescript-modular-monolith"), repository, { recursive: true });
+fs.cpSync(path.join(root, "scripts/benchmark/testdata/typescript-modular-monolith"), repository, { recursive: true });
 
 function treeDigest(directory) {
   const hash = createHash("sha256");

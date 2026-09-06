@@ -113,17 +113,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    function visit_(key, node, visitor, path7) {
-      const ctrl = callVisitor(key, node, visitor, path7);
+    function visit_(key, node, visitor, path8) {
+      const ctrl = callVisitor(key, node, visitor, path8);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path7, ctrl);
-        return visit_(key, ctrl, visitor, path7);
+        replaceNode(key, path8, ctrl);
+        return visit_(key, ctrl, visitor, path8);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path7 = Object.freeze(path7.concat(node));
+          path8 = Object.freeze(path8.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = visit_(i, node.items[i], visitor, path7);
+            const ci = visit_(i, node.items[i], visitor, path8);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -134,13 +134,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path7 = Object.freeze(path7.concat(node));
-          const ck = visit_("key", node.key, visitor, path7);
+          path8 = Object.freeze(path8.concat(node));
+          const ck = visit_("key", node.key, visitor, path8);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = visit_("value", node.value, visitor, path7);
+          const cv = visit_("value", node.value, visitor, path8);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -161,17 +161,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key, node, visitor, path7) {
-      const ctrl = await callVisitor(key, node, visitor, path7);
+    async function visitAsync_(key, node, visitor, path8) {
+      const ctrl = await callVisitor(key, node, visitor, path8);
       if (identity.isNode(ctrl) || identity.isPair(ctrl)) {
-        replaceNode(key, path7, ctrl);
-        return visitAsync_(key, ctrl, visitor, path7);
+        replaceNode(key, path8, ctrl);
+        return visitAsync_(key, ctrl, visitor, path8);
       }
       if (typeof ctrl !== "symbol") {
         if (identity.isCollection(node)) {
-          path7 = Object.freeze(path7.concat(node));
+          path8 = Object.freeze(path8.concat(node));
           for (let i = 0; i < node.items.length; ++i) {
-            const ci = await visitAsync_(i, node.items[i], visitor, path7);
+            const ci = await visitAsync_(i, node.items[i], visitor, path8);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -182,13 +182,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity.isPair(node)) {
-          path7 = Object.freeze(path7.concat(node));
-          const ck = await visitAsync_("key", node.key, visitor, path7);
+          path8 = Object.freeze(path8.concat(node));
+          const ck = await visitAsync_("key", node.key, visitor, path8);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node.key = null;
-          const cv = await visitAsync_("value", node.value, visitor, path7);
+          const cv = await visitAsync_("value", node.value, visitor, path8);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -215,23 +215,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key, node, visitor, path7) {
+    function callVisitor(key, node, visitor, path8) {
       if (typeof visitor === "function")
-        return visitor(key, node, path7);
+        return visitor(key, node, path8);
       if (identity.isMap(node))
-        return visitor.Map?.(key, node, path7);
+        return visitor.Map?.(key, node, path8);
       if (identity.isSeq(node))
-        return visitor.Seq?.(key, node, path7);
+        return visitor.Seq?.(key, node, path8);
       if (identity.isPair(node))
-        return visitor.Pair?.(key, node, path7);
+        return visitor.Pair?.(key, node, path8);
       if (identity.isScalar(node))
-        return visitor.Scalar?.(key, node, path7);
+        return visitor.Scalar?.(key, node, path8);
       if (identity.isAlias(node))
-        return visitor.Alias?.(key, node, path7);
+        return visitor.Alias?.(key, node, path8);
       return void 0;
     }
-    function replaceNode(key, path7, node) {
-      const parent = path7[path7.length - 1];
+    function replaceNode(key, path8, node) {
+      const parent = path8[path8.length - 1];
       if (identity.isCollection(parent)) {
         parent.items[key] = node;
       } else if (identity.isPair(parent)) {
@@ -841,10 +841,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path7, value) {
+    function collectionFromPath(schema, path8, value) {
       let v = value;
-      for (let i = path7.length - 1; i >= 0; --i) {
-        const k = path7[i];
+      for (let i = path8.length - 1; i >= 0; --i) {
+        const k = path8[i];
         if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
           const a = [];
           a[k] = v;
@@ -863,7 +863,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path7) => path7 == null || typeof path7 === "object" && !!path7[Symbol.iterator]().next().done;
+    var isEmptyPath = (path8) => path8 == null || typeof path8 === "object" && !!path8[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -893,11 +893,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path7, value) {
-        if (isEmptyPath(path7))
+      addIn(path8, value) {
+        if (isEmptyPath(path8))
           this.add(value);
         else {
-          const [key, ...rest] = path7;
+          const [key, ...rest] = path8;
           const node = this.get(key, true);
           if (identity.isCollection(node))
             node.addIn(rest, value);
@@ -911,8 +911,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path7) {
-        const [key, ...rest] = path7;
+      deleteIn(path8) {
+        const [key, ...rest] = path8;
         if (rest.length === 0)
           return this.delete(key);
         const node = this.get(key, true);
@@ -926,8 +926,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path7, keepScalar) {
-        const [key, ...rest] = path7;
+      getIn(path8, keepScalar) {
+        const [key, ...rest] = path8;
         const node = this.get(key, true);
         if (rest.length === 0)
           return !keepScalar && identity.isScalar(node) ? node.value : node;
@@ -945,8 +945,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path7) {
-        const [key, ...rest] = path7;
+      hasIn(path8) {
+        const [key, ...rest] = path8;
         if (rest.length === 0)
           return this.has(key);
         const node = this.get(key, true);
@@ -956,8 +956,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path7, value) {
-        const [key, ...rest] = path7;
+      setIn(path8, value) {
+        const [key, ...rest] = path8;
         if (rest.length === 0) {
           this.set(key, value);
         } else {
@@ -3472,9 +3472,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path7, value) {
+      addIn(path8, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path7, value);
+          this.contents.addIn(path8, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -3549,14 +3549,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path7) {
-        if (Collection.isEmptyPath(path7)) {
+      deleteIn(path8) {
+        if (Collection.isEmptyPath(path8)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path7) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path8) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -3571,10 +3571,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path7, keepScalar) {
-        if (Collection.isEmptyPath(path7))
+      getIn(path8, keepScalar) {
+        if (Collection.isEmptyPath(path8))
           return !keepScalar && identity.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity.isCollection(this.contents) ? this.contents.getIn(path7, keepScalar) : void 0;
+        return identity.isCollection(this.contents) ? this.contents.getIn(path8, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -3585,10 +3585,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path7) {
-        if (Collection.isEmptyPath(path7))
+      hasIn(path8) {
+        if (Collection.isEmptyPath(path8))
           return this.contents !== void 0;
-        return identity.isCollection(this.contents) ? this.contents.hasIn(path7) : false;
+        return identity.isCollection(this.contents) ? this.contents.hasIn(path8) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -3605,13 +3605,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path7, value) {
-        if (Collection.isEmptyPath(path7)) {
+      setIn(path8, value) {
+        if (Collection.isEmptyPath(path8)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path7), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path8), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path7, value);
+          this.contents.setIn(path8, value);
         }
       }
       /**
@@ -5571,9 +5571,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path7) => {
+    visit.itemAtPath = (cst, path8) => {
       let item = cst;
-      for (const [field, index] of path7) {
+      for (const [field, index] of path8) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -5582,23 +5582,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path7) => {
-      const parent = visit.itemAtPath(cst, path7.slice(0, -1));
-      const field = path7[path7.length - 1][0];
+    visit.parentCollection = (cst, path8) => {
+      const parent = visit.itemAtPath(cst, path8.slice(0, -1));
+      const field = path8[path8.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path7, item, visitor) {
-      let ctrl = visitor(item, path7);
+    function _visit(path8, item, visitor) {
+      let ctrl = visitor(item, path8);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i = 0; i < token.items.length; ++i) {
-            const ci = _visit(Object.freeze(path7.concat([[field, i]])), token.items[i], visitor);
+            const ci = _visit(Object.freeze(path8.concat([[field, i]])), token.items[i], visitor);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -5609,10 +5609,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path7);
+            ctrl = ctrl(item, path8);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path7) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path8) : ctrl;
     }
     exports.visit = visit;
   }
@@ -6914,14 +6914,14 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs4 = this.flowScalar(this.type);
+              const fs5 = this.flowScalar(this.type);
               if (atNextItem || it.value) {
-                map.items.push({ start, key: fs4, sep: [] });
+                map.items.push({ start, key: fs5, sep: [] });
                 this.onKeyLine = true;
               } else if (it.sep) {
-                this.stack.push(fs4);
+                this.stack.push(fs5);
               } else {
-                Object.assign(it, { key: fs4, sep: [] });
+                Object.assign(it, { key: fs5, sep: [] });
                 this.onKeyLine = true;
               }
               return;
@@ -7049,13 +7049,13 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs4 = this.flowScalar(this.type);
+              const fs5 = this.flowScalar(this.type);
               if (!it || it.value)
-                fc.items.push({ start: [], key: fs4, sep: [] });
+                fc.items.push({ start: [], key: fs5, sep: [] });
               else if (it.sep)
-                this.stack.push(fs4);
+                this.stack.push(fs5);
               else
-                Object.assign(it, { key: fs4, sep: [] });
+                Object.assign(it, { key: fs5, sep: [] });
               return;
             }
             case "flow-map-end":
@@ -7365,8 +7365,8 @@ var require_dist = __commonJS({
 
 // src/app/hub-okf/ci/validation.ts
 import { createHash as createHash4 } from "node:crypto";
-import fs3 from "node:fs";
-import path6 from "node:path";
+import fs4 from "node:fs";
+import path7 from "node:path";
 
 // src/core/knowledge/schemas/definition.ts
 var generatedEvidence = ["title", "description", "generated", "sources"];
@@ -7674,9 +7674,23 @@ var FRONTMATTER_LIMIT = 64 * 1024;
 var MAX_DEPTH = 16;
 var MAX_NODES = 4096;
 var MAX_SCALAR_BYTES = 32 * 1024;
+var DOMAIN_INDEX_PATH = /^domains\/[a-z0-9]+(?:-[a-z0-9]+)*\/index\.md$/;
+function isDomainConceptPath(documentPath) {
+  return DOMAIN_INDEX_PATH.test(documentPath);
+}
+function isDomainConceptDocument(documentPath, source) {
+  return isDomainConceptPath(documentPath) && parseReservedFrontmatter(documentPath, source).frontmatter?.type === "Domain";
+}
+function conceptIdentityFromPath(documentPath) {
+  const normalized = path.posix.normalize(documentPath);
+  if (!documentPath.endsWith(".md") || documentPath.startsWith("/") || normalized !== documentPath) {
+    throw new OkfValidationError("INVALID_CONCEPT_PATH", "concept path must be a normalized bundle-relative .md path", documentPath);
+  }
+  return isDomainConceptPath(documentPath) ? path.posix.dirname(documentPath) : documentPath.slice(0, -3);
+}
 function requireConceptPath(documentPath) {
   const normalized = path.posix.normalize(documentPath);
-  if (!documentPath.endsWith(".md") || documentPath.startsWith("/") || normalized !== documentPath || documentPath.split("/").some((part) => !part || part === "." || part === "..") || ["index.md", "log.md"].includes(path.posix.basename(documentPath))) {
+  if (!documentPath.endsWith(".md") || documentPath.startsWith("/") || normalized !== documentPath || documentPath.split("/").some((part) => !part || part === "." || part === "..") || path.posix.basename(documentPath) === "index.md" && !isDomainConceptPath(documentPath) || path.posix.basename(documentPath) === "log.md") {
     throw new OkfValidationError("INVALID_CONCEPT_PATH", "concept path must be a normalized non-reserved bundle-relative .md path", documentPath);
   }
 }
@@ -7771,7 +7785,7 @@ function parseConceptDocument(documentPath, source) {
     throw new OkfValidationError("STATUS_INVALID", "status must be a non-empty string when present", documentPath);
   }
   return {
-    conceptId: documentPath.slice(0, -3),
+    conceptId: conceptIdentityFromPath(documentPath),
     path: documentPath,
     type,
     status,
@@ -7852,10 +7866,254 @@ function parseReservedFrontmatter(documentPath, source) {
 }
 
 // src/core/knowledge/query/hub-query-graph.ts
-import path3 from "node:path";
+import path4 from "node:path";
+
+// src/core/knowledge/documents/agentbase-profile.ts
+import fs from "node:fs";
+import path2 from "node:path";
+var AGENTBASE_OKF_PROFILE_PATH = "shared/agentbase-profile.md";
+var AGENTBASE_OKF_PROFILE_CONCEPT_ID = "shared/agentbase-profile";
+var AGENTBASE_OKF_PROFILE_TYPE = "AgentBase OKF Profile";
+var AGENTBASE_OKF_PROFILE_RESOURCE = "agentbase://okf-profile/1.0";
+var AGENTBASE_OKF_PROFILE_EXTENSIONS = [
+  "canonical-relationships-v1",
+  "external-identities-v1",
+  "flow-steps-v1",
+  "maintainer-guidance-v1",
+  "observed-revisions-v1",
+  "observed-values-v1",
+  "questions-v1",
+  "repository-identity-v1",
+  "technology-metadata-v1"
+];
+var AGENTBASE_OKF_PROFILE = Object.freeze({
+  id: "agentbase-okf",
+  version: "1.0",
+  okfBase: "0.2",
+  layout: "compact-domain-capsules-v1",
+  extensions: AGENTBASE_OKF_PROFILE_EXTENSIONS
+});
+var DOMAIN_SELECTOR = /^domains\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
+var DOMAIN_CONCEPT = /^domains\/([a-z0-9]+(?:-[a-z0-9]+)*)$/;
+var DOMAIN_HOME = /^domains\/([a-z0-9]+(?:-[a-z0-9]+)*)\/(.+)$/;
+var KNOWN_CATEGORY = /* @__PURE__ */ new Map([
+  ["Repository", "repositories"],
+  ["Question", "questions"]
+]);
+var MAXIMUM_FAILURES = 128;
+var CONCEPT_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+function mapping2(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
+}
+function exactArray(left, right) {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+function profileFailures(concept, profileConcepts) {
+  const failures = [];
+  if (concept.type !== AGENTBASE_OKF_PROFILE_TYPE) {
+    failures.push(`${AGENTBASE_OKF_PROFILE_PATH}: type must be ${AGENTBASE_OKF_PROFILE_TYPE}`);
+  }
+  if (concept.frontmatter.resource !== AGENTBASE_OKF_PROFILE_RESOURCE) {
+    failures.push(`${AGENTBASE_OKF_PROFILE_PATH}: resource must be ${AGENTBASE_OKF_PROFILE_RESOURCE}`);
+  }
+  const agentbase = mapping2(concept.frontmatter.agentbase), profile = mapping2(agentbase?.profile);
+  const keys = profile ? Object.keys(profile).sort() : [];
+  if (!profile || !exactArray(keys, ["extensions", "id", "layout", "okf_base", "version"])) {
+    failures.push(`${AGENTBASE_OKF_PROFILE_PATH}: agentbase.profile must use the exact Profile 1.0 fields`);
+  } else {
+    if (profile.id !== AGENTBASE_OKF_PROFILE.id) failures.push(`${AGENTBASE_OKF_PROFILE_PATH}: profile id is unsupported`);
+    if (profile.version !== AGENTBASE_OKF_PROFILE.version) failures.push(`${AGENTBASE_OKF_PROFILE_PATH}: profile version is unsupported`);
+    if (profile.okf_base !== AGENTBASE_OKF_PROFILE.okfBase) failures.push(`${AGENTBASE_OKF_PROFILE_PATH}: profile OKF base is unsupported`);
+    if (profile.layout !== AGENTBASE_OKF_PROFILE.layout) failures.push(`${AGENTBASE_OKF_PROFILE_PATH}: profile layout is unsupported`);
+    const extensions = Array.isArray(profile.extensions) ? profile.extensions.filter((value) => typeof value === "string") : [];
+    if (!Array.isArray(profile.extensions) || extensions.length !== profile.extensions.length || !exactArray(extensions, AGENTBASE_OKF_PROFILE.extensions)) {
+      failures.push(`${AGENTBASE_OKF_PROFILE_PATH}: profile extensions must match the exact sorted Profile 1.0 set`);
+    }
+  }
+  for (const duplicate of profileConcepts.filter((item) => item.path !== AGENTBASE_OKF_PROFILE_PATH)) {
+    failures.push(`${duplicate.path}: Profile concept must use ${AGENTBASE_OKF_PROFILE_PATH}`);
+  }
+  return failures;
+}
+function knownTypeFailure(concept, relativeWithinHome) {
+  if (concept.type === "Domain") {
+    return relativeWithinHome === "index.md" && DOMAIN_CONCEPT.test(concept.conceptId) ? void 0 : `${concept.path}: Domain must be the capsule concept domains/<slug>/index.md`;
+  }
+  if (concept.type === AGENTBASE_OKF_PROFILE_TYPE) {
+    return concept.path === AGENTBASE_OKF_PROFILE_PATH ? void 0 : `${concept.path}: Profile concept must use ${AGENTBASE_OKF_PROFILE_PATH}`;
+  }
+  const category = KNOWN_CATEGORY.get(concept.type) ?? "knowledge";
+  const parts = relativeWithinHome.split("/");
+  return parts.length === 2 && parts[0] === category && parts[1]?.endsWith(".md") ? void 0 : `${concept.path}: ${concept.type} must use the home-relative ${category}/ category`;
+}
+function conceptHome(concept, failures) {
+  if (concept.path === AGENTBASE_OKF_PROFILE_PATH) return { kind: "shared" };
+  if (concept.path.startsWith("shared/")) {
+    const relative = concept.path.slice("shared/".length);
+    if (!relative.includes("/")) {
+      failures.push(`${concept.path}: only ${AGENTBASE_OKF_PROFILE_PATH} may be a direct shared concept`);
+      return void 0;
+    }
+    const knownFailure2 = knownTypeFailure(concept, relative);
+    if (knownFailure2) failures.push(knownFailure2);
+    return { kind: "shared" };
+  }
+  const match = DOMAIN_HOME.exec(concept.path);
+  if (!match?.[1] || !match[2]) {
+    failures.push(`${concept.path}: Profile 1.0 concept must have one domains/<slug>/ or shared/ home`);
+    return void 0;
+  }
+  if (match[2] !== "index.md" && !match[2].includes("/")) {
+    failures.push(`${concept.path}: only index.md may be a direct Domain Capsule concept`);
+    return void 0;
+  }
+  const knownFailure = knownTypeFailure(concept, match[2]);
+  if (knownFailure) failures.push(knownFailure);
+  return { kind: "domain", selector: `domains/${match[1]}` };
+}
+function resolveIndexTarget(indexPath, raw) {
+  const clean = raw.split("#")[0]?.split("?")[0];
+  if (!clean || clean.startsWith("#") || /^[a-z][a-z0-9+.-]*:/i.test(clean)) return void 0;
+  const target = clean.startsWith("/") ? path2.posix.normalize(clean.slice(1)) : path2.posix.normalize(path2.posix.join(path2.posix.dirname(indexPath), clean));
+  if (target === ".." || target.startsWith("../")) return `!unsafe:${raw}`;
+  return target.endsWith("/") ? `${target}index.md` : target;
+}
+function indexTargets(snapshot, indexPath, failures) {
+  if (!snapshot.files.includes(indexPath)) {
+    failures.push(`${indexPath}: Profile 1.0 navigation index is missing`);
+    return /* @__PURE__ */ new Set();
+  }
+  const source = snapshot.readMarkdown(indexPath);
+  if (source === void 0) {
+    failures.push(`${indexPath}: Profile 1.0 navigation index is unavailable`);
+    return /* @__PURE__ */ new Set();
+  }
+  const body = parseReservedFrontmatter(indexPath, source).body;
+  const targets = /* @__PURE__ */ new Set();
+  for (const match of body.matchAll(/\[[^\]]+\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)) {
+    const raw = match[1];
+    if (!raw) continue;
+    const resolved = resolveIndexTarget(indexPath, raw);
+    if (resolved?.startsWith("!unsafe:")) failures.push(`${indexPath}: unsafe navigation target ${raw}`);
+    else if (resolved) targets.add(resolved);
+  }
+  return targets;
+}
+function requireTarget(indexPath, targets, target, failures) {
+  if (!targets.has(target)) failures.push(`${indexPath}: Profile 1.0 navigation must resolve ${target}`);
+}
+function boundedFailures(values) {
+  const failures = [...new Set(values)].sort();
+  return { failures: failures.slice(0, MAXIMUM_FAILURES), omittedFailureCount: Math.max(0, failures.length - MAXIMUM_FAILURES) };
+}
+function agentBaseDomainConceptIdentity(selector) {
+  if (!DOMAIN_SELECTOR.test(selector)) throw new Error("AgentBase Domain selector must be domains/<slug>");
+  return selector;
+}
+function agentBaseDomainConceptPath(selector) {
+  return `${agentBaseDomainConceptIdentity(selector)}/index.md`;
+}
+function agentBaseDomainSelector(conceptIdentity) {
+  const match = DOMAIN_CONCEPT.exec(conceptIdentity);
+  if (!match?.[1]) throw new Error("AgentBase Domain concept identity must be domains/<slug>");
+  return `domains/${match[1]}`;
+}
+function agentBaseProfileConceptPath(home, type, conceptSlug) {
+  if (!CONCEPT_SLUG.test(conceptSlug)) throw new Error("AgentBase Profile concept slug is invalid");
+  if (type === "Domain") {
+    if (home.kind !== "domain" || path2.posix.basename(home.selector) !== conceptSlug) {
+      throw new Error("AgentBase Domain path must match its Domain home");
+    }
+    return agentBaseDomainConceptPath(home.selector);
+  }
+  if (type === AGENTBASE_OKF_PROFILE_TYPE) {
+    if (home.kind !== "shared") throw new Error("AgentBase Profile declaration must use the shared home");
+    return AGENTBASE_OKF_PROFILE_PATH;
+  }
+  const category = KNOWN_CATEGORY.get(type) ?? "knowledge";
+  if (home.kind === "domain") agentBaseDomainConceptIdentity(home.selector);
+  const prefix = home.kind === "shared" ? "shared" : home.selector;
+  return `${prefix}/${category}/${conceptSlug}.md`;
+}
+function classifyAgentBaseHubProfileSnapshot(snapshot) {
+  const exact = snapshot.concepts.get(AGENTBASE_OKF_PROFILE_CONCEPT_ID);
+  const profileConcepts = [...snapshot.concepts.values()].filter((concept) => concept.type === AGENTBASE_OKF_PROFILE_TYPE);
+  if (!exact && !profileConcepts.length) return { kind: "legacy-unprofiled" };
+  const failures = [];
+  if (!exact) {
+    for (const concept of profileConcepts) failures.push(`${concept.path}: Profile concept must use ${AGENTBASE_OKF_PROFILE_PATH}`);
+    const bounded3 = boundedFailures(failures);
+    return { kind: "unsupported", ...bounded3 };
+  }
+  failures.push(...profileFailures(exact, profileConcepts));
+  const homes = [];
+  for (const concept of snapshot.concepts.values()) {
+    const home = conceptHome(concept, failures);
+    if (home) homes.push({ identity: concept.conceptId, path: concept.path, home });
+  }
+  const domainSelectors = /* @__PURE__ */ new Set();
+  for (const relative of snapshot.files) {
+    const match = /^domains\/([a-z0-9]+(?:-[a-z0-9]+)*)\//.exec(relative);
+    if (match?.[1]) domainSelectors.add(`domains/${match[1]}`);
+  }
+  for (const selector of [...domainSelectors].sort()) {
+    const identity = agentBaseDomainConceptIdentity(selector), concept = snapshot.concepts.get(identity);
+    if (!concept || concept.type !== "Domain") failures.push(`${selector}/index.md: Domain Capsule requires one matching Domain concept`);
+  }
+  for (const relative of snapshot.files) {
+    if (path2.posix.basename(relative) === "log.md") {
+      failures.push(`${relative}: compact Profile does not admit reserved activity log.md`);
+      continue;
+    }
+    if (relative === "index.md" || relative === "README.md" || relative.startsWith(".agentbase/") || relative.startsWith(".github/")) continue;
+    if (relative === "shared/index.md" || relative === AGENTBASE_OKF_PROFILE_PATH) continue;
+    const withinShared = relative.startsWith("shared/") ? relative.slice("shared/".length) : void 0;
+    const domain = DOMAIN_HOME.exec(relative);
+    const withinHome = withinShared ?? domain?.[2];
+    if (!withinHome) continue;
+    if (domain && withinHome === "index.md") continue;
+    const parts = withinHome.split("/");
+    if (parts.length !== 2 || !["repositories", "knowledge", "questions"].includes(parts[0]) || !parts[1]?.endsWith(".md") || ["index.md", "log.md"].includes(parts[1])) {
+      failures.push(`${relative}: compact Profile home admits only repositories/, knowledge/ and questions/ concept files`);
+    }
+  }
+  const rootTargets = indexTargets(snapshot, "index.md", failures);
+  requireTarget("index.md", rootTargets, AGENTBASE_OKF_PROFILE_PATH, failures);
+  requireTarget("index.md", rootTargets, "shared/index.md", failures);
+  const sharedTargets = indexTargets(snapshot, "shared/index.md", failures);
+  requireTarget("shared/index.md", sharedTargets, AGENTBASE_OKF_PROFILE_PATH, failures);
+  for (const selector of [...domainSelectors].sort()) {
+    const indexPath = `${selector}/index.md`;
+    const targets = indexTargets(snapshot, indexPath, failures);
+    for (const home of homes.filter((item) => item.home.kind === "domain" && item.home.selector === selector && item.path !== indexPath)) {
+      requireTarget(indexPath, targets, home.path, failures);
+    }
+    requireTarget("index.md", rootTargets, indexPath, failures);
+  }
+  for (const home of homes.filter((item) => item.home.kind === "shared" && item.path !== AGENTBASE_OKF_PROFILE_PATH)) {
+    requireTarget("shared/index.md", sharedTargets, home.path, failures);
+  }
+  const bounded2 = boundedFailures(failures);
+  if (bounded2.failures.length || bounded2.omittedFailureCount) return { kind: "unsupported", ...bounded2 };
+  return {
+    kind: "profile-1.0",
+    profile: AGENTBASE_OKF_PROFILE,
+    homes: homes.sort((left, right) => left.identity.localeCompare(right.identity))
+  };
+}
+function classifyAgentBaseHubProfile(bundle) {
+  return classifyAgentBaseHubProfileSnapshot({
+    concepts: bundle.concepts,
+    files: bundle.files,
+    readMarkdown(relativePath) {
+      const target = path2.join(bundle.root, ...relativePath.split("/"));
+      return fs.existsSync(target) ? fs.readFileSync(target, "utf8") : void 0;
+    }
+  });
+}
 
 // src/core/knowledge/documents/okf-relationships.ts
-import path2 from "node:path";
+import path3 from "node:path";
 
 // src/core/knowledge/documents/relationship-vocabulary.ts
 var CANONICAL_RELATIONSHIP_KINDS = [
@@ -7880,7 +8138,7 @@ function isCanonicalRelationshipKind(value) {
 
 // src/core/knowledge/documents/okf-relationships.ts
 var MAX_IDENTITY_BYTES = 256;
-function mapping2(value) {
+function mapping3(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
 }
 function resolveOkfMarkdownLinkPaths(concept) {
@@ -7888,7 +8146,7 @@ function resolveOkfMarkdownLinkPaths(concept) {
   for (const match of concept.body.matchAll(/(?<!!)\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)) {
     const raw = match[1]?.split("#")[0]?.split("?")[0];
     if (!raw || !raw.endsWith(".md") || /^[a-z][a-z0-9+.-]*:/i.test(raw)) continue;
-    const resolved = raw.startsWith("/") ? path2.posix.normalize(raw.slice(1)) : path2.posix.normalize(path2.posix.join(path2.posix.dirname(concept.path), raw));
+    const resolved = raw.startsWith("/") ? path3.posix.normalize(raw.slice(1)) : path3.posix.normalize(path3.posix.join(path3.posix.dirname(concept.path), raw));
     if (resolved !== ".." && !resolved.startsWith("../")) links.add(resolved);
   }
   return links;
@@ -7896,7 +8154,7 @@ function resolveOkfMarkdownLinkPaths(concept) {
 function sourceIds(concept) {
   if (!Array.isArray(concept.frontmatter.sources)) return /* @__PURE__ */ new Set();
   return new Set(concept.frontmatter.sources.flatMap((value) => {
-    const id = mapping2(value)?.id;
+    const id = mapping3(value)?.id;
     return typeof id === "string" ? [id] : [];
   }));
 }
@@ -7923,7 +8181,7 @@ function validateFlowSteps(identity, concept, targets, strict, failures) {
   const steps = [];
   const orders = /* @__PURE__ */ new Set();
   for (const raw of value) {
-    const step = mapping2(raw);
+    const step = mapping3(raw);
     const order = step?.order;
     const source = step?.source;
     const action = step?.action;
@@ -7988,7 +8246,7 @@ function validateOkfRelationships(concepts, options = {}) {
       const links = resolveOkfMarkdownLinkPaths(concept);
       const sources = sourceIds(concept);
       for (const value of declared) {
-        const relationship = mapping2(value);
+        const relationship = mapping3(value);
         if (!relationship || typeof relationship.kind !== "string" || typeof relationship.target !== "string") {
           failures.push(`${concept.path}: relationship declaration is malformed`);
           continue;
@@ -8115,56 +8373,107 @@ function deriveDomains(concepts, edges) {
   for (const identity of concepts.keys()) visit(identity);
   return result;
 }
-function deriveDomainScopes(concepts, domains, edges, flowSteps) {
+function deriveRepositoryScopes(concepts, edges) {
   const structural = /* @__PURE__ */ new Set(["part-of", "implemented-in", "declared-by"]);
-  const parents = /* @__PURE__ */ new Map();
+  const dependants = /* @__PURE__ */ new Map();
   for (const edge of edges) {
     if (!structural.has(edge.kind) || !concepts.has(edge.target)) continue;
-    parents.set(edge.source, [...parents.get(edge.source) ?? [], edge.target]);
+    dependants.set(edge.target, [...dependants.get(edge.target) ?? [], edge.source]);
   }
-  const repositories = (identity, trail = /* @__PURE__ */ new Set()) => {
-    if (trail.has(identity)) return [];
-    const concept = concepts.get(identity);
-    if (!concept) return [];
-    if (concept.document.type === "Repository") return [identity];
-    const next = new Set(trail).add(identity);
-    return [...new Set((parents.get(identity) ?? []).flatMap((parent) => repositories(parent, next)))].sort();
-  };
-  const result = /* @__PURE__ */ new Map();
+  const scopes = new Map([...concepts.keys()].map((identity) => [identity, /* @__PURE__ */ new Set()]));
+  const pending = [...concepts].filter(([, concept]) => concept.document.type === "Repository").map(([identity]) => identity).sort();
+  const queued = new Set(pending);
+  for (const identity of pending) scopes.get(identity).add(identity);
+  while (pending.length) {
+    const parent = pending.shift();
+    queued.delete(parent);
+    for (const child of (dependants.get(parent) ?? []).sort()) {
+      const childScope = scopes.get(child);
+      const size = childScope.size;
+      for (const repository of scopes.get(parent)) childScope.add(repository);
+      if (childScope.size > size && !queued.has(child)) {
+        pending.push(child);
+        queued.add(child);
+      }
+    }
+  }
+  return new Map([...scopes].map(([identity, repositories]) => [identity, [...repositories].sort()]));
+}
+function deriveDomainScopes(concepts, domains, repositories, homes, edges, flowSteps) {
+  const scopes = /* @__PURE__ */ new Map();
+  const roleDetails = /* @__PURE__ */ new Map();
   const domainIds = [...concepts].filter(([, concept]) => concept.document.type === "Domain").map(([identity]) => identity).sort();
   for (const domain of domainIds) {
     const roles = /* @__PURE__ */ new Map();
+    const details = /* @__PURE__ */ new Map();
+    const addDetail = (identity, role) => {
+      const values = details.get(identity) ?? /* @__PURE__ */ new Set();
+      values.add(role);
+      details.set(identity, values);
+    };
     for (const identity of concepts.keys()) {
-      if ((domains.get(identity) ?? []).includes(domain)) roles.set(identity, "member");
+      if ((domains.get(identity) ?? []).includes(domain)) {
+        roles.set(identity, "member");
+        addDetail(identity, "participant");
+      }
     }
     for (const identity of concepts.keys()) {
-      if (roles.has(identity)) continue;
-      if (repositories(identity).some((repository) => (domains.get(repository) ?? []).includes(domain))) {
-        roles.set(identity, "repository-associated");
+      if ((repositories.get(identity) ?? []).some((repository) => (domains.get(repository) ?? []).includes(domain))) {
+        if (!roles.has(identity)) roles.set(identity, "repository-associated");
+        addDetail(identity, "participant");
+      }
+    }
+    for (const [identity, home] of homes) {
+      if (home.kind === "domain" && agentBaseDomainConceptIdentity(home.selector) === domain) {
+        if (!roles.has(identity)) roles.set(identity, "home");
+        addDetail(identity, "home");
       }
     }
     const primary = new Set(roles.keys());
     for (const edge of edges) {
-      if (primary.has(edge.source) && !roles.has(edge.target)) roles.set(edge.target, "boundary");
-      if (primary.has(edge.target) && !roles.has(edge.source)) roles.set(edge.source, "boundary");
+      if (primary.has(edge.source) && !roles.has(edge.target)) {
+        roles.set(edge.target, "boundary");
+        addDetail(edge.target, "boundary");
+      }
+      if (primary.has(edge.target) && !roles.has(edge.source)) {
+        roles.set(edge.source, "boundary");
+        addDetail(edge.source, "boundary");
+      }
     }
     for (const step of flowSteps) {
       if (primary.has(step.flow)) {
-        if (!roles.has(step.source)) roles.set(step.source, "boundary");
-        if (!roles.has(step.target)) roles.set(step.target, "boundary");
+        if (!roles.has(step.source)) {
+          roles.set(step.source, "boundary");
+          addDetail(step.source, "boundary");
+        }
+        if (!roles.has(step.target)) {
+          roles.set(step.target, "boundary");
+          addDetail(step.target, "boundary");
+        }
       }
-      if (primary.has(step.source) && !roles.has(step.target)) roles.set(step.target, "boundary");
-      if (primary.has(step.target) && !roles.has(step.source)) roles.set(step.source, "boundary");
+      if (primary.has(step.source) && !roles.has(step.target)) {
+        roles.set(step.target, "boundary");
+        addDetail(step.target, "boundary");
+      }
+      if (primary.has(step.target) && !roles.has(step.source)) {
+        roles.set(step.source, "boundary");
+        addDetail(step.source, "boundary");
+      }
     }
-    result.set(domain, roles);
+    scopes.set(domain, roles);
+    const order = /* @__PURE__ */ new Map([["home", 0], ["participant", 1], ["boundary", 2]]);
+    roleDetails.set(domain, new Map([...details].map(([identity, values]) => [
+      identity,
+      [...values].sort((left, right) => order.get(left) - order.get(right))
+    ])));
   }
-  return result;
+  return { scopes, roles: roleDetails };
 }
 function normalizeHubConceptPath(value) {
-  if (value.includes("\0") || value.includes("\\") || path3.posix.isAbsolute(value)) {
+  if (value.includes("\0") || value.includes("\\") || path4.posix.isAbsolute(value)) {
     throw new Error("Hub concept path must be normalized and relative");
   }
-  const normalized = path3.posix.normalize(value);
+  const normalized = path4.posix.normalize(value);
   if (normalized === "." || normalized.startsWith("../") || !normalized.endsWith(".md")) {
     throw new Error("Hub concept path must identify one Markdown file");
   }
@@ -8172,16 +8481,23 @@ function normalizeHubConceptPath(value) {
 }
 async function loadHubGraph(reader, maximumDocumentBytes) {
   const concepts = /* @__PURE__ */ new Map(), paths = /* @__PURE__ */ new Map(), omissions = [];
+  const markdown2 = /* @__PURE__ */ new Map();
   const markdownPaths = [...await reader.listMarkdownPaths()].map(normalizeHubConceptPath).sort();
   for (const relativePath of markdownPaths) {
-    if (["index.md", "log.md", "README.md"].includes(path3.posix.basename(relativePath))) continue;
     const content = await reader.readMarkdown(relativePath);
     if (Buffer.byteLength(content) > maximumDocumentBytes) {
       omissions.push({ path: relativePath, reason: "oversized" });
       continue;
     }
+    markdown2.set(relativePath, content);
+    if (["log.md", "README.md"].includes(path4.posix.basename(relativePath))) continue;
     try {
+      if (path4.posix.basename(relativePath) === "index.md" && !isDomainConceptDocument(relativePath, content)) continue;
       const document = parseConceptDocument(relativePath, content);
+      const existing = concepts.get(document.conceptId);
+      if (existing) {
+        throw new Error(`duplicate concept identity ${document.conceptId}; already defined by ${existing.document.path}`);
+      }
       concepts.set(document.conceptId, {
         document,
         title: text(document.frontmatter.title) || document.body.match(/^#\s+(.+)$/m)?.[1]?.trim() || document.conceptId,
@@ -8195,6 +8511,14 @@ async function loadHubGraph(reader, maximumDocumentBytes) {
       throw new Error(`Published Hub concept is invalid: ${relativePath}`);
     }
   }
+  const missingProfile = markdownPaths.includes(AGENTBASE_OKF_PROFILE_PATH) && !concepts.has(AGENTBASE_OKF_PROFILE_CONCEPT_ID);
+  const profileAdmission = missingProfile ? { kind: "unsupported", failures: [`${AGENTBASE_OKF_PROFILE_PATH} is unavailable`], omittedFailureCount: 0 } : classifyAgentBaseHubProfileSnapshot({
+    concepts: new Map([...concepts].map(([identity, concept]) => [identity, concept.document])),
+    files: markdownPaths,
+    readMarkdown(relativePath) {
+      return markdown2.get(relativePath);
+    }
+  });
   const validation = validateOkfRelationships([...concepts].map(([identity, concept]) => ({
     identity,
     concept: concept.document
@@ -8208,7 +8532,10 @@ async function loadHubGraph(reader, maximumDocumentBytes) {
     }
   }
   links.sort((left, right) => `${left.source}\0${left.target}`.localeCompare(`${right.source}\0${right.target}`));
+  const homes = profileAdmission.kind === "profile-1.0" ? new Map(profileAdmission.homes.map((item) => [item.identity, item.home])) : /* @__PURE__ */ new Map();
   const domains = deriveDomains(concepts, edges);
+  const repositoryScopes = deriveRepositoryScopes(concepts, edges);
+  const domainProjection = deriveDomainScopes(concepts, domains, repositoryScopes, homes, edges, validation.flowSteps);
   return {
     commit: reader.commit,
     concepts,
@@ -8218,8 +8545,13 @@ async function loadHubGraph(reader, maximumDocumentBytes) {
     flowSteps: validation.flowSteps,
     links,
     omissions,
+    profile: profileAdmission.kind,
+    profileFailures: profileAdmission.kind === "unsupported" ? profileAdmission.failures : [],
+    homes,
     domains,
-    domainScopes: deriveDomainScopes(concepts, domains, edges, validation.flowSteps)
+    repositoryScopes,
+    domainScopes: domainProjection.scopes,
+    domainRoles: domainProjection.roles
   };
 }
 function summarizeHubConcept(graph, identity) {
@@ -8231,8 +8563,49 @@ function summarizeHubConcept(graph, identity) {
     type: value.document.type,
     title: value.title,
     description: value.description,
-    domains: graph.domains.get(identity) ?? []
+    domains: graph.domains.get(identity) ?? [],
+    ...graph.profile === "profile-1.0" && value.document.type === "Domain" ? { domainSelector: agentBaseDomainSelector(identity) } : {}
   };
+}
+
+// src/core/knowledge/governance/repository-identity.ts
+function mapping4(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
+}
+function stringList(value) {
+  return Array.isArray(value) && value.every((item) => typeof item === "string") ? value : [];
+}
+function readRepositoryIdentityRecord(concept) {
+  if (concept.type !== "Repository") return void 0;
+  const agentbase = mapping4(concept.frontmatter.agentbase);
+  const repository = mapping4(agentbase?.repository);
+  if (!repository || typeof repository.id !== "string" || typeof repository.display_name !== "string" || !/^repository-[a-z0-9-]+-[a-f0-9]{12}$/.test(repository.id)) return void 0;
+  const aliases = mapping4(repository.aliases);
+  return normalizeRecord({
+    id: repository.id,
+    displayName: repository.display_name,
+    remotes: stringList(aliases?.remotes),
+    rootCommits: stringList(aliases?.root_commits),
+    ...typeof repository.forge_id === "string" ? { forgeId: repository.forge_id } : {}
+  });
+}
+function readRepositoryObservedSource(concept) {
+  if (concept.type !== "Repository") return void 0;
+  const repository = mapping4(mapping4(concept.frontmatter.agentbase)?.repository);
+  const observed = mapping4(repository?.observed_source);
+  if (!observed || observed.commit !== null && (typeof observed.commit !== "string" || !/^[a-f0-9]{40}$/.test(observed.commit)) || typeof observed.dirty !== "boolean" || observed.dirty_digest !== null && (typeof observed.dirty_digest !== "string" || !/^sha256:[a-f0-9]{64}$/.test(observed.dirty_digest)) || typeof observed.observed_at !== "string" || !Number.isFinite(Date.parse(observed.observed_at))) return void 0;
+  return {
+    commit: observed.commit,
+    dirty: observed.dirty,
+    dirtyDigest: observed.dirty_digest,
+    observedAt: observed.observed_at
+  };
+}
+function unique(values) {
+  return [...new Set(values.map((value) => value.trim().toLowerCase()).filter(Boolean))].sort();
+}
+function normalizeRecord(record) {
+  return { ...record, remotes: unique(record.remotes), rootCommits: unique(record.rootCommits) };
 }
 
 // src/core/knowledge/query/hub-query.ts
@@ -8251,57 +8624,17 @@ async function listHubConcepts(reader, options = {}) {
   return [...graph.concepts.keys()].filter((identity) => !types || types.has(graph.concepts.get(identity).document.type)).sort().slice(0, limit).map((identity) => summarizeHubConcept(graph, identity));
 }
 
-// src/core/knowledge/governance/repository-identity.ts
-function mapping3(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
-}
-function stringList(value) {
-  return Array.isArray(value) && value.every((item) => typeof item === "string") ? value : [];
-}
-function readRepositoryIdentityRecord(concept) {
-  if (concept.type !== "Repository") return void 0;
-  const agentbase = mapping3(concept.frontmatter.agentbase);
-  const repository = mapping3(agentbase?.repository);
-  if (!repository || typeof repository.id !== "string" || typeof repository.display_name !== "string" || !/^repository-[a-z0-9-]+-[a-f0-9]{12}$/.test(repository.id)) return void 0;
-  const aliases = mapping3(repository.aliases);
-  return normalizeRecord({
-    id: repository.id,
-    displayName: repository.display_name,
-    remotes: stringList(aliases?.remotes),
-    rootCommits: stringList(aliases?.root_commits),
-    ...typeof repository.forge_id === "string" ? { forgeId: repository.forge_id } : {}
-  });
-}
-function readRepositoryObservedSource(concept) {
-  if (concept.type !== "Repository") return void 0;
-  const repository = mapping3(mapping3(concept.frontmatter.agentbase)?.repository);
-  const observed = mapping3(repository?.observed_source);
-  if (!observed || observed.commit !== null && (typeof observed.commit !== "string" || !/^[a-f0-9]{40}$/.test(observed.commit)) || typeof observed.dirty !== "boolean" || observed.dirty_digest !== null && (typeof observed.dirty_digest !== "string" || !/^sha256:[a-f0-9]{64}$/.test(observed.dirty_digest)) || typeof observed.observed_at !== "string" || !Number.isFinite(Date.parse(observed.observed_at))) return void 0;
-  return {
-    commit: observed.commit,
-    dirty: observed.dirty,
-    dirtyDigest: observed.dirty_digest,
-    observedAt: observed.observed_at
-  };
-}
-function unique(values) {
-  return [...new Set(values.map((value) => value.trim().toLowerCase()).filter(Boolean))].sort();
-}
-function normalizeRecord(record) {
-  return { ...record, remotes: unique(record.remotes), rootCommits: unique(record.rootCommits) };
-}
-
 // src/core/knowledge/documents/okf-bundle.ts
 import { createHash } from "node:crypto";
-import fs from "node:fs";
-import path4 from "node:path";
+import fs2 from "node:fs";
+import path5 from "node:path";
 function bundleFiles(root) {
-  if (!fs.existsSync(root)) return [];
+  if (!fs2.existsSync(root)) return [];
   const files2 = [];
   const walk = (directory) => {
-    for (const entry of fs.readdirSync(directory, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
-      const absolute = path4.join(directory, entry.name);
-      const relative = path4.relative(root, absolute).split(path4.sep).join("/");
+    for (const entry of fs2.readdirSync(directory, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
+      const absolute = path5.join(directory, entry.name);
+      const relative = path5.relative(root, absolute).split(path5.sep).join("/");
       if (entry.isSymbolicLink()) throw new OkfValidationError("BUNDLE_SYMLINK", `${relative}: bundle symlinks are not allowed`);
       if (entry.isDirectory()) walk(absolute);
       else if (entry.isFile()) files2.push(relative);
@@ -8332,7 +8665,7 @@ function validateIndex(relative, source) {
     else {
       const navigation = line.match(/^\*\s+\[[^\]]+\]\(([^)]+)\)(?:\s+-\s+.+)?$/);
       if (navigation && headingSeen) {
-        const target = path4.posix.normalize(navigation[1]);
+        const target = path5.posix.normalize(navigation[1]);
         if (targets.has(target)) throw new OkfValidationError("INDEX_DUPLICATE", `${relative}: duplicate index target: ${target}`);
         targets.add(target);
         continue;
@@ -8373,14 +8706,14 @@ function resolveConceptLink(from, target) {
   if (target.startsWith("#") || /^[a-z][a-z0-9+.-]*:/i.test(target)) return void 0;
   const clean = target.split("#")[0]?.split("?")[0];
   if (!clean || !clean.endsWith(".md") && !clean.endsWith("/")) return void 0;
-  const resolved = clean.startsWith("/") ? path4.posix.normalize(clean.slice(1)) : path4.posix.normalize(path4.posix.join(path4.posix.dirname(from), clean));
+  const resolved = clean.startsWith("/") ? path5.posix.normalize(clean.slice(1)) : path5.posix.normalize(path5.posix.join(path5.posix.dirname(from), clean));
   if (resolved.startsWith("../") || resolved === "..") return `!unsafe:${target}`;
   return resolved.endsWith("/") ? `${resolved}index.md` : resolved;
 }
 function digestTree(root, files2) {
   const hash = createHash("sha256");
   for (const relative of files2) {
-    const bytes = fs.readFileSync(path4.join(root, ...relative.split("/")));
+    const bytes = fs2.readFileSync(path5.join(root, ...relative.split("/")));
     hash.update(`${relative}\0${bytes.length}\0`);
     hash.update(bytes);
     hash.update("\0");
@@ -8388,21 +8721,33 @@ function digestTree(root, files2) {
   return `sha256:${hash.digest("hex")}`;
 }
 function loadOkfBundle(root, options = {}) {
-  const absoluteRoot = path4.resolve(root);
+  const absoluteRoot = path5.resolve(root);
   const files2 = bundleFiles(absoluteRoot);
   const concepts = /* @__PURE__ */ new Map();
+  const addConcept = (concept) => {
+    const existing = concepts.get(concept.conceptId);
+    if (existing) {
+      throw new OkfValidationError(
+        "CONCEPT_DUPLICATE",
+        `${concept.path}: duplicate concept identity ${concept.conceptId}; already defined by ${existing.path}`,
+        concept.path
+      );
+    }
+    concepts.set(concept.conceptId, concept);
+  };
   let okfVersion;
   for (const relative of files2.filter((file) => file.endsWith(".md"))) {
-    const source = utf8(fs.readFileSync(path4.join(absoluteRoot, ...relative.split("/"))), relative);
+    const source = utf8(fs2.readFileSync(path5.join(absoluteRoot, ...relative.split("/"))), relative);
     if (relative === "README.md") continue;
-    const basename = path4.posix.basename(relative);
-    if (basename === "index.md") {
+    const basename = path5.posix.basename(relative);
+    if (isDomainConceptDocument(relative, source)) {
+      addConcept(parseConceptDocument(relative, source));
+    } else if (basename === "index.md") {
       const version = validateIndex(relative, source);
       if (relative === "index.md") okfVersion = version;
     } else if (basename === "log.md") validateLog(relative, source);
     else {
-      const concept = parseConceptDocument(relative, source);
-      concepts.set(concept.conceptId, concept);
+      addConcept(parseConceptDocument(relative, source));
     }
   }
   if (options.requireAgentBaseRootIndex && okfVersion !== "0.2") {
@@ -8444,8 +8789,14 @@ var RELATIONSHIP_DISPLAY_DESCRIPTORS = Object.freeze(Object.fromEntries(CANONICA
 
 // src/core/knowledge/governance/questions.ts
 import { createHash as createHash2 } from "node:crypto";
+
+// src/product-version.ts
+var AGENTBASE_VERSION = "0.1.0";
+var AGENTBASE_PRODUCER = `agentbase/${AGENTBASE_VERSION}`;
+
+// src/core/knowledge/governance/questions.ts
 var QUESTION_ID = /^question-[a-f0-9]{24}$/;
-var SUBJECT = /^(?:domains|systems|components|functions|interfaces|flows|resources|infrastructure|deployments|repositories|relationships|capabilities|guidance)\/[a-z0-9][a-z0-9./-]*$/;
+var SUBJECT = /^(?:shared|domains|systems|components|functions|interfaces|flows|resources|infrastructure|deployments|repositories|relationships|capabilities|guidance)\/[a-z0-9][a-z0-9./-]*$/;
 var TOKEN = /^[A-Za-z0-9][A-Za-z0-9._:/-]*$/;
 var STATES = /* @__PURE__ */ new Set(["open", "resolved", "needs-review"]);
 var KINDS = /* @__PURE__ */ new Set(["conflict", "missing-evidence", "relation-candidate", "identity-candidate", "maintainer-decision"]);
@@ -8464,7 +8815,7 @@ var QUESTION_KEYS = [
   "state",
   "subject"
 ];
-function mapping4(value) {
+function mapping5(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
 }
 function exactKeys(value, expected) {
@@ -8490,7 +8841,7 @@ function referenceKey(reference) {
   ].join("\0");
 }
 function parseReference(value, prefix) {
-  const entry = mapping4(value);
+  const entry = mapping5(value);
   if (!entry || entry.reference_kind !== "owned-item" && entry.reference_kind !== "candidate-evidence") {
     throw new Error(`${prefix} reference kind is invalid`);
   }
@@ -8555,17 +8906,18 @@ ${reason}
 `;
 }
 function parseQuestionDocument(concept) {
-  if (concept.type !== "Question" || !concept.path.startsWith("questions/") || concept.status !== "draft") {
+  const pathMatch = /^(?:questions|shared\/questions|domains\/[a-z0-9]+(?:-[a-z0-9]+)*\/questions)\/(question-[a-f0-9]{24})\.md$/.exec(concept.path);
+  if (concept.type !== "Question" || !pathMatch || concept.status !== "draft") {
     throw new Error(`${concept.path}: shared Question document identity is invalid`);
   }
-  const generated = mapping4(concept.frontmatter.generated), agentbase = mapping4(concept.frontmatter.agentbase);
-  const question = mapping4(agentbase?.question);
+  const generated = mapping5(concept.frontmatter.generated), agentbase = mapping5(concept.frontmatter.agentbase);
+  const question = mapping5(agentbase?.question);
   if (!question || !exactKeys(question, QUESTION_KEYS)) throw new Error(`${concept.path}: agentbase.question contains unknown or missing fields`);
   const id = question.id, revision = question.revision, state = question.state, kind = question.kind;
   const originSubject = question.origin_subject, originProperty = question.origin_property;
   const subject = question.subject, property = question.property, scopeKey = question.scope_key;
   const title = concept.frontmatter.title;
-  if (!bounded(id) || !QUESTION_ID.test(id) || concept.conceptId !== `questions/${id}` || !Number.isSafeInteger(revision) || Number(revision) < 1 || typeof state !== "string" || !STATES.has(state) || typeof kind !== "string" || !KINDS.has(kind) || !bounded(originSubject) || !SUBJECT.test(originSubject) || !bounded(subject) || !SUBJECT.test(subject) || !bounded(originProperty, 128) || !TOKEN.test(originProperty) || !bounded(property, 128) || !TOKEN.test(property) || !bounded(scopeKey) || !bounded(title, 512) || typeof generated?.at !== "string" || Number.isNaN(Date.parse(generated.at))) {
+  if (!bounded(id) || !QUESTION_ID.test(id) || pathMatch[1] !== id || concept.conceptId !== conceptIdentityFromPath(concept.path) || !Number.isSafeInteger(revision) || Number(revision) < 1 || typeof state !== "string" || !STATES.has(state) || typeof kind !== "string" || !KINDS.has(kind) || !bounded(originSubject) || !SUBJECT.test(originSubject) || !bounded(subject) || !SUBJECT.test(subject) || !bounded(originProperty, 128) || !TOKEN.test(originProperty) || !bounded(property, 128) || !TOKEN.test(property) || !bounded(scopeKey) || !bounded(title, 512) || typeof generated?.at !== "string" || Number.isNaN(Date.parse(generated.at))) {
     throw new Error(`${concept.path}: shared Question fields are invalid`);
   }
   if (createQuestionId({ kind, originSubject, originProperty, scopeKey }) !== id) {
@@ -8606,18 +8958,18 @@ var WORD = /^[a-z][a-z0-9.-]{0,63}$/;
 var SCOPE_KEY = /^[a-z][a-z0-9_]{0,63}$/;
 var SOURCE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 var SECRET = /(?:-----BEGIN [A-Z ]*PRIVATE KEY-----|\bAKIA[A-Z0-9]{16}\b|\bgh[pousr]_[A-Za-z0-9_]{20,}\b|[?&](?:X-Amz-Signature|token|secret)=)/i;
-function mapping5(value) {
+function mapping6(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
 }
 function exactKeys2(value, allowed) {
   return Object.keys(value).every((key) => allowed.includes(key));
 }
 function parseEntry(value, prefix) {
-  const entry = mapping5(value), failures = [];
+  const entry = mapping6(value), failures = [];
   if (!entry || !exactKeys2(entry, ["provider", "identity_type", "value", "service", "resource_type", "scope", "evidence", "observed_at"])) {
     return { failures: [`${prefix} contains unknown fields or is not a mapping`] };
   }
-  const scope = mapping5(entry.scope);
+  const scope = mapping6(entry.scope);
   if (typeof entry.provider !== "string" || !WORD.test(entry.provider)) failures.push(`${prefix} provider is invalid`);
   if (typeof entry.identity_type !== "string" || !WORD.test(entry.identity_type)) failures.push(`${prefix} identity_type is invalid`);
   if (typeof entry.service !== "string" || !WORD.test(entry.service)) failures.push(`${prefix} service is invalid`);
@@ -8644,7 +8996,7 @@ function externalIdentityKey(identity) {
   return JSON.stringify([identity.provider, identity.identityType, identity.value]);
 }
 function readExternalIdentities(concept) {
-  const raw = mapping5(concept.frontmatter.agentbase)?.external_identities;
+  const raw = mapping6(concept.frontmatter.agentbase)?.external_identities;
   if (raw === void 0) return [];
   if (!Array.isArray(raw) || raw.length > 64) throw new Error(`${concept.path}: agentbase.external_identities must be a list of at most 64 entries`);
   const identities = [], failures = [];
@@ -8675,7 +9027,7 @@ function validateBundleExternalIdentities(concepts) {
 
 // src/core/knowledge/governance/observed-values.ts
 var VALUE_ID = /^AB-OBS-[a-f0-9]{24}$/;
-var SUBJECT_ROOT = "(?:domains|systems|components|interfaces|flows|resources|infrastructure|deployments|repositories|relationships|capabilities|guidance)";
+var SUBJECT_ROOT = "(?:shared|domains|systems|components|interfaces|flows|resources|infrastructure|deployments|repositories|relationships|capabilities|guidance)";
 var SUBJECT2 = new RegExp(`^${SUBJECT_ROOT}/[a-z0-9][a-z0-9./-]*$`);
 var PROPERTY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 var COMMIT = /^[a-f0-9]{40}$/;
@@ -8688,7 +9040,7 @@ var SECTION_START = "<!-- agentbase:observed-values:start -->";
 var SECTION_END = "<!-- agentbase:observed-values:end -->";
 var OWNED_SECTION = /<!-- agentbase:observed-values:start -->[\s\S]*?<!-- agentbase:observed-values:end -->/g;
 var MANUAL_HEADING = /^## Observed values\s*$/m;
-function mapping6(value) {
+function mapping7(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
 }
 function exactKeys3(value, expected) {
@@ -8703,7 +9055,7 @@ function sourceMap(concept) {
   const result = /* @__PURE__ */ new Map();
   if (!Array.isArray(concept.frontmatter.sources)) return result;
   for (const value of concept.frontmatter.sources) {
-    const source = mapping6(value);
+    const source = mapping7(value);
     if (typeof source?.id === "string" && typeof source.resource === "string") result.set(source.id, source);
   }
   return result;
@@ -8747,7 +9099,7 @@ function providerStateFailures(observed, prefix) {
 }
 function providerSource(source, resource) {
   if (!/^provider-observation:\/\/aws\/[a-f0-9]{64}$/.test(resource)) return void 0;
-  const metadata = mapping6(mapping6(source.agentbase)?.provider_observation);
+  const metadata = mapping7(mapping7(source.agentbase)?.provider_observation);
   if (!metadata || !exactKeys3(metadata, ["authority", "evidence_digest", "location", "native_identity", "observed_at", "profile_family", "profile_version"]) || typeof metadata.profile_family !== "string" || typeof metadata.profile_version !== "number" || !Number.isSafeInteger(metadata.profile_version) || metadata.profile_version < 1 || typeof metadata.authority !== "string" || typeof metadata.location !== "string" || typeof metadata.native_identity !== "string" || typeof metadata.evidence_digest !== "string" || !DIGEST.test(metadata.evidence_digest) || !validObservedAt(metadata.observed_at)) return void 0;
   return {
     resource,
@@ -8760,7 +9112,7 @@ function providerSource(source, resource) {
   };
 }
 function parseValues(concept) {
-  const agentbase = mapping6(concept.frontmatter.agentbase);
+  const agentbase = mapping7(concept.frontmatter.agentbase);
   const raw = agentbase?.observed_values;
   if (raw === void 0) {
     const sections2 = [...concept.body.matchAll(OWNED_SECTION)];
@@ -8777,7 +9129,7 @@ function parseValues(concept) {
   const values = [], failures = [];
   for (const [index, rawValue] of raw.entries()) {
     const prefix = `${concept.path}: observed value ${index + 1}`;
-    const entry = mapping6(rawValue);
+    const entry = mapping7(rawValue);
     if (!entry || !exactKeys3(entry, ["id", "observed", "property", "role", "source_id", "subject", "value"])) {
       failures.push(`${prefix} contains unknown or missing fields`);
       continue;
@@ -8798,7 +9150,7 @@ function parseValues(concept) {
     else if (role !== "provider" && !repositorySource) failures.push(`${prefix} non-provider role requires a normalized repository source`);
     const safetyFailure = observedValueSafetyFailure(property, value);
     if (safetyFailure) failures.push(`${prefix} ${safetyFailure}`);
-    const observed = mapping6(entry.observed);
+    const observed = mapping7(entry.observed);
     failures.push(...role === "provider" ? providerStateFailures(observed, prefix) : stateFailures(observed, prefix));
     if (!failures.some((failure) => failure.startsWith(prefix)) && typeof resource === "string" && (repositorySource || runtimeSource)) {
       values.push({
@@ -8917,18 +9269,26 @@ async function readHubFreshness(reader, now = () => /* @__PURE__ */ new Date()) 
 }
 
 // src/app/hub-okf/authoring/questions.ts
-import fs2 from "node:fs";
-import path5 from "node:path";
-var SUBJECT_ROOT2 = "(?:domains|systems|components|functions|interfaces|flows|resources|infrastructure|deployments|repositories|relationships|capabilities)";
+import fs3 from "node:fs";
+import path6 from "node:path";
+var SUBJECT_ROOT2 = "(?:shared|domains|systems|components|functions|interfaces|flows|resources|infrastructure|deployments|repositories|relationships|capabilities)";
 var SUBJECT3 = new RegExp(`^${SUBJECT_ROOT2}/[a-z0-9][a-z0-9./-]*$`);
-function mapping7(value) {
+function mapping8(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
 }
-function questionDocuments(root) {
-  return [...loadOkfBundle(root).concepts.values()].filter((concept) => concept.type === "Question").map(parseQuestionDocument).sort((left, right) => left.id.localeCompare(right.id));
+function questionPath(root, question) {
+  const bundle = loadOkfBundle(root);
+  if (!bundle.concepts.has(AGENTBASE_OKF_PROFILE_CONCEPT_ID)) return `questions/${question.id}.md`;
+  const subjectPath = bundle.concepts.get(question.subject)?.path;
+  const domain = subjectPath ? /^domains\/([a-z0-9]+(?:-[a-z0-9]+)*)\//.exec(subjectPath)?.[1] : void 0;
+  const home = domain ? { kind: "domain", selector: `domains/${domain}` } : { kind: "shared" };
+  return agentBaseProfileConceptPath(home, "Question", question.id);
 }
 function validateSharedQuestionBundle(root) {
-  const bundle = loadOkfBundle(root), questions = questionDocuments(root), failures = [];
+  const bundle = loadOkfBundle(root), profile = bundle.concepts.has(AGENTBASE_OKF_PROFILE_CONCEPT_ID);
+  const questionConcepts = [...bundle.concepts.values()].filter((concept) => concept.type === "Question");
+  const questions = questionConcepts.map(parseQuestionDocument).sort((left, right) => left.id.localeCompare(right.id));
+  const failures = [];
   const repositoryIds = new Set([...bundle.concepts.values()].flatMap((concept) => {
     const repository = readRepositoryIdentityRecord(concept);
     return repository ? [repository.id] : [];
@@ -8946,15 +9306,23 @@ function validateSharedQuestionBundle(root) {
       failures.push(`${question.id}: reference owner is missing: ${reference.owner}`);
       continue;
     }
-    const sources = new Set((Array.isArray(owner.frontmatter.sources) ? owner.frontmatter.sources : []).flatMap((value) => typeof mapping7(value)?.id === "string" ? [mapping7(value).id] : []));
+    const sources = new Set((Array.isArray(owner.frontmatter.sources) ? owner.frontmatter.sources : []).flatMap((value) => typeof mapping8(value)?.id === "string" ? [mapping8(value).id] : []));
     if (!sources.has(reference.sourceId)) failures.push(`${question.id}: reference source_id is unresolved: ${reference.sourceId}`);
     if (reference.itemKind === "observed-value" && !readObservedValues(owner).some((value) => value.id === reference.itemKey)) {
       failures.push(`${question.id}: observed-value item is unresolved: ${reference.itemKey}`);
     }
   }
-  const indexPath = path5.join(root, "questions", "index.md");
-  if (questions.length && (!fs2.existsSync(indexPath) || fs2.readFileSync(indexPath, "utf8") !== renderQuestionIndex(questions))) {
-    failures.push("questions/index.md is missing or stale");
+  if (profile) {
+    for (const question of questions) {
+      const concept = questionConcepts.find((item) => parseQuestionDocument(item).id === question.id);
+      const expected = questionPath(root, question);
+      if (concept.path !== expected) failures.push(`${concept.path}: Question does not use its subject home ${expected}`);
+    }
+  } else {
+    const indexPath = path6.join(root, "questions", "index.md");
+    if (questions.length && (!fs3.existsSync(indexPath) || fs3.readFileSync(indexPath, "utf8") !== renderQuestionIndex(questions))) {
+      failures.push("questions/index.md is missing or stale");
+    }
   }
   if (failures.length) throw new Error(`shared Question validation failed: ${failures.join("; ")}`);
 }
@@ -9023,16 +9391,16 @@ var SECRET2 = /(?:-----BEGIN [A-Z ]*PRIVATE KEY-----|\b(?:AKIA|ASIA)[A-Z0-9]{16}
 var SECRET_ASSIGNMENT = /(?:^|[\s"'])(?:password|passwd|secret|token|credential|private[_-]?key|api[_-]?key|access[_-]?key)\s*[:=]\s*["']?[A-Za-z0-9/+_.=-]{16,}/im;
 var FORBIDDEN_PATH = /(?:^|\/)(?:\.env(?:\..*)?|credentials?|id_(?:rsa|dsa|ecdsa|ed25519)|[^/]+\.(?:pem|p12|pfx|key)|(?:graph|codegraph)\.(?:db|sqlite))$/i;
 var CI_SUPPORT_FILES = /* @__PURE__ */ new Set([HUB_CI_WORKFLOW_PATH, HUB_CI_VALIDATOR_PATH, HUB_CI_MANIFEST_PATH]);
-function mapping8(value) {
+function mapping9(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
 }
 function files(root) {
   const found = [];
   const walk = (directory) => {
-    for (const entry of fs3.readdirSync(directory, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
+    for (const entry of fs4.readdirSync(directory, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
       if (entry.name === ".git") continue;
-      const absolute = path6.join(directory, entry.name);
-      const relative = path6.relative(root, absolute).split(path6.sep).join("/");
+      const absolute = path7.join(directory, entry.name);
+      const relative = path7.relative(root, absolute).split(path7.sep).join("/");
       if (entry.isSymbolicLink()) throw new Error(`${relative}: Hub symlinks are not allowed`);
       if (entry.isDirectory()) walk(absolute);
       else if (entry.isFile()) found.push(relative);
@@ -9045,7 +9413,7 @@ function files(root) {
 function treeDigest(root, relativeFiles) {
   const hash = createHash4("sha256");
   for (const relative of relativeFiles) {
-    const bytes = fs3.readFileSync(path6.join(root, ...relative.split("/")));
+    const bytes = fs4.readFileSync(path7.join(root, ...relative.split("/")));
     hash.update(`${relative}\0${bytes.length}\0`);
     hash.update(bytes);
     hash.update("\0");
@@ -9054,12 +9422,12 @@ function treeDigest(root, relativeFiles) {
 }
 function indexTargetFailures(root, relativeFiles) {
   const present = new Set(relativeFiles), failures = [];
-  for (const relative of relativeFiles.filter((item) => path6.posix.basename(item) === "index.md")) {
-    const source = fs3.readFileSync(path6.join(root, ...relative.split("/")), "utf8");
+  for (const relative of relativeFiles.filter((item) => path7.posix.basename(item) === "index.md")) {
+    const source = fs4.readFileSync(path7.join(root, ...relative.split("/")), "utf8");
     for (const match of source.matchAll(/\[[^\]]+\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)) {
       const raw = match[1]?.split("#")[0]?.split("?")[0];
       if (!raw || raw.startsWith("#") || /^[a-z][a-z0-9+.-]*:/i.test(raw)) continue;
-      const target = raw.startsWith("/") ? path6.posix.normalize(raw.slice(1)) : path6.posix.normalize(path6.posix.join(path6.posix.dirname(relative), raw));
+      const target = raw.startsWith("/") ? path7.posix.normalize(raw.slice(1)) : path7.posix.normalize(path7.posix.join(path7.posix.dirname(relative), raw));
       const resolved = target.endsWith("/") ? `${target}index.md` : target;
       if (resolved === ".." || resolved.startsWith("../") || !present.has(resolved)) {
         failures.push(`${relative}: index target is missing or unsafe: ${match[1]}`);
@@ -9071,7 +9439,7 @@ function indexTargetFailures(root, relativeFiles) {
 function safety(root, relativeFiles) {
   const errors = [], warnings = [];
   for (const relative of relativeFiles) {
-    const absolute = path6.join(root, ...relative.split("/")), stat = fs3.statSync(absolute);
+    const absolute = path7.join(root, ...relative.split("/")), stat = fs4.statSync(absolute);
     if (CI_SUPPORT_FILES.has(relative)) continue;
     if (FORBIDDEN_PATH.test(relative)) errors.push(`${relative}: secret/raw-state path is forbidden`);
     if (stat.size > MAX_FILE_BYTES) {
@@ -9080,7 +9448,7 @@ function safety(root, relativeFiles) {
     }
     let source;
     try {
-      source = new TextDecoder("utf-8", { fatal: true }).decode(fs3.readFileSync(absolute));
+      source = new TextDecoder("utf-8", { fatal: true }).decode(fs4.readFileSync(absolute));
     } catch {
       errors.push(`${relative}: Hub files must be valid UTF-8 text`);
       continue;
@@ -9097,7 +9465,7 @@ function validateCiSupport(root, relativeFiles) {
   for (const required of CI_SUPPORT_FILES) if (!relativeFiles.includes(required)) errors.push(`${required}: required Hub CI file is missing`);
   if (!relativeFiles.includes(HUB_CI_WORKFLOW_PATH) || !relativeFiles.includes(HUB_CI_VALIDATOR_PATH) || !relativeFiles.includes(HUB_CI_MANIFEST_PATH)) return errors;
   try {
-    const manifest = JSON.parse(fs3.readFileSync(path6.join(root, ...HUB_CI_MANIFEST_PATH.split("/")), "utf8"));
+    const manifest = JSON.parse(fs4.readFileSync(path7.join(root, ...HUB_CI_MANIFEST_PATH.split("/")), "utf8"));
     if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) throw new Error("manifest must be an object");
     const record = manifest, validator = record.validator;
     if (record.format !== HUB_CI_FORMAT_VERSION || typeof record.target_branch !== "string" || !/^[A-Za-z0-9_][A-Za-z0-9._/-]*$/.test(record.target_branch) || record.target_branch.includes("..") || record.target_branch.includes("//") || record.target_branch.includes("@{") || record.target_branch.endsWith("/") || !validator || typeof validator !== "object" || Array.isArray(validator)) {
@@ -9107,10 +9475,10 @@ function validateCiSupport(root, relativeFiles) {
     if (value.path !== HUB_CI_VALIDATOR_PATH || typeof value.version !== "string" || !/^\d+\.\d+\.\d+$/.test(value.version) || typeof value.sha256 !== "string" || !/^sha256:[a-f0-9]{64}$/.test(value.sha256)) {
       throw new Error("manifest validator identity is invalid");
     }
-    const bytes = fs3.readFileSync(path6.join(root, ...HUB_CI_VALIDATOR_PATH.split("/")));
+    const bytes = fs4.readFileSync(path7.join(root, ...HUB_CI_VALIDATOR_PATH.split("/")));
     const actual = hubCiBytesDigest(bytes);
     if (actual !== value.sha256) throw new Error("validator checksum mismatch");
-    if (fs3.readFileSync(path6.join(root, ...HUB_CI_WORKFLOW_PATH.split("/")), "utf8") !== renderHubCiWorkflow(actual, record.target_branch)) {
+    if (fs4.readFileSync(path7.join(root, ...HUB_CI_WORKFLOW_PATH.split("/")), "utf8") !== renderHubCiWorkflow(actual, record.target_branch)) {
       throw new Error("workflow differs from the checksum-pinned released template");
     }
   } catch (error) {
@@ -9138,8 +9506,8 @@ function markdown(result) {
   return lines.join("\n");
 }
 async function validateHubCi(hubRoot, now = () => /* @__PURE__ */ new Date(), options = {}) {
-  const root = fs3.realpathSync(path6.resolve(hubRoot));
-  if (!fs3.statSync(root).isDirectory()) throw new Error("Hub CI root must be a directory");
+  const root = fs4.realpathSync(path7.resolve(hubRoot));
+  if (!fs4.statSync(root).isDirectory()) throw new Error("Hub CI root must be a directory");
   const relativeFiles = files(root), errors = [], warnings = [];
   const safe = safety(root, relativeFiles);
   errors.push(...safe.errors);
@@ -9154,13 +9522,24 @@ async function validateHubCi(hubRoot, now = () => /* @__PURE__ */ new Date(), op
   }
   errors.push(...indexTargetFailures(root, relativeFiles));
   errors.push(...bundle.warnings);
+  if (bundle.concepts.has(AGENTBASE_OKF_PROFILE_CONCEPT_ID)) {
+    const admission = classifyAgentBaseHubProfile(bundle);
+    if (admission.kind === "unsupported") {
+      errors.push(...admission.failures.map((failure) => `AgentBase OKF profile: ${failure}`));
+      if (admission.omittedFailureCount) {
+        errors.push(`AgentBase OKF profile: ${admission.omittedFailureCount} additional layout failure(s) omitted`);
+      }
+    }
+  }
   for (const concept of bundle.concepts.values()) {
-    const generated = mapping8(concept.frontmatter.generated);
+    const generated = mapping9(concept.frontmatter.generated);
     if (typeof generated?.by === "string" && generated.by.startsWith("agentbase/")) {
       errors.push(...validateAgentBaseDraft(concept));
     }
     if (getOkfConceptSchema(concept.type)) errors.push(...validateConceptAgainstSchema(concept));
-    else if (concept.type !== "Question") warnings.push(`${concept.path}: custom OKF type ${concept.type} uses base validation only`);
+    else if (concept.type !== "Question" && concept.type !== AGENTBASE_OKF_PROFILE_TYPE) {
+      warnings.push(`${concept.path}: custom OKF type ${concept.type} uses base validation only`);
+    }
     if (concept.type === "Question") {
       try {
         parseQuestionDocument(concept);
@@ -9196,7 +9575,7 @@ async function validateHubCi(hubRoot, now = () => /* @__PURE__ */ new Date(), op
       return relativeFiles.filter((relative) => relative.endsWith(".md"));
     },
     async readMarkdown(relative) {
-      return fs3.readFileSync(path6.join(root, ...relative.split("/")), "utf8");
+      return fs4.readFileSync(path7.join(root, ...relative.split("/")), "utf8");
     }
   };
   const generatedAt = now();

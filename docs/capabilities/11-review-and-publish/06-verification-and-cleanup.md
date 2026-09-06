@@ -1,6 +1,6 @@
 # 11.06 — Verification and cleanup
 
-> Status: Transaction cleanup is implemented; accepted-artifact cleanup is deferred.
+> Status: Transaction cleanup is implemented; published-proposal artifact cleanup is deferred.
 
 ## Outcome
 
@@ -11,8 +11,7 @@ collector for the MVP.
 
 1. **Finalize** checks the exact authored bundle, schema, links, relations,
    Questions, ownership, correction/removal intent and proposal diff.
-2. **Accept** checks the exact tree/diff digest, base commit and immutable reviewed
-   bytes before creating a Local Draft commit.
+2. **Inspect** derives the exact byte/semantic preview; it creates no Git commit.
 3. **Publish/Sync** checks the exact remote/base/branch/proposal identity and clean
    candidate before pushing or advancing local `main`.
 
@@ -30,7 +29,7 @@ or knowledge bytes.
   transaction directories are cleaned immediately.
 - A failure requiring recovery retains bounded transaction evidence; cleanup
   occurs after recovery completes.
-- Source checkouts, valid Code Graph caches, accepted Local Draft commits and the
+- Source checkouts, valid Code Graph caches, Published commits and private authoring bundles and the
   Hub remote are never modified/deleted by the cleanup workflow.
 - Cleanup failure is reported; do not pretend the transaction disappeared.
 
@@ -50,8 +49,8 @@ only when actual disk usage proves the need.
 
 - Canceling authoring/an Incomplete run can delete only private unaccepted staging
   for the exact run after the user requests it.
-- Do not cancel by resetting Local Draft, dropping an accepted commit or closing a pull request.
-- Changing an Accepted Proposal requires a new proposal; cleanup is not a lifecycle mutation.
+- Do not cancel by resetting Published state, dropping a shared commit or closing a pull request.
+- Changing a finalized proposal requires a new proposal; cleanup is not a lifecycle mutation.
 
 ## No additional MVP machinery
 

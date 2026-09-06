@@ -16,9 +16,15 @@ import { GatewaySession } from "./gateway-session.ts";
 import { PINNED_PROVIDER_TOOLS, SAFE_TOOLS, SAFE_TOOL_NAMES } from "./tool-manifest.ts";
 import { OKF_SCHEMA_TOOLS } from "./okf-schema-tools.ts";
 
-test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][AB-SCHEMA-049][AB-INGEST-003] official client lists and calls the safe server surface", async () => {
-  const repo = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-server-repo-"));
-  const secondRepo = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-server-repo-"));
+function repository(prefix: string): string {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  fs.mkdirSync(path.join(root, ".git"));
+  return root;
+}
+
+test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][AB-SCHEMA-049][AB-INGEST-003][AB-HOME-012][AB-PROFILE-LIFECYCLE-010][AB-PROFILE-READ-009..010][AB-REFRESH-020] official client lists and calls the safe server surface", async () => {
+  const repo = repository("agentbase-server-repo-");
+  const secondRepo = repository("agentbase-server-repo-");
   const state = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-server-state-"));
   let closes = 0;
   const bindings: string[] = [];
@@ -70,6 +76,11 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
     );
     const toolNames = tools.tools.map((tool) => tool.name);
     assert.equal(toolNames.length, 44);
+    assert.equal(tools.tools.every((tool) => tool.annotations
+      && typeof tool.annotations.readOnlyHint === "boolean"
+      && typeof tool.annotations.destructiveHint === "boolean"
+      && typeof tool.annotations.idempotentHint === "boolean"
+      && typeof tool.annotations.openWorldHint === "boolean"), true);
     const retiredToolNames = ["query_graph", "get_graph_schema", "list_projects", "select_okf_schemas",
       "validate_okf_concept", "validate_okf_relationships", "validate_okf_bundle"];
     assert.equal(toolNames.some((name) => retiredToolNames.includes(name)), false);
@@ -77,8 +88,26 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
     const indexTool = tools.tools.find((tool) => tool.name === "index_repository");
     assert.deepEqual(Object.keys(indexTool?.inputSchema.properties ?? {}).sort(), ["mode", "name", "repo_path"]);
     assert.doesNotMatch(JSON.stringify(indexTool), /cross-repo-intelligence|target_projects|persistence/);
+    const searchCodeTool = tools.tools.find((tool) => tool.name === "search_code");
+    assert.equal("debug" in (searchCodeTool?.inputSchema.properties ?? {}), false);
+    const coverageTool = tools.tools.find((tool) => tool.name === "check_index_coverage");
+    assert.deepEqual(coverageTool?.inputSchema.anyOf, [{ required: ["paths"] }, { required: ["scopes"] }]);
     assert.deepEqual(indexTool?.annotations, {
       readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false,
+    });
+    assert.deepEqual(tools.tools.find((tool) => tool.name === "search_hub_okf")?.annotations, {
+      readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false,
+    });
+    assert.deepEqual(Object.keys(tools.tools.find((tool) => tool.name === "search_hub_okf")?.inputSchema.properties ?? {}).sort(),
+      ["domain", "global", "limit", "query", "types"]);
+    assert.equal(toolNames.includes("accept_hub_okf_proposal"), false);
+    assert.equal(toolNames.includes("submit_hub_okf_proposals"), false);
+    assert.equal(toolNames.includes("list_pending_hub_okf"), false);
+    assert.deepEqual(tools.tools.find((tool) => tool.name === "prepare_hub_profile_migration")?.annotations, {
+      readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false,
+    });
+    assert.deepEqual(tools.tools.find((tool) => tool.name === "publish_hub_okf_proposal")?.annotations, {
+      readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true,
     });
     for (const graphTool of tools.tools.filter((tool) => tool.name !== "index_repository"
       && (SAFE_TOOL_NAMES as readonly string[]).includes(tool.name))) {
@@ -126,6 +155,11 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
     const finalizeTool = tools.tools.find((tool) => tool.name === "finalize_hub_okf_proposal");
     assert.match(prepareTool?.description ?? "", /changed paths, observed source state and known gaps/);
     assert.match(JSON.stringify(prepareTool?.inputSchema), /New Initial Ingest requires repositories\/<slug>/);
+    assert.ok("home_plan" in ((prepareTool?.inputSchema.properties ?? {}) as Record<string, unknown>));
+    assert.match(JSON.stringify((prepareTool?.inputSchema.properties ?? {}).home_plan), /default_home.*exceptions.*participations/);
+    assert.deepEqual((prepareTool?.inputSchema.properties ?? {}).refresh_scope,
+      { type: "string", enum: ["delta", "coverage"],
+        description: "Refresh-only scope. Delta is backward-compatible default; coverage is explicit broad bounded recovery and requires coverage." });
     assert.ok("removals" in ((finalizeTool?.inputSchema.properties ?? {}) as Record<string, unknown>));
     assert.ok("change_accounting" in ((finalizeTool?.inputSchema.properties ?? {}) as Record<string, unknown>));
     assert.match(JSON.stringify(finalizeTool?.inputSchema), /updated.*new.*embedded.*question.*ignored/);
@@ -174,6 +208,33 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
     } });
     assert.equal(unconfiguredHub.isError, true);
     assert.match(unconfiguredHub.content[0]?.type === "text" ? unconfiguredHub.content[0].text : "", /connect an existing Hub or bootstrap an empty remote Hub/);
+    const conflictingHome = await client.callTool({ name: "prepare_hub_okf", arguments: {
+      mode: "new", source_repository: repo, subject_directory: "repositories/acme",
+      discovery_receipt_id: `discovery-receipt-${"a".repeat(24)}`,
+      confirmed_domain: { identity: "domains/orders", title: "Orders" },
+      home_plan: { default_home: { kind: "shared" }, exceptions: [], participations: [] },
+    } });
+    assert.equal(conflictingHome.isError, true);
+    assert.match(conflictingHome.content[0]?.type === "text" ? conflictingHome.content[0].text : "", /never both/);
+    const refreshHome = await client.callTool({ name: "prepare_hub_okf", arguments: {
+      mode: "refresh", source_repository: repo, subject_directory: "repositories/acme",
+      home_plan: { default_home: { kind: "shared" }, exceptions: [], participations: [] },
+    } });
+    assert.equal(refreshHome.isError, true);
+    assert.match(refreshHome.content[0]?.type === "text" ? refreshHome.content[0].text : "", /Refresh does not accept home_plan/);
+    const initialWithRefreshScope = await client.callTool({ name: "prepare_hub_okf", arguments: {
+      mode: "new", refresh_scope: "coverage", source_repository: repo, subject_directory: "repositories/acme",
+      discovery_receipt_id: `discovery-receipt-${"a".repeat(24)}`,
+    } });
+    assert.equal(initialWithRefreshScope.isError, true);
+    assert.match(initialWithRefreshScope.content[0]?.type === "text" ? initialWithRefreshScope.content[0].text : "",
+      /Initial Ingest does not accept refresh_scope/);
+    const coverageWithoutAccount = await client.callTool({ name: "prepare_hub_okf", arguments: {
+      mode: "refresh", refresh_scope: "coverage", source_repository: repo, subject_directory: "repositories/acme",
+    } });
+    assert.equal(coverageWithoutAccount.isError, true);
+    assert.match(coverageWithoutAccount.content[0]?.type === "text" ? coverageWithoutAccount.content[0].text : "",
+      /Coverage Refresh requires coverage/);
     const unchangedStatus = await client.callTool({ name: "get_hub_status", arguments: {} });
     assert.match(unchangedStatus.content[0]?.type === "text" ? unchangedStatus.content[0].text : "", /unconfigured/);
     const schemas = await client.callTool({ name: "list_okf_schemas", arguments: {} });
@@ -248,8 +309,8 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
   }
   assert.equal(closes, 2);
 
-  const failedFirst = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-failed-switch-"));
-  const blockedSecond = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-blocked-switch-"));
+  const failedFirst = repository("agentbase-failed-switch-");
+  const blockedSecond = repository("agentbase-blocked-switch-");
   let opened = 0;
   const gateway = new GatewaySession({ projectRoot: "/agentbase", stateRoot: state,
     providerFactory: async () => {
@@ -267,6 +328,34 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
     await gateway.close();
     fs.rmSync(failedFirst, { recursive: true, force: true });
     fs.rmSync(blockedSecond, { recursive: true, force: true });
+  }
+});
+
+test("[AB-MCPMOD-007..011] capability policy filters composition without changing the trusted default", async () => {
+  const seen: Array<Readonly<{ name: string; capability: string }>> = [];
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const current = createAgentBaseMcpServer({
+    projectRoot: "/agentbase",
+    capabilityPolicy: {
+      allows(tool) {
+        seen.push(tool);
+        return tool.name !== "bootstrap_hub";
+      },
+    },
+  });
+  const client = new Client({ name: "agentbase-policy-test", version: "0.0.0" });
+  try {
+    await current.connect(serverTransport);
+    await client.connect(clientTransport);
+    const tools = await client.listTools(undefined, { cacheMode: "bypass" });
+    assert.equal(tools.tools.some((tool) => tool.name === "bootstrap_hub"), false);
+    assert.equal(tools.tools.length, 43);
+    assert.equal(seen.some((tool) => tool.name === "search_hub_okf" && tool.capability === "hub"), true);
+    assert.equal(seen.some((tool) => tool.name === "list_okf_schemas" && tool.capability === "schema"), true);
+    assert.equal(seen.some((tool) => tool.name === "index_repository" && tool.capability === "graph"), true);
+  } finally {
+    await client.close();
+    await current.close();
   }
 });
 

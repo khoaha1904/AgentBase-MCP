@@ -1,5 +1,6 @@
 import { Client } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
+import { AGENTBASE_VERSION } from "../../product-version.ts";
 import type { CodebaseMemoryTool } from "./adapter.ts";
 import { CodebaseMemoryError } from "./errors.ts";
 import { providerProcessEnvironment } from "./provider-environment.ts";
@@ -117,7 +118,7 @@ function officialConnection(options: Parameters<SessionConnectionFactory>[0]): S
     stderr: "pipe",
     maxBufferSize: options.maximumMessageBytes,
   });
-  const client = new Client({ name: "agentbase", version: "0.0.0" });
+  const client = new Client({ name: "agentbase", version: AGENTBASE_VERSION });
   return {
     get pid() { return transport.pid; },
     stderr: transport.stderr as StderrSource | null,

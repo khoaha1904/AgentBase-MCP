@@ -4,6 +4,11 @@
 transactionally registers the current checkout as user-global stdio MCP in
 selected clients. Installation never selects/creates a Hub or asks for a token.
 
+> Status: Installation is implemented. Group 1 treats the existing runtime
+> shared token as the built-in trusted-enterprise credential provider; Group 2
+> owns transactional skill upgrade/uninstall and release-integrity changes from
+> the accepted Product Contract sequence.
+
 ## Credential and non-interactive behavior
 
 - **AB-INSTALL-001** — Interactive selection changes exactly available selected
@@ -12,11 +17,13 @@ selected clients. Installation never selects/creates a Hub or asks for a token.
 - **AB-INSTALL-003 (retired)** — Installer token skip/local-Hub choice is removed.
 - **AB-INSTALL-004 (retired)** — Installer global token persistence is removed.
 - **AB-INSTALL-005 (retired)** — Installer token replacement is removed.
-- **AB-INSTALL-006 (retired)** — Ambient/global token precedence is removed.
+- **AB-INSTALL-006 (retired)** — Installer-owned ambient/global token precedence
+  is removed. Runtime credential reuse belongs to the configured provider and is
+  owned by `AB-HUB-SETUP-032..037`.
 
-Token entry and replacement belong only to the later owner-private
-`agentbase-hub` profile connection flow; no ambient/global token becomes a
-default for every Hub.
+Token entry and replacement belong only to the later owner-private Hub
+connection flow. Installation does not collect credentials; runtime may reuse
+one provider credential across Hub profiles.
 
 ## Client registration transaction
 
@@ -68,11 +75,11 @@ default for every Hub.
 ## Product skills
 
 - **AB-INSTALL-025** — Every interactively selected client receives exactly
-  twelve released product skills named by `.agents/skills/README.md`: nine public
-  user-goal workflows including explicit visualization, and three internal
-  supporting workflows.
-- **AB-INSTALL-026** — A fixed allowlist is release authority; `speckit-*` and
-  every other repository-development skill are never installed.
+  thirteen released product skills named by `.agents/skills/README.md`: ten
+  public entry names including one Context compatibility entry and visualization, and
+  three internal supporting workflows.
+- **AB-INSTALL-026** — A fixed allowlist is release authority; no skill outside
+  the released product catalog is installed.
 - **AB-INSTALL-027** — Codex uses `$CODEX_HOME/skills` with
   `~/.codex/skills` fallback; Claude Code uses `~/.claude/skills`.
 - **AB-INSTALL-028** — An exact installed copy is a no-op. A different,
@@ -85,6 +92,13 @@ default for every Hub.
   pre-existing destination.
 - **AB-INSTALL-031** — Non-interactive setup remains preparation-only and never
   installs product skills or registers clients.
+- **AB-INSTALL-043** — Every released AgentBase skill disables Codex implicit
+  invocation. Public skill descriptions require the exact user-named skill or
+  the explicitly approved, narrowly scoped handoff defined by `AB-USE-004..006`;
+  internal skill descriptions require delegation from an already active
+  explicitly invoked public AgentBase workflow. Ordinary repository work MUST
+  NOT activate any AgentBase skill merely because the MCP or skills are
+  installed.
 
 ## Owned native provider bundle
 

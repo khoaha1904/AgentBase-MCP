@@ -1,6 +1,8 @@
 # 03 — Baseline and impact checkpoint
 
-> Status: Two qualification gates are decided; no numeric scoring is used.
+> Status: Identity/query-value gates and Group 5's independent reading boundary
+> are implemented. The G5-C2 semantic critic is deferred and inactive; no
+> numeric scoring is used.
 
 ## Implemented baseline
 
@@ -28,12 +30,16 @@ Runtime has the candidate contract and ownership validation. There is
 intentionally no persistent candidate registry or review UI; the Agent remains
 the reasoning layer in a bounded skill workflow.
 
+Repository-local evidence now has a default dossier outcome and standalone
+promotion requires independent reading value. A fresh-context critic may be
+reconsidered only if observed ingest defects justify product-integrated review.
+
 ## Implementation result
 
 A lightweight evidence-bearing boundary was added through skill, MCP input and
 validation without a model runtime or scoring subsystem.
 
 Building a deterministic discovery/scoring engine that understands every
-language/provider would be a **Broad change/Near rewrite** and is unnecessary:
-the Agent is already the reasoning layer, while MCP should keep bounded tools
-and deterministic guards.
+language/provider remains a **Near rewrite** and is unnecessary. The current
+release keeps the Agent as reasoning layer and MCP's implemented deterministic
+guards; it adds no critic packet/report workflow.

@@ -1,9 +1,34 @@
+import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
 import { projectRoot } from "./benchmark-paths.mjs";
 
 const toml = JSON.stringify;
+const MAX_AUTH_BYTES = 1024 * 1024;
+
+export function isolateCodexEnvironment(runtimeRoot, environment = process.env,
+  credentialEnvironment = process.env) {
+  const sourceHome = credentialEnvironment.CODEX_HOME
+    ?? path.join(credentialEnvironment.HOME ?? os.homedir(), ".codex");
+  const sourceAuth = path.join(sourceHome, "auth.json");
+  let sourceStat;
+  try {
+    sourceStat = fs.lstatSync(sourceAuth);
+  } catch {
+    throw new Error("Codex authentication is unavailable for an isolated real benchmark");
+  }
+  if (!sourceStat.isFile() || sourceStat.size < 1 || sourceStat.size > MAX_AUTH_BYTES) {
+    throw new Error("Codex authentication is not a bounded regular file");
+  }
+
+  const codexHome = path.join(runtimeRoot, "codex");
+  fs.mkdirSync(path.join(codexHome, "skills"), { recursive: true, mode: 0o700 });
+  const targetAuth = path.join(codexHome, "auth.json");
+  fs.copyFileSync(sourceAuth, targetAuth, fs.constants.COPYFILE_EXCL);
+  fs.chmodSync(targetAuth, 0o600);
+  return { ...environment, CODEX_HOME: codexHome };
+}
 
 export function renderAgentPrompt(template, values) {
   return template.replace(/\{\{([A-Z0-9_]+)\}\}/g, (_match, key) => {
@@ -19,10 +44,10 @@ export function portableAgentText(value, { repository, workspace, runtimeRoot })
 }
 
 export function buildCodexArgs({ workspace, finalMessage, model, reasoningEffort, arm = "mcp", runtimeRoot,
-  enabledTools, trackerRoot, mcpEntryPoint, disableShell = arm === "direct" }) {
+  enabledTools, trackerRoot, mcpEntryPoint, disableShell = arm === "direct", sandbox = "workspace-write" }) {
   if (!["mcp", "direct"].includes(arm)) throw new Error(`unknown benchmark arm: ${arm}`);
   const args = ["--ask-for-approval", "never", "exec", "--ephemeral", "--json", "--ignore-user-config",
-    "--skip-git-repo-check", "--sandbox", "workspace-write", "--model", model, "--cd", workspace,
+    "--skip-git-repo-check", "--sandbox", sandbox, "--model", model, "--cd", workspace,
     "--output-last-message", finalMessage, "--config", `model_reasoning_effort=${toml(reasoningEffort)}`];
   if (disableShell) args.push("--disable", "shell_tool");
   if (arm === "mcp") args.push(

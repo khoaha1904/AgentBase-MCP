@@ -5,7 +5,12 @@ import type { LocalHubState } from "../../../core/hub/index.ts";
 import { loadOkfBundle } from "../../../core/knowledge/index.ts";
 import { runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
 import { listPendingHubProposals } from "../review/pending.ts";
-import { acquireHubMutationLock, releaseHubMutationLock, writeAtomicJson } from "../review/proposal-state.ts";
+import {
+  acquireHubMutationLock,
+  hubMutationProfileId,
+  releaseHubMutationLock,
+  writeAtomicJson,
+} from "../review/proposal-state.ts";
 import {
   computeProposalPatchIdentity,
   recognizePublishedProposals,
@@ -73,7 +78,7 @@ export async function synchronizeLocalHub(
   });
   let lock: ReturnType<typeof acquireHubMutationLock> | undefined;
   try {
-    try { lock = acquireHubMutationLock(options.stateRoot, id); }
+    try { lock = acquireHubMutationLock(options.stateRoot, hubMutationProfileId(options.localHub), id); }
     catch (error) { fs.rmSync(transactionRoot, { recursive: true, force: true }); throw error; }
     await ensurePublishedRef(git, options.localHub);
     const pending = await listPendingHubProposals(options.localHub, git);

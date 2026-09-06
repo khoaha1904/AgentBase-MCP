@@ -16,16 +16,16 @@ type Manifest = Readonly<{
   tools: readonly ProviderToolDescriptor[];
 }>;
 
-function readManifest(version: "0.10.1" | "0.10.8"): Manifest {
-  const value = JSON.parse(fs.readFileSync(new URL(`../../../fixtures/codebase-memory-v${version}/mcp-surface.json`, import.meta.url), "utf8")) as Manifest;
+function readManifest(): Manifest {
+  const version = "0.10.8";
+  const value = JSON.parse(fs.readFileSync(new URL("../../providers/codebase-memory/contracts/v0.10.8/mcp-surface.json", import.meta.url), "utf8")) as Manifest;
   if (value.provider !== "codebase-memory-mcp" || value.version !== version) {
     throw new Error("captured Codebase Memory MCP manifest is invalid");
   }
   return value;
 }
 
-const providerManifest = readManifest("0.10.8");
-const publicManifest = readManifest("0.10.1");
+const providerManifest = readManifest();
 function selectedTools(manifest: Manifest): ProviderToolDescriptor[] {
   const byName = new Map(manifest.tools.map((tool) => [tool.name, tool]));
   return SAFE_TOOL_NAMES.map((name) => {
@@ -35,9 +35,7 @@ function selectedTools(manifest: Manifest): ProviderToolDescriptor[] {
   });
 }
 const providerTools = selectedTools(providerManifest);
-const publicTools = selectedTools(publicManifest);
 export const PINNED_PROVIDER_TOOLS = Object.freeze(providerTools.map((tool) => Object.freeze(tool)));
-const capturedSafeTools = publicTools;
 
 const READ_ONLY_GRAPH_ANNOTATIONS = Object.freeze({
   readOnlyHint: true,
@@ -71,6 +69,24 @@ function publicDescriptor(tool: ProviderToolDescriptor): ProviderToolDescriptor 
       },
     };
   }
+  if (tool.name === "search_code") {
+    const { debug: _providerDiagnostic, ...properties } = tool.inputSchema.properties as Record<string, unknown>;
+    return {
+      ...tool,
+      inputSchema: { ...tool.inputSchema, properties },
+      annotations: READ_ONLY_GRAPH_ANNOTATIONS,
+    };
+  }
+  if (tool.name === "check_index_coverage") {
+    return {
+      ...tool,
+      inputSchema: {
+        ...tool.inputSchema,
+        anyOf: [{ required: ["paths"] }, { required: ["scopes"] }],
+      },
+      annotations: READ_ONLY_GRAPH_ANNOTATIONS,
+    };
+  }
   return {
     ...tool,
     ...(tool.name === "index_status" && tool.description
@@ -80,7 +96,7 @@ function publicDescriptor(tool: ProviderToolDescriptor): ProviderToolDescriptor 
   };
 }
 
-export const SAFE_TOOLS = Object.freeze(capturedSafeTools.map((tool) => Object.freeze(publicDescriptor(tool))));
+export const SAFE_TOOLS = Object.freeze(providerTools.map((tool) => Object.freeze(publicDescriptor(tool))));
 
 function canonical(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;

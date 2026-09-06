@@ -1,22 +1,33 @@
-import type { ConfirmedDomain, HubSearchOptions, OkfAuthoringGuidanceRequest } from "../../../core/knowledge/index.ts";
+import type {
+  AgentBaseInitialIngestHomePlan,
+  ConfirmedDomain,
+  HubSearchOptions,
+  OkfAuthoringGuidanceRequest,
+} from "../../../core/knowledge/index.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
 import type { HubRemovalDeclaration } from "../../../core/knowledge/index.ts";
 import type { EnrichmentAnswer, EnrichmentCandidateInput } from "../enrichment/index.ts";
 import type { RefreshChangeOutcome } from "../authoring/refresh-change-accounting.ts";
 import type { ConfirmedDomain as BatchDomain } from "../../../core/knowledge/index.ts";
+import type { ProfileMigrationMove } from "../migration/profile-migration.ts";
 
 export type HubToolActions = Readonly<{
+  publish(input: Readonly<{ proposalId: string; diffDigest: string; mode: "direct" | "pr" }>): Promise<import("../publication/direct-publish.ts").DirectPublicationResult>;
   status(): Promise<unknown>;
   configure(input: Readonly<{ repositoryUrl: string; targetBranch: string }>): Promise<unknown>;
   previewBootstrap(repositoryUrl: string, targetBranch: string): Promise<unknown>;
   bootstrap(repositoryUrl: string, targetBranch: string): Promise<unknown>;
   scan(workspaceRoot: string): Promise<unknown>;
   preflight(sourceRepository: string): Promise<unknown>;
+  prepareMigration(): Promise<unknown>;
+  finalizeMigration(input: Readonly<{ sessionId: string; moves: readonly ProfileMigrationMove[] }>): Promise<unknown>;
   prepare(input: Readonly<{
     mode: "new" | "refresh";
+    refreshScope?: "delta" | "coverage";
     sourceRepository: string;
     subjectDirectory: string;
     confirmedDomain?: ConfirmedDomain;
+    homePlan?: AgentBaseInitialIngestHomePlan;
     signals?: readonly string[];
     guidanceRequest?: OkfAuthoringGuidanceRequest;
     coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
@@ -50,7 +61,6 @@ export type HubToolActions = Readonly<{
     manifestId: string; manifestRevision: number; answers: readonly EnrichmentAnswer[];
   }>): Promise<unknown>;
   inspect(proposalId: string): Promise<unknown>;
-  accept(proposalId: string, proposalDigest: string): Promise<unknown>;
   search(query: string, options?: HubSearchOptions): Promise<unknown>;
   read(relativePath: string): Promise<unknown>;
   visualize(input: Readonly<{
@@ -70,8 +80,6 @@ export type HubToolActions = Readonly<{
   answerQuestion(input: Readonly<{
     questionId: string; revision: number; answer: string; maintainer: string;
   }>): Promise<unknown>;
-  listPending(): Promise<unknown>;
-  submitMany(proposalIds: readonly string[]): Promise<unknown>;
   synchronize(): Promise<unknown>;
   recover(transactionId: string): Promise<unknown>;
 }>;

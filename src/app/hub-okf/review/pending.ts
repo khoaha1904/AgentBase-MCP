@@ -1,4 +1,4 @@
-import type { AdmittedLocalHubState } from "../../../core/hub/index.ts";
+import type { AdmittedLocalHubState, HubProposalMode } from "../../../core/hub/index.ts";
 import { HUB_PROPOSAL_TRAILERS } from "../../../core/hub/index.ts";
 import { runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
 
@@ -9,10 +9,11 @@ export type PendingHubProposal = Readonly<{
   domainId?: string;
   sourceRepositoryIds?: readonly string[];
   manifestDigest?: string;
+  migrationDigest?: string;
   evidenceDigest: string;
   diffDigest: string;
   schemaVersion: string;
-  mode?: "new" | "refresh" | "enrichment" | "batch-new";
+  mode?: HubProposalMode;
   parentCommit: string;
   commit: string;
   diffSummary: string;
@@ -36,11 +37,11 @@ function required(values: ReadonlyMap<string, string>, key: string, commit: stri
   return value;
 }
 
-function optionalMode(values: ReadonlyMap<string, string>, commit: string): "new" | "refresh" | "enrichment" | "batch-new" | undefined {
+function optionalMode(values: ReadonlyMap<string, string>, commit: string): HubProposalMode | undefined {
   const value = values.get(HUB_PROPOSAL_TRAILERS.mode);
   if (value === undefined) return undefined;
-  if (!new Set(["new", "refresh", "enrichment", "batch-new"]).has(value)) throw new Error(`pending commit ${commit} has an invalid proposal mode`);
-  return value as "new" | "refresh" | "enrichment" | "batch-new";
+  if (!new Set(["new", "refresh", "enrichment", "batch-new", "migration"]).has(value)) throw new Error(`pending commit ${commit} has an invalid proposal mode`);
+  return value as HubProposalMode;
 }
 
 export async function listPendingHubProposals(
@@ -81,7 +82,9 @@ export async function listPendingHubProposals(
       maximumOutputBytes: 64 * 1024,
     });
     const multiRepository = mode === "enrichment" || mode === "batch-new";
-    const scope = multiRepository ? {
+    const scope = mode === "migration" ? {
+      migrationDigest: required(message, HUB_PROPOSAL_TRAILERS.migrationDigest, commit),
+    } : multiRepository ? {
       domainId: required(message, HUB_PROPOSAL_TRAILERS.domainId, commit),
       sourceRepositoryIds: required(message, HUB_PROPOSAL_TRAILERS.sourceIds, commit).split(",").filter(Boolean),
       manifestDigest: required(message, HUB_PROPOSAL_TRAILERS.manifestDigest, commit),

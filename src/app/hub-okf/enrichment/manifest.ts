@@ -3,7 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 import {
-  AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, isCanonicalRelationshipKind, loadOkfBundle, parseQuestionDocument,
+  AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, agentBaseDomainConceptIdentity, classifyAgentBaseHubProfile,
+  isCanonicalRelationshipKind, loadOkfBundle, parseQuestionDocument,
   parseRepositorySourceResource, readRepositoryIdentityRecord,
   TERRAFORM_FAMILY_DETECTOR_PROFILE,
   type CanonicalRelationshipKind, type ConceptDocument, type OkfValue,
@@ -43,7 +44,7 @@ export type EnrichmentManifest = Readonly<{
 
 const REPOSITORY_ID = /^repository-[a-z0-9-]+-[a-f0-9]{12}$/;
 const DOMAIN_ID = /^domains\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const CONCEPT_ID = /^(?:domains|systems|components|interfaces|flows|resources|infrastructure|deployments|repositories|relationships|capabilities)\/[a-z0-9][a-z0-9./-]*$/;
+const CONCEPT_ID = /^(?:shared|domains|systems|components|interfaces|flows|resources|infrastructure|deployments|repositories|relationships|capabilities)\/[a-z0-9][a-z0-9./-]*$/;
 const CANDIDATE_ID = /^candidate-[a-f0-9]{24}$/;
 const QUESTION_ID = /^question-[a-f0-9]{24}$/;
 const COMMIT = /^[a-f0-9]{40}$/;
@@ -73,6 +74,14 @@ function repositoryInDomain(concept: ConceptDocument, domainId: string): boolean
     const relation = mapping(value);
     return relation?.kind === "part-of" && relation.target === domainId;
   });
+}
+
+function resolvedDomainIdentity(bundle: ReturnType<typeof loadOkfBundle>, selector: string): string {
+  const admission = classifyAgentBaseHubProfile(bundle);
+  if (admission.kind === "unsupported") {
+    throw new Error(`Published Hub Profile is unsupported: ${admission.failures.join("; ")}`);
+  }
+  return admission.kind === "profile-1.0" ? agentBaseDomainConceptIdentity(selector) : selector;
 }
 
 function canonicalCandidate(input: EnrichmentCandidateInput, concepts: ReadonlyMap<string, ConceptDocument>,
@@ -164,10 +173,15 @@ export function buildEnrichmentManifest(input: Readonly<{
     throw new Error("membership revision cannot change Published base, Domain or provider scope");
   }
   const bundle = loadOkfBundle(input.publishedRoot, { requireAgentBaseRootIndex: true });
-  if (!bundle.concepts.has(input.domainId)) throw new Error("confirmed enrichment Domain is absent from Published Hub");
+  const domainIdentity = resolvedDomainIdentity(bundle, input.domainId);
+  if (bundle.concepts.get(domainIdentity)?.type !== "Domain") {
+    throw new Error("confirmed enrichment Domain is absent from Published Hub");
+  }
   for (const repositoryId of repositoryIds) {
     const repository = [...bundle.concepts.values()].find((concept) => readRepositoryIdentityRecord(concept)?.id === repositoryId);
-    if (!repository || !repositoryInDomain(repository, input.domainId)) throw new Error(`Repository is not Published in confirmed Domain: ${repositoryId}`);
+    if (!repository || !repositoryInDomain(repository, domainIdentity)) {
+      throw new Error(`Repository is not Published in confirmed Domain: ${repositoryId}`);
+    }
   }
   const selectedRepositoryIds = new Set(repositoryIds);
   const candidates = input.candidates.map((candidate) => canonicalCandidate(candidate, bundle.concepts, selectedRepositoryIds))

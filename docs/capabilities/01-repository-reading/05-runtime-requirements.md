@@ -4,6 +4,9 @@ These `AB-MVP-*`, `AB-GRAPH-*`, `AB-GRAPH-REFRESH-*` and `AB-MCP-*`
 requirements are the normative Repository Reading Capability Contract. The
 graph remains detailed, private and disposable.
 
+> Status: The provider/runtime baseline and Group 1 dynamic source resolution
+> are implemented and verified.
+
 ## Owned provider and evidence
 
 - **AB-MVP-001, AB-GRAPH-005, AB-MCP-002** — AgentBase owns the attributed
@@ -50,9 +53,10 @@ graph remains detailed, private and disposable.
   median total time no greater than 50% of one-shot on the exercised host.
 - **AB-GRAPH-006** — The current default is one short-lived stdio session for
   index plus bounded queries in one repository evidence round, then close.
-- **AB-GRAPH-007** — The exact repository allow root and private cache outside
-  the checkout are bounded; AgentBase enables no UI, global registration,
-  provider configuration or watcher.
+- **AB-GRAPH-007** — The source resolver derives the exact real Git root from the
+  selected readable path and the private cache stays outside the checkout.
+  AgentBase enables no UI, global registration, provider configuration or
+  watcher.
 - **AB-GRAPH-008** — Connection, request, session, message, stderr and graceful/
   forced shutdown have positive limits and fail closed.
 - **AB-GRAPH-009** — Success, error and cancellation close exactly once;
@@ -109,13 +113,15 @@ fixture cost, so no incremental-speed or scale claim is accepted.
   plus controlled `index_repository`, forwarding raw result blocks without OKF
   normalization. Raw Cypher, graph-schema introspection and global project
   inventory are not released AgentBase workflows.
-- **AB-MCP-004** — First indexing binds the connection to one absolute existing
-  repository. A later sequential `index_repository` for another explicit root
+- **AB-MCP-004** — First indexing resolves the selected readable path to one
+  exact real Git repository and binds that root to the connection. A later
+  sequential `index_repository` for another explicit repository
   closes the prior provider session cleanly before binding the new root. Cleanup
   failure stops the switch; one connection never owns two provider children or
   combines their graph state.
-- **AB-MCP-005** — Public indexing accepts only one absolute `repo_path`, one
-  optional `full`/`moderate`/`fast` mode and one optional name. The gateway
+- **AB-MCP-005** — Public indexing accepts one `repo_path`, one optional
+  `full`/`moderate`/`fast` mode and one optional name. In the trusted-enterprise
+  profile, `repo_path` selects any readable local Git repository. The gateway
   forces private non-persistent provider state and defensively rejects source
   persistence, cross-repository mode and target-project arguments.
 - **AB-MCP-006** — `query_graph`, `get_graph_schema`, `list_projects`,
@@ -137,7 +143,7 @@ fixture cost, so no incremental-speed or scale claim is accepted.
   `@modelcontextprotocol/server@2.0.0`, not hand-written framing or a web adapter.
 - **AB-MCP-015** — Snapshot query returns observed metadata without probing a
   source. Only an explicit current-value request may bind its accepted file
-  reference to the one repository already authorized by the connection; the
+  reference to the one repository already bound to the connection; the
   host uses existing `search_graph` and `get_code_snippet` calls. No AgentBase
   source parser, durable live-value cache, hidden re-index or second graph is
   introduced.
@@ -149,7 +155,7 @@ fixture cost, so no incremental-speed or scale claim is accepted.
 - **AB-MCP-017** — One Git root is one graph unit. A monorepo's subprojects are
   scopes inside that graph; a directory containing independent Git repositories
   is only routing scope. Repository selection uses an explicit target, the Git
-  root containing current context, or one uniquely known authorized local
+  root containing current context, or one uniquely known local
   checkout; ambiguity asks the user. Multi-repository source work switches
   repositories sequentially after clean session shutdown and never combines
   graphs or recursively scans arbitrary workspace paths.
@@ -158,14 +164,14 @@ fixture cost, so no incremental-speed or scale claim is accepted.
   source from a resolved repository is required, with existing source/engine/
   namespace receipt rules deciding reuse versus refresh. No prewarming,
   background indexing, watcher or daemon is introduced.
-- **AB-MCP-019** — Capability 046 Hub-bound Init, Batch and Refresh resolve the exact authorized remote
+- **AB-MCP-019** — Capability 046 Hub-bound Init, Batch and Refresh resolve the exact selected remote
   default-branch commit before indexing. Canonical remote must uniquely resolve
-  on the active Hub host; API/fetch use only Hub-token HTTPS into a
+  on the active Hub host; API/fetch use credential-provider-backed HTTPS into a
   profile/source-scoped private bare mirror outside the source repo and verify
   the same commit. It reuses a checkout only when clean/exact, otherwise uses a
   detached private worktree. It never mutates source refs/worktree or uses local
-  filters, hooks, submodules, LFS, SSH agent or ambient credentials. Ordinary
-  query receives no remote materialization authority.
+  filters, hooks, submodules or LFS. Ordinary query never materializes a remote
+  repository automatically.
 - **AB-MCP-020** — After exact Init/Batch-member Preflight arms one analysis root
   and indexing that root succeeds, the gateway itself derives a private Seed
   by running index status, terminal/paged coverage, explicit architecture
@@ -180,6 +186,12 @@ fixture cost, so no incremental-speed or scale claim is accepted.
   field on source/provider upgrades. Unsupported or partial output produces an
   explicit lane limitation or failure according to P0 impact; it never silently
   appears as an empty repository.
+  A census stopped inside its current directory must report truncation, even
+  with no queued subdirectories. Oversized otherwise-admitted files produce a
+  counted limitation. An empty heuristic lane is `limited` with a not-detected
+  explanation, never `absent-after-check`. Known groups may remain reviewable
+  with census limitations; non-terminal/unavailable provider diagnostics retain
+  the existing Incomplete boundary.
 - **AB-MCP-022** — An AgentBase-owned hard-deny patch at the pinned provider's
   admission/read boundary excludes symlink escapes, generated/vendor/build output
   and secret-like paths (including `.env*`, credential/key/cert and Agent state)
@@ -202,6 +214,25 @@ fixture cost, so no incremental-speed or scale claim is accepted.
   baseline are either promoted into bounded discovery groups or reported as
   explicitly not promoted. Boundary/layer promotion cannot create an unbounded
   source crawl, candidate list or model context.
+  Runtime/entrypoint groups preserve each distinct source path/line rather than
+  sampling several runtime locations into one group. They are evidence scopes,
+  not inferred services or mandatory standalone concepts. Same-location signals
+  may coalesce; different groups may map to one useful dossier. Existing group
+  limits fail visibly on overflow; they must not silently drop runtime evidence.
+  Other sampled groups retain their sample limits in Receipt coverage, together
+  with limited-lane and capture diagnostics.
+- **AB-SOURCE-RESOLVE-001** — Source resolution canonicalizes the selected path,
+  resolves its containing Git root and records exact source state before graph
+  work. Missing, unreadable or non-Git paths fail before provider start or cache
+  creation.
+- **AB-SOURCE-RESOLVE-002** — Workspace inventory starts from the explicit path
+  or active workspace selected for that run and retains skipped-directory,
+  repository-count and traversal bounds. Selecting another readable workspace
+  or repository requires no persistent allowlist or AgentBase reconfiguration.
+- **AB-SOURCE-RESOLVE-003** — Focused tests cover direct and nested paths,
+  canonical/symlink identity, nested repositories, source change, bounded
+  workspace discovery and sequential repository switching with clean provider
+  shutdown.
 
 `AB-MCP-017` and `AB-MCP-018` are accepted product contracts. Capability 046
 adds `AB-MCP-019..024`; Capability 051 adds `AB-MCP-025..026`. Each addition is

@@ -5,37 +5,32 @@ must never become an implicit Hub identity or generated OKF subject.
 
 ## Session startup
 
-Read only these files before interpreting a task:
-
-1. `docs/README.md`
-2. `specs/CURRENT.md`
-
-Then inspect Git status. Use the routing table in `docs/README.md` to load only
+Read `docs/README.md`, then inspect Git status. Use its routing table to load only
 the affected product decision, architecture map or design/requirements route.
-Do not preload every document or completed capability.
+Do not preload every document.
 
 The latest user request and live repository state outrank stale planning prose.
 Communicate with the user in the language they use. Keep every AgentBase-owned
-repository artifact in English, including documentation, specs, source text,
+repository artifact in English, including documentation, source text,
 comments, test descriptions and commit messages. Do not translate third-party
-vendor snapshots, generated output or immutable external evidence.
+vendor snapshots or generated output. The
+explicitly localized Vietnamese presentation source under `presentation/vi/`
+and its generated standalone snapshot at `presentation/preview.html` are also
+excluded; they are communication material, not product-contract authority.
 
 ## Development workflow
 
-- Use specification-driven development for product or architecture changes.
+- Use contract-driven development for product or architecture changes.
 - Start with the smallest user-visible outcome and record owner decisions before
   implementation details.
-- Keep at most one active capability in `specs/CURRENT.md`; between slices use
-  `None` plus the most recently completed capability.
 - Product direction lives under `docs/product/`; architecture ownership lives in
   `docs/architecture/`; capability design and current `AB-*` requirements live
-  under `docs/capabilities/`. Numbered
-  `specs/<number>-<name>/` directories are historical after completion.
+  under `docs/capabilities/`.
 - Update current truth once in the narrowest design/requirements route. Do not create handoff,
-  roadmap, ADR or evidence files that repeat it.
+  roadmap, per-change specification or evidence files that repeat it.
 - Never port a large legacy implementation. Extract one verified behavior at a
   time behind current requirements.
-- Prevent dead specs while implementing. If code exposes a broad product,
+- Prevent dead contracts while implementing. If code exposes a broad product,
   architecture, authority, migration or workflow gap, stop implementation and
   return to the affected Product, Architecture and Capability Contracts for owner
   review before continuing. Small related implementation corrections may be
@@ -70,14 +65,12 @@ silently redefine an upstream contract.
    requirements. Tests and retained reports provide the Validation Evidence;
    they do not become Capability Contract authority. Query behavior belongs in numbered Query design (10), not in
    an ad-hoc new query system.
-4. **Implementation Contract** — create or update one numbered `specs/<id>/`
-   artifact and `specs/CURRENT.md`. Keep accepted change requirements and links
-   to affected upstream contracts in the `spec.md` Contract Delta; use `plan.md`
-   for concrete modules, interfaces, data/state choices,
-   dependencies, migration/recovery and requirement-to-verification mapping.
-   Historical capabilities are never silently rewritten.
-5. **Consistency gate** — compare all affected upstream contracts, the active
-   implementation contract and the code baseline. Do not write runtime code
+4. **Implementation plan** — identify the concrete modules, interfaces,
+   data/state choices, dependencies, migration/recovery and
+   requirement-to-verification mapping in the working plan. Durable decisions
+   belong in the narrowest living contract, not a per-change archive.
+5. **Consistency gate** — compare all affected contracts, the implementation
+   plan and the code baseline. Do not write runtime code
    until they describe the same intended behavior and the owner has approved
    any material scope, authority, security, migration or architecture decision.
 
@@ -99,8 +92,8 @@ silently redefine an upstream contract.
 
 ### Completion gate
 
-A slice is complete only when the affected Product, Architecture, Capability and
-Implementation Contracts, code, tests and verification describe the same
+A slice is complete only when the affected Product, Architecture and Capability
+Contracts, code, tests and verification describe the same
 behavior. Before PR/capability close, run focused checks and the repository gate,
 then record any remaining gap as an explicit deferred boundary rather than
 leaving it implicit.
@@ -132,28 +125,19 @@ dependency changes; do not weaken a rule without explicit owner approval.
 - Missing evidence in a later ingest never implicitly deletes accepted
   knowledge.
 
-## Development Hub convention
+## Hub safety convention
 
 AgentBase product semantics do not define primary, secondary, production or
 test Hub roles. Hub profiles are peers, exactly one is active, and the user may
 connect or switch them. Switching never copies or merges knowledge.
 
-This workspace has a development-only convention:
-
-- `khoaha1904/AgentBase-Hub` contains real owner data and must not receive MCP
-  fixtures, mock enrichment or qualification output.
-- `khoaha1904/hub-3` is the current disposable development Hub for Crawler
-  ingest, enrichment, query, visualization and benchmark qualification.
 - Before any development action that can read or mutate Hub data, run `abs
-  status`. When the task is testing MCP behavior, connect to `hub-3` through
-  `abs hub connect` and reuse the existing shared token; do not manually clone
-  an anonymous remote or invent a second credential path.
-- Do not reset, reseed or copy `AgentBase-Hub` into `hub-3` without an explicit
-  owner request. Inspect the existing Published revision, repository coverage,
-  OKF validation and embedded CI first so useful fixture data is not destroyed.
-- `domain-hub` and GitHub Pages are generated presentation output. Page
-  visibility does not imply that either Hub repository is public.
-
-These names are workspace fixtures only. Never expose this convention as a
-general AgentBase product hierarchy or assume another user's Hub has the same
-role.
+  status` and inspect the exact active repository, branch, Published revision,
+  Local Draft state and recovery state.
+- Never connect or switch to another Hub, reset or reseed Hub data, or reuse a
+  Hub for fixtures or qualification without an explicit owner request.
+- Qualification targets are operator-provided local configuration. This
+  repository must not instruct an agent to connect to a personal or globally
+  assumed Hub identity.
+- Domain sites and hosted pages are generated presentation output. Page
+  visibility does not imply that the owning Hub repository is public.

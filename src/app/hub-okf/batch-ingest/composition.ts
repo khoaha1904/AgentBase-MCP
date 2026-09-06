@@ -4,11 +4,12 @@ import path from "node:path";
 
 import { createHubProposal, type AdmittedLocalHubState, type AnyHubProposal } from "../../../core/hub/index.ts";
 import {
-  AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, conceptReferencesRepository, diffBundleProposal, loadOkfBundle,
+  AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, agentBaseDomainConceptPath, classifyAgentBaseHubProfile,
+  conceptIdentityFromPath, diffBundleProposal, loadOkfBundle,
   parseConceptDocument, parseQuestionDocument, prepareBundleProposal, renderConceptDocument,
   repositorySourceResources, validateBundleProposal,
 } from "../../../core/knowledge/index.ts";
-import { attachHubInspectionContext, inspectHubProposal, type HubProposalInspection } from "../review/inspect.ts";
+import { attachHubInspectionContext, bindHubProposalInspection, inspectHubProposal, type HubProposalInspection } from "../review/inspect.ts";
 import { readHubProposalState, writeHubProposalState } from "../review/proposal-state.ts";
 import type { BatchIngestManifest } from "./manifest.ts";
 
@@ -43,6 +44,11 @@ function mergeIndex(baseRoot: string, proposedRoot: string, targetRoot: string, 
   fs.writeFileSync(path.join(targetRoot, relative), `${next}\n`);
 }
 
+function navigationTarget(line: string): string | undefined {
+  const match = line.match(/^\* \[[^\]]+\]\(([^)]+)\) - .+$/);
+  return match?.[1] === undefined ? undefined : path.posix.normalize(match[1]);
+}
+
 function mergeNewDomain(targetRoot: string, proposedRoot: string, relative: string, repositoryPath: string): void {
   const target = path.join(targetRoot, relative), proposed = path.join(proposedRoot, relative);
   fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -53,23 +59,28 @@ function mergeNewDomain(targetRoot: string, proposedRoot: string, relative: stri
     throw new Error("confirmed Domain members authored incompatible Domain concepts");
   }
   const priorLinks = (current.body.match(/\n+# Batch Navigation\n+([\s\S]*)$/)?.[1] ?? "").split(/\r?\n/)
-    .filter((line) => /^\* \[[^\]]+\]\([^)]+\) - (?:System|Repository)$/.test(line));
-  const memberBundle = loadOkfBundle(proposedRoot), repository = memberBundle.concepts.get(repositoryPath.slice(0, -3));
+    .filter((line) => /^\* \[[^\]]+\]\([^)]+\) - .+$/.test(line));
+  const memberBundle = loadOkfBundle(proposedRoot), repository = memberBundle.concepts.get(conceptIdentityFromPath(repositoryPath));
   if (!repository) throw new Error("batch member Repository concept is missing during Domain navigation");
   const repositoryMetadata = repository.frontmatter.agentbase as Record<string, unknown> | undefined;
   const repositoryIdentity = repositoryMetadata?.repository as Record<string, unknown> | undefined;
   if (typeof repositoryIdentity?.id !== "string") throw new Error("batch member Repository identity is missing during Domain navigation");
-  const memberConcepts = [repository, ...[...memberBundle.concepts.values()].filter((concept) => {
-    const relationships = concept.frontmatter.relationships;
-    return concept.type === "System" && conceptReferencesRepository(concept, repositoryIdentity.id as string)
-      && Array.isArray(relationships) && relationships.some((relationship) => relationship !== null
-        && typeof relationship === "object" && !Array.isArray(relationship)
-        && relationship.kind === "part-of" && relationship.target === relative.slice(0, -3));
-  })];
+  const domainPrefix = `${path.posix.dirname(relative)}/`;
+  const memberConcepts = [repository, ...[...memberBundle.concepts.values()].filter((concept) =>
+    concept.path !== relative && concept.path !== repository.path && concept.path.startsWith(domainPrefix))];
   const memberLinks = memberConcepts.map((concept) =>
     `* [${String(concept.frontmatter.title)}](${path.posix.relative(path.posix.dirname(relative), concept.path)}) - ${concept.type}`);
-  const baseBody = current.body.replace(/\n+# Batch Navigation[\s\S]*$/, "").trimEnd();
-  const body = `${baseBody}\n\n# Batch Navigation\n\n${[...new Set([...priorLinks, ...memberLinks])].join("\n")}\n`;
+  const navigation = new Map<string, string>();
+  for (const line of [...priorLinks, ...memberLinks]) {
+    const target = navigationTarget(line);
+    if (target !== undefined) navigation.set(target, line);
+  }
+  const baseBody = current.body.replace(/\n+# Batch Navigation[\s\S]*$/, "").split(/\r?\n/)
+    .filter((line) => {
+      const target = navigationTarget(line);
+      return target === undefined || !navigation.has(target);
+    }).join("\n").trimEnd();
+  const body = `${baseBody}\n\n# Batch Navigation\n\n${[...navigation.values()].join("\n")}\n`;
   fs.writeFileSync(target, renderConceptDocument({ ...current, body }));
 }
 
@@ -91,7 +102,14 @@ export function composeBatchProposal(options: Readonly<{
   const memberPaths = new Map(options.manifest.members.map((member) => [member.id, new Set<string>()]));
   const proposalDigests: string[] = [], limitations: string[] = [];
   const memberDiscoveries = new Map<string, HubProposalInspection["discovery"]>();
-  const domainPath = `${options.manifest.domain.identity}.md`;
+  const profileAdmission = classifyAgentBaseHubProfile(loadOkfBundle(options.localHub.root,
+    { requireAgentBaseRootIndex: true }));
+  if (profileAdmission.kind === "unsupported") {
+    throw new Error(`batch Hub Profile is unsupported: ${profileAdmission.failures.join("; ")}`);
+  }
+  const domainPath = profileAdmission.kind === "profile-1.0"
+    ? agentBaseDomainConceptPath(options.manifest.domain.identity)
+    : `${options.manifest.domain.identity}.md`;
   try {
     for (const member of options.manifest.members) {
       const proposalRoot = options.memberProposalRoots.get(member.id);
@@ -108,16 +126,16 @@ export function composeBatchProposal(options: Readonly<{
       });
       if (!repository) throw new Error(`batch member Repository concept is missing: ${member.id}`);
       for (const relative of changedPaths(baseRoot, proposedRoot)) {
-        if (path.posix.basename(relative) === "index.md") {
-          mergeIndex(baseRoot, proposedRoot, targetRoot, relative); sharedPaths.add(relative); continue;
-        }
         if (relative === domainPath && !fs.existsSync(path.join(baseRoot, relative))) {
           mergeNewDomain(targetRoot, proposedRoot, relative, repository.path); sharedPaths.add(relative); continue;
+        }
+        if (path.posix.basename(relative) === "index.md") {
+          mergeIndex(baseRoot, proposedRoot, targetRoot, relative); sharedPaths.add(relative); continue;
         }
         const previousOwner = owners.get(relative);
         if (previousOwner) throw new Error(`batch members overlap authored path ${relative}: ${previousOwner}, ${member.id}`);
         if (relative.endsWith(".md") && path.posix.basename(relative) !== "log.md") {
-          const concept = loadOkfBundle(proposedRoot).concepts.get(relative.slice(0, -3));
+          const concept = loadOkfBundle(proposedRoot).concepts.get(conceptIdentityFromPath(relative));
           if (concept?.type === "Question") {
             const crossMember = parseQuestionDocument(concept).references.some((reference) =>
               reference.referenceKind === "candidate-evidence"
@@ -155,6 +173,14 @@ export function composeBatchProposal(options: Readonly<{
     prepareBundleProposal({ currentBundleRoot: baseRoot, proposalRoot: staging,
       proposalId: `proposal-${options.manifest.id.slice(-24)}`, evidenceDigest, createdAt: options.manifest.createdAt });
     fs.rmSync(path.join(staging, "bundle"), { recursive: true, force: true }); copyTree(targetRoot, path.join(staging, "bundle"));
+    if (profileAdmission.kind === "profile-1.0") {
+      const composedAdmission = classifyAgentBaseHubProfile(loadOkfBundle(path.join(staging, "bundle"),
+        { requireAgentBaseRootIndex: true }));
+      if (composedAdmission.kind !== "profile-1.0") {
+        throw new Error(`batch Profile composition failed validation: ${composedAdmission.kind === "unsupported"
+          ? composedAdmission.failures.join("; ") : "Profile declaration disappeared"}`);
+      }
+    }
     const validated = validateBundleProposal(baseRoot, staging);
     if (!validated.producerValidation?.passed) throw new Error(`batch proposal failed validation: ${validated.producerValidation?.failures.join("; ")}`);
     const diff = diffBundleProposal(baseRoot, staging);
@@ -163,13 +189,13 @@ export function composeBatchProposal(options: Readonly<{
       { baseRoot, proposedRoot: path.join(staging, "bundle") }), [], {
       partial: limitations.length > 0, limitations,
     });
-    const inspection: HubProposalInspection = { ...ordinaryInspection, batch: {
+    const inspectionWithBatch: HubProposalInspection = { ...ordinaryInspection, batch: {
       members: options.manifest.members.map((member) => ({ repositoryId: member.repositoryId,
         paths: [...memberPaths.get(member.id)!].sort(),
         ...(memberDiscoveries.get(member.id) ? { discovery: memberDiscoveries.get(member.id) } : {}) })),
       sharedPaths: [...sharedPaths].sort(),
     } };
-    const diffDigest = `sha256:${createHash("sha256").update(JSON.stringify(inspection.entries)).digest("hex")}`;
+    const diffDigest = `sha256:${createHash("sha256").update(JSON.stringify(inspectionWithBatch.entries)).digest("hex")}`;
     const common = { mode: "batch-new" as const, subject: options.manifest.domain.identity,
       baseCommit: options.manifest.baseCommit, domainId: options.manifest.domain.identity,
       sourceRepositoryIds: options.manifest.members.map((member) => member.repositoryId),
@@ -181,6 +207,9 @@ export function composeBatchProposal(options: Readonly<{
       ? createHubProposal({ ...common, localHubId: options.localHub.localHubId })
       : createHubProposal({ ...common, hub: options.localHub.hub });
     writeHubProposalState(staging, proposal);
+    const inspection = bindHubProposalInspection(inspectionWithBatch, {
+      baseRoot, proposedRoot: path.join(staging, "bundle"), proposal,
+    });
     copyTree(baseRoot, path.join(staging, "base"));
     fs.writeFileSync(path.join(staging, "inspection.json"), `${JSON.stringify(inspection, null, 2)}\n`, { mode: 0o600 });
     fs.writeFileSync(path.join(staging, "runtime.json"), `${JSON.stringify({ checkoutRoot: options.localHub.root })}\n`, { mode: 0o600 });

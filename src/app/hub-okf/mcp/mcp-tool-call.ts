@@ -1,7 +1,8 @@
 import type { CallToolResult } from "@modelcontextprotocol/server";
 
 import {
-  normalizeConfirmedDomain, type CanonicalRelationshipKind, type OkfAuthoringGuidanceRequest,
+  normalizeAgentBaseInitialIngestHomePlan, normalizeConfirmedDomain,
+  type CanonicalRelationshipKind, type OkfAuthoringGuidanceRequest,
 } from "../../../core/knowledge/index.ts";
 import type { HubToolActions } from "./mcp-tool-actions.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
@@ -244,9 +245,31 @@ export async function callHubOkfTool(
     if (name === "scan_workspace_repositories") {
       return result(await actions.scan(required(args, "workspace_root")));
     }
+    if (name === "prepare_hub_profile_migration") return result(await actions.prepareMigration());
+    if (name === "finalize_hub_profile_migration_proposal") {
+      if (!Array.isArray(args.moves) || args.moves.length > 4096) {
+        throw new Error("moves must be a list of at most 4096 exact file moves");
+      }
+      const moves = args.moves.map((value, index) => {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          throw new Error(`migration move ${index + 1} must be an object`);
+        }
+        const move = value as Record<string, unknown>;
+        if (Object.keys(move).sort().join("\0") !== "from_path\0to_path") {
+          throw new Error(`migration move ${index + 1} contains unknown or missing fields`);
+        }
+        return { fromPath: required(move, "from_path"), toPath: required(move, "to_path") };
+      });
+      return result(await actions.finalizeMigration({ sessionId: required(args, "session_id"), moves }));
+    }
     if (name === "prepare_hub_okf") {
       const mode = required(args, "mode");
       if (mode !== "new" && mode !== "refresh") throw new Error("mode must be new or refresh");
+      const refreshScope = args.refresh_scope;
+      if (refreshScope !== undefined && refreshScope !== "delta" && refreshScope !== "coverage") {
+        throw new Error("refresh_scope must be delta or coverage");
+      }
+      if (mode === "new" && refreshScope !== undefined) throw new Error("Initial Ingest does not accept refresh_scope");
       if (mode === "new" && args.evidence_digest !== undefined) {
         throw new Error("new Initial Ingest derives evidence_digest; callers must not supply it");
       }
@@ -262,8 +285,16 @@ export async function callHubOkfTool(
       if (mode === "refresh" && args.discovery_receipt_id !== undefined) {
         throw new Error("Refresh does not accept discovery_receipt_id");
       }
+      if (mode === "refresh" && args.home_plan !== undefined) {
+        throw new Error("Refresh does not accept home_plan");
+      }
+      if (args.home_plan !== undefined && args.confirmed_domain !== undefined) {
+        throw new Error("Initial Ingest accepts home_plan or confirmed_domain, never both");
+      }
       const confirmedDomain = args.confirmed_domain === undefined
         ? undefined : normalizeConfirmedDomain(args.confirmed_domain);
+      const homePlan = args.home_plan === undefined
+        ? undefined : normalizeAgentBaseInitialIngestHomePlan(args.home_plan);
       const coverage = args.coverage;
       if (coverage !== undefined && (!coverage || typeof coverage !== "object" || Array.isArray(coverage)
         || typeof (coverage as Record<string, unknown>).partial !== "boolean"
@@ -272,11 +303,17 @@ export async function callHubOkfTool(
           .every((item) => typeof item === "string" && item.length > 0 && item.length <= 512))) {
         throw new Error("coverage must contain partial and bounded limitations");
       }
+      if (mode === "refresh" && refreshScope === "coverage" && coverage === undefined) {
+        throw new Error("Coverage Refresh requires coverage");
+      }
       return result(await actions.prepare({
         mode,
+        ...(mode === "refresh" && refreshScope !== undefined
+          ? { refreshScope: refreshScope as "delta" | "coverage" } : {}),
         sourceRepository: required(args, "source_repository"),
         subjectDirectory: required(args, "subject_directory"),
         ...(confirmedDomain ? { confirmedDomain } : {}),
+        ...(homePlan ? { homePlan } : {}),
         ...(args.signals === undefined ? {} : { signals: Array.isArray(args.signals)
           && args.signals.every((signal) => typeof signal === "string")
           ? args.signals as string[] : (() => { throw new Error("signals must be a string list"); })() }),
@@ -435,21 +472,18 @@ export async function callHubOkfTool(
         answer: required(args, "answer"), maintainer: required(args, "maintainer"),
       }));
     }
-    if (name === "list_pending_hub_okf") return result(await actions.listPending());
-    if (name === "submit_hub_okf_proposals") {
-      if (!Array.isArray(args.proposal_ids) || !args.proposal_ids.length
-        || !args.proposal_ids.every((value) => typeof value === "string" && value.length > 0)) {
-        throw new Error("proposal_ids must be a non-empty string list");
-      }
-      return result(await actions.submitMany(args.proposal_ids as string[]));
+    if (name === "publish_hub_okf_proposal") {
+      const mode = args.publication_mode;
+      if (mode !== "direct" && mode !== "pr") throw new Error("publication_mode must be direct or pr");
+      const publication = await actions.publish({ proposalId: required(args, "proposal_id"),
+        diffDigest: required(args, "proposal_digest"), mode });
+      return result(publication, publication.remote !== "in-review"
+        && !(publication.remote === "published" && publication.local === "recognized"));
     }
     if (name === "synchronize_hub_okf") return result(await actions.synchronize());
     if (name === "recover_hub_okf") return result(await actions.recover(required(args, "transaction_id")));
     const proposalId = required(args, "proposal_id");
     if (name === "inspect_hub_okf_proposal") return result(await actions.inspect(proposalId));
-    if (name === "accept_hub_okf_proposal") {
-      return result(await actions.accept(proposalId, required(args, "proposal_digest")));
-    }
     throw new Error(`unsupported Hub action: ${name}`);
   } catch (error) {
     return result({ error: error instanceof Error ? error.message : "Hub action failed" }, true);

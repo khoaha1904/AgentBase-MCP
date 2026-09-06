@@ -1,25 +1,29 @@
 # 14.03 — Task Planning context qualification
 
-> Status: Benchmark is implemented; the real pair remains incomplete because of
-> evidence trace and model quota, so it is not product proof.
+> Status: Fair source-parity benchmark is implemented. One Crawler triad shows
+> an efficiency candidate; one conventional ECS source/graph pair shows no
+> measured net gain. Actual edit outcomes are qualified separately in
+> [`09-implementation-outcome-qualification.md`](09-implementation-outcome-qualification.md).
 
 ## Goal
 
-Verify that a User Story can be broken into better implementation tasks when a
-developer allows AgentBase to read local Code Graph/source, compared with tracker
-context alone. This qualifies context, not a task generator or
-`agentbase-add-context`.
+Measure whether Code Graph improves or reduces the cost of breaking a User
+Story into implementation tasks compared with normal source reading. A
+conditional third arm measures Hub only for a named cross-repository or
+accepted-contract gap. This qualifies context, not a task generator.
 
 ## Boundary
 
 - Feature/US and relations come from a read-only tracker fixture.
-- The assisted arm binds exactly one local Git repository, indexes lazily through
-  MCP and reads bounded architecture/search/trace/snippet evidence.
-- The direct arm has no AgentBase MCP or source checkout.
+- Every arm receives an independent disposable copy of the same pinned source
+  with ordinary bounded read-only search and file access.
+- The graph arm alone binds that repository, indexes once through MCP and reads
+  bounded architecture/search/trace/snippet/coverage evidence.
+- A Hub arm is optional and requires one named knowledge hypothesis plus an
+  exact Published revision; it does not run for generic local context.
 - Both arms return the same structured task plan; the runner only validates,
   scores and retains evidence and does not create tasks.
-- Hub overview may determine scope but does not replace exact source for
-  files/symbols/dependencies. This phase measures Code Graph value.
+- Hub never replaces exact source for files, symbols or dependencies.
 
 ## Correctness conditions
 
@@ -34,7 +38,9 @@ speed or fewer tokens.
 - Query/ingest/Hub/public `abs`: unchanged.
 - Developer Task Planning adds Code Graph index/reuse when needed, consuming
   first-run time and local CPU/cache without cloning or publishing source.
-- Benchmark adds a suite and A/B result; the real pair still needs owner review.
+- Crawler graph navigation retained equal measured quality with lower cost;
+  conventional ECS retained equal quality with higher cost. Graph therefore
+  remains selective rather than a default planning step.
 - Scope does not bind AgentBase to ECS; the scenario is an AWS/Terraform fixture.
 
 ## Non-goals

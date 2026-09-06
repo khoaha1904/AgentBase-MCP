@@ -1,16 +1,15 @@
 # Foundation requirements
 
 Current accepted repository navigation, architecture controls and deterministic
-foundation behavior. Numbered `specs/` directories record changes and do not
-override these requirements after completion.
+foundation behavior.
 
 ## Session and history
 
-- **AB-FND-001** — A new session reads `AGENTS.md`, `docs/README.md`,
-  `specs/CURRENT.md` and Git status, then loads only the affected domain docs.
+- **AB-FND-001** — A new session reads `AGENTS.md`, `docs/README.md` and Git
+  status, then loads only the affected domain docs.
 - **AB-FND-002** — Current product direction lives under `docs/product/` and
-  current design/requirements under `docs/capabilities/`; `specs/CURRENT.md` selects at most
-  one active capability and completed numbered capabilities are historical.
+  current architecture, design and requirements live under `docs/architecture/`
+  and `docs/capabilities/`; Git history is explanatory rather than authoritative.
 - **AB-FND-003** — Sibling legacy AgentBase repositories are read-only evidence,
   never dependencies or mutation targets.
 
@@ -44,7 +43,7 @@ override these requirements after completion.
   Split only distinct responsibilities, never metric-driven wrappers.
 - **AB-FND-014** — Tests and deterministic support stay with the narrowest
   behavior owner or explicit repository fixture owner.
-- **AB-FND-015** — `npm run verify` is the canonical offline specification,
+- **AB-FND-015** — `npm run verify` is the canonical offline contract,
   type, dependency architecture, dead-code/dependency, redacted-secret, test
   and diff gate.
 - **AB-FND-016** — Core owns provider-neutral repository-map and

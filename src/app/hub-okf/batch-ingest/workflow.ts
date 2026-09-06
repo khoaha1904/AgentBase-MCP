@@ -125,7 +125,10 @@ export function recordBatchMember(options: Readonly<{
   if (session.mode !== "new" || session.baseCommit !== manifest.baseCommit
     || session.sourceRepositoryId !== member.repositoryId || path.resolve(session.sourceRepositoryRoot) !== path.resolve(member.analysisRoot)
     || !sameSource(session.sourceState, member.source) || !sameSource(options.currentSource, member.source)
-    || session.confirmedDomain?.identity !== manifest.domain.identity) throw new Error("authoring session does not match exact batch member inputs");
+    || (session.confirmedDomain?.identity ?? (session.homePlan?.defaultHome.kind === "domain"
+      ? session.homePlan.defaultHome.identity : undefined)) !== manifest.domain.identity) {
+    throw new Error("authoring session does not match exact batch member inputs");
+  }
   if (!session.discoveryReceipt
     || session.discoveryReceipt.source.repositoryId !== member.repositoryId
     || session.discoveryReceipt.source.commit !== member.source.commit

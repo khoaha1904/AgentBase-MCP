@@ -11,6 +11,7 @@ export {
   renderLocalProposalTrailers,
   type AnyHubProposal,
   type HubProposal,
+  type HubProposalMode,
   type HubProposalPhase,
   type LocalProposal,
   type LocalOnlyHubProposal,

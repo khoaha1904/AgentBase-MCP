@@ -1,6 +1,14 @@
 import path from "node:path";
 
-import { parseConceptDocument, type ConceptDocument, type OkfValue } from "../documents/okf-document.ts";
+import {
+  AGENTBASE_OKF_PROFILE_CONCEPT_ID,
+  AGENTBASE_OKF_PROFILE_PATH,
+  agentBaseDomainConceptIdentity,
+  agentBaseDomainSelector,
+  classifyAgentBaseHubProfileSnapshot,
+  type AgentBaseConceptHome,
+} from "../documents/agentbase-profile.ts";
+import { isDomainConceptDocument, parseConceptDocument, type ConceptDocument, type OkfValue } from "../documents/okf-document.ts";
 import {
   resolveOkfMarkdownLinkPaths,
   validateOkfRelationships,
@@ -22,12 +30,14 @@ export type HubConceptSummary = Readonly<{
   title: string;
   description: string;
   domains: readonly string[];
+  domainSelector?: string;
 }>;
 
 export type HubGraphEdge = Readonly<{ source: string; kind: string; target: string; evidence: readonly string[] }>;
 export type HubGraphLink = Readonly<{ source: string; target: string }>;
 export type HubGraphOmission = Readonly<{ path: string; reason: "oversized" }>;
-export type HubDomainScopeRole = "member" | "repository-associated" | "boundary";
+export type HubDomainScopeRole = "member" | "repository-associated" | "home" | "boundary";
+export type HubProfileDomainRole = "home" | "participant" | "boundary";
 export type HubGraphConcept = Readonly<{
   document: ConceptDocument;
   title: string;
@@ -45,8 +55,13 @@ export type HubGraph = Readonly<{
   flowSteps: readonly ValidatedOkfFlowStep[];
   links: readonly HubGraphLink[];
   omissions: readonly HubGraphOmission[];
+  profile: "profile-1.0" | "legacy-unprofiled" | "unsupported";
+  profileFailures: readonly string[];
+  homes: ReadonlyMap<string, AgentBaseConceptHome>;
   domains: ReadonlyMap<string, readonly string[]>;
+  repositoryScopes: ReadonlyMap<string, readonly string[]>;
   domainScopes: ReadonlyMap<string, ReadonlyMap<string, HubDomainScopeRole>>;
+  domainRoles: ReadonlyMap<string, ReadonlyMap<string, readonly HubProfileDomainRole[]>>;
 }>;
 
 function text(value: OkfValue | undefined): string {
@@ -99,57 +114,109 @@ function deriveDomains(
   return result;
 }
 
+function deriveRepositoryScopes(
+  concepts: ReadonlyMap<string, HubGraphConcept>,
+  edges: readonly HubGraphEdge[],
+): ReadonlyMap<string, readonly string[]> {
+  const structural = new Set(["part-of", "implemented-in", "declared-by"]);
+  const dependants = new Map<string, string[]>();
+  for (const edge of edges) {
+    if (!structural.has(edge.kind) || !concepts.has(edge.target)) continue;
+    dependants.set(edge.target, [...dependants.get(edge.target) ?? [], edge.source]);
+  }
+  const scopes = new Map<string, Set<string>>([...concepts.keys()].map((identity) => [identity, new Set()]));
+  const pending = [...concepts].filter(([, concept]) => concept.document.type === "Repository")
+    .map(([identity]) => identity).sort();
+  const queued = new Set(pending);
+  for (const identity of pending) scopes.get(identity)!.add(identity);
+  while (pending.length) {
+    const parent = pending.shift()!;
+    queued.delete(parent);
+    for (const child of (dependants.get(parent) ?? []).sort()) {
+      const childScope = scopes.get(child)!;
+      const size = childScope.size;
+      for (const repository of scopes.get(parent)!) childScope.add(repository);
+      if (childScope.size > size && !queued.has(child)) {
+        pending.push(child);
+        queued.add(child);
+      }
+    }
+  }
+  return new Map([...scopes].map(([identity, repositories]) => [identity, [...repositories].sort()]));
+}
+
 function deriveDomainScopes(
   concepts: ReadonlyMap<string, HubGraphConcept>,
   domains: ReadonlyMap<string, readonly string[]>,
+  repositories: ReadonlyMap<string, readonly string[]>,
+  homes: ReadonlyMap<string, AgentBaseConceptHome>,
   edges: readonly HubGraphEdge[],
   flowSteps: readonly ValidatedOkfFlowStep[],
-): ReadonlyMap<string, ReadonlyMap<string, HubDomainScopeRole>> {
-  const structural = new Set(["part-of", "implemented-in", "declared-by"]);
-  const parents = new Map<string, string[]>();
-  for (const edge of edges) {
-    if (!structural.has(edge.kind) || !concepts.has(edge.target)) continue;
-    parents.set(edge.source, [...parents.get(edge.source) ?? [], edge.target]);
-  }
-  const repositories = (identity: string, trail = new Set<string>()): readonly string[] => {
-    if (trail.has(identity)) return [];
-    const concept = concepts.get(identity);
-    if (!concept) return [];
-    if (concept.document.type === "Repository") return [identity];
-    const next = new Set(trail).add(identity);
-    return [...new Set((parents.get(identity) ?? []).flatMap((parent) => repositories(parent, next)))].sort();
-  };
+): Readonly<{
+  scopes: ReadonlyMap<string, ReadonlyMap<string, HubDomainScopeRole>>;
+  roles: ReadonlyMap<string, ReadonlyMap<string, readonly HubProfileDomainRole[]>>;
+}> {
 
-  const result = new Map<string, ReadonlyMap<string, HubDomainScopeRole>>();
+  const scopes = new Map<string, ReadonlyMap<string, HubDomainScopeRole>>();
+  const roleDetails = new Map<string, ReadonlyMap<string, readonly HubProfileDomainRole[]>>();
   const domainIds = [...concepts].filter(([, concept]) => concept.document.type === "Domain")
     .map(([identity]) => identity).sort();
   for (const domain of domainIds) {
     const roles = new Map<string, HubDomainScopeRole>();
+    const details = new Map<string, Set<HubProfileDomainRole>>();
+    const addDetail = (identity: string, role: HubProfileDomainRole) => {
+      const values = details.get(identity) ?? new Set<HubProfileDomainRole>();
+      values.add(role); details.set(identity, values);
+    };
     for (const identity of concepts.keys()) {
-      if ((domains.get(identity) ?? []).includes(domain)) roles.set(identity, "member");
+      if ((domains.get(identity) ?? []).includes(domain)) {
+        roles.set(identity, "member");
+        addDetail(identity, "participant");
+      }
     }
     for (const identity of concepts.keys()) {
-      if (roles.has(identity)) continue;
-      if (repositories(identity).some((repository) => (domains.get(repository) ?? []).includes(domain))) {
-        roles.set(identity, "repository-associated");
+      if ((repositories.get(identity) ?? []).some((repository) => (domains.get(repository) ?? []).includes(domain))) {
+        if (!roles.has(identity)) roles.set(identity, "repository-associated");
+        addDetail(identity, "participant");
+      }
+    }
+    for (const [identity, home] of homes) {
+      if (home.kind === "domain" && agentBaseDomainConceptIdentity(home.selector) === domain) {
+        if (!roles.has(identity)) roles.set(identity, "home");
+        addDetail(identity, "home");
       }
     }
     const primary = new Set(roles.keys());
     for (const edge of edges) {
-      if (primary.has(edge.source) && !roles.has(edge.target)) roles.set(edge.target, "boundary");
-      if (primary.has(edge.target) && !roles.has(edge.source)) roles.set(edge.source, "boundary");
+      if (primary.has(edge.source) && !roles.has(edge.target)) {
+        roles.set(edge.target, "boundary"); addDetail(edge.target, "boundary");
+      }
+      if (primary.has(edge.target) && !roles.has(edge.source)) {
+        roles.set(edge.source, "boundary"); addDetail(edge.source, "boundary");
+      }
     }
     for (const step of flowSteps) {
       if (primary.has(step.flow)) {
-        if (!roles.has(step.source)) roles.set(step.source, "boundary");
-        if (!roles.has(step.target)) roles.set(step.target, "boundary");
+        if (!roles.has(step.source)) {
+          roles.set(step.source, "boundary"); addDetail(step.source, "boundary");
+        }
+        if (!roles.has(step.target)) {
+          roles.set(step.target, "boundary"); addDetail(step.target, "boundary");
+        }
       }
-      if (primary.has(step.source) && !roles.has(step.target)) roles.set(step.target, "boundary");
-      if (primary.has(step.target) && !roles.has(step.source)) roles.set(step.source, "boundary");
+      if (primary.has(step.source) && !roles.has(step.target)) {
+        roles.set(step.target, "boundary"); addDetail(step.target, "boundary");
+      }
+      if (primary.has(step.target) && !roles.has(step.source)) {
+        roles.set(step.source, "boundary"); addDetail(step.source, "boundary");
+      }
     }
-    result.set(domain, roles);
+    scopes.set(domain, roles);
+    const order = new Map<HubProfileDomainRole, number>([["home", 0], ["participant", 1], ["boundary", 2]]);
+    roleDetails.set(domain, new Map([...details].map(([identity, values]) => [identity,
+      [...values].sort((left, right) => order.get(left)! - order.get(right)!)])));
   }
-  return result;
+  return { scopes, roles: roleDetails };
 }
 
 export function normalizeHubConceptPath(value: string): string {
@@ -165,16 +232,24 @@ export function normalizeHubConceptPath(value: string): string {
 
 export async function loadHubGraph(reader: HubQueryReader, maximumDocumentBytes: number): Promise<HubGraph> {
   const concepts = new Map<string, HubGraphConcept>(), paths = new Map<string, string>(), omissions: HubGraphOmission[] = [];
+  const markdown = new Map<string, string>();
   const markdownPaths = [...await reader.listMarkdownPaths()].map(normalizeHubConceptPath).sort();
   for (const relativePath of markdownPaths) {
-    if (["index.md", "log.md", "README.md"].includes(path.posix.basename(relativePath))) continue;
     const content = await reader.readMarkdown(relativePath);
     if (Buffer.byteLength(content) > maximumDocumentBytes) {
       omissions.push({ path: relativePath, reason: "oversized" });
       continue;
     }
+    markdown.set(relativePath, content);
+    if (["log.md", "README.md"].includes(path.posix.basename(relativePath))) continue;
     try {
+      if (path.posix.basename(relativePath) === "index.md"
+        && !isDomainConceptDocument(relativePath, content)) continue;
       const document = parseConceptDocument(relativePath, content);
+      const existing = concepts.get(document.conceptId);
+      if (existing) {
+        throw new Error(`duplicate concept identity ${document.conceptId}; already defined by ${existing.document.path}`);
+      }
       concepts.set(document.conceptId, {
         document,
         title: text(document.frontmatter.title) || document.body.match(/^#\s+(.+)$/m)?.[1]?.trim() || document.conceptId,
@@ -188,6 +263,15 @@ export async function loadHubGraph(reader: HubQueryReader, maximumDocumentBytes:
       throw new Error(`Published Hub concept is invalid: ${relativePath}`);
     }
   }
+  const missingProfile = markdownPaths.includes(AGENTBASE_OKF_PROFILE_PATH)
+    && !concepts.has(AGENTBASE_OKF_PROFILE_CONCEPT_ID);
+  const profileAdmission = missingProfile
+    ? { kind: "unsupported" as const, failures: [`${AGENTBASE_OKF_PROFILE_PATH} is unavailable`], omittedFailureCount: 0 }
+    : classifyAgentBaseHubProfileSnapshot({
+      concepts: new Map([...concepts].map(([identity, concept]) => [identity, concept.document])),
+      files: markdownPaths,
+      readMarkdown(relativePath) { return markdown.get(relativePath); },
+    });
   const validation = validateOkfRelationships([...concepts].map(([identity, concept]) => ({
     identity,
     concept: concept.document,
@@ -202,7 +286,12 @@ export async function loadHubGraph(reader: HubQueryReader, maximumDocumentBytes:
     }
   }
   links.sort((left, right) => `${left.source}\0${left.target}`.localeCompare(`${right.source}\0${right.target}`));
+  const homes = profileAdmission.kind === "profile-1.0"
+    ? new Map(profileAdmission.homes.map((item) => [item.identity, item.home]))
+    : new Map<string, AgentBaseConceptHome>();
   const domains = deriveDomains(concepts, edges);
+  const repositoryScopes = deriveRepositoryScopes(concepts, edges);
+  const domainProjection = deriveDomainScopes(concepts, domains, repositoryScopes, homes, edges, validation.flowSteps);
   return {
     commit: reader.commit,
     concepts,
@@ -212,8 +301,13 @@ export async function loadHubGraph(reader: HubQueryReader, maximumDocumentBytes:
     flowSteps: validation.flowSteps,
     links,
     omissions,
+    profile: profileAdmission.kind,
+    profileFailures: profileAdmission.kind === "unsupported" ? profileAdmission.failures : [],
+    homes,
     domains,
-    domainScopes: deriveDomainScopes(concepts, domains, edges, validation.flowSteps),
+    repositoryScopes,
+    domainScopes: domainProjection.scopes,
+    domainRoles: domainProjection.roles,
   };
 }
 
@@ -227,10 +321,24 @@ export function summarizeHubConcept(graph: HubGraph, identity: string): HubConce
     title: value.title,
     description: value.description,
     domains: graph.domains.get(identity) ?? [],
+    ...(graph.profile === "profile-1.0" && value.document.type === "Domain"
+      ? { domainSelector: agentBaseDomainSelector(identity) } : {}),
   };
 }
 
 export function resolveHubIdentity(graph: HubGraph, value: string): string | undefined {
   const normalized = value.endsWith(".md") ? normalizeHubConceptPath(value) : value;
   return graph.concepts.has(normalized) ? normalized : graph.paths.get(normalized);
+}
+
+export function resolveHubDomainIdentity(graph: HubGraph, value: string): string | undefined {
+  const direct = resolveHubIdentity(graph, value);
+  if (direct && graph.concepts.get(direct)?.document.type === "Domain") return direct;
+  if (graph.profile !== "profile-1.0") return undefined;
+  try {
+    const identity = agentBaseDomainConceptIdentity(value);
+    return graph.concepts.get(identity)?.document.type === "Domain" ? identity : undefined;
+  } catch {
+    return undefined;
+  }
 }

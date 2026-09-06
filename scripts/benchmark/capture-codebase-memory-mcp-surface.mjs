@@ -15,7 +15,7 @@ if (!binary || !version) {
 }
 const cache = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-mcp-capture-"));
 const target = process.env.AGENTBASE_CBM_TARGET
-  ?? path.join(root, "fixtures", `codebase-memory-v${version}`, "mcp-surface.json");
+  ?? path.join(root, "src/providers/codebase-memory/contracts", `v${version}`, "mcp-surface.json");
 const allowed = new Set([
   "index_repository", "search_graph", "query_graph", "trace_path",
   "get_code_snippet", "get_graph_schema", "get_architecture", "search_code",

@@ -4,6 +4,7 @@ import path from "node:path";
 
 import {
   OkfValidationError,
+  isDomainConceptDocument,
   parseConceptDocument,
   parseReservedFrontmatter,
   type ConceptDocument,
@@ -129,18 +130,28 @@ export function loadOkfBundle(root: string, options: LoadOkfBundleOptions = {}):
   const absoluteRoot = path.resolve(root);
   const files = bundleFiles(absoluteRoot);
   const concepts = new Map<string, ConceptDocument>();
+  const addConcept = (concept: ConceptDocument) => {
+    const existing = concepts.get(concept.conceptId);
+    if (existing) {
+      throw new OkfValidationError("CONCEPT_DUPLICATE",
+        `${concept.path}: duplicate concept identity ${concept.conceptId}; already defined by ${existing.path}`,
+        concept.path);
+    }
+    concepts.set(concept.conceptId, concept);
+  };
   let okfVersion: string | undefined;
   for (const relative of files.filter((file) => file.endsWith(".md"))) {
     const source = utf8(fs.readFileSync(path.join(absoluteRoot, ...relative.split("/"))), relative);
     if (relative === "README.md") continue;
     const basename = path.posix.basename(relative);
-    if (basename === "index.md") {
+    if (isDomainConceptDocument(relative, source)) {
+      addConcept(parseConceptDocument(relative, source));
+    } else if (basename === "index.md") {
       const version = validateIndex(relative, source);
       if (relative === "index.md") okfVersion = version;
     } else if (basename === "log.md") validateLog(relative, source);
     else {
-      const concept = parseConceptDocument(relative, source);
-      concepts.set(concept.conceptId, concept);
+      addConcept(parseConceptDocument(relative, source));
     }
   }
   if (options.requireAgentBaseRootIndex && okfVersion !== "0.2") {

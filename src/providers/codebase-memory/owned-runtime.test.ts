@@ -8,7 +8,7 @@ import test from "node:test";
 import { CodebaseMemoryError } from "./errors.ts";
 import { resolveOwnedRuntime, verifyOwnedRuntimeBundle } from "./owned-runtime.ts";
 
-const surfaceSource = new URL("../../../fixtures/codebase-memory-v0.10.8/mcp-surface.json", import.meta.url);
+const surfaceSource = new URL("./contracts/v0.10.8/mcp-surface.json", import.meta.url);
 const safeTools = [
   "index_repository", "search_graph", "trace_path", "get_code_snippet",
   "get_architecture", "search_code", "index_status", "check_index_coverage",
@@ -34,7 +34,7 @@ function fixture(): Readonly<{ root: string; source: string; profile: string; ma
   const source = path.join(vendor, "upstream/source.txt");
   const profile = path.join(vendor, "agentbase/parser-profile.json");
   const patch = path.join(vendor, "agentbase/patches/0001-parser-profile.patch");
-  const surface = path.join(root, "fixtures/codebase-memory-v0.10.8/mcp-surface.json");
+  const surface = path.join(root, "src/providers/codebase-memory/contracts/v0.10.8/mcp-surface.json");
   const runtime = path.join(root, "build/providers/codebase-memory/linux-x64");
   const executable = path.join(runtime, "codebase-memory-mcp");
   for (const directory of [path.dirname(source), path.dirname(profile), path.dirname(patch), path.dirname(surface), runtime]) {

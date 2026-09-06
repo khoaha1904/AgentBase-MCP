@@ -10,7 +10,9 @@ import {
   readPersistedHubConfiguration,
 } from "../../src/app/hub-okf/configuration/configuration-file.ts";
 import { createHubIdentity, hubProfileId } from "../../src/core/hub/index.ts";
-import { buildCodexArgs, portableAgentText, renderAgentPrompt } from "./benchmark-agent.mjs";
+import {
+  buildCodexArgs, isolateCodexEnvironment, portableAgentText, renderAgentPrompt,
+} from "./benchmark-agent.mjs";
 import { benchmarkRoot, projectRoot, setBenchmarkRoot } from "./benchmark-paths.mjs";
 
 const ARMS = ["discovery-only", "discovery-plus-agentbase"];
@@ -441,6 +443,7 @@ export async function executeContextArm({ arm, manifest, renderedPrompt, directo
     for (const name of ["tmp", "agentbase", "home", "config", "data"]) fs.mkdirSync(path.join(runtimeRoot, name), { recursive: true, mode: 0o700 });
     let hubRoot = "";
     if (arm === "discovery-plus-agentbase") ({ environment, localRoot: hubRoot } = seedPinnedContextHub(runtimeRoot, manifest.hub));
+    environment = isolateCodexEnvironment(runtimeRoot, environment);
     const args = buildCodexArgs({ workspace, finalMessage, model: manifest.agent.model,
       reasoningEffort: manifest.agent.reasoningEffort, arm: arm === "discovery-only" ? "direct" : "mcp", runtimeRoot,
       enabledTools: arm === "discovery-plus-agentbase" ? [...ALLOWED_TOOLS] : undefined,

@@ -148,7 +148,7 @@ export const fixtureRepositoryOverview: RepositoryOverview = {
     { from: "app", to: "catalog", calls: 1 },
   ],
   completeness: "complete",
-  limitations: ["explicit fake data derived from the sanitized v0.10.1 spike"],
+  limitations: ["explicit fake data derived from a sanitized provider spike"],
 };
 
 export const fixtureTaskContext: TaskContextFound = {

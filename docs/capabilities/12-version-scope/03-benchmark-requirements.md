@@ -1,11 +1,34 @@
 # Benchmark requirements
 
+> Release status: Benchmark design, deterministic tests, opt-in runners and
+> retained historical evidence remain supported. New real-model usefulness,
+> onboarding and longitudinal stewardship campaigns are deferred and are not a
+> current internal enterprise release gate. Ordinary `npm run verify`, contract
+> checks, release CI and artifact qualification remain required.
+
 This file owns the shared benchmark execution and evidence boundary. The
 historical requirements below qualify OKF authoring. The proposed Feature
 Discovery context comparison is governed by
 [`AB-CONTEXT-*`](../14-ai-sdlc-context/02-runtime-requirements.md) and reuses
 the same opt-in, isolated, pinned-input and durable-result principles without
 changing OKF-authoring semantics or the public `abs` CLI.
+
+## Read selectively
+
+This page is not required startup context. Use the relevant section below;
+follow its linked owner rather than loading unrelated sections.
+
+- [Current adaptive evaluation profile](#current-adaptive-evaluation-profile)
+- [Agent-driven OKF authoring](#agent-driven-okf-authoring)
+- [Context A/B interpretation](#context-ab-interpretation)
+- [Historical v1 baseline](#historical-v1-baseline)
+- [First real context A/B evidence](#first-real-context-ab-evidence)
+- [First v2 authoring-quality evidence](#first-v2-authoring-quality-evidence)
+- [v3 heterogeneous evidence](#v3-heterogeneous-evidence)
+- [v4 batch-authoring checkpoint](#v4-batch-authoring-checkpoint)
+- [v5 offline qualification](#v5-offline-qualification)
+- [Confirmed-Domain qualification](#confirmed-domain-qualification)
+- [V13 Initial Ingest qualification](#v13-initial-ingest-qualification)
 
 ## Current adaptive evaluation profile
 
@@ -31,6 +54,32 @@ changing OKF-authoring semantics or the public `abs` CLI.
   exact evidence IDs. It may abstain; low-confidence or threshold decisions
   require a second pinned judgment or owner review. AI never changes the active
   profile without an explicit reviewed version update.
+- **AB-BENCH-096** — Every real model runner uses a disposable isolated
+  `CODEX_HOME`, copies only the required bounded authentication material and
+  starts with an empty custom-skill root. Only version-pinned workspace skills
+  intentionally present in a suite may participate; operator-global skills and
+  configuration MUST NOT affect comparable evidence.
+- **AB-BENCH-097** — A real read-only source-comparison suite MUST give every arm an
+  independent disposable copy of the same pinned repository under a read-only
+  sandbox. It records bounded source-command count/result bytes separately from
+  graph and Hub activity, and MUST reject file changes, source revision drift or
+  a capability outside the arm's declared surface.
+- **AB-BENCH-098** — A real Phase 2 pair or triad MUST prove that one disposable Code
+  Graph session can index, navigate and close cleanly before any model arm
+  starts. Provider admission or cache conflicts stop before model execution;
+  failed preflight state is removed and cannot become Task-quality evidence.
+- **AB-BENCH-099** — A real implementation comparison gives every arm an
+  independent editable clone at one pinned commit while leaving the registered
+  source untouched. It retains prompts, events, patches, changed paths,
+  versioned manifest/evaluator digests and independent verification results,
+  removes disposable workspaces, and records later evaluator repairs as exact-
+  patch replays rather than changing historical qualifications.
+- **AB-BENCH-100** — A real cross-repository incident pair gives both arms
+  independent read-only copies of the same clean pinned repositories and the
+  same symptom, model, prompt and output contract. The assisted arm adds only
+  one exact-Published-Hub search. Results retain source commands, Hub bytes,
+  repository/file inspection coverage, exact source evidence, elapsed time and
+  model usage; quality and unsupported causal claims are assessed before cost.
 
 ## Agent-driven OKF authoring
 
@@ -376,7 +425,12 @@ benchmarks.
   from `--root` or `AGENTBASE_BENCHMARK_ROOT`; the default is the sibling
   checkout. Suite, prompt, expectation and result paths resolve beneath that
   root and cannot escape it. `npm run demo`, `npm run verify` and ordinary MCP
-  startup do not require model-backed benchmark data.
+  startup do not require the sibling Benchmark checkout or model-backed
+  benchmark data. The canonical gate always runs self-contained benchmark
+  engine/scorer tests; tests that inspect sibling-owned suite metadata run only
+  when that checkout is explicitly available and report a visible skip
+  otherwise. Active MCP release requirements keep self-contained fixtures and
+  never rely on such a skip.
 - **AB-BENCH-082** — Repository registry entries pin domain, source kind,
   checkout path and exact clean Git revision. Public checkouts use source URL
   plus commit; local-only fixtures are explicitly marked and must still pass
@@ -610,8 +664,8 @@ infrastructure, a separate DLQ identity and explicit operation-to-handler maps
 also remain useful enrichment rather than inferred facts.
 
 The exact V9 bundle was accepted from remote Hub `main` as new subject
-`systems/serverless-shopping-cart` and published without merge as
-[`AgentBase-Hub` PR #7](https://github.com/khoaha1904/AgentBase-Hub/pull/7).
+`systems/serverless-shopping-cart` and published without merge as an
+owner-reviewed qualification PR.
 Proposal `1825cee818828dd7e60cfb3f` has accepted commit
 `faaf8569452699a9405c062ca90042a499546b71`; the PR remains human-review input,
 not proof that the visible owner-review findings are resolved. Governed

@@ -1,7 +1,13 @@
 # Ownership
 
-> Status: Accepted system ownership baseline; update when a cross-capability
-> boundary or responsibility changes.
+> Status: Accepted system ownership baseline. Group 3 evidence ownership is
+> owner-approved; G3-C1 freshness and G3-C2 proposal impact are implemented,
+> while G3-C3 real-model usefulness qualification is deferred and is not a
+> current release gate. Group 4 Domain Capsule/Profile, migration and final
+> admission ownership is implemented and verified; Group 4 is closed for the
+> current internal enterprise release. G5-C1 compact-layout ownership is
+> implemented and verified; G5-C2 semantic-quality
+> ownership is deferred and inactive.
 
 AgentBase-MCP is a TypeScript Node.js modular monolith. Every runtime file has
 one capability owner, every capability exposes a small public `index.ts`, and
@@ -34,6 +40,7 @@ src/app/
     provider/                     isolated provider workspace
     workflow/                     orchestration and recovery
   hub-okf/                        local Hub lifecycle and publication
+    runtime-actions.ts            Hub-wide action composition for CLI/MCP
     configuration/                settings and credentials
     workspace/                    checkout, setup and bootstrap
     authoring/                    proposals, refresh and Questions
@@ -46,7 +53,8 @@ src/app/
     mcp/                          Hub MCP adapters
 scripts/
   checks/                         repository verification
-  installation/                   setup and migration utilities
+  installation/                   release lifecycle, client/skill setup and migration
+  release/                        platform bundle, manifest and SBOM production
   benchmark/                      opt-in measurement and qualification
 ```
 
@@ -58,3 +66,93 @@ The source layout is the ownership registry. Do not create a duplicate
 ownership manifest or speculative `common`, `utils` or `helpers` owner. Split
 only responsibilities with independent reasons to change; file size, density,
 line length and import count are not architecture boundaries.
+
+Within Hub authoring, `authoring-session.ts` owns session persistence and the
+ordered Prepare/Finalize lifecycle. `authoring-validation.ts` owns source and
+structural-reachability checks; `receipt-materialization.ts` owns Receipt-bound
+embedded knowledge, materialization checks, inspection context and initial
+coverage debt. These internal modules accept narrow data contexts and never
+import the session orchestrator. The existing application entrypoints, state
+format, validation order and recovery/publication boundaries stay unchanged.
+The adjacent lifecycle and Receipt tests exercise the same public session API.
+
+`hub-okf/runtime-actions.ts` composes Hub configuration, authoring, query,
+enrichment and publication actions. It belongs at the Hub application root,
+not under Query; its public exports remain routed through `hub-okf/index.ts`.
+This placement changes no action API, source-snapshot state or admission order.
+Capability modules do not import this composition root in production.
+
+Group 2 adds no runtime service. `scripts/installation/` owns the stable
+launcher and local release transaction; `scripts/release/` owns maintainer/CI
+artifact production; `scripts/checks/` owns derived requirement-evidence and
+release verification. Knowledge, Hub and provider owners do not acquire release
+or distributed-coordination responsibility.
+
+Group 3 keeps the same modular-monolith owners:
+
+- `core/knowledge/query` owns the provider-neutral freshness value and pure
+  aggregation rules; application query supplies exact Published and observed
+  inputs, while an already authorized Repository workflow may supply a current
+  source receipt;
+- `core/knowledge/proposals` owns the pure semantic before/after impact model;
+  `app/hub-okf/review` binds it to exact proposal/base bytes and retains it in
+  the existing proposal inspection lifecycle;
+- query, context, review and visualization adapters render those values without
+  acquiring truth, Accept or publication authority; and
+- `scripts/benchmark/` owns retained opt-in runner behavior only.
+  AgentBase-Benchmark owns the pinned registry, suite expectations, immutable
+  result history and owner dispositions. No production runtime or current
+  internal release gate depends on executing a real-model campaign.
+
+No runtime owner acquires a general event ledger, model execution service,
+cross-repository graph or generated-site authority.
+
+Group 4 keeps those owners and adds no registry or service:
+
+- `core/knowledge/documents` owns pure Profile 1.0 declaration parsing, Hub
+  layout classification, Domain-selector-to-concept mapping and path/home
+  validation. OKF concept identity remains its bundle-relative path;
+- `core/knowledge/schemas` continues to own type semantics and type-relative
+  path hints. It does not choose a physical home;
+- `app/hub-okf/authoring` composes one user-confirmed Repository default and
+  bounded concept-home exceptions with schema hints. Batch, Questions, Guidance
+  and Enrichment remain with their existing application owners;
+- `core/knowledge/query` derives home, Domain participation and boundary roles
+  from admitted paths and relations. Query, review and visualization adapters
+  consume that one projection instead of inventing layout rules; and
+- installation/release code declares compatibility only. Hub profile migration
+  remains a reviewable knowledge workflow owned by `app/hub-okf`, never an
+  application-upgrade side effect.
+
+The well-known `shared/agentbase-profile.md` is Hub knowledge/control state, not
+a local sidecar. Generated indexes are navigation, not another identity or home
+registry. Capacity runners remain deferred and no Group 4 runtime owner may
+claim a qualified scale envelope.
+
+Group 5 reuses the same owners and supersedes only their Profile 1.0 behavior:
+
+- `core/knowledge/documents` owns the compact layout grammar, the Domain
+  `index.md` concept identity, type-neutral `knowledge/` admission and the
+  rejection of AgentBase activity logs from Profile Hubs;
+- `core/knowledge/schemas` owns semantic type and promotion rules but no longer
+  supplies type-relative storage paths;
+- `app/hub-okf/authoring` owns Repository-dossier skeletons and reuses the
+  implemented deterministic coverage and proposal validation before Finalize;
+- optional external AI review remains operator practice and acquires no runtime
+  owner, product state or admission authority; and
+- query, semantic impact, CI and visualization consume the compact Profile
+  classifier through the same public core entrypoint.
+
+The deferred semantic-quality design introduces no reviewer packet/report,
+draft-probe, repair/override state, model gateway, reviewer database, activity
+ledger or new service owner.
+
+Group 6 release hardening retains these owners. `app/hub-okf/authoring` binds
+Refresh scope and writes or clears compact coverage debt during deterministic
+Finalize, including its bounded convergence count;
+`core/knowledge/governance` parses that Repository metadata; and
+`app/hub-okf/query` projects it into existing continuity gaps. The packaged
+`agentbase-refresh` skill orchestrates broad bounded Coverage with the existing
+graph/schema/Hub tools. No new runtime package, service, skill or MCP tool owner
+is introduced. Surface governance remains with Product and installation release
+evidence; it freezes the owned catalog without creating a runtime registry.

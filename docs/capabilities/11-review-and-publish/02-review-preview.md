@@ -1,27 +1,18 @@
 # 11.02 — Review preview
 
-> Status: Structured inspection, including atomic Batch Initial Ingest, is
-> implemented; optional visual review is deferred.
+> Status: Structured byte and semantic inspection, including atomic Batch
+> Initial Ingest, is implemented and verified; optional visual review remains
+> deferred. G5-C1 activity-log removal is implemented and verified; G5-C2
+> pre-Finalize quality summary is deferred and inactive.
 
 ## Outcome
 
-Review lets the user understand what a proposal will change before Local Accept
-and before a pull request. Selection occurs while the authoring draft is still
-editable; a Finalized proposal is an atomic review unit and can only be Accepted
-in full or returned for editing.
-
-## MVP flow
+Review explains material changes before explicit Publish. Selection occurs in
+the editable authoring workspace; Finalize locks one atomic proposal.
 
 ```text
-editable authoring draft
-        ↓ add / edit / remove items
-Finalize validates dependencies and locks exact bytes
-        ↓
-structured inspection + bounded before/after content
-        ↓ accept all | return to authoring
-immutable Local Draft commit
-        ↓ later publication selection
-PR preview/body + exact Git diff
+editable draft → deterministic Finalize → structured inspection
+              → confirm exact proposal Publish | return to authoring
 ```
 
 Preview groups `Added`, `Updated`, `Removed` and `Questions/Limitations`. Initial
@@ -32,16 +23,19 @@ allowed state, reason when available, bounded before/after bytes and digest. A
 destructive entry must retain its correction/removal reason/evidence; preview
 does not infer the reason from the Git diff.
 
+The deferred G5-C2 design adds no quality policy/packet/report, findings/probes,
+repair count or owner override to current inspection. Optional external AI
+review notes remain outside AgentBase state and the Hub.
+
 ## Atomic selection rule
 
 - Concepts, relations, Questions, evidence and navigation can be edited before Finalize.
 - Finalize rechecks the entire bundle, relation targets, protected bytes,
   Question references and navigation invariants.
 - After Finalize, no per-item checkbox can change the locked bundle.
-- If review fails, return to authoring and Finalize again; Accept requires the
+- If review fails, return to authoring and Finalize again; Publish requires the
   exact reviewed proposal diff digest and tree digest.
-- Publication can select dependency-safe proposal commits but cannot split items
-  inside an accepted proposal.
+- Publish consumes one complete proposal; it cannot split its items.
 
 This rule avoids creating a second selection engine that automatically repairs a
 relation/index/Question when the user removes an item.
@@ -65,22 +59,21 @@ return to authoring and be Finalized again.
 ## Failure boundaries
 
 - Truncated content must be marked clearly and retain its digest; do not present it as a full diff.
-- An invalid/non-applicable inspection cannot be Accepted.
-- Proposal bytes/base changing after inspection makes Accept fail closed.
-- Preview does not read source, probe credentials, Refresh, Accept or Publish.
+- An invalid/non-applicable inspection cannot be Published.
+- Proposal bytes/base changing after inspection makes Publish fail closed.
+- Preview does not read source, probe credentials, Refresh or Publish.
 
-## Knowledge activity summaries
+## Operational history
 
-Successful proposal materializes concise newest-first entries in
-`repositories/<slug>/log.md` for repository-owned activity and
-`domains/<slug>/log.md` only for Enrichment, cross-repository relation/Flow or
-explicit Domain correction. Routine Repository membership does not duplicate a
-Domain log entry. Existing Hub log grammar remains authoritative. Do not log query,
-tool call, raw Inventory or failed/Incomplete attempt. Git commit, PR and exact
-diff remain the complete audit history.
+Compact Profile 1.0 materializes no Repository or Domain activity `log.md`.
+Git commits, pull requests and their exact diffs remain complete shared history.
+Discovery and proposal-operation records stay in owner-private workflow state
+and are retained only for review/publication/recovery. Optional external review
+notes are not AgentBase inspection evidence or Published knowledge.
 
-## Current implementation gap
+## Implemented and deferred boundary
 
-Structured inspection, grouped changes, bounded content and exact-digest Accept
-exist. The host workflow must clearly express the return-to-authoring step when
-review fails. Static HTML/graph review is outside the MVP and needs no runtime capability yet.
+Inspection retains grouped byte changes and a digest-bound semantic projection.
+Inspect and Publish rederive it before use. Invalid or stale proposal evidence
+fails before mutation; a failed review returns to authoring.
+Static HTML/graph review and semantic-quality admission remain deferred.

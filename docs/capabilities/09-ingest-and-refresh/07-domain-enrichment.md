@@ -86,8 +86,9 @@ another maintainer decision. Those Questions remain open without owner guidance.
   by the ordinary enrichment and governance contracts without mock metadata.
 - **AB-ENRICH-016** — Fixture publication fails closed unless an exact
   qualification target allowlist admits the active Hub identity and branch.
-  The workspace qualification admits only `khoaha1904/hub-3` on `main` and
-  never `khoaha1904/AgentBase-Hub`.
+  The operator supplies that exact repository identity through local
+  environment configuration; the repository carries no personal or globally
+  assumed qualification Hub.
 - **AB-ENRICH-017** — An owner-authorized fixture run preserves Prepare, Run,
   Finalize, inspect, Accept, submit, external merge and synchronize as distinct
   transitions; no failure automatically advances the next transition.

@@ -15,6 +15,7 @@ export type DiagramType = "architecture" | "dependency" | "sequence";
 
 export type DiagramPacket = Readonly<{
   schemaVersion: 3;
+  profile: PublishedVisualizationProjection["profile"];
   hub: string;
   commit: string;
   domain: PublishedVisualizationProjection["domain"];
@@ -98,6 +99,7 @@ function packet(
     reasons: [],
     packet: {
       schemaVersion: 3,
+      profile: projection.profile,
       hub: projection.hub,
       commit: projection.commit,
       domain: projection.domain,

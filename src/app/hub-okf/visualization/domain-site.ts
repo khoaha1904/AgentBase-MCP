@@ -8,7 +8,7 @@ import {
 } from "../../../core/knowledge/index.ts";
 
 const CYTOSCAPE_VERSION = "3.34.2";
-const DOMAIN_SITE_GENERATOR_VERSION = 7 as const;
+const DOMAIN_SITE_GENERATOR_VERSION = 12 as const;
 const BUILD_KEY_PLACEHOLDER = "__AGENTBASE_BUILD_KEY__";
 const GENERATED_PATHS = [
   "assets/app.css",
@@ -22,6 +22,7 @@ export type DomainSiteBuildReceipt = Readonly<{
   schemaVersion: 1;
   generator: "agentbase-domain-site";
   generatorVersion: typeof DOMAIN_SITE_GENERATOR_VERSION;
+  profile: PublishedVisualizationProjection["profile"];
   hub: string;
   commit: string;
   domain: string;
@@ -142,6 +143,7 @@ export function buildStaticDomainSite(
       schemaVersion: 1,
       generator: "agentbase-domain-site",
       generatorVersion: DOMAIN_SITE_GENERATOR_VERSION,
+      profile: projection.profile,
       hub: projection.hub,
       commit: projection.commit,
       domain: projection.domain.id,

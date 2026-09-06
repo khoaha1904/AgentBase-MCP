@@ -5,8 +5,13 @@ import path from "node:path";
 import { createHubProposal, type AdmittedLocalHubState, type AnyHubProposal } from "../../../core/hub/index.ts";
 import {
   AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
+  agentBaseProfileConceptPath,
+  classifyAgentBaseHubProfile,
+  conceptIdentityFromPath,
   diffBundleProposal,
+  loadOkfBundle,
   observedValueSafetyFailure,
+  parseQuestionDocument,
   prepareBundleProposal,
   renderConceptDocument,
   renderQuestionDocument,
@@ -16,7 +21,7 @@ import {
   type OkfFrontmatter,
 } from "../../../core/knowledge/index.ts";
 import { runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
-import { inspectHubProposal, type HubProposalInspection } from "../review/inspect.ts";
+import { bindHubProposalInspection, inspectHubProposal, type HubProposalInspection } from "../review/inspect.ts";
 import { writeHubProposalState } from "../review/proposal-state.ts";
 import type { GovernedQuestion } from "./questions.ts";
 
@@ -33,7 +38,18 @@ export function materializeQuestionGuidance(options: Readonly<{
   if (!/^human:[A-Za-z0-9][A-Za-z0-9._@-]{0,127}$/.test(options.by)) throw new Error("maintainer must use an explicit human: identity");
   if (Number.isNaN(Date.parse(options.at))) throw new Error("question answer time is invalid");
   const revision = options.question.revision, key = `${options.question.id}-r${revision}`;
-  const conceptId = `guidance/${key}`, conceptPath = `${conceptId}.md`;
+  const bundle = loadOkfBundle(options.targetRoot, { requireAgentBaseRootIndex: true });
+  const admission = classifyAgentBaseHubProfile(bundle);
+  if (admission.kind === "unsupported") throw new Error(`Hub Profile is unsupported: ${admission.failures.join("; ")}`);
+  const questionConcept = [...bundle.concepts.values()].find((concept) =>
+    concept.type === "Question" && parseQuestionDocument(concept).id === options.question.id);
+  if (!questionConcept) throw new Error("Question document path does not match the Hub Profile");
+  const questionHome = admission.kind === "profile-1.0"
+    ? admission.homes.find((item) => item.identity === questionConcept.conceptId)?.home : undefined;
+  const conceptPath = admission.kind === "profile-1.0"
+    ? agentBaseProfileConceptPath(questionHome ?? { kind: "shared" }, "Maintainer Guidance", key)
+    : `guidance/${key}.md`;
+  const conceptId = conceptIdentityFromPath(conceptPath);
   const frontmatter: OkfFrontmatter = {
     type: "Maintainer Guidance",
     title: `Guidance for ${options.question.subject} ${options.question.property}`,
@@ -52,8 +68,15 @@ export function materializeQuestionGuidance(options: Readonly<{
   fs.writeFileSync(target, renderConceptDocument(concept), { mode: 0o600 });
   const resolvedQuestion = resolveQuestion(options.question, conceptId);
   const resolved: GovernedQuestion = { ...options.question, ...resolvedQuestion, status: resolvedQuestion.state };
-  fs.writeFileSync(path.join(options.targetRoot, "questions", `${options.question.id}.md`),
+  fs.writeFileSync(path.join(options.targetRoot, ...questionConcept.path.split("/")),
     renderQuestionDocument(resolvedQuestion), { mode: 0o600 });
+  if (admission.kind === "profile-1.0") {
+    const relativeIndex = questionHome?.kind === "domain" ? `${questionHome.selector}/index.md` : "shared/index.md";
+    const indexPath = path.join(options.targetRoot, ...relativeIndex.split("/"));
+    const current = fs.readFileSync(indexPath, "utf8");
+    const line = `* [${frontmatter.title}](${path.posix.relative(path.posix.dirname(relativeIndex), conceptPath)}) - Maintainer Guidance`;
+    if (!current.split(/\r?\n/).includes(line)) fs.writeFileSync(indexPath, `${current.trimEnd()}\n\n${line}\n`);
+  }
   return { concept, resolved };
 }
 
@@ -87,6 +110,9 @@ export async function prepareQuestionGuidanceProposal(
 ): Promise<Readonly<{ question: GovernedQuestion; proposal: AnyHubProposal; inspection: HubProposalInspection }>> {
   const answer = options.answer.trim(), git = options.git ?? runGit;
   if (!options.question.sourceRepositoryId) throw new Error("question source repository is unavailable");
+  const baseAdmission = classifyAgentBaseHubProfile(loadOkfBundle(options.localHub.root,
+    { requireAgentBaseRootIndex: true }));
+  if (baseAdmission.kind === "unsupported") throw new Error(`Hub Profile is unsupported: ${baseAdmission.failures.join("; ")}`);
   const status = await git({
     args: ["status", "--porcelain=v1", "--untracked-files=all"],
     cwd: options.localHub.root,
@@ -113,6 +139,9 @@ export async function prepareQuestionGuidanceProposal(
     const { concept, resolved } = materializeQuestionGuidance({ targetRoot: path.join(staging, "bundle"),
       question: options.question, answer, by: options.by, at: options.at });
     const conceptId = concept.conceptId, conceptPath = concept.path;
+    const questionPath = baseAdmission.kind === "profile-1.0"
+      ? `shared/questions/${options.question.id}.md` : `questions/${options.question.id}.md`;
+    const navigationPath = baseAdmission.kind === "profile-1.0" ? "shared/index.md" : undefined;
     const validated = validateBundleProposal(baseRoot, staging, {
       maintainerGuidance: { conceptId, by: options.by, at: options.at },
     });
@@ -120,10 +149,19 @@ export async function prepareQuestionGuidanceProposal(
     const diff = diffBundleProposal(baseRoot, staging);
     const invalid = diff.entries.find((entry) => entry.change !== "preserved"
       && !(entry.change === "created" && entry.path === conceptPath)
-      && !(entry.change === "modified" && entry.path === `questions/${options.question.id}.md`));
+      && !(entry.change === "modified" && entry.path === questionPath)
+      && !(entry.change === "modified" && entry.path === navigationPath));
     if (!diff.applicable || invalid) throw new Error(`guidance proposal contains an out-of-scope change${invalid ? `: ${invalid.path}` : ""}`);
-    const inspection = inspectHubProposal(diff.entries, { baseRoot, proposedRoot: path.join(staging, "bundle") });
-    const diffDigest = `sha256:${createHash("sha256").update(JSON.stringify(inspection.entries)).digest("hex")}`;
+    if (baseAdmission.kind === "profile-1.0") {
+      const proposedAdmission = classifyAgentBaseHubProfile(loadOkfBundle(path.join(staging, "bundle"),
+        { requireAgentBaseRootIndex: true }));
+      if (proposedAdmission.kind !== "profile-1.0") {
+        throw new Error(`guidance Profile layout failed validation: ${proposedAdmission.kind === "unsupported"
+          ? proposedAdmission.failures.join("; ") : "Profile declaration disappeared"}`);
+      }
+    }
+    const ordinaryInspection = inspectHubProposal(diff.entries, { baseRoot, proposedRoot: path.join(staging, "bundle") });
+    const diffDigest = `sha256:${createHash("sha256").update(JSON.stringify(ordinaryInspection.entries)).digest("hex")}`;
     const common = { mode: "refresh" as const, subject: options.question.subject, baseCommit: options.localHub.activeHead,
       sourceRepositoryId: options.question.sourceRepositoryId, evidenceDigest,
       schemaVersion: AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, selectedSchemas: ["Maintainer Guidance"],
@@ -132,6 +170,9 @@ export async function prepareQuestionGuidanceProposal(
       ? createHubProposal({ ...common, localHubId: options.localHub.localHubId })
       : createHubProposal({ ...common, hub: options.localHub.hub });
     writeHubProposalState(staging, proposal);
+    const inspection = bindHubProposalInspection(ordinaryInspection, {
+      baseRoot, proposedRoot: path.join(staging, "bundle"), proposal,
+    });
     fs.cpSync(baseRoot, path.join(staging, "base"), { recursive: true, errorOnExist: true, force: false });
     fs.writeFileSync(path.join(staging, "inspection.json"), `${JSON.stringify(inspection, null, 2)}\n`, { mode: 0o600 });
     fs.writeFileSync(path.join(staging, "runtime.json"), `${JSON.stringify({ checkoutRoot: options.localHub.root })}\n`, { mode: 0o600 });

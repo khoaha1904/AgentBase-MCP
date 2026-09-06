@@ -9,6 +9,8 @@ for users and agents.
 - `configuration/` — Hub settings and credentials.
 - `workspace/` — checkout, setup, bootstrap and local Hub admission.
 - `authoring/` — proposal preparation, refresh and Questions.
+- `migration/` — report-first legacy-to-Profile workspace and exact move
+  admission.
 - `review/` — inspection, acceptance and pending state.
 - `publication/` — submit, publish, synchronize and recovery.
 - `query/` — accepted-Hub reads and composed runtime actions.

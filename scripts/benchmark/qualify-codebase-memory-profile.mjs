@@ -9,7 +9,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 const root = path.resolve(import.meta.dirname, "../..");
 const binary = process.env.AGENTBASE_CBM_BINARY
   ?? path.join(root, "build/providers/codebase-memory/linux-x64/codebase-memory-mcp");
-const repository = path.join(root, "fixtures/codebase-memory-profile-mixed");
+const repository = path.join(root, "scripts/benchmark/testdata/codebase-memory-profile-mixed");
 const supportedFiles = [
   "supported.sh",
   "Dockerfile",

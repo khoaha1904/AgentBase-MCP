@@ -1,6 +1,6 @@
 ---
 name: use-diagram-design
-description: Internal AgentBase renderer for a ready Published Hub diagram packet. Use only when agentbase-diagram delegates a truthful Architecture, Dependency, or Sequence packet; never discover topology or handle Domain-site generation.
+description: Internal explicit delegation only. Use $use-diagram-design only after explicitly invoked $agentbase-diagram supplies a ready Published Hub packet; never select it for an ordinary diagram request, topology discovery, or Domain-site generation.
 ---
 
 # Render an AgentBase diagram

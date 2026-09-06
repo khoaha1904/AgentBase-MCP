@@ -2,3 +2,6 @@ interface:
   display_name: "AgentBase Internal: Diagram Renderer"
   short_description: "Render a truthful Published Hub packet"
   default_prompt: "Use $use-diagram-design only for the ready diagram packet supplied by $agentbase-diagram."
+
+policy:
+  allow_implicit_invocation: false

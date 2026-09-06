@@ -1,12 +1,25 @@
 ---
 name: agentbase-ingest
-description: Ingest one authorized local source repository into a sparse, evidence-backed AgentBase OKF proposal preview. Use when a user asks to initialize, ingest, or draft Hub knowledge for one repository; do not use for ordinary questions, Refresh, multi-repository batches, provider CLI enrichment, Accept, or Publish.
+description: Explicit-only AgentBase Add repository. Use only when the user names $agentbase-ingest, enters from Update knowledge for the same approved new repository, or approves a scoped Ingest handoff from AgentBase query; never infer it from ordinary reading or authorize Publish.
 ---
 
-# Ingest one repository
+# Add repository
 
 Create one reviewable proposal from bounded source evidence. The user supplies
-the repository, not an authoring prompt. Stop before Accept or Publish.
+the repository, not an authoring prompt. Stop before Publish.
+
+The installed command remains `$agentbase-ingest`. If Preflight finds one
+existing canonical Published Repository, explain that it needs an update and
+follow [Update knowledge](../agentbase-refresh/SKILL.md) for that same approved scope without asking for a
+repeated command. Do not create a duplicate. Ambiguous identity stops for
+clarification, never a loop between skills. New repositories follow the stages
+below, including all home confirmations.
+
+An approved Query handoff is preparation-only for its named Hub/repository and
+gap. Revalidate source authority and retain all Preflight/home confirmations;
+carried evidence is a starting point, not a substitute for discovery admission.
+Changed or broader scope needs renewed agreement. Cancellation preserves private
+work without publishing or deleting it.
 
 This workflow uses `preflight_hub_ingest`, the tools named by
 `use-codebase-memory`, `get_okf_authoring_schemas`, `prepare_hub_okf`,
@@ -16,9 +29,11 @@ This workflow uses `preflight_hub_ingest`, the tools named by
 ## Workflow
 
 1. **Preflight** — Read [`references/preflight.md`](references/preflight.md).
-   Call `preflight_hub_ingest`, compare the repository documents with returned
+   Call `preflight_hub_ingest` and resolve new/existing/ambiguous identity first.
+   Apply the existing-repository handoff above before asking for a new home.
+   For a new repository, compare its documents with returned
    Domain summaries, show evidence and warnings, then obtain one explicit
-   primary-Domain confirmation.
+   preliminary Repository default-home confirmation.
 2. **Discover** — Index exactly the `analysis_source_repository` returned by
    Preflight and follow `use-codebase-memory`. The index call appends one
    bounded Discovery Seed after its fixed diagnostic/architecture/census pass.
@@ -77,17 +92,32 @@ This workflow uses `preflight_hub_ingest`, the tools named by
    embedded in its useful parent. Treat a returned `suggested` role as reviewable, never exact;
    structured mapping wins and semantic keyword matches are diagnostic rather
    than a pass/fail gate. The successful call returns one
-   `discovery_receipt_id`. Pass only that Receipt ID, source repository,
-   subject and confirmed Domain to `prepare_hub_okf`; never resend mutable
+   `discovery_receipt_id`. From its exact materialized candidates, present one
+   grouped plan: the Repository default home, only exceptional candidate homes,
+   and only separately evidenced Domain participations. Home is either
+   `shared` or one exact `domains/<slug>`; placement never implies
+   participation. Obtain one explicit confirmation for the whole plan, not one
+   prompt per concept. The simple one-Domain case may use `confirmed_domain`;
+   use `home_plan` when a concept is shared, has a different home or has
+   separately confirmed participation. Pass only the Receipt ID, source
+   repository, subject and exactly one confirmed plan or compatibility Domain
+   to `prepare_hub_okf`; never resend mutable
    guidance, coverage, signals or an evidence digest. For Initial Ingest, set
    `subject_directory` to one normalized `repositories/<repository-slug>` path;
-   the confirmed Domain is not the proposal subject. Persist the confirmed
-   primary Domain as an owner-evidenced `Repository part-of Domain` relation.
+   it supplies the slug rather than the final Profile path. Use the exact
+   home-qualified subject and skeleton paths returned by Prepare. The
+   compatibility Domain retains the prior owner-evidenced Repository/System
+   participation; an explicit plan creates `part-of` only from its
+   `participations` entries.
    Run one bounded active-Hub identity match, then follow `agentbase-okf` inside
    the returned workspace. Enrich the returned OKF skeletons instead of
    rebuilding their frontmatter or navigation from memory. Prepare has already
-   populated the direct root entrypoint; preserve it and never create
-   architecture category indexes. Keep a newly confirmed Domain sparse and
+   populated root, capsule and home navigation; preserve it and never create
+   unrelated indexes. Treat the Repository as the default dossier. Add only
+   applicable evidence-backed sections for purpose/boundaries, runtime and
+   deployment, capabilities, interfaces/triggers, dependencies/data,
+   operations/recovery and known gaps; omit unsupported headings and link to
+   independently promoted knowledge without copying it. Keep a newly confirmed Domain sparse and
    summarize only the current repository-contributed scope supported by evidence;
    never invent a complete domain definition. Preserve the visible
    review limitation on every suggested skeleton. Preserve the one prepared
@@ -104,8 +134,9 @@ This workflow uses `preflight_hub_ingest`, the tools named by
    Do not retry ambiguous/unsupported recommendations or any internal,
    integrity, authority or transport failure.
 5. **Validate** — Run changed-set and final validation. Preserve prepared
-   `sources[].observed_revision`. Do not author `questions/` or the Repository
-   activity log; Finalize renders both from the Receipt. Make at most one repair
+   `sources[].observed_revision`. Do not author any home `questions/`; Finalize
+   renders Questions from the Receipt and updates the home navigation. Never
+   create an AgentBase activity `log.md`. Make at most one repair
    from exact failures. If Finalize returns a Hub-base replacement session,
    continue from its new skeletons without rerunning source discovery. Inspect and present the complete proposal diff,
    Questions, limitations and partial-coverage status.
@@ -121,7 +152,7 @@ This workflow uses `preflight_hub_ingest`, the tools named by
 - After one exact validation failure, make at most one repair. A second failure
   is Incomplete and requires an explicit user retry; never start another hidden
   reasoning pass.
-- Do not call a provider CLI, clone another repository, Accept, submit,
+- Do not call a provider CLI, clone another repository,
   synchronize, rebuild a PR or publish from this skill.
 - Do not store source blocks, graph output, secrets or arbitrary config dumps in
   Hub. A small directly evidenced snapshot is optional and remains an observed,

@@ -10,13 +10,13 @@ import {
   renderConceptDocument, renderQuestionDocument, resolveQuestionFromEvidence,
   validateBundleExternalIdentities, validateBundleObservedValues, validateBundleProposal,
   validateOkfRelationships, validateProviderObservation, withExternalIdentity,
-  type ConceptDocument, type OkfValue, type SharedQuestion,
+  type ConceptDocument, type OkfBundle, type OkfValue, type SharedQuestion,
 } from "../../../core/knowledge/index.ts";
 import {
   createHubProposal, type AdmittedLocalHubState, type AnyHubProposal,
 } from "../../../core/hub/index.ts";
 import { AwsCliAdapter, AwsCliError } from "../../../providers/aws-cli/index.ts";
-import { attachHubInspectionContext, inspectHubProposal, type HubProposalInspection } from "../review/inspect.ts";
+import { attachHubInspectionContext, bindHubProposalInspection, inspectHubProposal, type HubProposalInspection } from "../review/inspect.ts";
 import { writeHubProposalState } from "../review/proposal-state.ts";
 import { materializeQuestionGuidance } from "../authoring/guidance-proposal.ts";
 import type { GovernedQuestion } from "../authoring/questions.ts";
@@ -227,16 +227,24 @@ function addRelation(source: ConceptDocument, target: ConceptDocument, kind: str
   return { ...source, frontmatter: { ...source.frontmatter, relationships }, body };
 }
 
-function governedQuestion(root: string, id: string): GovernedQuestion {
-  const bundle = loadOkfBundle(root), concept = [...bundle.concepts.values()].find((item) => item.type === "Question" && item.conceptId === `questions/${id}`);
-  if (!concept) throw new Error(`Question is unavailable: ${id}`);
-  const question = parseQuestionDocument(concept);
+function questionDocument(bundle: OkfBundle, id: string): Readonly<{ question: SharedQuestion; concept: ConceptDocument }> {
+  const matches = [...bundle.concepts.values()].filter((item) => item.type === "Question")
+    .map((concept) => ({ concept, question: parseQuestionDocument(concept) }))
+    .filter((item) => item.question.id === id);
+  if (matches.length !== 1) throw new Error(`Question is unavailable: ${id}`);
+  return matches[0]!;
+}
+
+function governedQuestion(root: string, id: string): Readonly<{ question: GovernedQuestion; concept: ConceptDocument }> {
+  const bundle = loadOkfBundle(root), { concept, question } = questionDocument(bundle, id);
   const observations = question.references.flatMap((reference) => {
     if (reference.referenceKind !== "owned-item" || reference.itemKind !== "observed-value") return [];
     const owner = bundle.concepts.get(reference.owner);
     return owner ? readObservedValues(owner).filter((value) => value.id === reference.itemKey) : [];
   });
-  return { ...question, status: question.state, observationIds: observations.map((value) => value.id), observations };
+  return { concept, question: {
+    ...question, status: question.state, observationIds: observations.map((value) => value.id), observations,
+  } };
 }
 
 function copyBaseToProposal(baseRoot: string, staging: string, evidenceDigest: string, createdAt: string): string {
@@ -259,7 +267,7 @@ function assertNoLocalOverlap(publishedRoot: string, localRoot: string, manifest
   const local = loadOkfBundle(localRoot, { requireAgentBaseRootIndex: true });
   const affected = new Set(manifest.candidates.flatMap((candidate) => [candidate.sourceConceptId,
     ...(candidate.targetConceptId ? [candidate.targetConceptId] : []),
-    ...(candidate.question ? [`questions/${candidate.question.id}`] : [])]));
+    ...(candidate.question ? [questionDocument(published, candidate.question.id).concept.conceptId] : [])]));
   for (const conceptId of affected) {
     const before = published.concepts.get(conceptId), current = local.concepts.get(conceptId);
     if (!before || !current || before.path !== current.path
@@ -318,7 +326,7 @@ export function finalizeDomainEnrichment(options: Readonly<{
     const guidance: Readonly<{ conceptId: string; by: string; at: string }>[] = [];
     for (const decision of state.decisions) {
       const candidate = manifest.candidates.find((item) => item.id === decision.candidateId)!, result = outcomes.get(candidate.id)!;
-      const question = governedQuestion(bundleRoot, decision.question.id);
+      const governed = governedQuestion(bundleRoot, decision.question.id), question = governed.question;
       if (question.revision !== decision.question.revision) throw new Error(`${candidate.id}: Question revision changed before Finalize`);
       if (decision.tier === "automatic") {
         const ownerId = candidate.targetConceptId ?? candidate.sourceConceptId;
@@ -328,7 +336,8 @@ export function finalizeDomainEnrichment(options: Readonly<{
         const resolved = resolveQuestionFromEvidence(question, { referenceKind: "owned-item", owner: ownerId,
           itemKind: "observed-value", itemKey: observed.id, sourceId: observed.sourceId,
           ...(observed.observed.evidenceDigest ? { observedRevision: observed.observed.evidenceDigest } : {}) });
-        fs.writeFileSync(path.join(bundleRoot, "questions", `${question.id}.md`), renderQuestionDocument(resolved), { mode: 0o600 });
+        fs.writeFileSync(path.join(bundleRoot, ...governed.concept.path.split("/")),
+          renderQuestionDocument(resolved), { mode: 0o600 });
         continue;
       }
       const answer = answerByCandidate.get(candidate.id);
@@ -347,13 +356,13 @@ export function finalizeDomainEnrichment(options: Readonly<{
     if (!validated.producerValidation?.passed) throw new Error(`enrichment proposal failed validation: ${validated.producerValidation?.failures.join("; ")}`);
     const diff = diffBundleProposal(baseSnapshot, staging);
     if (!diff.applicable) throw new Error("enrichment proposal contains an inapplicable change");
-    const inspection = attachHubInspectionContext(inspectHubProposal(diff.entries,
+    const ordinaryInspection = attachHubInspectionContext(inspectHubProposal(diff.entries,
       { baseRoot: baseSnapshot, proposedRoot: bundleRoot }), [], {
       partial: state.outcomes.some((item) => item.status === "unresolved"),
       limitations: [...state.outcomes.flatMap((item) => item.limitation ? [item.limitation] : []),
         ...(duplicateCandidates.size ? [`Strong provider identity matches multiple concepts for candidates ${[...duplicateCandidates].sort().join(", ")}; duplicate identity changes and automatic Question transitions were withheld for explicit merge review.`] : [])],
     });
-    const diffDigest = `sha256:${createHash("sha256").update(JSON.stringify(inspection.entries)).digest("hex")}`;
+    const diffDigest = `sha256:${createHash("sha256").update(JSON.stringify(ordinaryInspection.entries)).digest("hex")}`;
     const common = { mode: "enrichment" as const, subject: manifest.domainId, baseCommit: options.localHub.activeHead,
       domainId: manifest.domainId, sourceRepositoryIds: manifest.repositoryIds, manifestDigest: manifest.digest,
       evidenceDigest, schemaVersion: AGENTBASE_OKF_SCHEMA_CATALOG_VERSION,
@@ -363,6 +372,9 @@ export function finalizeDomainEnrichment(options: Readonly<{
       ? createHubProposal({ ...common, localHubId: options.localHub.localHubId })
       : createHubProposal({ ...common, hub: options.localHub.hub });
     writeHubProposalState(staging, proposal);
+    const inspection = bindHubProposalInspection(ordinaryInspection, {
+      baseRoot: baseSnapshot, proposedRoot: bundleRoot, proposal,
+    });
     copyBundleSnapshot(baseSnapshot, path.join(staging, "base"));
     fs.writeFileSync(path.join(staging, "inspection.json"), `${JSON.stringify(inspection, null, 2)}\n`, { mode: 0o600 });
     fs.writeFileSync(path.join(staging, "enrichment-summary.json"), `${JSON.stringify({

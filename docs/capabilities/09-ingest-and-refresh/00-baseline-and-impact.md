@@ -1,7 +1,8 @@
 # 09 — Baseline and impact checkpoint
 
 > Status: Single-repository and Batch Initial Ingest, AWS/SQS Enrichment,
-> freshness CI and bounded workspace Scan are implemented.
+> freshness CI and bounded workspace Scan are implemented. G5-C2 semantic
+> quality admission is deferred, inactive and not a current release gate.
 
 ## Current baseline
 
@@ -32,9 +33,13 @@ Public `agentbase-scan` is implemented under a bounded Published-only contract.
 Batch Refresh and mixed Init/Refresh remain outside the MVP; Batch Initial Ingest
 checkpoint/retry and the Hub CI freshness projection are implemented.
 
+The implemented gates prove discovery accounting, evidence and structure;
+explicit Inspect/Accept remains the current semantic review boundary. The
+deferred G5-C2 design may be reconsidered only after observed defects justify
+its additional state and orchestration cost.
+
 ## Result
 
-The implementation preserves deterministic graph, proposal, validation, Git
-publication and recovery boundaries. The remaining work continues as independent
-vertical slices; it does not reopen the single-repository flow as a general
-orchestration framework.
+The current target preserves deterministic graph, proposal, validation, Git
+publication and recovery boundaries without reopening the single-repository
+flow as a general orchestration framework.

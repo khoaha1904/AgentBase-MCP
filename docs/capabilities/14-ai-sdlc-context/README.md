@@ -1,7 +1,10 @@
 # 14 — Context for AI SDLC workflows
 
-> Status: Phase 1 Feature Discovery and Phase 2 Task Planning qualification
-> harnesses are implemented; no context skill or runtime behavior is added.
+> Status: The explicit Phase 1 context skill and Phase 2 planning and
+> implementation qualification harnesses are implemented. G3-C1 freshness
+> presentation is implemented and verified. New real-model A/B, onboarding and
+> longitudinal stewardship campaigns are deferred and are not current internal
+> enterprise release gates; retained harnesses and evidence remain available.
 
 Product Contract:
 [`AI SDLC context`](../../product/07-ai-sdlc-context.md)
@@ -11,9 +14,15 @@ Architecture Contract:
 
 ## Scope
 
+G8-C1 manual runtime use is owned by the shared `agentbase-query` instructions;
+`agentbase-context` is a compatibility entry. See
+[unified-use requirements](../10-query-routing/07-runtime-requirements.md#group-8-unified-use-delivery).
+The fixed qualification profiles below retain their original tool bounds and
+do not become a second installed read workflow.
+
 Phase 1 tests whether BA/PO/DM Discovery benefits from Published Hub without
-source. Phase 2 separately tests whether developer Task Planning benefits from
-bounded local Code Graph/source evidence.
+source. Phase 2 separately tests whether developer Task Planning and actual
+implementation benefit from bounded local Code Graph/source evidence.
 
 ## Contract map
 
@@ -31,6 +40,9 @@ bounded local Code Graph/source evidence.
   developer/source boundary, impact and non-goals.
   [`05-end-to-end-qualification.md`](05-end-to-end-qualification.md) — full
   Feature → US → Tasks comparison and its impact.
+- **Implementation outcome evidence:**
+  [`09-implementation-outcome-qualification.md`](09-implementation-outcome-qualification.md)
+  — editable source/graph pair, independent verification and patch replay.
 - **Visual-context decision and readiness:**
   [`07-useful-visual-context.md`](07-useful-visual-context.md) — the small
   phase-prioritized diagram portfolio, current data support and missing slices.
@@ -38,6 +50,11 @@ bounded local Code Graph/source evidence.
 Qualification pages define bounded scenarios and summarize results. Durable run
 artifacts live in AgentBase-Benchmark; tests and retained reports are Validation
 Evidence and do not override the `AB-CONTEXT-*` requirements.
+
+G3-C1 uses the shared
+[uniform freshness envelope](../08-live-references/08-freshness-envelope-requirements.md)
+from Published query results. Context presentation preserves that envelope; it
+does not create an independent freshness model or source-access path.
 
 The first qualification exposes only current Published search/read to the
 assisted arm and reuses the existing Crawler fixture. It does not prebuild

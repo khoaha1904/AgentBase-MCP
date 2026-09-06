@@ -1,6 +1,6 @@
 ---
 name: agentbase-scan
-description: Inventory repositories under one explicit workspace and suggest AgentBase Ingest or Refresh work. Use when the user wants to see which local repositories are absent, current, changed, drafted, or already in review.
+description: Explicit-only AgentBase workspace scan. Use only when the user names $agentbase-scan to inventory repositories and suggest Ingest or Refresh work; never for ordinary workspace or repository inspection.
 ---
 
 # AgentBase workspace scan

@@ -2,7 +2,8 @@
 
 > Status: Bounded Agent candidate gates, Capability 046 broad-discovery
 > coverage and Capability 051 content-redaction/explicit-limitation handling
-> are implemented.
+> are implemented. Group 5 dossier/standalone quality rules are implemented and
+> verified.
 
 ## Discovery lanes and Seed
 
@@ -16,8 +17,9 @@ priority or absence.
 
 Investigate submits one Inventory. Each important Seed group maps to exactly one
 outcome: `materialized`, `question` or `ignored`. A materialized group may point
-to several candidates; a candidate already declares concept/embedded and parent,
-so Inventory does not declare them again. Coverage groups are not split/merged
+to several candidates; a candidate already declares standalone-document or
+dossier/parent embedding and its parent, so Inventory does not declare them
+again. Coverage groups are not split/merged
 in the MVP; each item has one origin group, while multiple groups may contribute
 to one candidate. Successful guidance freezes a compact Inventory Receipt; raw
 graph/source does not enter the Receipt or Hub.
@@ -70,16 +72,21 @@ mapping exists, guidance still returns embedded with provider-neutral metadata a
 a limitation; `unsupported` applies only to standalone promotion/schema without
 sufficient evidence or catalog support.
 
-## Two qualification gates
+## Three standalone qualification gates
 
-Every candidate answers:
+Every standalone candidate answers:
 
 1. **Identity:** Can we point to this entity stably?
 2. **Query/link value:** Does a user have an independent reason to find it or
    link another concept to it?
+3. **Reading boundary:** Would a separate document carry independent ownership,
+   lifecycle, contract, Flow, stewardship or cross-document relationship value
+   instead of fragmenting its useful parent?
 
-With both gates, the candidate moves to schema selection. Missing a gate triggers
-bounded evidence gathering; if it remains unclear and matters, keep a Question,
+With all gates, the candidate moves to standalone schema selection. A stable and
+useful repository-local fact that lacks the third gate moves into the Repository
+dossier or another useful parent. Missing identity/value triggers bounded
+evidence gathering; if it remains unclear and matters, keep a Question,
 otherwise omit it from this run when there is no independent value. Omission is
 not stored as a suppression rule; a later Refresh can reassess it with new
 evidence.
@@ -102,7 +109,8 @@ describes the specific missing part instead of a falsely precise number.
 - A source-free signal cannot authorize an authoring schema.
 - One direct source may be sufficient; do not invent a minimum source count.
 - Future intent or vague docs are not presented as implemented state.
-- Do not create a candidate merely to make the Hub more detailed.
+- Do not create a standalone candidate merely to make the Hub more detailed or
+  to give a detected type its own file.
 - A route, entrypoint, runtime root, API spec, IaC/deploy group, explicit service
   boundary, channel or datastore cannot disappear before an outcome is recorded.
 - MCP fixes P0 classification. Distinct discovery groups may materialize the

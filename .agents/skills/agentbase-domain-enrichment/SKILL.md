@@ -1,13 +1,19 @@
 ---
 name: agentbase-domain-enrichment
-description: Enrich one Published AgentBase Hub Domain across selected repositories with exact read-only provider evidence and shared Question decisions. Use after related repositories are Published; not for repository Ingest/Refresh, Accept, publication, arbitrary AWS exploration, or cloud mutation.
+description: Explicit-only AgentBase Domain enrichment. Use only when the user names $agentbase-domain-enrichment or explicitly approves a scoped Enrichment handoff from AgentBase query or Update knowledge; never infer provider exploration, publication, or cloud mutation.
 ---
 
 # Enrich one Published Domain
 
 Produce one private manifest and, after reviewable evidence collection, one
 ordinary Enrichment proposal. Never log in for the user, read credentials,
-Accept, Publish, mutate cloud resources, scan an account, or infer completeness.
+Publish, mutate cloud resources, scan an account, or infer completeness.
+
+An approved Query or Update knowledge handoff authorizes preparation for the named gap only, not
+provider execution or Publish. Revalidate the Hub, Domain and repository/resource
+identities. Keep the account, regions and provider-session confirmations below.
+Changed or broader scope needs renewed agreement; cancellation preserves private
+work without further calls, publication or deletion.
 
 Use only `prepare_domain_enrichment`, `revise_domain_enrichment_membership`,
 `run_domain_enrichment`, `finalize_domain_enrichment_proposal` and
@@ -17,7 +23,11 @@ Use only `prepare_domain_enrichment`, `revise_domain_enrichment_membership`,
 
 1. Confirm one Published Domain, 1–32 Published Repository IDs, 1–64 exact
    SQS candidates, the expected 12-digit AWS account and 1–16 regions. Keep
-   resource identity evidence separate from interaction evidence.
+   resource identity evidence separate from interaction evidence. Keep
+   `domains/<slug>` as the Domain selector, but use the exact Published concept
+   identities returned by AgentBase for candidate endpoints; Profile concepts
+   may be under that capsule or `shared/`. Physical home is not Domain
+   membership.
 2. Call `prepare_domain_enrichment`. Review the immutable manifest, candidate
    membership, Question revisions and released provider profiles. This step
    performs no AWS call and changes no Hub knowledge.
@@ -38,8 +48,9 @@ Use only `prepare_domain_enrichment`, `revise_domain_enrichment_membership`,
    the exact current revision; never hide a retry loop.
 7. Call `finalize_domain_enrichment_proposal` with selected human decisions.
    Call `inspect_hub_okf_proposal` for the grouped proposal and stop before
-   Accept. Open Questions and limitations are valid output; do not force
-   completeness.
+   Publish. Verify that Profile paths/homes are preserved and review physical
+   home separately from semantic Domain impact. Open Questions and limitations
+   are valid output; do not force completeness.
 
 ## Provider boundary
 

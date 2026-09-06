@@ -59,7 +59,7 @@ test("[AB-MVP-016..021] revision rebuild preserves guidance, persistent defer an
       "type: Maintainer Guidance",
       "title: Defer policy owner question",
       "status: stable",
-      "generated: { by: 'human:khoa', at: '2026-08-12T01:00:00Z' }",
+      "generated: { by: 'human:maintainer', at: '2026-08-12T01:00:00Z' }",
       "agentbase:",
       "  directive:",
       "    id: AB-DIRECTIVE-policy-owner",

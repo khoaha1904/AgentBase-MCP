@@ -3,6 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 
 import {
+  AGENTBASE_OKF_PROFILE_CONCEPT_ID,
+  AGENTBASE_OKF_PROFILE_TYPE,
+  classifyAgentBaseHubProfile,
   getOkfConceptSchema,
   loadOkfBundle,
   parseQuestionDocument,
@@ -173,13 +176,24 @@ export async function validateHubCi(
   }
   errors.push(...indexTargetFailures(root, relativeFiles));
   errors.push(...bundle.warnings);
+  if (bundle.concepts.has(AGENTBASE_OKF_PROFILE_CONCEPT_ID)) {
+    const admission = classifyAgentBaseHubProfile(bundle);
+    if (admission.kind === "unsupported") {
+      errors.push(...admission.failures.map((failure) => `AgentBase OKF profile: ${failure}`));
+      if (admission.omittedFailureCount) {
+        errors.push(`AgentBase OKF profile: ${admission.omittedFailureCount} additional layout failure(s) omitted`);
+      }
+    }
+  }
   for (const concept of bundle.concepts.values()) {
     const generated = mapping(concept.frontmatter.generated);
     if (typeof generated?.by === "string" && generated.by.startsWith("agentbase/")) {
       errors.push(...validateAgentBaseDraft(concept));
     }
     if (getOkfConceptSchema(concept.type)) errors.push(...validateConceptAgainstSchema(concept));
-    else if (concept.type !== "Question") warnings.push(`${concept.path}: custom OKF type ${concept.type} uses base validation only`);
+    else if (concept.type !== "Question" && concept.type !== AGENTBASE_OKF_PROFILE_TYPE) {
+      warnings.push(`${concept.path}: custom OKF type ${concept.type} uses base validation only`);
+    }
     if (concept.type === "Question") {
       try { parseQuestionDocument(concept); }
       catch (error) { errors.push(error instanceof Error ? error.message : `${concept.path}: Question validation failed`); }

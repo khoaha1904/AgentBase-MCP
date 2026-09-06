@@ -1,6 +1,8 @@
 # 07.03 — Maintainer Guidance
 
-> Status: The exact subject-property transaction is implemented; broad scope is deferred.
+> Status: The exact subject-property transaction and Group 5 compact type-neutral
+> placement are implemented and verified; broad scope is
+> deferred.
 
 ## Decision summary
 
@@ -15,8 +17,10 @@ MVP it applies only to the exact Question subject/property.
   Guidance; MCP does not misrepresent a provider observation as a human answer.
 - A model suggestion does not become Guidance until a human confirms it.
 
-Guidance is Markdown knowledge under `guidance/` and passes through proposal,
-review, Accept and Publish like other concepts and Questions.
+Guidance is Markdown knowledge. Compact Profile 1.0 places an independently
+useful revision in the Question home's `knowledge/`; legacy Hubs retain
+`guidance/`. It passes through proposal, review, Accept and Publish like other
+concepts and Questions.
 
 ## Scope
 
@@ -45,9 +49,11 @@ A Guidance revision retains:
 - evidence/reason supplied by the maintainer, when available;
 - creation time and a link back to the Question.
 
-The existing `guidance/<question-id>-r<revision>.md` path is reused. The Question
-points to active Guidance; older revisions remain readable as history, but query
-does not present them as current guidance by default.
+Compact Profile 1.0 uses
+`<question-home>/knowledge/<question-id>-r<revision>.md`; a legacy-unprofiled Hub
+retains `guidance/<question-id>-r<revision>.md`. The Question points to the exact
+layout-qualified Guidance identity; older revisions remain readable as history,
+but query does not present them as current guidance by default.
 
 ## Conflict with new evidence
 

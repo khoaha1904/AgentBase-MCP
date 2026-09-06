@@ -7,15 +7,15 @@ import {
   readRepositoryIdentityRecord,
   readRepositoryObservedSource,
   resolveRepositoryIdentity,
-  readHubConcept,
-  searchHubConcepts,
-  type HubQueryMatch,
+  readHubConceptWithFreshness,
+  searchHubConceptsWithFreshness,
+  type FreshHubQueryMatch,
+  type FreshHubSearchResult,
   type HubConceptSummary,
   type HubQueryReader,
   type HubContinuityManifest,
   type HubContinuityOptions,
   type HubSearchOptions,
-  type HubSearchResult,
   type RepositoryIdentityHints,
   type RepositoryIdentityRecord,
   type RepositoryIdentityResolution,
@@ -30,6 +30,7 @@ export type HubQueryGit = (request: GitRequest) => Promise<GitOutput>;
 export type InitialIngestHubContext = Readonly<{
   commit: string;
   repository: RepositoryIdentityResolution;
+  repositorySubject?: HubConceptSummary;
   domains: readonly HubConceptSummary[];
 }>;
 
@@ -79,8 +80,8 @@ export function searchPublishedHub(
   query: string,
   options: HubSearchOptions = {},
   git: HubQueryGit = runGit,
-): Promise<HubSearchResult> {
-  return searchHubConcepts(publishedReader(localHub, git), query, options);
+): Promise<FreshHubSearchResult> {
+  return searchHubConceptsWithFreshness(publishedReader(localHub, git), query, options);
 }
 
 export async function inspectInitialIngestHubContext(
@@ -96,13 +97,23 @@ export async function inspectInitialIngestHubContext(
   const repositoryDocuments = await Promise.all(summaries.filter((item) => item.type === "Repository").map(async (item) => (
     parseConceptDocument(item.path, await currentReader.readMarkdown(item.path))
   )));
+  const repositoryIdsByPath = new Map(repositoryDocuments.flatMap((concept) => {
+    const record = readRepositoryIdentityRecord(concept);
+    return record ? [[concept.path, record.id] as const] : [];
+  }));
   const records = repositoryDocuments.flatMap((concept) => {
     const record = readRepositoryIdentityRecord(concept);
     return record ? [record] : [];
   });
+  const repository = resolveRepositoryIdentity(hints, records);
+  const repositorySubject = repository.kind === "existing"
+    ? summaries.find((summary) => summary.type === "Repository"
+      && repositoryIdsByPath.get(summary.path) === repository.repository.id)
+    : undefined;
   return {
     commit,
-    repository: resolveRepositoryIdentity(hints, records),
+    repository,
+    ...(repositorySubject ? { repositorySubject } : {}),
     domains: summaries.filter((item) => item.type === "Domain"),
   };
 }
@@ -137,8 +148,8 @@ export function readPublishedHubConcept(
   localHub: AdmittedLocalHubState,
   relativePath: string,
   git: HubQueryGit = runGit,
-): Promise<HubQueryMatch> {
-  return readHubConcept(publishedReader(localHub, git), relativePath);
+): Promise<FreshHubQueryMatch> {
+  return readHubConceptWithFreshness(publishedReader(localHub, git), relativePath);
 }
 
 export async function projectPublishedHubDomain(

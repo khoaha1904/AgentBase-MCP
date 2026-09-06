@@ -15,7 +15,7 @@ const profileFile = path.join(root, "vendor/codebase-memory/agentbase/parser-pro
 const patchFile = path.join(root, "vendor/codebase-memory/agentbase/patches/0001-parser-profile.patch");
 const inventoryFile = path.join(root, "vendor/codebase-memory/inventory.sha256");
 const upstreamDirectory = path.join(root, "vendor/codebase-memory/upstream");
-const acceptedSurfaceFile = path.join(root, "fixtures/codebase-memory-v0.10.8/mcp-surface.json");
+const acceptedSurfaceFile = path.join(root, "src/providers/codebase-memory/contracts/v0.10.8/mcp-surface.json");
 const selectedToolNames = [
   "index_repository", "search_graph", "trace_path", "get_code_snippet",
   "get_architecture", "search_code", "index_status", "check_index_coverage",

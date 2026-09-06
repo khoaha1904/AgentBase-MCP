@@ -2,6 +2,8 @@
 
 > Status: Implemented. Prior eight-repository qualification is historical; the
 > generated snapshot is disposable validation output rather than authority.
+> G4-C4 Profile Domain projection and G5-C1 compact projection are implemented
+> and verified.
 
 Product Contract:
 [Visualization](../../product/06-visualization.md).
@@ -25,5 +27,4 @@ publication.
   [Runtime requirements](04-runtime-requirements.md).
 
 The baseline page records reusable implementation evidence at the time of the
-capability review. It does not override the `AB-VIS-*` requirements and is not a
-global Implementation Contract.
+capability review. It does not override the `AB-VIS-*` requirements.

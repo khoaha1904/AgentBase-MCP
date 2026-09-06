@@ -1,9 +1,0 @@
-{
-  "content": [
-    {
-      "type": "text",
-      "text": "project: agentbase-typescript-fixture\ntotal_nodes: 55\ntotal_edges: 76\nnode_labels: 8  (cols: label count)\n  Variable 15\n  File 13\n  Module 13\n  Function 6\n  Folder 4\n  Type 2\n  Branch 1\n  Project 1\nedge_types: 7  (cols: type count)\n  DEFINES 36\n  IMPORTS 14\n  CONTAINS_FILE 13\n  CALLS 5\n  USAGE 4\n  CONTAINS_FOLDER 3\n  HAS_BRANCH 1\nlanguages: 1  (cols: language files)\n  TypeScript 12\npackages: 3  (cols: name nodes fan_in fan_out)\n  workspace 3 0 0\n  catalog 3 0 0\n  app 2 0 0\nentry_points: 6  (cols: qn file)\n  agentbase-typescript-fixture.src.app.inspect.inspectWorkspace src/app/inspect.ts\n  agentbase-typescript-fixture.src.app.report.renderInspection src/app/report.ts\n  agentbase-typescript-fixture.src.catalog.format.formatEntry src/catalog/format.ts\n  agentbase-typescript-fixture.src.catalog.repository.listModules src/catalog/repository.ts\n  agentbase-typescript-fixture.src.workspace.paths.resolveWorkspace src/workspace/paths.ts\n  agentbase-typescript-fixture.src.workspace.policy.allowWorkspace src/workspace/policy.ts\nboundaries: 2  (cols: from to calls)\n  app workspace 1\n  app catalog 1\nlayers: 3  (cols: name layer reason)\n  app entry \"has entry points, only outbound calls\"\n  catalog leaf \"only inbound calls, no outbound\"\n  workspace leaf \"only inbound calls, no outbound\""
-    }
-  ],
-  "isError": false
-}

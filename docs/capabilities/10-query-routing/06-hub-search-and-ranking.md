@@ -10,9 +10,6 @@ then `read_hub_okf_concept` hydrates the full document. OKF determines corpus
 shape; MCP determines the tool contract; the full-text library determines lexical
 relevance. AgentBase does not create a new query language or scoring algorithm.
 
-Research authority:
-[capability 049 Phase 0](../../../specs/049-hub-query-quality/research.md).
-
 ## Upstream contracts reused
 
 - OKF `description` is the official one-line summary for `index.md`, snippets and
@@ -141,6 +138,13 @@ is never rewritten by query. Scoped eligibility carries one explicit reason:
 Structural Repository association follows only accepted `part-of`,
 `implemented-in` and `declared-by` direction toward a Repository. Boundary
 expansion stops after one endpoint and never imports its Domain neighborhood.
+
+For compact Profile 1.0, external selector and actual Domain identity are both
+`domains/<slug>`, backed by the capsule `index.md`. Capsule home also makes a
+concept eligible but does not make it a canonical member. Additive scope detail keeps `home`,
+`participant` and `boundary` separately visible as defined by
+[10.08](08-profile-domain-projection-requirements.md); legacy roles above remain
+compatible.
 
 Portable links, backlinks and accepted direct relations enrich the selected
 result after lexical retrieval. They do not recursively expand the candidate

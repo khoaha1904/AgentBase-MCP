@@ -80,7 +80,7 @@ The response presents a short answer first, then detail/provenance:
 ⚠ TTL currently has multiple sources:
 - 7 days — configuration snapshot, repository commit abc…, observed 5 days ago
 - 30 days — documentation snapshot, repository commit def…, observed 12 days ago
-- Maintainer Guidance: 7 days — human:khoa, subject/property scope
+- Maintainer Guidance: 7 days — human:maintainer, subject/property scope
 Question: Needs Review — new evidence conflicts with Guidance
 ```
 
