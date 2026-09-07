@@ -13,6 +13,30 @@ AgentBase-MCP is a TypeScript Node.js modular monolith. Every runtime file has
 one capability owner, every capability exposes a small public `index.ts`, and
 tests stay beside their behavior owner.
 
+## Coverage expansion ownership
+
+The bounded [Product expansion](../product/01-repository-understanding.md#coverage-expansion)
+retains these existing owners: `app/codebase-memory-mcp` owns deterministic
+census selection, input admission and per-session budget evidence;
+`core/knowledge/schemas` owns source-format detection and shared AWS semantic
+mapping; `providers/codebase-memory` with `vendor/codebase-memory/agentbase`
+and `scripts/upstream` owns the C#/Kotlin parser profile and qualified artifacts.
+Discovery selection, source-format mappings and parser admission are implemented.
+Template declaration census lives in `app/codebase-memory-mcp/template-discovery.ts`;
+it does not evaluate infrastructure. `index_repository` consumes its census controls in
+the gateway without forwarding them to the provider; expanded census requires
+the current standard Seed and reuses captured provider diagnostics. Seed and
+Receipt retain optional validated census accounting for prior-Receipt readability.
+Public workflow adapters obtain expansion approval and explain limitations;
+they do not choose arbitrary runtime limits or synthesize provider evidence.
+
+SAM and Terraform reuse provider-neutral roles without a generic plugin system,
+new cloud execution adapter or new Hub schema. Exact same-source references and
+declaration evidence remain distinct from runtime interaction and deployed
+state. Existing publication and recovery owners are unchanged.
+
+## Current source layout
+
 ```text
 src/cli.ts                         composition root and `abs` CLI dispatcher
 src/core/

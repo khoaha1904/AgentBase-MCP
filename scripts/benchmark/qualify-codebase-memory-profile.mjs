@@ -11,6 +11,8 @@ const binary = process.env.AGENTBASE_CBM_BINARY
   ?? path.join(root, "build/providers/codebase-memory/linux-x64/codebase-memory-mcp");
 const repository = path.join(root, "scripts/benchmark/testdata/codebase-memory-profile-mixed");
 const supportedFiles = [
+  "Supported.cs",
+  "Supported.kt",
   "supported.sh",
   "Dockerfile",
   "supported.go",
@@ -49,6 +51,18 @@ try {
   const coverage = await client.callTool({ name: "check_index_coverage", arguments: {
     project, paths: [...supportedFiles, unsupportedFile],
   } }, { timeout: 60_000 });
+  const languageSymbols = {};
+  const languageCalls = {};
+  for (const [language, symbol, file, caller] of [["csharp", "Greeting", "Supported.cs", "Run"], ["kotlin", "kotlinGreeting", "Supported.kt", "kotlinRun"]]) {
+    const result = await client.callTool({ name: "search_graph", arguments: {
+      project, name_pattern: symbol, limit: 10, format: "json",
+    } }, { timeout: 60_000 });
+    languageSymbols[language] = result.isError !== true && textOf(result).includes(symbol) && textOf(result).includes(file);
+    const trace = await client.callTool({ name: "trace_path", arguments: {
+      project, function_name: caller, direction: "outbound", depth: 1, limit: 10, mode: "calls", format: "json",
+    } }, { timeout: 60_000 });
+    languageCalls[language] = trace.isError !== true && textOf(trace).includes(symbol);
+  }
   const indexText = textOf(indexed);
   const searchText = textOf(searched);
   const coverageText = textOf(coverage);
@@ -57,11 +71,15 @@ try {
   const skippedFiles = indexed.structuredContent?.skipped?.files ?? [];
   const result = {
     schemaVersion: 1,
-    profile: "agentbase-mvp-12-v1",
+    profile: "agentbase-mvp-14-v1",
     supportedFiles,
     checks: {
       indexSucceeded: indexed.isError !== true,
       supportedSymbolFound: searchText.includes("supportedGreeting"),
+      csharpSymbolFound: languageSymbols.csharp,
+      kotlinSymbolFound: languageSymbols.kotlin,
+      csharpCallFound: languageCalls.csharp,
+      kotlinCallFound: languageCalls.kotlin,
       allSupportedFilesAccepted: supportedFiles.every((file) => {
         const entry = coverageByPath.get(file);
         return entry?.status === "no_recorded_issue"

@@ -9,7 +9,7 @@ const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 const maximumFileBytes = 100 * 1024 * 1024;
 const selectedGrammars = new Set([
   "bash", "dockerfile", "go", "hcl", "java", "javascript", "json",
-  "markdown", "python", "tsx", "typescript", "yaml",
+  "markdown", "python", "tsx", "typescript", "yaml", "c_sharp", "kotlin",
 ]);
 
 const upstreams = Object.freeze({
@@ -26,7 +26,7 @@ const upstreams = Object.freeze({
       const grammar = /^internal\/cbm\/vendored\/grammars\/([^/]+)\//.exec(relative);
       return !grammar || selectedGrammars.has(grammar[1]);
     },
-    selection: "Core runtime and the AgentBase 12-language grammar profile; Graph UI frontend excluded.",
+    selection: "Core runtime and the AgentBase 14-language grammar profile; Graph UI frontend excluded.",
   }),
   "diagram-design": Object.freeze({
     commit: "648c2a597839301e06df1e7434a08bde9f42eed3",

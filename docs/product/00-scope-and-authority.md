@@ -268,7 +268,8 @@ and authorization; this does not change Hub publication rules.
 AgentBase catalog 7.0 supplies a small provider-neutral authoring core.
 Versioned Terraform-family detection and AWS mapping profiles attach technology
 metadata without deciding that every cloud resource deserves a concept.
-Terraform and Terragrunt are supported source tools; SAM/CloudFormation is not.
+Terraform/Terragrunt and bounded SAM/CloudFormation are supported source tools;
+exact scope and unresolved-expression limits live in schema-selection contracts.
 Promotion is evidence-driven and sparse: internal resources remain searchable
 inside a useful parent, while independent runtime, contract or operational
 boundaries may become concepts. Unknown valid OKF types remain readable and
@@ -402,8 +403,9 @@ baseline after preview/confirmation.
   or automatic semantic/vector fallback.
 - Hub access reads all Published knowledge; there is no Domain-, concept- or
   field-level ACL.
-- Structured infrastructure evidence currently supports Terraform/Terragrunt;
-  SAM/CloudFormation and additional provider profiles are deferred.
+- Structured infrastructure evidence supports Terraform/Terragrunt and bounded
+  SAM/CloudFormation. General template evaluation and additional provider
+  profiles remain deferred.
 - Ordinary Hub query is Published-only. Private proposals exist for review.
 - The Published Hub graph and every search index are rebuildable read-only
   projections, not additional sources of truth.

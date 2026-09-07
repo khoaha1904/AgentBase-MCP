@@ -122,8 +122,8 @@ export const OKF_SCHEMA_TOOLS = [
         resource_observations: {
           type: "array", maxItems: 64, items: { type: "object", properties: {
             id: { type: "string" }, candidate_id: { type: "string" }, source_tool: {
-              type: "string", enum: ["terraform", "terragrunt"],
-              description: "Must match the exact source: Terraform uses .tf/.tf.json; Terragrunt uses terragrunt.hcl. Provider resources reached through Terragrunt cite the referenced Terraform file.",
+              type: "string", enum: ["terraform", "terragrunt", "sam", "cloudformation"],
+              description: "Match exact source: Terraform .tf/.tf.json; Terragrunt terragrunt.hcl module orchestration. SAM AWS::Serverless::* and native CloudFormation AWS::* cite YAML/JSON/.template and retain Type/logical ID. Native types inside SAM use cloudformation. No deployed identity is inferred.",
             },
             resource_type: { type: "string" }, address: { type: "string" }, source: { type: "object", properties: {
               path: { type: "string" }, start_line: { type: "integer", minimum: 1 }, end_line: { type: "integer", minimum: 1 },
@@ -230,7 +230,7 @@ function guidanceRequest(args: Readonly<Record<string, unknown>>): OkfAuthoringG
     }),
     resourceObservations: array(args.resource_observations, "resource_observations").map((value) => {
       const item = object(value, "resource observation", ["id", "candidate_id", "source_tool", "resource_type", "address", "source"]);
-      return { id: item.id as string, candidateId: item.candidate_id as string, sourceTool: item.source_tool as "terraform" | "terragrunt",
+      return { id: item.id as string, candidateId: item.candidate_id as string, sourceTool: item.source_tool as "terraform" | "terragrunt" | "sam" | "cloudformation",
         resourceType: item.resource_type as string, address: item.address as string, source: source(item.source) };
     }),
   };

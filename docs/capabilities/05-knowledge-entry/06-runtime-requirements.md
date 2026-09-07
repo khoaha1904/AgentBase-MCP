@@ -300,7 +300,7 @@ follow its linked owner rather than loading unrelated sections.
   Caller-supplied provider, product, exact schema assertions and unknown fields
   are rejected; optional `suggested_type` is limited to a released
   catalog-7 role and exposes evidence-bound agent intent only.
-- **AB-SCHEMA-032** — Terraform-family Detector v1 and AWS Profile v2 are independently
+- **AB-SCHEMA-032** — Terraform-family and CloudFormation-family Detectors v1 and AWS Profile v2.1 are independently
   versioned data contracts, not cloud SDKs or new concept taxonomies.
 - **AB-SCHEMA-033** — AWS EC2/VM, Lambda, SQS, SNS, EventBridge, S3, RDS and
   DynamoDB observations map deterministically to technology metadata. A
@@ -344,8 +344,8 @@ follow its linked owner rather than loading unrelated sections.
   `terragrunt` and its source path must agree: Terraform uses `.tf`/`.tf.json`,
   Terragrunt uses `terragrunt.hcl`. Terragrunt directly evidences module
   orchestration; exact provider resources cite the referenced Terraform file.
-  SAM/CloudFormation/YAML is unsupported and cannot be relabeled as either
-  source tool.
+  SAM/native CloudFormation uses its own detector under AB-SCHEMA-062 and
+  cannot be relabeled as either Terraform-family source tool.
 - **AB-SCHEMA-042** — Standalone Interface/Resource intent requires a compatible
   promotion basis plus exact candidate-owned semantic observations supporting
   the candidate boundary. Declaration evidence, caller prose and `suggested_type`
@@ -463,10 +463,50 @@ follow its linked owner rather than loading unrelated sections.
   provider output is partial, malformed or redacted. A high-value signal is
   materialized, represented as a Question, or recorded with an explicit ignored
   reason; it is never silently dropped to make a proposal appear complete.
+- **AB-INGEST-022** — Initial Ingest census selects at most 256 (`standard`)
+  or 1,024 (`expanded`) safe files after a bounded 4,096-entry enumeration.
+  Priority goes to manifests, deployment/operations files and graph-evidenced
+  entrypoints; reserve one quarter of the file budget for ordinary source when
+  available, then fill unused capacity. Selection is deterministic. The 64 KiB
+  per-file cap, denied paths, symlink exclusion and graph coverage limits remain
+  unchanged. Report mode, budget, selected/eligible counts, known omitted
+  priority files and entry truncation separately; these are census, not whole
+  graph, bounds.
+- **AB-INGEST-023** — Existing `index_repository` admits `discovery_mode` with
+  default `standard`. `expanded` requires `discovery_confirmation` containing
+  the current standard `seed_id`, `user_confirmed: true` and a bounded concrete
+  `reason` for missing important coverage. It is admitted only on the same
+  armed Initial Ingest root/provider session with file omissions, before its
+  Receipt is frozen, once per armed run. Standard rejects confirmation fields.
+  Invalid/stale requests fail before provider calls. Expansion reuses captured
+  graph diagnostics and reruns only census; it replaces the Seed and invalidates
+  old Inventory input. Record budget evidence in the Seed and Receipt. The
+  confirmation is the calling agent's attestation, not independent proof of
+  human consent; installed guidance must obtain that consent. It grants no
+  source expansion, Refresh, cloud access or Publish permission.
 - **AB-SCHEMA-043** — Exact supported Terraform/Terragrunt observations are
   high-priority when readily available. Their omission is a coverage diagnostic,
   not an invalidity condition for an otherwise truthful partial proposal.
   Unsupported IaC must not be relabeled as supported structured evidence.
+- **AB-SCHEMA-061** — AWS Profile 2.1 admits the bounded Terraform ECS and API
+  Gateway mappings listed in section 04.03 and Lambda event-source mappings.
+  Mapping supplies metadata, not promotion or relations. Exact Function
+  selection requires `runtime-function`, not merely product `lambda`; trigger
+  declarations stay distinct. Verify embedded and standalone candidates and
+  regression coverage for existing Lambda/resource behavior.
+- **AB-SCHEMA-062** — SAM/native CloudFormation resource observations retain
+  their original Type and logical ID with exact template source attribution.
+  Source-format and AWS technology mappings are separate; unsupported Types
+  remain visible. SAM Function and native Lambda Function share runtime-function
+  semantics, never event-source-mapping semantics. No classifier evaluates a
+  template or establishes deployed identity. Legacy Receipt mapping versions
+  are not silently rewritten.
+  A candidate mixing detector families returns ambiguous without claiming one
+  exact detector profile. The bounded census preserves source lines, scalar
+  Function Globals with local override, supported API/SQS/schedule events and
+  direct same-template Ref/GetAtt as defined in section 04.04. Unsupported or
+  malformed declarations, conditions and unresolved expressions remain visible
+  limitations; no template execution or physical identity resolution occurs.
 - **AB-SCHEMA-044** — Usually keep one runtime's internal trigger, state and
   delivery sequence embedded. Create a standalone Flow when it adds independent
   query or navigation value across evidenced concept identities. Endpoint count

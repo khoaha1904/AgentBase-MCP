@@ -47,6 +47,18 @@ Do not create a separate decision register; current decisions already belong to
 their high/low-level owners, and another registry would become a dead-spec
 duplicate.
 
+## Parser profile
+
+The working source uses `agentbase-mvp-14-v1`: the existing twelve entries plus
+C# and Kotlin. Parser preparation and artifact admission bind this identity to
+the pinned source inventory. Discovery admits `.cs`, `.kt` and `.kts`.
+`scripts/benchmark/qualify-codebase-memory-profile.mjs` checks mixed-repository
+admission, symbols, C#/Kotlin calls and visible unsupported-language diagnostics.
+This deterministic fixture is not a model-quality benchmark or framework
+completeness claim. Qualified-platform gates remain: adding parsers does not
+qualify macOS or authorize automatic source re-ingest. Tagged 0.1.0 artifacts
+retain their original profile; new source requires a matching rebuilt artifact.
+
 ## Current MVP boundary
 
 - Catalog 7 with provider-neutral roles; the accepted compact target uses rich
@@ -55,7 +67,8 @@ duplicate.
 - Public bounded workspace Scan routes user-selected repositories without graph
   prebuild or mixed-batch machinery.
 - Bounded read-only AWS/SQS Domain Enrichment; no provider-wide scan or auto-publish.
-- Terraform/Terragrunt structured evidence; no SAM/CloudFormation support.
+- Terraform/Terragrunt and bounded SAM/CloudFormation structured evidence;
+  no template execution or deployed-state guarantee.
 - Sol Init and Terra Refresh are benchmark policy only.
 - Rich PR summary, independent Init PR, same-Repository stack and synchronization
   exist; MCP never merges.

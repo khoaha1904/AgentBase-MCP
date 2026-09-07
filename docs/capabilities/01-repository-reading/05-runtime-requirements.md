@@ -10,7 +10,7 @@ graph remains detailed, private and disposable.
 ## Owned provider and evidence
 
 - **AB-MVP-001, AB-GRAPH-005, AB-MCP-002** — AgentBase owns the attributed
-  Codebase Memory `v0.10.8` source snapshot and one explicit 12-language parser
+  Codebase Memory `v0.10.8` source snapshot and one explicit 14-entry parser
   profile. Runtime resolves only the current-platform artifact prepared from
   those bytes and never accepts a user path or searches `PATH`.
 - **AB-MVP-002** — Admission binds upstream commit, source/profile digests,

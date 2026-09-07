@@ -5,6 +5,10 @@ runtime and its explanation cannot silently diverge.
 
 ## Authority and artifacts
 
+- [`vi/practical-use.md`](vi/practical-use.md) explains the current language and
+  infrastructure coverage and illustrates real workflow boundaries with fictional
+  two-column user/agent conversations. It is a companion, not an extra slide or
+  benchmark transcript; no HTML rebuild is needed when only this guide changes.
 - [`vi/PLAN.md`](vi/PLAN.md) is the narrative contract: audience, outcome,
   sequence, depth and factual boundaries.
 - [`vi/slides/`](vi/slides/) is the canonical Vietnamese content source.

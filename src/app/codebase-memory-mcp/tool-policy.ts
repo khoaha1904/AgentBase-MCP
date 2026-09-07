@@ -4,6 +4,8 @@ import path from "node:path";
 export type ControlledIndex = Readonly<{
   repositoryRoot: string;
   arguments: Readonly<Record<string, unknown>>;
+  discoveryMode: "standard" | "expanded";
+  discoveryConfirmation?: unknown;
 }>;
 
 export class McpPolicyError extends Error {
@@ -30,6 +32,12 @@ function selectedGitRoot(candidate: string): string {
 }
 
 export function controlledIndex(argumentsValue: Readonly<Record<string, unknown>>): ControlledIndex {
+  const { discovery_mode: discoveryMode = "standard", discovery_confirmation: discoveryConfirmation,
+    ...providerArguments } = argumentsValue;
+  if (discoveryMode !== "standard" && discoveryMode !== "expanded") throw new McpPolicyError("invalid discovery_mode");
+  if (discoveryMode === "standard" && discoveryConfirmation !== undefined) {
+    throw new McpPolicyError("discovery_confirmation is only allowed for expanded discovery");
+  }
   const candidate = argumentsValue.repo_path;
   if (typeof candidate !== "string" || !path.isAbsolute(candidate)) {
     throw new McpPolicyError("repo_path must be an absolute repository directory");
@@ -54,6 +62,8 @@ export function controlledIndex(argumentsValue: Readonly<Record<string, unknown>
   }
   return {
     repositoryRoot,
-    arguments: { ...argumentsValue, repo_path: repositoryRoot, persistence: false },
+    discoveryMode,
+    ...(discoveryConfirmation !== undefined ? { discoveryConfirmation } : {}),
+    arguments: { ...providerArguments, repo_path: repositoryRoot, persistence: false },
   };
 }

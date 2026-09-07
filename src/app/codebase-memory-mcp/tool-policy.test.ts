@@ -12,6 +12,21 @@ function repository(prefix: string): string {
   return root;
 }
 
+test("[AB-INGEST-023] census controls are validated and never forwarded to the provider", (t) => {
+  const root = repository("agentbase-index-budget-");
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const standard = controlledIndex({ repo_path: root });
+  assert.equal(standard.discoveryMode, "standard");
+  assert.equal("discovery_mode" in standard.arguments, false);
+  const confirmation = { seed_id: "discovery-seed-" + "a".repeat(24), user_confirmed: true, reason: "Missing deployment" };
+  const expanded = controlledIndex({ repo_path: root, discovery_mode: "expanded", discovery_confirmation: confirmation });
+  assert.equal(expanded.discoveryMode, "expanded");
+  assert.deepEqual(expanded.discoveryConfirmation, confirmation);
+  assert.equal("discovery_confirmation" in expanded.arguments, false);
+  assert.throws(() => controlledIndex({ repo_path: root, discovery_mode: "unlimited" }), /discovery_mode/);
+  assert.throws(() => controlledIndex({ repo_path: root, discovery_confirmation: confirmation }), /only allowed/);
+});
+
 test("[AB-SOURCE-RESOLVE-001..003] resolves direct and nested selections to the nearest Git root", () => {
   const outer = repository("agentbase-source-resolver-");
   const nestedPath = path.join(outer, "services", "worker");

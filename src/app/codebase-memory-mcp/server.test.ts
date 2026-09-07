@@ -86,7 +86,7 @@ test("[AB-MCP-001][AB-MCP-003][AB-MCP-005][AB-MCP-008][AB-MCP-010][AB-MCP-016][A
     assert.equal(toolNames.some((name) => retiredToolNames.includes(name)), false);
     assert.doesNotMatch(JSON.stringify(tools.tools), new RegExp(retiredToolNames.join("|")));
     const indexTool = tools.tools.find((tool) => tool.name === "index_repository");
-    assert.deepEqual(Object.keys(indexTool?.inputSchema.properties ?? {}).sort(), ["mode", "name", "repo_path"]);
+    assert.deepEqual(Object.keys(indexTool?.inputSchema.properties ?? {}).sort(), ["discovery_confirmation", "discovery_mode", "mode", "name", "repo_path"]);
     assert.doesNotMatch(JSON.stringify(indexTool), /cross-repo-intelligence|target_projects|persistence/);
     const searchCodeTool = tools.tools.find((tool) => tool.name === "search_code");
     assert.equal("debug" in (searchCodeTool?.inputSchema.properties ?? {}), false);

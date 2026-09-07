@@ -21,6 +21,28 @@ completeness. No mandatory semantic reviewer is part of this horizon; the
 required-review failure bullet in the baseline below is deferred, not an
 active admission requirement.
 
+## Coverage expansion
+
+The working source implements the following owner-approved bounded follow-up.
+This does not change the already tagged 0.1.0 release:
+
+| Scope | Approved outcome | Delivery boundary |
+|---|---|---|
+| Discovery selection | Prioritize manifests, deployment evidence and evidenced entrypoints while reserving room for ordinary source. Default `standard`; offer `expanded` only for a concrete important coverage gap and after explicit user approval. | Two bounded modes, not arbitrary budgets, AI ranking or automatic escalation. Reuse the graph. Census limits are not whole-graph limits. |
+| SAM/basic CloudFormation | Source-backed functions, APIs, common API/SQS/schedule triggers, supported Globals inheritance and direct same-template references. | No build/deploy, macro expansion, nested-stack download, cross-stack resolution or live cloud verification. Unresolved expressions remain limitations. |
+| Backend languages | Enable and qualify C# and Kotlin in addition to the existing parser profile. | No other new languages; parser admission does not prove complete .NET/Spring/framework understanding or macOS qualification. |
+| Terraform mappings | Add bounded ECS service/task-definition, API Gateway and Lambda event-source-mapping support, with shared semantic roles across IaC formats. | No resource-per-concept rule, broad AWS catalog, Azure/GCP expansion or relation inference from classification alone. |
+
+Existing Published
+knowledge, public skill names, proposal approval and publication boundaries stay
+unchanged. No automatic re-ingest or reclassification follows an upgrade.
+
+Detailed scope belongs to [Discovery](../capabilities/03-concept-discovery/01-candidate-discovery.md),
+[Schema selection](../capabilities/04-schema-selection/README.md) and
+[Version scope](../capabilities/12-version-scope/README.md).
+CDK/Pulumi/Helm execution, broader cloud enrichment and automatic AI review are
+deferred to [company-environment evaluation](../capabilities/12-version-scope/07-deferred-capabilities.md#company-environment-evaluation-only).
+
 ## Outcome
 
 AgentBase turns a repository into a selective, evidence-backed system overview.

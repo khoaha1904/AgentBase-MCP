@@ -54,6 +54,32 @@ reference into the Receipt. The Agent does not create a `repository://` URI or
 revision. If subject/evidence cannot be bound, retain a limitation and do not
 create an orphan Question.
 
+## Selection and census budgets
+
+Follow the [Product scope](../../product/01-repository-understanding.md#coverage-expansion).
+Discovery uses deterministic priority selection after bounded enumeration,
+reserving one quarter of the budget for ordinary source. Do not
+let file priority imply a service boundary or change evidence admission.
+
+Initial Ingest exposes only `standard` and `expanded` census modes through
+`index_repository`. Standard retains the 256-file ceiling; expanded has a
+1,024-file ceiling. Expansion needs
+a concrete important coverage gap and explicit owner confirmation, not merely a
+large repository or a low concept count. Preserve the exact source scope, reuse
+the graph, disclose the selected budget and remaining limitations, and never
+run an automatic escalating loop. Entry traversal, individual file size and
+coverage paging limits remain separately visible; a larger file budget must
+not be described as resolving those other limits.
+
+The exact input/confirmation boundary and Seed/Receipt accounting are owned by
+[`AB-INGEST-022..023`](../05-knowledge-entry/06-runtime-requirements.md).
+An expansion replaces the standard Seed before Receipt creation and uses the
+captured graph diagnostics without provider calls. Reject stale/missing consent,
+another repository, repeated expansion and frozen Receipts. An agent attests
+user confirmation; the runtime cannot independently authenticate chat consent.
+Refresh Coverage remains a separate existing investigation, not this census.
+No new public skill or ranking AI is introduced.
+
 ## Candidate sources
 
 The Agent creates candidates from read evidence, not guesses from names:

@@ -2,10 +2,16 @@ import type { OkfConceptSchema } from "./definition.ts";
 import { AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, getOkfConceptSchema, selectOkfConceptSchemas } from "./catalog.ts";
 import { AWS_PROVIDER_PROFILE, mapAwsResource } from "./profiles/aws.ts";
 import { TERRAFORM_FAMILY_DETECTOR_PROFILE, detectTerraformResource } from "./profiles/terraform.ts";
+import { CLOUDFORMATION_DETECTOR_PROFILE, detectCloudFormationResource } from "./profiles/cloudformation.ts";
 import type { DetectedResource, ProviderResourceMapping } from "./profiles/definition.ts";
 
 export type ObservationSource = Readonly<{ path: string; startLine: number; endLine: number }>;
-export type ResourceSourceTool = "terraform" | "terragrunt";
+export type ResourceSourceTool = "terraform" | "terragrunt" | "sam" | "cloudformation";
+
+function detectResource(observation: ResourceObservation): DetectedResource {
+  return observation.sourceTool === "sam" || observation.sourceTool === "cloudformation"
+    ? detectCloudFormationResource(observation) : detectTerraformResource(observation);
+}
 export type PromotionBasis = "shared-contract" | "cross-boundary" | "ownership" | "lifecycle"
   | "failure" | "security" | "operational";
 export type PromotionEvidence = Readonly<{ basis: PromotionBasis; evidenceIds: readonly string[] }>;
@@ -175,12 +181,12 @@ function validateRequest(request: OkfAuthoringGuidanceRequest): void {
   for (const observation of request.resourceObservations) {
     requireExactKeys(observation, ["id", "candidateId", "sourceTool", "resourceType", "address", "source"], "resource observation");
     requireExactKeys(observation.source, ["path", "startLine", "endLine"], "observation source");
-    if (!(["terraform", "terragrunt"] as const).includes(observation.sourceTool)) {
+    if (!(["terraform", "terragrunt", "sam", "cloudformation"] as const).includes(observation.sourceTool)) {
       throw new Error("resource observation source tool is unsupported");
     }
     requireText(observation.resourceType, "resource type", 256);
     requireText(observation.address, "resource address", 512);
-    detectTerraformResource(observation);
+    detectResource(observation);
   }
   for (const candidate of candidates.values()) {
     if (candidate.evidenceIds.some((id) => !observationIds.has(id))) throw new Error(`candidate ${candidate.id} cites unknown evidence`);
@@ -221,7 +227,7 @@ export function getOkfAuthoringGuidance(request: OkfAuthoringGuidanceRequest): O
     const semantic = request.semanticObservations.filter((item) => item.candidateId === candidate.id);
     const resources = request.resourceObservations.filter((item) => item.candidateId === candidate.id);
     const detections: readonly TechnologyDetection[] = resources.map((observation): TechnologyDetection => {
-      const result = detectTerraformResource(observation);
+      const result = detectResource(observation);
       const mapping = result.status === "exact" && result.provider === "aws" ? mapAwsResource(result.resourceType) : undefined;
       return mapping ? { observation, result, mapping } : { observation, result };
     });
@@ -229,19 +235,22 @@ export function getOkfAuthoringGuidance(request: OkfAuthoringGuidanceRequest): O
     const mapped = detections.filter((item) => item.mapping);
     const distinctTechnologies = new Set(mapped.map((item) => `${item.mapping!.product}\0${item.mapping!.technologyKind}`));
     const technology = technologyFrom(mapped[0] ?? detections[0]);
+    const detectorProfiles = new Set(resources.map((item) => item.sourceTool === "sam" || item.sourceTool === "cloudformation"
+      ? CLOUDFORMATION_DETECTOR_PROFILE : TERRAFORM_FAMILY_DETECTOR_PROFILE));
     const base = {
       candidateId: candidate.id,
       disposition: candidate.disposition,
       matchedEvidence: candidate.evidenceIds,
       missingEvidence: [],
       technology,
-      ...(resources.length ? { detectorProfile: TERRAFORM_FAMILY_DETECTOR_PROFILE } : {}),
+      ...(detectorProfiles.size === 1 ? { detectorProfile: [...detectorProfiles][0]! } : {}),
       ...(mapped.length ? { providerProfile: AWS_PROVIDER_PROFILE } : {}),
     } as const;
-    if (detections.some((item) => item.result.status === "ambiguous") || distinctTechnologies.size > 1) return {
+    if (detectorProfiles.size > 1 || detections.some((item) => item.result.status === "ambiguous") || distinctTechnologies.size > 1) return {
       ...base,
       status: "ambiguous",
-      limitations: [...limitations, ...(distinctTechnologies.size > 1 ? ["evidence identifies multiple technology resources"] : [])],
+      limitations: [...limitations, ...(distinctTechnologies.size > 1 ? ["evidence identifies multiple technology resources"] : []),
+        ...(detectorProfiles.size > 1 ? ["candidate combines multiple source detector families; qualify observations separately"] : [])],
     };
     if (candidate.disposition === "embedded") {
       const ignoredStandaloneHints = candidate.suggestedType !== undefined || candidate.promotion !== undefined
@@ -261,7 +270,7 @@ export function getOkfAuthoringGuidance(request: OkfAuthoringGuidanceRequest): O
           `embedded in ${candidate.parentCandidateId}; technology detection does not promote a concept`],
       };
     }
-    const exactFunction = mapped.length === 1 && mapped[0]?.mapping?.product === "lambda";
+    const exactFunction = mapped.length === 1 && mapped[0]?.mapping?.technologyKind === "runtime-function";
     const semanticSelections = selectOkfConceptSchemas(semantic.map((item) => item.signal));
     const semanticTypes = [...new Set(semanticSelections.map((item) => item.type))];
     if (exactFunction) {

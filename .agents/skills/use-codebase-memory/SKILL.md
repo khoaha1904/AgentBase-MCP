@@ -24,6 +24,19 @@ AgentBase tools.
    When Initial Ingest Preflight armed this exact root, the index result also
    contains one bounded `agentbase_discovery_seed`. Preserve its group IDs,
    lanes and limitations; later search/trace calls explain but never mutate it.
+   Start with `discovery_mode: standard` (or omit it). Its census reads at most
+   256 selected files, not the whole graph. If `capture.census` reports omitted
+   files and important runtime/deploy/source coverage is concretely missing,
+   explain that gap and offer one `expanded` census (up to 1,024 files). Only
+   after explicit user agreement, call `index_repository` on the same root with
+   `discovery_mode: expanded` and `discovery_confirmation` containing the current
+   standard `seed_id`, `user_confirmed: true` and a short concrete `reason`.
+   This reuses the graph and replaces the Seed; use only the replacement for
+   Inventory, before any Receipt is frozen. Never invent consent, auto-expand,
+   increase arbitrary limits or repeat expansion. Entry traversal, oversized
+   files and graph coverage have separate bounds; report remaining limitations.
+   This option belongs to armed Initial Ingest, including its Batch member;
+   it is not Refresh Coverage or permission to inspect another repository.
 3. Start structural discovery with `get_architecture` or `search_graph`. Use
    `trace_path` for callers, callees, impact and data flow instead of text grep.
 4. After finding an exact qualified name, use `get_code_snippet` to read the

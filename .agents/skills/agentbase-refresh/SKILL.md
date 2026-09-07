@@ -69,6 +69,11 @@ This workflow uses `preflight_hub_ingest`, the tools named by
    a partial read of a large file. Use Code Graph as a private map and resolve
    retained observations to exact authorized source.
 4. Author only inside the prepared `bundle/` following `agentbase-okf`. A valid
+   SAM/CloudFormation change retains source Type/logical ID and cites both the
+   resource and applicable Globals spans. Recheck affected functions when a
+   supported inherited scalar changes; do not evaluate macros, nested stacks,
+   dynamic references or deployed values. IAM permission is not interaction
+   evidence. Preserve unresolved expressions as limitations. A
    sparse or partial result is enough; do not search for completeness.
    Preserve the prepared Repository home, root/capsule/shared navigation and
    every existing Profile path. Refresh has no `home_plan` and cannot rehome a

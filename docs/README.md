@@ -149,9 +149,10 @@ clean source publication because its accepted outcomes already live here.
 - Deterministic discovery discloses bounds and unsupported lanes; Initial Ingest
   retains limitations as Repository coverage debt. Delta preserves that debt;
   explicit Coverage can repair it without re-ingesting. No completeness guarantee.
-- Latest local verification: 248/248 tests. Exact final source/tag still requires
+- Run `npm run verify` against the current source. Exact final source/tag requires
   CI and artifact qualification. See [Release CI](capabilities/12-version-scope/13-release-ci-requirements.md).
-- Presentation Markdown and standalone HTML are aligned. Real-model routing,
+- The practical-use Markdown describes current coverage; standalone HTML is not
+  rebuilt for this coverage expansion. Real-model routing,
   semantic usefulness across models, long-term stewardship, scale and macOS
   qualification are not established by these deterministic tests.
 - No model benchmark runs automatically. Deferred campaigns/reports are

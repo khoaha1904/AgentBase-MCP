@@ -5,6 +5,50 @@ import { getOkfAuthoringGuidance, type ResourceSourceTool, type SemanticObservat
 
 const source = { path: "infra/main.tf", startLine: 1, endLine: 8 };
 
+test("[AB-SCHEMA-062] mixed detector families cannot claim one exact profile", () => {
+  const input = resource("Worker", "aws_lambda_function");
+  input.candidates[0]!.evidenceIds.push("evidence.template");
+  input.resourceObservations.push({ ...input.resourceObservations[0]!, id: "evidence.template",
+    sourceTool: "sam", resourceType: "AWS::Serverless::Function", address: "Worker",
+    source: { ...source, path: "template.yaml" } });
+  const result = getOkfAuthoringGuidance(input).recommendations[0]!;
+  assert.equal(result.status, "ambiguous");
+  assert.equal(result.detectorProfile, undefined);
+  assert.match(result.limitations.join(), /multiple source detector families/);
+});
+
+test("[AB-SCHEMA-062] template observations retain source types and reject source-format confusion", () => {
+  for (const [tool, type] of [["sam", "AWS::Serverless::Function"], ["cloudformation", "AWS::Lambda::Function"]] as const) {
+    const input = resource("Worker", type, "concept", tool, "template.yaml");
+    input.resourceObservations[0]!.address = "Worker";
+    const recommendation = getOkfAuthoringGuidance(input).recommendations[0]!;
+    assert.equal(recommendation.status, "exact");
+    assert.equal(recommendation.schema?.type, "Function");
+    assert.equal(recommendation.technology.resourceType, type);
+    assert.equal(recommendation.detectorProfile?.id, "cloudformation-family");
+    assert.throws(() => getOkfAuthoringGuidance({ ...input, resourceObservations: [{ ...input.resourceObservations[0]!,
+      source: { ...source, path: "main.tf" } }] }), /must cite/);
+  }
+  const input = resource("Binding", "AWS::Lambda::EventSourceMapping", "concept", "cloudformation", "template.json");
+  input.resourceObservations[0]!.address = "Binding";
+  assert.equal(getOkfAuthoringGuidance(input).recommendations[0]!.status, "unsupported");
+  assert.throws(() => getOkfAuthoringGuidance({ ...input, resourceObservations: [{ ...input.resourceObservations[0]!, sourceTool: "sam" }] }), /must match/);
+});
+
+test("[AB-SCHEMA-061] trigger and deployment declarations do not automatically become runtime concepts", () => {
+  for (const type of ["aws_lambda_event_source_mapping", "aws_ecs_service", "aws_ecs_task_definition",
+    "aws_api_gateway_rest_api", "aws_apigatewayv2_api"]) {
+    const result = getOkfAuthoringGuidance(resource("declaration", type)).recommendations[0]!;
+    assert.equal(result.status, "unsupported", type);
+    assert.equal(result.schema, undefined, type);
+    assert.ok(result.technology.kind, type);
+  }
+  const input = resource("binding", "aws_lambda_event_source_mapping");
+  const result = getOkfAuthoringGuidance({ ...input,
+    candidates: [{ ...input.candidates[0]!, suggestedType: "Function" }] }).recommendations[0]!;
+  assert.equal(result.status, "suggested", "intent never turns a binding into an exact Function mapping");
+});
+
 function resource(candidateId: string, resourceType: string, disposition: "concept" | "embedded" = "concept",
   sourceTool: ResourceSourceTool = "terraform", sourcePath = source.path) {
   return {
@@ -28,7 +72,7 @@ test("[AB-SCHEMA-032..036] concept-disposition Lambda maps exactly to Function",
   assert.equal(recommendation.disposition, "concept");
   assert.equal(recommendation.schema?.type, "Function");
   assert.deepEqual(recommendation.detectorProfile, { id: "terraform-family", version: "1.0.0" });
-  assert.deepEqual(recommendation.providerProfile, { id: "aws", version: "2.0.0" });
+  assert.deepEqual(recommendation.providerProfile, { id: "aws", version: "2.1.0" });
   assert.deepEqual(recommendation.technology, {
     kind: "runtime-function", provider: "aws", product: "lambda", sourceTool: "terraform", resourceType: "aws_lambda_function",
   });
@@ -43,6 +87,16 @@ test("[AB-SCHEMA-032][AB-SCHEMA-037] supporting Terraform resources remain embed
     ["aws_s3_bucket", "s3", "object-storage"],
     ["aws_db_instance", "rds", "database"],
     ["aws_dynamodb_table", "dynamodb", "database-table"],
+    ["aws_ecs_service", "ecs", "runtime-service"],
+    ["aws_ecs_task_definition", "ecs", "task-definition"],
+    ["aws_api_gateway_rest_api", "apigateway", "api"],
+    ["aws_apigatewayv2_api", "apigateway", "api"],
+    ["aws_api_gateway_resource", "apigateway", "api-resource"],
+    ["aws_api_gateway_method", "apigateway", "api-route"],
+    ["aws_apigatewayv2_route", "apigateway", "api-route"],
+    ["aws_api_gateway_integration", "apigateway", "api-integration"],
+    ["aws_apigatewayv2_integration", "apigateway", "api-integration"],
+    ["aws_lambda_event_source_mapping", "lambda", "event-source-mapping"],
   ] as const) {
     const input = resource(resourceType.replaceAll("_", "."), resourceType, "embedded");
     input.candidates.unshift({ id: "parent", identityHint: "runtime", identityBasis: "workload boundary",

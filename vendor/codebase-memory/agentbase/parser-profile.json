@@ -1,10 +1,12 @@
 {
   "schemaVersion": 1,
-  "id": "agentbase-mvp-12-v1",
+  "id": "agentbase-mvp-14-v1",
   "version": 1,
   "upstreamCommit": "46ae198fc11cda80e817acbc5f5908d7c2de7032",
   "supportedPlatforms": ["linux-x64", "darwin-arm64"],
   "languages": [
+    { "id": "csharp", "factory": "tree_sitter_c_sharp" },
+    { "id": "kotlin", "factory": "tree_sitter_kotlin" },
     { "id": "bash", "factory": "tree_sitter_bash" },
     { "id": "dockerfile", "factory": "tree_sitter_dockerfile" },
     { "id": "go", "factory": "tree_sitter_go" },

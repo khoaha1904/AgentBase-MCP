@@ -9,8 +9,8 @@ import { runBoundedProcess } from "./process.ts";
 const PROVIDER = "codebase-memory-mcp";
 const PROVIDER_VERSION = "0.10.8";
 const UPSTREAM_COMMIT = "46ae198fc11cda80e817acbc5f5908d7c2de7032";
-const SOURCE_INVENTORY_SHA256 = "9c0634644e777be1c1997f203987fae9c0b703f4042c397353410cd01e300b68";
-const PROFILE_ID = "agentbase-mvp-12-v1";
+const SOURCE_INVENTORY_SHA256 = "666d68fd794b137cab17155a4d9fb230d04002dcd3a58872d34082a576b33060";
+const PROFILE_ID = "agentbase-mvp-14-v1";
 const PROFILE_VERSION = 1;
 const ADAPTER_VERSION = 1;
 const SAFE_TOOLS = [

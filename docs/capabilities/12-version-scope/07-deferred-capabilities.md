@@ -40,6 +40,27 @@ dependencies or alternative authorities.
 - Safe cleanup of Published proposal artifacts after shared Questions become
   fully rebuildable from Hub documents.
 
+## Company-environment evaluation only
+
+The owner explicitly deferred these items after approving the bounded discovery,
+SAM/Terraform and C#/Kotlin expansion in
+[Repository understanding](../../product/01-repository-understanding.md#coverage-expansion).
+Do not implement or scaffold them in the current workspace:
+
+- **CDK/Pulumi/Helm deep support:** inspect actual company repositories first.
+  Identify a question that existing source evidence cannot answer before
+  proposing support for one synth/render workflow. No automatic execution.
+- **Additional cloud enrichment:** identify an exact question requiring live
+  provider evidence, then propose one bounded read-only profile and its access
+  requirements. No account-wide scanning or generic cloud connector.
+- **Automatic AI ingest reviewer:** first request an explicitly authorized
+  manual review of representative company repositories. Record material defects
+  caught and effort/cost before proposing a product-integrated reviewer. No
+  default extra AI pass, new skill or automatic repair loop.
+
+These are evaluation questions, not committed features or release blockers.
+Any later implementation needs owner approval based on company evidence.
+
 ## Explicitly not implied
 
 Deferred does not mean scaffolding now. MVP adds no empty adapter, database,

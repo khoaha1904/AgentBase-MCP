@@ -118,6 +118,12 @@ export class GatewaySession {
     let indexedRoot: string | undefined;
     if (tool === "index_repository") {
       const controlled = controlledIndex(argumentsValue);
+      if (controlled.discoveryMode === "expanded") {
+        if (!provider || this.#repositoryRoot !== controlled.repositoryRoot) {
+          throw new Error("expanded discovery requires the same active indexed repository");
+        }
+        return this.#discoverySession.expand(controlled.repositoryRoot, controlled.discoveryConfirmation);
+      }
       provider = await this.#select(controlled.repositoryRoot);
       providerArguments = controlled.arguments;
       indexedRoot = controlled.repositoryRoot;

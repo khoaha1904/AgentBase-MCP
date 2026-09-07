@@ -29,6 +29,7 @@ import {
   type ScopedSession,
 } from "../../providers/codebase-memory/index.ts";
 import type { SourceSnapshot } from "../../providers/github-hub/index.ts";
+import { templateDiscovery } from "./template-discovery.ts";
 
 export const DISCOVERY_ARCHITECTURE_ASPECTS = [
   "overview", "structure", "dependencies", "routes", "languages", "packages",
@@ -36,7 +37,6 @@ export const DISCOVERY_ARCHITECTURE_ASPECTS = [
 ] as const;
 
 const MAX_CENSUS_ENTRIES = 4_096;
-const MAX_CENSUS_FILES = 256;
 const MAX_FILE_BYTES = 64 * 1024;
 const COVERAGE_PAGE_SIZE = 200;
 const MAX_COVERAGE_PAGES = 5;
@@ -87,23 +87,33 @@ export function isDeniedDiscoveryPath(value: string): boolean {
 function candidateFile(relative: string): boolean {
   const name = path.posix.basename(relative).toLowerCase();
   const extension = path.posix.extname(name);
-  return /^readme(?:\.|$)/i.test(name) || ["codeowners", "dockerfile", "makefile", "terragrunt.hcl", "go.mod"].includes(name)
-    || [".tf", ".hcl", ".yaml", ".yml", ".json", ".toml", ".md", ".ts", ".tsx", ".js", ".mjs",
-      ".cjs", ".py", ".go", ".java", ".sh"].includes(extension);
+  return /^readme(?:\.|$)/i.test(name) || ["codeowners", "dockerfile", "makefile", "terragrunt.hcl", "go.mod", "pom.xml", "build.gradle", "build.gradle.kts"].includes(name)
+    || [".tf", ".hcl", ".yaml", ".yml", ".json", ".template", ".toml", ".md", ".ts", ".tsx", ".js", ".mjs",
+      ".cjs", ".py", ".go", ".java", ".sh", ".cs", ".kt", ".kts"].includes(extension);
 }
 
-function walkCensusFiles(root: string): Readonly<{ files: readonly string[]; truncated: boolean; oversized: number }> {
+function priorityFile(relative: string, entrypoints: ReadonlySet<string>): boolean {
+  const name = path.posix.basename(relative).toLowerCase();
+  return entrypoints.has(relative) || /^readme(?:\.|$)/.test(name)
+    || ["package.json", "pyproject.toml", "go.mod", "pom.xml", "build.gradle", "build.gradle.kts",
+      "dockerfile", "makefile", "codeowners", "terragrunt.hcl"].includes(name)
+    || /\.(tf|hcl)$/.test(name) || /^(template|sam|serverless|compose|docker-compose)(?:\.|$)/.test(name)
+    || /^(runbook|deploy|deployment|release).*\.md$/.test(name) || relative.startsWith(".github/workflows/");
+}
+
+function walkCensusFiles(root: string, mode: "standard" | "expanded", entrypoints: ReadonlySet<string>) {
   const pending = [""];
   const files: string[] = [];
+  const fileLimit = mode === "expanded" ? 1_024 : 256;
   let entries = 0;
-  let truncated = false, oversized = 0;
-  while (pending.length && entries < MAX_CENSUS_ENTRIES && files.length < MAX_CENSUS_FILES) {
-    const relativeDirectory = pending.pop()!;
+  let entriesTruncated = false, oversized = 0;
+  while (pending.length && entries < MAX_CENSUS_ENTRIES) {
+    const relativeDirectory = pending.shift()!;
     const absoluteDirectory = relativeDirectory ? path.join(root, relativeDirectory) : root;
     const children = fs.readdirSync(absoluteDirectory, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name));
-    for (const [index, entry] of children.entries()) {
+    for (const entry of children) {
+      if (entries >= MAX_CENSUS_ENTRIES) { entriesTruncated = true; break; }
       entries += 1;
-      if (entries > MAX_CENSUS_ENTRIES) break;
       const relative = normalizedPath(relativeDirectory ? `${relativeDirectory}/${entry.name}` : entry.name);
       if (!relative || isDeniedDiscoveryPath(relative) || entry.isSymbolicLink()) continue;
       if (entry.isDirectory()) pending.push(relative);
@@ -111,13 +121,21 @@ function walkCensusFiles(root: string): Readonly<{ files: readonly string[]; tru
         if (fs.lstatSync(path.join(root, relative)).size <= MAX_FILE_BYTES) files.push(relative);
         else oversized += 1;
       }
-      if (files.length >= MAX_CENSUS_FILES) {
-        truncated = index < children.length - 1;
-        break;
-      }
     }
   }
-  return { files: files.sort(), truncated: truncated || Boolean(pending.length) || entries >= MAX_CENSUS_ENTRIES, oversized };
+  entriesTruncated ||= Boolean(pending.length);
+  const ordered = files.sort();
+  const priority = ordered.filter((file) => priorityFile(file, entrypoints));
+  const ordinary = ordered.filter((file) => !priorityFile(file, entrypoints));
+  const reserved = Math.min(ordinary.length, Math.floor(fileLimit / 4));
+  const selected = new Set([...priority.slice(0, fileLimit - reserved), ...ordinary.slice(0, reserved)]);
+  for (const file of [...priority, ...ordinary]) {
+    if (selected.size >= fileLimit) break;
+    selected.add(file);
+  }
+  return { files: [...selected].sort(), truncated: entriesTruncated || files.length > fileLimit, oversized,
+    accounting: { mode, fileLimit, selectedFiles: selected.size, eligibleFiles: files.length,
+      omittedPriorityFiles: priority.filter((file) => !selected.has(file)).length, entriesTruncated } };
 }
 
 function addMatchSignals(signals: CensusSignal[], relative: string, lines: readonly string[]): void {
@@ -166,17 +184,29 @@ export function redactDiscoveryHint(value: string): string {
   return redacted.slice(0, 240);
 }
 
-function census(root: string): Readonly<{ signals: readonly CensusSignal[]; truncated: boolean; oversized: number }> {
-  const discovered = walkCensusFiles(root);
+function census(root: string, mode: "standard" | "expanded", entrypoints: ReadonlySet<string>) {
+  const discovered = walkCensusFiles(root, mode, entrypoints);
   const signals: CensusSignal[] = [];
+  const templateLimitations = new Set<string>();
   for (const relative of discovered.files) {
     if (isDeniedDiscoveryPath(relative)) continue;
     const absolute = path.join(root, relative);
     const stat = fs.lstatSync(absolute);
     if (!stat.isFile() || stat.isSymbolicLink() || stat.size > MAX_FILE_BYTES) continue;
-    addMatchSignals(signals, relative, fs.readFileSync(absolute, "utf8").split(/\r?\n/));
+    const text = fs.readFileSync(absolute, "utf8");
+    addMatchSignals(signals, relative, text.split(/\r?\n/));
+    if (/\.(ya?ml|json|template)$/i.test(relative)) {
+      const template = templateDiscovery(text);
+      for (const issue of template.limitations) templateLimitations.add(issue);
+      for (const hint of template.hints) signals.push({
+        lane: hint.kind === "runtime" ? "runtime-entrypoint" : hint.kind === "interface" ? "interface-event-trigger" : "deploy-operations",
+        kind: `template-${hint.kind}`, priority: "p0", title: `Template ${hint.kind} evidence`,
+        path: relative, line: hint.line, hint: redactDiscoveryHint(hint.text),
+      });
+    }
   }
-  return { signals, truncated: discovered.truncated, oversized: discovered.oversized };
+  return { signals, truncated: discovered.truncated, oversized: discovered.oversized, accounting: discovered.accounting,
+    templateLimitations: [...templateLimitations] };
 }
 
 function architectureSignals(architecture: ArchitectureCapture, root: string): CensusSignal[] {
@@ -235,9 +265,11 @@ function buildSeed(input: Readonly<{
   coverageUnavailable: boolean;
   censusTruncated: boolean;
   censusOversized: number;
+  templateLimitations: readonly string[];
+  census: NonNullable<DiscoverySeed["capture"]["census"]>;
   signals: readonly CensusSignal[];
 }>): DiscoverySeed {
-  const limitations: string[] = [];
+  const limitations: string[] = [...input.templateLimitations];
   if (input.diagnostic.status !== "ready") limitations.push("Code Graph index is empty");
   if (input.diagnostic.parsePartialCount) limitations.push(`${input.diagnostic.parsePartialCount} files contain parse-partial ranges`);
   if (input.diagnostic.skippedCount) limitations.push(`${input.diagnostic.skippedCount} files were skipped by Codebase Memory`);
@@ -273,7 +305,7 @@ function buildSeed(input: Readonly<{
   });
   const body = {
     source: sourceIdentity(input.snapshot),
-    engine: { id: "codebase-memory-mcp", version: "0.10.8", profile: "agentbase-mvp-12-v1" },
+    engine: { id: "codebase-memory-mcp", version: "0.10.8", profile: "agentbase-mvp-14-v1" },
     lanes,
     groups,
     capture: {
@@ -283,6 +315,7 @@ function buildSeed(input: Readonly<{
       truncated: input.diagnostic.truncated || input.censusTruncated,
       p1P2Overflow: 0,
       limitations: [...new Set(limitations)].sort(),
+      census: input.census,
     },
     state: p0Hiding || input.diagnostic.status !== "ready" ? "invalid" as const : "ready" as const,
   };
@@ -312,6 +345,8 @@ export class DiscoverySession {
   readonly #stateRoot: string | undefined;
   #armed: ArmedSource | undefined;
   #seed: DiscoverySeed | undefined;
+  #captured: { input: Parameters<typeof buildSeed>[0]; result: CallToolResult } | undefined;
+  #expanded = false;
   readonly #receipts = new Map<string, InventoryReceipt>();
 
   constructor(stateRoot?: string) {
@@ -343,9 +378,37 @@ export class DiscoverySession {
     authority?: Readonly<{ hubProfileId: string; publishedBase: string }>): void {
     this.#armed = mode === "new" ? { snapshot, mode, ...(authority ? { authority } : {}) } : undefined;
     this.#seed = undefined;
+    this.#captured = undefined;
+    this.#expanded = false;
   }
 
   get activeSeed(): DiscoverySeed | undefined { return this.#seed; }
+
+  expand(repositoryRoot: string, confirmation: unknown): CallToolResult {
+    const seed = this.#seed, captured = this.#captured, armed = this.#armed;
+    if (!seed || !captured || !armed || this.#expanded || seed.state !== "ready"
+      || fs.realpathSync(repositoryRoot) !== fs.realpathSync(armed.snapshot.analysisRoot)
+      || seed.capture.census?.mode !== "standard"
+      || seed.capture.census.eligibleFiles <= seed.capture.census.selectedFiles
+      || [...this.#receipts.values()].some((receipt) => receipt.seedId === seed.id)) {
+      throw new Error("expanded discovery requires an unfrozen standard Seed with omitted files on the same armed repository");
+    }
+    const value = confirmation as Record<string, unknown> | null;
+    if (!value || typeof value !== "object" || Array.isArray(value)
+      || Object.keys(value).some((key) => !["seed_id", "user_confirmed", "reason"].includes(key))
+      || value.seed_id !== seed.id || value.user_confirmed !== true
+      || typeof value.reason !== "string" || !value.reason.trim() || value.reason.length > 512) {
+      throw new Error("expanded discovery requires current seed_id, user_confirmed:true and a concrete coverage reason");
+    }
+    const graphSignals = architectureSignals(captured.input.architecture, armed.snapshot.analysisRoot);
+    const direct = census(armed.snapshot.analysisRoot, "expanded", new Set(graphSignals.map((signal) => signal.path)));
+    const expanded = buildSeed({ ...captured.input, census: direct.accounting, templateLimitations: direct.templateLimitations,
+      censusTruncated: direct.truncated, censusOversized: direct.oversized,
+      signals: [...direct.signals, ...graphSignals] });
+    this.#expanded = true;
+    this.#seed = expanded;
+    return appendSeed(captured.result, expanded);
+  }
 
   freezeReceipt(input: Readonly<{
     inventory: DiscoveryInventory;
@@ -394,6 +457,8 @@ export class DiscoverySession {
   }>): Promise<CallToolResult> {
     const armed = this.#armed;
     if (!armed || fs.realpathSync(input.repositoryRoot) !== fs.realpathSync(armed.snapshot.analysisRoot)) return input.result;
+    this.#seed = undefined;
+    this.#captured = undefined;
     const diagnostic = parseIndexDiagnostic(await input.provider.invoke("index_status", { project: input.project }));
     const entries: CoverageEntry[] = [];
     let offset = 0, coverageTerminal = false, coverageUnavailable = false;
@@ -415,10 +480,13 @@ export class DiscoverySession {
       || architecture.edgeCount !== diagnostic.edges) {
       throw new Error("Codebase Memory discovery diagnostics disagree on project identity or graph totals");
     }
-    const direct = census(armed.snapshot.analysisRoot);
-    const seed = buildSeed({ snapshot: armed.snapshot, diagnostic, architecture, coverageTerminal,
+    const graphSignals = architectureSignals(architecture, armed.snapshot.analysisRoot);
+    const direct = census(armed.snapshot.analysisRoot, "standard", new Set(graphSignals.map((signal) => signal.path)));
+    const seedInput = { snapshot: armed.snapshot, diagnostic, architecture, coverageTerminal,
       coverageEntries: entries, coverageUnavailable, censusTruncated: direct.truncated, censusOversized: direct.oversized,
-      signals: [...direct.signals, ...architectureSignals(architecture, armed.snapshot.analysisRoot)] });
+      census: direct.accounting, templateLimitations: direct.templateLimitations, signals: [...direct.signals, ...graphSignals] };
+    const seed = buildSeed(seedInput);
+    this.#captured = { input: seedInput, result: input.result };
     this.#seed = seed;
     return appendSeed(input.result, seed);
   }
@@ -426,5 +494,7 @@ export class DiscoverySession {
   clear(): void {
     this.#armed = undefined;
     this.#seed = undefined;
+    this.#captured = undefined;
+    this.#expanded = false;
   }
 }

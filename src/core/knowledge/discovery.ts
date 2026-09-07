@@ -59,6 +59,14 @@ export type DiscoverySeed = Readonly<{
     truncated: boolean;
     p1P2Overflow: number;
     limitations: readonly string[];
+    census?: Readonly<{
+      mode: "standard" | "expanded";
+      fileLimit: number;
+      selectedFiles: number;
+      eligibleFiles: number;
+      omittedPriorityFiles: number;
+      entriesTruncated: boolean;
+    }>;
   }>;
   state: "collecting" | "ready" | "invalid";
 }>;
@@ -119,6 +127,7 @@ export type InventoryReceipt = Readonly<{
   seedDigest: string;
   source: DiscoverySourceIdentity;
   engine: DiscoverySeed["engine"];
+  census?: DiscoverySeed["capture"]["census"];
   hubProfileId: string;
   publishedBase: string;
   inventory: DiscoveryInventory;
@@ -184,12 +193,24 @@ function validateSourceIdentity(source: DiscoverySourceIdentity): void {
   }
 }
 
+function validateCensus(census: DiscoverySeed["capture"]["census"]): void {
+  if (census === undefined) return; // Receipts from the prior profile remain readable.
+  if (!census || !["standard", "expanded"].includes(census.mode)
+    || census.fileLimit !== (census.mode === "expanded" ? 1_024 : 256)
+    || [census.selectedFiles, census.eligibleFiles, census.omittedPriorityFiles]
+      .some((value) => !Number.isSafeInteger(value) || value < 0)
+    || census.selectedFiles > census.fileLimit || census.selectedFiles > census.eligibleFiles
+    || census.eligibleFiles > 4_096 || census.omittedPriorityFiles > census.eligibleFiles - census.selectedFiles
+    || typeof census.entriesTruncated !== "boolean") throw new Error("discovery census accounting is invalid");
+}
+
 export function validateDiscoverySeed(seed: DiscoverySeed): void {
   try {
     if (!/^discovery-seed-[a-f0-9]{24}$/.test(seed.id) || !DIGEST.test(seed.digest)) {
       throw new Error("discovery Seed identity is invalid");
     }
     validateSourceIdentity(seed.source);
+    validateCensus(seed.capture.census);
     if (!bounded(seed.engine.id, 128) || !bounded(seed.engine.version, 64) || !bounded(seed.engine.profile, 128)) {
       throw new Error("discovery engine identity is invalid");
     }
@@ -412,6 +433,7 @@ export function createInventoryReceipt(input: Readonly<{
     seedDigest: input.seed.digest,
     source: input.seed.source,
     engine: input.seed.engine,
+    ...(input.seed.capture.census ? { census: input.seed.capture.census } : {}),
     hubProfileId: input.hubProfileId,
     publishedBase: input.publishedBase,
     inventory: input.inventory,
@@ -425,6 +447,7 @@ export function createInventoryReceipt(input: Readonly<{
 
 export function validateInventoryReceipt(receipt: InventoryReceipt): void {
   validateSourceIdentity(receipt.source);
+  validateCensus(receipt.census);
   if (!/^discovery-receipt-[a-f0-9]{24}$/.test(receipt.id) || !DIGEST.test(receipt.digest)
     || !/^discovery-seed-[a-f0-9]{24}$/.test(receipt.seedId) || !DIGEST.test(receipt.seedDigest)
     || !/^[a-f0-9]{24}$/.test(receipt.hubProfileId) || !COMMIT.test(receipt.publishedBase)
@@ -460,6 +483,7 @@ export function rebaseInventoryReceipt(
     seedDigest: receipt.seedDigest,
     source: receipt.source,
     engine: receipt.engine,
+    ...(receipt.census ? { census: receipt.census } : {}),
     hubProfileId: receipt.hubProfileId,
     publishedBase,
     inventory: receipt.inventory,

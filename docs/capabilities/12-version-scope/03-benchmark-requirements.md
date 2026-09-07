@@ -251,7 +251,8 @@ benchmarks.
 - **AB-BENCH-046** — The current MVP qualification suites contain only pinned
   Terraform/Terragrunt repositories. Application frontend/backend source may be
   qualified when Terraform is the structured infrastructure evidence.
-  SAM/CloudFormation remains outside scope and cannot be relabeled as Terraform.
+  SAM/CloudFormation is outside these pinned suites, not current product scope,
+  and cannot be relabeled as Terraform.
   Historical prompts, expectations and results remain immutable.
 - **AB-BENCH-047** — Every scored ratio reports numerator and denominator; a
   zero denominator is unavailable rather than 100%. Reports name unjudged
@@ -349,7 +350,8 @@ benchmarks.
   and one intentionally sparse tutorial. Reference expectations contain only
   representative important probes, never a complete required inventory.
   Repositories run sequentially under AB-BENCH-048; SAM/CloudFormation remains
-  excluded and historical suites/results remain immutable.
+  excluded from this historical suite, not current product support. Historical
+  suites/results remain immutable.
 - **AB-BENCH-071** — The first diverse-suite probe retains its V15 failure: the
   obsolete prompt requested removed local-only Hub setup and no OKF was
   authored. V16 instead seeds one isolated admitted remote-profile fixture in

@@ -43,7 +43,7 @@ function fixture(): Readonly<{ root: string; source: string; profile: string; ma
   fs.writeFileSync(source, "owned source\n");
   const inventory = `${sha256(fs.readFileSync(source))}  upstream/source.txt\n`;
   fs.writeFileSync(path.join(vendor, "inventory.sha256"), inventory);
-  fs.writeFileSync(profile, JSON.stringify({ schemaVersion: 1, id: "agentbase-mvp-12-v1", version: 1,
+  fs.writeFileSync(profile, JSON.stringify({ schemaVersion: 1, id: "agentbase-mvp-14-v1", version: 1,
     upstreamCommit: "46ae198fc11cda80e817acbc5f5908d7c2de7032" }));
   fs.writeFileSync(patch, "profile patch\n");
   fs.copyFileSync(surfaceSource, surface);
@@ -58,7 +58,7 @@ function fixture(): Readonly<{ root: string; source: string; profile: string; ma
     provider_version: "0.10.8",
     upstream_commit: "46ae198fc11cda80e817acbc5f5908d7c2de7032",
     source_digest: sha256(inventory),
-    profile_id: "agentbase-mvp-12-v1",
+    profile_id: "agentbase-mvp-14-v1",
     profile_version: 1,
     profile_digest: sha256(Buffer.concat([fs.readFileSync(profile), fs.readFileSync(patch)])),
     platform: "linux",

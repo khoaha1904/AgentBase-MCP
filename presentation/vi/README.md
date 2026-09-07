@@ -1,5 +1,8 @@
 # AgentBase — nguồn thuyết trình tiếng Việt
 
+[Cách dùng thực tế](practical-use.md) giải thích độ bao quát và minh hoạ từng
+use case bằng hội thoại hai cột. Đây là tài liệu đọc riêng, không thêm slide.
+
 [`PLAN.md`](PLAN.md) là narrative contract. [`slides/`](slides/) chứa 15 slide
 chính và 9 slide appendix theo đúng thứ tự số.
 

@@ -29,7 +29,7 @@ the OKF document model, relationships and Hub lifecycle remain unchanged.
 
 ## Remaining gap
 
-Azure/GCP profiles, the SAM/CloudFormation detector, provider verification and
+Azure/GCP profiles, general cloud-provider verification and
 semantic profile migration are not in the current MVP.
 
 Independent from provider coverage, Catalog role selection must no longer imply

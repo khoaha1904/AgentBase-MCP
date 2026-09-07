@@ -12,6 +12,8 @@ import { createInventoryItemId, createQuestionPlanId, createRepositorySourceReso
   validateDiscoverySeed, validateDiscoveryInventory } from "../../core/knowledge/index.ts";
 import { DiscoverySession, DISCOVERY_ARCHITECTURE_ASPECTS, redactDiscoveryHint } from "./discovery-session.ts";
 import { callOkfSchemaTool } from "./okf-schema-tools.ts";
+import { GatewaySession } from "./gateway-session.ts";
+import { PINNED_PROVIDER_TOOLS } from "./tool-manifest.ts";
 
 const testDataRoot = new URL("./testdata/discovery/", import.meta.url);
 
@@ -39,26 +41,41 @@ function snapshot(root: string): SourceSnapshot {
   };
 }
 
-async function captureCensus(root: string) {
+async function captureCensus(root: string, discovery = new DiscoverySession(), calls: string[] = [],
+  architecture = "project: fixture\ntotal_nodes: 12\ntotal_edges: 15\n") {
   const page = (readFixture("coverage-pages.json") as Record<string, unknown>[])[1]!;
   const provider: ScopedSession = {
     pid: 1, tools: [],
     async invoke(name) {
+      calls.push(name);
       if (name === "index_status") return envelope(readFixture("index-status.json"));
       if (name === "check_index_coverage") return envelope({ ...page,
         scopes: [{ requested_scope: ".", scope: ".", total: 0, has_more: false,
           entries: [], status: "no_recorded_issue" }] });
-      if (name === "get_architecture") return envelope("project: fixture\ntotal_nodes: 12\ntotal_edges: 15\n");
+      if (name === "get_architecture") return envelope(architecture);
       throw new Error(`unexpected provider call: ${name}`);
     },
     async close() { return { status: "clean", pid: 1, graceful: true, forced: false, stderrBytes: 0 }; },
   };
-  const discovery = new DiscoverySession();
   discovery.arm(snapshot(root), "new");
   await discovery.captureAfterIndex({ repositoryRoot: root, project: "fixture", provider, result: envelope("indexed") });
   assert.ok(discovery.activeSeed);
   return discovery.activeSeed;
 }
+
+test("[AB-SCHEMA-062] template evidence and limitations reach the discovery Seed", async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-template-census-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "template.template"), `Resources:
+  Worker:
+    Type: AWS::Lambda::Function
+    Condition: Enabled
+    Properties: {Runtime: nodejs22.x}
+`);
+  const seed = await captureCensus(root);
+  assert.ok(seed.groups.some((group) => group.sources.some((source) => source.path === "template.template")));
+  assert.match(seed.capture.limitations.join(), /conditional resource declarations/);
+});
 
 test("[AB-MCP-021] census reports a file cap inside the final directory, not at an exact complete boundary", async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-census-cap-"));
@@ -72,6 +89,98 @@ test("[AB-MCP-021] census reports a file cap inside the final directory, not at 
   assert.equal(seed.capture.truncated, true);
   assert.match(seed.capture.limitations.join("\n"), /entry\/file limit/);
   assert.equal(seed.lanes.find((lane) => lane.lane === "runtime-entrypoint")?.status, "limited");
+});
+
+test("[AB-INGEST-022..023] prioritizes deployment and expands census once without provider calls", async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-priority-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "README.md"), "# Service\n");
+  for (let index = 0; index < 300; index += 1) fs.writeFileSync(path.join(root, `a-${index}.ts`), "export {};\n");
+  fs.mkdirSync(path.join(root, "deployment"));
+  fs.writeFileSync(path.join(root, "deployment/main.tf"), 'resource "aws_lambda_function" "worker" {}\n');
+  fs.writeFileSync(path.join(root, "zz-worker.ts"), 'const handler = () => "work";\n');
+  const discovery = new DiscoverySession(), calls: string[] = [];
+  const seed = await captureCensus(root, discovery, calls);
+  assert.equal(seed.capture.census?.selectedFiles, 256);
+  assert.equal(seed.capture.census?.eligibleFiles, 303);
+  assert.equal(seed.capture.census?.omittedPriorityFiles, 0);
+  assert.ok(seed.groups.some((group) => group.sources.some((source) => source.path === "deployment/main.tf")));
+  assert.equal(seed.groups.some((group) => group.sources.some((source) => source.path === "zz-worker.ts")), false);
+  assert.equal((await captureCensus(root)).digest, seed.digest, "selection is deterministic");
+  assert.throws(() => discovery.expand(root, undefined), /confirmation|seed_id/);
+  assert.throws(() => discovery.expand(root, { seed_id: seed.id, user_confirmed: false, reason: "Missing worker" }), /user_confirmed/);
+  assert.throws(() => discovery.expand(root, { seed_id: "old", user_confirmed: true, reason: "Missing worker" }), /seed_id/);
+  assert.throws(() => discovery.expand(root, { seed_id: seed.id, user_confirmed: true, reason: " " }), /reason/);
+  const before = calls.length;
+  discovery.expand(root, { seed_id: seed.id, user_confirmed: true, reason: "Worker entrypoint not examined" });
+  const expanded = discovery.activeSeed!;
+  assert.equal(calls.length, before, "expansion uses captured graph diagnostics, not provider calls");
+  assert.equal(expanded.capture.census?.mode, "expanded");
+  assert.equal(expanded.capture.census?.selectedFiles, 303);
+  assert.equal(expanded.capture.truncated, false);
+  assert.notEqual(expanded.id, seed.id);
+  assert.ok(expanded.groups.some((group) => group.sources.some((source) => source.path === "zz-worker.ts")));
+  assert.throws(() => discovery.expand(root, { seed_id: seed.id, user_confirmed: true, reason: "Again" }), /standard Seed/);
+  discovery.clear();
+  assert.throws(() => discovery.expand(root, { seed_id: expanded.id, user_confirmed: true, reason: "Again" }), /standard Seed/);
+});
+
+test("[AB-INGEST-022] ordinary source keeps a reserved share when priority files exceed the budget", async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-reserved-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "README.md"), "# Service\n");
+  for (let index = 0; index < 300; index += 1) fs.writeFileSync(path.join(root, `infra-${index}.tf`), "# infrastructure\n");
+  for (let index = 0; index < 100; index += 1) fs.writeFileSync(path.join(root, `source-${index}.ts`), "export {};\n");
+  fs.writeFileSync(path.join(root, "source-0.ts"), 'const handler = () => "ordinary source";\n');
+  const seed = await captureCensus(root);
+  assert.equal(seed.capture.census?.omittedPriorityFiles, 109);
+  assert.ok(seed.groups.some((group) => group.sources.some((source) => source.path === "source-0.ts")));
+  assert.throws(() => validateDiscoverySeed({ ...seed, capture: { ...seed.capture,
+    census: { ...seed.capture.census!, fileLimit: 9999 } } }), /census accounting/);
+});
+
+test("[AB-INGEST-023] gateway expands only the active Init without indexing or switching repositories", async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-budget-gateway-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const repo = path.join(root, "repo"), other = path.join(root, "other");
+  fs.mkdirSync(path.join(repo, ".git"), { recursive: true });
+  fs.mkdirSync(path.join(other, ".git"), { recursive: true });
+  fs.writeFileSync(path.join(repo, "README.md"), "# Service\n");
+  for (let index = 0; index < 1100; index += 1) fs.writeFileSync(path.join(repo, `file-${index}.ts`), "export {};\n");
+  const discovery = new DiscoverySession();
+  const calls: string[] = [];
+  const page = (readFixture("coverage-pages.json") as Record<string, unknown>[])[1]!;
+  const gateway = new GatewaySession({ projectRoot: root, stateRoot: path.join(root, "state"), discoverySession: discovery,
+    providerFactory: async () => ({ pid: 1, tools: [...PINNED_PROVIDER_TOOLS],
+      async invoke(name) {
+        calls.push(name);
+        if (name === "index_repository") return envelope("indexed");
+        if (name === "index_status") return envelope(readFixture("index-status.json"));
+        if (name === "get_architecture") return envelope("project: fixture\ntotal_nodes: 12\ntotal_edges: 15\n");
+        if (name === "check_index_coverage") return envelope({ ...page, scopes: [{ requested_scope: ".", scope: ".",
+          total: 0, has_more: false, entries: [], status: "no_recorded_issue" }] });
+        throw new Error("unexpected call");
+      }, async close() { return { status: "clean", pid: 1, graceful: true, forced: false, stderrBytes: 0 }; },
+    }),
+  });
+  t.after(() => gateway.close());
+  await assert.rejects(gateway.call("index_repository", { repo_path: repo, discovery_mode: "expanded" }), /same active/);
+  assert.equal(calls.length, 0);
+  discovery.arm(snapshot(repo), "new");
+  await gateway.call("index_repository", { repo_path: repo, name: "fixture" });
+  const seed = discovery.activeSeed!;
+  const args = { repo_path: repo, discovery_mode: "expanded", discovery_confirmation: {
+    seed_id: seed.id, user_confirmed: true, reason: "Missing service integration coverage" } };
+  const before = calls.length;
+  await assert.rejects(gateway.call("index_repository", { ...args, repo_path: other }), /same active/);
+  await assert.rejects(gateway.call("index_repository", { ...args, discovery_confirmation: undefined }), /seed_id/);
+  await gateway.call("index_repository", args);
+  assert.equal(calls.length, before);
+  assert.equal(discovery.activeSeed?.capture.census?.selectedFiles, 1024);
+  assert.equal(discovery.activeSeed?.capture.truncated, true);
+  await assert.rejects(gateway.call("index_repository", args), /standard Seed/);
+  discovery.arm(snapshot(repo), "refresh");
+  await assert.rejects(gateway.call("index_repository", args), /standard Seed/);
 });
 
 test("[AB-MCP-021] census discloses entry and oversized-file limits without claiming heuristic absence", async (t) => {
@@ -282,6 +391,7 @@ test("[AB-MCP-019..023][AB-INGEST-017] armed Init derives one fixed bounded Seed
   assert.equal(guidanceValue.coverage?.p0_acknowledged, seed.groups.filter((group) => group.priority === "p0").length);
   const receipt = discovery.resolveReceipt(guidanceValue.discovery_receipt_id!);
   assert.ok(receipt);
+  assert.deepEqual(receipt.census, seed.capture.census);
   const mixedItem = receipt.inventory.items.find((item) => item.originGroupId === seed.groups[nestedIndex]!.id)!;
   assert.equal(mixedItem.id, createInventoryItemId(seed.id, seed.groups[nestedIndex]!.id));
   assert.deepEqual(mixedItem.outputs, [
@@ -307,6 +417,7 @@ test("[AB-MCP-019..023][AB-INGEST-017] armed Init derives one fixed bounded Seed
   const replacement = new DiscoverySession(discoveryState).rebaseReceipt(
     guidanceValue.discovery_receipt_id!, "d".repeat(40), "2026-08-26T00:00:00.000Z");
   assert.notEqual(replacement?.id, guidanceValue.discovery_receipt_id);
+  assert.deepEqual(replacement?.census, receipt.census);
   assert.equal(new DiscoverySession(discoveryState).resolveReceipt(replacement!.id)?.publishedBase, "d".repeat(40));
 
   const unarmed = new DiscoverySession();

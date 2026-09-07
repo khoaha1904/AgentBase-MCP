@@ -50,7 +50,14 @@ This workflow uses `preflight_hub_ingest`, the tools named by
    on that host as `Component`; if no workload is known, retain only the host
    reference or a limitation. Resolve every retained item to an exact source
    path/span and keep important ambiguity as a Question or limitation.
-   Structured observations support only Terraform and Terragrunt. Label `.tf`
+   Structured observations support Terraform, Terragrunt, SAM and native
+   CloudFormation. For templates, retain the exact resource Type and logical
+   ID: `AWS::Serverless::*` uses `sam`; native `AWS::*` uses `cloudformation`,
+   even inside a SAM template. Cite YAML/JSON/.template source spans. Do not
+   confuse declarations with deployed identity or infer interaction from IAM.
+   Read local and inherited Globals evidence together; unsupported expressions,
+   transforms and cross-stack references remain limitations. Never run build,
+   deploy or cloud calls to fill those gaps. Label `.tf`
    or `.tf.json` evidence `terraform`; label `terragrunt.hcl` module
    orchestration `terragrunt`. When Terragrunt references a module, cite the
    module's exact `.tf` file as `terraform` for provider resources. Never label
