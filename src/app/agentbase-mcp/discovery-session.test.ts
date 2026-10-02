@@ -186,6 +186,66 @@ test("[AB-DISC-010] a document with many signals cannot monopolize group source 
   assert.equal(seed.groups.filter((group) => group.kind === "outbound-integration" || group.kind === "flow-candidate").length, 2);
 });
 
+test("[AB-DISC-011] tests and documentation retain context without becoming production runtime or interface P0", async (t) => {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-production-evidence-")));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const nonProduction = ["README.md", "Guide.md", "docs/Usage.java", "OrdersControllerTest.java",
+    "ApplicationTests.java", "worker.test.ts", "worker.spec.ts", "src/test/java/Example.java",
+    "__tests__/handler.ts", "src/test/cloud.yaml"];
+  for (const relative of nonProduction) {
+    fs.mkdirSync(path.dirname(path.join(root, relative)), { recursive: true });
+    fs.writeFileSync(path.join(root, relative), relative.endsWith(".yaml")
+      ? "Resources:\n  Worker:\n    Type: AWS::Lambda::Function\n    Properties: {Handler: worker.main}\n  Api:\n    Type: AWS::ApiGateway::RestApi\n"
+      : "@SpringBootApplication\n@RestController\n@GetMapping(\"/demo\")\npublic static void main(String[] args) {}\nconst handler = () => {};\napp.get('/demo');\nhttps://example.test/guide\n");
+  }
+  const production = {
+    "src/main/java/LiveApplication.java": "@SpringBootApplication\nclass LiveApplication {}\n",
+    "src/main/java/LiveController.java": "@RestController\nclass LiveController {}\n",
+  };
+  for (const [relative, text] of Object.entries(production)) {
+    fs.mkdirSync(path.dirname(path.join(root, relative)), { recursive: true });
+    fs.writeFileSync(path.join(root, relative), text);
+  }
+  const seed = await captureCensus(root);
+  const p0 = seed.groups.filter((group) => group.priority === "p0"
+    && ["runtime-entrypoint", "interface-event-trigger"].includes(group.lane));
+  assert.equal(p0.length, 2);
+  assert.ok(p0.every((group) => group.sources.every((source) => Object.hasOwn(production, source.path))));
+  assert.ok(seed.groups.some((group) => group.lane === "identity-product" && group.sources.some((source) => source.path === "README.md")));
+  assert.ok(seed.groups.some((group) => group.lane === "integration-data-channel" && group.sources.some((source) => source.path === "Guide.md")));
+});
+
+test("[AB-DISC-002][AB-DISC-011] Spring Boot and Java main entrypoints survive the standard census budget", async (t) => {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-java-entrypoints-")));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const files = {
+    "README.md": "# Web service\n",
+    "pom.xml": "<project><modules><module>api</module></modules></project>\n",
+    "api/pom.xml": "<project><artifactId>api</artifactId></project>\n",
+    "api/src/main/java/example/ZApplication.java": "@SpringBootApplication\nclass ZApplication { public static void main(String[] args) {} }\n",
+    "api/src/main/java/example/ZMain.java": "class ZMain { public static void main(String... args) {} }\n",
+    "api/src/main/kotlin/example/ZApplication.kt": "@org.springframework.boot.autoconfigure.SpringBootApplication\nclass ZApplication\n",
+  };
+  for (const [relative, text] of Object.entries(files)) {
+    fs.mkdirSync(path.dirname(path.join(root, relative)), { recursive: true });
+    fs.writeFileSync(path.join(root, relative), text);
+  }
+  for (let index = 0; index < 300; index++) {
+    fs.writeFileSync(path.join(root, `api/src/main/java/example/AHelper${index}.java`), `class AHelper${index} {}\n`);
+  }
+  const seed = await captureCensus(root);
+  assert.equal(seed.capture.census?.eligibleFiles, Object.keys(files).length + 300);
+  assert.equal(seed.capture.census?.selectedFiles, 256);
+  assert.equal(seed.capture.census?.omittedPriorityFiles, 0);
+  assert.equal(seed.capture.truncated, true);
+  const runtimes = seed.groups.filter((group) => group.lane === "runtime-entrypoint" && group.priority === "p0");
+  assert.equal(runtimes.length, 4);
+  assert.deepEqual(runtimes.flatMap((group) => group.sources.map((source) => `${source.path}:${source.startLine}`)).sort(), [
+    "api/src/main/java/example/ZApplication.java:1", "api/src/main/java/example/ZApplication.java:2",
+    "api/src/main/java/example/ZMain.java:1", "api/src/main/kotlin/example/ZApplication.kt:1",
+  ].sort());
+});
+
 test("[AB-DISC-002..003][AB-INGEST-022..023] prioritizes deployment and expands census once from source", async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-priority-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -266,7 +326,8 @@ test("[AB-DISC-002][AB-DISC-005] census discloses entry and oversized-file limit
   assert.match(seed.capture.limitations.join("\n"), /1 admitted source files exceeded/);
   assert.equal(seed.lanes.some((lane) => lane.status === "absent-after-check"), false);
   assert.equal(seed.lanes.find((lane) => lane.lane === "interface-event-trigger")?.status, "covered");
-  assert.match(seed.lanes.find((lane) => lane.lane === "runtime-entrypoint")?.limitation ?? "", /not detected/);
+  assert.equal(seed.lanes.find((lane) => lane.lane === "runtime-entrypoint")?.status, "covered");
+  assert.match(seed.lanes.find((lane) => lane.lane === "integration-data-channel")?.limitation ?? "", /not detected/);
   for (let index = 0; index < 4096; index += 1) fs.writeFileSync(path.join(root, `z-${index}.txt`), "");
   assert.equal((await captureCensus(root)).capture.truncated, true);
 });

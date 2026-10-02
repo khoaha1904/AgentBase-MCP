@@ -57,6 +57,13 @@ upstream graph MCPs are independent and never configured or proxied by AgentBase
   per file before a second location from any file, then repeat in deterministic
   rounds. Repeated identical locations consume no extra slot. Full signal counts
   and bounded-sampling limitations remain visible.
+- **AB-DISC-011** - Test paths and conventional test filenames, Markdown and
+  documentation paths cannot produce runtime-entrypoint or interface-event-trigger
+  P0 signals, including template-derived signals. They retain useful identity,
+  integration and operations evidence. Java/Kotlin `@SpringBootApplication` and
+  Java `public static void main` produce runtime-entrypoint P0 signals in
+  production source. Conventional Application/Main filenames receive the same
+  bounded priority selection as controllers; arbitrary names remain heuristic.
 
 Legacy graph fields in previously frozen Receipts remain compatibility input;
 when present, counts remain nonnegative integers and terminal coverage remains

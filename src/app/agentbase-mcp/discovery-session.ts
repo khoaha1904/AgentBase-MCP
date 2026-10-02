@@ -78,6 +78,14 @@ function candidateFile(relative: string): boolean {
       ".cjs", ".py", ".go", ".java", ".sh", ".cs", ".kt", ".kts"].includes(extension);
 }
 
+function isTestOrDocumentationPath(relative: string): boolean {
+  return /(?:^|\/)(?:tests?|__tests__|fixtures|__fixtures__|docs?|documentation)\//i.test(relative)
+    || /\.(?:md|markdown|mdx)$/i.test(relative)
+    || /(?:Test|Tests|Spec)\.(?:java|kt|kts)$/.test(relative)
+    || /(?:^|[\/._-])(?:test|spec)[._-]/i.test(relative)
+    || /(?:_test\.go|_test\.py|\/test_[^/]+\.py)$/i.test(relative);
+}
+
 function priorityFile(relative: string): boolean {
   const name = path.posix.basename(relative).toLowerCase();
   return /^readme(?:\.|$)/.test(name)
@@ -85,7 +93,7 @@ function priorityFile(relative: string): boolean {
       "dockerfile", "makefile", "codeowners", "terragrunt.hcl"].includes(name)
     || /\.(tf|hcl)$/.test(name) || /^(template|sam|serverless|compose|docker-compose)(?:\.|$)/.test(name)
     || /^(runbook|deploy|deployment|release).*\.md$/.test(name) || relative.startsWith(".github/workflows/")
-    || /\.(?:java|kt|kts)$/.test(name) && (/(?:controller|resource|endpoint)(?:impl)?\.(?:java|kt|kts)$/.test(name)
+    || !isTestOrDocumentationPath(relative) && /\.(?:java|kt|kts)$/.test(name) && (/(?:controller|resource|endpoint|application|main)(?:impl)?\.(?:java|kt|kts)$/.test(name)
       || /(?:^|\/)(?:controllers?|resources?|endpoints?)\//i.test(relative));
 }
 
@@ -128,6 +136,8 @@ function walkCensusFiles(root: string, mode: "standard" | "expanded") {
 
 function addMatchSignals(signals: CensusSignal[], relative: string, lines: readonly string[]): void {
   const lowerPath = relative.toLowerCase();
+  const production = !isTestOrDocumentationPath(relative);
+  const javaOrKotlin = /\.(?:java|kt|kts)$/.test(lowerPath);
   const add = (lane: DiscoveryLane, kind: string, priority: CensusSignal["priority"], title: string,
     line: number, hint: string) => signals.push({ lane, kind, priority, title, path: relative, line, hint });
   if (/^readme(?:\.|$)/i.test(path.posix.basename(relative)) || /(?:^|\/)package\.json$/.test(lowerPath)
@@ -144,14 +154,16 @@ function addMatchSignals(signals: CensusSignal[], relative: string, lines: reado
 
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index]!, number = index + 1;
-    if (/resource\s+"(?:aws_lambda_function|aws_ecs_service|aws_instance|aws_autoscaling_group|azurerm_linux_function_app|azurerm_linux_virtual_machine|google_cloudfunctions_function)"/i.test(line)
-      || /(?:^|[^a-z])(handler|main|bootstrap)\s*[=:]/i.test(line)) {
+    if (production && (/resource\s+"(?:aws_lambda_function|aws_ecs_service|aws_instance|aws_autoscaling_group|azurerm_linux_function_app|azurerm_linux_virtual_machine|google_cloudfunctions_function)"/i.test(line)
+      || /(?:^|[^a-z])(handler|main|bootstrap)\s*[=:]/i.test(line)
+      || javaOrKotlin && /@(?:org\.springframework\.boot\.autoconfigure\.)?SpringBootApplication\b/.test(line)
+      || lowerPath.endsWith(".java") && /\bpublic\s+static\s+void\s+main\s*\(/.test(line))) {
       add("runtime-entrypoint", "runtime-entrypoint", "p0", "Evidenced runtime or entrypoint", number, redactDiscoveryHint(line));
     }
-    if (/resource\s+"(?:aws_apigatewayv2_route|aws_api_gateway_method|aws_lambda_event_source_mapping|aws_s3_bucket_notification|aws_sns_topic_subscription)"/i.test(line)
+    if (production && (/resource\s+"(?:aws_apigatewayv2_route|aws_api_gateway_method|aws_lambda_event_source_mapping|aws_s3_bucket_notification|aws_sns_topic_subscription)"/i.test(line)
       || /\b(?:app|router)\.(?:get|post|put|patch|delete)\s*\(/i.test(line)
-      || /\.(?:java|kt|kts)$/.test(lowerPath) && WEB_INTERFACE_ANNOTATION.test(line)
-      || /\b(?:route|trigger|event_source)\b\s*[=:]/i.test(line)) {
+      || javaOrKotlin && WEB_INTERFACE_ANNOTATION.test(line)
+      || /\b(?:route|trigger|event_source)\b\s*[=:]/i.test(line))) {
       add("interface-event-trigger", "interface-trigger", "p0", "Explicit interface, event or trigger", number, redactDiscoveryHint(line));
     }
     if (/resource\s+"(?:aws_sqs_queue|aws_sns_topic|aws_dynamodb_table|aws_db_instance|aws_rds_cluster|aws_s3_bucket|azurerm_servicebus_queue|google_pubsub_topic)"/i.test(line)
@@ -187,11 +199,14 @@ function census(root: string, mode: "standard" | "expanded") {
     if (/\.(ya?ml|json|template)$/i.test(relative)) {
       const template = templateDiscovery(text);
       for (const issue of template.limitations) templateLimitations.add(issue);
-      for (const hint of template.hints) signals.push({
-        lane: hint.kind === "runtime" ? "runtime-entrypoint" : hint.kind === "interface" ? "interface-event-trigger" : "deploy-operations",
-        kind: `template-${hint.kind}`, priority: "p0", title: `Template ${hint.kind} evidence`,
-        path: relative, line: hint.line, hint: redactDiscoveryHint(hint.text),
-      });
+      for (const hint of template.hints) {
+        if (isTestOrDocumentationPath(relative) && (hint.kind === "runtime" || hint.kind === "interface")) continue;
+        signals.push({
+          lane: hint.kind === "runtime" ? "runtime-entrypoint" : hint.kind === "interface" ? "interface-event-trigger" : "deploy-operations",
+          kind: `template-${hint.kind}`, priority: "p0", title: `Template ${hint.kind} evidence`,
+          path: relative, line: hint.line, hint: redactDiscoveryHint(hint.text),
+        });
+      }
     }
   }
   return { signals, truncated: discovered.truncated, oversized: discovered.oversized, accounting: discovered.accounting,
