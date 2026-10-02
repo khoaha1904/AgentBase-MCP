@@ -11,9 +11,15 @@ graph tools may register them independently in their coding client.
 
 ## Install and verify
 
-Requires approved Node.js `>=24.12 <25` and the configured company HTTPS npm
-registry. No compiler, native graph artifact or separate provider setup is
-required. Public npm registry fallback is rejected.
+Prerequisites:
+
+- Node.js `>=24.12 <25`; `.nvmrc` recommends `24.20.0`. Select it with your
+  version manager before running the installer, for example `nvm install && nvm use`.
+- A configured company HTTPS npm registry. Public npm registry fallback is rejected.
+- Gitleaks `8.30.1` on `PATH` to run `npm run verify`; verification does not
+  install or silently skip the secret scanner.
+
+No compiler, native graph artifact or separate provider setup is required.
 
 ```bash
 ./install.sh

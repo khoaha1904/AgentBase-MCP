@@ -143,9 +143,30 @@ async function readClientSelection(reader, output, capabilities) {
   }
 }
 
-function assertNodeVersion(version) {
+function nodeVersionGuidance(environment) {
+  const version = "24.20.0";
+  const managers = [
+    { name: "fnm", active: environment.FNM_MULTISHELL_PATH || environment.FNM_DIR,
+      command: `fnm install ${version} && fnm use ${version}` },
+    { name: "volta", active: environment.VOLTA_HOME, command: `volta install node@${version}` },
+    { name: "asdf", active: environment.ASDF_DIR || environment.ASDF_DATA_DIR,
+      command: `asdf install nodejs ${version} && asdf set nodejs ${version}` },
+    { name: "nvm", active: environment.NVM_DIR, command: `nvm install ${version} && nvm use ${version}` },
+  ];
+  const executable = (name) => (environment.PATH ?? "").split(path.delimiter).filter(Boolean).some((directory) => {
+    try { fs.accessSync(path.join(directory, name), fs.constants.X_OK); return true; }
+    catch { return false; }
+  });
+  const manager = managers.find((candidate) => candidate.active)
+    ?? managers.find((candidate) => executable(candidate.name));
+  return manager ? `Run: ${manager.command}` : `Download Node ${version}: https://nodejs.org/en/download`;
+}
+
+function assertNodeVersion(version, environment) {
   const [major, minor] = version.split(".").map(Number);
-  if (major !== 24 || minor < 12) throw new Error(`Node >=24.12 <25 is required; received ${version}`);
+  if (major !== 24 || minor < 12) {
+    throw new Error(`Node >=24.12 <25 is required; received ${version}. ${nodeVersionGuidance(environment)}`);
+  }
 }
 
 function privateRegistry(value) {
@@ -227,7 +248,7 @@ export async function runInstaller(options = {}) {
   const runProductSkillInstallation = options.runProductSkillInstallation ?? installProductSkills;
   const runProductSkillRollback = options.runProductSkillRollback ?? rollbackProductSkills;
   parseArgs(args);
-  assertNodeVersion(options.nodeVersion ?? process.versions.node);
+  assertNodeVersion(options.nodeVersion ?? process.versions.node, environment);
   const registry = privateRegistry(await runRegistryResolution(environment));
   await runDependencyInstall(registry, environment);
   verifyVisualizationRuntime();

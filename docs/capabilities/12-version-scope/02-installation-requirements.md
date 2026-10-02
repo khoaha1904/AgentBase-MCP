@@ -103,3 +103,10 @@ are owned by [Repository discovery](../01-repository-reading/05-runtime-requirem
 Checkout installation resolves its invoked entrypoint through the real path.
 Running `./install.sh` from a symbolic-link checkout path executes the same
 installer validation and setup as running it from the canonical checkout path.
+
+- **AB-INSTALL-044** — A clean checkout declares recommended Node `24.20.0`
+  in `.nvmrc` while retaining `>=24.12 <25` admission. A rejected runtime gives
+  exact installation/selection commands for the configured fnm, Volta, asdf or
+  nvm manager, otherwise the official Node download URL. Validation stops before
+  dependencies, clients or Hub state are changed. README names Node, the internal
+  npm registry and Gitleaks as explicit verification prerequisites.
