@@ -268,6 +268,9 @@ export async function previewHubBootstrap(
 
 function permissionFailure(error: unknown, token: string): Error {
   const message = (error instanceof Error ? error.message : "Hub bootstrap failed").split(token).join("[REDACTED]");
+  if (/without\s+workflow\s+scope/i.test(message)) {
+    return new Error("GitHub refused a workflow write because the Hub token lacks the 'workflow' scope; grant that scope for CI initialization or upgrade, then retry");
+  }
   if (/status (?:401|403)/i.test(message)) {
     return new Error("GitHub access is insufficient; update the shared Hub token with repository read and Contents write access, then retry");
   }

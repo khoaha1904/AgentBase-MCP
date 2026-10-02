@@ -336,6 +336,11 @@ authorized old test-state disposal is complete without a migration adapter.
   status prefix plus at most 600 characters from the end of stderr. Credential
   redaction precedes whitespace normalization and truncation; existing output,
   timeout, cancellation and private askpass-cleanup bounds remain in force.
+- **AB-HUB-SETUP-040** — A bootstrap push refusal naming missing `workflow`
+  scope reports that exact permission and preserves the prepared checkpoint
+  without exposing credentials. The four-file bootstrap requires repository
+  access only; reviewed initialization or upgrade that writes CI requires
+  `workflow` scope for a classic GitHub token.
 - **AB-HUB-SETUP-006** — After explicit preview/confirmation, an exact empty
   user-created remote may receive one bootstrap commit directly on the configured
   target branch containing only four released baseline files: standard README,

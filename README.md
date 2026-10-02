@@ -68,6 +68,17 @@ Git. Installation never collects it. Profiles are peers; switching does not copy
 or merge knowledge. An unconfigured installation can use schema guidance and
 workspace Scan; Hub knowledge requires a connected Hub.
 
+Classic GitHub token scopes:
+
+| Scope | When required |
+| --- | --- |
+| `repo` | Always, for private Hub repository access. |
+| `workflow` | Only when reviewed `initialize_hub` or CI upgrade adds or updates workflows. |
+
+Empty-remote bootstrap writes only the README, root/shared indexes and Profile;
+it does not need `workflow`. Fine-grained tokens need the equivalent repository
+read/write permissions and workflow permission for CI writes.
+
 ## Add and update
 
 Use `$agentbase-ingest` to Add repository and `$agentbase-refresh` to Update

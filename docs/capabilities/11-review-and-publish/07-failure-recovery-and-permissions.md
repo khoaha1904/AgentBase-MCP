@@ -21,6 +21,11 @@ or retry system.
   It does not include merge, approve, close, force-push, branch deletion or
   repository settings.
 - Source/provider credentials are separate authority and cannot be borrowed for publication.
+- A classic GitHub token needs `repo` for private Hub access. Add `workflow`
+  when reviewed initialization or upgrade writes the Hub CI workflow. The
+  four-file empty-remote bootstrap does not write CI and needs no `workflow`
+  scope. A push refusal naming that scope requests the exact missing permission
+  and retains the prepared checkpoint for retry.
 
 ## Failure classes
 
