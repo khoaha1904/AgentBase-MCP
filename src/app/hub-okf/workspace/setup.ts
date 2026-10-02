@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { createHubIdentity, hubProfileId } from "../../../core/hub/index.ts";
 import { AGENTBASE_OKF_SCHEMA_CATALOG_VERSION, loadOkfBundle } from "../../../core/knowledge/index.ts";
-import { runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
+import { GitHubApiError, runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
 import { loadHubProfileToken } from "../configuration/credential-file.ts";
 import {
   activatePersistedHubConfiguration,
@@ -94,8 +94,14 @@ function result(configuration: PersistedHubConfiguration, activeHead: string): H
 function setupFailure(error: unknown, token: string): Error {
   const message = error instanceof Error ? error.message : "Hub attachment failed";
   const redacted = token ? message.split(token).join("[REDACTED]") : message;
-  if (/(?:status 401|status 403|exited with status)/i.test(redacted)) {
+  if ((error instanceof GitHubApiError && error.status === 401) || /\bstatus 401\b/i.test(redacted)) {
+    return new Error("The Hub token was rejected; it may be invalid, expired or issued by another host. Replace it with a token for this GitHub host, then retry");
+  }
+  if ((error instanceof GitHubApiError && error.status === 403) || /\bstatus 403\b/i.test(redacted)) {
     return new Error("GitHub access is insufficient; update the shared Hub token with repository read access, then retry");
+  }
+  if (/exited with status/i.test(redacted)) {
+    return new Error(`Hub Git operation failed; check the remote, target branch and network: ${redacted}`);
   }
   return new Error(redacted);
 }

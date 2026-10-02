@@ -36,6 +36,11 @@ or retry system.
 | Interrupted validated sync | Explicit recovery advances candidate or restores original. |
 | Existing initialization branch has extra/drifted bytes | Stop; never overwrite or adopt it. |
 
+Attachment reports HTTP 401 as a rejected, expired or wrong-host token, HTTP 403
+as insufficient repository permission, and Git exit failures as remote, branch
+or network failures with redacted details. These classifications preserve the
+prior admitted profile and never expose credential values.
+
 ## Retry and recovery
 
 - Same request is idempotent by proposal, branch, base/head and PR identity.

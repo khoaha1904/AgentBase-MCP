@@ -324,6 +324,10 @@ authorized old test-state disposal is complete without a migration adapter.
   README; MCP-created new Hubs still include it.
 - **AB-HUB-SETUP-005** — Failed/interrupted setup preserves the prior admitted
   state and never leaves a partial active checkout.
+- **AB-HUB-SETUP-038** — Attach failures distinguish HTTP 401 (rejected,
+  expired or wrong-host credential), HTTP 403 (insufficient permission) and Git
+  failures (remote, branch or network). Git diagnostics retain redacted details
+  without treating every exit failure as a credential problem.
 - **AB-HUB-SETUP-006** — After explicit preview/confirmation, an exact empty
   user-created remote may receive one bootstrap commit directly on the configured
   target branch containing only the complete released baseline: standard README,
