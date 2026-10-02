@@ -10,12 +10,15 @@ tmp/
 *.log
 *.tmp
 *.swp
+*.tsbuildinfo
 .idea/
 .vscode/
+.claude/settings.local.json
 
 # Local credentials and configuration must never enter the repository.
 .env
 .env.*
+.npmrc
 
 # Local detailed graphs are disposable machine state, not shared knowledge.
 *.db
