@@ -25,6 +25,7 @@ import {
 } from "../index.ts";
 import { createLegacyTestActions as createHubRuntimeActions } from "../review/test-support.ts";
 import { attachExistingHub, createLocalHub } from "./setup.ts";
+import { renderHubReadme } from "./readme.ts";
 import {
   hubProfileCredentialPath, loadExactHubProfileToken, writeGlobalHubToken, writeHubProfileToken,
 } from "../configuration/credential-file.ts";
@@ -394,8 +395,7 @@ test("[AB-HUB-SETUP-001..017][AB-BATCH-006][AB-BATCH-016][AB-HUB-CI-001..007][AB
     };
     const preview = await previewHubBootstrap(bootstrapUrl, bootstrapBranch, bootstrapEnvironment, bootstrapGit);
     assert.equal(preview.remoteState, "empty");
-    assert.deepEqual(preview.baselinePaths, [HUB_CI_MANIFEST_PATH, HUB_CI_VALIDATOR_PATH, HUB_CI_WORKFLOW_PATH,
-      "README.md", "index.md", "shared/index.md", AGENTBASE_OKF_PROFILE_PATH].sort());
+    assert.deepEqual(preview.baselinePaths, ["README.md", "index.md", "shared/index.md", AGENTBASE_OKF_PROFILE_PATH].sort());
     await assert.rejects(executeHubBootstrap(bootstrapUrl, bootstrapBranch, bootstrapEnvironment,
       { git: bootstrapGit }), /simulated post-activation crash/);
     const interrupted = readPersistedHubConfiguration(bootstrapEnvironment);
@@ -410,8 +410,14 @@ test("[AB-HUB-SETUP-001..017][AB-BATCH-006][AB-BATCH-016][AB-HUB-CI-001..007][AB
       operation: "verify bootstrap Published boundary" })).stdout.trim(), bootstrapped.intent.baseCommit);
     assert.equal((await runGit({ args: ["rev-parse", `refs/heads/${bootstrapBranch}`], cwd: bootstrapRemote,
       operation: "verify remote bootstrap target" })).stdout.trim(), bootstrapped.intent.baseCommit);
-    assert.match((await runGit({ args: ["show", `refs/heads/${bootstrapBranch}:${HUB_CI_MANIFEST_PATH}`], cwd: bootstrapRemote,
-      operation: "verify remote bootstrap CI target" })).stdout, new RegExp(`"target_branch": "${bootstrapBranch}"`));
+    const remotePaths = (await runGit({ args: ["ls-tree", "-r", "--name-only", `refs/heads/${bootstrapBranch}`],
+      cwd: bootstrapRemote, operation: "verify remote bootstrap paths" })).stdout.trim().split("\n").sort();
+    assert.deepEqual(remotePaths, preview.baselinePaths);
+    assert.equal(remotePaths.some((file) => file.startsWith(".github/workflows/") || file.startsWith(".agentbase/ci/")), false);
+    const remoteReadme = (await runGit({ args: ["show", `refs/heads/${bootstrapBranch}:README.md`], cwd: bootstrapRemote,
+      operation: "verify remote bootstrap README" })).stdout;
+    assert.equal(remoteReadme, renderHubReadme(false));
+    assert.doesNotMatch(remoteReadme, /Hub CI|\.github\/workflows|\.agentbase\/ci/);
 
     const legacyEnvironment = { HOME: path.join(root, "legacy-home"), XDG_CONFIG_HOME: path.join(root, "legacy-config"),
       XDG_DATA_HOME: path.join(root, "legacy-data") };

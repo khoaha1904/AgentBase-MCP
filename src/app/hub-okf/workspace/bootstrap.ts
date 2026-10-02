@@ -9,7 +9,6 @@ import {
   renderAgentBaseOkfProfileDocument,
 } from "../../../core/knowledge/index.ts";
 import { listRemoteRefs, runGit, type GitOutput, type GitRequest } from "../../../providers/github-hub/index.ts";
-import { renderHubCiBundle } from "../ci/artifact.ts";
 import {
   acquireHubActivationLock,
   activatePersistedHubConfiguration,
@@ -119,11 +118,10 @@ function writeReceipt(environment: NodeJS.ProcessEnv, receipt: HubBootstrapRecei
   writeAtomicJson(receiptPath(environment, receipt.intent.remoteHubId), receipt);
 }
 
-function baselineFiles(targetBranch: string): Readonly<Record<string, Buffer>> {
-  return { [HUB_README_PATH]: Buffer.from(renderHubReadme()), "index.md": Buffer.from(ROOT_INDEX),
+function baselineFiles(): Readonly<Record<string, Buffer>> {
+  return { [HUB_README_PATH]: Buffer.from(renderHubReadme(false)), "index.md": Buffer.from(ROOT_INDEX),
     "shared/index.md": Buffer.from(SHARED_INDEX),
-    [AGENTBASE_OKF_PROFILE_PATH]: Buffer.from(renderAgentBaseOkfProfileDocument()),
-    ...renderHubCiBundle(targetBranch).files };
+    [AGENTBASE_OKF_PROFILE_PATH]: Buffer.from(renderAgentBaseOkfProfileDocument()) };
 }
 
 function filesDigest(files: Readonly<Record<string, Buffer>>): string {
@@ -136,7 +134,7 @@ function filesDigest(files: Readonly<Record<string, Buffer>>): string {
 function createIntent(
   normalized: ReturnType<typeof normalizeGitHubHubUrl>, targetBranch: string, remoteHubId: string, baseCommit: string,
 ): HubBootstrapIntent {
-  const files = baselineFiles(targetBranch), baselineDigest = filesDigest(files);
+  const files = baselineFiles(), baselineDigest = filesDigest(files);
   const id = createHash("sha256").update([
     normalized.host, normalized.repository, targetBranch, baseCommit, baselineDigest,
   ].join("\0")).digest("hex").slice(0, 24);
@@ -153,7 +151,7 @@ async function exactCommit(root: string, ref: string, operation: string, git: Bo
 }
 
 async function validatePreparedBaseline(receipt: HubBootstrapReceipt, git: BootstrapGit): Promise<void> {
-  const root = receipt.localRoot, expected = baselineFiles(receipt.intent.targetBranch);
+  const root = receipt.localRoot, expected = baselineFiles();
   if (!fs.existsSync(root) || fs.lstatSync(root).isSymbolicLink() || !fs.statSync(root).isDirectory()) {
     throw new Error("prepared Hub bootstrap checkout is unavailable");
   }
@@ -189,7 +187,7 @@ async function prepareBaseline(
 ): Promise<HubBootstrapReceipt> {
   const parent = dataRoot(environment), localRoot = path.join(parent, remoteHubId);
   if (fs.existsSync(localRoot)) throw new Error("Hub profile checkout exists without a matching bootstrap receipt; attach it instead");
-  const staging = path.join(parent, `.bootstrap-${remoteHubId}-${randomUUID()}`), files = baselineFiles(targetBranch);
+  const staging = path.join(parent, `.bootstrap-${remoteHubId}-${randomUUID()}`), files = baselineFiles();
   fs.mkdirSync(staging, { mode: 0o700 });
   try {
     await git({ args: ["init", "--initial-branch=main"], cwd: staging, operation: "initialize Hub bootstrap checkout" });

@@ -18,7 +18,8 @@ Architecture Contracts:
 
 ## Current → target
 
-Bootstrap currently publishes only the base OKF index, README and Hub CI.
+Bootstrap publishes the README, root/shared indexes and Profile declaration;
+Hub CI is added through reviewed initialization or upgrade.
 Initial Ingest writes global type-first paths and overloads
 `confirmed_domain`: it chooses both placement and `part-of` participation.
 
@@ -98,8 +99,8 @@ created at `domains/<slug>/index.md` with owner-guidance and source evidence.
 
 - **AB-HOME-001** — New empty-Hub bootstrap deterministically includes root
   base-OKF `index.md`, `shared/index.md`, the exact Profile 1.0 concept, README
-  and current Hub CI in one baseline commit. Root and shared navigation satisfy
-  Profile admission before any remote write.
+  in one baseline commit, without CI files. Root and shared navigation satisfy
+  Profile admission before any remote write; CI uses a later reviewed workflow.
 - **AB-HOME-002** — Bootstrap preview, digest, interruption recovery, exact-empty
   remote guard and direct-write authority continue to cover the complete new
   baseline; no second bootstrap mode or profile registry is introduced.

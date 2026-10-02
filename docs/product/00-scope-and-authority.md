@@ -313,8 +313,9 @@ Local acceptance and remote publication are separate authorizations. Normal
 operation never creates a GitHub repository, writes remote `main`, merges or
 approves a PR, force-pushes, deletes branches, changes repository settings or
 drops pending local commits. The only direct target-branch write is an explicit
-empty-remote bootstrap of the complete released README + root index + CI
-baseline after preview/confirmation.
+empty-remote bootstrap of the released README, root and shared indexes, and
+Profile baseline after preview/confirmation. Hub CI is added separately through
+reviewed initialization or upgrade.
 
 ## Stable product requirements
 

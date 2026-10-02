@@ -1,6 +1,6 @@
 export const HUB_README_PATH = "README.md" as const;
 
-export function renderHubReadme(): string {
+export function renderHubReadme(includeCi = true): string {
   return "# AgentBase-Hub\n\n"
     + "AgentBase-Hub is a human-readable OKF knowledge repository created and managed by "
     + "AgentBase-MCP. "
@@ -26,8 +26,8 @@ export function renderHubReadme(): string {
     + "shared/knowledge/                Independently useful shared knowledge\n"
     + "shared/questions/                Governed shared Questions\n"
     + "shared/agentbase-profile.md      AgentBase OKF Profile declaration\n"
-    + ".agentbase/ci/                   Self-contained Hub validator\n"
-    + ".github/workflows/               Read-only Hub CI\n"
+    + (includeCi ? ".agentbase/ci/                   Self-contained Hub validator\n"
+      + ".github/workflows/               Read-only Hub CI\n" : "")
     + "```\n\n"
     + "A physical home controls placement and default navigation; only an evidenced "
     + "relationship expresses Domain participation. Collections are created only when useful "
@@ -39,6 +39,6 @@ export function renderHubReadme(): string {
     + "reviewable pull request. Knowledge becomes Published only after a maintainer merges "
     + "that PR and MCP synchronizes the Hub. Conflicting evidence may remain visible rather "
     + "than being forced into one unsupported answer.\n\n"
-    + "Hub CI checks structure, links, obvious sensitive content and freshness metadata. "
-    + "Freshness is warning-only; it never rewrites knowledge automatically.\n";
+    + (includeCi ? "Hub CI checks structure, links, obvious sensitive content and freshness metadata. "
+      + "Freshness is warning-only; it never rewrites knowledge automatically.\n" : "");
 }

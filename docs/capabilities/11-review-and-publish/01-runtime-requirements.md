@@ -188,9 +188,10 @@ authorized old test-state disposal is complete without a migration adapter.
   visible warning; unknown type alone does not fail CI.
 - **AB-HUB-CI-004** — Freshness is always warning-only context. CI has no stale
   threshold and never creates a Question, triggers Refresh or changes knowledge.
-- **AB-HUB-CI-005** — Every MCP-created Hub base includes one exact CI bundle:
+- **AB-HUB-CI-005** — Reviewed Hub initialization or upgrade adds one exact CI bundle:
   workflow, standalone validator and version/checksum manifest. It runs for pull
-  requests, pushes to `main`, weekly schedule and manual dispatch.
+  requests, pushes to the configured target, weekly schedule and manual dispatch.
+  Empty-remote bootstrap omits CI and requires a later reviewed initialization.
 - **AB-HUB-CI-006** — The workflow grants only `contents: read`, uses pinned
   third-party actions, verifies the bundled validator before execution and
   contains no package install, sibling-repository checkout, MCP credential,
@@ -337,8 +338,10 @@ authorized old test-state disposal is complete without a migration adapter.
   timeout, cancellation and private askpass-cleanup bounds remain in force.
 - **AB-HUB-SETUP-006** — After explicit preview/confirmation, an exact empty
   user-created remote may receive one bootstrap commit directly on the configured
-  target branch containing only the complete released baseline: standard README,
-  valid OKF v0.2 root `index.md` and exact read-only Hub CI bundle.
+  target branch containing only four released baseline files: standard README,
+  valid OKF v0.2 root `index.md`, `shared/index.md` and the Profile declaration.
+  The bootstrap README omits CI paths and claims; CI is added only through later
+  reviewed initialization or upgrade.
 - **AB-HUB-SETUP-007** — Base and knowledge commits have distinct explicit
   identities; pending ancestry rejects unclassified commits above the base.
 - **AB-HUB-SETUP-008** — After remote admission/synchronization, prepare,

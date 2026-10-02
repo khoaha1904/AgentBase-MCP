@@ -39,5 +39,6 @@ digest. Explicit initialize may create or recover only
 changed base, ambiguous PR or byte drift stops. The same dedicated Hub token is
 used internally; the caller cannot provide a token, branch name or file bytes.
 The standard README is human onboarding only; canonical knowledge navigation
-remains in `index.md`. Exact-empty bootstrap uses the same released support
-bytes directly only because no target branch exists for a PR.
+remains in `index.md`. Exact-empty bootstrap writes only the README, root/shared
+indexes and Profile directly because no target branch exists for a PR. It omits
+CI; initialization or upgrade adds CI through review after the branch exists.

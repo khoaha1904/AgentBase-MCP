@@ -70,6 +70,7 @@ The previous native engine and all model benchmark runners are retired.
 - No remote profile means schema guidance/Scan only; every remote URL+branch profile
   isolates Published and Draft state while profiles may share one configured
   enterprise credential. Exact-empty bootstrap writes
-  README + root index + CI baseline directly once; later changes use PRs.
+  README, root/shared indexes and Profile directly once; later changes, including
+  CI initialization or upgrade, use PRs.
 - Public terminal surface is the small `abs` command (`status`, `hub connect`,
   `hub sync`); OKF is the shared format name, not a user-facing command group.
