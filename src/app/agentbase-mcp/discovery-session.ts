@@ -238,6 +238,8 @@ function compactGroups(signals: readonly CensusSignal[]): readonly DiscoveryGrou
       path: value.path, startLine: value.line, endLine: value.line,
     }])).values()];
     if (first.lane === "identity-product") locations.sort((left, right) => readmeRank(left.path) - readmeRank(right.path));
+    if (first.lane === "integration-data-channel") locations.sort((left, right) =>
+      Number(/\.(?:md|markdown|mdx)$/i.test(left.path)) - Number(/\.(?:md|markdown|mdx)$/i.test(right.path)));
     const perFile = new Map<string, number>();
     const sources = locations.map((source) => {
       const round = perFile.get(source.path) ?? 0;

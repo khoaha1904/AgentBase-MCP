@@ -167,7 +167,7 @@ test("[AB-DISC-010][AB-DISC-006] controller samples take one file per round befo
   assert.equal((await captureCensus(root)).digest, seed.digest);
 });
 
-test("[AB-DISC-010] a document with many signals cannot monopolize group source samples", async (t) => {
+test("[AB-DISC-010][AB-DISC-014] a document with many signals cannot displace integration code source samples", async (t) => {
   const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-document-samples-")));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   fs.writeFileSync(path.join(root, "README.md"), "# Service\n");
@@ -180,10 +180,50 @@ test("[AB-DISC-010] a document with many signals cannot monopolize group source 
     assert.equal(group.count, 20);
     assert.equal(group.sources.length, 8);
     assert.equal(new Set(group.sources.map((source) => source.path)).size, 8);
-    assert.equal(group.sources.filter((source) => source.path === "a-guide.md").length, 1);
+    assert.equal(group.sources.filter((source) => source.path === "a-guide.md").length, 0);
     assert.match(group.limitations.join(), /samples are bounded/);
   }
   assert.equal(seed.groups.filter((group) => group.kind === "outbound-integration" || group.kind === "flow-candidate").length, 2);
+});
+
+test("[AB-DISC-010][AB-DISC-014] integration samples prefer real manifests and config while retaining documentation context", async (t) => {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-integration-samples-")));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "README.md"), "# Integrations\n");
+  const code = {
+    "service/pom.xml": "<project><url>https://example.test/service</url></project>\n",
+    "Dockerfile": "ENV BASE_URL=https://example.test/container\n",
+    ".github/workflows/ci.yml": "env:\n  BASE_URL: https://example.test/workflow\n",
+    "run.sh": "base_url=https://example.test/script\n",
+    "Client.java": 'class Client { String endpoint = "https://example.test/client"; }\n',
+    "client.json": '{"endpoint":"https://example.test/config"}\n',
+    "worker.py": 'endpoint = "https://example.test/python"\n',
+    "go.mod": "module example.test/client\n// https://example.test/module\n",
+  };
+  const docs = ["AGENTS.md", "a-constitution.md", "runbook.md", "review.md"];
+  for (const [relative, text] of Object.entries(code)) {
+    fs.mkdirSync(path.dirname(path.join(root, relative)), { recursive: true });
+    fs.writeFileSync(path.join(root, relative), text);
+  }
+  for (const relative of docs) fs.writeFileSync(path.join(root, relative), "https://example.test/context\n");
+  const seed = await captureCensus(root);
+  for (const kind of ["outbound-integration", "flow-candidate"]) {
+    const group = seed.groups.find((candidate) => candidate.kind === kind)!;
+    assert.equal(group.count, 12);
+    assert.equal(group.sources.length, 8);
+    assert.deepEqual(group.sources.map((source) => source.path).sort(), Object.keys(code).sort());
+    assert.match(group.limitations.join(), /samples are bounded/);
+  }
+  fs.rmSync(path.join(root, "go.mod"));
+  fs.rmSync(path.join(root, "worker.py"));
+  const smaller = await captureCensus(root);
+  for (const kind of ["outbound-integration", "flow-candidate"]) {
+    const group = smaller.groups.find((candidate) => candidate.kind === kind)!;
+    assert.equal(group.count, 10);
+    assert.ok(group.sources.slice(0, 6).every((source) => Object.hasOwn(code, source.path)));
+    assert.ok(group.sources.slice(6).every((source) => docs.includes(source.path)));
+  }
+  assert.equal((await captureCensus(root)).digest, smaller.digest);
 });
 
 test("[AB-DISC-011] tests and documentation retain context without becoming production runtime or interface P0", async (t) => {

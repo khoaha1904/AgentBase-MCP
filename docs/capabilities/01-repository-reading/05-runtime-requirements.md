@@ -74,6 +74,10 @@ upstream graph MCPs are independent and never configured or proxied by AgentBase
   README is admitted first among priority files and precedes module READMEs in
   identity samples; module READMEs precede other identity sources. Missing
   non-fixture identity remains visible rather than borrowing fixture context.
+- **AB-DISC-014** - Integration source samples prefer code, configuration and
+  manifests over Markdown within each file-diversity round. Documentation stays
+  available as context when slots remain; full counts and sampling limitations
+  include all admitted signals. Derived Flow candidate samples use the same order.
 
 Legacy graph fields in previously frozen Receipts remain compatibility input;
 when present, counts remain nonnegative integers and terminal coverage remains
