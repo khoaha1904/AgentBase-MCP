@@ -20,6 +20,16 @@ required. Public npm registry fallback is rejected.
 npm run verify
 ```
 
+The checkout installer can also be invoked directly with Node, without Bash:
+
+```bash
+node scripts/installation/install.mjs
+```
+
+This uses the same Node-version, internal-registry and dependency checks.
+Direct invocation does not qualify Windows or additional release targets; see
+[Platform limits](docs/capabilities/12-version-scope/05-accepted-limitations.md#platform-and-node-compatibility).
+
 Interactive checkout installation selects Codex, Claude Code or both, registers
 user-global `agentbase` stdio MCP and installs twelve product skills: ten public
 entries and two internal helpers. Ordinary repository work does not activate

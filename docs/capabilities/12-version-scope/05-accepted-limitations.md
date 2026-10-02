@@ -21,3 +21,27 @@
 These limitations must degrade visibly or preserve knowledge. They do not permit
 the Agent to guess, publish automatically, hide conflicts or turn incomplete
 coverage into hard failure.
+
+## Platform and Node compatibility
+
+Removing the native graph provider does not expand the release target contract.
+Artifact assembly, bundle admission, lifecycle pointers and integration state
+still admit only `linux-x64` and `darwin-arm64`. Linux x64 is the qualified CI
+boundary; macOS Intel and Windows remain unqualified.
+
+The supported runtime remains Node `>=24.12 <25`. A Node 22 LTS compatibility
+probe reaches explicit version guards in the checkout installer and release CI;
+passing other tests does not authorize changing `engines` or those guards.
+
+The checkout installer has a direct `node scripts/installation/install.mjs`
+entrypoint, so its Bash wrapper is optional. Released installers and stable
+launchers still use Bash, and the lifecycle uses filesystem links and POSIX
+permissions. Windows npm/client executable resolution also needs qualification;
+direct Node invocation alone does not prove a working Windows installation.
+
+Before adding macOS Intel or Windows, qualify the target through all four
+release owners together, provide an appropriate released installer/launcher,
+and verify dependency execution, path/link handling, lifecycle recovery and
+client registration on that operating system. Evaluate a wider Node range
+separately with installation and release CI evidence. These are proposed future
+qualification steps; current release identifiers and runtime bounds are unchanged.
