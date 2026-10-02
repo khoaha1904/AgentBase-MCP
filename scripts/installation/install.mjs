@@ -143,7 +143,7 @@ async function readClientSelection(reader, output, capabilities) {
   }
 }
 
-function nodeVersionGuidance(environment) {
+function nodeVersionGuidance(environment, nodeExecutable) {
   const version = "24.20.0";
   const managers = [
     { name: "fnm", active: environment.FNM_MULTISHELL_PATH || environment.FNM_DIR,
@@ -158,14 +158,15 @@ function nodeVersionGuidance(environment) {
     catch { return false; }
   });
   const manager = managers.find((candidate) => candidate.active)
+    ?? (/\/\.nvm\/versions\/node\//.test(nodeExecutable.replaceAll("\\", "/")) ? managers.find((candidate) => candidate.name === "nvm") : undefined)
     ?? managers.find((candidate) => executable(candidate.name));
   return manager ? `Run: ${manager.command}` : `Download Node ${version}: https://nodejs.org/en/download`;
 }
 
-function assertNodeVersion(version, environment) {
+function assertNodeVersion(version, environment, nodeExecutable) {
   const [major, minor] = version.split(".").map(Number);
   if (major !== 24 || minor < 12) {
-    throw new Error(`Node >=24.12 <25 is required; received ${version}. ${nodeVersionGuidance(environment)}`);
+    throw new Error(`Node >=24.12 <25 is required; received ${version}. ${nodeVersionGuidance(environment, nodeExecutable)}`);
   }
 }
 
@@ -248,7 +249,7 @@ export async function runInstaller(options = {}) {
   const runProductSkillInstallation = options.runProductSkillInstallation ?? installProductSkills;
   const runProductSkillRollback = options.runProductSkillRollback ?? rollbackProductSkills;
   parseArgs(args);
-  assertNodeVersion(options.nodeVersion ?? process.versions.node, environment);
+  assertNodeVersion(options.nodeVersion ?? process.versions.node, environment, options.execPath ?? process.execPath);
   const registry = privateRegistry(await runRegistryResolution(environment));
   await runDependencyInstall(registry, environment);
   verifyVisualizationRuntime();
