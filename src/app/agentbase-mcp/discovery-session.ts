@@ -24,6 +24,7 @@ import { templateDiscovery } from "./template-discovery.ts";
 
 const MAX_CENSUS_ENTRIES = 4_096;
 const MAX_FILE_BYTES = 64 * 1024;
+const WEB_INTERFACE_ANNOTATION = /@(?:(?:org\.springframework\.web\.bind\.annotation|org\.springframework\.stereotype|(?:javax|jakarta)\.ws\.rs)\.)?(?:GetMapping|PostMapping|PutMapping|DeleteMapping|PatchMapping|RequestMapping|RestController|Controller|Path|GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\b/;
 
 type CensusSignal = Readonly<{
   lane: DiscoveryLane;
@@ -59,7 +60,8 @@ export function isDeniedDiscoveryPath(value: string): boolean {
   const parts = normalized.toLowerCase().split("/");
   const deniedDirectories = new Set([
     ".git", ".agentbase", ".codebase-memory", "node_modules", "vendor", "dist", "build",
-    "coverage", "target", ".terraform", ".cache", ".next", ".nuxt", "__pycache__",
+    "coverage", "target", ".terraform", ".terragrunt-cache", ".gradle", ".serverless",
+    ".cache", ".next", ".nuxt", "__pycache__",
   ]);
   if (parts.some((part) => deniedDirectories.has(part))) return true;
   const name = parts.at(-1)!;
@@ -82,7 +84,9 @@ function priorityFile(relative: string): boolean {
     || ["package.json", "pyproject.toml", "go.mod", "pom.xml", "build.gradle", "build.gradle.kts",
       "dockerfile", "makefile", "codeowners", "terragrunt.hcl"].includes(name)
     || /\.(tf|hcl)$/.test(name) || /^(template|sam|serverless|compose|docker-compose)(?:\.|$)/.test(name)
-    || /^(runbook|deploy|deployment|release).*\.md$/.test(name) || relative.startsWith(".github/workflows/");
+    || /^(runbook|deploy|deployment|release).*\.md$/.test(name) || relative.startsWith(".github/workflows/")
+    || /\.(?:java|kt|kts)$/.test(name) && (/(?:controller|resource|endpoint)(?:impl)?\.(?:java|kt|kts)$/.test(name)
+      || /(?:^|\/)(?:controllers?|resources?|endpoints?)\//i.test(relative));
 }
 
 function walkCensusFiles(root: string, mode: "standard" | "expanded") {
@@ -146,6 +150,7 @@ function addMatchSignals(signals: CensusSignal[], relative: string, lines: reado
     }
     if (/resource\s+"(?:aws_apigatewayv2_route|aws_api_gateway_method|aws_lambda_event_source_mapping|aws_s3_bucket_notification|aws_sns_topic_subscription)"/i.test(line)
       || /\b(?:app|router)\.(?:get|post|put|patch|delete)\s*\(/i.test(line)
+      || /\.(?:java|kt|kts)$/.test(lowerPath) && WEB_INTERFACE_ANNOTATION.test(line)
       || /\b(?:route|trigger|event_source)\b\s*[=:]/i.test(line)) {
       add("interface-event-trigger", "interface-trigger", "p0", "Explicit interface, event or trigger", number, redactDiscoveryHint(line));
     }

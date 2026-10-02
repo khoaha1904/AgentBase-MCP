@@ -27,6 +27,9 @@ upstream graph MCPs are independent and never configured or proxied by AgentBase
   Stale, repeated, cross-repository and frozen-Receipt expansion fails.
 - **AB-DISC-004** - Secret-like paths, generated/dependency/state directories
   and symlinks are excluded before reads. Hints redact credential-like values.
+  Committed `.terragrunt-cache`, `.terraform`, `.gradle`, `.serverless`, `target`
+  and `build` trees are also excluded; their files consume no admitted-file
+  budget and produce no discovery signals.
 - **AB-DISC-005** - Empty lanes mean not detected, never verified absent.
   Missing identity produces an invalid Seed. Truncation/oversized files remain
   limitations; known evidence may still be dispositioned. No graph counts or
@@ -43,6 +46,13 @@ upstream graph MCPs are independent and never configured or proxied by AgentBase
   integrity and recovery tests. Graph-only fixtures may be removed; unrelated
   proposal, guidance/defer and atomic-recovery assertions remain at their
   current behavior owners.
+- **AB-DISC-009** - Explicit Spring mapping/controller and JAX-RS path/HTTP
+  annotations in admitted Java/Kotlin source produce P0
+  `interface-event-trigger` evidence. Conventional Controller, Resource and
+  Endpoint filenames/directories receive priority selection alongside manifests
+  within the existing census bounds and ordinary-source reservation. Selection
+  uses filenames without extra source reads; arbitrary names and dynamic
+  dispatch remain bounded heuristic limitations.
 
 Legacy graph fields in previously frozen Receipts remain compatibility input;
 when present, counts remain nonnegative integers and terminal coverage remains

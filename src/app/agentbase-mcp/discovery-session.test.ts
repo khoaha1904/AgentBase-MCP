@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -60,6 +61,92 @@ test("[AB-DISC-002][AB-DISC-005] census reports a file cap inside the final dire
   assert.equal(seed.capture.truncated, true);
   assert.match(seed.capture.limitations.join("\n"), /entry\/file limit/);
   assert.equal(seed.lanes.find((lane) => lane.lane === "runtime-entrypoint")?.status, "limited");
+});
+
+test("[AB-DISC-002][AB-DISC-004] committed generated caches consume no census budget or P0 evidence", async (t) => {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-committed-caches-")));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const caches = [".terragrunt-cache", ".terraform", ".gradle", ".serverless", "target", "build"];
+  for (const cache of caches) {
+    fs.mkdirSync(path.join(root, cache));
+    const count = cache === ".terragrunt-cache" ? 320 : 1;
+    for (let index = 0; index < count; index++) {
+      fs.writeFileSync(path.join(root, cache, `${index}.tf`), 'resource "aws_apigatewayv2_route" "cached" {}\n');
+    }
+  }
+  fs.writeFileSync(path.join(root, "README.md"), "# Live worker\n");
+  fs.writeFileSync(path.join(root, "main.tf"), 'resource "aws_lambda_function" "live" {}\n');
+  fs.writeFileSync(path.join(root, "worker.ts"), "const handler = () => 1;\n");
+  execFileSync("git", ["init", "--quiet", "--initial-branch=main"], { cwd: root });
+  execFileSync("git", ["add", "."], { cwd: root });
+  execFileSync("git", ["-c", "user.name=AgentBase Test", "-c", "user.email=test@agentbase.invalid",
+    "-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "Commit generated cache fixture"], { cwd: root });
+  assert.equal(execFileSync("git", ["ls-files", ".terragrunt-cache"], { cwd: root, encoding: "utf8" })
+    .trim().split("\n").length, 320);
+  const seed = await captureCensus(root);
+  assert.equal(seed.capture.census?.eligibleFiles, 3);
+  assert.equal(seed.capture.census?.selectedFiles, 3);
+  assert.equal(seed.capture.census?.omittedPriorityFiles, 0);
+  assert.equal(seed.capture.truncated, false);
+  assert.ok(seed.groups.every((group) => group.sources.every((source) => !caches.includes(source.path.split("/")[0]!))));
+  assert.ok(seed.groups.some((group) => group.priority === "p0" && group.sources.some((source) => source.path === "main.tf")));
+});
+
+test("[AB-DISC-009] Spring and JAX-RS annotations become explicit Java and Kotlin P0 interface evidence", async (t) => {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-web-annotations-")));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "README.md"), "# HTTP service\n");
+  const annotations = ["GetMapping", "PostMapping", "PutMapping", "DeleteMapping", "PatchMapping", "RequestMapping",
+    "RestController", "Controller", "Path", "GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS",
+    "org.springframework.web.bind.annotation.GetMapping", "org.springframework.stereotype.Controller",
+    "javax.ws.rs.Path", "jakarta.ws.rs.GET"];
+  for (const extension of ["java", "kt"]) {
+    const file = `Web.${extension}`;
+    for (const annotation of annotations) {
+      fs.writeFileSync(path.join(root, file), `package example;\n@${annotation}\nclass Web {}\n`);
+      const seed = await captureCensus(root);
+      const groups = seed.groups.filter((group) => group.lane === "interface-event-trigger");
+      assert.equal(groups.length, 1, `${extension}: ${annotation}`);
+      assert.equal(groups[0]!.priority, "p0");
+      assert.equal(groups[0]!.count, 1);
+      assert.deepEqual(groups[0]!.sources, [{ path: file, startLine: 2, endLine: 2 }]);
+    }
+    fs.rmSync(path.join(root, file));
+  }
+});
+
+test("[AB-DISC-002][AB-DISC-009] Maven multi-module web controllers survive the standard file budget", async (t) => {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-maven-controllers-")));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const files = {
+    "README.md": "# Multi-module web service\n",
+    "pom.xml": "<project><modules><module>api</module><module>admin</module></modules></project>\n",
+    "api/pom.xml": "<project><artifactId>api</artifactId></project>\n",
+    "admin/pom.xml": "<project><artifactId>admin</artifactId></project>\n",
+    "api/src/main/java/example/ZOrdersController.java": '@RestController\n@GetMapping("/orders")\nclass ZOrdersController {}\n',
+    "api/src/main/java/example/ZOrdersResource.java": '@jakarta.ws.rs.Path("/orders")\n@GET\nclass ZOrdersResource {}\n',
+    "admin/src/main/kotlin/example/ZAdminController.kt": '@Controller\n@PostMapping("/admin")\nclass ZAdminController\n',
+  };
+  for (const [relative, text] of Object.entries(files)) {
+    fs.mkdirSync(path.dirname(path.join(root, relative)), { recursive: true });
+    fs.writeFileSync(path.join(root, relative), text);
+  }
+  for (let index = 0; index < 300; index++) {
+    fs.writeFileSync(path.join(root, `api/src/main/java/example/AHelper${index}.java`), `class AHelper${index} {}\n`);
+  }
+  const seed = await captureCensus(root);
+  assert.equal(seed.capture.census?.eligibleFiles, 307);
+  assert.equal(seed.capture.census?.selectedFiles, 256);
+  assert.equal(seed.capture.census?.omittedPriorityFiles, 0);
+  assert.equal(seed.capture.truncated, true);
+  const interfaces = seed.groups.filter((group) => group.lane === "interface-event-trigger");
+  assert.equal(interfaces.length, 1);
+  assert.equal(interfaces[0]!.priority, "p0");
+  assert.equal(interfaces[0]!.count, 6);
+  for (const relative of Object.keys(files).filter((file) => /\.(java|kt)$/.test(file))) {
+    assert.ok(interfaces[0]!.sources.some((source) => source.path === relative), relative);
+  }
+  assert.equal((await captureCensus(root)).digest, seed.digest);
 });
 
 test("[AB-DISC-002..003][AB-INGEST-022..023] prioritizes deployment and expands census once from source", async (t) => {
@@ -141,7 +228,8 @@ test("[AB-DISC-002][AB-DISC-005] census discloses entry and oversized-file limit
   assert.equal(seed.groups.some((group) => group.sources.some((source) => source.path === "go.mod")), true);
   assert.match(seed.capture.limitations.join("\n"), /1 admitted source files exceeded/);
   assert.equal(seed.lanes.some((lane) => lane.status === "absent-after-check"), false);
-  assert.match(seed.lanes.find((lane) => lane.lane === "interface-event-trigger")?.limitation ?? "", /not detected/);
+  assert.equal(seed.lanes.find((lane) => lane.lane === "interface-event-trigger")?.status, "covered");
+  assert.match(seed.lanes.find((lane) => lane.lane === "runtime-entrypoint")?.limitation ?? "", /not detected/);
   for (let index = 0; index < 4096; index += 1) fs.writeFileSync(path.join(root, `z-${index}.txt`), "");
   assert.equal((await captureCensus(root)).capture.truncated, true);
 });
