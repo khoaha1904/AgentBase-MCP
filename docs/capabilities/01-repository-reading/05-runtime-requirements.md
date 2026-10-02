@@ -68,6 +68,12 @@ upstream graph MCPs are independent and never configured or proxied by AgentBase
   runtime-entrypoint group, retaining distinct annotation/main locations and
   full signal count. Separate launcher files and independently declared
   infrastructure runtimes remain separate groups.
+- **AB-DISC-013** - Test/fixture/mock paths, including `__files` and `mappings`,
+  cannot supply identity-product P0 evidence or its semantic-confirmation
+  fallback. Fixture READMEs receive no README admission priority. The root
+  README is admitted first among priority files and precedes module READMEs in
+  identity samples; module READMEs precede other identity sources. Missing
+  non-fixture identity remains visible rather than borrowing fixture context.
 
 Legacy graph fields in previously frozen Receipts remain compatibility input;
 when present, counts remain nonnegative integers and terminal coverage remains

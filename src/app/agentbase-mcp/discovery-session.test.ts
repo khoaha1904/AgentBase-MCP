@@ -266,6 +266,62 @@ test("[AB-DISC-012][AB-DISC-006] Spring and main markers share one group per lau
   assert.equal((await captureCensus(root)).digest, seed.digest);
 });
 
+test("[AB-DISC-013] identity samples prefer the root and module READMEs over test and mock fixture context", async (t) => {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-readme-identity-")));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const fixtures = ["src/tests/resources/sample/README.md", "fixtures/sample/README.md", "fixture/README.md",
+    "__files/README.md", "mappings/README.md", "mocks/README.md", "__mocks__/README.md"];
+  const modules = Array.from({ length: 9 }, (_, index) => `AModule${index}/README.md`);
+  for (const relative of ["README.md", ...modules, ...fixtures]) {
+    fs.mkdirSync(path.dirname(path.join(root, relative)), { recursive: true });
+    fs.writeFileSync(path.join(root, relative), "# Service overview\nhttps://example.test/context\n");
+  }
+  fs.writeFileSync(path.join(root, "package.json"), '{"name":"example-service"}\n');
+  const seed = await captureCensus(root);
+  const identity = seed.groups.find((group) => group.lane === "identity-product")!;
+  assert.equal(identity.count, 11);
+  assert.equal(identity.priority, "p0");
+  assert.deepEqual(identity.sources.map((source) => source.path), ["README.md", ...modules.slice(0, 7)]);
+  assert.ok(identity.sources.every((source) => !fixtures.includes(source.path)));
+  assert.equal((await captureCensus(root)).digest, seed.digest);
+  fs.rmSync(path.join(root, "README.md"));
+  assert.deepEqual((await captureCensus(root)).groups.find((group) => group.lane === "identity-product")?.sources
+    .map((source) => source.path), modules.slice(0, 8));
+});
+
+test("[AB-DISC-013][AB-DISC-005] fixture-only signals cannot become fallback Repository identity", async (t) => {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-fixture-identity-")));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  for (const directory of ["src/tests/resources/sample", "__files", "mappings"]) {
+    fs.mkdirSync(path.join(root, directory), { recursive: true });
+    fs.writeFileSync(path.join(root, directory, "README.md"), "# Fixture\nhttps://example.test/mock\n");
+    fs.writeFileSync(path.join(root, directory, "package.json"), '{"name":"fixture"}\n');
+  }
+  const seed = await captureCensus(root);
+  assert.equal(seed.state, "invalid");
+  assert.equal(seed.groups.some((group) => group.lane === "identity-product"), false);
+  assert.ok(seed.groups.some((group) => group.lane === "integration-data-channel"));
+  assert.match(seed.capture.limitations.join(), /identity evidence was not available/);
+});
+
+test("[AB-DISC-002][AB-DISC-013] root README admission survives a full budget of fixture READMEs and priority files", async (t) => {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-readme-budget-")));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "README.md"), "# Production service\n");
+  for (let index = 0; index < 256; index++) {
+    const directory = path.join(root, `AFixture${index}`, "fixtures");
+    fs.mkdirSync(directory, { recursive: true });
+    fs.writeFileSync(path.join(directory, "README.md"), "# Fixture context\n");
+    fs.writeFileSync(path.join(root, `AInfrastructure${index}.tf`), "# Infrastructure\n");
+  }
+  const seed = await captureCensus(root);
+  assert.equal(seed.capture.census?.selectedFiles, 256);
+  assert.equal(seed.capture.census?.eligibleFiles, 513);
+  const identity = seed.groups.find((group) => group.lane === "identity-product")!;
+  assert.equal(identity.count, 1);
+  assert.deepEqual(identity.sources, [{ path: "README.md", startLine: 1, endLine: 1 }]);
+});
+
 test("[AB-DISC-002..003][AB-INGEST-022..023] prioritizes deployment and expands census once from source", async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-priority-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));

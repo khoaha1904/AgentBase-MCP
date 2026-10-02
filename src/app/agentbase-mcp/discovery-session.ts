@@ -78,17 +78,25 @@ function candidateFile(relative: string): boolean {
       ".cjs", ".py", ".go", ".java", ".sh", ".cs", ".kt", ".kts"].includes(extension);
 }
 
-function isTestOrDocumentationPath(relative: string): boolean {
-  return /(?:^|\/)(?:tests?|__tests__|fixtures|__fixtures__|docs?|documentation)\//i.test(relative)
-    || /\.(?:md|markdown|mdx)$/i.test(relative)
+function isTestPath(relative: string): boolean {
+  return /(?:^|\/)(?:tests?|__tests__|fixtures?|__fixtures__|mocks?|__mocks__|__files|mappings)\//i.test(relative)
     || /(?:Test|Tests|Spec)\.(?:java|kt|kts)$/.test(relative)
     || /(?:^|[\/._-])(?:test|spec)[._-]/i.test(relative)
     || /(?:_test\.go|_test\.py|\/test_[^/]+\.py)$/i.test(relative);
 }
 
+function isTestOrDocumentationPath(relative: string): boolean {
+  return isTestPath(relative) || /(?:^|\/)(?:docs?|documentation)\//i.test(relative)
+    || /\.(?:md|markdown|mdx)$/i.test(relative);
+}
+
+function readmeRank(relative: string): number {
+  return /^readme(?:\.|$)/i.test(path.posix.basename(relative)) ? relative.includes("/") ? 1 : 0 : 2;
+}
+
 function priorityFile(relative: string): boolean {
   const name = path.posix.basename(relative).toLowerCase();
-  return /^readme(?:\.|$)/.test(name)
+  return !isTestPath(relative) && /^readme(?:\.|$)/.test(name)
     || ["package.json", "pyproject.toml", "go.mod", "pom.xml", "build.gradle", "build.gradle.kts",
       "dockerfile", "makefile", "codeowners", "terragrunt.hcl"].includes(name)
     || /\.(tf|hcl)$/.test(name) || /^(template|sam|serverless|compose|docker-compose)(?:\.|$)/.test(name)
@@ -121,7 +129,8 @@ function walkCensusFiles(root: string, mode: "standard" | "expanded") {
   }
   entriesTruncated ||= Boolean(pending.length);
   const ordered = files.sort();
-  const priority = ordered.filter((file) => priorityFile(file));
+  const priority = ordered.filter((file) => priorityFile(file))
+    .sort((left, right) => Number(readmeRank(left) !== 0) - Number(readmeRank(right) !== 0));
   const ordinary = ordered.filter((file) => !priorityFile(file));
   const reserved = Math.min(ordinary.length, Math.floor(fileLimit / 4));
   const selected = new Set([...priority.slice(0, fileLimit - reserved), ...ordinary.slice(0, reserved)]);
@@ -140,8 +149,8 @@ function addMatchSignals(signals: CensusSignal[], relative: string, lines: reado
   const javaOrKotlin = /\.(?:java|kt|kts)$/.test(lowerPath);
   const add = (lane: DiscoveryLane, kind: string, priority: CensusSignal["priority"], title: string,
     line: number, hint: string) => signals.push({ lane, kind, priority, title, path: relative, line, hint });
-  if (/^readme(?:\.|$)/i.test(path.posix.basename(relative)) || /(?:^|\/)package\.json$/.test(lowerPath)
-    || /(?:^|\/)pyproject\.toml$/.test(lowerPath) || /(?:^|\/)go\.mod$/.test(lowerPath)) {
+  if (!isTestPath(relative) && (/^readme(?:\.|$)/i.test(path.posix.basename(relative)) || /(?:^|\/)package\.json$/.test(lowerPath)
+    || /(?:^|\/)pyproject\.toml$/.test(lowerPath) || /(?:^|\/)go\.mod$/.test(lowerPath))) {
     add("identity-product", "repository-identity", "p0", "Repository identity and stated purpose", 1, relative);
   }
   if (/\.tf$/.test(lowerPath) || /(?:^|\/)terragrunt\.hcl$/.test(lowerPath)) {
@@ -228,6 +237,7 @@ function compactGroups(signals: readonly CensusSignal[]): readonly DiscoveryGrou
     const locations = [...new Map(values.map((value) => [`${value.path}:${value.line}`, {
       path: value.path, startLine: value.line, endLine: value.line,
     }])).values()];
+    if (first.lane === "identity-product") locations.sort((left, right) => readmeRank(left.path) - readmeRank(right.path));
     const perFile = new Map<string, number>();
     const sources = locations.map((source) => {
       const round = perFile.get(source.path) ?? 0;
@@ -268,7 +278,7 @@ function buildSeed(input: Readonly<{
       title: "Cross-boundary Flow candidate" }));
   let groups = compactGroups([...input.signals, ...flowSignals]);
   if (!groups.some((group) => group.lane === "identity-product")) {
-    const fallback = input.signals[0];
+    const fallback = input.signals.find((signal) => !isTestPath(signal.path));
     if (fallback) groups = compactGroups([...input.signals, { ...fallback, lane: "identity-product", kind: "repository-identity",
       priority: "p0", title: "Repository identity requires semantic confirmation", hint: fallback.path }]);
   }
