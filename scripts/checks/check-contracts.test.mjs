@@ -135,6 +135,7 @@ test("[AB-LANG-006] repository language check rejects Vietnamese prose and allow
     { relative: "docs/example.md", source: "English with café and Bézier.\n" },
     { relative: "presentation/vi/slide.md", source: "N\u1ed9i dung thuy\u1ebft tr\u00ecnh ti\u1ebfng Vi\u1ec7t.\n" },
     { relative: "presentation/preview.html", source: "<p>N\u1ed9i dung thuy\u1ebft tr\u00ecnh ti\u1ebfng Vi\u1ec7t.</p>\n" },
+    { relative: "handoff/REPORT.md", source: "B\u00e1o c\u00e1o v\u00f2ng l\u00e0m vi\u1ec7c.\n" },
   ]), []);
 
   assert.deepEqual(checkRepositoryLanguageEntries([
@@ -154,6 +155,16 @@ test("[AB-LANG-006] repository language check rejects Vietnamese prose and allow
     code: "CONTRACT-NON-ENGLISH",
     message: "presentation/preview-copy.html:1 contains Vietnamese text",
   }]);
+
+  assert.deepEqual(checkRepositoryLanguageEntries([
+    { relative: "handoff-copy/REPORT.md", source: "B\u00e1o c\u00e1o v\u00f2ng l\u00e0m vi\u1ec7c.\n" },
+    { relative: "docs/handoff/REPORT.md", source: "B\u00e1o c\u00e1o v\u00f2ng l\u00e0m vi\u1ec7c.\n" },
+    { relative: "src/example.ts", source: '// B\u00e1o c\u00e1o v\u00f2ng l\u00e0m vi\u1ec7c.\n' },
+  ]), [
+    { code: "CONTRACT-NON-ENGLISH", message: "handoff-copy/REPORT.md:1 contains Vietnamese text" },
+    { code: "CONTRACT-NON-ENGLISH", message: "docs/handoff/REPORT.md:1 contains Vietnamese text" },
+    { code: "CONTRACT-NON-ENGLISH", message: "src/example.ts:1 contains Vietnamese text" },
+  ]);
 });
 
 test("[AB-DOC-006] current authority rejects old routes while source text is ignored", () => {

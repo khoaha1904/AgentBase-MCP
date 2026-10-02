@@ -15,6 +15,10 @@ exceptions; they are not Product, Architecture or Capability Contract
 authority. A translation must preserve requirements, identifiers, links, code
 examples and observable runtime behavior.
 
+Owner-requested reviewer round reports under `handoff/` are a Vietnamese
+operational correspondence exception. They remain outside `docs/` and the
+Product, Architecture and Capability Contracts; Git retains prior rounds.
+
 All current product documentation lives in this repository at three contract levels:
 
 ```text

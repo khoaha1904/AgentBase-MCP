@@ -18,6 +18,12 @@ explicitly localized Vietnamese presentation source under `presentation/vi/`
 and its generated standalone snapshot at `presentation/preview.html` are also
 excluded; they are communication material, not product-contract authority.
 
+Owner-requested reviewer round reports under `handoff/` are written in Vietnamese
+and are operational correspondence, not product-contract authority. Compare the
+requested round with `handoff/REPORT.md`; skip completed items and resume any
+reported incomplete work. Replace the report each round and push verified work
+with the report even when another item is blocked.
+
 ## Development workflow
 
 - Use contract-driven development for product or architecture changes.
