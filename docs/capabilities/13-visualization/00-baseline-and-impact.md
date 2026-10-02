@@ -7,7 +7,9 @@
 - OKF relationship validation already owns canonical predicates and `flow_steps`.
 - shared Question Markdown already exposes exact subject and state.
 - Hub configuration already isolates and synchronizes one Published checkout.
-- diagram-design `2.6.5` is retained with an offline static HTML/SVG profile.
+- The internal renderer owns an adapted offline HTML/SVG template derived from
+  diagram-design `2.6.5`; its asset NOTICE retains upstream provenance and the
+  complete MIT license. No upstream source snapshot is shipped.
 
 ## Baseline gaps addressed by capability 045
 

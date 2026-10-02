@@ -6,7 +6,7 @@ Repository automation is grouped by its operator goal:
 - `installation/` — installer, client registration and repository migration.
 - `release/` - immutable application packaging and release qualification.
 - `qualification/` - deterministic Hub workflow fixtures.
-- `upstream/` - retained diagram source inventory checks.
+- `upstream/` - offline diagram skill asset and dependency checks.
 
 Product runtime code belongs under `src/`; scripts should compose existing
 public entrypoints instead of becoming another application layer.

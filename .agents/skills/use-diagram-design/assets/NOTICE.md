@@ -1,3 +1,16 @@
+# Diagram template attribution
+
+Source: https://github.com/carhrynlavery/diagram-design
+
+Version: 2.6.5
+
+Commit: 648c2a597839301e06df1e7434a08bde9f42eed3
+
+The shipped template is an AgentBase-modified adaptation of the upstream
+static HTML/SVG template. The upstream source snapshot is not included.
+
+## Upstream license
+
 MIT License
 
 Copyright (c) 2025 Cathryn Lavery

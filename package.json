@@ -18,7 +18,6 @@
     "configure:hub-token": "node scripts/installation/configure-hub-token.mjs",
     "release:build": "node scripts/release/build-release.mjs",
     "release:qualify": "node scripts/release/qualify-release.mjs",
-    "verify:upstreams": "node scripts/upstream/manage-upstreams.mjs verify diagram-design",
     "check:upstream-foundations": "node scripts/upstream/check-inactive-foundations.mjs",
     "build:hub-validator": "node scripts/build-hub-validator.mjs",
     "check:hub-validator": "node scripts/build-hub-validator.mjs --check",

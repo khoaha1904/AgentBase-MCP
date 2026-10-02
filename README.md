@@ -99,8 +99,8 @@ no real model, provider or GitHub operation.
 Application-owned model benchmark runners, fake graph demo and native-provider
 qualification are removed. Historical benchmark data remains in the independent
 AgentBase-Benchmark repository and Git history. It is not required to install,
-run or verify this app. Retained diagram source supports the existing static
-HTML/SVG presentation boundary; it introduces no browser or model service.
+run or verify this app. The internal diagram skill ships its adapted offline
+HTML/SVG template and upstream MIT notice; it introduces no browser or model service.
 
 ## Documentation
 

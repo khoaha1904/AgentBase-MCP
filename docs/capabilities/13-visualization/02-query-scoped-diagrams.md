@@ -5,6 +5,11 @@ It uses Hub search/read to establish scope, asks the shared visualization tool
 for one bounded packet, then delegates rendering to internal
 `use-diagram-design`.
 
+The renderer uses its own adapted inline-SVG template with local assets and
+system fonts. Repository verification checks that shipped template for network
+URLs and requires its adjacent upstream NOTICE; no vendored upstream tree or
+upstream inventory is required.
+
 ## Supported first slice
 
 - **Architecture:** nodes plus structural/runtime edges; may render partial data
