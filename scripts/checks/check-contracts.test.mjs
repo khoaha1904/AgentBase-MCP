@@ -147,7 +147,10 @@ test("[AB-LANG-006] repository language check rejects Vietnamese prose and allow
 
   assert.deepEqual(checkRepositoryLanguageEntries([
     { relative: "vendor/example.md", source: "Kh\u00f4ng \u0111\u01b0\u1ee3c ghi ti\u1ebfng Vi\u1ec7t.\n" },
-  ]), []);
+  ]), [{
+    code: "CONTRACT-NON-ENGLISH",
+    message: "vendor/example.md:1 contains Vietnamese text",
+  }]);
 
   assert.deepEqual(checkRepositoryLanguageEntries([
     { relative: "presentation/preview-copy.html", source: "N\u1ed9i dung thuy\u1ebft tr\u00ecnh ti\u1ebfng Vi\u1ec7t.\n" },

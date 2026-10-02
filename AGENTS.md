@@ -12,8 +12,8 @@ Do not preload every document.
 The latest user request and live repository state outrank stale planning prose.
 Communicate with the user in the language they use. Keep every AgentBase-owned
 repository artifact in English, including documentation, source text,
-comments, test descriptions and commit messages. Do not translate third-party
-vendor snapshots or generated output. The
+comments, test descriptions and commit messages. Generated output retains its
+original bytes. The
 explicitly localized Vietnamese presentation source under `presentation/vi/`
 and its generated standalone snapshot at `presentation/preview.html` are also
 excluded; they are communication material, not product-contract authority.

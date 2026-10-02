@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -9,7 +10,7 @@ function readJson(relative) {
   return JSON.parse(fs.readFileSync(path.join(repositoryRoot, relative), "utf8"));
 }
 
-function verifyDiagramFoundation() {
+export function verifyDiagramFoundation(repositoryRoot) {
   const assets = path.join(repositoryRoot, ".agents/skills/use-diagram-design/assets");
   const template = fs.readFileSync(path.join(assets, "template.html"), "utf8");
   assert.match(template, /<svg\b/, "diagram foundation requires an inline SVG template");
@@ -25,8 +26,8 @@ function verifyDiagramFoundation() {
   assert.match(notice, /2\.6\.5/);
   assert.match(notice, /648c2a597839301e06df1e7434a08bde9f42eed3/);
   assert.match(notice, /MIT License/);
-  assert.equal(fs.existsSync(path.join(repositoryRoot, "vendor/diagram-design")), false,
-    "the retired upstream source snapshot must not be shipped");
+  assert.equal(fs.existsSync(path.join(repositoryRoot, "vendor")), false,
+    "retired upstream source snapshots must not be shipped");
 
   assert.equal(fs.existsSync(path.join(repositoryRoot, ".agents/skills/diagram-design")), false,
     "diagram-design must not be installed as an AgentBase skill");
@@ -46,6 +47,8 @@ function verifyNoActivation() {
   }
 }
 
-verifyDiagramFoundation();
-verifyNoActivation();
-process.stdout.write("upstream foundations: verified with narrow diagram activation\n");
+if (process.argv[1] && import.meta.url === pathToFileURL(fs.realpathSync(process.argv[1])).href) {
+  verifyDiagramFoundation(repositoryRoot);
+  verifyNoActivation();
+  process.stdout.write("upstream foundations: verified with narrow diagram activation\n");
+}

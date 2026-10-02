@@ -138,5 +138,6 @@ not product-contract authority.
 
 ## License
 
-AgentBase-MCP uses [Apache License 2.0](LICENSE). Retained third-party source under
-`vendor/` keeps its upstream license and attribution.
+AgentBase-MCP uses [Apache License 2.0](LICENSE). The adapted diagram template
+retains upstream MIT attribution in its adjacent
+[NOTICE](.agents/skills/use-diagram-design/assets/NOTICE.md).

@@ -7,8 +7,8 @@ artifact: documentation, source text, comments, tests and
 commit messages. Agents communicate with users in the language used by the
 user, but user conversation does not change the repository language.
 
-Third-party vendor snapshots and generated output retain their original bytes
-and are excluded from translation. The Vietnamese
+Generated output retains its original bytes and is excluded from translation.
+The Vietnamese
 presentation source under `presentation/vi/` and its generated standalone
 snapshot at `presentation/preview.html` are explicit localized-content
 exceptions; they are not Product, Architecture or Capability Contract
