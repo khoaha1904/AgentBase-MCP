@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { executeCli } from "./cli.ts";
 import {
@@ -32,6 +34,27 @@ function io(environment: NodeJS.ProcessEnv, promptToken: (existing: string | und
     output, errors,
   };
 }
+
+test("[AB-CLI-001][AB-INSTALL-008] CLI and checkout installer execute through symbolic links", (t) => {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-symlink-entrypoints-")));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const cli = path.join(root, "abs.ts");
+  fs.symlinkSync(fileURLToPath(new URL("./cli.ts", import.meta.url)), cli);
+  const result = spawnSync(process.execPath, [cli, "status"], {
+    encoding: "utf8", env: { ...process.env, AGENTBASE_HOME: path.join(root, "state") },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).kind, "unconfigured");
+
+  const checkout = path.join(root, "checkout");
+  fs.symlinkSync(path.resolve(import.meta.dirname, ".."), checkout);
+  const installed = spawnSync("bash", [path.join(checkout, "install.sh"), "--invalid"], {
+    encoding: "utf8", env: { ...process.env, AGENTBASE_HOME: path.join(root, "state") },
+  });
+  assert.equal(installed.status, 1, installed.stderr);
+  assert.match(installed.stderr, /installer accepts no arguments/);
+  assert.equal(fs.existsSync(path.join(root, "state")), false);
+});
 
 test("abs help exposes only the small public surface", async () => {
   const output: string[] = [];

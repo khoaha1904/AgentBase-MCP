@@ -89,6 +89,8 @@ boundary without changing Hub profiles or connect semantics.
   workspace setup owns validation and activation; MCP tools remain unchanged.
 - `package.json` maps the installed executable name `abs` to the existing
   dispatcher rather than introducing a wrapper.
+- Entrypoint detection resolves the invoked path through its real path so the
+  installed `abs` command also dispatches when invoked through a symbolic link.
 
 ## Verification
 

@@ -99,3 +99,7 @@ Dependencies and client/skill setup require no native graph binary, provider
 activation or parser build. Retired provider-only requirements AB-INSTALL-032
 through AB-INSTALL-036 are no longer release obligations. Source/runtime bounds
 are owned by [Repository discovery](../01-repository-reading/05-runtime-requirements.md).
+
+Checkout installation resolves its invoked entrypoint through the real path.
+Running `./install.sh` from a symbolic-link checkout path executes the same
+installer validation and setup as running it from the canonical checkout path.
