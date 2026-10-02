@@ -216,8 +216,10 @@ function census(root: string, mode: "standard" | "expanded") {
 function compactGroups(signals: readonly CensusSignal[]): readonly DiscoveryGroup[] {
   const grouped = new Map<string, CensusSignal[]>();
   for (const signal of signals) {
-    // Preserve evidenced entrypoint locations, not guessed directory/service identities.
-    const scope = signal.lane === "runtime-entrypoint" ? `${signal.path}:${signal.line}` : "";
+    // JVM launcher markers describe one file; infrastructure declarations remain distinct.
+    const scope = signal.lane === "runtime-entrypoint"
+      ? /\.(?:java|kt|kts)$/i.test(signal.path) ? signal.path : `${signal.path}:${signal.line}`
+      : "";
     const key = `${signal.lane}\u0000${signal.kind}\u0000${signal.priority}\u0000${signal.title}\u0000${scope}`;
     grouped.set(key, [...(grouped.get(key) ?? []), signal]);
   }

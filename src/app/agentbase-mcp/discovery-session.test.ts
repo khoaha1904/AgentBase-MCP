@@ -239,11 +239,31 @@ test("[AB-DISC-002][AB-DISC-011] Spring Boot and Java main entrypoints survive t
   assert.equal(seed.capture.census?.omittedPriorityFiles, 0);
   assert.equal(seed.capture.truncated, true);
   const runtimes = seed.groups.filter((group) => group.lane === "runtime-entrypoint" && group.priority === "p0");
-  assert.equal(runtimes.length, 4);
+  assert.equal(runtimes.length, 3);
   assert.deepEqual(runtimes.flatMap((group) => group.sources.map((source) => `${source.path}:${source.startLine}`)).sort(), [
     "api/src/main/java/example/ZApplication.java:1", "api/src/main/java/example/ZApplication.java:2",
     "api/src/main/java/example/ZMain.java:1", "api/src/main/kotlin/example/ZApplication.kt:1",
   ].sort());
+});
+
+test("[AB-DISC-012][AB-DISC-006] Spring and main markers share one group per launcher file with both locations", async (t) => {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-launcher-groups-")));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "README.md"), "# Application\n");
+  fs.writeFileSync(path.join(root, "Application.java"), "@SpringBootApplication\nclass Application {\n  public static void main(String[] args) {}\n}\n");
+  fs.writeFileSync(path.join(root, "OtherApplication.kt"), "@SpringBootApplication\nclass OtherApplication\n");
+  const seed = await captureCensus(root);
+  const groups = seed.groups.filter((group) => group.lane === "runtime-entrypoint");
+  assert.equal(groups.length, 2);
+  const application = groups.find((group) => group.sources[0]?.path === "Application.java")!;
+  assert.equal(application.priority, "p0");
+  assert.equal(application.count, 2);
+  assert.deepEqual(application.sources, [
+    { path: "Application.java", startLine: 1, endLine: 1 },
+    { path: "Application.java", startLine: 3, endLine: 3 },
+  ]);
+  assert.equal(groups.find((group) => group.sources[0]?.path === "OtherApplication.kt")?.count, 1);
+  assert.equal((await captureCensus(root)).digest, seed.digest);
 });
 
 test("[AB-DISC-002..003][AB-INGEST-022..023] prioritizes deployment and expands census once from source", async (t) => {

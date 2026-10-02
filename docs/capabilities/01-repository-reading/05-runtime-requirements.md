@@ -64,6 +64,10 @@ upstream graph MCPs are independent and never configured or proxied by AgentBase
   Java `public static void main` produce runtime-entrypoint P0 signals in
   production source. Conventional Application/Main filenames receive the same
   bounded priority selection as controllers; arbitrary names remain heuristic.
+- **AB-DISC-012** - Java/Kotlin launcher evidence in one file forms one
+  runtime-entrypoint group, retaining distinct annotation/main locations and
+  full signal count. Separate launcher files and independently declared
+  infrastructure runtimes remain separate groups.
 
 Legacy graph fields in previously frozen Receipts remain compatibility input;
 when present, counts remain nonnegative integers and terminal coverage remains
