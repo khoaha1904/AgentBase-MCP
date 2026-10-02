@@ -7,27 +7,7 @@ import path from "node:path";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 const maximumFileBytes = 100 * 1024 * 1024;
-const selectedGrammars = new Set([
-  "bash", "dockerfile", "go", "hcl", "java", "javascript", "json",
-  "markdown", "python", "tsx", "typescript", "yaml", "c_sharp", "kotlin",
-]);
-
 const upstreams = Object.freeze({
-  "codebase-memory": Object.freeze({
-    commit: "46ae198fc11cda80e817acbc5f5908d7c2de7032",
-    version: "v0.10.8",
-    url: "https://github.com/DeusData/codebase-memory-mcp",
-    license: "MIT",
-    include(relative) {
-      if (relative === "Formula") return false;
-      if (relative === "graph-ui" || relative.startsWith("graph-ui/")) return false;
-      const shim = /^internal\/cbm\/grammar_([^/]+)\.c$/.exec(relative);
-      if (shim) return selectedGrammars.has(shim[1]);
-      const grammar = /^internal\/cbm\/vendored\/grammars\/([^/]+)\//.exec(relative);
-      return !grammar || selectedGrammars.has(grammar[1]);
-    },
-    selection: "Core runtime and the AgentBase 14-language grammar profile; Graph UI frontend excluded.",
-  }),
   "diagram-design": Object.freeze({
     commit: "648c2a597839301e06df1e7434a08bde9f42eed3",
     version: "2.6.5",

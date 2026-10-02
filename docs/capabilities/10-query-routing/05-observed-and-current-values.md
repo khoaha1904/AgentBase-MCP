@@ -123,5 +123,5 @@ Refresh/Enrichment proposal accepts it.
 ## Minimal implementation impact
 
 Exact concept read exposes the snapshot. `agentbase-query` composes current
-source over existing graph tools; no parser, resolver, target registry, cache,
+source through host read/search tools; no parser, resolver, target registry, cache,
 dependency or new persistence is needed.

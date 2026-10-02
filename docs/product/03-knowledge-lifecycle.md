@@ -127,8 +127,8 @@ explicit Publish → direct commit + local recognition → Published
                  → PR + external merge + explicit sync → Published
 ```
 
-Without an active Remote Hub, AgentBase may scan local repositories and use the
-Code Graph, but it has no authority to create OKF Drafts or query Hub knowledge.
+Without an active Remote Hub, AgentBase may scan local repositories and provide
+schema guidance, but it has no authority to create OKF Drafts or query Hub knowledge.
 
 ## Choosing a workflow
 

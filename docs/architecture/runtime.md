@@ -14,14 +14,13 @@
 
 | Boundary | Architecture ownership | Capability Contract |
 |---|---|---|
-| MCP composition and wire protocol | `app/codebase-memory-mcp` registers business tools; protocol adapters own version and transport negotiation | [MCP protocol](../capabilities/12-version-scope/09-mcp-protocol-requirements.md) and [Code Graph runtime](../capabilities/01-repository-reading/05-runtime-requirements.md) |
-| Code Intelligence | `core/code-intelligence` owns neutral values; provider adapters own engine lifecycle and translation | [Repository Reading](../capabilities/01-repository-reading/README.md) |
-| Knowledge authoring | `core/knowledge` owns portable documents and policy; `app/repository-okf` composes repository evidence | [Knowledge Entry](../capabilities/05-knowledge-entry/README.md) and [Ingest/Refresh](../capabilities/09-ingest-and-refresh/README.md) |
+| MCP composition and wire protocol | `app/agentbase-mcp` registers business tools; protocol adapters own version and transport negotiation | [MCP protocol](../capabilities/12-version-scope/09-mcp-protocol-requirements.md) and [Source discovery runtime](../capabilities/01-repository-reading/05-runtime-requirements.md) |
+| Repository discovery | source discovery owns bounded census; the host agent owns source investigation | [Repository Reading](../capabilities/01-repository-reading/README.md) |
+| Knowledge authoring | `core/knowledge` owns portable documents and policy; `app/hub-okf` composes governed proposals using repository source identity and Discovery Receipts | [Knowledge Entry](../capabilities/05-knowledge-entry/README.md) and [Ingest/Refresh](../capabilities/09-ingest-and-refresh/README.md) |
 | Hub governance and publication | `core/hub` owns identity/transitions; `app/hub-okf` owns local workflows; `providers/github-hub` owns transport | [Review and Publish](../capabilities/11-review-and-publish/README.md) |
 | Provider enrichment | provider adapters own bounded observations; `app/hub-okf/enrichment` owns reconciliation | [Cross-repository Relations](../capabilities/06-cross-repository-relations/README.md) |
 | Query and visualization | `core/knowledge/query` owns accepted reads; application projections remain derived and commit-bound | [Query Routing](../capabilities/10-query-routing/README.md) and [Visualization](../capabilities/13-visualization/README.md) |
 | CLI, installation and local storage | `src/cli.ts` dispatches; application owners and installation scripts own transactions | [Version Scope](../capabilities/12-version-scope/README.md) |
-| Benchmark and AI-SDLC qualification | scripts own isolated measurement; production runtime contains no model execution authority | [Benchmark](../capabilities/12-version-scope/03-benchmark-requirements.md) and [AI-SDLC Context](../capabilities/14-ai-sdlc-context/README.md) |
 
 The high-level MCP server factory owns tool registration. Low-level protocol
 adapters own wire versions and transport negotiation. Business capabilities do
@@ -70,7 +69,7 @@ only inside the trusted enterprise boundary.
 
 One immutable release archive is built for each supported platform. It contains
 the bundled CLI/MCP application, production dependencies, product skills,
-native Code Graph provider and static assets. Node.js remains the only external
+static assets. Node.js remains the only external
 runtime prerequisite; ordinary installation does not run `npm ci`, compile
 native source or depend on a mutable checkout.
 
@@ -102,7 +101,7 @@ SHA-256 checksums and SBOM. Signing or attestation may wrap that boundary for a
 future hardened/public profile but is not part of the trusted-enterprise
 runtime. The current workflow admits only `linux-x64`, records deterministic
 gate results in the manifest and retains the archive plus adjacent checksum;
-additional platform jobs wait for their reviewed native artifacts.
+additional platform jobs require explicit host qualification.
 
 Revalidation against Product Groups 3 and 4 adds release compatibility metadata
 without moving knowledge authority into installation. The manifest declares the
@@ -125,19 +124,8 @@ database. It composes three existing boundaries:
    finalized proposal and admitted base. Text and any optional visualization
    render the same projection; Git diff and the exact Publish confirmation digest remain
    the review authorities.
-3. Qualification runners in this repository execute pinned cases, while the
-   sibling AgentBase-Benchmark repository owns source registrations, semantic
-   expectations, immutable results and owner dispositions. Generated Domain
-   sites remain presentation output only.
-
-The real-model qualification pass is deferred and is not part of ordinary
-runtime, deterministic verification or the current internal enterprise release
-gate. When resumed, it first measures the current lexical profile; retrieval
-code changes only after a versioned case exposes a decision-relevant failure,
-and the smallest bounded correction reruns the same case. Group 4 Domain Capsule
-compatibility is preserved by carrying canonical Domain, Repository and concept
-identities in these projections; current Markdown paths are evidence locations,
-not new identity keys.
+3. Focused deterministic tests verify those projections. Historical comparison
+   evidence remains external; this repository contains no model runner.
 
 ## Group 4 Profile and Domain Capsule composition
 

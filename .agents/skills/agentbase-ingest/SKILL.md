@@ -21,8 +21,7 @@ carried evidence is a starting point, not a substitute for discovery admission.
 Changed or broader scope needs renewed agreement. Cancellation preserves private
 work without publishing or deleting it.
 
-This workflow uses `preflight_hub_ingest`, the tools named by
-`use-codebase-memory`, `get_okf_authoring_schemas`, `prepare_hub_okf`,
+This workflow uses `preflight_hub_ingest`, `discover_repository`, `get_okf_authoring_schemas`, `prepare_hub_okf`,
 `validate_okf_changes`, `finalize_hub_okf_proposal` and
 `inspect_hub_okf_proposal` only.
 
@@ -34,11 +33,15 @@ This workflow uses `preflight_hub_ingest`, the tools named by
    For a new repository, compare its documents with returned
    Domain summaries, show evidence and warnings, then obtain one explicit
    preliminary Repository default-home confirmation.
-2. **Discover** — Index exactly the `analysis_source_repository` returned by
-   Preflight and follow `use-codebase-memory`. The index call appends one
-   bounded Discovery Seed after its fixed diagnostic/architecture/census pass.
-   If the Seed is not `ready`, stop Incomplete. Reuse its graph; never ingest
-   graph records or raw Seed rows.
+2. **Discover** - Call `discover_repository` with exactly the
+   `analysis_source_repository` returned by Preflight. It returns one bounded
+   five-lane Discovery Seed from source census. If the Seed is not `ready`, stop
+   Incomplete. Inspect its limits and use ordinary read/search tools to qualify
+   source evidence. If an important gap needs the expanded 1,024-file pass,
+   obtain explicit confirmation and call the same tool with `discovery_mode:
+   expanded` and `discovery_confirmation` containing its current `seed_id`,
+   `user_confirmed: true` and a concrete `reason`, before freezing the Receipt.
+   Never treat census as complete symbol, route or call-path analysis.
 3. **Investigate** — Detect technology, then decide promotion before selecting
    a schema. A standalone candidate needs stable identity and an independent query/link value,
    plus an evidenced deployment, ownership, contract, cross-boundary,

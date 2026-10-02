@@ -12,7 +12,7 @@ export function renderHubReadme(): string {
     + "## What this Hub stores\n\n"
     + "The Hub stores reviewed knowledge, relationships, Questions, limitations, evidence "
     + "and small observed-value snapshots as linked Markdown concepts. It does not duplicate "
-    + "repository source code or the private local Code Graph; concepts retain references that "
+    + "repository source code or private discovery state; concepts retain references that "
     + "help readers return to source evidence when more detail is needed.\n\n"
     + "## Layout\n\n"
     + "```text\n"

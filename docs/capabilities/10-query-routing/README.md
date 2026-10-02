@@ -15,7 +15,7 @@ Product Contract:
 - [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — current query surfaces,
   reusable boundaries, gaps and impact checkpoint.
 - [`01-source-selection.md`](01-source-selection.md) — selecting the Hub,
-  source/Code Graph or both without adding a reasoning router to MCP.
+  source or both without adding a reasoning router to MCP.
 - [`02-published-and-draft-overlay.md`](02-published-and-draft-overlay.md) —
   superseded overlay and the exact Published-only query boundary.
 - [`03-source-access-and-degradation.md`](03-source-access-and-degradation.md) —

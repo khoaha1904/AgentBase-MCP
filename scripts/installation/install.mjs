@@ -6,7 +6,6 @@ import { pathToFileURL } from "node:url";
 
 import { registerClients } from "./client-registration.mjs";
 import { installProductSkills, PRODUCT_SKILL_NAMES, rollbackProductSkills } from "./product-skills.mjs";
-import { activateBundledCodebaseMemory } from "./provider-bundle.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 const PINNED_CYTOSCAPE_VERSION = "3.34.2";
@@ -85,7 +84,7 @@ function ui(capabilities) {
 function renderHeader(output, capabilities) {
   const glyph = ui(capabilities), divider = "─".repeat(Math.max(12, Math.min(56, capabilities.width - 1)));
   output.write(`${glyph.accent(`${glyph.brand} AgentBase-MCP`)}\n`);
-  output.write(`${capabilities.narrow ? "Local code intelligence + shared knowledge" : "  Local code intelligence and shared knowledge"}\n`);
+  output.write(`${capabilities.narrow ? "Source discovery + shared knowledge" : "  Source discovery and shared knowledge"}\n`);
   if (!capabilities.narrow) output.write(`${glyph.accent(divider)}\n`);
   output.write(`Setup: Clients ${glyph.arrow} Registration\n\n`);
 }
@@ -224,7 +223,6 @@ export async function runInstaller(options = {}) {
   const environment = options.environment ?? process.env;
   const runRegistryResolution = options.runRegistryResolution ?? resolveRegistry;
   const runDependencyInstall = options.runDependencyInstall ?? installDependencies;
-  const runProviderActivation = options.runProviderActivation ?? activateBundledCodebaseMemory;
   const runClientRegistration = options.runClientRegistration ?? registerClients;
   const runProductSkillInstallation = options.runProductSkillInstallation ?? installProductSkills;
   const runProductSkillRollback = options.runProductSkillRollback ?? rollbackProductSkills;
@@ -233,16 +231,15 @@ export async function runInstaller(options = {}) {
   const registry = privateRegistry(await runRegistryResolution(environment));
   await runDependencyInstall(registry, environment);
   verifyVisualizationRuntime();
-  await runProviderActivation();
   const interactive = Boolean(input.isTTY && output.isTTY && typeof input.setRawMode === "function");
   if (!interactive) {
-    output.write("AgentBase-MCP: dependencies and bundled Code Graph ready; interactive client registration skipped.\n");
+    output.write("AgentBase-MCP: dependencies ready; interactive client registration skipped.\n");
     return { clients: [], registration: "skipped" };
   }
 
   const capabilities = terminalCapabilities(output, environment), glyph = ui(capabilities);
   renderHeader(output, capabilities);
-  output.write(`${glyph.accent(glyph.success)} Dependencies and Code Graph ready\n\n`);
+  output.write(`${glyph.accent(glyph.success)} Dependencies ready\n\n`);
   const reader = new CharacterReader(input);
   input.setRawMode(true);
   input.resume();

@@ -1,6 +1,6 @@
 # Release artifact requirements
 
-> Status: Implemented and verified for the checked-in `linux-x64` provider
+> Status: Implemented and verified for the source-only `linux-x64` application
 > artifact and compact Profile 1.0. Lifecycle, integration and release CI
 > consume the artifact boundary unchanged.
 >
@@ -23,7 +23,7 @@ not install, upgrade, roll back, uninstall, discover, download or grant CI
 qualification to releases.
 
 The first release identity is `0.1.0`. The current source tree qualifies only
-`linux-x64`, because that is the only checked-in native provider artifact.
+`linux-x64`, under the existing CI and host qualification boundary.
 
 ## Requirements
 
@@ -31,15 +31,15 @@ The first release identity is `0.1.0`. The current source tree qualifies only
   equal the root package and lockfile versions. The first releasable version is
   `0.1.0`; manifests and generated AgentBase ownership strings use that identity.
 - **AB-RELEASE-002** — A build explicitly selects one supported target and
-  admits only an existing, verified native provider artifact for that target.
-  Missing or cross-platform provider content fails before output publication.
+  admits the target-matching production dependency closure. No native graph
+  provider artifact or source build is required.
 - **AB-RELEASE-003** — A public build requires a clean Git worktree, resolves
   the exact source commit and committed timestamp, refuses an existing output
   name and never silently overwrites a release.
 - **AB-RELEASE-004** — The payload contains application runtime source, the
   installed production dependency closure, released product skills, static
   runtime assets, versioned lifecycle bootstrap/control, license/provenance
-  files and exactly one native provider artifact. It excludes AgentBase tests, test fixtures, development
+  files. It excludes native graph providers, AgentBase tests, test fixtures, development
   dependencies, other platform artifacts, imported upstream source and the
   upstream Graph UI.
 - **AB-RELEASE-005** — Dependency admission is derived from the installed
@@ -59,7 +59,7 @@ The first release identity is `0.1.0`. The current source tree qualifies only
 - **AB-RELEASE-009** — Paths, ordering, ownership, permissions and timestamps
   are normalized. Repeating a build for the same source, target and dependency
   tree produces byte-identical archive and checksum output.
-- **AB-RELEASE-010** — Before publication, the builder verifies source/provider
+- **AB-RELEASE-010** — Before publication, the builder verifies source
   integrity, manifest/file closure, internal and outer hashes, safe extraction
   and a clean extracted `node src/cli.ts --help` smoke run. Failure publishes no
   final artifact.

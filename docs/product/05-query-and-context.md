@@ -66,12 +66,12 @@ The old Context name remains a compatibility input, not a second workflow.
 ## Outcome
 
 The user explicitly invokes `agentbase-query`; the Agent then selects the Hub,
-local source/Code Graph or both. The user does not need to choose a query mode.
+local source or both. The user does not need to choose a query mode.
 
 | Question | Preferred source |
 |---|---|
 | What exists, why and how is it connected? | Published Hub |
-| How does the current code implement it? | Local source and Code Graph |
+| How does the current code implement it? | Authorized local source |
 | Connect system overview with implementation | Hub, then selective source |
 
 Query is **snapshot-default**: when Published knowledge is sufficient, the
@@ -127,7 +127,7 @@ every rubric item as mandatory repository content.
 
 ## Source use and degradation
 
-In the trusted enterprise profile, Code Graph access follows the local
+In the trusted enterprise profile, Source access follows the local
 repository selected for the workflow and the current process's filesystem
 access. A remote source reference requires an explicit source workflow and the
 operator's configured enterprise or local Git identity; ordinary query never

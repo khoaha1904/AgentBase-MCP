@@ -9,7 +9,8 @@ import {
   stableClientEntry,
 } from "./client-registration.mjs";
 import {
-  PRODUCT_SKILL_NAMES,
+  MANAGED_PRODUCT_SKILL_NAMES,
+  isReleasedSkillCatalog,
   productSkillDirectoryDigest,
   productSkillRoot,
 } from "./product-skills.mjs";
@@ -62,19 +63,14 @@ function sameClients(left, right) {
   return left.length === right.length && left.every((client, index) => client === right[index]);
 }
 
-function expectedSkillNames() {
-  return [...PRODUCT_SKILL_NAMES].sort();
-}
-
 function validState(value, paths) {
   if (value?.schema !== 1 || !RELEASE_ID.test(value.releaseId)
     || !Array.isArray(value.clients) || value.clients.length === 0 || !sameClients(value.clients, canonicalClients(value.clients))
     || value.entry?.command !== paths.launcher || JSON.stringify(value.entry?.args) !== JSON.stringify(["mcp"])
     || typeof value.skills !== "object") return false;
-  const names = expectedSkillNames();
   return value.clients.every((client) => {
     const skills = value.skills[client];
-    return skills && JSON.stringify(Object.keys(skills).sort()) === JSON.stringify(names)
+    return skills && isReleasedSkillCatalog(Object.keys(skills))
       && Object.values(skills).every((digest) => DIGEST.test(digest));
   }) && JSON.stringify(Object.keys(value.skills).sort()) === JSON.stringify([...value.clients].sort());
 }
@@ -101,11 +97,10 @@ function releaseSkills(releaseRoot, manifest) {
     throw new Error("release integration target is invalid");
   }
   const declared = [...(manifest.skills ?? [])];
-  if (new Set(declared).size !== declared.length
-    || JSON.stringify(declared.sort()) !== JSON.stringify(expectedSkillNames())) {
+  if (!isReleasedSkillCatalog(declared)) {
     throw new Error("release skill catalog differs from the AgentBase product catalog");
   }
-  return Object.fromEntries(PRODUCT_SKILL_NAMES.map((name) => {
+  return Object.fromEntries(declared.map((name) => {
     const source = path.join(releaseRoot, ".agents", "skills", name);
     if (!exists(path.join(source, "SKILL.md"))) throw new Error(`released product skill is invalid: ${name}`);
     return [name, { source, digest: productSkillDirectoryDigest(source) }];
@@ -162,12 +157,13 @@ function planSkills({ operation, selected, state, targetSkills, environment }) {
   const actions = [], nextSkills = {};
   for (const client of selected) {
     nextSkills[client] = {};
-    for (const name of PRODUCT_SKILL_NAMES) {
+    const names = new Set([...Object.keys(state?.skills[client] ?? {}), ...Object.keys(targetSkills ?? {})]);
+    for (const name of names) {
       const target = skillTarget(client, name, environment);
       const actual = currentSkillDigest(target, client);
       const before = state?.skills[client]?.[name] ?? null;
       if (state && actual !== before) throw new Error(`${client} skill drifted from installation state: ${name}`);
-      const after = operation === "uninstall" ? null : targetSkills[name].digest;
+      const after = operation === "uninstall" ? null : targetSkills[name]?.digest ?? null;
       if (!state && actual !== null && actual !== after) throw new Error(`${client} already has a different skill named ${name}`);
       if (actual !== after) actions.push({ client, name, before: actual, after, state: "pending" });
       if (after) nextSkills[client][name] = after;
@@ -228,7 +224,7 @@ function receiptValid(receipt, paths) {
   return receipt.clients.every((action) => CLIENT_IDS.has(action.client)
       && validEntry(action.before) && validEntry(action.after)
       && ["pending", "applying", "complete", "rolled-back"].includes(action.state))
-    && receipt.skills.every((action) => CLIENT_IDS.has(action.client) && PRODUCT_SKILL_NAMES.includes(action.name)
+    && receipt.skills.every((action) => CLIENT_IDS.has(action.client) && MANAGED_PRODUCT_SKILL_NAMES.includes(action.name)
       && (action.before === null || DIGEST.test(action.before)) && (action.after === null || DIGEST.test(action.after))
       && ["pending", "applying", "complete", "rolled-back"].includes(action.state));
 }

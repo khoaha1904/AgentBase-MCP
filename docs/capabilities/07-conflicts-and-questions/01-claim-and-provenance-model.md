@@ -42,7 +42,7 @@ a correction or removal, but explicit intent and review are still required.
 ## Structured claims boundary
 
 Keep `agentbase.observed_values` for bounded snapshots with queryable values. The
-current source can be reread when needed through normal MCP file/graph tools;
+current source can be reread when needed through the host's read/search tools;
 there is no semantic live locator. Do not expand snapshots into storage for every
 business fact, configuration dump or provider response.
 

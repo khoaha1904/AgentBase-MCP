@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { gunzipSync } from "node:zlib";
 
-import { PRODUCT_SKILL_NAMES } from "./product-skills.mjs";
+import { isReleasedSkillCatalog } from "./product-skills.mjs";
 
 const METADATA_FILES = new Set(["release-manifest.json", "sbom.cdx.json", "SHA256SUMS"]);
 // This control file is copied outside the application tree during install, so
@@ -173,30 +173,6 @@ function readJson(file, label) {
   catch { throw new Error(`release ${label} is invalid`); }
 }
 
-function validateProvider(root, manifest, target) {
-  const providerRoot = path.join(root, "vendor/codebase-memory/artifacts", manifest.target.id);
-  if (!fs.lstatSync(providerRoot).isDirectory()
-    || !exactArray(fs.readdirSync(providerRoot).sort(), ["artifact-manifest.json", "codebase-memory-mcp"])) {
-    throw new Error("release native provider closure is invalid");
-  }
-  const provider = readJson(path.join(providerRoot, "artifact-manifest.json"), "native provider manifest");
-  const executable = path.join(providerRoot, "codebase-memory-mcp");
-  if (provider.platform !== target.platform || provider.architecture !== target.architecture
-    || provider.executable_sha256 !== sha256File(executable)
-    || provider.source_digest !== sha256File(path.join(root, "vendor/codebase-memory/inventory.sha256"))) {
-    throw new Error("release native provider identity is invalid");
-  }
-  const profile = fs.readFileSync(path.join(root, "vendor/codebase-memory/agentbase/parser-profile.json"));
-  const patch = fs.readFileSync(path.join(root, "vendor/codebase-memory/agentbase/patches/0001-parser-profile.patch"));
-  if (provider.profile_digest !== sha256(Buffer.concat([profile, patch]))) throw new Error("release native provider profile is invalid");
-  const surface = path.join(root, "src/providers/codebase-memory/contracts/v0.10.8/mcp-surface.json");
-  if (provider.tool_manifest_sha256 !== sha256File(surface)) throw new Error("release native provider tool manifest is invalid");
-  fs.accessSync(executable, fs.constants.X_OK);
-  const probe = spawnSync(executable, ["--version"], { cwd: root, encoding: "utf8", timeout: 15_000, maxBuffer: 16_384 });
-  if (probe.status !== 0 || probe.stdout.trim() !== `${provider.provider} ${provider.provider_version}`) {
-    throw new Error("release native provider probe failed");
-  }
-}
 
 export async function verifyExtractedRelease(root, expected = {}) {
   const metadata = fs.lstatSync(root);
@@ -264,11 +240,10 @@ export async function verifyExtractedRelease(root, expected = {}) {
     || /(?:^|\/)test-support(?:\/|\.|$)/.test(relative)
     || relative.startsWith("src/") && /\.test\.(?:ts|mjs)$/.test(relative));
   if (forbidden) throw new Error(`release contains excluded content: ${forbidden}`);
-  const expectedSkills = [...PRODUCT_SKILL_NAMES].sort();
-  if (!Array.isArray(manifest.skills) || new Set(manifest.skills).size !== manifest.skills.length
-    || !exactArray([...manifest.skills].sort(), expectedSkills)) {
+  if (!isReleasedSkillCatalog(manifest.skills)) {
     throw new Error("release product skill catalog is invalid");
   }
+  const expectedSkills = [...manifest.skills].sort();
   const packagedSkills = [...new Set(payload.filter((relative) => relative.startsWith(".agents/skills/"))
     .map((relative) => relative.split("/")[2]))].sort();
   if (!exactArray(packagedSkills, expectedSkills)
@@ -278,12 +253,6 @@ export async function verifyExtractedRelease(root, expected = {}) {
   if (RELEASE_CONTROL_FILES.some((name) => !payload.includes(`scripts/installation/${name}`))) {
     throw new Error("release lifecycle control closure is invalid");
   }
-  const artifactPrefix = `vendor/codebase-memory/artifacts/${manifest.target.id}/`;
-  const artifactFiles = payload.filter((relative) => relative.startsWith("vendor/codebase-memory/artifacts/"));
-  if (!artifactFiles.length || artifactFiles.some((relative) => !relative.startsWith(artifactPrefix))) {
-    throw new Error("release native provider closure is invalid");
-  }
-  validateProvider(root, manifest, target);
   const smoke = spawnSync(process.execPath, [path.join(root, "src/cli.ts"), "--help"], {
     cwd: root, encoding: "utf8", env: { PATH: process.env.PATH ?? "" }, maxBuffer: 1024 * 1024,
   });

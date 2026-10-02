@@ -24,7 +24,7 @@ files. Catalog 7 replaces it with eight general boundaries; queue/table/bucket/
 host usually become embedded knowledge with technology metadata and exact parent
 evidence.
 
-This is a clean cutover because no catalog-6 concept was Published. Code Graph,
+This is a clean cutover because no catalog-6 concept was Published. Source discovery,
 the OKF document model, relationships and Hub lifecycle remain unchanged.
 
 ## Remaining gap

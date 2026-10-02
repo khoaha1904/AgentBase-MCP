@@ -4,8 +4,9 @@ Repository automation is grouped by its operator goal:
 
 - `checks/` — verification and test discovery used by `npm run verify`.
 - `installation/` — installer, client registration and repository migration.
-- `benchmark/` — opt-in benchmark engine/scorer; benchmark data lives in the
-  sibling `AgentBase-Benchmark` repository.
+- `release/` - immutable application packaging and release qualification.
+- `qualification/` - deterministic Hub workflow fixtures.
+- `upstream/` - retained diagram source inventory checks.
 
 Product runtime code belongs under `src/`; scripts should compose existing
 public entrypoints instead of becoming another application layer.

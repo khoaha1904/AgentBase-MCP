@@ -4,7 +4,7 @@
 
 ## Outcome
 
-The Agent selects the Hub, local source/Code Graph or both based on the question.
+The Agent selects the Hub, local source or both based on the question.
 MCP keeps its read surfaces small and deterministic; it does not add a reasoning
 router or an “answer everything” tool.
 
@@ -14,7 +14,7 @@ router or an “answer everything” tool.
   Domain/type scope.
 - Concept Markdown already contains relationships, snapshots, provenance and
   Questions; no separate query action is needed for each data type.
-- The Gateway exposes Code Graph/search/snippet for an authorized local repository
+- The host agent reads/searches the authorized local repository
   binding. Source reading does not belong to the Hub query owner.
 - Hub Questions are shared Markdown with separate governance.
 - Remote GitHub credentials already belong to MCP publication/setup, but there is
@@ -31,7 +31,7 @@ router or an “answer everything” tool.
 4. Snapshot age and the local Repository freshness report exist, but freshness
    markers in ordinary search/read responses are deferred; scheduled CI already
    uses this report.
-5. Explicit current-source reads reuse graph/file tools. A bounded remote-reference
+5. Explicit current-source reads reuse source read/search tools. A bounded remote-reference
    reader is the first post-phase query priority, not an MVP blocker.
 
 ## Minimal direction
@@ -55,12 +55,12 @@ router or an “answer everything” tool.
 
 | Boundary | Impact | Reason |
 |---|---|---|
-| Host source selection | Reuse/documentation | Existing Hub and graph tools already separate responsibilities correctly. |
+| Host source selection | Reuse/documentation | Hub tools and host source tools keep knowledge reads and source investigation separate. |
 | Search/ranking | Contained + reviewed dependency | Reuse transient Hub graph/Markdown; standard lexical scorer replaces custom relevance and returns best section. |
 | Domain query context | Contained change | Reuse accepted structural relations without rewriting Hub membership. |
 | Published + Local Draft overlay | Rejected for MVP | Draft belongs to review/PR, not ordinary query. |
 | Conflict/Question composition | Contained after Part 07 | The Shared Question runtime does not yet exist. |
-| Observed/current values | Reuse | Part 08 snapshot query + normal graph/file reads. |
+| Observed/current values | Reuse | Part 08 snapshot query + normal source read/search. |
 | Remote repository reference read | First post-phase capability | Shared stable cross-repository source through an MCP token; deferred only from the MVP. |
 | Freshness presentation/CI | Contained follow-up | Reuse implemented Repository report; ordinary response marks and scheduling remain. |
 

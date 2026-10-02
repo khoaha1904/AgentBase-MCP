@@ -19,7 +19,7 @@ authorized old test-state disposal is complete without a migration adapter.
 ## Local active knowledge
 
 - **AB-LOCAL-HUB-001** — Exactly one state is active: no Hub or one configured
-  remote Hub profile. Without a remote profile only Code Graph workflows run.
+  remote Hub profile. Without a remote profile schema guidance and Scan remain available.
   Each normalized host/repository/branch profile owns isolated Published and
   Draft Git state.
 - **AB-LOCAL-HUB-002** — `prepare` creates an isolated workspace at an exact
@@ -279,7 +279,7 @@ authorized old test-state disposal is complete without a migration adapter.
   `delta` is default; owner-requested `coverage` performs broad bounded
   provider-neutral investigation over identity/product, runtime/entrypoint,
   interface/event/trigger, integration/data/channel and deploy/operations. It
-  reuses the exact source and graph cache, reads exact evidence for retained
+  reuses the exact source, reads exact evidence for retained
   findings and adds no skill, MCP tool, model service or completeness claim.
 - **AB-REFRESH-020** — Existing `prepare_hub_okf` accepts optional
   `refresh_scope: delta|coverage`. Initial Ingest rejects it. Coverage requires
@@ -312,7 +312,7 @@ authorized old test-state disposal is complete without a migration adapter.
 
 ## Lazy setup and first bootstrap
 
-- **AB-HUB-SETUP-001** — Hub is optional at install and for all Code Graph use.
+- **AB-HUB-SETUP-001** — Hub is optional at install and for schema guidance/Scan.
 - **AB-HUB-SETUP-002** — Hub status is exactly `unconfigured` or one active
   `remote` profile, resolved from owner-private configuration, not caller cwd.
 - **AB-HUB-SETUP-003** — An unconfigured Hub-dependent action stops with compact

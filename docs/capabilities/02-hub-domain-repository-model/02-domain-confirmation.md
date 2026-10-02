@@ -24,7 +24,7 @@ The host skill reads in this order:
 3. overview/domain/architecture documents directly linked by the root README.
 
 Exact file/byte limits belong to the implementation plan, but the skill does
-not recursively scan all docs or need Code Graph merely to confirm a Domain.
+not recursively scan all docs or need full source discovery merely to confirm a Domain.
 
 ## Candidate result
 

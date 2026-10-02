@@ -13,9 +13,9 @@ import {
   rollbackProductSkills,
 } from "./product-skills.mjs";
 import { HUB_OKF_TOOLS } from "../../src/app/hub-okf/mcp/mcp-tools.ts";
-import { OKF_SCHEMA_TOOLS } from "../../src/app/codebase-memory-mcp/okf-schema-tools.ts";
-import { SAFE_TOOLS } from "../../src/app/codebase-memory-mcp/tool-manifest.ts";
-import { TRUSTED_ENTERPRISE_CAPABILITY_POLICY } from "../../src/app/codebase-memory-mcp/capability-policy.ts";
+import { OKF_SCHEMA_TOOLS } from "../../src/app/agentbase-mcp/okf-schema-tools.ts";
+import { DISCOVERY_TOOL } from "../../src/app/agentbase-mcp/discovery-tool.ts";
+import { TRUSTED_ENTERPRISE_CAPABILITY_POLICY } from "../../src/app/agentbase-mcp/capability-policy.ts";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -66,12 +66,12 @@ test("[AB-SURFACE-001..005] freezes an owned release skill and tool surface", ()
   const tools = [
     ...HUB_OKF_TOOLS.map((tool) => ({ name: tool.name, capability: "hub" })),
     ...OKF_SCHEMA_TOOLS.map((tool) => ({ name: tool.name, capability: "schema" })),
-    ...SAFE_TOOLS.map((tool) => ({ name: tool.name, capability: "graph" })),
+    { name: DISCOVERY_TOOL.name, capability: "discovery" },
   ];
 
   assert.equal(PUBLIC_PRODUCT_SKILL_NAMES.length, 10);
-  assert.equal(INTERNAL_PRODUCT_SKILL_NAMES.length, 3);
-  assert.equal(tools.length, 44);
+  assert.equal(INTERNAL_PRODUCT_SKILL_NAMES.length, 2);
+  assert.equal(tools.length, 36);
   assert.equal(new Set(tools.map((tool) => tool.name)).size, tools.length, "advertised tool names must be unique");
   for (const tool of tools) {
     const owners = [...skills].filter(([, skill]) => skill.includes(`\`${tool.name}\``)).map(([name]) => name);
@@ -102,8 +102,8 @@ test("[AB-INSTALL-025..031][AB-QUESTION-006][AB-FRESH-010][AB-USE-001..005] inst
     "agentbase-query", "agentbase-context", "agentbase-scan", "agentbase-ingest", "agentbase-refresh",
     "agentbase-batch-ingest", "agentbase-domain-enrichment", "agentbase-diagram", "agentbase-domain-site", "agentbase-hub",
   ]);
-  assert.deepEqual(INTERNAL_PRODUCT_SKILL_NAMES, ["use-codebase-memory", "agentbase-okf", "use-diagram-design"]);
-  assert.equal(PRODUCT_SKILL_NAMES.length, 13);
+  assert.deepEqual(INTERNAL_PRODUCT_SKILL_NAMES, ["agentbase-okf", "use-diagram-design"]);
+  assert.equal(PRODUCT_SKILL_NAMES.length, 12);
   const contextSkill = fs.readFileSync(path.join(repositoryRoot, ".agents", "skills", "agentbase-context", "SKILL.md"), "utf8");
   const contextMetadata = fs.readFileSync(path.join(repositoryRoot, ".agents", "skills", "agentbase-context", "agents", "openai.yaml"), "utf8");
   const sharedLink = /\]\((\.\.\/agentbase-query\/SKILL\.md)\)/.exec(contextSkill)?.[1];
@@ -178,10 +178,9 @@ test("[AB-INSTALL-025..031][AB-QUESTION-006][AB-FRESH-010][AB-USE-001..005] inst
     args: [], input: { isTTY: false }, output: { isTTY: false, write() {} }, environment: preparedEnvironment,
     runRegistryResolution: async () => { preparationOrder.push("registry"); return "https://registry.company.example/"; },
     runDependencyInstall: async () => { preparationOrder.push("dependencies"); },
-    runProviderActivation: async () => { preparationOrder.push("provider"); },
     runProductSkillInstallation: async () => { skillInstallCalled = true; },
   });
-  assert.deepEqual(preparationOrder, ["registry", "dependencies", "provider"]);
+  assert.deepEqual(preparationOrder, ["registry", "dependencies"]);
   assert.equal(skillInstallCalled, false);
   assert.equal(preparedOnly.registration, "skipped");
   assert.equal("credential" in preparedOnly, false);
@@ -190,10 +189,9 @@ test("[AB-INSTALL-025..031][AB-QUESTION-006][AB-FRESH-010][AB-USE-001..005] inst
   await assert.rejects(runInstaller({
     args: [], input: { isTTY: false }, output: { isTTY: false, write() {} }, environment: environment(),
     runRegistryResolution: async () => "https://registry.company.example/",
-    runDependencyInstall: async () => {},
-    runProviderActivation: async () => { throw new Error("provider activation failed"); },
+    runDependencyInstall: async () => { throw new Error("dependency installation failed"); },
     runProductSkillInstallation: async () => { mutationAfterFailure = true; },
-  }), /provider activation failed/);
+  }), /dependency installation failed/);
   assert.equal(mutationAfterFailure, false);
   let registryChecked = false;
   await assert.rejects(runInstaller({

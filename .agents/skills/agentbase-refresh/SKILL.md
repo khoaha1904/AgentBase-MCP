@@ -34,8 +34,7 @@ knowledge, rerun broad discovery, or refresh coverage after a skill/model/profil
 upgrade. Those requests select `coverage` scope in this same skill; never route
 them to Initial Ingest, Domain Enrichment or another skill.
 
-This workflow uses `preflight_hub_ingest`, the tools named by
-`use-codebase-memory`, optional `list_okf_schemas`/`get_okf_schema`,
+This workflow uses `preflight_hub_ingest`, ordinary source read/search, optional `list_okf_schemas`/`get_okf_schema`,
 `prepare_hub_okf`, `validate_okf_changes`, `finalize_hub_okf_proposal` and
 `inspect_hub_okf_proposal` only.
 
@@ -51,14 +50,12 @@ This workflow uses `preflight_hub_ingest`, the tools named by
    Profile home from the checkout path or current source evidence.
 2. For `delta`, call `prepare_hub_okf` with `mode: refresh` and either omit
    `refresh_scope` or pass `delta`; provide no evidence digest. For `coverage`,
-   first use `use-codebase-memory` against the exact Preflight
-   `analysis_source_repository`: index/reuse the graph, inspect index/coverage
-   diagnostics and broadly but boundedly check identity/product,
+   use ordinary read/search tools against the exact Preflight
+   `analysis_source_repository` and broadly but boundedly check identity/product,
    runtime/entrypoint, interface/event/trigger, integration/data/channel and
    deploy/operations. Resolve retained findings to exact source; do not read or
    send every file. Then call Prepare with `refresh_scope: coverage` and one
-   truthful `coverage` account. `partial` is true exactly when bounded graph,
-   source or lane limitations remain. Treat returned active local `main`, source
+   truthful `coverage` account. `partial` is true exactly when bounded source or lane limitations remain. Treat returned active local `main`, source
    snapshot, continuity, known gaps and omitted counts as the baseline.
 3. For Delta, investigate in order: exact changed source, known Questions/
    limitations/broken or aging references, then one small discovery pass. For
@@ -66,8 +63,7 @@ This workflow uses `preflight_hub_ingest`, the tools named by
    and returned known gaps; do not run a second broad pass. Before discovery,
    inspect the exact Git diff from the returned previously observed commit to
    the current commit for every returned changed path; do not replace this with
-   a partial read of a large file. Use Code Graph as a private map and resolve
-   retained observations to exact authorized source.
+   a partial read of a large file. Resolve retained observations to exact authorized source.
 4. Author only inside the prepared `bundle/` following `agentbase-okf`. A valid
    SAM/CloudFormation change retains source Type/logical ID and cites both the
    resource and applicable Globals spans. Recheck affected functions when a
@@ -96,7 +92,7 @@ This workflow uses `preflight_hub_ingest`, the tools named by
    when exact current evidence changes a useful runtime direction. Use only
    `self`, one exact concept identity or one unique same-parent embedded name,
    and never infer an arrow from containment or prose alone.
-5. Preserve omission. Missing graph/search evidence, elapsed time or an omitted
+5. Preserve omission. Missing source/search evidence, elapsed time or an omitted
    file never means deletion. For a shared multi-repository concept, change only
    structured source/observation/relation entries with exact current-Repository
    evidence ownership. Preserve ambiguous prose/metadata and declare a Question

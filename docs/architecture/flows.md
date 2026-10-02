@@ -60,7 +60,7 @@ state collection, and does not rewrite previously Published repositories.
 
 Release-hardening keeps one Refresh flow with two scopes. Delta follows the
 existing change-first sequence. Explicit Coverage performs its broad bounded
-five-lane graph/source investigation before preparing the same authoring
+five-lane source investigation before preparing the same authoring
 workspace, then processes continuity and known gaps normally. Partial delta or
 Coverage updates one compact Repository coverage-debt marker; later Prepare
 projects it as a known gap. A reviewed non-partial Coverage proposal clears that
@@ -86,7 +86,7 @@ Group 8 uses one installed instruction owner, `agentbase-query`, for standalone
 answers and evidence inside a primary workflow. The retained `agentbase-context`
 entry links to that same owner; it adds no second retrieval or runtime router.
 Composition chooses output ownership, not new permissions. Existing bounded
-Published search/read and authorized single-repository graph tools remain the
+Published search/read and authorized single-repository source reads remain the
 only evidence routes. Missing evidence degrades the answer without mutation;
 G8-C2 carries a concrete finding, Published identity/revision, needed source and
 agreed scope in the current conversation into an existing authoring owner.
@@ -103,7 +103,7 @@ Query Routing
         └─→ Published Visualization projection
 
 Selected local Repository root and pinned revision
-        ↓ bounded Code Graph/source queries
+        ↓ bounded source reads/searches
 Phase 2 AI-SDLC context
         └─→ session-local implementation impact view
 ```
@@ -271,23 +271,10 @@ exact finalized proposal + exact admitted base
     -> bounded text / optional disposable visual preview
     -> confirm Publish for the exact proposal or return to authoring
 
-pinned Benchmark suite + exact source/Hub inputs
-    -> comparable control and AgentBase-assisted runs
-    -> quality, retrieval, freshness and stewardship measurements
-    -> candidate comparison
-    -> explicit owner disposition
-    -> immutable AgentBase-Benchmark evidence
 ```
 
-The Benchmark branch is an accepted but deferred flow. It is not executed by
-ordinary runtime, deterministic verification or the current internal enterprise
-release gate. When resumed, the campaign covers the same narrow
-cross-repository impact and requirement-clarification claim across at least two
-materially different Domains, one multi-product monorepo/shared-platform
-boundary and one longitudinal Refresh. Cases may share a claim but never
-silently share mutable inputs. A failed case routes back to the Product,
-Architecture or affected Capability boundary; it does not get hidden by
-aggregate scores or trigger an unrelated search rewrite.
+Historical comparisons remain external evidence. Model campaigns and their
+runner lifecycle are retired; current verification uses focused offline tests.
 
 ## Group 4 Profile and Domain Capsule flows
 

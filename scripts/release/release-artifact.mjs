@@ -6,9 +6,8 @@ import path from "node:path";
 import { gzipSync } from "node:zlib";
 
 import { AGENTBASE_VERSION } from "../../src/product-version.ts";
-import { AGENTBASE_MCP_PROTOCOL_VERSIONS } from "../../src/app/codebase-memory-mcp/protocol-policy.ts";
+import { AGENTBASE_MCP_PROTOCOL_VERSIONS } from "../../src/app/agentbase-mcp/protocol-policy.ts";
 import { AGENTBASE_OKF_PROFILE } from "../../src/core/knowledge/index.ts";
-import { ownedRuntimeTarget, verifyOwnedRuntimeBundle } from "../../src/providers/codebase-memory/owned-runtime.ts";
 import { PRODUCT_SKILL_NAMES } from "../installation/product-skills.mjs";
 import {
   AGENTBASE_OKF_RELEASE_PROFILE,
@@ -330,15 +329,9 @@ exec node "$agentbase_release_root/scripts/installation/release-control.mjs" ins
       include: (relative) => !relative.split("/").includes("node_modules"),
     });
   }
-  const vendorRoot = path.join(projectRoot, "vendor/codebase-memory");
-  for (const name of ["UPSTREAM.md", "inventory.sha256"]) copyFile(path.join(vendorRoot, name), path.join(root, "vendor/codebase-memory", name));
-  copyTree(path.join(vendorRoot, "agentbase"), path.join(root, "vendor/codebase-memory/agentbase"));
-  copyTree(path.join(vendorRoot, "artifacts", target), path.join(root, "vendor/codebase-memory/artifacts", target));
-
   normalizeTree(root);
   fs.chmodSync(path.join(root, "install.sh"), 0o755);
   fs.chmodSync(path.join(root, "src/cli.ts"), 0o755);
-  fs.chmodSync(path.join(root, "vendor/codebase-memory/artifacts", target, "codebase-memory-mcp"), 0o755);
 }
 
 export async function buildReleaseArtifact(options) {
@@ -346,7 +339,7 @@ export async function buildReleaseArtifact(options) {
     throw new Error("release Profile identity differs from the source Profile contract");
   }
   const projectRoot = fs.realpathSync(options.projectRoot);
-  const targetId = options.target ?? ownedRuntimeTarget(process.platform, process.arch);
+  const targetId = options.target ?? `${process.platform}-${process.arch}`;
   const target = TARGETS[targetId];
   if (!target) throw new Error(`unsupported release target: ${targetId}`);
   if (target.platform !== process.platform || target.architecture !== process.arch) {
@@ -355,9 +348,6 @@ export async function buildReleaseArtifact(options) {
   const source = resolveSourceIdentity(projectRoot, options.sourceIdentity);
   const { packageJson } = readProductMetadata(projectRoot);
   const dependencies = productionPackages(projectRoot);
-  const providerRoot = path.join(projectRoot, "vendor/codebase-memory/artifacts", targetId);
-  await verifyOwnedRuntimeBundle({ projectRoot, runtimeRoot: providerRoot, ...target });
-
   const outputDirectory = path.resolve(options.outputDirectory);
   fs.mkdirSync(outputDirectory, { recursive: true, mode: 0o755 });
   const releaseId = `${PRODUCT}-${AGENTBASE_VERSION}-${targetId}`;

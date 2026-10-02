@@ -104,7 +104,7 @@ test("[AB-RELEASE-003] source identity requires exact clean Git state", (t) => {
   assert.throws(() => resolveSourceIdentity(root), /clean Git worktree/);
 });
 
-test("[AB-RELEASE-001..011][AB-RELEASE-CI-008] builds and verifies an exact reproducible qualified host archive", async (t) => {
+test("[AB-DISC-008][AB-RELEASE-001..011][AB-RELEASE-CI-008] builds and verifies an exact reproducible qualified host archive", async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-release-test-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const firstOutput = path.join(root, "first"), secondOutput = path.join(root, "second");
@@ -135,7 +135,10 @@ test("[AB-RELEASE-001..011][AB-RELEASE-CI-008] builds and verifies an exact repr
   const sbomNames = sbom.components.map((component) => component.name);
   assert.equal(sbomNames.includes("yaml"), true);
   assert.equal(sbomNames.includes("zod"), true);
-  assert.equal(fs.existsSync(path.join(extracted, "vendor/codebase-memory/upstream")), false);
+  assert.equal(fs.existsSync(path.join(extracted, "vendor")), false);
+  assert.equal(fs.existsSync(path.join(extracted, "src/providers/codebase-memory")), false);
+  assert.equal(fs.existsSync(path.join(extracted, "scripts/benchmark")), false);
+  assert.equal(manifest.skills.includes("use-codebase-memory"), false);
   assert.equal(fs.existsSync(path.join(extracted, "node_modules/@swc/core")), false);
   assert.equal(fs.existsSync(path.join(extracted, "src/cli.test.ts")), false);
   for (const retired of ["review/accept.ts", "publication/publish.ts", "review/test-support.ts",
@@ -143,7 +146,6 @@ test("[AB-RELEASE-001..011][AB-RELEASE-CI-008] builds and verifies an exact repr
     assert.equal(fs.existsSync(path.join(extracted, "src/app/hub-okf", retired)), false);
   }
   assert.equal("devDependencies" in JSON.parse(fs.readFileSync(path.join(extracted, "package.json"), "utf8")), false);
-  assert.deepEqual(fs.readdirSync(path.join(extracted, "vendor/codebase-memory/artifacts")), [target]);
 
   const installedHome = path.join(root, "installed"), userHome = path.join(root, "home");
   fs.mkdirSync(userHome, { recursive: true });

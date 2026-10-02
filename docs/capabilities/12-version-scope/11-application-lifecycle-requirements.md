@@ -33,7 +33,7 @@ name inspectable without resolving an attacker-controlled filesystem link.
   paths. It never derives identity from the current repository directory.
 - **AB-LIFECYCLE-002** — The transaction admits only a fully verified extracted
   release or a local archive with matching adjacent outer checksum. It checks
-  target platform, manifest/file/SBOM closure, native provider identity and CLI
+  target platform, manifest/file/SBOM closure and CLI
   smoke before mutating installed state.
 - **AB-LIFECYCLE-003** — One create-exclusive owner-private installation lock
   serializes install, upgrade, rollback and uninstall. A live owner blocks; a

@@ -98,3 +98,8 @@ Requirement-linked tests beside the installation owners are the evidence for
 this contract. The repository verification gate must also prove that every
 release carries the integration/control modules and that its manifest skill
 catalog equals its packaged skill closure.
+
+- **AB-INTEGRATION-015** - Upgrade recognizes the prior managed thirteen-skill
+  catalog and transactionally removes its owned `use-codebase-memory` skill.
+  Drift fails before mutation; rollback restores the prior release's exact
+  catalog. Independently registered external graph tools are untouched.

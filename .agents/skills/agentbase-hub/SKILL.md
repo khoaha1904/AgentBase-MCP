@@ -21,7 +21,7 @@ Lifecycle tools are `get_hub_status`, `configure_hub`, `preview_hub_bootstrap`,
 `publish_hub_okf_proposal`, `synchronize_hub_okf` and `recover_hub_okf`. Invoke
 only the action explicitly requested after status establishes its preconditions.
 
-- An unconfigured installation is valid and Code Graph stays available. Hub
+- An unconfigured installation is valid; schema guidance and workspace Scan remain available. Hub
   query, Ingest, Refresh and OKF Draft work wait until a remote Hub is active.
 - Connect an existing remote only after the user supplies its credential-free
   HTTPS repository URL and exact target branch. The owner-facing terminal flow

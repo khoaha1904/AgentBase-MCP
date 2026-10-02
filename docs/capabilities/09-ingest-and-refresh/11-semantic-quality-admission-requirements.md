@@ -78,7 +78,7 @@ The packet binds:
 
 The critic begins in a separate fresh context that receives the packet but not
 the author's private reasoning or transcript. It may use the same authorized
-exact source snapshot and Code Graph for bounded follow-up verification, but it
+exact source snapshot for bounded follow-up verification, but it
 cannot change source, expand repository/Hub/provider authority or inspect
 secrets. Model/provider/reasoning identity is recorded as execution evidence,
 not hard-coded product policy. A host unable to provide required isolation

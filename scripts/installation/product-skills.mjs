@@ -16,7 +16,6 @@ export const PUBLIC_PRODUCT_SKILL_NAMES = Object.freeze([
 ]);
 
 export const INTERNAL_PRODUCT_SKILL_NAMES = Object.freeze([
-  "use-codebase-memory",
   "agentbase-okf",
   "use-diagram-design",
 ]);
@@ -25,6 +24,17 @@ export const PRODUCT_SKILL_NAMES = Object.freeze([
   ...PUBLIC_PRODUCT_SKILL_NAMES,
   ...INTERNAL_PRODUCT_SKILL_NAMES,
 ]);
+
+// Retained only to recognize and retire an older managed installation, or
+// restore its exact skill catalog when rolling back to that release.
+export const MANAGED_PRODUCT_SKILL_NAMES = Object.freeze([...PRODUCT_SKILL_NAMES, "use-codebase-memory"]);
+
+export function isReleasedSkillCatalog(names) {
+  if (!Array.isArray(names) || new Set(names).size !== names.length) return false;
+  const actual = JSON.stringify([...names].sort());
+  return [PRODUCT_SKILL_NAMES, MANAGED_PRODUCT_SKILL_NAMES]
+    .some((catalog) => actual === JSON.stringify([...catalog].sort()));
+}
 
 const CLIENT_IDS = new Set(["codex", "claude-code"]);
 

@@ -12,7 +12,7 @@ state uses one owner-private `AGENTBASE_HOME`/`~/.agentbase` root:
   config/   Hub configuration and owner-private credentials
   hubs/     durable Hub checkout, Draft `main` and Published ref
   state/    proposals, sessions, transactions and enrichment checkpoints
-  cache/    rebuildable Code Graph/provider/query cache
+  cache/    rebuildable source/query cache
   tmp/      disposable checkout/workspace staging
 ```
 
@@ -55,7 +55,7 @@ Ordinary search/read uses exact `remoteBase`. `activeHead` and proposal commits
 remain available only to inspect/review/PR workflows.
 
 Without a remote profile, do not initialize a local-only OKF authority: Hub
-query, Ingest, Refresh and Draft operations do not run. Local Code Graph remains
+query, Ingest, Refresh and Draft operations do not run. Schema guidance remains
 independent and usable. Switching profiles selects state by normalized remote URL
 + branch; it does not silently overlay or migrate Drafts between profiles.
 

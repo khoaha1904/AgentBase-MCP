@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { resolveRepositoryIdentity, type RepositoryIdentityResolution } from "../../../core/knowledge/index.ts";
-import { discoverRepositorySourceState } from "../../repository-okf/index.ts";
+import { discoverRepositorySourceState } from "../../repository-source/index.ts";
 import type { PendingHubProposal } from "../review/pending.ts";
 import type { PublishedRepositoryInventoryItem } from "./query.ts";
 

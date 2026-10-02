@@ -6,18 +6,18 @@
 
 - install/register MCP without forcing Hub setup;
 - public bounded `agentbase-scan` inventory and workflow suggestions;
-- one explicit local repository Code Graph and bounded source reads;
+- one exact source snapshot with bounded source discovery;
 - Catalog 7 provider-neutral concepts with Terraform/Terragrunt evidence;
 - single-repository Initial Ingest and Refresh producing reviewable proposals;
 - Batch Initial Ingest with recoverable sequential checkpoints and one atomic proposal;
 - bounded AWS/SQS Domain Enrichment with read-only provider evidence;
 - isolated remote Hub profiles, Published-only query, structured inspection and
-  atomic Accept; no remote profile means Code Graph only;
+  explicit Direct/PR Publish; no remote profile means schema guidance and Scan;
 - observed snapshots with provenance, age and no implicit source probe;
 - shared Hub Question documents and atomic exact-scope Maintainer Guidance;
 - rich deterministic PR summary, independent Init PRs, same-Repository stacks,
   retry/reconciliation and synchronization;
-- no automatic Accept, Publish or merge.
+- no automatic Publish or merge.
 - one small public `abs` CLI surface (`status`, `hub connect`, `hub sync`);
   lifecycle runners and OKF internals remain hidden skill/MCP/developer routes.
 
@@ -29,9 +29,8 @@ qualification are evidence gates; Batch Refresh, additional provider profiles,
 remote file reading and HTML review remain deferred. Ordinary Hub query is
 intentionally Published-only.
 
-## Qualification boundary
+## Evaluation boundary
 
-Offline `npm run verify` remains canonical. Model benchmark is explicit product
-evidence: Sol for Initial Ingest, Terra for Refresh. It does not become runtime
-model routing, a completeness gate or a promise that every repository/domain is
-covered.
+Offline `npm run verify` remains canonical. The application contains no model
+benchmark or native-provider campaign. Historical evidence is retained outside
+the runtime; future evaluation needs a concrete owner question and scope.

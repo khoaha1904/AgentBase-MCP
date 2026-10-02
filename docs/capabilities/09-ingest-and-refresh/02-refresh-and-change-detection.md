@@ -12,7 +12,7 @@ Refresh neither scans the full repository nor looks only at changed files:
 3. **Small discovery pass:** a bounded architecture overview to find important
    candidates previously missed.
 
-Priority follows that order. The discovery pass uses the graph cache when fresh
+Priority follows that order. The discovery pass uses the authorized source directly
 and does not open an unbounded source scan.
 
 ## Changed-path accounting
@@ -75,7 +75,7 @@ file or requiring 100% completeness. It reuses the same public
 `agentbase-refresh` skill and MCP tools.
 
 A Coverage Refresh checks the five provider-neutral discovery lanes, reuses a
-fresh graph cache where possible and resolves retained findings to exact source.
+exact authorized source and resolves retained findings to exact source.
 It retains source authority, candidate gates, one guidance call, validation and
 the one-repair budget from normal Refresh. It may add knowledge when source is
 unchanged.

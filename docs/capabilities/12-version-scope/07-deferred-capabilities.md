@@ -1,11 +1,10 @@
 # 12.07 — Deferred capabilities
 
-## Confirmed sequence after the owned-runtime migration
+## Future source and visualization boundaries
 
-Capability 044 changes supply-chain ownership only. It vendors and qualifies
-the selected Codebase Memory and diagram-design sources but activates no new
-visual product surface. Later work stays split into independently reviewable
-capabilities:
+The static diagram foundation remains attributed and pinned. The former owned
+Codebase Memory engine is removed. Future work requires a concrete source or
+Published visualization question and owner approval:
 
 1. **Bounded remote repository reader** — read a specific file or small source
    range through the active MCP-managed GitHub.com/GitHub Enterprise authority

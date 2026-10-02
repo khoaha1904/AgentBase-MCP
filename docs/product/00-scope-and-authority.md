@@ -45,16 +45,40 @@ The owning decisions are [Knowledge lifecycle](03-knowledge-lifecycle.md#accepte
 and [Query and context](05-query-and-context.md#accepted-unified-use-target--group-8).
 Trusted-enterprise access, source provenance, deterministic validation,
 Published-only query, explicit provider scope and recoverable Git history remain.
-Do not replace Git/Markdown, the graph engine, schema/layout or visualization
-to deliver this horizon. Automatic publication, continuous whole-Hub refresh,
+Keep Git/Markdown, schema/layout and visualization within their accepted scope. Automatic publication, continuous whole-Hub refresh,
 mandatory AI review and broad new provider integration are not approved work.
+
+## Accepted source-only simplification
+
+The owner has approved removing Codebase Memory completely from AgentBase:
+vendored source/binaries, native builds, parser profiles, graph contracts,
+gateway/process/cache lifecycle, fake graph/demo and graph-related CLI routes.
+AgentBase owns Hub/OKF workflows and bounded deterministic source discovery.
+The host agent reads and searches source with its existing tools; an operator
+may independently install upstream graph tooling without an AgentBase adapter.
+Graph investigation, symbol resolution and call-path tracing are outside the
+AgentBase product. This is a capability removal, not an equivalent graph engine.
+
+Initial Ingest uses `discover_repository` after exact-source Preflight, keeping
+five-lane accounting, evidence-bound Receipts, visible limitations and explicit
+one-time census expansion. Delta continues using Git changes. Existing Hub
+knowledge, frozen legacy Receipts and publication/recovery remain readable.
+Existing external graph caches are left untouched; application upgrade does not
+modify Hub knowledge or independently registered graph tooling.
+
+All application-owned model benchmark runners and native-provider qualification
+campaigns are retired. Focused deterministic product, discovery, lifecycle and
+release tests remain mandatory. Historical AgentBase-Benchmark data stays in its
+own repository; it is not a runtime dependency or an active release promise.
+No new parser/index/graph replacement, model runner or compatibility proxy is
+introduced. The Node range and qualified release platforms retain their current
+bounds; removal alone does not qualify additional hosts.
 
 ## Outcome and ownership
 
 AgentBase has two products:
 
-- **AgentBase-MCP** is the local application used by coding agents. It owns Code
-  Graph access, evidence investigation, the OKF schema catalog, local knowledge
+- **AgentBase-MCP** is the local application used by coding agents. It owns bounded source discovery, evidence provenance, the OKF schema catalog, local knowledge
   workflows and synchronization.
 - **AgentBase-Hub** is an ordinary Git repository containing shared Google Open
   Knowledge Format Markdown. It contains no graph engine, MCP runtime or hidden
@@ -65,7 +89,7 @@ tools. AgentBase supplies bounded system context and evidence; it does not own
 the caller's planning, discovery, delivery or approval workflow. The first
 product qualification target is Hub-only feature discovery for BA/PO/DM, with
 no source checkout prerequisite. Developer task planning may add selective local
-Code Graph/source investigation after Hub context identifies the relevant scope.
+source investigation after Hub context identifies the relevant scope.
 
 ## Durable team knowledge boundary
 
@@ -74,7 +98,7 @@ living-context database. A team connects a bounded set of repositories to one
 Hub and improves that Hub over time through Ingest, Refresh, Questions, Domain
 Enrichment and explicit policy-bound Publish.
 
-Repository graphs, provider reads and source investigation are rebuildable
+Provider reads and source investigation are rebuildable
 inputs. Their useful conclusions are reduced into consistent, human-readable
 OKF documents with provenance, uncertainty and navigation back to source. The
 reviewed OKF output and its Git history are the durable shared product.
@@ -146,7 +170,7 @@ Initial installation remains the release bundle's `install.sh`. Automatic
 update discovery, a background updater and a release-coordination service are
 not part of this group.
 
-Ingest, Refresh, Enrichment, Query, Questions, Publish, benchmark and
+Ingest, Refresh, Enrichment, Query, Questions, Publish and
 recovery are selected by product skills/MCP or developer verification. The
 technical `mcp` launcher and legacy `okf` routes remain hidden compatibility
 paths so client registration and existing automation are not broken.
@@ -157,12 +181,12 @@ available to the operator and may be reused where that provider policy allows.
 AgentBase never writes a secret into Hub knowledge or accepts one through model
 content. Connect and sync remain separate workflow boundaries.
 
-A user can investigate source through a disposable local graph, turn bounded
+A user can investigate source with ordinary read/search tools, turn bounded
 evidence into a private OKF proposal, review its material changes and explicitly
 Publish through the configured Direct/PR policy. Ordinary Hub query
 reads only synchronized Published knowledge.
 
-Installation selects no Hub and Code Graph never requires one. OKF authoring and
+Installation selects no Hub; schema guidance and Scan remain available. OKF authoring and
 Hub query require an explicitly configured remote profile identified by exact
 GitHub host, repository and target branch. Each profile keeps independent
 Published/private-proposal state while one profile is active; credential resolution remains
@@ -175,12 +199,9 @@ are not persisted AgentBase roles and do not change query, ingest or publication
 semantics.
 
 For enterprise installation, AgentBase owns pinned, attributed source snapshots
-for its Code Graph engine and future diagram foundation. Release maintainers
-build one reviewed Code Graph bundle per supported platform; ordinary
-installation verifies and activates that repository-contained bundle without a
-compiler, native headers or a provider download. The Codebase Memory Graph UI
-frontend is excluded. Retained diagram-design source adds no released UI,
-renderer, tool or skill by itself.
+for its static diagram foundation. Ordinary installation uses locked Node
+dependencies and requires no native graph source, compiler or provider artifact.
+No graph UI, background indexer or engine session belongs to AgentBase.
 
 ## Accepted release and operating model
 
@@ -221,8 +242,8 @@ after Git reconciliation.
 ```text
 source repository
   -> resolve canonical Repository and confirm grouped physical home/participation
-  -> build or reuse private Code Graph
-  -> agent investigates graph and authorized source evidence
+  -> bounded source discovery
+  -> agent investigates authorized source evidence
   -> normalize bounded provenance-bearing observations
   -> author a rich Repository dossier plus independently useful knowledge
   -> deterministic Finalize and explicit human review
@@ -236,15 +257,15 @@ daily pull: it reports available updates and synchronizes only after an explicit
 user request.
 
 Code structure, symbols, callers and exact implementation primarily come from
-the current repository graph. Business, system, infrastructure and
+the current repository source. Business, system, infrastructure and
 cross-repository knowledge primarily come from local AgentBase-Hub. Answers may
 combine both when their sources and limitations remain visible.
 
 ## Knowledge model
 
-The detailed Codebase Memory graph is machine-local, private, disposable and
-non-canonical. Raw graph records, provider identifiers and graph databases never
-enter AgentBase-Hub.
+Detailed source investigation belongs to the host agent. AgentBase retains only
+bounded evidence-backed observations and reviewable knowledge; no raw source
+index, graph records or database becomes Hub authority.
 
 Only selected observations with repository revision, bounded source provenance,
 engine identity and limitations may support generated OKF. Observation is an

@@ -28,8 +28,7 @@ local-graphs/
 # AgentBase-owned evidence, proposals and recovery state are disposable/local.
 .agentbase/
 
-# Provider persistence is disabled, but ignore it defensively if a failed or
-# manually invoked provider run creates local graph artifacts.
+# Ignore caches from independently installed external graph tools.
 .codebase-memory/
 
 # Same-filesystem OKF switch siblings are local recovery machinery. The shared

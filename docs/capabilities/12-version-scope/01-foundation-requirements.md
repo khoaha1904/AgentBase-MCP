@@ -13,21 +13,6 @@ foundation behavior.
 - **AB-FND-003** — Sibling legacy AgentBase repositories are read-only evidence,
   never dependencies or mutation targets.
 
-## Deterministic foundation demonstration
-
-- **AB-FND-004** — The demo returns a repository map followed by the accepted
-  relevant-neighborhood result.
-- **AB-FND-005** — The demo composes a deterministic fake through the neutral
-  Code Intelligence public contract, without parsing or an external engine.
-- **AB-FND-006** — Its fixture contains exactly 12 authored TypeScript files with
-  modular public/private boundaries and a cross-capability chain.
-- **AB-FND-007** — The accepted query returns every manifest-declared node and
-  edge while citing at most three fixture files.
-- **AB-FND-008** — Five unchanged runs produce byte-equivalent normalized output
-  regardless of provider insertion order.
-- **AB-FND-009** — Missing snapshots, unknown subjects and invalid queries remain
-  distinct failures; a known isolated subject is a successful empty result.
-
 ## Architecture and verification
 
 - **AB-FND-010** — Every authored runtime/test file remains attributable to one
@@ -46,12 +31,6 @@ foundation behavior.
 - **AB-FND-015** — `npm run verify` is the canonical offline contract,
   type, dependency architecture, dead-code/dependency, redacted-secret, test
   and diff gate.
-- **AB-FND-016** — Core owns provider-neutral repository-map and
-  relevant-neighborhood contracts.
-- **AB-FND-017** — The deterministic fake passes the same neutral conformance
-  scenarios required of real providers.
-- **AB-FND-018** — Provider-private graph records never leak into public core
-  values; adapters translate at their boundary.
 - **AB-FND-019** — Foundation verification needs no network, credentials, model,
   daemon or arbitrary executable fallback.
 - **AB-FND-020** — Knip uses explicit runtime, script and test entrypoints and
@@ -74,7 +53,7 @@ foundation behavior.
 - **AB-CLI-003** — `mcp` remains a technical stdio launcher for registered
   clients but is not advertised as an ordinary user workflow.
 - **AB-CLI-004** — Ingest, Refresh, Batch, Domain Enrichment, Query, Accept,
-  Publish, Question review, validator and benchmark actions remain skill/MCP or
+  Publish, Question review, validator actions remain skill/MCP or
   developer/internal routes; they are not duplicated as public CLI commands.
 - **AB-CLI-005** — Internal routes may retain compatibility during migration,
   but public help, README examples and product skills reference only the

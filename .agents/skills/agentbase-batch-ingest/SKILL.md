@@ -10,8 +10,8 @@ Build one sparse review unit without mixing repository evidence.
 Use only `prepare_batch_hub_ingest`, `confirm_batch_hub_ingest`,
 `preflight_hub_ingest`, `prepare_hub_okf`, `record_batch_hub_ingest_member`,
 `retry_batch_hub_ingest_member`, `revise_batch_hub_ingest_membership`,
-`finalize_batch_hub_ingest_proposal`, `inspect_hub_okf_proposal` and the exact
-graph tools named by `use-codebase-memory`, `get_okf_authoring_schemas` and
+`finalize_batch_hub_ingest_proposal`, `inspect_hub_okf_proposal` and
+`discover_repository`, `get_okf_authoring_schemas` and
 `validate_okf_changes`. Never use ordinary repository Preflight/Finalize inside
 a confirmed batch.
 
@@ -33,8 +33,8 @@ a confirmed batch.
 4. A truthful sparse member is complete. A member-local `failed` checkpoint
    does not block later siblings after the next repository switch confirms
    clean provider closure. Record it, continue sequentially, then retry only
-   failed members. A shared Hub/source authority failure or uncertain provider
-   cleanup stops the Batch.
+   failed members. A shared Hub/source authority failure or uncertain source
+   state stops the Batch.
 5. If membership changes, call `revise_batch_hub_ingest_membership` with the
    complete replacement member set. Re-author invalidated/dangling work when the
    returned revision requires it; never silently drop a member contribution.
@@ -43,6 +43,5 @@ a confirmed batch.
    per-repository source revision and lane coverage, shared Domain/index
    navigation, Questions, ignored reasons and limitations.
 
-Stop before Publish, synchronization, provider enrichment or model
-benchmark. Do not scan the workspace, run members in parallel, split a finalized
+Stop before Publish, synchronization, provider enrichment . Do not scan the workspace, run members in parallel, split a finalized
 proposal or convert an existing canonical Repository into Init.

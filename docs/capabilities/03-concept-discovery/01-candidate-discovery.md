@@ -9,9 +9,9 @@
 
 Discover runs five lanes: repository identity/product; runtime/entrypoint;
 interface/route/event/trigger; dependency/integration/data/channel; and
-deploy/operations. After indexing, MCP runs a fixed provider baseline and a
-bounded safe-file census to create a private per-connection Discovery Seed. Raw
-graph nodes are compacted into session-stable evidence groups; repeated low-value
+deploy/operations. After exact-source Preflight, `discover_repository` runs a
+bounded safe-file census to create a private per-connection Discovery Seed. Source
+signals are compacted into session-stable evidence groups; repeated low-value
 rows keep counts and source samples. The Agent does not invent lane status,
 priority or absence.
 
@@ -22,7 +22,7 @@ dossier/parent embedding and its parent, so Inventory does not declare them
 again. Coverage groups are not split/merged
 in the MVP; each item has one origin group, while multiple groups may contribute
 to one candidate. Successful guidance freezes a compact Inventory Receipt; raw
-graph/source does not enter the Receipt or Hub.
+source does not enter the Receipt or Hub.
 
 The Agent does not create Inventory item IDs, QuestionPlan IDs, output parents or
 a second candidate-level evidence list. MCP derives those fields from the active
@@ -37,7 +37,7 @@ exact evidence and does not depend on a provider profile. The Agent may improve
 the human-readable label in a table/prose; Finalize does not use an exact
 identity-hint substring as the materialization gate. If exact evidence disappears
 from the parent, MCP appends the canonical embedded row from the frozen Receipt
-before validation; raw graph is not reused.
+before validation; raw source is not reused.
 
 `get_okf_authoring_schemas` validates submitted Inventory against the active Seed
 and returns `discovery_receipt_id`. New-mode `prepare_hub_okf` consumes that
@@ -62,19 +62,18 @@ reserving one quarter of the budget for ordinary source. Do not
 let file priority imply a service boundary or change evidence admission.
 
 Initial Ingest exposes only `standard` and `expanded` census modes through
-`index_repository`. Standard retains the 256-file ceiling; expanded has a
+`discover_repository`. Standard retains the 256-file ceiling; expanded has a
 1,024-file ceiling. Expansion needs
 a concrete important coverage gap and explicit owner confirmation, not merely a
-large repository or a low concept count. Preserve the exact source scope, reuse
-the graph, disclose the selected budget and remaining limitations, and never
+large repository or a low concept count. Preserve the exact source scope, disclose the selected budget and remaining limitations, and never
 run an automatic escalating loop. Entry traversal, individual file size and
-coverage paging limits remain separately visible; a larger file budget must
+traversal limits remain separately visible; a larger file budget must
 not be described as resolving those other limits.
 
 The exact input/confirmation boundary and Seed/Receipt accounting are owned by
 [`AB-INGEST-022..023`](../05-knowledge-entry/06-runtime-requirements.md).
 An expansion replaces the standard Seed before Receipt creation and uses the
-captured graph diagnostics without provider calls. Reject stale/missing consent,
+same armed source without indexing. Reject stale/missing consent,
 another repository, repeated expansion and frozen Receipts. An agent attests
 user confirmation; the runtime cannot independently authenticate chat consent.
 Refresh Coverage remains a separate existing investigation, not this census.
@@ -85,12 +84,12 @@ No new public skill or ranking AI is introduced.
 The Agent creates candidates from read evidence, not guesses from names:
 
 - root README/docs/ADR for declared purpose, boundary or decision;
-- architecture/entrypoint/package boundaries from graph and exact source;
+- architecture/entrypoint/package boundaries from exact source;
 - infrastructure/resource declarations with logical identity;
 - an API, event, queue or data contract with integration value;
 - an existing Hub concept/relation requiring new source evidence.
 
-A graph node, file, function, cloud keyword or import is only a discovery signal;
+A file, function, cloud keyword or import is only a discovery signal;
 none becomes a concept automatically.
 
 An explicit `embedded` disposition is provider-independent. When no technology
@@ -152,7 +151,7 @@ describes the specific missing part instead of a falsely precise number.
 
 ## Deterministic/AI balance
 
-The deterministic workflow owns repository authority, graph/source bounds,
+The deterministic workflow owns repository authority, source bounds,
 candidate shape, identity checks, schema catalog, validation and retry budget.
 The Agent owns semantic interpretation: what boundary the source describes, which
 candidate has query value and which ambiguity needs a Question.
@@ -163,6 +162,5 @@ two provider-neutral gates. Conversely, the Agent may not expand authority,
 schemas or loops because its reasoning finds that useful.
 
 Capability 051 adds two guards in the same boundary: source-line hints redact
-credential-like values before entering the Seed, and captured architecture
-sections without an exact source path become a limitation rather than silently
-disappearing or creating an unbounded candidate.
+credential-like values before entering the Seed, and unsupported source patterns remain explicit limitations rather than
+creating guessed candidates.

@@ -14,5 +14,5 @@ files directly.
 - `governance/` — confirmed domains, directives and live-claim policy.
 
 Keep a concern here only when it is provider-neutral knowledge policy. Git,
-Code Graph sessions, MCP transport and workflow orchestration belong to their
+Source discovery, MCP transport and workflow orchestration belong to their
 existing provider or application capability.

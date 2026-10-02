@@ -6,7 +6,7 @@
 
 ## Current baseline
 
-- The Repository graph round manages source identity, freshness, evidence and cleanup.
+- Git source discovery manages exact identity and source-change evidence.
 - Hub prepare creates a private authoring session from the exact active Hub head.
 - The Agent authoring workspace keeps a separate base/bundle and bounded continuity.
 - Finalize validates, locks and materializes an immutable proposal.
@@ -15,14 +15,14 @@
 
 Baseline sources:
 
-- [Repository graph/evidence](../../../src/app/repository-okf/README.md)
+- [Repository graph/evidence](../../../src/app/repository-source/index.ts)
 - [Hub authoring session](../../../src/app/hub-okf/authoring/authoring-session.ts)
 - [Refresh reconciliation](../../../src/app/hub-okf/authoring/refresh.ts)
 - [Hub MCP boundary](../../../src/app/hub-okf/mcp/mcp-tools.ts)
 
 ## Closed gaps
 
-`agentbase-ingest` and `agentbase-refresh` connect graph reading, evidence-bearing
+`agentbase-ingest` and `agentbase-refresh` connect source discovery, evidence-bearing
 guidance, prepared skeletons, changed-document validation, finalize and inspect.
 The evidence digest for a new proposal is derived from validated guidance and
 exact source state instead of opaque caller input.
@@ -40,6 +40,6 @@ its additional state and orchestration cost.
 
 ## Result
 
-The current target preserves deterministic graph, proposal, validation, Git
+The current target preserves deterministic source discovery, proposal, validation, Git
 publication and recovery boundaries without reopening the single-repository
 flow as a general orchestration framework.

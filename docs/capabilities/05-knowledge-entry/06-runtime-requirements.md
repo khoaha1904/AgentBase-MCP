@@ -16,7 +16,6 @@ This page is not required startup context. Use the relevant section below;
 follow its linked owner rather than loading unrelated sections.
 
 - [Repository proposal lifecycle](#repository-proposal-lifecycle)
-- [Explicit observations](#explicit-observations)
 - [Observed values](#observed-values)
 - [Refresh contribution lifecycle](#refresh-contribution-lifecycle)
 - [Concrete schema catalog](#concrete-schema-catalog)
@@ -27,7 +26,7 @@ follow its linked owner rather than loading unrelated sections.
 - **AB-MVP-008** — The current host coding agent performs synthesis through the
   internal supporting `agentbase-okf` skill after a public workflow prepares
   the exact workspace; AgentBase adds no model SDK or model key.
-- **AB-MVP-009** — `okf prepare` byte-copies current knowledge into an isolated
+- **AB-MVP-009** — Hub Prepare byte-copies current knowledge into an isolated
   proposal and never mutates the shared `okf/` bundle.
 - **AB-MVP-010, AB-MVP-011** — Concept files have bounded parseable YAML
   frontmatter and non-empty `type`; reserved files follow OKF v0.2, root
@@ -57,34 +56,15 @@ follow its linked owner rather than loading unrelated sections.
   diffed owned-draft deletion is allowed.
 - **AB-MVP-020** — State changes use one repository-local atomic lock, a complete
   sibling next bundle and phase manifest with deterministic checkpoint recovery.
-- **AB-MVP-021** — The accepted 12-file rehearsal proves five facts within
-  three source files, linked drafts, guidance/defer, allowed deletion, stale
+- **AB-MVP-021** — Focused proposal tests prove evidence-backed linked changes, linked drafts, guidance/defer, allowed deletion, stale
   rejection and recovery.
-- **AB-MVP-022** — Graph/direct-source comparison may record time, presented
-  context, fact coverage and correction count; no unmeasured speed threshold is
+- **AB-MVP-022** — Historical comparisons may record cost and fact coverage; no unmeasured speed threshold is
   a product claim.
 - **AB-MVP-023** — Root `index.md` carries base OKF frontmatter; under compact
   Profile 1.0 each Domain `index.md` carries its Domain concept frontmatter and
   navigation body. `shared/index.md` is navigation only. Repository,
   `knowledge/` and `questions/` category indexes are not authored Hub files.
   Legacy and foreign valid indexes remain readable under their admitted profile.
-
-## Explicit observations
-
-- **AB-OBS-001, AB-OBS-004** — `observe` is a separate user action for one
-  repository/symbol. It never starts implicitly and never creates, validates,
-  changes or applies OKF; OKF needs another explicit command.
-- **AB-OBS-002** — Exact owned Codebase Memory owns indexing, graph structure,
-  graph semantics and graph queries; AgentBase owns no parallel canonical graph.
-- **AB-OBS-003** — Only normalized evidence crosses the bridge: exact engine and
-  source identity, bounded queries, facts, relative sources, completeness,
-  limitations and digest. Provider-private graph records do not.
-- **AB-OBS-005** — Equivalent evidence has stable order/digest; source or engine
-  changes remain visible.
-- **AB-OBS-006** — Invalid input, provider failure, source mutation or cleanup
-  failure returns a distinct failure and no partial observation.
-- **AB-OBS-007** — Observation preserves exact owned-artifact admission, private
-  cache, bounded process/session, source integrity and confirmed cleanup.
 
 ## Observed values
 
@@ -366,7 +346,7 @@ follow its linked owner rather than loading unrelated sections.
   showing Domain/shared evidence and mismatches.
 - **AB-INGEST-003, AB-INGEST-004** — The host skill runs Preflight, Discover,
   Investigate, Author, semantic Quality Admission and deterministic Validate.
-  Code Graph is a private map; promoted claims and relations resolve to exact
+  Source census is a bounded map; promoted claims and relations resolve to exact
   source. Before proposal state exists, one
   retryable `INVALID_ARGUMENT` guidance request may be corrected; after state
   exists, at most one separate changed-document validation repair runs. Sparse
@@ -456,7 +436,7 @@ follow its linked owner rather than loading unrelated sections.
   an existing embedded row that retains exact candidate-owned evidence and
   deterministically restores a missing canonical row and missing frontmatter
   source record from the frozen Receipt into its resolved parent. This
-  normalization uses no graph/source reread and does not consume the Agent
+  normalization uses no source reread and does not consume the Agent
   repair budget. A row that still cannot be resolved to a valid parent/evidence
   remains an integrity failure.
 - **AB-INGEST-021** — Discovery and authoring preserve bounded limitations when
@@ -465,21 +445,17 @@ follow its linked owner rather than loading unrelated sections.
   reason; it is never silently dropped to make a proposal appear complete.
 - **AB-INGEST-022** — Initial Ingest census selects at most 256 (`standard`)
   or 1,024 (`expanded`) safe files after a bounded 4,096-entry enumeration.
-  Priority goes to manifests, deployment/operations files and graph-evidenced
-  entrypoints; reserve one quarter of the file budget for ordinary source when
+  Priority goes to manifests and deployment/operations files; reserve one quarter of the file budget for ordinary source when
   available, then fill unused capacity. Selection is deterministic. The 64 KiB
-  per-file cap, denied paths, symlink exclusion and graph coverage limits remain
-  unchanged. Report mode, budget, selected/eligible counts, known omitted
-  priority files and entry truncation separately; these are census, not whole
-  graph, bounds.
-- **AB-INGEST-023** — Existing `index_repository` admits `discovery_mode` with
+  per-file cap, denied paths, symlink exclusion remain unchanged. Report mode, budget, selected/eligible counts, known omitted
+  priority files and entry truncation separately; these are census bounds, not completeness claims.
+- **AB-INGEST-023** — Existing `discover_repository` admits `discovery_mode` with
   default `standard`. `expanded` requires `discovery_confirmation` containing
   the current standard `seed_id`, `user_confirmed: true` and a bounded concrete
   `reason` for missing important coverage. It is admitted only on the same
-  armed Initial Ingest root/provider session with file omissions, before its
+  armed Initial Ingest source with file omissions, before its
   Receipt is frozen, once per armed run. Standard rejects confirmation fields.
-  Invalid/stale requests fail before provider calls. Expansion reuses captured
-  graph diagnostics and reruns only census; it replaces the Seed and invalidates
+  Invalid/stale requests fail before source reads. Expansion reruns census on the same armed source; it replaces the Seed and invalidates
   old Inventory input. Record budget evidence in the Seed and Receipt. The
   confirmation is the calling agent's attestation, not independent proof of
   human consent; installed guidance must obtain that consent. It grants no

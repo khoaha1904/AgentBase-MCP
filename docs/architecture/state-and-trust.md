@@ -19,7 +19,7 @@
 ```text
 read-only source repository
         ↓
-private provider/cache state
+private workflow/query cache state
         ↓
 normalized provenance-bearing evidence
         ↓
@@ -30,8 +30,6 @@ shared Git-backed Hub knowledge
 
 | State | Scope | Shared | Rebuildable |
 |---|---|---:|---:|
-| Detailed graph and provider cache | machine/repository | no | yes |
-| Freshness receipt | machine/repository/provider | no | yes |
 | Observation/evidence bundle | source revision | no in current product | yes |
 | Unaccepted proposal workspace | local transaction | no | yes from reviewed input |
 | Derived Question/query projection | exact local Hub commit | no | yes from shared documents |

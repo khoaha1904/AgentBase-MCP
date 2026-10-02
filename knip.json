@@ -5,10 +5,17 @@
     "src/app/hub-okf/ci/standalone.ts",
     "scripts/**/*.mjs"
   ],
-  "project": ["src/**/*.ts", "scripts/**/*.mjs"],
-  "ignore": ["vendor/**"],
-  "ignoreDependencies": ["@swc/core", "cytoscape"],
-  "ignoreBinaries": ["gitleaks", "patch"],
+  "project": [
+    "src/**/*.ts",
+    "scripts/**/*.mjs"
+  ],
+  "ignoreDependencies": [
+    "@swc/core",
+    "cytoscape"
+  ],
+  "ignoreBinaries": [
+    "gitleaks"
+  ],
   "rules": {
     "exports": "off",
     "types": "off"

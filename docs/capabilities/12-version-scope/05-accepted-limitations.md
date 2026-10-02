@@ -1,8 +1,8 @@
 # 12.05 — Accepted MVP limitations
 
 - Local Draft has no remote backup before publication.
-- One MCP connection binds one explicit local repository; no auto-clone or
-  cross-repository Code Graph.
+- Source discovery binds the exact repository selected by Initial Ingest
+  Preflight; no auto-clone or Code Graph.
 - Initial Ingest has no remote claim/lock; duplicate unpublished work is handled
   by people, and the later duplicate is canceled/restarted as Refresh.
 - Relation discovery can miss indirect links without shared identity evidence.
@@ -14,7 +14,7 @@
   reports and remote source reading are absent; snapshot age, local reporting
   and scheduled CI exist. Remote source reading is first post-phase priority.
 - Without a configured remote Hub, Hub query/Ingest/Refresh/Draft operations are
-  unavailable; Code Graph and bounded workspace Scan remain usable.
+  unavailable; schema guidance and bounded workspace Scan remain usable.
 - Review is structured text/diff; no generated HTML graph UI.
 - Accepted private proposal artifacts are retained; no cleanup scheduler.
 

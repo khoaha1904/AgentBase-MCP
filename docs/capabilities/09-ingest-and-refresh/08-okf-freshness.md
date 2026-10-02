@@ -5,7 +5,7 @@
 ## Boundary
 
 OKF Freshness describes how long ago a repository/source contribution was
-observed and at which revision. It is independent of Code Graph cache freshness
+observed and at which revision. It is independent of source discovery state
 and does not judge whether knowledge is correct.
 
 ## Source contribution metadata

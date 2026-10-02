@@ -93,13 +93,9 @@ const CAPABILITY_SECTIONS = [
 ];
 
 const REQUIREMENT_GROUPS = [
-  ["foundation", "docs/capabilities/12-version-scope/01-foundation-requirements.md", ids("AB-FND", 19), "CONTRACT-LIVING-MISSING", "CONTRACT-ID-MISSING"],
-  ["managed graph", "docs/capabilities/01-repository-reading/05-runtime-requirements.md", ids("AB-MVP", 7), "CONTRACT-MVP-LIVING-MISSING", "CONTRACT-MVP-ID-MISSING"],
-  ["graph lifecycle", "docs/capabilities/01-repository-reading/05-runtime-requirements.md", ids("AB-GRAPH", 14), "CONTRACT-GRAPH-LIVING-MISSING", "CONTRACT-GRAPH-ID-MISSING"],
-  ["graph freshness", "docs/capabilities/01-repository-reading/05-runtime-requirements.md", ids("AB-GRAPH-REFRESH", 12), "CONTRACT-GRAPH-LIVING-MISSING", "CONTRACT-GRAPH-REFRESH-ID-MISSING"],
-  ["MCP surface", "docs/capabilities/01-repository-reading/05-runtime-requirements.md", ids("AB-MCP", 26), "CONTRACT-GRAPH-LIVING-MISSING", "CONTRACT-MCP-ID-MISSING"],
+  ["source discovery", "docs/capabilities/01-repository-reading/05-runtime-requirements.md", ids("AB-DISC", 8), "CONTRACT-DISC-LIVING-MISSING", "CONTRACT-DISC-ID-MISSING"],
+  ["foundation", "docs/capabilities/12-version-scope/01-foundation-requirements.md", [...ids("AB-FND", 3), ...ids("AB-FND", 6, 10), ...ids("AB-FND", 4, 19)], "CONTRACT-LIVING-MISSING", "CONTRACT-ID-MISSING"],
   ["OKF proposal", "docs/capabilities/05-knowledge-entry/06-runtime-requirements.md", ids("AB-MVP", 16, 8), "CONTRACT-OKF-LIVING-MISSING", "CONTRACT-MVP-ID-MISSING"],
-  ["observations", "docs/capabilities/05-knowledge-entry/06-runtime-requirements.md", ids("AB-OBS", 7), "CONTRACT-OKF-LIVING-MISSING", "CONTRACT-OBS-ID-MISSING"],
   ["context freshness", "docs/capabilities/08-live-references/08-freshness-envelope-requirements.md", ids("AB-FRESH", 12), "CONTRACT-FRESH-LIVING-MISSING", "CONTRACT-FRESH-ID-MISSING"],
   ["schema catalog", "docs/capabilities/05-knowledge-entry/06-runtime-requirements.md", ids("AB-SCHEMA", 36), "CONTRACT-OKF-LIVING-MISSING", "CONTRACT-SCHEMA-ID-MISSING"],
   ["live claims", "docs/capabilities/05-knowledge-entry/06-runtime-requirements.md", ids("AB-CLAIM", 5), "CONTRACT-OKF-LIVING-MISSING", "CONTRACT-CLAIM-ID-MISSING"],
@@ -108,7 +104,6 @@ const REQUIREMENT_GROUPS = [
   ["query", "docs/capabilities/10-query-routing/07-runtime-requirements.md", ids("AB-QUERY", 18), "CONTRACT-QUERY-LIVING-MISSING", "CONTRACT-QUERY-ID-MISSING"],
   ["local Hub", "docs/capabilities/11-review-and-publish/01-runtime-requirements.md", [...ids("AB-LOCAL-HUB", 16), ...ids("AB-PUBLISH", 10), ...ids("AB-HUB-SETUP", 17)], "CONTRACT-HUB-LIVING-MISSING", "CONTRACT-HUB-ID-MISSING"],
   ["installation", "docs/capabilities/12-version-scope/02-installation-requirements.md", ids("AB-INSTALL", 31), "CONTRACT-INSTALL-LIVING-MISSING", "CONTRACT-INSTALL-ID-MISSING"],
-  ["benchmark", "docs/capabilities/12-version-scope/03-benchmark-requirements.md", ids("AB-BENCH", 90), "CONTRACT-BENCH-LIVING-MISSING", "CONTRACT-BENCH-ID-MISSING"],
   ["MCP protocol", "docs/capabilities/12-version-scope/09-mcp-protocol-requirements.md", ids("AB-MCPMOD", 6), "CONTRACT-MCPMOD-LIVING-MISSING", "CONTRACT-MCPMOD-ID-MISSING"],
   ["release artifact", "docs/capabilities/12-version-scope/10-release-artifact-requirements.md", ids("AB-RELEASE", 11), "CONTRACT-RELEASE-LIVING-MISSING", "CONTRACT-RELEASE-ID-MISSING"],
   ["application lifecycle", "docs/capabilities/12-version-scope/11-application-lifecycle-requirements.md", ids("AB-LIFECYCLE", 12), "CONTRACT-LIFECYCLE-LIVING-MISSING", "CONTRACT-LIFECYCLE-ID-MISSING"],

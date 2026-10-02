@@ -34,7 +34,7 @@ For a value question:
 1. read the Hub observed snapshot and retain the exact layer/source/time/age;
 2. if the snapshot sufficiently answers user intent, stop at the snapshot;
 3. if the user asks for the current value, check the current repository binding;
-4. use normal graph/file tools only when the repository ID matches;
+4. use normal source read/search tools only when the repository ID matches;
 5. present the current result separately from the snapshot; do not write back.
 
 An old snapshot, an existing conflict/Question or available local source does
@@ -52,7 +52,7 @@ Source access and value resolution are separate:
 |---|---|
 | `not-checked` | Snapshot-only query; source/credentials were not probed. |
 | `available` | The exact repository binding/path is readable for this workflow. |
-| `unavailable` | Repository is not local, the binding mismatches, the path is missing or graph/file reading is unavailable. |
+| `unavailable` | Repository is not local, the binding mismatches, the path is missing or source reading is unavailable. |
 | `unauthorized` | A future remote action tried an MCP credential and the provider denied permission. |
 
 When access is `available`, current resolution can still be `resolved`,
@@ -60,7 +60,7 @@ When access is `available`, current resolution can still be `resolved`,
 that the Agent mapped the property to the correct value.
 
 The response retains a bounded reason such as `repository-not-local`,
-`binding-mismatch`, `path-missing`, `graph-unavailable`, `permission-denied` or
+`binding-mismatch`, `path-missing`, `source-unavailable`, `permission-denied` or
 `unsafe-value` so the user knows why current verification did not complete. It
 does not expose a local absolute path, token or provider response body.
 

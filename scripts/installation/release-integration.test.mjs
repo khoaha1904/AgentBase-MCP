@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { clientEntriesEqual, stableClientEntry } from "./client-registration.mjs";
-import { PRODUCT_SKILL_NAMES, productSkillRoot } from "./product-skills.mjs";
+import { MANAGED_PRODUCT_SKILL_NAMES, PRODUCT_SKILL_NAMES, productSkillRoot } from "./product-skills.mjs";
 import { parseClients } from "./release-control.mjs";
 import { readReleaseIntegrationState, releaseIntegrationPaths } from "./release-integration.mjs";
 import { lifecyclePaths, runApplicationLifecycle } from "./release-lifecycle.mjs";
@@ -56,17 +56,17 @@ function fixture(t) {
   fs.mkdirSync(environment.HOME, { recursive: true });
   const paths = lifecyclePaths(environment);
   const releases = path.join(root, "candidates");
-  const createRelease = (version, skillVersion = version) => {
+  const createRelease = (version, skillVersion = version, catalog = PRODUCT_SKILL_NAMES) => {
     const releaseId = `agentbase-mcp-${version}-${process.platform}-${process.arch}`;
     const releaseRoot = path.join(releases, releaseId);
     fs.mkdirSync(path.join(releaseRoot, "src"), { recursive: true });
     fs.mkdirSync(path.join(releaseRoot, "scripts", "installation"), { recursive: true });
-    fs.writeFileSync(path.join(releaseRoot, "fixture.json"), `${JSON.stringify({ release_id: releaseId })}\n`);
+    fs.writeFileSync(path.join(releaseRoot, "fixture.json"), `${JSON.stringify({ release_id: releaseId, skills: catalog })}\n`);
     fs.writeFileSync(path.join(releaseRoot, "src", "cli.ts"), `process.stdout.write(${JSON.stringify(`${releaseId}\n`)});\n`);
     for (const name of RELEASE_CONTROL_FILES) {
       fs.copyFileSync(path.join(sourceControl, name), path.join(releaseRoot, "scripts", "installation", name));
     }
-    for (const name of PRODUCT_SKILL_NAMES) {
+    for (const name of catalog) {
       const skill = path.join(releaseRoot, ".agents", "skills", name);
       fs.mkdirSync(skill, { recursive: true });
       fs.writeFileSync(path.join(skill, "SKILL.md"), `# ${name}\n\nrelease: ${skillVersion}\n`);
@@ -76,7 +76,7 @@ function fixture(t) {
   const verifyRelease = async (releaseRoot, expected = {}) => {
     const manifest = JSON.parse(fs.readFileSync(path.join(releaseRoot, "fixture.json"), "utf8"));
     if (expected.releaseId && expected.releaseId !== manifest.release_id) throw new Error("fixture release identity changed");
-    return { ...manifest, runtime: { lifecycle_api: 1, integration_state_schema: 1 }, skills: [...PRODUCT_SKILL_NAMES] };
+    return { ...manifest, runtime: { lifecycle_api: 1, integration_state_schema: 1 } };
   };
   const createLegacyEntry = () => {
     const checkout = path.join(root, "legacy-checkout");
@@ -100,6 +100,29 @@ function fixture(t) {
 function installedSkill(environment, client, name) {
   return path.join(productSkillRoot(client, environment), name, "SKILL.md");
 }
+
+test("[AB-INTEGRATION-015] retires the owned graph skill on upgrade and restores it on rollback", async (t) => {
+  const value = fixture(t);
+  const first = value.createRelease("0.1.0", "legacy", MANAGED_PRODUCT_SKILL_NAMES);
+  const second = value.createRelease("0.2.0", "source-only");
+  const adapter = fakeClientAdapter();
+  const options = { environment: value.environment, verifyRelease: value.verifyRelease, clientAdapter: adapter };
+  await runApplicationLifecycle("install", { ...options, releaseRoot: first, clients: ["codex"] });
+  const retired = installedSkill(value.environment, "codex", "use-codebase-memory");
+  assert.equal(fs.existsSync(retired), true);
+  const original = fs.readFileSync(retired, "utf8");
+  fs.appendFileSync(retired, "owner changes\n");
+  await assert.rejects(runApplicationLifecycle("upgrade", { ...options, releaseRoot: second }), /skill drifted/);
+  assert.equal(readReleaseIntegrationState(value.paths).releaseId, path.basename(first));
+  fs.writeFileSync(retired, original);
+  await runApplicationLifecycle("upgrade", { ...options, releaseRoot: second });
+  assert.equal(fs.existsSync(retired), false);
+  assert.deepEqual(Object.keys(readReleaseIntegrationState(value.paths).skills.codex).sort(), [...PRODUCT_SKILL_NAMES].sort());
+  await runApplicationLifecycle("rollback", options);
+  assert.equal(fs.readFileSync(retired, "utf8"), original);
+  await runApplicationLifecycle("uninstall", options);
+  assert.deepEqual(fs.readdirSync(productSkillRoot("codex", value.environment)), []);
+});
 
 test("[AB-INTEGRATION-001..010][AB-INTEGRATION-013..014] migrates once and versions skills with the application", async (t) => {
   const value = fixture(t);

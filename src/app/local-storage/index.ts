@@ -12,7 +12,6 @@ export type AgentBaseStorage = Readonly<{
   tmp: string;
   hubRuntime: string;
   hubCheckouts: string;
-  providerCache: string;
 }>;
 
 export type LegacyAgentBaseStorage = Readonly<{
@@ -37,7 +36,6 @@ export function agentBaseStorage(environment: NodeJS.ProcessEnv = process.env): 
     tmp: path.join(root, "tmp"),
     hubRuntime: path.join(root, "state", "hub-runtime"),
     hubCheckouts: path.join(root, "tmp", "hub"),
-    providerCache: path.join(root, "cache", "codebase-memory"),
   };
 }
 

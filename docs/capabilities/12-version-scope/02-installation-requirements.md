@@ -92,50 +92,10 @@ one provider credential across Hub profiles.
   pre-existing destination.
 - **AB-INSTALL-031** — Non-interactive setup remains preparation-only and never
   installs product skills or registers clients.
-- **AB-INSTALL-043** — Every released AgentBase skill disables Codex implicit
-  invocation. Public skill descriptions require the exact user-named skill or
-  the explicitly approved, narrowly scoped handoff defined by `AB-USE-004..006`;
-  internal skill descriptions require delegation from an already active
-  explicitly invoked public AgentBase workflow. Ordinary repository work MUST
-  NOT activate any AgentBase skill merely because the MCP or skills are
-  installed.
 
-## Owned native provider bundle
+## Source-only installation
 
-- **AB-INSTALL-032** — Ordinary installation requires approved Node.js
-  `>=24.12 <25`, the configured company npm registry and a released
-  `linux-x64` or `darwin-arm64` repository bundle. It does not require Git,
-  Make, a compiler, zlib development headers or a separate provider command.
-- **AB-INSTALL-033** — npm dependency preparation uses the user's one configured
-  HTTPS registry with registry-host replacement; public npm/yarn and GitHub
-  package authorities are rejected rather than used as fallback.
-- **AB-INSTALL-034** — After dependencies, installation verifies both immutable
-  upstream inventories and the exact current-platform Codebase Memory bundle
-  before copying skills or changing a client MCP entry.
-- **AB-INSTALL-035** — Ordinary installation copies only the repository-owned
-  bundle into private staging, verifies the staged identity and atomically
-  activates it. It never downloads or compiles a provider and never falls back
-  to `PATH` or a user-supplied binary.
-- **AB-INSTALL-036** — A failed preflight, bundle probe or admission preserves
-  the previously admitted artifact and leaves skills/client registration
-  unchanged. Later registration failure uses the existing registration/skill
-  rollback and may retain the already valid artifact.
-- **AB-INSTALL-037** — Non-interactive setup still prepares dependencies and
-  activates the bundled provider, but performs no skill or client mutation.
-- **AB-INSTALL-038** — Codebase Memory Graph UI source/dependencies are excluded.
-  diagram-design dependencies are not installed by this capability; its source
-  and static profile are audit inputs only.
-- **AB-INSTALL-039** — A release maintainer explicitly runs
-  `npm run package:codebase-memory` on each supported target. This is the only
-  flow that requires the native build toolchain and platform development files.
-- **AB-INSTALL-040** — Maintainer packaging verifies the prepared runtime and
-  atomically replaces only the current target under
-  `vendor/codebase-memory/artifacts/`; another platform bundle is preserved.
-- **AB-INSTALL-041** — The canonical offline gate verifies the current-platform
-  bundle against the pinned source, parser profile, accepted tool surface,
-  manifest checksum, platform identity and executable version. A platform is
-  not released until this gate passes on that platform.
-- **AB-INSTALL-042** — After dependency preparation, installation verifies the
-  exact `cytoscape@3.34.2` package and local browser asset used by Domain-site
-  generation. Enterprise release requires that exact package in the configured
-  company registry; no public-registry or CDN fallback is allowed.
+Dependencies and client/skill setup require no native graph binary, provider
+activation or parser build. Retired provider-only requirements AB-INSTALL-032
+through AB-INSTALL-036 are no longer release obligations. Source/runtime bounds
+are owned by [Repository discovery](../01-repository-reading/05-runtime-requirements.md).

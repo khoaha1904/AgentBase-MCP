@@ -1,7 +1,7 @@
 # Repository skills
 
 Released skills are grouped by product ownership. Ten public entry names include
-one compatibility alias; three internal skills support those workflows. Some clients may still show
+one compatibility alias; two internal skills support those workflows. Some clients may still show
 internal artifacts in a technical selector.
 
 Public entry is explicit-only: name the skill or use an approved same-scope
@@ -49,8 +49,6 @@ a separately approved Domain Enrichment scope and provider-session confirmation.
 
 ## Internal supporting skills
 
-- [`use-codebase-memory`](use-codebase-memory/SKILL.md) — map, search, trace and
-  read exact source from one authorized local repository for a public workflow.
 - [`agentbase-okf`](agentbase-okf/SKILL.md) — author and validate the exact
   bounded proposal workspace prepared by a public workflow.
 - [`use-diagram-design`](use-diagram-design/SKILL.md) — render only a truthful

@@ -9,7 +9,7 @@ role and source ID.
 For a volatile-value query, call `read_hub_okf_concept` on the Published
 concept. Present the stored snapshot with its source revision and observation
 time. Do not probe repository access or imply the snapshot is current. If the user explicitly needs the current value, use normal
-graph/file tools only when that repository is already authorized and local.
+source read/search tools only when that repository is already authorized and local.
 Present documentation, implementation/configuration and accepted Maintainer
 Guidance separately; if they disagree, say so and do not select a winner. A dirty
 source observation remains useful evidence but is never timeless truth.

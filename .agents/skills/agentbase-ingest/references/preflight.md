@@ -8,7 +8,7 @@ Read only the authorized repository root, in this order:
    root README.
 
 Keep the read bounded to five files and 256 KiB total. Do not recursively scan
-docs and do not index the graph only to classify Domain.
+docs and do not run full discovery only to classify Domain.
 
 Resolve identity first. For an existing canonical Repository, return to the
 Add entry's Update handoff without proposing a new home. Ambiguous identity

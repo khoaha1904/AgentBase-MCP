@@ -9,7 +9,7 @@
 These `AB-QUERY-*` requirements are the normative Query Routing Capability
 Contract.
 
-- **AB-QUERY-001** — Code questions primarily use Code Graph; business/system/
+- **AB-QUERY-001** — Code questions primarily use the host's source read/search tools; business/system/
   cross-repository questions primarily use local Hub; combined answers retain
   both source kinds and limitations.
 - **AB-QUERY-002** — Published-Hub search supports exact Domain and type scopes,
@@ -132,7 +132,7 @@ permission API changes are required.
   to the supplied canonical Domain or explicitly global. Stop when sufficient;
   exact concept reads or another targeted search require a concrete evidence
   need. Feature/business context stays snapshot-only. Current implementation
-  questions MAY reuse source/Code Graph only in the user's authorized local
+  questions MAY reuse source only in the user's authorized local
   repository; a Hub reference never authorizes cloning or workspace scanning.
   Missing source returns the supported answer and a visible unverified boundary.
   Preserve Published provenance, freshness, omissions and host tool authority.

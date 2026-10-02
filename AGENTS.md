@@ -107,9 +107,9 @@ leaving it implicit.
 - Review cohesive changes from their responsibility and diff, not line, byte or
   import budgets. Split only distinct responsibilities; never add forwarding
   wrappers or fragments merely to satisfy a metric.
-- Prefer deterministic local Code Intelligence. Keep detailed graphs private,
-  disposable and non-canonical. Only bounded provenance-bearing observations
-  may enter OKF workflows.
+- Prefer bounded deterministic source discovery. Host agents own source
+  investigation; AgentBase owns no graph engine or provider. Only bounded
+  provenance-bearing observations may enter OKF workflows.
 
 `docs/architecture/README.md` is the ownership index. Before changing runtime behavior,
 confirm the active plan, affected requirements, owning capability, public entrypoint

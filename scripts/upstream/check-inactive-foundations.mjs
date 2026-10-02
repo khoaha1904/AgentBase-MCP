@@ -11,23 +11,13 @@ function readJson(relative) {
 }
 
 function verifyInventories() {
-  for (const name of ["codebase-memory", "diagram-design"]) {
+  for (const name of ["diagram-design"]) {
     execFileSync(process.execPath, [
       path.join(repositoryRoot, "scripts/upstream/manage-upstreams.mjs"),
       "verify",
       name,
     ], { stdio: "inherit" });
   }
-}
-
-function verifyNoGraphUiFrontend() {
-  assert.equal(fs.existsSync(path.join(repositoryRoot, "vendor/codebase-memory/upstream/graph-ui")), false,
-    "Graph UI frontend must not be retained in the released source snapshot");
-  const preparation = fs.readFileSync(
-    path.join(repositoryRoot, "scripts/upstream/prepare-codebase-memory.mjs"), "utf8",
-  );
-  assert.doesNotMatch(preparation, /--with-ui|cbm-with-ui/,
-    "Codebase Memory preparation must not activate Graph UI");
 }
 
 function verifyDiagramFoundation() {
@@ -69,7 +59,6 @@ function verifyNoActivation() {
 }
 
 verifyInventories();
-verifyNoGraphUiFrontend();
 verifyDiagramFoundation();
 verifyNoActivation();
 process.stdout.write("upstream foundations: verified with narrow diagram activation\n");

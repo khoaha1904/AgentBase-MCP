@@ -24,7 +24,7 @@ own a separate symbol/configuration resolver or live-value state machine.
   exact reviewed correction/removal owns deletion.
 - A shared obvious-secret guard blocks authoring/publication/Hub CI. Exact
   Published Markdown reads do not create a separate field-level transformation layer.
-- Normal Code Graph/search/snippet tools already read authorized local source; no
+- Host read/search tools already read authorized local source; no
   new resolver/cache/parser is needed.
 - Repository observed-source metadata and Section 09 define exact age/revision
   warnings without using a threshold as truth.
@@ -39,7 +39,7 @@ with no dual read or dual write:
 - the snapshot is the primary shared value;
 - one file source may support multiple values;
 - a line range is only an optional evidence hint;
-- current-value lookup uses ordinary MCP file/graph reading when explicitly requested;
+- current-value lookup uses the host agent's ordinary source read/search when explicitly requested;
 - a historical-integrity failure may propose a Shared Question; a moved current
   path only degrades lookup and does not run moved-symbol recovery.
 

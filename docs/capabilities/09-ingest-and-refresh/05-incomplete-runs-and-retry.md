@@ -50,7 +50,7 @@ input is rejected. Raw graph/Inventory needs no durable checkpoint.
 
 The user can cancel an Incomplete batch and delete private staging/cache receipts
 belonging to that run. Cleanup touches only validated marker-owned private paths;
-accepted Hub commits, valid reusable graph caches and the source repository are
+accepted Hub commits, external tool caches and the source repository are
 not modified. Cleanup failure is reported clearly; the run is not assumed gone.
 
 ## Bounds

@@ -29,7 +29,7 @@ or knowledge bytes.
   transaction directories are cleaned immediately.
 - A failure requiring recovery retains bounded transaction evidence; cleanup
   occurs after recovery completes.
-- Source checkouts, valid Code Graph caches, Published commits and private authoring bundles and the
+- Source checkouts, Published commits and private authoring bundles and the
   Hub remote are never modified/deleted by the cleanup workflow.
 - Cleanup failure is reported; do not pretend the transaction disappeared.
 

@@ -66,7 +66,7 @@ Publication remains at **proposal commit** level, not each item inside Markdown:
 
 Each normalized remote URL + branch has its own Published clone and Draft
 workspace. Without a remote configuration there is no Hub/OKF authority; only
-Code Graph operates.
+Schema guidance operates.
 
 ## Impact assessment
 
@@ -104,7 +104,7 @@ Draft, In Review and Published as one unit. High-level sections 05 and 11 were
 updated accordingly.
 
 Ordinary query reads only Published state from the active remote profile. Without
-remote configuration there is no competing Hub authority and only Code Graph is
+remote configuration there is no competing Hub authority and only schema guidance and Scan are
 used.
 
 Impact after the decision: **Contained change**; no broad Hub redesign remains.

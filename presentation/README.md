@@ -1,7 +1,12 @@
 # AgentBase presentation
 
-This directory carries the approved presentation story with the product so the
-runtime and its explanation cannot silently diverge.
+This directory carries the practical-use guide and a retained presentation deck.
+
+The slide source, narrative plan and generated `preview.html` describe the
+historical release before source-only simplification. Their native Code Graph
+and provider qualification claims do not describe the current application.
+The practical-use guide is updated for current source discovery. Rebuilding or
+publishing the historical deck is a separate presentation task.
 
 ## Authority and artifacts
 
@@ -83,7 +88,7 @@ moving deep material out of the main story.
 
 ## Rebuild and review
 
-Current owner checkpoint: Markdown and standalone HTML are aligned for Add/Update
+Historical owner checkpoint: Markdown and standalone HTML are aligned for Add/Update
 and Direct/PR publication. The renderer reads speaker notes directly from canonical
 slide Markdown; visible layouts remain renderer-owned and require comparison after
 content changes. Preserve the 15-main/9-appendix sequence and existing mock labels.

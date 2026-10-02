@@ -16,8 +16,8 @@ core -X-> provider/app
 provider -X-> app
 ```
 
-Core owns provider-neutral policy and values. Providers translate external or
-engine-private behavior into those contracts. Application capabilities compose
+Core owns provider-neutral policy and values. Providers translate external
+service behavior into those contracts. Application capabilities compose
 core and provider entrypoints into user workflows; they do not redefine either
 boundary. `src/cli.ts` is the composition root and may dispatch application
 entrypoints without becoming their behavior owner.
@@ -29,10 +29,11 @@ use. Stable controls and their acceptance evidence are defined by
 Group 3 keeps source access and evidence rendering outside the pure knowledge
 models. Application workflows pass admitted values into `core/knowledge/query`
 and `core/knowledge/proposals`; core never reads a checkout, invokes a provider,
-opens Benchmark data or imports an application renderer. Qualification scripts
-may invoke public application/runtime entrypoints and read an explicitly
-selected AgentBase-Benchmark root, but production modules never import suites,
-results or runner code. Review and visualization consume the same public impact
+opens Benchmark data or imports an application renderer. Retained deterministic
+qualification tests invoke public application/runtime entrypoints using local
+fixtures. No application script assumes a sibling Benchmark checkout or generated
+site destination. Production modules never import suites, results or runner code.
+Review and visualization consume the same public impact
 model rather than importing one another.
 
 Group 4 Profile/Layout policy is a pure `core/knowledge` entrypoint. Schema

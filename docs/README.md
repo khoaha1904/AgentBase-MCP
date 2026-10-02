@@ -143,20 +143,21 @@ clean source publication because its accepted outcomes already live here.
 - User workflow: Add repository / Update knowledge → private proposal →
   material preview → explicit Direct/PR Publish. Query reads Published only.
   No Accept or stacked-publication public entrypoint remains.
-- The installed surface is ten public skills, three internal skills and
-  forty-four owned tools. Query owns standalone and host-workflow reads;
+- The installed surface is ten public skills, two internal skills and
+  thirty-six owned tools. Query owns standalone and host-workflow reads;
   Context delegates to it. Repair approval never grants publication or provider access.
 - Deterministic discovery discloses bounds and unsupported lanes; Initial Ingest
   retains limitations as Repository coverage debt. Delta preserves that debt;
   explicit Coverage can repair it without re-ingesting. No completeness guarantee.
 - Run `npm run verify` against the current source. Exact final source/tag requires
   CI and artifact qualification. See [Release CI](capabilities/12-version-scope/13-release-ci-requirements.md).
-- The practical-use Markdown describes current coverage; standalone HTML is not
-  rebuilt for this coverage expansion. Real-model routing,
+- The practical-use Markdown describes current source discovery; the retained
+  slide deck and standalone HTML describe the historical graph-based application.
+  Real-model routing,
   semantic usefulness across models, long-term stewardship, scale and macOS
   qualification are not established by these deterministic tests.
-- No model benchmark runs automatically. Deferred campaigns/reports are
-  task-specific evidence, not startup context or current feature requirements.
+- Application-owned model benchmark runners and native graph qualification are
+  retired. Historical results are external evidence, not current requirements.
 
 Update current truth once in the narrowest high- or low-level document. Do not
 add handoff, roadmap, ADR or evidence-diary files that repeat it.

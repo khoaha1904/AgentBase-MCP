@@ -6,16 +6,12 @@ It is not a package cache and contains no nested Git repository.
 - `*/upstream/` is copied byte-for-byte from one approved local checkout.
 - `*/UPSTREAM.md` records the exact upstream identity and selection boundary.
 - `*/inventory.sha256` binds every retained upstream file.
-- `codebase-memory/agentbase/` is the only AgentBase-owned overlay.
-- Native binaries and patched build trees belong under ignored `build/`, never
-  under `vendor/`.
+- `diagram-design/agentbase/` contains the AgentBase-owned offline diagram profile.
 
 Import and verification are local-only:
 
 ```sh
-node scripts/upstream/manage-upstreams.mjs import codebase-memory /approved/checkout
 node scripts/upstream/manage-upstreams.mjs import diagram-design /approved/checkout
-node scripts/upstream/manage-upstreams.mjs verify codebase-memory
 node scripts/upstream/manage-upstreams.mjs verify diagram-design
 ```
 
@@ -31,19 +27,13 @@ There is no automatic updater. For a proposed upstream revision:
 1. obtain and approve a local upstream checkout through the company's normal
    source-review process;
 2. update the exact revision and selection in `manage-upstreams.mjs`;
-3. qualify the pristine revision against the currently accepted behavior;
-4. import from that local checkout and review `UPSTREAM.md`, licenses/notices,
+3. import from that local checkout and review `UPSTREAM.md`, licenses/notices,
    the deterministic inventory and retained size;
-5. apply every AgentBase patch with zero fuzz in disposable staging, resolving
-   changes by reviewing the patch rather than editing `upstream/`;
-6. run profile, tool-surface and representative evidence qualification;
-7. build and qualify native artifacts independently on Linux x64 and macOS
-   arm64 through approved toolchains and registries; and
-8. request explicit owner approval for the migration.
+4. verify the offline HTML/SVG profile and run the product gate; and
+5. review any changed diagram behavior before adopting the revision.
 
-Codebase Memory's Graph UI frontend is excluded from the released snapshot;
-shared upstream C runtime scaffolding remains inert because removing it would
-fork the core build. diagram-design is a source foundation only and capability
-044 does not install or start it. The future diagram boundary is self-contained
-static HTML/SVG with system fonts; browser downloads, Playwright/Chromium, PNG
-automation, remote fonts/assets and URL onboarding are excluded.
+Only diagram-design remains vendored. Its upstream skill is not installed;
+AgentBase uses the narrow `use-diagram-design` wrapper for self-contained static
+HTML/SVG with system fonts. Browser downloads, Playwright/Chromium, PNG automation,
+remote fonts/assets and URL onboarding are excluded. Repository source discovery
+has no vendored engine, native binary or build overlay.

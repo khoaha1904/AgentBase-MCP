@@ -17,8 +17,7 @@ Product Contract:
   engineering and verification requirements.
   [`02-installation-requirements.md`](02-installation-requirements.md) — setup,
   credential and client registration requirements.
-  [`03-benchmark-requirements.md`](03-benchmark-requirements.md) — opt-in agent
-  benchmark requirements and retained evidence.
+  [`03-benchmark-requirements.md`](03-benchmark-requirements.md) — retired runner boundary and historical evidence.
 - **Behavior and boundaries:**
   [`04-v1-capability-boundaries.md`](04-v1-capability-boundaries.md) — required
   first-version scope and release gaps.
@@ -47,17 +46,12 @@ Do not create a separate decision register; current decisions already belong to
 their high/low-level owners, and another registry would become a dead-spec
 duplicate.
 
-## Parser profile
+## Source-only discovery
 
-The working source uses `agentbase-mvp-14-v1`: the existing twelve entries plus
-C# and Kotlin. Parser preparation and artifact admission bind this identity to
-the pinned source inventory. Discovery admits `.cs`, `.kt` and `.kts`.
-`scripts/benchmark/qualify-codebase-memory-profile.mjs` checks mixed-repository
-admission, symbols, C#/Kotlin calls and visible unsupported-language diagnostics.
-This deterministic fixture is not a model-quality benchmark or framework
-completeness claim. Qualified-platform gates remain: adding parsers does not
-qualify macOS or authorize automatic source re-ingest. Tagged 0.1.0 artifacts
-retain their original profile; new source requires a matching rebuilt artifact.
+AgentBase has no parser profile or native graph artifact. `discover_repository`
+uses the bounded source census and retains visible unsupported-pattern limits.
+This does not qualify additional operating systems or framework understanding.
+The previous native engine and all model benchmark runners are retired.
 
 ## Current MVP boundary
 
@@ -69,12 +63,11 @@ retain their original profile; new source requires a matching rebuilt artifact.
 - Bounded read-only AWS/SQS Domain Enrichment; no provider-wide scan or auto-publish.
 - Terraform/Terragrunt and bounded SAM/CloudFormation structured evidence;
   no template execution or deployed-state guarantee.
-- Sol Init and Terra Refresh are benchmark policy only.
 - Rich PR summary, independent Init PR, same-Repository stack and synchronization
   exist; MCP never merges.
 - Shared Question documents, exact-scope Guidance and AWS/SQS three-tier
   enrichment are implemented. Broader inference and provider profiles remain deferred.
-- No remote profile means Code Graph/Scan only; every remote URL+branch profile
+- No remote profile means schema guidance/Scan only; every remote URL+branch profile
   isolates Published and Draft state while profiles may share one configured
   enterprise credential. Exact-empty bootstrap writes
   README + root index + CI baseline directly once; later changes use PRs.

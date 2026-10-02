@@ -13,22 +13,14 @@ AgentBase-MCP is a TypeScript Node.js modular monolith. Every runtime file has
 one capability owner, every capability exposes a small public `index.ts`, and
 tests stay beside their behavior owner.
 
-## Coverage expansion ownership
+## Source-only discovery ownership
 
-The bounded [Product expansion](../product/01-repository-understanding.md#coverage-expansion)
-retains these existing owners: `app/codebase-memory-mcp` owns deterministic
-census selection, input admission and per-session budget evidence;
-`core/knowledge/schemas` owns source-format detection and shared AWS semantic
-mapping; `providers/codebase-memory` with `vendor/codebase-memory/agentbase`
-and `scripts/upstream` owns the C#/Kotlin parser profile and qualified artifacts.
-Discovery selection, source-format mappings and parser admission are implemented.
-Template declaration census lives in `app/codebase-memory-mcp/template-discovery.ts`;
-it does not evaluate infrastructure. `index_repository` consumes its census controls in
-the gateway without forwarding them to the provider; expanded census requires
-the current standard Seed and reuses captured provider diagnostics. Seed and
-Receipt retain optional validated census accounting for prior-Receipt readability.
-Public workflow adapters obtain expansion approval and explain limitations;
-they do not choose arbitrary runtime limits or synthesize provider evidence.
+`app/agentbase-mcp` owns deterministic census, safe input admission, Seed/Receipt
+lifecycle and MCP composition. `app/repository-source` owns Git source identity
+and change accounting. `core/knowledge/schemas` owns source-format detection and
+provider-neutral mappings. The host agent owns exact source investigation.
+No graph provider, native artifact, fake provider or benchmark runner owner
+remains. Discovery expansion reuses the armed source, never an index.
 
 SAM and Terraform reuse provider-neutral roles without a generic plugin system,
 new cloud execution adapter or new Hub schema. Exact same-source references and
@@ -40,8 +32,6 @@ state. Existing publication and recovery owners are unchanged.
 ```text
 src/cli.ts                         composition root and `abs` CLI dispatcher
 src/core/
-  code-intelligence/              neutral map/query contracts
-  observations/                   normalized evidence and identity
   knowledge/                      provider-neutral OKF policy
     documents/                    OKF documents and relationships
     governance/                   domain, directive and live-claim policy
@@ -50,19 +40,12 @@ src/core/
     schemas/                      generic catalog, guidance and versioned profiles
   hub/                            Hub identity, ancestry and transitions
 src/providers/
-  fake-code-intelligence/         deterministic conformance provider
-  codebase-memory/                managed graph adapter and lifecycle
   github-hub/                     bounded Git/worktree/GitHub transport
   aws-cli/                        read-only provider observation adapter
 src/app/
   local-storage/                  owner-private local storage root
-  foundation-demo/                offline product demonstration
-  codebase-memory-mcp/            MCP composition and protocol adapters
-  repository-okf/                 one-repository evidence workflow
-    graph/                        graph rounds and freshness
-    evidence/                     source state and normalized evidence
-    provider/                     isolated provider workspace
-    workflow/                     orchestration and recovery
+  agentbase-mcp/            MCP composition and protocol adapters
+  repository-source/              Git identity and change accounting
   hub-okf/                        local Hub lifecycle and publication
     runtime-actions.ts            Hub-wide action composition for CLI/MCP
     configuration/                settings and credentials
@@ -79,7 +62,6 @@ scripts/
   checks/                         repository verification
   installation/                   release lifecycle, client/skill setup and migration
   release/                        platform bundle, manifest and SBOM production
-  benchmark/                      opt-in measurement and qualification
 ```
 
 Product skills under `.agents/skills/` and the terminal CLI are presentation
@@ -123,10 +105,9 @@ Group 3 keeps the same modular-monolith owners:
   the existing proposal inspection lifecycle;
 - query, context, review and visualization adapters render those values without
   acquiring truth, Accept or publication authority; and
-- `scripts/benchmark/` owns retained opt-in runner behavior only.
-  AgentBase-Benchmark owns the pinned registry, suite expectations, immutable
-  result history and owner dispositions. No production runtime or current
-  internal release gate depends on executing a real-model campaign.
+- deterministic tests remain with each behavior owner; historical comparison
+  data belongs to AgentBase-Benchmark. Production imports no model runner,
+  suites or retained results.
 
 No runtime owner acquires a general event ledger, model execution service,
 cross-repository graph or generated-site authority.
@@ -177,6 +158,6 @@ Finalize, including its bounded convergence count;
 `core/knowledge/governance` parses that Repository metadata; and
 `app/hub-okf/query` projects it into existing continuity gaps. The packaged
 `agentbase-refresh` skill orchestrates broad bounded Coverage with the existing
-graph/schema/Hub tools. No new runtime package, service, skill or MCP tool owner
+source/schema/Hub tools. No new runtime package, service, skill or MCP tool owner
 is introduced. Surface governance remains with Product and installation release
 evidence; it freezes the owned catalog without creating a runtime registry.

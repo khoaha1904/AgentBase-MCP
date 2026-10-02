@@ -1,40 +1,25 @@
-# 01 — Repository reading
+# 01 - Repository reading
 
-> Status: Core local reading, lazy multi-repository workspace routing and
-> Capability 046 remote-default Hub authoring snapshots are implemented;
-> arbitrary remote clone/query remains out of scope.
+> Status: Source-only discovery and exact-source provenance replace the retired
+> owned graph engine. Ordinary source investigation belongs to the host agent.
 
 Product Contract:
 [Repository understanding](../../product/01-repository-understanding.md)
 
 ## Contract map
 
-- [`00-baseline-and-impact.md`](00-baseline-and-impact.md) — graph, evidence and
-  skill baseline; identifies reusable parts and gaps.
-- [`01-skill-orchestration.md`](01-skill-orchestration.md) — Ingest/Refresh skill
-  coordination between Agent and MCP.
-- [`02-code-graph-lifecycle.md`](02-code-graph-lifecycle.md) — create, use,
-  refresh and discard a Code Graph.
-- [`03-source-evidence-resolution.md`](03-source-evidence-resolution.md) — return
-  from the graph to source for evidence.
-- [`04-reading-boundaries-and-failures.md`](04-reading-boundaries-and-failures.md)
-  — local/workspace boundary, read limits and failure outcomes.
-- [`05-runtime-requirements.md`](05-runtime-requirements.md) — current graph,
-  refresh and MCP `AB-*` requirements.
+- [Runtime requirements](05-runtime-requirements.md) - source discovery,
+  census bounds, safe reads, Receipts and MCP composition.
+- [Candidate discovery](../03-concept-discovery/01-candidate-discovery.md) -
+  five-lane signal accounting and selective knowledge promotion.
 
-## Current behavior and boundary
+## Current boundary
 
-`agentbase-query`, `use-codebase-memory`, Initial Ingest and Refresh connect the
-Published Hub, owned Codebase Memory, exact source reads and evidence
-validation. A graph remains private/rebuildable and is used only for a
-local/workspace repository. Batch Ingest processes an explicit repository list
-sequentially in section 09. Public Scan inventories bounded Git roots; the query
-skill selects one explicit root or asks again, and the gateway switches
-repository sessions sequentially. There is no combined graph or workspace
-registry.
+Preflight binds an Initial Ingest source snapshot; `discover_repository` builds
+its private bounded Seed. The agent investigates exact source using existing
+read/search tools and submits one Inventory through schema guidance. Delta
+uses Git changes; Coverage uses bounded source investigation.
 
-Capability 046 retains this gateway/provider but adds a machine-derived
-Discovery Seed, compact signal groups and bounded source census. Hub Init may
-materialize the exact remote default commit in a detached worktree/cache; this
-does not change ordinary-query authority or auto-clone repositories outside the
-selected workflow.
+AgentBase ships no native graph provider, proxy, parser profile, indexing,
+symbol lookup or call-path tracing. A separately registered upstream MCP has no
+AgentBase-owned lifecycle. Hub-only query needs no source checkout or discovery.

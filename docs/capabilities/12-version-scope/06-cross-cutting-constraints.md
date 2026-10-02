@@ -1,6 +1,6 @@
 # 12.06 — Cross-cutting constraints
 
-- **Profile-local after sync:** Code Graph always works locally. Hub authoring,
+- **Profile-local after sync:** Source investigation uses the host agent's local tools. Hub authoring,
   review, Accept and Published query can work from the active profile's admitted
   local state after connection/sync; no profile means no Hub/OKF authority.
 - **Provenance-first:** knowledge, relations, observations, Questions and human

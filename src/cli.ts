@@ -3,15 +3,13 @@ import path from "node:path";
 import process from "node:process";
 import { pathToFileURL } from "node:url";
 
-import { executeFoundationCli } from "./app/foundation-demo/index.ts";
-import { serveCodebaseMemoryMcp } from "./app/codebase-memory-mcp/index.ts";
+import { serveAgentBaseMcp } from "./app/agentbase-mcp/index.ts";
 import {
   executeHubCiCli, executeHubCli, tryCreateHubRuntimeActions,
   loadExactHubProfileToken, loadGlobalHubToken, readPersistedHubConfiguration,
   removeGlobalHubToken, writeGlobalHubToken, type HubToolActions,
   hubPublicationPolicy, publishConfiguredHubProposal,
 } from "./app/hub-okf/index.ts";
-import { executeGraphBenchmarkCli, executeObservationCli, executeOkfCli, executeRealEvidenceCli } from "./app/repository-okf/index.ts";
 
 type Writer = (value: string) => void;
 type CliDependencies = Readonly<{
@@ -185,16 +183,12 @@ export async function executeCli(
     }
   }
   if (command === "mcp") {
-    await serveCodebaseMemoryMcp(path.resolve(import.meta.dirname, ".."));
+    await serveAgentBaseMcp();
     return 0;
   }
-  if (command === "codebase-memory:integration") return executeRealEvidenceCli(rest);
-  if (command === "codebase-memory:benchmark") return executeGraphBenchmarkCli(rest);
-  if (command === "observe") return executeObservationCli(rest);
   if (command === "okf" && rest[0] === "hub") return executeHubCli(rest.slice(1), hubActions ?? tryCreateHubRuntimeActions(environment));
   if (command === "okf" && rest[0] === "hub-ci") return executeHubCiCli(rest.slice(1));
-  if (command === "okf") return executeOkfCli(rest);
-  if (command === undefined || command === "foundation-demo") return executeFoundationCli();
+  if (command === undefined) { writeOutput(HELP); return 0; }
   process.stderr.write(`Unknown command: ${command}\n`);
   return 2;
 }

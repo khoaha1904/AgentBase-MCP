@@ -107,12 +107,12 @@ configuration and documentation in many repositories. AgentBase helps AI find,
 verify and connect that knowledge into a shared map with clear sources.
 
 ```text
-Local/workspace source → private Code Graph + evidence → private proposal
+Local/workspace source → bounded source discovery + evidence → private proposal
                                                          ↓ preview + Publish
                                                    Published Hub (Direct/PR)
 ```
 
-- Source and Code Graph answer exact current-implementation questions.
+- Source reads answer exact current-implementation questions.
 - Skills and MCP investigate, verify, propose and query bounded knowledge.
 - AgentBase-Hub keeps the sparse reviewed overview and Git history; it does not
   copy entire repositories or raw graphs.

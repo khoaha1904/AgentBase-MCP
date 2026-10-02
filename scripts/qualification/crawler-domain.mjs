@@ -22,16 +22,11 @@ import { AwsCliAdapter } from "../../src/providers/aws-cli/index.ts";
 import { createMockAwsSqsRunner } from "../../src/app/hub-okf/test-support/mock-aws-sqs.ts";
 import { prepareDomainEnrichment, runDomainEnrichment } from "../../src/app/hub-okf/enrichment/index.ts";
 
-const AGENTBASE_ROOT = path.resolve(import.meta.dirname, "../../..");
-const BENCHMARK_ROOT = path.resolve(
-  process.env.AGENTBASE_BENCHMARK_ROOT ?? path.join(AGENTBASE_ROOT, "AgentBase-Benchmark"),
-);
-const FIXTURE_ROOT = path.join(BENCHMARK_ROOT, "repositories/crawler");
 const COMMIT = "a".repeat(40);
 const ACCOUNT = "123456789012";
 const REGION = "ap-southeast-1";
 
-function source(repo, relative, id, sourceRepositoryId = repo, fixtureRoot = FIXTURE_ROOT) {
+function source(repo, relative, id, sourceRepositoryId, fixtureRoot) {
   return { id, resource: `repository://${sourceRepositoryId}/${relative}#L1-L24`, observed_revision: gitHead(path.join(fixtureRoot, repo)) };
 }
 
@@ -75,7 +70,7 @@ function questionDocument(repoId) {
     title: "Confirm crawler-jobs producer relation", createdAt: "2026-08-28T00:00:00Z" }) };
 }
 
-function qualificationDocuments(fixtureRoot = FIXTURE_ROOT) {
+function qualificationDocuments(fixtureRoot) {
   const publisherId = "repository-crawler-publisher-111111111111";
   const workerId = "repository-crawler-worker-222222222222";
   const pipelineId = "repository-serverless-pipeline-333333333333";
@@ -136,7 +131,7 @@ function reader(documents) {
   } };
 }
 
-export async function qualify(outputDirectory, { fixtureRoot = FIXTURE_ROOT } = {}) {
+export async function qualify(outputDirectory, { fixtureRoot }) {
   const pipeline = path.join(fixtureRoot, "serverless-data-pipelines-demo");
   const publisher = path.join(fixtureRoot, "crawler-publisher");
   const worker = path.join(fixtureRoot, "crawler-worker");
@@ -179,12 +174,4 @@ export async function qualify(outputDirectory, { fixtureRoot = FIXTURE_ROOT } = 
   const siteText = fs.readFileSync(path.join(outputDirectory, "data/domain.json"), "utf8");
   assert.equal(siteText.includes("arn:aws"), false);
   return { sourceCommits: { publisher: gitHead(publisher), worker: gitHead(worker), pipeline: gitHead(pipeline) }, counts: receipt.counts, query: result.matches[0].path, enrichment: enrichment.outcomes[0].status, outputDirectory };
-}
-
-if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)) {
-  const output = path.resolve(process.argv[2] ?? path.join(AGENTBASE_ROOT, "domain-hub/crawler"));
-  fs.mkdirSync(path.dirname(output), { recursive: true });
-  if (fs.existsSync(output)) for (const entry of fs.readdirSync(output)) fs.rmSync(path.join(output, entry), { recursive: true, force: true });
-  const report = await qualify(output);
-  console.log(JSON.stringify(report, null, 2));
 }

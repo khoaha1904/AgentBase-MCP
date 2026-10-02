@@ -1,6 +1,6 @@
 # AgentBase trong thực tế: độ bao quát và hội thoại mẫu
 
-Đối chiếu working source sau đợt mở rộng coverage; tag 0.1.0 cũ không thay đổi.
+Đối chiếu working source sau khi bỏ codebase-memory; tag 0.1.0 cũ không thay đổi.
 Đây là tài liệu hình dung cách dùng, không
 phải transcript chạy thật hay benchmark chất lượng. Không bổ sung slide hoặc
 thay đổi HTML hiện tại.
@@ -19,28 +19,28 @@ thay đổi HTML hiện tại.
 
 ## Độ bao quát
 
-Phải phân biệt ba tầng: **parser đọc cấu trúc code**, **agent tổng hợp kiến
-thức có bằng chứng**, và **provider kiểm tra tài nguyên thật**. Có parser không
-đồng nghĩa hiểu mọi framework hoặc tìm đủ mọi dependency.
+Phải phân biệt ba tầng: **census tìm tín hiệu trong source text**, **agent đọc và
+tổng hợp kiến thức có bằng chứng**, và **provider kiểm tra tài nguyên thật**.
+AgentBase không còn parser profile hoặc graph engine. Census chỉ gợi ý nơi cần
+đọc; agent dùng công cụ đọc/tìm kiếm của host để điều tra tiếp.
 
 | Bài toán | Hiện có | Không nên hứa |
 |---|---|---|
-| Backend JS/TS, Python, Java, Go, C#/.NET, Kotlin | Parser bật trong profile mới; agent dùng graph, source và docs để tìm runtime, interface, data, operations | Hiểu đầy đủ mọi framework, DI/reflection, call graph động hoặc business rule |
-| Backend PHP, Ruby, Rust, C/C++ | Không có parser bật trong profile hiện tại; source text được phép vẫn có thể là bằng chứng | Mức graph/discovery ngang nhóm trên; ingest tự động chắc chắn thành công |
-| Serverless dùng JS/TS, Python, Java, Go, C#, Kotlin | Có parser phần code handler; Function/trigger/dependency có thể được mô tả nếu đủ bằng chứng | Hỗ trợ serverless end-to-end chỉ vì parse được handler |
-| Serverless dùng ngôn ngữ ngoài profile | Hạn chế giống backend ngoài profile | Tự có hỗ trợ Rust Lambda hoặc mọi custom runtime |
-| Terraform `.tf`, `.tf.json`; Terragrunt | HCL/JSON parser; nhận observation Terraform-family có exact source; Terragrunt nhận module orchestration | Evaluate mọi module/variable hoặc chứng minh trạng thái deployed |
-| Dockerfile, Bash, YAML, JSON | Có parser; có thể góp bằng chứng build/deploy/config | Parser YAML hiểu toàn bộ semantics Kubernetes, Helm, SAM hoặc CloudFormation |
-| CDK/Pulumi viết TS/Python/Java/Go | Có thể đọc code ở tầng ngôn ngữ và tổng hợp có dẫn nguồn | Có adapter cấu trúc tài nguyên tương đương Terraform hoặc đã synth/preview |
+| Backend JS/TS, Python, Java, Go, C#/.NET, Kotlin | Census chọn một số source files; agent đọc source/docs để tìm runtime, interface, data, operations | Hiểu đầy đủ mọi framework, DI/reflection, call graph động hoặc business rule |
+| Backend PHP, Ruby, Rust, C/C++, Groovy | Agent có thể đọc source được cho phép; các đuôi file này chưa được census tự chọn | Discovery tự động ngang các đuôi file đã chọn; ingest chắc chắn thành công |
+| Serverless | Tín hiệu handler/trigger từ source và cấu hình; Function/dependency được mô tả khi đủ bằng chứng | Bao quát mọi handler, custom runtime hoặc hỗ trợ end-to-end |
+| Terraform `.tf`, `.tf.json`; Terragrunt | Tín hiệu source và observation Terraform-family có exact source; Terragrunt nhận module orchestration | Evaluate mọi module/variable hoặc chứng minh trạng thái deployed |
+| Dockerfile, Bash, YAML, JSON | Census đọc tín hiệu build/deploy/config | Hiểu toàn bộ semantics Kubernetes, Helm hoặc CloudFormation |
+| CDK/Pulumi | Agent đọc source và tổng hợp có dẫn nguồn | Có adapter cấu trúc tài nguyên tương đương Terraform hoặc đã synth/preview |
 | SAM/basic CloudFormation | Mapping Function, API, SQS và event-source; census đọc API/SQS/schedule events, một số Globals scalar và Ref/GetAtt trong cùng template | Evaluate macro, nested stack, cross-stack, mọi intrinsic hoặc trạng thái deployed |
 | Serverless Framework, Kubernetes/Helm | YAML/JSON/source hỗ trợ điều tra bằng chứng | Có resource mapping chuyên biệt hoặc cloud verification tổng quát |
-| Azure Bicep hoặc IaC ngoài profile | Không có parser Bicep bật; fallback source bị giới hạn | Bao phủ Azure/GCP chỉ vì Terraform nhận ra provider prefix |
+| Azure Bicep hoặc IaC khác | Agent đọc source được cho phép; census không tự chọn Bicep | Bao phủ Azure/GCP chỉ vì Terraform nhận ra provider prefix |
 | Kiểm chứng AWS thật | Domain Enrichment: xác nhận account bằng STS, đọc exact SQS candidates | Scan account, kiểm tra Lambda/ECS/RDS thật, mọi event bus hoặc tự nối toàn domain |
 
-Profile gồm **14 loại file/ngôn ngữ**: Bash, C#, Dockerfile, Go, HCL, Java,
-JavaScript, JSON, Kotlin, Markdown, Python, TSX, TypeScript, YAML. Không phải 14 ngôn
-ngữ backend. Trong nhóm tham chiếu JS, TS, Python, Java, Go, C#, PHP, Ruby,
-Kotlin, Rust thì **7/10 có parser bật**; đây không phải 70% thị phần backend.
+Census chọn các đuôi source/config phổ biến cùng README, manifest và file
+build/deploy. Đây là bộ lọc file và tín hiệu heuristic, không phải danh sách
+ngôn ngữ được parse hoặc tỷ lệ bao phủ backend. Giới hạn được trả về trong Seed;
+symbol, quan hệ gọi hàm và dispatch của framework không được phân giải.
 
 Mapping AWS bao gồm nhóm EC2, Lambda, queue/topic, storage/database và mở rộng
 Terraform ECS/API Gateway/event-source, cùng SAM/basic CloudFormation.
@@ -48,9 +48,10 @@ Terraform ECS/API Gateway/event-source, cùng SAM/basic CloudFormation.
 cũng không buộc mỗi resource thành một concept. Danh sách và giới hạn chính xác
 nằm ở [provider profile](../../docs/capabilities/04-schema-selection/03-cloud-provider-profiles.md).
 
-Census mặc định đọc tối đa 256 file được ưu tiên; không phải giới hạn toàn bộ
-Code Graph. Nếu bỏ sót bằng chứng quan trọng, agent có thể đề nghị mức 1024 file
-và chỉ mở rộng sau khi bạn đồng ý. Không tự tăng budget hay ingest lại Hub.
+Census mặc định đọc tối đa 256 file, mỗi file tối đa 64 KiB, sau khi duyệt tối đa
+4.096 entries. Nếu bỏ sót bằng chứng quan trọng, agent có thể đề nghị một lượt
+1024 file và chỉ mở rộng sau khi bạn đồng ý, trước khi đóng băng Receipt.
+Không tự tăng budget hay ingest lại Hub.
 
 **Backend nhiều service:** một repo có thể chứa nhiều runtime độc lập. AgentBase
 có thể giữ chúng thành Component/Function riêng; module nội bộ, queue, table
@@ -60,8 +61,8 @@ thuộc evidence và model, không phải bảo đảm của schema.
 **Đánh giá thực dụng:** phù hợp nhất để pilot domain có JS/TS/Python/Java/Go,
 docs và Terraform AWS. Chưa nên giới thiệu là công cụ hiểu sâu mọi backend hay
 mọi cloud. Chưa có benchmark model chứng minh chất lượng ngang nhau theo ngôn
-ngữ. Profile có tên platform macOS ARM nhưng release hiện chỉ qualified Linux
-x64; khả năng parse và khả năng cài trên máy là hai câu hỏi khác nhau.
+ngữ. Release hiện chỉ qualified Linux x64; bỏ binary provider chưa xác lập hỗ
+trợ Windows hoặc macOS.
 
 ## Quy ước hội thoại
 
@@ -101,7 +102,7 @@ công ty đã có cơ chế handoff tích hợp.
 | Agent | Bạn |
 |:---|---:|
 | | `$agentbase-query` Kiểm tra implementation xử lý đơn trong checkout `/work/orders-api`. Đọc code repo này để đối chiếu Hub; chưa sửa gì. |
-| Tôi sẽ dùng graph làm bản đồ rồi đọc exact source trong checkout được chỉ định. Quan hệ Hub không cấp quyền đọc thêm checkout khác. | |
+| Tôi sẽ dùng công cụ đọc/tìm kiếm của host để kiểm tra exact source trong checkout được chỉ định. Quan hệ Hub không cấp quyền đọc thêm checkout khác. | |
 | Source `<file:lines>` ở `<revision>` có thêm nhánh validation chưa được mô tả tại `<Hub path>`. Đây là khác biệt có bằng chứng; chưa đủ để kết luận các repo khác không bị ảnh hưởng. | |
 | | Chuẩn bị cập nhật đúng phần validation thiếu đó vào Hub. |
 | Tôi chuyển sang Update knowledge cho repo và gap vừa duyệt. Tôi sẽ dừng ở proposal để bạn xem; chưa Publish. | |
@@ -201,8 +202,8 @@ Kết quả: artifact riêng; sửa Hub không tự cập nhật site, muốn m�
 
 ## Nguồn đối chiếu trong repo
 
-- [Parser profile](../../vendor/codebase-memory/agentbase/parser-profile.json),
-  [profile qualification](../../scripts/benchmark/qualify-codebase-memory-profile.mjs).
+- [Source census](../../src/app/agentbase-mcp/discovery-session.ts),
+  [discovery requirements](../../docs/capabilities/01-repository-reading/05-runtime-requirements.md).
 - [Terraform detector](../../src/core/knowledge/schemas/profiles/terraform.ts),
   [AWS mapping](../../src/core/knowledge/schemas/profiles/aws.ts).
 - [Public skill catalog](../../.agents/skills/README.md): Query, Ingest, Refresh,

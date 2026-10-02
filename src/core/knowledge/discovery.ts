@@ -53,9 +53,9 @@ export type DiscoverySeed = Readonly<{
   lanes: readonly DiscoveryLaneResult[];
   groups: readonly DiscoveryGroup[];
   capture: Readonly<{
-    nodeCount: number;
-    edgeCount: number;
-    coverageTerminal: boolean;
+    nodeCount?: number;
+    edgeCount?: number;
+    coverageTerminal?: boolean;
     truncated: boolean;
     p1P2Overflow: number;
     limitations: readonly string[];
@@ -241,14 +241,14 @@ export function validateDiscoverySeed(seed: DiscoverySeed): void {
     const p0Count = seed.groups.filter((group) => group.priority === "p0").length;
     if (p0Count > 64) throw new DiscoveryValidationError("DISCOVERY_OVERFLOW", "discovery Seed exceeds 64 P0 groups");
     if (!["collecting", "ready", "invalid"].includes(seed.state)
-      || !Number.isSafeInteger(seed.capture.nodeCount) || seed.capture.nodeCount < 0
-      || !Number.isSafeInteger(seed.capture.edgeCount) || seed.capture.edgeCount < 0
+      || seed.capture.nodeCount !== undefined && (!Number.isSafeInteger(seed.capture.nodeCount) || seed.capture.nodeCount < 0)
+      || seed.capture.edgeCount !== undefined && (!Number.isSafeInteger(seed.capture.edgeCount) || seed.capture.edgeCount < 0)
       || !Number.isSafeInteger(seed.capture.p1P2Overflow) || seed.capture.p1P2Overflow < 0
       || seed.capture.limitations.length > 32
       || seed.capture.limitations.some((value) => !bounded(value, 1024))) {
       throw new Error("discovery capture state is invalid");
     }
-    if (seed.state === "ready" && (!seed.capture.coverageTerminal
+    if (seed.state === "ready" && (seed.capture.coverageTerminal === false
       || seed.lanes.some((lane) => lane.status === "limited" && seed.groups.some((group) => group.priority === "p0" && group.lane === lane.lane)))) {
       throw new Error("discovery Seed cannot be ready while P0 coverage is non-terminal or limited");
     }

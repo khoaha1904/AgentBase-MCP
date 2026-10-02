@@ -15,7 +15,7 @@ company-repo                 one Repository identity and physical home
 ```
 
 Every scope retains the Repository's identity and physical home. A scope only
-limits discovery, Code Graph queries and source references; its evidence URI
+limits discovery, source investigation and source references; its evidence URI
 still uses the same Repository ID with the complete relative path. Evidence from
 a scope may justify another Domain participation or a concept home exception,
 but it never creates a second Repository or silently rehomes the dossier.

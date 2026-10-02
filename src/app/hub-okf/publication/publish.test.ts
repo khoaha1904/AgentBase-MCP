@@ -281,7 +281,7 @@ test("[AB-PUBLISH-001..011][AB-HUB-CI-008..010][AB-HUB-SETUP-018..021][AB-CONCUR
     assert.match(renderHubReadme(), /created and managed by AgentBase-MCP/);
     assert.doesNotMatch(renderHubReadme(), /github\.com/);
     assert.match(renderHubReadme(), /\[`index\.md`\]\(index\.md\)/);
-    assert.match(renderHubReadme(), /does not duplicate repository source code or the private local Code Graph/);
+    assert.match(renderHubReadme(), /does not duplicate repository source code or private discovery state/);
     assert.doesNotMatch(pullCalls.find((call) => call.title === "Initialize AgentBase-Hub")?.body ?? "",
       /github_pat_secret_canary|agentbase-publish-test-/);
     const initializationRetry = await initializeHub(initializationOptions, {

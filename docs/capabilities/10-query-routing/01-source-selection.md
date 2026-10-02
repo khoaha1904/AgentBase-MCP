@@ -7,7 +7,7 @@
 
 The Agent understands the question's intent and invokes the correct query
 primitive. MCP does not classify questions automatically, create a combined-answer
-tool or run the Code Graph for a question that needs only Hub knowledge.
+tool or read source for a question that needs only Hub knowledge.
 
 ## Routing table
 
@@ -15,7 +15,7 @@ tool or run the Code Graph for a question that needs only Hub knowledge.
 |---|---|---|
 | Domain, system, purpose, ownership, known behavior | Hub search/read | The user needs to compare the current implementation. |
 | Cross-repository or cross-domain relation | Hub search/read links | Code detail is needed from a local, authorized repository. |
-| Symbol, caller/callee, execution path, impact, exact implementation | Current repository Code Graph | Business intent, an accepted constraint or a relation outside the repository is needed. |
+| Symbol, caller/callee, execution path, impact, exact implementation | Host source read/search | Business intent, an accepted constraint or a relation outside the repository is needed. |
 | “Why” an implementation exists | Hub | The current code must be checked against the knowledge. |
 | “What is the known value?” | Hub concept snapshot | Do not add a source read automatically. |
 | “What is the current value?” | Hub concept snapshot | After presenting the snapshot and provenance, read exact authorized local source through a normal graph/file tool to verify the current value. |
@@ -60,20 +60,12 @@ that is sufficient, no source read follows. Only when the Hub lacks a suitable
 snapshot does an explicit current-value request go directly to normal source
 tools; query does not create a snapshot automatically.
 
-## Code Graph route
+## Source route
 
-1. Select exactly one explicit local repository root; do not scan its parent workspace.
-2. Reuse the internal support skill `use-codebase-memory`: index/reuse freshness,
-   find the structure/symbol/path, then read the exact snippet.
-3. One MCP connection binds only one repository at a time. To read another local
-   repository, invoke controlled `index_repository` with the exact root; the
-   gateway cleanly closes the old session and binds a new one. Do not combine
-   graphs from multiple repositories.
-4. Do not clone a remote repository automatically. A Hub relation/reference does
-   not grant source access or trigger indexing automatically.
-
-Direct text/source search is only a fallback for graph-unsupported areas or for
-verifying exact text after graph discovery.
+Select the exact authorized local repository and use the host agent's existing
+read/search tools. Qualify claims against current source paths and spans. Do not
+clone remote source or scan a workspace from a Hub reference alone. AgentBase
+provides no graph/indexing/symbol/call-path API.
 
 ## Combined route
 
@@ -82,7 +74,7 @@ A combined query is Agent orchestration, not joined storage:
 ```text
 Hub concept + exact Hub commit
         ↓ identifies intent/relation/repository reference
-authorized local Code Graph/source
+authorized local source
         ↓ verifies current implementation
 one answer with the two provenances kept separate
 ```
@@ -95,8 +87,8 @@ Part 10.04 conflict presentation; query does not Refresh or write back automatic
 
 - Hub unavailable/unconfigured: a code question can still use the current local
   repository; a shared-knowledge question states that the Hub is unavailable.
-- Graph unavailable/stale: return what the Hub knows and state that implementation
-  is unverified; reindex only when a current-source question genuinely requires it.
+- Source unavailable: return what the Hub knows and state that implementation
+  is unverified; investigate only within the authorized source scope.
 - Referenced repository not local/readable: return Hub knowledge/snapshot; do
   not clone, start a remote source workflow or guess at code.
 - No source is sufficient: ask one short clarification about the Domain/repository
@@ -107,9 +99,9 @@ Those actions always use a separate reviewed workflow.
 
 ## Requirement mapping
 
-- Reuses AB-QUERY-001 for Hub-versus-Code-Graph priority.
+- Reuses AB-QUERY-001 for Hub-versus-source priority.
 - Reuses AB-QUERY-002..004 and AB-QUERY-012..013 for bounded exact-Published reads.
-- Reuses AB-MCP-015 and AB-QUERY-006..009 for snapshot/current-source separation.
+- Reuses AB-QUERY-006..009 for snapshot/current-source separation.
 - Capability 041 implements this routing in `agentbase-query`; the current
-  released MCP surface contains 46 tools. Visualization remains an explicit
+  released MCP surface contains 36 tools. Visualization remains an explicit
   separate workflow and ordinary query does not generate an artifact.

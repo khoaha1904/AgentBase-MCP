@@ -32,7 +32,7 @@ Baseline sources:
 - [Grouped home plan](../../../src/core/knowledge/governance/initial-ingest-home-plan.ts)
 - [Hub authoring](../../../src/app/hub-okf/authoring/initial-ingest-skeleton.ts)
 - [Domain-scoped query graph](../../../src/core/knowledge/query/hub-query-graph.ts)
-- [Repository source identity](../../../src/app/repository-okf/evidence/source-state.ts)
+- [Repository source identity](../../../src/app/repository-source/source-state.ts)
 
 ## Accepted gap and target
 

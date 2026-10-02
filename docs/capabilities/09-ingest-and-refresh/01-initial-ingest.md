@@ -81,6 +81,6 @@ a missing row from the Receipt in the normalized proposal without requiring an
 Agent repair.
 
 Capability 046 does not add schema/catalog, public scanner tool or concept
-quota. It reuses pinned Codebase Memory and exposes normalized diagnostics to
-the private Seed. It does not retrofit Published repositories; that remains
+quota. It uses safe bounded source census to build the private Seed without indexing
+or a native engine. It does not retrofit Published repositories; that remains
 future Full Discovery Refresh or an intentional qualification-data re-ingest.

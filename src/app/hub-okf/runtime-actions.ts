@@ -21,7 +21,7 @@ import { AwsCliAdapter, AWS_SQS_PROFILE, AWS_STS_PROFILE } from "../../providers
 import { hubProfileId, type AdmittedLocalHubState } from "../../core/hub/index.ts";
 import {
   discoverRepositorySourceChanges, discoverRepositorySourceState, resolveRepositorySourceRoot,
-} from "../repository-okf/index.ts";
+} from "../repository-source/index.ts";
 import {
   beginHubAuthoringSession, finalizeHubAuthoringSession, materializeInitialIngestSessionSkeletons,
   readHubAuthoringSession, validateHubAuthoringSession,

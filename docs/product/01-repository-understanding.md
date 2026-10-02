@@ -28,9 +28,9 @@ This does not change the already tagged 0.1.0 release:
 
 | Scope | Approved outcome | Delivery boundary |
 |---|---|---|
-| Discovery selection | Prioritize manifests, deployment evidence and evidenced entrypoints while reserving room for ordinary source. Default `standard`; offer `expanded` only for a concrete important coverage gap and after explicit user approval. | Two bounded modes, not arbitrary budgets, AI ranking or automatic escalation. Reuse the graph. Census limits are not whole-graph limits. |
+| Discovery selection | Prioritize manifests, deployment evidence and evidenced entrypoints while reserving room for ordinary source. Default `standard`; offer `expanded` only for a concrete important coverage gap and after explicit user approval. | Two bounded modes, not arbitrary budgets, AI ranking or automatic escalation. No graph engine. Census limits remain visible. |
 | SAM/basic CloudFormation | Source-backed functions, APIs, common API/SQS/schedule triggers, supported Globals inheritance and direct same-template references. | No build/deploy, macro expansion, nested-stack download, cross-stack resolution or live cloud verification. Unresolved expressions remain limitations. |
-| Backend languages | Enable and qualify C# and Kotlin in addition to the existing parser profile. | No other new languages; parser admission does not prove complete .NET/Spring/framework understanding or macOS qualification. |
+| Source languages | Read admitted C#, Kotlin and other source as text. | File admission is not parser or framework understanding; unsupported patterns remain limitations. |
 | Terraform mappings | Add bounded ECS service/task-definition, API Gateway and Lambda event-source-mapping support, with shared semantic roles across IaC formats. | No resource-per-concept rule, broad AWS catalog, Azure/GCP expansion or relation inference from classification alone. |
 
 Existing Published
@@ -46,14 +46,14 @@ deferred to [company-environment evaluation](../capabilities/12-version-scope/07
 ## Outcome
 
 AgentBase turns a repository into a selective, evidence-backed system overview.
-It uses a private Code Graph as a map, returns to original source for proof and
+It uses bounded source census as a map, returns to original source for proof and
 proposes only concepts that have independent identity and query or relationship
 value.
 
 ```text
 exact repository snapshot
         ↓
-private Code Graph and bounded source discovery
+bounded source discovery
         ↓
 evidence-backed candidates
         ↓
@@ -65,27 +65,19 @@ Hub or turn every file, function and cloud declaration into shared knowledge.
 
 ## Repository and workspace boundary
 
-One Git repository is one graph and source-identity unit. A monorepo uses one
-graph with child paths as evidence scopes. A directory containing several Git
-repositories is only routing scope: AgentBase selects repositories explicitly
-and reads them sequentially instead of merging their graphs.
+One Git repository is one source-identity unit. Child paths in a monorepo
+are evidence scopes. A directory containing several Git repositories is routing
+scope; select exact repositories and investigate them sequentially.
 
-In the trusted enterprise profile, a user, client or active workflow may select
-any local path readable by the current process. AgentBase resolves the exact Git
-repository root and pins its source state for that workflow. Switching to a
-repository elsewhere on the machine requires no installation, persistent root
-allowlist or AgentBase reconfiguration.
-
-Graphs are created or reused only when a workflow needs exact source. Hub-only
-overview questions do not build a graph, and ordinary query never clones a
-remote repository automatically. A Hub-authoring workflow may materialize its
-selected exact source snapshot without modifying the user's checkout or
-credentials.
+A user, client or authorized workflow may select any readable local Git root.
+Hub authoring may materialize the selected exact default-branch snapshot without
+modifying the user's checkout. Ordinary query does not clone remote source.
+Source-only questions use the host agent's existing read/search tools. AgentBase
+provides no graph index, symbol resolver or call-path API.
 
 ## Evidence before knowledge
 
-The Code Graph locates files, symbols, dependencies and flows; it is not final
-evidence. Claims must resolve to authorized code, configuration, infrastructure
+Discovery locates bounded source signals; it is not final evidence. Claims must resolve to authorized code, configuration, infrastructure
 or documentation. Source roles remain visible, sensitive content is excluded or
 redacted and incomplete access produces a limitation rather than a guess.
 
@@ -197,7 +189,7 @@ and returns ordinary work to Delta rather than claiming completeness.
 - Missing, malformed, redacted or unreadable source remains a visible
   limitation and cannot be presented as complete discovery.
 - Source changes during a run invalidate the affected evidence boundary.
-- A failed graph/cache operation does not mutate source or create Hub knowledge.
+- A failed discovery operation does not mutate source or create Hub knowledge.
 - Retrying the same exact source must not create duplicate concepts merely
   because transient candidate state was lost.
 - A required semantic review that cannot obtain bounded source evidence or a
@@ -210,7 +202,7 @@ This gate is not part of the current internal enterprise release. Before
 Repository understanding is generalized or promoted with a benchmark-proven
 scale claim, qualification covers at least one multi-product monorepo and one
 shared platform/infrastructure repository. It measures source omission,
-unsupported claims, repository-selection ambiguity and whether one graph plus
+unsupported claims, repository-selection ambiguity and whether source discovery plus
 scoped child paths still preserves the boundaries needed by downstream users.
 A failing identity or scope assumption returns to this Product Contract instead
 of being patched with hidden path heuristics.

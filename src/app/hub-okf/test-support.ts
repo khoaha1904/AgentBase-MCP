@@ -67,7 +67,7 @@ export function createTestInventoryReceipt(input: Readonly<{
     id: seedId,
     digest: `sha256:${fixtureHex(`${input.label}:seed-digest`, 64)}`,
     source: input.source,
-    engine: { id: "test-codebase-memory", version: "0.10.8", profile: "agentbase-mvp-12-v1" },
+    engine: { id: "test-source-census", version: "1", profile: "bounded-source-v1" },
     lanes: DISCOVERY_LANES.map((lane) => ({ lane,
       status: lane === "identity-product" ? "covered" as const : "absent-after-check" as const })),
     groups,

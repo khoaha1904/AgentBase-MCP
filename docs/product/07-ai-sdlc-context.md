@@ -32,7 +32,7 @@ without taking ownership of their lifecycle.
 
 ```text
 Published Hub → business/system overview for Feature Discovery
-Published Hub → scope → local source/Code Graph for developer Task Planning
+Published Hub → scope → local source for developer Task Planning
 ```
 
 A BA, PO or DM can understand existing systems and cross-repository relations
@@ -44,7 +44,7 @@ exact implementation, impact and tests matter.
 The next product claim is intentionally narrow: AgentBase helps a BA/PO/DM or
 developer clarify the impact of a change whose ownership, interface, dependency
 or failure boundary spans repositories. It is not a general promise that Hub or
-Code Graph improves every planning, implementation, incident or onboarding
+AgentBase improves every planning, implementation, incident or onboarding
 task.
 
 The deferred product-proof campaign qualifies this wedge in at least two
@@ -82,7 +82,7 @@ Returned context prioritizes:
 Published Markdown groups internal infrastructure with the runtime or ownership
 boundary that gives it meaning. Phase 1 promotes only boundaries that a Feature
 Discovery answer or impact view must identify independently. Phase 2 obtains
-files, symbols, calls and tests from current source/Code Graph rather than
+files, symbols, calls and tests from current source rather than
 expanding Hub metadata into a stale implementation inventory.
 
 A Phase 1 impact view may expand a concrete, exactly sourced embedded resource
@@ -111,7 +111,7 @@ deliverable. AgentBase does not own or render a Task dependency DAG because it
 does not own the Task lifecycle.
 
 Phase 1 visuals use the exact Published Hub boundary. Phase 2 implementation
-visuals may use authorized local Code Graph/source evidence and must stay
+visuals may use authorized local source evidence and must stay
 revision-bound, derived and session-local. A missing or untraceable edge is an
 explicit limitation, not a reason to substitute a Published relation or an
 invented source path.
@@ -120,7 +120,7 @@ invented source path.
 
 Feature Discovery uses Published Hub knowledge only. Missing source is not a BA
 or product-owner failure, and AgentBase does not ask them to clone repositories.
-Task Planning may read local source/Code Graph only when the developer has that
+Task Planning may read local source only when the developer has that
 source and exact implementation evidence is needed.
 
 Every returned fact retains provenance and limitations. If AgentBase or the Hub
@@ -131,63 +131,15 @@ described as current implementation.
 The context boundary adds no credential or read permission. Local Draft and
 unaccepted relations never enter ordinary context.
 
-## Deferred product-proof gate
+## Evaluation boundary
 
-The real-model A/B campaign, onboarding study and longitudinal stewardship
-measurement are deferred. They do not block packaging or internal enterprise
-use of already implemented explicit workflows. Existing harnesses and retained
-results remain historical or candidate evidence; no pending, dirty or
-unreviewed result supports a generalized product claim or automatic invocation.
+Model runners, graph comparisons and benchmark orchestration are retired from
+AgentBase. Historical evidence belongs to AgentBase-Benchmark and Git history.
+It does not establish general semantic usefulness, scale or cost savings.
 
-Qualification compares the same workflow with and without AgentBase. Adoption
-requires no critical quality regression, no unsupported claims and at least one
-meaningful improvement in impact coverage, questions or traceability. Time,
-token use and tool-result size are diagnostics rather than substitutes for
-quality or owner review.
-
-Phase 2 Task Planning always starts with a two-arm audit: the realistic baseline
-reads the same pinned source normally and the second arm adds Code Graph. A
-third exact-Published-Hub arm is admitted only for a named cross-repository,
-ownership or accepted-contract gap; it is not run merely to repeat local
-implementation terms. No Phase 2 product claim is accepted from a control that
-lacks source or from a comparison that changes the User Story, source revision,
-model, output contract or read-only boundary between comparable arms.
-
-Implementation is qualified separately in two editable disposable copies of
-the same pinned repository. Normal source reading remains the default. Code
-Graph is added only when unfamiliar structure, callers, dependency paths or
-coverage create a concrete navigation need; Hub remains absent unless the work
-has a named cross-repository knowledge gap. A graph-assisted patch must pass the
-same focused, hidden-semantic and repository verification as the control before
-time or token savings count.
-
-The first three-repository Phase 3 incident replay gave both arms identical
-source authority. Hub returned the correct cross-repository route but produced
-no quality, source-command or first-root-evidence gain and added time and model
-tokens. Incident use therefore remains selective and unproductized; another
-qualification is justified only by a harder routing problem, not by repeating
-the same small source set.
-
-Qualification harnesses, prompts, fixtures, tool traces, timestamps and model
-results are Validation Evidence. They belong to the relevant Capability
-Contract and AgentBase-Benchmark, not this Product Contract.
-
-AgentBase-Benchmark owns the source registry, expectations and immutable
-comparison results/dispositions used as qualification evidence. It is neither
-runtime nor Product/knowledge authority. The generated `domain-hub` repository
-is presentation output only and cannot substitute for Hub state, benchmark
-evidence or an owner decision.
-
-Candidate runs and owner decisions remain distinct. A product claim requires a
-clean, committed immutable comparison artifact with pinned inputs, both arms,
-quality/cost results and machine-readable owner disposition. Product summaries
-must not describe pending or uncommitted evidence as accepted release proof.
-
-The original productization used an explicit-only integration skill backed by
-the qualified one-search profile. G8-C1 consolidates installed read guidance;
-it does not reinterpret historical qualification results. Automatic invocation from a
-host workflow requires separate evidence and owner approval. Productization
-does not require a Hub schema migration or ownership of an external workflow.
+Future evaluation starts from a concrete owner question and an approved bounded
+real-use campaign. Focused offline tests remain the current implementation gate.
+Generated Domain sites are presentation, not Hub or evaluation authority.
 
 ## Value and trade-offs
 
