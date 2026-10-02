@@ -23,6 +23,7 @@ and are operational correspondence, not product-contract authority. Compare the
 requested round with `handoff/REPORT.md`; skip completed items and resume any
 reported incomplete work. Replace the report each round and push verified work
 with the report even when another item is blocked.
+The persistent reviewer workflow is recorded in `handoff/README.md`.
 
 ## Development workflow
 
