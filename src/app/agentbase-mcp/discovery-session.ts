@@ -208,9 +208,15 @@ function compactGroups(signals: readonly CensusSignal[]): readonly DiscoveryGrou
   }
   return [...grouped.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([, values]) => {
     const first = values[0]!;
-    const sources = [...new Map(values.map((value) => [`${value.path}:${value.line}`, {
+    const locations = [...new Map(values.map((value) => [`${value.path}:${value.line}`, {
       path: value.path, startLine: value.line, endLine: value.line,
-    }])).values()].slice(0, 8);
+    }])).values()];
+    const perFile = new Map<string, number>();
+    const sources = locations.map((source) => {
+      const round = perFile.get(source.path) ?? 0;
+      perFile.set(source.path, round + 1);
+      return { source, round };
+    }).sort((left, right) => left.round - right.round).slice(0, 8).map(({ source }) => source);
     const hints = [...new Set(values.map((value) => value.hint))].sort().slice(0, 16);
     const body = { lane: first.lane, kind: first.kind, priority: first.priority, title: first.title, sources, hints };
     return {

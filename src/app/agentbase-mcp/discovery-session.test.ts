@@ -149,6 +149,43 @@ test("[AB-DISC-002][AB-DISC-009] Maven multi-module web controllers survive the 
   assert.equal((await captureCensus(root)).digest, seed.digest);
 });
 
+test("[AB-DISC-010][AB-DISC-006] controller samples take one file per round before repeating locations", async (t) => {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-controller-samples-")));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "README.md"), "# Service\n");
+  for (const [name, count] of [["AController.java", 4], ["BController.java", 3], ["CController.kt", 2]] as const) {
+    fs.writeFileSync(path.join(root, name), Array.from({ length: count }, (_, index) => `@GetMapping("/route-${index}")`).join("\n"));
+  }
+  const seed = await captureCensus(root);
+  const group = seed.groups.find((candidate) => candidate.lane === "interface-event-trigger")!;
+  assert.equal(group.count, 9);
+  assert.deepEqual(group.sources.map((source) => `${source.path}:${source.startLine}`), [
+    "AController.java:1", "BController.java:1", "CController.kt:1",
+    "AController.java:2", "BController.java:2", "CController.kt:2", "AController.java:3", "BController.java:3",
+  ]);
+  assert.match(group.limitations.join(), /samples are bounded/);
+  assert.equal((await captureCensus(root)).digest, seed.digest);
+});
+
+test("[AB-DISC-010] a document with many signals cannot monopolize group source samples", async (t) => {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-document-samples-")));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "README.md"), "# Service\n");
+  fs.writeFileSync(path.join(root, "a-guide.md"), Array.from({ length: 12 }, (_, index) => `https://example.test/docs-${index}`).join("\n"));
+  for (let index = 0; index < 8; index++) {
+    fs.writeFileSync(path.join(root, `z-client-${index}.ts`), `const endpoint = "https://example.test/api-${index}";\n`);
+  }
+  const seed = await captureCensus(root);
+  for (const group of seed.groups.filter((candidate) => candidate.kind === "outbound-integration" || candidate.kind === "flow-candidate")) {
+    assert.equal(group.count, 20);
+    assert.equal(group.sources.length, 8);
+    assert.equal(new Set(group.sources.map((source) => source.path)).size, 8);
+    assert.equal(group.sources.filter((source) => source.path === "a-guide.md").length, 1);
+    assert.match(group.limitations.join(), /samples are bounded/);
+  }
+  assert.equal(seed.groups.filter((group) => group.kind === "outbound-integration" || group.kind === "flow-candidate").length, 2);
+});
+
 test("[AB-DISC-002..003][AB-INGEST-022..023] prioritizes deployment and expands census once from source", async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-priority-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));

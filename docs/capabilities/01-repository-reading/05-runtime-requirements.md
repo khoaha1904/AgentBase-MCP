@@ -53,6 +53,10 @@ upstream graph MCPs are independent and never configured or proxied by AgentBase
   within the existing census bounds and ordinary-source reservation. Selection
   uses filenames without extra source reads; arbitrary names and dynamic
   dispatch remain bounded heuristic limitations.
+- **AB-DISC-010** - Each group's eight source-location samples take one location
+  per file before a second location from any file, then repeat in deterministic
+  rounds. Repeated identical locations consume no extra slot. Full signal counts
+  and bounded-sampling limitations remain visible.
 
 Legacy graph fields in previously frozen Receipts remain compatibility input;
 when present, counts remain nonnegative integers and terminal coverage remains
