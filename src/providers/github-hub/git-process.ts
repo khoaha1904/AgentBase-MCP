@@ -92,7 +92,12 @@ export async function runGit(request: GitRequest, spawnGit: SpawnGit = defaultSp
         clearTimeout(timer);
         request.signal?.removeEventListener("abort", cancel);
         if (failure) reject(failure);
-        else if (code !== 0) reject(new Error(`${request.operation}: Git exited with status ${code ?? 1}`));
+        else if (code !== 0) {
+          const diagnostic = Buffer.concat(stderr).toString("utf8");
+          const redacted = request.token ? diagnostic.split(request.token).join("[REDACTED]") : diagnostic;
+          const tail = redacted.replace(/\s+/g, " ").trim().slice(-600);
+          reject(new Error(`${request.operation}: Git exited with status ${code ?? 1}${tail ? `: ${tail}` : ""}`));
+        }
         else resolve({ stdout: Buffer.concat(stdout).toString("utf8"), stderr: Buffer.concat(stderr).toString("utf8") });
       });
     });

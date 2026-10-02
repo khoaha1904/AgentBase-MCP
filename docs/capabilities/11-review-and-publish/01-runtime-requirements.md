@@ -331,6 +331,10 @@ authorized old test-state disposal is complete without a migration adapter.
   After an attach Git failure, a best-effort remote-head probe distinguishes an
   empty remote (explicit bootstrap required) from a missing exact target branch.
   A failed probe or an existing target preserves the original redacted diagnostic.
+- **AB-HUB-SETUP-039** — Failed Git operations retain the operation and exit
+  status prefix plus at most 600 characters from the end of stderr. Credential
+  redaction precedes whitespace normalization and truncation; existing output,
+  timeout, cancellation and private askpass-cleanup bounds remain in force.
 - **AB-HUB-SETUP-006** — After explicit preview/confirmation, an exact empty
   user-created remote may receive one bootstrap commit directly on the configured
   target branch containing only the complete released baseline: standard README,
