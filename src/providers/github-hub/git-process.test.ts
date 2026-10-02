@@ -19,7 +19,7 @@ function failedGit(chunks: readonly string[], code: number | null = 128): SpawnG
       child.emit("close", code);
     });
     assert.ok(options.env.GIT_ASKPASS && fs.existsSync(options.env.GIT_ASKPASS));
-    return child as ReturnType<SpawnGit>;
+    return child as unknown as ReturnType<SpawnGit>;
   };
 }
 
