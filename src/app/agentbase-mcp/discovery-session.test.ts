@@ -375,3 +375,20 @@ test("[AB-DISC-005] missing identity is visible and new Seeds contain no graph m
   assert.equal("coverageTerminal" in seed.capture, false);
   assert.equal(seed.engine.id, "agentbase-source-census");
 });
+
+test("[AB-DISC-005] optional legacy metadata retains strict validation", async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-discovery-legacy-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "README.md"), "# Worker\n");
+  const seed = await captureCensus(root);
+  assert.equal(seed.state, "ready");
+  assert.doesNotThrow(() => validateDiscoverySeed({ ...seed, capture: { ...seed.capture,
+    nodeCount: 12, edgeCount: 8, coverageTerminal: true } }));
+  for (const [field, value] of [["nodeCount", -1], ["edgeCount", 1.5], ["coverageTerminal", "true"]]) {
+    const malformed = structuredClone(seed);
+    Reflect.set(malformed.capture, field as string, value);
+    assert.throws(() => validateDiscoverySeed(malformed), /capture state is invalid/);
+  }
+  assert.throws(() => validateDiscoverySeed({ ...seed, capture: { ...seed.capture,
+    coverageTerminal: false } }), /cannot be ready/);
+});

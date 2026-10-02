@@ -13,6 +13,7 @@
   },
   "scripts": {
     "contract:check": "node scripts/checks/check-contracts.mjs",
+    "check:retired-code-graph": "node scripts/checks/check-retired-code-graph.mjs",
     "check:release-evidence": "node scripts/checks/check-release-evidence.mjs",
     "configure:hub-token": "node scripts/installation/configure-hub-token.mjs",
     "release:build": "node scripts/release/build-release.mjs",
@@ -26,7 +27,7 @@
     "knip": "knip",
     "gitleaks": "gitleaks detect --no-git --redact --config .gitleaks.toml",
     "test": "node scripts/checks/run-tests.mjs",
-    "check": "npm run contract:check && npm run check:release-evidence && npm run check:upstream-foundations && npm run check:hub-validator && npm run typecheck && npm run depcruise && npm run knip && npm run gitleaks && npm test",
+    "check": "npm run contract:check && npm run check:retired-code-graph && npm run check:release-evidence && npm run check:upstream-foundations && npm run check:hub-validator && npm run typecheck && npm run depcruise && npm run knip && npm run gitleaks && npm test",
     "verify": "npm run check && git diff --check"
   },
   "devDependencies": {

@@ -357,7 +357,7 @@ follow its linked owner rather than loading unrelated sections.
   Evidence lacking the third gate remains in a Repository dossier/useful parent.
   One bounded Hub match pass reuses identity only from strong evidence;
   name/prose similarity never auto-merges.
-- **AB-INGEST-007** — Limited graph/language evidence may produce a valid
+- **AB-INGEST-007** — Limited source/discovery evidence may produce a valid
   explicitly partial proposal with concrete limitations. Source mutation,
   cleanup uncertainty or integrity failure is Incomplete and exposes no
   acceptable proposal.

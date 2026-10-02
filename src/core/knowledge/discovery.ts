@@ -243,6 +243,7 @@ export function validateDiscoverySeed(seed: DiscoverySeed): void {
     if (!["collecting", "ready", "invalid"].includes(seed.state)
       || seed.capture.nodeCount !== undefined && (!Number.isSafeInteger(seed.capture.nodeCount) || seed.capture.nodeCount < 0)
       || seed.capture.edgeCount !== undefined && (!Number.isSafeInteger(seed.capture.edgeCount) || seed.capture.edgeCount < 0)
+      || seed.capture.coverageTerminal !== undefined && typeof seed.capture.coverageTerminal !== "boolean"
       || !Number.isSafeInteger(seed.capture.p1P2Overflow) || seed.capture.p1P2Overflow < 0
       || seed.capture.limitations.length > 32
       || seed.capture.limitations.some((value) => !bounded(value, 1024))) {

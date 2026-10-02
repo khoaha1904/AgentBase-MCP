@@ -38,8 +38,13 @@ upstream graph MCPs are independent and never configured or proxied by AgentBase
   annotations and capability filtering. No graph tool or process is exposed.
 - **AB-DISC-008** - Installation and release require no provider artifacts,
   native compilation, graph schema manifest or graph qualification. Offline
-  product gates retain discovery, Hub, release integrity and recovery tests.
+  product gates reject retired provider paths, imports and package scripts,
+  including ignored native build caches. They retain discovery, Hub, release
+  integrity and recovery tests. Graph-only fixtures may be removed; unrelated
+  proposal, guidance/defer and atomic-recovery assertions remain at their
+  current behavior owners.
 
 Legacy graph fields in previously frozen Receipts remain compatibility input;
-new discovery never fabricates graph metadata. Legacy source/profile values
+when present, counts remain nonnegative integers and terminal coverage remains
+a boolean. New discovery never fabricates graph metadata. Legacy source/profile values
 remain exact historical provenance, not an active provider promise.

@@ -45,6 +45,20 @@ test("abs help exposes only the small public surface", async () => {
   assert.doesNotMatch(output.join(""), /okf|benchmark|mcp/);
 });
 
+test("[AB-DISC-008][AB-CLI-003..005] retired graph and repository-local CLI routes expose no workflow", async (t) => {
+  const env = environment();
+  t.after(() => fs.rmSync(env.AGENTBASE_HOME!, { recursive: true, force: true }));
+  const forbidden = actions({
+    status: async () => { throw new Error("retired routes must not inspect a Hub"); },
+    configure: async () => { throw new Error("retired routes must not connect a Hub"); },
+    synchronize: async () => { throw new Error("retired routes must not synchronize a Hub"); },
+  });
+  for (const command of ["codebase-memory:integration", "codebase-memory:benchmark", "observe", "foundation-demo", "okf"]) {
+    assert.equal(await executeCli([command, "prepare"], forbidden, { environment: env }), 2);
+  }
+  assert.deepEqual(fs.readdirSync(env.AGENTBASE_HOME!), []);
+});
+
 test("[AB-DIRECT-008] public Publish binds confirmation and reports split outcomes without Accept", async () => {
   const env = environment();
   try {

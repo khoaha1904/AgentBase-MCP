@@ -7,7 +7,7 @@ import test from "node:test";
 import {
   createInventoryItemId, createInventoryReceipt, createQuestionPlanId,
   createRepositorySourceResource, getOkfAuthoringGuidance, loadOkfBundle,
-  parseQuestionDocument, readRepositoryRefreshCoverage, validateInventoryReceipt, type DiscoverySeed,
+  computeOkfTreeDigest, parseQuestionDocument, readRepositoryRefreshCoverage, validateInventoryReceipt, type DiscoverySeed,
 } from "../../../core/knowledge/index.ts";
 import {
   beginHubAuthoringSession, finalizeHubAuthoringSession, materializeInitialIngestSessionSkeletons,
@@ -16,7 +16,8 @@ import {
 const commit = "a".repeat(40), baseCommit = "b".repeat(40);
 const repositoryId = "repository-worker-aaaaaaaaaaaa";
 
-for (const partial of [false, true]) test(`[AB-MCP-024..030][AB-COMPACT-012][AB-REFRESH-021] Receipt Prepare and Finalize retain provenance and ${partial ? "bounded discovery debt" : "clean coverage"}`, () => {
+for (const { partial, legacy } of [{ partial: false, legacy: false }, { partial: true, legacy: false },
+  { partial: false, legacy: true }]) test(`[AB-MCP-024..030][AB-COMPACT-012][AB-REFRESH-021][AB-INGEST-003][AB-INGEST-007] Receipt Prepare and Finalize retain provenance and ${legacy ? "legacy receipt compatibility" : partial ? "bounded discovery debt" : "clean coverage"}`, () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-receipt-authoring-"));
   const hub = path.join(root, "hub"), source = path.join(root, "source"), stateRoot = path.join(root, "state");
   try {
@@ -44,7 +45,9 @@ for (const partial of [false, true]) test(`[AB-MCP-024..030][AB-COMPACT-012][AB-
     const seed: DiscoverySeed = {
       id: `discovery-seed-${"1".repeat(24)}`, digest: `sha256:${"2".repeat(64)}`,
       source: { repositoryId, remote: "https://github.example.test/acme/worker.git", defaultBranch: "main", commit },
-      engine: { id: "codebase-memory-mcp", version: "0.10.8", profile: "agentbase-mvp-12-v1" },
+      engine: legacy
+        ? { id: "codebase-memory-mcp", version: "0.10.8", profile: "agentbase-mvp-12-v1" }
+        : { id: "agentbase-source-census", version: "1", profile: "bounded-source-v1" },
       lanes: [
         { lane: "identity-product", status: "covered" },
         { lane: "runtime-entrypoint", status: "covered" },
@@ -53,7 +56,7 @@ for (const partial of [false, true]) test(`[AB-MCP-024..030][AB-COMPACT-012][AB-
         { lane: "deploy-operations", status: "absent-after-check" },
       ],
       groups,
-      capture: { nodeCount: 12, edgeCount: 8, coverageTerminal: true, truncated: false,
+      capture: { ...(legacy ? { nodeCount: 12, edgeCount: 8, coverageTerminal: true } : {}), truncated: false,
         p1P2Overflow: 0, limitations: partial ? ["Additional uninspected scope: " + "x".repeat(900)] : [] },
       state: "ready",
     };
@@ -144,6 +147,22 @@ for (const partial of [false, true]) test(`[AB-MCP-024..030][AB-COMPACT-012][AB-
     assert.equal(retry.id, first.id);
     assert.deepEqual(materializeInitialIngestSessionSkeletons(stateRoot, retry.id, hub,
       { id: repositoryId, displayName: "worker", remotes: [seed.source.remote], rootCommits: [commit] }), skeletons);
+
+    const exhaustedRoot = path.join(root, "exhausted"), before = computeOkfTreeDigest(hub);
+    const exhausted = beginHubAuthoringSession({ ...options, stateRoot: exhaustedRoot });
+    const exhaustedSkeletons = materializeInitialIngestSessionSkeletons(exhaustedRoot, exhausted.id, hub,
+      { id: repositoryId, displayName: "worker", remotes: [seed.source.remote], rootCommits: [commit] });
+    const invalidPath = path.join(exhausted.bundleRoot, exhaustedSkeletons.find((item) => item.candidateId === "worker")!.path);
+    const validContent = fs.readFileSync(invalidPath, "utf8");
+    fs.writeFileSync(invalidPath, validContent.replace("main.tf#L1-L3", "main.tf#L1-L99"));
+    const failFinalize = () => finalizeHubAuthoringSession(exhaustedRoot, exhausted.id, hub, [], [],
+      { commit, dirty: false, dirtyDigest: null }, baseCommit);
+    assert.throws(failFinalize, /one repair attempt remains/);
+    assert.throws(failFinalize, /remains incomplete after one repair/);
+    fs.writeFileSync(invalidPath, validContent);
+    assert.throws(failFinalize, /incomplete after its one repair attempt/);
+    assert.deepEqual(fs.readdirSync(path.join(exhaustedRoot, "proposals")), []);
+    assert.equal(computeOkfTreeDigest(hub), before, "incomplete authoring exposes no proposal and preserves the base");
 
     const workerPath = path.join(first.bundleRoot, skeletons.find((item) => item.candidateId === "worker")!.path);
     const validWorker = fs.readFileSync(workerPath, "utf8");

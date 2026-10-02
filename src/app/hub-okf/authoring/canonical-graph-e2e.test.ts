@@ -33,7 +33,7 @@ function copyBundle(source: string, target: string): void {
   fs.cpSync(source, target, { recursive: true });
 }
 
-test("[AB-BENCH-038][AB-BENCH-040] frontend, backend and infrastructure enrich one canonical system graph", () => {
+test("[AB-MVP-014][AB-INGEST-007..008][AB-REFRESH-013] frontend, backend and infrastructure enrich one canonical Hub system", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-canonical-graph-"));
   try {
     const base1 = path.join(root, "base-1"), authored1 = path.join(root, "authored-1");
