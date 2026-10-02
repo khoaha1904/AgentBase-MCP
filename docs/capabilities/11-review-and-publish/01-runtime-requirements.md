@@ -328,6 +328,9 @@ authorized old test-state disposal is complete without a migration adapter.
   expired or wrong-host credential), HTTP 403 (insufficient permission) and Git
   failures (remote, branch or network). Git diagnostics retain redacted details
   without treating every exit failure as a credential problem.
+  After an attach Git failure, a best-effort remote-head probe distinguishes an
+  empty remote (explicit bootstrap required) from a missing exact target branch.
+  A failed probe or an existing target preserves the original redacted diagnostic.
 - **AB-HUB-SETUP-006** — After explicit preview/confirmation, an exact empty
   user-created remote may receive one bootstrap commit directly on the configured
   target branch containing only the complete released baseline: standard README,

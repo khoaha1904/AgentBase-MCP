@@ -23,13 +23,15 @@ for (const [status, expected] of [[401, /rejected.*invalid, expired or issued by
   [403, /insufficient.*repository read access/]] as const) {
   test(`[AB-HUB-SETUP-038][AB-HUB-SETUP-015] attach identifies HTTP ${status} without exposing credentials`, async (t) => {
     const environment = fixture(t);
+    let calls = 0;
     await assert.rejects(attachExistingHub("https://github.com/fixtures/hub.git", "main", environment,
-      async () => { throw new GitHubApiError("HTTP", `request failed with status ${status}: ${credential}`, status); }),
+      async () => { calls++; throw new GitHubApiError("HTTP", `request failed with status ${status}: ${credential}`, status); }),
     (error: Error) => {
       assert.match(error.message, expected);
       assert.equal(error.message.includes(credential), false);
       return true;
     });
+    assert.equal(calls, 1);
     assert.equal(readPersistedHubConfiguration(environment), undefined);
   });
 }
@@ -47,3 +49,32 @@ test("[AB-HUB-SETUP-038][AB-HUB-SETUP-015] attach retains redacted Git details w
   });
   assert.equal(readPersistedHubConfiguration(environment), undefined);
 });
+
+for (const [scenario, heads, expected] of [
+  ["empty remote", "", /no branches.*bootstrap/],
+  ["missing target", `${"a".repeat(40)}\trefs/heads/other\n`, /no target branch 'main'/],
+  ["existing target", `${"a".repeat(40)}\trefs/heads/main\n`, /Git exited with status 128/],
+  ["failed probe", undefined, /Git exited with status 128/],
+] as const) {
+  test(`[AB-HUB-SETUP-038][AB-HUB-SETUP-015] attach diagnoses ${scenario} without changing configuration`, async (t) => {
+    const environment = fixture(t);
+    const calls: string[][] = [];
+    await assert.rejects(attachExistingHub("https://github.com/fixtures/hub.git", "main", environment,
+      async (request) => {
+        calls.push([...request.args]);
+        if (request.args[0] === "clone") throw new Error(`attach: Git exited with status 128: ${credential}`);
+        assert.deepEqual(request.args, ["ls-remote", "--heads", "https://github.com/fixtures/hub.git"]);
+        assert.equal(request.token, credential);
+        if (heads === undefined) throw new Error(`probe failed: ${credential}`);
+        return { stdout: heads, stderr: "" };
+      }),
+    (error: Error) => {
+      assert.match(error.message, expected);
+      assert.equal(error.message.includes(credential), false);
+      assert.doesNotMatch(error.message, /probe failed/);
+      return true;
+    });
+    assert.equal(calls.length, 2);
+    assert.equal(readPersistedHubConfiguration(environment), undefined);
+  });
+}

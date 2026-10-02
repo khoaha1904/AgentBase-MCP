@@ -189,7 +189,25 @@ export async function attachExistingHub(
     return result(configuration, activeHead);
   } catch (error) {
     if (fs.existsSync(staging)) fs.rmSync(staging, { recursive: true, force: true });
-    throw setupFailure(error, token);
+    const failure = setupFailure(error, token);
+    if (/exited with status/i.test(failure.message)) {
+      let heads: GitOutput;
+      try {
+        heads = await git({ args: ["ls-remote", "--heads", normalized.canonicalHttpsUrl],
+          cwd: parent, operation: "diagnose Hub attachment", token });
+      } catch {
+        // Failed probes must not replace the original Git diagnostic.
+        throw failure;
+      }
+      const branches = heads.stdout.trim().split("\n").filter(Boolean);
+      if (!branches.length) {
+        throw setupFailure(new Error("The Hub remote has no branches; preview and confirm bootstrap before attaching it"), token);
+      }
+      if (!branches.some((line) => line.trim().split(/\s+/)[1] === `refs/heads/${targetBranch}`)) {
+        throw setupFailure(new Error(`The Hub remote has no target branch '${targetBranch}'; select an existing branch or create it before attaching`), token);
+      }
+    }
+    throw failure;
   }
 }
 
