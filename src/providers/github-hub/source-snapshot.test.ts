@@ -30,7 +30,7 @@ function contains(root: string, needle: string): boolean {
 }
 
 test("[AB-MCP-019][AB-MCP-024] exact source snapshot isolates dirty worktrees and credentials", async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-source-snapshot-"));
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-source-snapshot-")));
   const source = path.join(root, "source"), remote = path.join(root, "source.git"), state = path.join(root, "state");
   const canonical = "https://github.com/acme/source.git", token = "source-token-canary";
   fs.mkdirSync(source);

@@ -91,7 +91,7 @@ function unsafeArchive(file) {
 }
 
 test("[AB-RELEASE-003] source identity requires exact clean Git state", (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-release-source-"));
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-release-source-")));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   runGit(root, ["init", "--quiet"]);
   fs.writeFileSync(path.join(root, "tracked.txt"), "accepted\n");
@@ -105,7 +105,7 @@ test("[AB-RELEASE-003] source identity requires exact clean Git state", (t) => {
 });
 
 test("[AB-DISC-008][AB-RELEASE-001..011][AB-RELEASE-CI-008] builds and verifies an exact reproducible qualified host archive", async (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-release-test-"));
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-release-test-")));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const firstOutput = path.join(root, "first"), secondOutput = path.join(root, "second");
   const target = `${process.platform}-${process.arch}`;
@@ -181,7 +181,7 @@ test("[AB-DISC-008][AB-RELEASE-001..011][AB-RELEASE-CI-008] builds and verifies 
 });
 
 test("[AB-RELEASE-010, AB-RELEASE-011] rejects an unsafe archive before extraction", (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-release-unsafe-"));
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-release-unsafe-")));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const archive = path.join(root, "unsafe.tar.gz");
   unsafeArchive(archive);

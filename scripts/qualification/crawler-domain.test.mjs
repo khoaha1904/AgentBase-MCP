@@ -20,8 +20,8 @@ function createRepository(fixtureRoot, name, files) {
 }
 
 test("[AB-BATCH-014..015][AB-QUERY-020][AB-VIS-016] Crawler qualification covers source, query, UI and mock proposal", async () => {
-  const output = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-crawler-site-"));
-  const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-crawler-fixture-"));
+  const output = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-crawler-site-")));
+  const fixtureRoot = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-crawler-fixture-")));
   try {
     createRepository(fixtureRoot, "crawler-publisher", {
       "README.md": "# Crawler publisher\n",

@@ -325,7 +325,7 @@ test("[AB-PROFILE-READ-002..004][AB-PROFILE-READ-007..008] Profile visualization
   });
   assert.equal(packet.status === "ready" ? packet.packet.profile : undefined, "profile-1.0");
 
-  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-profile-domain-site-"));
+  const temporary = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-profile-domain-site-")));
   context.after(() => fs.rmSync(temporary, { recursive: true, force: true }));
   const output = path.join(temporary, "site");
   buildStaticDomainSite(projection, { outputDirectory: output, visibilityAcknowledged: true });
@@ -423,7 +423,7 @@ test("[AB-VIS-005..010][AB-SCHEMA-050] diagram packets preserve Published topolo
 });
 
 test("[AB-VIS-006..010][AB-VIS-012..024] static Domain site is reproducible, offline and no-overwrite", async (context) => {
-  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-domain-site-test-"));
+  const temporary = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-domain-site-test-")));
   context.after(() => fs.rmSync(temporary, { recursive: true, force: true }));
   const documents = fixtureDocuments();
   const graph = await loadHubGraph({

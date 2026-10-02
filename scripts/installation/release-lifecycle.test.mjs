@@ -10,7 +10,7 @@ import { lifecyclePaths, runApplicationLifecycle } from "./release-lifecycle.mjs
 const sourceControl = import.meta.dirname;
 
 function fixture(t) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-lifecycle-"));
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-lifecycle-")));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const environment = { ...process.env, HOME: path.join(root, "home"), AGENTBASE_HOME: path.join(root, "agentbase") };
   fs.mkdirSync(environment.HOME, { recursive: true });
