@@ -78,6 +78,14 @@ upstream graph MCPs are independent and never configured or proxied by AgentBase
   manifests over Markdown within each file-diversity round. Documentation stays
   available as context when slots remain; full counts and sampling limitations
   include all admitted signals. Derived Flow candidate samples use the same order.
+- **AB-DISC-015** - Admitted production descriptor filenames ending in `web.xml`
+  receive priority selection and expose servlet, filter, listener and
+  servlet-mapping opening tags as runtime-entrypoint P0 locations. Production
+  Dockerfile `ENTRYPOINT` and `CMD` instructions also expose runtime P0.
+  Commented-out descriptor tags or Dockerfile instructions and test/docs
+  fixtures cannot produce runtime evidence. Detection uses bounded text reads,
+  performs no XML entity resolution or command execution and claims no runtime
+  completeness; unrelated XML files are not added to census admission.
 
 Legacy graph fields in previously frozen Receipts remain compatibility input;
 when present, counts remain nonnegative integers and terminal coverage remains

@@ -30,7 +30,7 @@ This does not change the already tagged 0.1.0 release:
 |---|---|---|
 | Discovery selection | Prioritize manifests, deployment evidence and evidenced entrypoints while reserving room for ordinary source. Default `standard`; offer `expanded` only for a concrete important coverage gap and after explicit user approval. | Two bounded modes, not arbitrary budgets, AI ranking or automatic escalation. No graph engine. Census limits remain visible. |
 | SAM/basic CloudFormation | Source-backed functions, APIs, common API/SQS/schedule triggers, supported Globals inheritance and direct same-template references. | No build/deploy, macro expansion, nested-stack download, cross-stack resolution or live cloud verification. Unresolved expressions remain limitations. |
-| Source languages | Read admitted C#, Kotlin and other source as text; prioritize conventional Java/Kotlin web controller files and expose explicit Spring/JAX-RS annotations as interface signals. | Bounded filename/line heuristics do not resolve framework dispatch; unsupported patterns remain limitations. |
+| Source languages | Read admitted C#, Kotlin and other source as text; prioritize conventional Java/Kotlin web controllers and application launchers, expose explicit Spring/JAX-RS interfaces, servlet/WAR descriptors and Dockerfile launch commands. | Bounded filename/line heuristics do not resolve framework dispatch; unsupported patterns remain limitations. |
 | Terraform mappings | Add bounded ECS service/task-definition, API Gateway and Lambda event-source-mapping support, with shared semantic roles across IaC formats. | No resource-per-concept rule, broad AWS catalog, Azure/GCP expansion or relation inference from classification alone. |
 
 Existing Published

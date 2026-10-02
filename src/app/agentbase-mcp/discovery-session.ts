@@ -73,7 +73,8 @@ export function isDeniedDiscoveryPath(value: string): boolean {
 function candidateFile(relative: string): boolean {
   const name = path.posix.basename(relative).toLowerCase();
   const extension = path.posix.extname(name);
-  return /^readme(?:\.|$)/i.test(name) || ["codeowners", "dockerfile", "makefile", "terragrunt.hcl", "go.mod", "pom.xml", "build.gradle", "build.gradle.kts"].includes(name)
+  return /^readme(?:\.|$)/i.test(name) || name.endsWith("web.xml")
+    || ["codeowners", "dockerfile", "makefile", "terragrunt.hcl", "go.mod", "pom.xml", "build.gradle", "build.gradle.kts"].includes(name)
     || [".tf", ".hcl", ".yaml", ".yml", ".json", ".template", ".toml", ".md", ".ts", ".tsx", ".js", ".mjs",
       ".cjs", ".py", ".go", ".java", ".sh", ".cs", ".kt", ".kts"].includes(extension);
 }
@@ -99,6 +100,7 @@ function priorityFile(relative: string): boolean {
   return !isTestPath(relative) && /^readme(?:\.|$)/.test(name)
     || ["package.json", "pyproject.toml", "go.mod", "pom.xml", "build.gradle", "build.gradle.kts",
       "dockerfile", "makefile", "codeowners", "terragrunt.hcl"].includes(name)
+    || !isTestOrDocumentationPath(relative) && name.endsWith("web.xml")
     || /\.(tf|hcl)$/.test(name) || /^(template|sam|serverless|compose|docker-compose)(?:\.|$)/.test(name)
     || /^(runbook|deploy|deployment|release).*\.md$/.test(name) || relative.startsWith(".github/workflows/")
     || !isTestOrDocumentationPath(relative) && /\.(?:java|kt|kts)$/.test(name) && (/(?:controller|resource|endpoint|application|main)(?:impl)?\.(?:java|kt|kts)$/.test(name)
@@ -147,6 +149,11 @@ function addMatchSignals(signals: CensusSignal[], relative: string, lines: reado
   const lowerPath = relative.toLowerCase();
   const production = !isTestOrDocumentationPath(relative);
   const javaOrKotlin = /\.(?:java|kt|kts)$/.test(lowerPath);
+  const webDescriptor = path.posix.basename(lowerPath).endsWith("web.xml");
+  const dockerfile = path.posix.basename(lowerPath) === "dockerfile";
+  const runtimeLines = webDescriptor
+    ? lines.join("\n").replace(/<!--[\s\S]*?(?:-->|$)/g, (comment) => comment.replace(/[^\n]/g, " ")).split("\n")
+    : lines;
   const add = (lane: DiscoveryLane, kind: string, priority: CensusSignal["priority"], title: string,
     line: number, hint: string) => signals.push({ lane, kind, priority, title, path: relative, line, hint });
   if (!isTestPath(relative) && (/^readme(?:\.|$)/i.test(path.posix.basename(relative)) || /(?:^|\/)package\.json$/.test(lowerPath)
@@ -166,7 +173,9 @@ function addMatchSignals(signals: CensusSignal[], relative: string, lines: reado
     if (production && (/resource\s+"(?:aws_lambda_function|aws_ecs_service|aws_instance|aws_autoscaling_group|azurerm_linux_function_app|azurerm_linux_virtual_machine|google_cloudfunctions_function)"/i.test(line)
       || /(?:^|[^a-z])(handler|main|bootstrap)\s*[=:]/i.test(line)
       || javaOrKotlin && /@(?:org\.springframework\.boot\.autoconfigure\.)?SpringBootApplication\b/.test(line)
-      || lowerPath.endsWith(".java") && /\bpublic\s+static\s+void\s+main\s*\(/.test(line))) {
+      || lowerPath.endsWith(".java") && /\bpublic\s+static\s+void\s+main\s*\(/.test(line)
+      || webDescriptor && /<(?:servlet|filter|listener|servlet-mapping)(?=[\s>])/i.test(runtimeLines[index]!)
+      || dockerfile && /^\s*(?:ENTRYPOINT|CMD)\s+\S/i.test(line))) {
       add("runtime-entrypoint", "runtime-entrypoint", "p0", "Evidenced runtime or entrypoint", number, redactDiscoveryHint(line));
     }
     if (production && (/resource\s+"(?:aws_apigatewayv2_route|aws_api_gateway_method|aws_lambda_event_source_mapping|aws_s3_bucket_notification|aws_sns_topic_subscription)"/i.test(line)

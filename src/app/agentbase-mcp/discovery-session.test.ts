@@ -362,6 +362,82 @@ test("[AB-DISC-002][AB-DISC-013] root README admission survives a full budget of
   assert.deepEqual(identity.sources, [{ path: "README.md", startLine: 1, endLine: 1 }]);
 });
 
+test("[AB-DISC-015] servlet descriptors and Dockerfile commands expose exact legacy WAR runtime locations", async (t) => {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-war-runtime-")));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const files = {
+    "README.md": "# Servlet application\n",
+    "src/main/webapp/WEB-INF/web.xml": "<web-app>\n<servlet>\n<servlet-name>Application</servlet-name>\n</servlet>\n<servlet-mapping>\n<url-pattern>/api/*</url-pattern>\n</servlet-mapping>\n<filter>\n<filter-name>RequestFilter</filter-name>\n</filter>\n<listener>\n<listener-class>example.ApplicationListener</listener-class>\n</listener>\n</web-app>\n",
+    "config/application-web.xml": '<web-app>\n<filter id="request-filter" />\n</web-app>\n',
+    "config/only-listener-web.xml": "<web-app>\n<listener>example.Listener</listener>\n</web-app>\n",
+    "Dockerfile": 'FROM example.test/runtime:1\nENTRYPOINT ["java", "-jar", "server.jar"]\n  CMD ["--config", "server.xml"]\n',
+  };
+  for (const [relative, text] of Object.entries(files)) {
+    fs.mkdirSync(path.dirname(path.join(root, relative)), { recursive: true });
+    fs.writeFileSync(path.join(root, relative), text);
+  }
+  const seed = await captureCensus(root);
+  const runtimes = seed.groups.filter((group) => group.lane === "runtime-entrypoint" && group.priority === "p0");
+  assert.deepEqual(runtimes.flatMap((group) => group.sources.map((source) => `${source.path}:${source.startLine}`)).sort(), [
+    "src/main/webapp/WEB-INF/web.xml:2", "src/main/webapp/WEB-INF/web.xml:5",
+    "src/main/webapp/WEB-INF/web.xml:8", "src/main/webapp/WEB-INF/web.xml:11",
+    "config/application-web.xml:2", "config/only-listener-web.xml:2", "Dockerfile:2", "Dockerfile:3",
+  ].sort());
+  assert.equal(seed.lanes.find((lane) => lane.lane === "runtime-entrypoint")?.status, "covered");
+  assert.equal((await captureCensus(root)).digest, seed.digest);
+});
+
+test("[AB-DISC-011][AB-DISC-015] commented, unrelated and fixture-only launch declarations are not runtime evidence", async (t) => {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-war-exclusions-")));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const files = {
+    "README.md": "# Servlet examples\n",
+    "config/commented-web.xml": "<web-app>\n<!-- <servlet>example.Disabled</servlet> -->\n<!--\n<filter>example.Disabled</filter>\n-->\n<!-- <listener>example.Disabled</listener>\n",
+    "config/empty-web.xml": "<web-app>\n<servlet-name>Only a name</servlet-name>\n<filter-class>example.Filter</filter-class>\n</web-app>\n",
+    "config/unrelated.xml": "<web-app><servlet>Unrelated filename</servlet></web-app>\n",
+    "Dockerfile": 'FROM example.test/runtime:1\n# ENTRYPOINT ["disabled"]\n# CMD ["disabled"]\nENV CMD_HINT="disabled"\n',
+    "src/test/resources/web.xml": "<web-app><servlet>Fixture</servlet></web-app>\n",
+    "__files/mock-web.xml": "<web-app><filter>Fixture</filter></web-app>\n",
+    "mappings/web.xml": "<web-app><listener>Fixture</listener></web-app>\n",
+    "fixtures/Dockerfile": 'ENTRYPOINT ["fixture"]\nCMD ["fixture"]\n',
+    "docs/Dockerfile": 'ENTRYPOINT ["example"]\n',
+  };
+  for (const [relative, text] of Object.entries(files)) {
+    fs.mkdirSync(path.dirname(path.join(root, relative)), { recursive: true });
+    fs.writeFileSync(path.join(root, relative), text);
+  }
+  const seed = await captureCensus(root);
+  assert.equal(seed.groups.some((group) => group.lane === "runtime-entrypoint"), false);
+  assert.equal(seed.lanes.find((lane) => lane.lane === "runtime-entrypoint")?.status, "limited");
+  assert.equal(seed.capture.census?.eligibleFiles, Object.keys(files).length - 1);
+});
+
+test("[AB-DISC-002][AB-DISC-015] WAR descriptors and Dockerfile launch commands survive a large Java source census", async (t) => {
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-war-budget-")));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const files = {
+    "README.md": "# WAR service\n",
+    "pom.xml": "<project><packaging>war</packaging></project>\n",
+    "src/main/webapp/WEB-INF/web.xml": "<web-app>\n<servlet>example.Application</servlet>\n</web-app>\n",
+    "config/customweb.xml": "<web-app>\n<filter>example.Filter</filter>\n</web-app>\n",
+    "Dockerfile": 'FROM example.test/runtime:1\nCMD ["start-server"]\n',
+  };
+  for (const [relative, text] of Object.entries(files)) {
+    fs.mkdirSync(path.dirname(path.join(root, relative)), { recursive: true });
+    fs.writeFileSync(path.join(root, relative), text);
+  }
+  fs.mkdirSync(path.join(root, "src/main/java/example"), { recursive: true });
+  for (let index = 0; index < 300; index++) fs.writeFileSync(path.join(root, `src/main/java/example/Helper${index}.java`), `class Helper${index} {}\n`);
+  const seed = await captureCensus(root);
+  assert.equal(seed.capture.census?.eligibleFiles, 305);
+  assert.equal(seed.capture.census?.selectedFiles, 256);
+  assert.equal(seed.capture.census?.omittedPriorityFiles, 0);
+  assert.equal(seed.capture.truncated, true);
+  assert.deepEqual(seed.groups.filter((group) => group.lane === "runtime-entrypoint" && group.priority === "p0")
+    .flatMap((group) => group.sources.map((source) => source.path)).sort(),
+  ["Dockerfile", "config/customweb.xml", "src/main/webapp/WEB-INF/web.xml"].sort());
+});
+
 test("[AB-DISC-002..003][AB-INGEST-022..023] prioritizes deployment and expands census once from source", async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-priority-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
