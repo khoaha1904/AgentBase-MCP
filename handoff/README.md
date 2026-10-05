@@ -69,6 +69,15 @@ liệu riêng tư. Dùng biến mô tả fixture và chỉ giữ các dòng ki�
 - Commit báo cáo riêng: `Update handoff report for round <số>`.
 - Chỉ push code đã qua toàn bộ gate; dùng Node 24.x và `TMPDIR` qua symlink
   khi prompt yêu cầu. Không sửa guard chỉ để test qua.
+- Repository này cố ý để public; máy reviewer chỉ pull được repository public,
+  không đổi repository sang private.
+- Chủ repo cho phép `git push origin main` tới đúng repository này sau mỗi vòng
+  đã qua gate. Không push tới remote, branch hoặc repository nào khác.
+- Trước mỗi lần push, rà lại diff sắp push (so với remote branch) để chắc chắn
+  không có token, hostname nội bộ, URL Hub thật, email trừ email tác giả commit,
+  đường dẫn tuyệt đối trên máy, hoặc tên dự án/khách hàng/người. `gitleaks` chỉ
+  kiểm tra secret và không thay thế bước rà tên, URL, email hay đường dẫn. Ghi
+  kết quả rà này vào `handoff/REPORT.md`.
 - Nếu bị chặn, push các commit đã qua gate cùng báo cáo ghi rõ phần bị chặn.
   Không giữ báo cáo ở local vì reviewer chỉ thấy GitHub.
 - Không force-push lên `main`, không làm lại commit đã được chấp nhận.
