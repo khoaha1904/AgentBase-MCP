@@ -56,6 +56,12 @@ create an orphan Question.
 
 ## Selection and census budgets
 
+Census covers common conventions used by most repositories. Special cases are
+recorded as limitations and left to the host agent's source investigation.
+Prefer removing or narrowing noisy patterns; add a new pattern only for a
+widely used standard convention. Exhaustive repository-specific detection is
+outside this capability.
+
 Follow the [Product scope](../../product/01-repository-understanding.md#coverage-expansion).
 Discovery uses deterministic priority selection after bounded enumeration,
 reserving one quarter of the budget for ordinary source. Do not

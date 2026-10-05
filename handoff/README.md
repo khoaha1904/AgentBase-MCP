@@ -28,6 +28,13 @@ Quy tắc dưới đây được lưu từ Vòng 2; mỗi prompt mới chỉ tha
 - Code, docs sản phẩm, tên test và commit message viết tiếng Anh. Báo cáo và
   quy tắc trao đổi trong `handoff/` viết tiếng Việt theo yêu cầu chủ repo.
 
+## Nguyên tắc census từ Vòng 5
+
+Census chỉ phủ các quy ước phổ biến ở đa số repository. Trường hợp đặc biệt
+để agent đọc code và suy luận; census ghi limitation, không cố viết pattern
+cho mọi repository. Ưu tiên bỏ hoặc thu hẹp pattern gây nhiễu. Chỉ thêm pattern
+mới khi đó là quy ước chuẩn, được dùng rộng rãi.
+
 ## Báo cáo mỗi vòng
 
 Ghi đè toàn bộ `handoff/REPORT.md`; lịch sử vòng trước nằm trong Git. Đặt ngoài

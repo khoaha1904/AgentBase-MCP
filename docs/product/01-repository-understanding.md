@@ -86,6 +86,11 @@ integration and operational signals, but publication remains selective. Each
 important signal must have a visible outcome; repository-wide completeness and
 concept count are not success metrics.
 
+Census covers common conventions used by most repositories. Special cases
+remain limitations for the host agent to investigate in source. Prefer removing
+or narrowing noisy patterns; add a pattern only for a widely used standard
+convention, rather than trying to cover every repository.
+
 Discovery signals are a bounded map, not a completeness certificate. An empty
 heuristic result means not detected, not verified absent. File/entry limits,
 oversized admitted files and sampled evidence stay visible. Distinct evidenced
