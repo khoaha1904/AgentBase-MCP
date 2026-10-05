@@ -23,6 +23,11 @@ allowed state, reason when available, bounded before/after bytes and digest. A
 destructive entry must retain its correction/removal reason/evidence; preview
 does not infer the reason from the Git diff.
 
+Tool responses carry each inspection payload once. Grouped entries retain path,
+change and decision metadata while file bytes remain in the ordered entry list;
+preserved files have no before/after content. Inspect exposes `proposal_digest`
+as the exact digest accepted by Publish.
+
 The deferred G5-C2 design adds no quality policy/packet/report, findings/probes,
 repair count or owner override to current inspection. Optional external AI
 review notes remain outside AgentBase state and the Hub.

@@ -56,14 +56,25 @@ export type HubProposalInspection = Readonly<{
 }>;
 
 export type HubInspectionGroups = Readonly<{
-  added: readonly HubChangeEntry[];
-  updated: readonly HubChangeEntry[];
-  removed: readonly HubChangeEntry[];
+  added: readonly HubGroupedChangeEntry[];
+  updated: readonly HubGroupedChangeEntry[];
+  removed: readonly HubGroupedChangeEntry[];
   questionsAndLimitations: Readonly<{
     questions: readonly QuestionDeclaration[];
     limitations: readonly string[];
   }>;
 }>;
+
+type HubGroupedChangeEntry = Omit<HubChangeEntry, "before" | "after"> & Partial<Pick<HubChangeEntry, "before" | "after">>;
+
+function groupedEntry(entry: HubChangeEntry): HubGroupedChangeEntry {
+  // Added entries keep their path/change metadata in groups; file bytes live only in entries.
+  if (entry.change === "created" || entry.change === "preserved") {
+    const { before: _before, after: _after, ...summary } = entry;
+    return summary;
+  }
+  return entry;
+}
 
 function groups(
   entries: readonly HubChangeEntry[],
@@ -71,9 +82,9 @@ function groups(
   limitations: readonly string[] = [],
 ): HubInspectionGroups {
   return {
-    added: entries.filter((entry) => entry.change === "created"),
-    updated: entries.filter((entry) => ["modified", "conflict"].includes(entry.change)),
-    removed: entries.filter((entry) => ["deleted-agentbase-draft", "removed-contribution", "migration-move-source"].includes(entry.change)),
+    added: entries.filter((entry) => entry.change === "created").map(groupedEntry),
+    updated: entries.filter((entry) => ["modified", "conflict"].includes(entry.change)).map(groupedEntry),
+    removed: entries.filter((entry) => ["deleted-agentbase-draft", "removed-contribution", "migration-move-source"].includes(entry.change)).map(groupedEntry),
     questionsAndLimitations: { questions, limitations },
   };
 }
@@ -117,7 +128,11 @@ export function inspectHubProposal(
     if (!options) return entry;
     const before = inspectContent(options.baseRoot, entry.path, maximum);
     const after = inspectContent(options.proposedRoot, entry.path, maximum);
-    return { ...entry, ...(before ? { before } : {}), ...(after ? { after } : {}) };
+    return {
+      ...entry,
+      ...(entry.change === "preserved" ? {} : before ? { before } : {}),
+      ...(entry.change === "preserved" ? {} : after ? { after } : {}),
+    };
   });
   const counts = {
     created: 0,

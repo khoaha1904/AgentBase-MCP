@@ -176,14 +176,14 @@ test("[AB-DISC-010][AB-DISC-014] a document with many signals cannot displace in
     fs.writeFileSync(path.join(root, `z-client-${index}.ts`), `const endpoint = "https://example.test/api-${index}";\n`);
   }
   const seed = await captureCensus(root);
-  for (const group of seed.groups.filter((candidate) => candidate.kind === "outbound-integration" || candidate.kind === "flow-candidate")) {
+  for (const group of seed.groups.filter((candidate) => candidate.kind === "outbound-integration")) {
     assert.equal(group.count, 20);
     assert.equal(group.sources.length, 8);
     assert.equal(new Set(group.sources.map((source) => source.path)).size, 8);
     assert.equal(group.sources.filter((source) => source.path === "a-guide.md").length, 0);
     assert.match(group.limitations.join(), /samples are bounded/);
   }
-  assert.equal(seed.groups.filter((group) => group.kind === "outbound-integration" || group.kind === "flow-candidate").length, 2);
+  assert.equal(seed.groups.filter((group) => group.kind === "outbound-integration" || group.kind === "flow-candidate").length, 1);
 });
 
 test("[AB-DISC-010][AB-DISC-014] integration samples prefer real manifests and config while retaining documentation context", async (t) => {
@@ -207,7 +207,7 @@ test("[AB-DISC-010][AB-DISC-014] integration samples prefer real manifests and c
   }
   for (const relative of docs) fs.writeFileSync(path.join(root, relative), "https://example.test/context\n");
   const seed = await captureCensus(root);
-  for (const kind of ["outbound-integration", "flow-candidate"]) {
+  for (const kind of ["outbound-integration"]) {
     const group = seed.groups.find((candidate) => candidate.kind === kind)!;
     assert.equal(group.count, 12);
     assert.equal(group.sources.length, 8);
@@ -217,7 +217,7 @@ test("[AB-DISC-010][AB-DISC-014] integration samples prefer real manifests and c
   fs.rmSync(path.join(root, "go.mod"));
   fs.rmSync(path.join(root, "worker.py"));
   const smaller = await captureCensus(root);
-  for (const kind of ["outbound-integration", "flow-candidate"]) {
+  for (const kind of ["outbound-integration"]) {
     const group = smaller.groups.find((candidate) => candidate.kind === kind)!;
     assert.equal(group.count, 10);
     assert.ok(group.sources.slice(0, 6).every((source) => Object.hasOwn(code, source.path)));
@@ -353,12 +353,12 @@ test("[AB-DISC-016][AB-DISC-006] more than 64 runtime files remain ready with P0
   assert.equal(seed.state, "ready");
   assert.equal(seed.groups.length, 64);
   assert.equal(seed.groups.filter((group) => group.priority === "p0").length, 63);
-  assert.ok(seed.groups.every((group) => group.priority !== "p1"), "P0 fills slots before the derived Flow candidate");
+  assert.ok(seed.groups.every((group) => group.priority !== "p1"), "duplicate Flow candidates are removed");
   assert.ok(seed.lanes.every((lane) => lane.status === "covered"));
   assert.ok(seed.lanes.every((lane) => seed.groups.some((group) => group.lane === lane.lane)));
   assert.equal(seed.capture.truncated, true);
-  assert.equal(seed.capture.p1P2Overflow, 21);
-  assert.match(seed.capture.limitations.join(), /group limit of 64 omitted 21 groups \(20 P0\)/);
+  assert.equal(seed.capture.p1P2Overflow, 20);
+  assert.match(seed.capture.limitations.join(), /group limit of 64 omitted 20 groups \(20 P0\)/);
   assert.equal(seed.capture.census?.selectedFiles, 84);
   assert.equal(seed.capture.census?.omittedPriorityFiles, 0);
   assert.doesNotThrow(() => validateDiscoverySeed(seed));
@@ -367,7 +367,7 @@ test("[AB-DISC-016][AB-DISC-006] more than 64 runtime files remain ready with P0
   const fallback = await captureCensus(root);
   assert.equal(fallback.state, "ready");
   assert.equal(fallback.groups.length, 64);
-  assert.equal(fallback.capture.p1P2Overflow, 21, "identity fallback retains derived Flow accounting");
+  assert.equal(fallback.capture.p1P2Overflow, 20, "identity fallback removes duplicate Flow accounting");
   assert.ok(fallback.lanes.every((lane) => lane.status === "covered"));
 });
 
@@ -386,6 +386,25 @@ test("[AB-DISC-017] UI handler properties and minified assets do not create runt
   assert.deepEqual(runtime[0]!.sources, [{ path: "application.yaml", startLine: 1, endLine: 1 }]);
   assert.equal(seed.capture.census?.eligibleFiles, 3);
   assert.ok(seed.groups.every((group) => group.sources.every((source) => !/\.(?:min\.js|min\.css|bundle\.js|chunk\.js)$/.test(source.path))));
+});
+
+test("[AB-DISC-009] common AWS EventBridge and Scheduler resources become trigger evidence while test stubs stay out of integration samples", async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-scheduled-triggers-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "README.md"), "# Scheduled worker\n");
+  fs.writeFileSync(path.join(root, "schedule.tf"), [
+    'resource "aws_cloudwatch_event_rule" "nightly" { schedule_expression = "cron(0 0 * * ? *)" }',
+    'resource "aws_cloudwatch_event_target" "nightly_target" { rule = aws_cloudwatch_event_rule.nightly.name }',
+    'resource "aws_scheduler_schedule" "hourly" { schedule_expression = "rate(1 hour)" }',
+  ].join("\n"));
+  fs.mkdirSync(path.join(root, "tests"), { recursive: true });
+  fs.writeFileSync(path.join(root, "tests/stub.tf"), 'resource "aws_sqs_queue" "stub" {}\n');
+  const seed = await captureCensus(root);
+  const trigger = seed.groups.find((group) => group.lane === "interface-event-trigger");
+  assert.equal(trigger?.count, 3);
+  assert.equal(trigger?.sources[0]?.path, "schedule.tf");
+  const integration = seed.groups.find((group) => group.lane === "integration-data-channel");
+  assert.equal(integration, undefined);
 });
 
 test("[AB-DISC-013] identity samples prefer the root and module READMEs over test and mock fixture context", async (t) => {
@@ -422,7 +441,7 @@ test("[AB-DISC-013][AB-DISC-005] fixture-only signals cannot become fallback Rep
   const seed = await captureCensus(root);
   assert.equal(seed.state, "invalid");
   assert.equal(seed.groups.some((group) => group.lane === "identity-product"), false);
-  assert.ok(seed.groups.some((group) => group.lane === "integration-data-channel"));
+  assert.equal(seed.groups.some((group) => group.lane === "integration-data-channel"), false);
   assert.match(seed.capture.limitations.join(), /identity evidence was not available/);
 });
 
@@ -668,8 +687,8 @@ test("[AB-DISC-006][AB-INGEST-017] armed Init derives a source-only Seed and per
   const seed = discovery.activeSeed;
   assert.equal(seed?.state, "ready");
   assert.deepEqual(seed?.lanes.map((lane) => lane.status), ["covered", "covered", "covered", "covered", "covered"]);
-  assert.deepEqual([...new Set(seed?.groups.map((group) => group.priority))].sort(), ["p0", "p1", "p2"]);
-  assert.equal(seed?.groups.some((group) => group.priority === "p1" && group.kind === "flow-candidate"), true);
+  assert.deepEqual([...new Set(seed?.groups.map((group) => group.priority))].sort(), ["p0", "p2"]);
+  assert.equal(seed?.groups.some((group) => group.kind === "flow-candidate"), false);
   assert.equal(JSON.stringify(seed).includes("secret.example.test"), false);
   assert.equal(JSON.stringify(seed).includes("super-secret"), false);
   assert.equal(JSON.stringify(seed).includes("credentials.json"), false);

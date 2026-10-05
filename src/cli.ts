@@ -92,9 +92,14 @@ async function executePublicHubConnect(
     dependencies.writeOutput(`${JSON.stringify(output, null, 2)}\n`);
     return 0;
   } catch (error) {
-    if (changed) {
+    const message = error instanceof Error ? error.message : "Hub attachment failed";
+    const emptyRemote = /remote has no branches/i.test(message);
+    if (changed && !emptyRemote) {
       if (previous) writeGlobalHubToken(previous, dependencies.environment, { replace: true });
       else removeGlobalHubToken(dependencies.environment);
+    }
+    if (emptyRemote) {
+      throw new Error(`${message}; the entered token was retained. Next step: preview and confirm bootstrap for this Hub, then retry connect`);
     }
     throw error;
   }

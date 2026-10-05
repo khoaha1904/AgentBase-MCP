@@ -101,10 +101,7 @@ test("[AB-DISC-007][AB-SCHEMA-049][AB-INGEST-003][AB-HOME-012][AB-PROFILE-LIFECY
       status: "ready", mode: "diagram", domain: "domains/commerce",
       diagramType: "architecture", conceptIds: ["systems/orders"],
     });
-    assert.deepEqual(visualization.structuredContent, {
-      status: "ready", mode: "diagram", domain: "domains/commerce",
-      diagramType: "architecture", conceptIds: ["systems/orders"],
-    });
+    assert.equal(visualization.structuredContent, undefined);
     const site = await client.callTool({ name: "prepare_hub_visualization", arguments: {
       mode: "domain-site", domain: "domains/commerce", output_directory: "/tmp/domain-site",
       visibility_acknowledged: true,

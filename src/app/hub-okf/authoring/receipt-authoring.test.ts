@@ -169,9 +169,9 @@ for (const { partial, legacy } of [{ partial: false, legacy: false }, { partial:
     assert.match(validWorker, /\| jobs \|/);
     assert.match(validWorker, /\| events \|/);
     assert.match(validWorker, /\| upstream API \|/);
-    assert.match(validWorker, /  - id: queue-resource\n/);
-    assert.match(validWorker, /  - id: topic-resource\n/);
-    assert.match(validWorker, /  - id: external-doc\n/);
+    assert.doesNotMatch(validWorker, /  - id: queue-resource\n/);
+    assert.doesNotMatch(validWorker, /  - id: topic-resource\n/);
+    assert.doesNotMatch(validWorker, /  - id: external-doc\n/);
     const authoredWorker = validWorker
       .replace(/  - id: queue-resource\n    resource: [^\n]+\n    observed_revision: [^\n]+\n/, "")
       .replace("| jobs |", "| Job transport |")

@@ -11,11 +11,8 @@ import type { EnrichmentAnswer, EnrichmentCandidateInput } from "../enrichment/i
 import { REFRESH_CHANGE_OUTCOME_KINDS, type RefreshChangeOutcome } from "../authoring/refresh-change-accounting.ts";
 
 function result(value: unknown, isError = false): CallToolResult {
-  const structuredContent = value && typeof value === "object" && !Array.isArray(value)
-    ? value as Record<string, unknown> : undefined;
   return {
     content: [{ type: "text", text: JSON.stringify(value) }],
-    ...(structuredContent === undefined ? {} : { structuredContent }),
     ...(isError ? { isError: true } : {}),
   };
 }

@@ -179,13 +179,18 @@ export const OKF_SCHEMA_TOOLS = [
 ] as const;
 
 function result(value: unknown, isError = false): CallToolResult {
-  const structuredContent = value && typeof value === "object" && !Array.isArray(value)
-    ? value as Record<string, unknown> : undefined;
   return {
     content: [{ type: "text", text: JSON.stringify(value) }],
-    ...(structuredContent === undefined ? {} : { structuredContent }),
     ...(isError ? { isError: true } : {}),
   };
+}
+
+function resultValue(result: CallToolResult): Readonly<Record<string, unknown>> {
+  const text = result.content.find((item) => item.type === "text")?.text;
+  if (!text) return {};
+  const value = JSON.parse(text) as unknown;
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown> : {};
 }
 
 function guidanceRequest(args: Readonly<Record<string, unknown>>): OkfAuthoringGuidanceRequest {
@@ -457,10 +462,15 @@ export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record
     if (!dependencies.validateAuthoringSession) {
       return result({ error: "session-bound authoring validation is unavailable" }, true);
     }
-    return dependencies.validateAuthoringSession(args.session_id).then((sessionValidation) => result({
-      ...(validation.structuredContent ?? {}), sessionValidation,
-    }, Boolean(validation.isError)), (error) => result({
-      ...(validation.structuredContent ?? {}),
+    return dependencies.validateAuthoringSession(args.session_id).then((sessionValidation) => {
+      const sessionTargets = sessionValidation && typeof sessionValidation === "object"
+        && Array.isArray((sessionValidation as Record<string, unknown>).targets)
+        ? (sessionValidation as Record<string, unknown>).targets as OkfRelationshipTarget[] : [];
+      const mergedTargets = [...new Map([...targets.entries!, ...sessionTargets].map((target) => [target.identity, target])).values()];
+      const sessionBoundValidation = validateBundle(supplied.entries!, mergedTargets);
+      return result({ ...resultValue(sessionBoundValidation), sessionValidation }, Boolean(sessionBoundValidation.isError));
+    }, (error) => result({
+      ...resultValue(validation),
       sessionValidation: {
         valid: false,
         error: error instanceof Error ? error.message : "session validation failed",

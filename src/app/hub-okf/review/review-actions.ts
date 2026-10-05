@@ -23,6 +23,7 @@ export function createReviewActions(
       const proposal = readHubProposalState(root);
       return {
         proposal,
+        proposal_digest: proposal.diffDigest,
         inspection: readVerifiedHubProposalInspection(root, proposal),
       };
     },

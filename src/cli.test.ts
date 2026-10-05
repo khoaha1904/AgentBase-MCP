@@ -148,6 +148,18 @@ test("[AB-HUB-SETUP-031][AB-HUB-SETUP-037] hub connect restores the previous sha
   assert.doesNotMatch(connectIo.errors.join(""), /new-token-canary|old-token-canary/);
 });
 
+test("[AB-HUB-SETUP-038] empty Hub connect retains the entered token and directs the owner to bootstrap", async () => {
+  const env = environment();
+  const connect = actions({ configure: async () => {
+    throw new Error("The Hub remote has no branches; preview and confirm bootstrap before attaching it");
+  } });
+  const connectIo = io(env, async () => "empty-hub-token-canary");
+  assert.equal(await executeCli(["hub", "connect", "--url", "https://github.com/acme/empty.git", "--branch", "main"], connect, connectIo), 1);
+  assert.equal(loadGlobalHubToken(env), "empty-hub-token-canary");
+  assert.match(connectIo.errors.join(""), /token was retained|bootstrap/i);
+  assert.doesNotMatch(connectIo.errors.join(""), /empty-hub-token-canary/);
+});
+
 test("[AB-HUB-SETUP-033][AB-HUB-SETUP-037] the shared token is the default credential for every Hub profile", () => {
   const env = environment();
   const profileId = "a".repeat(24);

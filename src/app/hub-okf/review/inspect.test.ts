@@ -14,6 +14,7 @@ import {
   inspectHubProposal,
   readVerifiedHubProposalInspection,
 } from "./inspect.ts";
+import { callHubOkfTool } from "../mcp/mcp-tool-call.ts";
 import { writeHubProposalState } from "./proposal-state.ts";
 
 const COMMIT = "a".repeat(40);
@@ -89,4 +90,26 @@ test("[AB-IMPACT-010][AB-IMPACT-012..017] Inspect and Accept reject changed sema
     fs.writeFileSync(path.join(proposalRoot, "inspection.json"), `${JSON.stringify(legacy, null, 2)}\n`);
     assert.throws(() => readVerifiedHubProposalInspection(proposalRoot, proposal), /regenerate the prepared proposal/);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test("[AB-IMPACT-016] Inspect response carries proposal data once and groups do not repeat file bytes", async () => {
+  const fileContent = "x".repeat(17_000);
+  const value = {
+    proposal: { id: "proposal-aaaaaaaaaa", diffDigest: `sha256:${"b".repeat(64)}` },
+    inspection: {
+      entries: [{ path: "repositories/example.md", change: "created", allowed: true,
+        after: { digest: `sha256:${"c".repeat(64)}`, content: fileContent, truncated: false } }],
+      groups: { added: [{ path: "repositories/example.md", change: "created", allowed: true }], updated: [], removed: [],
+        questionsAndLimitations: { questions: [], limitations: [] } },
+    },
+  };
+  const response = await callHubOkfTool("inspect_hub_okf_proposal", { proposal_id: value.proposal.id }, {
+    inspect: async () => value,
+  } as never);
+  const text = response.content[0]?.type === "text" ? response.content[0].text : "";
+  assert.equal(response.structuredContent, undefined);
+  assert.ok((text.match(/x/g)?.length ?? 0) >= fileContent.length);
+  assert.ok(Buffer.byteLength(text) < 20_000, "response should contain the file bytes once");
+  const legacySize = Buffer.byteLength(JSON.stringify({ content: [{ type: "text", text }], structuredContent: value }));
+  assert.ok(legacySize > Buffer.byteLength(JSON.stringify(response)) * 1.8, "legacy duplicated response is substantially larger");
 });

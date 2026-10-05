@@ -268,7 +268,9 @@ authorized old test-state disposal is complete without a migration adapter.
   `validate_okf_changes` with the prepared session ID. Session-bound validation
   rejects repository source identities reused across changed observed revisions
   while the editable workspace is still repairable; Finalize retains the same
-  invariant as the authoritative lock boundary.
+  invariant as the authoritative lock boundary. Session-bound validation adds
+  prepared Initial Ingest skeleton summaries to relationship targets so an
+  agent does not need to echo concepts created by Prepare.
 - **AB-REFRESH-018** — Every newly authored known non-governance concept other
   than Domain or Repository has an evidenced structural path, using relations
   admitted by each source concept's exact schema, to a Repository or Domain.
@@ -332,6 +334,8 @@ authorized old test-state disposal is complete without a migration adapter.
   After an attach Git failure, a best-effort remote-head probe distinguishes an
   empty remote (explicit bootstrap required) from a missing exact target branch.
   A failed probe or an existing target preserves the original redacted diagnostic.
+  For an empty remote, `abs hub connect` retains the newly entered credential,
+  reports bootstrap as the next step and avoids a missing-token dead end.
 - **AB-HUB-SETUP-039** — Failed Git operations retain the operation and exit
   status prefix plus at most 600 characters from the end of stderr. Credential
   redaction precedes whitespace normalization and truncation; existing output,

@@ -87,7 +87,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "bootstrap_hub",
-    description: "Write README, root index and Hub CI directly once to an explicitly supplied empty Hub; knowledge remains pending for later pull requests.",
+    description: "Write README and root/index baseline files directly once to an explicitly supplied empty Hub; CI is added later through reviewed initialization and knowledge remains pending for later pull requests.",
     inputSchema: {
       type: "object",
       properties: {

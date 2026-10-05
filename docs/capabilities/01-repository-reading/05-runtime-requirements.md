@@ -47,7 +47,9 @@ upstream graph MCPs are independent and never configured or proxied by AgentBase
   proposal, guidance/defer and atomic-recovery assertions remain at their
   current behavior owners.
 - **AB-DISC-009** - Explicit Spring mapping/controller and JAX-RS path/HTTP
-  annotations in admitted Java/Kotlin source produce P0
+  annotations in admitted Java/Kotlin source and common AWS scheduled resources
+  (`aws_cloudwatch_event_rule`, `aws_cloudwatch_event_target` and
+  `aws_scheduler_schedule`) produce P0
   `interface-event-trigger` evidence. Conventional Controller, Resource and
   Endpoint filenames/directories receive priority selection alongside manifests
   within the existing census bounds and ordinary-source reservation. Selection
@@ -56,7 +58,9 @@ upstream graph MCPs are independent and never configured or proxied by AgentBase
 - **AB-DISC-010** - Each group's eight source-location samples take one location
   per file before a second location from any file, then repeat in deterministic
   rounds. Repeated identical locations consume no extra slot. Full signal counts
-  and bounded-sampling limitations remain visible.
+  and bounded-sampling limitations remain visible. Integration samples exclude
+  test, stub and mock paths. A derived Flow group is omitted when it is
+  equivalent to the outbound integration group.
 - **AB-DISC-011** - Test paths and conventional test filenames, Markdown and
   documentation paths cannot produce runtime-entrypoint or interface-event-trigger
   P0 signals, including template-derived signals. They retain useful identity,

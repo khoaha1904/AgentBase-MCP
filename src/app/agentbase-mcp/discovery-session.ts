@@ -93,6 +93,10 @@ function isTestOrDocumentationPath(relative: string): boolean {
     || /\.(?:md|markdown|mdx)$/i.test(relative);
 }
 
+function isTestOrStubPath(relative: string): boolean {
+  return isTestPath(relative) || /(?:^|\/)(?:stub|stubs|mocks?|__mocks__)\//i.test(relative);
+}
+
 function readmeRank(relative: string): number {
   return /^readme(?:\.|$)/i.test(path.posix.basename(relative)) ? relative.includes("/") ? 1 : 0 : 2;
 }
@@ -189,15 +193,15 @@ function addMatchSignals(signals: CensusSignal[], relative: string, lines: reado
       || dockerfile && /^\s*(?:ENTRYPOINT|CMD)\s+\S/i.test(line))) {
       add("runtime-entrypoint", "runtime-entrypoint", "p0", "Evidenced runtime or entrypoint", number, redactDiscoveryHint(line));
     }
-    if (production && (/resource\s+"(?:aws_apigatewayv2_route|aws_api_gateway_method|aws_lambda_event_source_mapping|aws_s3_bucket_notification|aws_sns_topic_subscription)"/i.test(line)
+    if (production && (/resource\s+"(?:aws_apigatewayv2_route|aws_api_gateway_method|aws_lambda_event_source_mapping|aws_s3_bucket_notification|aws_sns_topic_subscription|aws_cloudwatch_event_rule|aws_cloudwatch_event_target|aws_scheduler_schedule)"/i.test(line)
       || /\b(?:app|router)\.(?:get|post|put|patch|delete)\s*\(/i.test(line)
       || javaOrKotlin && WEB_INTERFACE_ANNOTATION.test(line)
       || /\b(?:route|trigger|event_source)\b\s*[=:]/i.test(line))) {
       add("interface-event-trigger", "interface-trigger", "p0", "Explicit interface, event or trigger", number, redactDiscoveryHint(line));
     }
-    if (/resource\s+"(?:aws_sqs_queue|aws_sns_topic|aws_dynamodb_table|aws_db_instance|aws_rds_cluster|aws_s3_bucket|azurerm_servicebus_queue|google_pubsub_topic)"/i.test(line)
+    if (!isTestOrStubPath(relative) && (/resource\s+"(?:aws_sqs_queue|aws_sns_topic|aws_dynamodb_table|aws_db_instance|aws_rds_cluster|aws_s3_bucket|azurerm_servicebus_queue|google_pubsub_topic)"/i.test(line)
       || /\b(?:queue_url|topic_arn|endpoint|base_url|database_url)\b\s*[=:]/i.test(line)
-      || /https?:\/\/[A-Za-z0-9.-]+(?:[:/][^\s"']*)?/i.test(line)) {
+      || /https?:\/\/[A-Za-z0-9.-]+(?:[:/][^\s"']*)?/i.test(line))) {
       add("integration-data-channel", "outbound-integration", "p0", "Explicit outbound dependency, data store or channel", number, redactDiscoveryHint(line));
     }
     if (resourceLine !== undefined) {
@@ -304,10 +308,22 @@ function buildSeed(input: Readonly<{
     .map((signal) => ({ ...signal, kind: "flow-candidate", priority: "p1" as const,
       title: "Cross-boundary Flow candidate" }));
   let groups = compactGroups([...input.signals, ...flowSignals]);
+  const outbound = groups.find((group) => group.kind === "outbound-integration");
+  if (outbound) {
+    groups = groups.filter((group) => group.kind !== "flow-candidate"
+      || group.count !== outbound.count
+      || JSON.stringify(group.sources) !== JSON.stringify(outbound.sources)
+      || JSON.stringify(group.hints) !== JSON.stringify(outbound.hints));
+  }
   if (!groups.some((group) => group.lane === "identity-product")) {
     const fallback = input.signals.find((signal) => !isTestPath(signal.path));
     if (fallback) groups = compactGroups([...input.signals, ...flowSignals, { ...fallback, lane: "identity-product", kind: "repository-identity",
       priority: "p0", title: "Repository identity requires semantic confirmation", hint: fallback.path }]);
+    const fallbackOutbound = groups.find((group) => group.kind === "outbound-integration");
+    if (fallbackOutbound) groups = groups.filter((group) => group.kind !== "flow-candidate"
+      || group.count !== fallbackOutbound.count
+      || JSON.stringify(group.sources) !== JSON.stringify(fallbackOutbound.sources)
+      || JSON.stringify(group.hints) !== JSON.stringify(fallbackOutbound.hints));
   }
   const identityUnavailable = !groups.some((group) => group.lane === "identity-product");
   if (identityUnavailable) limitations.push("repository identity evidence was not available in the bounded safe census");

@@ -341,10 +341,13 @@ export function validateHubAuthoringSession(
   stateRoot: string,
   sessionId: string,
   expectedCheckoutRoot: string,
-): Readonly<{ valid: true; sessionId: string; mode: "new" | "refresh" }> {
+): Readonly<{ valid: true; sessionId: string; mode: "new" | "refresh"; targets: readonly Readonly<{ identity: string; path: string; type: string }>[] }> {
   const session = readHubAuthoringSession(stateRoot, sessionId, expectedCheckoutRoot);
   validateHubAuthoringBundle(session, session.bundleRoot);
-  return { valid: true, sessionId: session.id, mode: session.mode };
+  return { valid: true, sessionId: session.id, mode: session.mode,
+    targets: (session.skeletons ?? []).map((skeleton) => ({
+      identity: skeleton.identity, path: skeleton.path, type: skeleton.type,
+    })) };
 }
 
 function normalizeAuthoredObservations(

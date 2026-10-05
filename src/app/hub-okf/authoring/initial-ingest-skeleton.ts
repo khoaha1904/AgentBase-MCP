@@ -287,7 +287,6 @@ export function writeInitialIngestSkeletons(options: WriteInitialIngestSkeletons
     const relative = availablePath(options.bundleRoot, hint, candidate.identityHint, used);
     used.add(relative);
     const sources = candidateSources(candidate, sourceById);
-    const retainedEmbeddedSources = embeddedSources(candidate.id, embedded, candidates, sourceById);
     const systemDomainSource = !profile && recommendation.schema.type === "System" && ownerSource ? ownerSource : undefined;
     const participations = profile ? participationSources(options.homePlan!, candidate.id) : [];
     const frontmatter: OkfFrontmatter = {
@@ -296,7 +295,7 @@ export function writeInitialIngestSkeletons(options: WriteInitialIngestSkeletons
       description: candidate.queryValue,
       status: "draft",
       generated,
-      sources: [...new Map([...sources, ...retainedEmbeddedSources, ...(systemDomainSource ? [systemDomainSource] : []),
+      sources: [...new Map([...sources, ...(systemDomainSource ? [systemDomainSource] : []),
         ...participations.map((item) => item.source)]
         .map((source) => [source.id, source])).values()],
       ...(recommendation.schema.type === "Flow" ? { flow_steps: [] } : {}),
