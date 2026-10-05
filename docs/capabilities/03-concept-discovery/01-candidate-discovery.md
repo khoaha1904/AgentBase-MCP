@@ -85,6 +85,15 @@ user confirmation; the runtime cannot independently authenticate chat consent.
 Refresh Coverage remains a separate existing investigation, not this census.
 No new public skill or ranking AI is introduced.
 
+Seed construction also bounds groups before validation, preserves detected lane
+representation and prioritizes P0. Runtime evidence is grouped by file except
+for separate Terraform resource blocks. Omitted groups, including P0 overflow,
+remain explicit coverage limitations rather than crashing discovery; the exact
+selection and accounting contract is
+[`AB-DISC-012`, `AB-DISC-016`](../01-repository-reading/05-runtime-requirements.md).
+Common configuration key markers are admitted only in standard configuration
+formats; UI code and minified/bundled assets remain outside these patterns.
+
 ## Candidate sources
 
 The Agent creates candidates from read evidence, not guesses from names:
@@ -142,8 +151,10 @@ describes the specific missing part instead of a falsely precise number.
 - Future intent or vague docs are not presented as implemented state.
 - Do not create a standalone candidate merely to make the Hub more detailed or
   to give a detected type its own file.
-- A route, entrypoint, runtime root, API spec, IaC/deploy group, explicit service
-  boundary, channel or datastore cannot disappear before an outcome is recorded.
+- A retained route, entrypoint, runtime root, API spec, IaC/deploy group, explicit
+  service boundary, channel or datastore cannot disappear before an outcome is
+  recorded. Evidence omitted by the Seed group bound remains coverage debt in
+  capture limitations rather than receiving an invented Inventory outcome.
 - MCP fixes P0 classification. Distinct discovery groups may materialize the
   same candidate when they contribute evidence to one knowledge boundary; the
   candidate identity is emitted once. A P0 group is ignored only when it adds

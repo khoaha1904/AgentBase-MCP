@@ -64,10 +64,12 @@ upstream graph MCPs are independent and never configured or proxied by AgentBase
   Java `public static void main` produce runtime-entrypoint P0 signals in
   production source. Conventional Application/Main filenames receive the same
   bounded priority selection as controllers; arbitrary names remain heuristic.
-- **AB-DISC-012** - Java/Kotlin launcher evidence in one file forms one
-  runtime-entrypoint group, retaining distinct annotation/main locations and
-  full signal count. Separate launcher files and independently declared
-  infrastructure runtimes remain separate groups.
+- **AB-DISC-012** - Runtime evidence in one file forms one runtime-entrypoint
+  group, including template-derived evidence, retaining sampled locations and
+  full signal count. Separate files remain separate groups. Only Terraform
+  resource blocks in `.tf`/`.hcl` files retain separate workload groups;
+  launcher settings inside a resource share that block's group. Block scope
+  uses bounded line/brace heuristics, not a complete HCL parser.
 - **AB-DISC-013** - Test/fixture/mock paths, including `__files` and `mappings`,
   cannot supply identity-product P0 evidence or its semantic-confirmation
   fallback. Fixture READMEs receive no README admission priority. The root
@@ -86,6 +88,19 @@ upstream graph MCPs are independent and never configured or proxied by AgentBase
   fixtures cannot produce runtime evidence. Detection uses bounded text reads,
   performs no XML entity resolution or command execution and claims no runtime
   completeness; unrelated XML files are not added to census admission.
+- **AB-DISC-016** - Before validation, Seed construction retains at most 64
+  groups. Reserve the highest-priority group from every detected lane, then
+  fill remaining slots in P0, P1, P2 order with deterministic ties. Group
+  overflow does not invalidate an otherwise ready Seed. `capture.truncated`
+  is true and the existing `p1P2Overflow` field counts all omitted groups,
+  including P0 when necessary; a capture limitation states total omitted groups
+  and omitted P0 groups. The bound does not imply complete P0 coverage.
+- **AB-DISC-017** - `handler`, `main` and `bootstrap` key/value markers are
+  runtime evidence only in YAML, JSON, Terraform/HCL, TOML and properties
+  files. Code expressions such as JavaScript `handler: function () {}` remain
+  source material for host-agent investigation. Files named `*.min.js`,
+  `*.min.css`, `*.bundle.js` and `*.chunk.js` are excluded before census
+  admission.
 
 Legacy graph fields in previously frozen Receipts remain compatibility input;
 when present, counts remain nonnegative integers and terminal coverage remains

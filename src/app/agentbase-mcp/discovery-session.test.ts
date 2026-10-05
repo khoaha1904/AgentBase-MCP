@@ -306,6 +306,88 @@ test("[AB-DISC-012][AB-DISC-006] Spring and main markers share one group per lau
   assert.equal((await captureCensus(root)).digest, seed.digest);
 });
 
+test("[AB-DISC-012][AB-DISC-006] runtime groups compact descriptor, Dockerfile and template signals by file", async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-runtime-files-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "README.md"), "# Runtime fixtures\n");
+  fs.writeFileSync(path.join(root, "web.xml"), Array.from({ length: 84 }, () => "<servlet />").join("\n"));
+  fs.writeFileSync(path.join(root, "Dockerfile"), 'ENTRYPOINT ["start"]\nCMD ["serve"]\n');
+  fs.writeFileSync(path.join(root, "template.yaml"), "Resources:\n  First:\n    Type: AWS::Lambda::Function\n    Properties:\n      Handler: first.main\n  Second:\n    Type: AWS::Lambda::Function\n    Properties:\n      Handler: second.main\n");
+  const seed = await captureCensus(root);
+  const runtimes = seed.groups.filter((group) => group.lane === "runtime-entrypoint");
+  assert.equal(seed.state, "ready");
+  assert.equal(runtimes.length, 3);
+  for (const [file, count] of [["web.xml", 84], ["Dockerfile", 2], ["template.yaml", 4]] as const) {
+    const group = runtimes.find((group) => group.sources[0]?.path === file)!;
+    assert.equal(group.count, count);
+    assert.ok(group.sources.every((source) => source.path === file));
+  }
+  assert.match(runtimes.find((group) => group.sources[0]?.path === "web.xml")!.limitations.join(), /samples are bounded/);
+  assert.equal(seed.capture.p1P2Overflow, 0);
+  assert.equal(seed.capture.truncated, false);
+  assert.equal((await captureCensus(root)).digest, seed.digest);
+});
+
+test("[AB-DISC-012] Terraform launcher settings stay with their resource workload", async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-resource-groups-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "main.tf"), 'resource "aws_lambda_function" "first" {\n  handler = "first.main"\n  environment { variables = { MARKER = "}" } }\n}\nresource "aws_lambda_function" "second" {\n  handler = "second.main"\n}\n');
+  const seed = await captureCensus(root);
+  const runtimes = seed.groups.filter((group) => group.lane === "runtime-entrypoint");
+  assert.equal(runtimes.length, 2);
+  assert.deepEqual(runtimes.map((group) => group.count), [2, 2]);
+  assert.deepEqual(runtimes.map((group) => group.sources.map((source) => source.startLine)), [[1, 2], [5, 6]]);
+});
+
+test("[AB-DISC-016][AB-DISC-006] more than 64 runtime files remain ready with P0 priority and every lane represented", async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-group-overflow-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  for (let index = 0; index < 80; index++) {
+    fs.writeFileSync(path.join(root, `Application${String(index).padStart(2, "0")}.java`), "@SpringBootApplication\n");
+  }
+  fs.writeFileSync(path.join(root, "README.md"), "# Service\n");
+  fs.writeFileSync(path.join(root, "routes.js"), "app.get('/orders', listOrders);\n");
+  fs.writeFileSync(path.join(root, "client.ts"), 'const endpoint = "https://example.test/api";\n');
+  fs.writeFileSync(path.join(root, "Dockerfile"), "FROM scratch\n");
+  const seed = await captureCensus(root);
+  assert.equal(seed.state, "ready");
+  assert.equal(seed.groups.length, 64);
+  assert.equal(seed.groups.filter((group) => group.priority === "p0").length, 63);
+  assert.ok(seed.groups.every((group) => group.priority !== "p1"), "P0 fills slots before the derived Flow candidate");
+  assert.ok(seed.lanes.every((lane) => lane.status === "covered"));
+  assert.ok(seed.lanes.every((lane) => seed.groups.some((group) => group.lane === lane.lane)));
+  assert.equal(seed.capture.truncated, true);
+  assert.equal(seed.capture.p1P2Overflow, 21);
+  assert.match(seed.capture.limitations.join(), /group limit of 64 omitted 21 groups \(20 P0\)/);
+  assert.equal(seed.capture.census?.selectedFiles, 84);
+  assert.equal(seed.capture.census?.omittedPriorityFiles, 0);
+  assert.doesNotThrow(() => validateDiscoverySeed(seed));
+  assert.equal((await captureCensus(root)).digest, seed.digest);
+  fs.rmSync(path.join(root, "README.md"));
+  const fallback = await captureCensus(root);
+  assert.equal(fallback.state, "ready");
+  assert.equal(fallback.groups.length, 64);
+  assert.equal(fallback.capture.p1P2Overflow, 21, "identity fallback retains derived Flow accounting");
+  assert.ok(fallback.lanes.every((lane) => lane.status === "covered"));
+});
+
+test("[AB-DISC-017] UI handler properties and minified assets do not create runtime census noise", async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-noisy-assets-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "README.md"), "# UI\n");
+  fs.writeFileSync(path.join(root, "button.js"), "const button = { handler: function () {}, main: () => 1, bootstrap: true };\n");
+  for (const name of ["app.min.js", "styles.min.css", "vendor.bundle.js", "page.chunk.js"]) {
+    fs.writeFileSync(path.join(root, name), "handler: function () {};\n");
+  }
+  fs.writeFileSync(path.join(root, "application.yaml"), "handler: worker.main\n");
+  const seed = await captureCensus(root);
+  const runtime = seed.groups.filter((group) => group.lane === "runtime-entrypoint");
+  assert.equal(runtime.length, 1);
+  assert.deepEqual(runtime[0]!.sources, [{ path: "application.yaml", startLine: 1, endLine: 1 }]);
+  assert.equal(seed.capture.census?.eligibleFiles, 3);
+  assert.ok(seed.groups.every((group) => group.sources.every((source) => !/\.(?:min\.js|min\.css|bundle\.js|chunk\.js)$/.test(source.path))));
+});
+
 test("[AB-DISC-013] identity samples prefer the root and module READMEs over test and mock fixture context", async (t) => {
   const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-readme-identity-")));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -445,14 +527,14 @@ test("[AB-DISC-002..003][AB-INGEST-022..023] prioritizes deployment and expands 
   for (let index = 0; index < 300; index += 1) fs.writeFileSync(path.join(root, `a-${index}.ts`), "export {};\n");
   fs.mkdirSync(path.join(root, "deployment"));
   fs.writeFileSync(path.join(root, "deployment/main.tf"), 'resource "aws_lambda_function" "worker" {}\n');
-  fs.writeFileSync(path.join(root, "zz-worker.ts"), 'const handler = () => "work";\n');
+  fs.writeFileSync(path.join(root, "zz-worker.yaml"), "handler: worker.main\n");
   const discovery = new DiscoverySession();
   const seed = await captureCensus(root, discovery);
   assert.equal(seed.capture.census?.selectedFiles, 256);
   assert.equal(seed.capture.census?.eligibleFiles, 303);
   assert.equal(seed.capture.census?.omittedPriorityFiles, 0);
   assert.ok(seed.groups.some((group) => group.sources.some((source) => source.path === "deployment/main.tf")));
-  assert.equal(seed.groups.some((group) => group.sources.some((source) => source.path === "zz-worker.ts")), false);
+  assert.equal(seed.groups.some((group) => group.sources.some((source) => source.path === "zz-worker.yaml")), false);
   assert.equal((await captureCensus(root)).digest, seed.digest, "selection is deterministic");
   assert.throws(() => discovery.expand(root, undefined), /confirmation|seed_id/);
   assert.throws(() => discovery.expand(root, { seed_id: seed.id, user_confirmed: false, reason: "Missing worker" }), /user_confirmed/);
@@ -464,7 +546,7 @@ test("[AB-DISC-002..003][AB-INGEST-022..023] prioritizes deployment and expands 
   assert.equal(expanded.capture.census?.selectedFiles, 303);
   assert.equal(expanded.capture.truncated, false);
   assert.notEqual(expanded.id, seed.id);
-  assert.ok(expanded.groups.some((group) => group.sources.some((source) => source.path === "zz-worker.ts")));
+  assert.ok(expanded.groups.some((group) => group.sources.some((source) => source.path === "zz-worker.yaml")));
   assert.throws(() => discovery.expand(root, { seed_id: seed.id, user_confirmed: true, reason: "Again" }), /standard Seed/);
   discovery.clear();
   assert.throws(() => discovery.expand(root, { seed_id: expanded.id, user_confirmed: true, reason: "Again" }), /standard Seed/);
@@ -476,10 +558,10 @@ test("[AB-INGEST-022] ordinary source keeps a reserved share when priority files
   fs.writeFileSync(path.join(root, "README.md"), "# Service\n");
   for (let index = 0; index < 300; index += 1) fs.writeFileSync(path.join(root, `infra-${index}.tf`), "# infrastructure\n");
   for (let index = 0; index < 100; index += 1) fs.writeFileSync(path.join(root, `source-${index}.ts`), "export {};\n");
-  fs.writeFileSync(path.join(root, "source-0.ts"), 'const handler = () => "ordinary source";\n');
+  fs.writeFileSync(path.join(root, "source-0.yaml"), "handler: ordinary.main\n");
   const seed = await captureCensus(root);
   assert.equal(seed.capture.census?.omittedPriorityFiles, 109);
-  assert.ok(seed.groups.some((group) => group.sources.some((source) => source.path === "source-0.ts")));
+  assert.ok(seed.groups.some((group) => group.sources.some((source) => source.path === "source-0.yaml")));
   assert.throws(() => validateDiscoverySeed({ ...seed, capture: { ...seed.capture,
     census: { ...seed.capture.census!, fileLimit: 9999 } } }), /census accounting/);
 });
@@ -556,7 +638,11 @@ test("[AB-DISC-002] runtime evidence stays accountable across files and within o
   assert.equal(missing.outcome, "incomplete");
   fs.writeFileSync(path.join(root, "overflow.tf"), Array.from({ length: 65 }, (_, index) =>
     `resource "aws_lambda_function" "overflow_${index}" {}`).join("\n"));
-  await assert.rejects(captureCensus(root), /exceeds 64 groups/);
+  const bounded = await captureCensus(root);
+  assert.equal(bounded.state, "ready");
+  assert.equal(bounded.groups.length, 64);
+  assert.equal(bounded.capture.p1P2Overflow, 17);
+  assert.match(bounded.capture.limitations.join(), /group limit of 64 omitted 17 groups \(17 P0\)/);
 });
 
 test("[AB-DISC-006][AB-INGEST-017] armed Init derives a source-only Seed and persists exact Inventory Receipts", async (t) => {

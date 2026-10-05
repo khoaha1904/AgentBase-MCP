@@ -34,6 +34,7 @@ type CensusSignal = Readonly<{
   path: string;
   line: number;
   hint: string;
+  resourceLine?: number;
 }>;
 
 type ArmedSource = Readonly<{
@@ -73,6 +74,7 @@ export function isDeniedDiscoveryPath(value: string): boolean {
 function candidateFile(relative: string): boolean {
   const name = path.posix.basename(relative).toLowerCase();
   const extension = path.posix.extname(name);
+  if ([".min.js", ".min.css", ".bundle.js", ".chunk.js"].some((suffix) => name.endsWith(suffix))) return false;
   return /^readme(?:\.|$)/i.test(name) || name.endsWith("web.xml")
     || ["codeowners", "dockerfile", "makefile", "terragrunt.hcl", "go.mod", "pom.xml", "build.gradle", "build.gradle.kts"].includes(name)
     || [".tf", ".hcl", ".yaml", ".yml", ".json", ".template", ".toml", ".md", ".ts", ".tsx", ".js", ".mjs",
@@ -151,11 +153,16 @@ function addMatchSignals(signals: CensusSignal[], relative: string, lines: reado
   const javaOrKotlin = /\.(?:java|kt|kts)$/.test(lowerPath);
   const webDescriptor = path.posix.basename(lowerPath).endsWith("web.xml");
   const dockerfile = path.posix.basename(lowerPath) === "dockerfile";
+  const terraform = /\.(?:tf|hcl)$/.test(lowerPath);
+  const configLike = /\.(?:ya?ml|json|tf|hcl|toml|properties)$/i.test(lowerPath);
+  let resourceLine: number | undefined;
+  let resourceDepth = 0;
   const runtimeLines = webDescriptor
     ? lines.join("\n").replace(/<!--[\s\S]*?(?:-->|$)/g, (comment) => comment.replace(/[^\n]/g, " ")).split("\n")
     : lines;
   const add = (lane: DiscoveryLane, kind: string, priority: CensusSignal["priority"], title: string,
-    line: number, hint: string) => signals.push({ lane, kind, priority, title, path: relative, line, hint });
+    line: number, hint: string) => signals.push({ lane, kind, priority, title, path: relative, line, hint,
+      ...(lane === "runtime-entrypoint" && resourceLine !== undefined ? { resourceLine } : {}) });
   if (!isTestPath(relative) && (/^readme(?:\.|$)/i.test(path.posix.basename(relative)) || /(?:^|\/)package\.json$/.test(lowerPath)
     || /(?:^|\/)pyproject\.toml$/.test(lowerPath) || /(?:^|\/)go\.mod$/.test(lowerPath))) {
     add("identity-product", "repository-identity", "p0", "Repository identity and stated purpose", 1, relative);
@@ -170,8 +177,12 @@ function addMatchSignals(signals: CensusSignal[], relative: string, lines: reado
 
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index]!, number = index + 1;
+    if (terraform && /^\s*resource\s+"[^"]+"\s+"[^"]+"\s*\{/.test(line)) {
+      resourceLine = number;
+      resourceDepth = 0;
+    }
     if (production && (/resource\s+"(?:aws_lambda_function|aws_ecs_service|aws_instance|aws_autoscaling_group|azurerm_linux_function_app|azurerm_linux_virtual_machine|google_cloudfunctions_function)"/i.test(line)
-      || /(?:^|[^a-z])(handler|main|bootstrap)\s*[=:]/i.test(line)
+      || configLike && /(?:^|[^a-z])(handler|main|bootstrap)\s*[=:]/i.test(line)
       || javaOrKotlin && /@(?:org\.springframework\.boot\.autoconfigure\.)?SpringBootApplication\b/.test(line)
       || lowerPath.endsWith(".java") && /\bpublic\s+static\s+void\s+main\s*\(/.test(line)
       || webDescriptor && /<(?:servlet|filter|listener|servlet-mapping)(?=[\s>])/i.test(runtimeLines[index]!)
@@ -188,6 +199,11 @@ function addMatchSignals(signals: CensusSignal[], relative: string, lines: reado
       || /\b(?:queue_url|topic_arn|endpoint|base_url|database_url)\b\s*[=:]/i.test(line)
       || /https?:\/\/[A-Za-z0-9.-]+(?:[:/][^\s"']*)?/i.test(line)) {
       add("integration-data-channel", "outbound-integration", "p0", "Explicit outbound dependency, data store or channel", number, redactDiscoveryHint(line));
+    }
+    if (resourceLine !== undefined) {
+      const structure = line.replace(/"(?:\\.|[^"\\])*"/g, '""').replace(/(?:#|\/\/).*$/, "");
+      resourceDepth += (structure.match(/\{/g)?.length ?? 0) - (structure.match(/\}/g)?.length ?? 0);
+      if (resourceDepth <= 0) resourceLine = undefined;
     }
   }
 }
@@ -234,11 +250,11 @@ function census(root: string, mode: "standard" | "expanded") {
 function compactGroups(signals: readonly CensusSignal[]): readonly DiscoveryGroup[] {
   const grouped = new Map<string, CensusSignal[]>();
   for (const signal of signals) {
-    // JVM launcher markers describe one file; infrastructure declarations remain distinct.
     const scope = signal.lane === "runtime-entrypoint"
-      ? /\.(?:java|kt|kts)$/i.test(signal.path) ? signal.path : `${signal.path}:${signal.line}`
+      ? signal.resourceLine === undefined ? signal.path : `${signal.path}:${signal.resourceLine}`
       : "";
-    const key = `${signal.lane}\u0000${signal.kind}\u0000${signal.priority}\u0000${signal.title}\u0000${scope}`;
+    const key = signal.lane === "runtime-entrypoint" ? `${signal.lane}\u0000${scope}`
+      : `${signal.lane}\u0000${signal.kind}\u0000${signal.priority}\u0000${signal.title}`;
     grouped.set(key, [...(grouped.get(key) ?? []), signal]);
   }
   return [...grouped.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([, values]) => {
@@ -290,11 +306,27 @@ function buildSeed(input: Readonly<{
   let groups = compactGroups([...input.signals, ...flowSignals]);
   if (!groups.some((group) => group.lane === "identity-product")) {
     const fallback = input.signals.find((signal) => !isTestPath(signal.path));
-    if (fallback) groups = compactGroups([...input.signals, { ...fallback, lane: "identity-product", kind: "repository-identity",
+    if (fallback) groups = compactGroups([...input.signals, ...flowSignals, { ...fallback, lane: "identity-product", kind: "repository-identity",
       priority: "p0", title: "Repository identity requires semantic confirmation", hint: fallback.path }]);
   }
   const identityUnavailable = !groups.some((group) => group.lane === "identity-product");
   if (identityUnavailable) limitations.push("repository identity evidence was not available in the bounded safe census");
+  let overflow = 0;
+  if (groups.length > 64) {
+    const ordered = [...groups].sort((left, right) => left.priority.localeCompare(right.priority));
+    const selected = new Set(DISCOVERY_LANES.flatMap((lane) => {
+      const representative = ordered.find((group) => group.lane === lane);
+      return representative ? [representative.id] : [];
+    }));
+    for (const group of ordered) {
+      if (selected.size >= 64) break;
+      selected.add(group.id);
+    }
+    const omitted = groups.filter((group) => !selected.has(group.id));
+    overflow = omitted.length;
+    limitations.push(`Seed group limit of 64 omitted ${overflow} groups (${omitted.filter((group) => group.priority === "p0").length} P0); source investigation is required for omitted evidence`);
+    groups = groups.filter((group) => selected.has(group.id));
+  }
   const lanes = DISCOVERY_LANES.map((lane) => {
     const laneGroups = groups.filter((group) => group.lane === lane);
     if (laneGroups.length) return { lane, status: "covered" as const };
@@ -307,8 +339,8 @@ function buildSeed(input: Readonly<{
     lanes,
     groups,
     capture: {
-      truncated: input.censusTruncated,
-      p1P2Overflow: 0,
+      truncated: input.censusTruncated || overflow > 0,
+      p1P2Overflow: overflow,
       limitations: [...new Set(limitations)].sort(),
       census: input.census,
     },
