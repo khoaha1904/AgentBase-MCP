@@ -7,8 +7,9 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { executeCli } from "./cli.ts";
+import { createHubIdentity, hubProfileId } from "./core/hub/index.ts";
 import {
-  loadGlobalHubToken, loadHubProfileToken, writeGlobalHubToken, writeHubProfileToken,
+  loadExactHubProfileToken, loadGlobalHubToken, loadHubProfileToken, writeGlobalHubToken, writeHubProfileToken,
 } from "./app/hub-okf/configuration/credential-file.ts";
 import type { HubToolActions } from "./app/hub-okf/mcp/mcp-tool-actions.ts";
 
@@ -122,41 +123,51 @@ test("abs status and sync dispatch bounded owner actions", async () => {
   assert.match(syncIo.output.join(""), /synchronized/);
 });
 
-test("[AB-HUB-SETUP-030][AB-HUB-SETUP-033][AB-HUB-SETUP-037] hub connect stores one shared token and reuses it on blank input", async () => {
+test("[AB-HUB-SETUP-030][AB-HUB-SETUP-033][AB-HUB-SETUP-037] hub connect stores tokens by Hub profile and preserves the shared token", async () => {
   const env = environment();
+  writeGlobalHubToken("shared-default-token", env);
+  const firstProfile = hubProfileId(createHubIdentity("acme/hub", "main"));
+  const secondProfile = hubProfileId(createHubIdentity("acme/other-hub", "main"));
   let calls = 0;
   const connect = actions({ configure: async () => { calls += 1; return { connected: true }; } });
-  const firstIo = io(env, async () => "shared-token-canary");
+  const firstIo = io(env, async () => "profile-token-canary");
   assert.equal(await executeCli(["hub", "connect", "--url", "https://github.com/acme/hub.git", "--branch", "main"], connect, firstIo), 0);
-  assert.equal(loadGlobalHubToken(env), "shared-token-canary");
+  assert.equal(loadGlobalHubToken(env), "shared-default-token");
+  assert.equal(loadExactHubProfileToken(firstProfile, env), "profile-token-canary");
 
   const secondIo = io(env, async () => "");
   assert.equal(await executeCli(["hub", "connect", "--url", "https://github.com/acme/other-hub.git", "--branch", "main"], connect, secondIo), 0);
-  assert.equal(loadGlobalHubToken(env), "shared-token-canary");
+  assert.equal(loadGlobalHubToken(env), "shared-default-token");
+  assert.equal(loadExactHubProfileToken(secondProfile, env), "shared-default-token");
   assert.equal(calls, 2);
-  assert.doesNotMatch(firstIo.output.join("") + firstIo.errors.join(""), /shared-token-canary/);
+  assert.doesNotMatch(firstIo.output.join("") + firstIo.errors.join(""), /profile-token-canary/);
 });
 
 test("[AB-HUB-SETUP-031][AB-HUB-SETUP-037] hub connect restores the previous shared token after a reported failure", async () => {
   const env = environment();
+  const profileId = hubProfileId(createHubIdentity("acme/hub", "main"));
   writeGlobalHubToken("old-token-canary", env);
   const connect = actions({ configure: async () => { throw new Error("destination rejected"); } });
   const connectIo = io(env, async () => "new-token-canary");
   assert.equal(await executeCli(["hub", "connect", "--url", "https://github.com/acme/hub.git", "--branch", "main"], connect, connectIo), 1);
   assert.equal(loadGlobalHubToken(env), "old-token-canary");
+  assert.equal(loadExactHubProfileToken(profileId, env), undefined);
   assert.match(connectIo.errors.join(""), /destination rejected/);
   assert.doesNotMatch(connectIo.errors.join(""), /new-token-canary|old-token-canary/);
 });
 
 test("[AB-HUB-SETUP-038] empty Hub connect retains the entered token and directs the owner to bootstrap", async () => {
   const env = environment();
+  const profileId = hubProfileId(createHubIdentity("acme/empty", "main"));
+  writeGlobalHubToken("old-shared-token", env);
   const connect = actions({ configure: async () => {
     throw new Error("The Hub remote has no branches; preview and confirm bootstrap before attaching it");
   } });
   const connectIo = io(env, async () => "empty-hub-token-canary");
   assert.equal(await executeCli(["hub", "connect", "--url", "https://github.com/acme/empty.git", "--branch", "main"], connect, connectIo), 1);
-  assert.equal(loadGlobalHubToken(env), "empty-hub-token-canary");
-  assert.match(connectIo.errors.join(""), /token was retained|bootstrap/i);
+  assert.equal(loadGlobalHubToken(env), "old-shared-token");
+  assert.equal(loadExactHubProfileToken(profileId, env), "empty-hub-token-canary");
+  assert.match(connectIo.errors.join(""), /token was retained.*\$agentbase-hub|bootstrap/i);
   assert.doesNotMatch(connectIo.errors.join(""), /empty-hub-token-canary/);
 });
 
@@ -165,5 +176,5 @@ test("[AB-HUB-SETUP-033][AB-HUB-SETUP-037] the shared token is the default crede
   const profileId = "a".repeat(24);
   writeHubProfileToken(profileId, "legacy-profile-token", env);
   writeGlobalHubToken("shared-default-token", env);
-  assert.equal(loadHubProfileToken(profileId, env), "shared-default-token");
+  assert.equal(loadHubProfileToken(profileId, env), "legacy-profile-token");
 });

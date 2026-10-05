@@ -51,7 +51,7 @@ test("[AB-HUB-SETUP-038][AB-HUB-SETUP-015] attach retains redacted Git details w
 });
 
 for (const [scenario, heads, expected] of [
-  ["empty remote", "", /no branches.*bootstrap/],
+  ["empty remote", "", /no branches.*\$agentbase-hub.*bootstrap/],
   ["missing target", `${"a".repeat(40)}\trefs/heads/other\n`, /no target branch 'main'/],
   ["existing target", `${"a".repeat(40)}\trefs/heads/main\n`, /Git exited with status 128/],
   ["failed probe", undefined, /Git exited with status 128/],

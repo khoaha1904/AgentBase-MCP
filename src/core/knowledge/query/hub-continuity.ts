@@ -20,12 +20,18 @@ export type HubContinuityManifest = Readonly<{
   subject?: HubConceptSummary;
   currentSource: readonly HubConceptSummary[];
   neighbors: readonly HubConceptSummary[];
+  domainConcepts: readonly HubDomainConceptSummary[];
   edges: readonly HubGraphEdge[];
   navigationPaths: readonly string[];
   observedSource?: RepositoryObservedSource;
   knownGaps: readonly HubContinuityGap[];
   truncated: boolean;
-  omitted: Readonly<{ currentSource: number; neighbors: number; edges: number; navigationPaths: number }>;
+  omitted: Readonly<{ currentSource: number; neighbors: number; domainConcepts: number; edges: number; navigationPaths: number }>;
+}>;
+
+export type HubDomainConceptSummary = Readonly<{
+  summary: HubConceptSummary;
+  embeddedItems: readonly string[];
 }>;
 
 export type HubContinuityGap = Readonly<{
@@ -75,6 +81,15 @@ function navigationCandidates(relative: string): readonly string[] {
   return candidates;
 }
 
+function embeddedItemNames(body: string): readonly string[] {
+  const section = body.match(/^# Embedded Knowledge[ \t]*\n([\s\S]*?)(?=^## Exact Evidence[ \t]*$|^# |(?![\s\S]))/m)?.[1] ?? "";
+  return section.split(/\r?\n/).flatMap((line) => {
+    const match = /^\|\s*([^|]+?)\s*\|/.exec(line);
+    if (!match || /^name$/i.test(match[1]!.trim()) || /^-+$/.test(match[1]!.trim())) return [];
+    return [match[1]!.trim().replaceAll("\\|", "|")];
+  }).slice(0, 16);
+}
+
 export async function buildHubContinuity(
   reader: HubQueryReader,
   sourceRepositoryId: string,
@@ -90,6 +105,11 @@ export async function buildHubContinuity(
     conceptReferencesRepository(concept.document, sourceRepositoryId)).map(([identity]) => identity).sort();
   const currentIds = allCurrent.slice(0, conceptLimit);
   const subjectId = subjectIdentity(graph, subjectDirectory);
+  const pathDomain = /^(domains\/[a-z0-9]+(?:-[a-z0-9]+)*)\//.exec(subjectDirectory)?.[1];
+  const subjectDomains = [...new Set([
+    ...(subjectId ? graph.domains.get(subjectId) ?? [] : []),
+    ...(pathDomain && graph.concepts.has(pathDomain) ? [pathDomain] : []),
+  ])];
   const repositoryConcept = [...graph.concepts.values()].map((item) => item.document).find((concept) =>
     readRepositoryIdentityRecord(concept)?.id === sourceRepositoryId);
   const observedSource = repositoryConcept ? readRepositoryObservedSource(repositoryConcept) : undefined;
@@ -100,10 +120,18 @@ export async function buildHubContinuity(
   const allNeighborIds = [...new Set(candidateEdges.flatMap((edge) => [edge.source, edge.target])
     .filter((identity) => !seeds.has(identity)))].sort();
   const neighborIds = allNeighborIds.slice(0, neighborLimit);
+  const allDomainIds = [...graph.concepts].filter(([identity, concept]) =>
+    !identity.startsWith("shared/") && subjectDomains.some((domain) => (graph.domains.get(identity) ?? []).includes(domain))
+      && !currentIds.includes(identity)).map(([identity]) => identity).sort();
+  const domainIds = allDomainIds.slice(0, neighborLimit);
+  const domainConcepts = domainIds.map((identity) => {
+    const concept = graph.concepts.get(identity)!;
+    return { summary: summarizeHubConcept(graph, identity), embeddedItems: embeddedItemNames(concept.document.body) };
+  });
   const admittedIds = new Set([...seeds, ...neighborIds]);
   const admittedEdgeCandidates = candidateEdges.filter((edge) => admittedIds.has(edge.source) && admittedIds.has(edge.target));
   const edges = admittedEdgeCandidates.slice(0, edgeLimit);
-  const conceptPaths = [...currentIds, ...neighborIds, ...(subjectId ? [subjectId] : [])]
+  const conceptPaths = [...currentIds, ...neighborIds, ...domainIds, ...(subjectId ? [subjectId] : [])]
     .map((identity) => graph.concepts.get(identity)?.document.path).filter((value): value is string => Boolean(value));
   const wantedIndexes = new Set([`${subjectDirectory}/index.md`,
     ...conceptPaths.flatMap(navigationCandidates)]);
@@ -113,6 +141,7 @@ export async function buildHubContinuity(
   const omitted = {
     currentSource: allCurrent.length - currentIds.length,
     neighbors: allNeighborIds.length - neighborIds.length,
+    domainConcepts: allDomainIds.length - domainIds.length,
     edges: candidateEdges.length - edges.length,
     navigationPaths: allNavigation.length - navigationPaths.length,
   };
@@ -123,6 +152,7 @@ export async function buildHubContinuity(
     ...(subjectId ? { subject: summarizeHubConcept(graph, subjectId) } : {}),
     currentSource: currentIds.map((identity) => summarizeHubConcept(graph, identity)),
     neighbors: neighborIds.map((identity) => summarizeHubConcept(graph, identity)),
+    domainConcepts,
     edges,
     navigationPaths,
     ...(observedSource ? { observedSource } : {}),

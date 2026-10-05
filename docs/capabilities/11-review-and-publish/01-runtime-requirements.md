@@ -66,7 +66,8 @@ authorized old test-state disposal is complete without a migration adapter.
   existing nonblank lines.
 - **AB-LOCAL-HUB-014** — Prepare reports exact-base bounded continuity:
   current-source summaries, the logical subject when resolved, one-hop
-  neighbors and relevant navigation paths with explicit omitted counts. The
+  neighbors, existing concepts in the same Domain with bounded embedded-item
+  names, and relevant navigation paths with explicit omitted counts. The
   complete checkout remains lifecycle state and is not serialized as authoring
   context.
 - **AB-LOCAL-HUB-015** — A new repository proposal may append navigation to an
@@ -269,8 +270,10 @@ authorized old test-state disposal is complete without a migration adapter.
   rejects repository source identities reused across changed observed revisions
   while the editable workspace is still repairable; Finalize retains the same
   invariant as the authoritative lock boundary. Session-bound validation adds
-  prepared Initial Ingest skeleton summaries to relationship targets so an
-  agent does not need to echo concepts created by Prepare.
+  prepared Initial Ingest skeleton summaries and referenced Published concept
+  summaries to relationship targets, excluding concepts in the changed set, so
+  an agent does not need to echo concepts created by Prepare or existing Domain
+  targets.
 - **AB-REFRESH-018** — Every newly authored known non-governance concept other
   than Domain or Repository has an evidenced structural path, using relations
   admitted by each source concept's exact schema, to a Repository or Domain.

@@ -11,6 +11,7 @@ import {
   validateAgentBaseInitialIngestHomePlan, validateInventoryReceipt,
   type AgentBaseInitialIngestHomePlan, type ConfirmedDomain, type HubRemovalDeclaration, type OkfAuthoringGuidance,
   type InventoryReceipt,
+  type OkfRelationshipTarget,
   type OkfValue,
   type RepositoryIdentityRecord,
 } from "../../../core/knowledge/index.ts";
@@ -341,13 +342,31 @@ export function validateHubAuthoringSession(
   stateRoot: string,
   sessionId: string,
   expectedCheckoutRoot: string,
-): Readonly<{ valid: true; sessionId: string; mode: "new" | "refresh"; targets: readonly Readonly<{ identity: string; path: string; type: string }>[] }> {
+  publishedTargets: readonly OkfRelationshipTarget[] = [],
+): Readonly<{ valid: true; sessionId: string; mode: "new" | "refresh"; targets: readonly OkfRelationshipTarget[] }> {
   const session = readHubAuthoringSession(stateRoot, sessionId, expectedCheckoutRoot);
   validateHubAuthoringBundle(session, session.bundleRoot);
+  const bundle = loadOkfBundle(session.bundleRoot, { requireAgentBaseRootIndex: true });
+  const references = new Set<string>();
+  for (const concept of bundle.concepts.values()) {
+    const relationships = concept.frontmatter.relationships;
+    if (Array.isArray(relationships)) for (const value of relationships) {
+      const target = mapping(value).target;
+      if (typeof target === "string") references.add(target);
+    }
+    const flowSteps = concept.frontmatter.flow_steps;
+    if (Array.isArray(flowSteps)) for (const value of flowSteps) {
+      const step = mapping(value);
+      for (const endpoint of [step.source, step.target]) if (typeof endpoint === "string") references.add(endpoint);
+    }
+  }
+  const skeletonTargets = (session.skeletons ?? []).map((skeleton) => ({
+    identity: skeleton.identity, path: skeleton.path, type: skeleton.type,
+  }));
+  const existingTargets = publishedTargets.filter((target) => references.has(target.identity));
   return { valid: true, sessionId: session.id, mode: session.mode,
-    targets: (session.skeletons ?? []).map((skeleton) => ({
-      identity: skeleton.identity, path: skeleton.path, type: skeleton.type,
-    })) };
+    targets: [...new Map([...skeletonTargets, ...existingTargets]
+      .map((target) => [target.identity, target])).values()] };
 }
 
 function normalizeAuthoredObservations(

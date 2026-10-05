@@ -12,7 +12,8 @@ export {
 } from "./ci/upgrade.ts";
 export { loadHubConfiguration, resolveHubConfiguration, type HubConfiguration, type OptionalHubConfiguration } from "./configuration/configuration.ts";
 export {
-  loadExactHubProfileToken, loadGlobalHubToken, removeGlobalHubToken, writeGlobalHubToken,
+  loadExactHubProfileToken, loadGlobalHubToken, loadHubProfileToken, removeGlobalHubToken, removeHubProfileToken,
+  writeGlobalHubToken, writeHubProfileToken,
 } from "./configuration/credential-file.ts";
 export {
   globalHubConfigurationPath,

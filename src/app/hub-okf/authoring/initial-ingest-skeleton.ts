@@ -328,9 +328,7 @@ export function writeInitialIngestSkeletons(options: WriteInitialIngestSkeletons
     description: repositoryPurpose,
     status: "draft",
     generated,
-    sources: [...new Map([...repositorySources,
-      ...embeddedSources(repositoryEvidenceCandidate.id, embedded, candidates, sourceById),
-      ...(ownerSource ? [ownerSource] : []),
+    sources: [...new Map([...repositorySources, ...(ownerSource ? [ownerSource] : []),
       ...(profile ? participationSources(options.homePlan!, repositoryEvidenceCandidate.id).map((item) => item.source) : [])]
       .map((source) => [source.id, source])).values()],
     ...(!profile && options.confirmedDomain ? {
@@ -347,7 +345,6 @@ export function writeInitialIngestSkeletons(options: WriteInitialIngestSkeletons
     const target = path.posix.relative(path.posix.dirname(repositoryPath), item.path);
     return `* [${item.title}](${target}) - ${item.type}`;
   });
-  const repositoryEmbedded = embeddedKnowledge(repositoryEvidenceCandidate.id, embedded, candidates, sourceById);
   write(options.bundleRoot, repositoryPath, document(repositoryPath, "Repository", repositoryFrontmatter, [
     "# Purpose and boundaries", "", repositoryPurpose,
     ...(!profile && options.confirmedDomain
@@ -356,7 +353,6 @@ export function writeInitialIngestSkeletons(options: WriteInitialIngestSkeletons
       ? ["", `Domains: ${participationSources(options.homePlan!, repositoryEvidenceCandidate.id).map((item) =>
         `[${item.domain.title}](${path.posix.relative(path.posix.dirname(repositoryPath), agentBaseDomainConceptPath(item.domain.identity))})`).join(", ")}.`] : []),
     ...(links.length ? ["", "# Independently promoted knowledge", "", ...links] : []),
-    ...(repositoryEmbedded ? ["", repositoryEmbedded] : []),
   ].join("\n")));
   skeletons.unshift({ ...(profile || repositoryRecommendation ? { candidateId: repositoryEvidenceCandidate.id } : {}),
     identity: options.subjectDirectory, path: repositoryPath, type: "Repository" });

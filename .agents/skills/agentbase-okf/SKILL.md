@@ -96,7 +96,9 @@ skill.
 6. Validate created/modified concepts with `validate_okf_changes`, supplying
    the prepared `session_id` when the invoking workflow returned one, and
    only their full Markdown plus unchanged target summaries from continuity or
-   exact search/read. Read each changed file and send its complete Markdown
+   exact search/read. When a prepared session is supplied, the validator also
+   admits referenced Published concepts and filters changed skeletons from its
+   automatic targets. Read each changed file and send its complete Markdown
    document bytes as `content`, never its path or a wrapper object. For every
    supplied concept or target, `identity` is
    exactly its normalized path relative to the OKF root with `.md` removed;

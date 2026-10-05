@@ -12,13 +12,36 @@ import {
 import { createHubIdentity } from "../../core/hub/index.ts";
 import { createAgentBaseMcpServer } from "./server.ts";
 import { DISCOVERY_TOOL } from "./discovery-tool.ts";
-import { OKF_SCHEMA_TOOLS } from "./okf-schema-tools.ts";
+import { callOkfSchemaTool, OKF_SCHEMA_TOOLS } from "./okf-schema-tools.ts";
 
 function repository(prefix: string): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
   fs.mkdirSync(path.join(root, ".git"));
   return root;
 }
+
+test("[AB-REFRESH-017..018] session validation excludes changed skeleton targets and admits Published relationship targets", async () => {
+  const content = [
+    "---", "type: Function", "title: Reader", "description: Reads a shared queue.", "status: draft",
+    "generated: { by: 'agentbase/0.0.0', at: '2026-08-31T00:00:00Z' }",
+    "sources:", "  - id: source", "    resource: agentbase://fixture",
+    "relationships:", "  - { kind: part-of, target: domains/orders, evidence: [source] }",
+    "---", "", "# Reader", "", "[Orders](../index.md)", "",
+  ].join("\n");
+  const response = await callOkfSchemaTool("validate_okf_changes", {
+    session_id: `hub-session-${"a".repeat(24)}`,
+    changes: [{ identity: "domains/orders/knowledge/reader", path: "domains/orders/knowledge/reader.md", content }],
+    targets: [],
+  }, {
+    validateAuthoringSession: async () => ({ valid: true, targets: [
+      { identity: "domains/orders/knowledge/reader", path: "domains/orders/knowledge/reader.md", type: "Function" },
+      { identity: "domains/orders", path: "domains/orders/index.md", type: "Domain" },
+    ] }),
+  });
+  const value = JSON.parse(response.content[0]?.type === "text" ? response.content[0].text : "{}");
+  assert.equal(value.valid, true);
+  assert.deepEqual(value.relationshipFailures, []);
+});
 
 test("[AB-DISC-007][AB-SCHEMA-049][AB-INGEST-003][AB-HOME-012][AB-PROFILE-LIFECYCLE-010][AB-PROFILE-READ-009..010][AB-REFRESH-020] official client lists and calls the safe server surface", async () => {
   const repo = repository("agentbase-server-repo-");

@@ -250,6 +250,10 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
         sourceTool: "terraform", resourceType: "aws_lambda_function" },
     });
     assert.equal(skeletonBundle.concepts.get("domains/vehicle-data/repositories/vehicle-events")?.body.includes("../knowledge/publisher.md"), true);
+    const repository = skeletonBundle.concepts.get("domains/vehicle-data/repositories/vehicle-events");
+    assert.ok(repository);
+    assert.doesNotMatch(JSON.stringify(repository.frontmatter.sources), /queue|topic|external-doc/);
+    assert.doesNotMatch(repository.body, /# Embedded Knowledge/);
     const publisherBody = skeletonBundle.concepts.get("domains/vehicle-data/knowledge/publisher")?.body ?? "";
     assert.match(publisherBody, /# Embedded Knowledge/);
     assert.match(publisherBody, /Vehicle-events \| Internal trigger transport for the publisher \| message-queue \| aws \/ sqs; terraform:aws_sqs_queue/i);

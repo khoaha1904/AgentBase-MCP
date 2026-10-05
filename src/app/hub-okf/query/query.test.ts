@@ -69,7 +69,8 @@ test("[AB-PROFILE-LIFECYCLE-001][AB-PROFILE-LIFECYCLE-003][AB-PROFILE-LIFECYCLE-
     ["index.md", `---\nokf_version: "0.2"\n---\n\n# Hub\n\n* [Profile](shared/agentbase-profile.md) - Profile\n* [Shared](shared/index.md) - Shared knowledge\n* [Orders](domains/orders/) - Domain Capsule\n`],
     ["shared/index.md", "# Shared\n\n* [Profile](agentbase-profile.md) - Profile\n"],
     ["shared/agentbase-profile.md", renderAgentBaseOkfProfileDocument()],
-    ["domains/orders/index.md", `---\ntype: Domain\ntitle: Orders\ndescription: Orders domain.\n---\n\n# Orders\n\n* [Checkout](repositories/checkout.md) - Repository\n`],
+    ["domains/orders/index.md", `---\ntype: Domain\ntitle: Orders\ndescription: Orders domain.\n---\n\n# Orders\n\n* [Checkout](repositories/checkout.md) - Repository\n* [Queue owner](knowledge/queue-owner.md) - Component\n`],
+    ["domains/orders/knowledge/queue-owner.md", `---\ntype: Component\ntitle: Queue owner\ndescription: Owns the shared queue.\nstatus: draft\nsources:\n  - id: owner\n    resource: agentbase://fixture\nrelationships:\n  - { kind: part-of, target: domains/orders, evidence: [owner] }\n---\n\n# Queue owner\n\n[Orders](../index.md)\n\n# Embedded Knowledge\n\n| Name | Role | Kind | Technology | Evidence |\n|---|---|---|---|---|\n| Shared queue | Internal transport | message-queue | aws / sqs | ` + "`owner`" + ` |\n\n## Exact Evidence\n\n* ` + "`owner`" + " - `agentbase://fixture`\n"],
     ["domains/orders/repositories/checkout.md", `---\ntype: Repository\ntitle: Checkout\ndescription: Checkout source.\nstatus: draft\nagentbase:\n  repository:\n    id: ${repositoryId}\n    display_name: checkout\n    aliases:\n      remotes: [https://github.com/acme/checkout.git]\n      root_commits: [${"a".repeat(40)}]\n---\n\n# Checkout\n`],
   ]);
   const git = async (request: Readonly<{ args: readonly string[]; operation: string }>) => {
@@ -95,6 +96,8 @@ test("[AB-PROFILE-LIFECYCLE-001][AB-PROFILE-LIFECYCLE-003][AB-PROFILE-LIFECYCLE-
   assert.equal(continuity.subjectDirectory, context.repositorySubject?.identity);
   assert.deepEqual(continuity.navigationPaths,
     ["domains/orders/index.md", "index.md", "shared/index.md"]);
+  const sameDomain = continuity.domainConcepts.find((item) => item.summary.identity === "domains/orders/knowledge/queue-owner");
+  assert.deepEqual(sameDomain?.embeddedItems, ["Shared queue"]);
   const search = await searchPublishedHub(localHub, "checkout", { domain: "domains/orders" }, git);
   assert.equal(search.profile, "profile-1.0");
   assert.equal(search.status === "ok" ? search.matches[0]?.scope?.domain : undefined,

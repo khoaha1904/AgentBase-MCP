@@ -201,7 +201,7 @@ export async function attachExistingHub(
       }
       const branches = heads.stdout.trim().split("\n").filter(Boolean);
       if (!branches.length) {
-        throw setupFailure(new Error("The Hub remote has no branches; preview and confirm bootstrap before attaching it"), token);
+        throw setupFailure(new Error("The Hub remote has no branches; use the $agentbase-hub skill to preview and confirm bootstrap before attaching it"), token);
       }
       if (!branches.some((line) => line.trim().split(/\s+/)[1] === `refs/heads/${targetBranch}`)) {
         throw setupFailure(new Error(`The Hub remote has no target branch '${targetBranch}'; select an existing branch or create it before attaching`), token);

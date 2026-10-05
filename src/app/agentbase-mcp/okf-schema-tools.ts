@@ -466,7 +466,12 @@ export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record
       const sessionTargets = sessionValidation && typeof sessionValidation === "object"
         && Array.isArray((sessionValidation as Record<string, unknown>).targets)
         ? (sessionValidation as Record<string, unknown>).targets as OkfRelationshipTarget[] : [];
-      const mergedTargets = [...new Map([...targets.entries!, ...sessionTargets].map((target) => [target.identity, target])).values()];
+      const changedIdentities = new Set(supplied.entries!.map((entry) => entry.identity));
+      const changedPaths = new Set(supplied.entries!.map((entry) => entry.path));
+      const availableSessionTargets = sessionTargets.filter((target) =>
+        !changedIdentities.has(target.identity) && !changedPaths.has(target.path));
+      const mergedTargets = [...new Map([...targets.entries!, ...availableSessionTargets]
+        .map((target) => [target.identity, target])).values()];
       const sessionBoundValidation = validateBundle(supplied.entries!, mergedTargets);
       return result({ ...resultValue(sessionBoundValidation), sessionValidation }, Boolean(sessionBoundValidation.isError));
     }, (error) => result({

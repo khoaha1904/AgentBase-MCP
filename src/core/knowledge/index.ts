@@ -78,6 +78,7 @@ export {
 export {
   buildHubContinuity,
   type HubContinuityGap,
+  type HubDomainConceptSummary,
   type HubContinuityManifest,
   type HubContinuityOptions,
 } from "./query/hub-continuity.ts";

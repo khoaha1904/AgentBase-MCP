@@ -123,7 +123,9 @@ This workflow uses `preflight_hub_ingest`, `discover_repository`, `get_okf_autho
    the returned workspace. Enrich the returned OKF skeletons instead of
    rebuilding their frontmatter or navigation from memory. Prepare has already
    populated root, capsule and home navigation; preserve it and never create
-   unrelated indexes. Treat the Repository as the default dossier. Add only
+   unrelated indexes. Prepare also returns bounded summaries of existing
+   concepts in the selected Domain and their embedded item names; use them to
+   recognize shared resources across repositories. Treat the Repository as the default dossier. Add only
    applicable evidence-backed sections for purpose/boundaries, runtime and
    deployment, capabilities, interfaces/triggers, dependencies/data,
    operations/recovery and known gaps; omit unsupported headings and link to
@@ -132,7 +134,9 @@ This workflow uses `preflight_hub_ingest`, `discover_repository`, `get_okf_autho
    never invent a complete domain definition. Preserve the visible
    review limitation on every suggested skeleton. Preserve the one prepared
    Embedded Knowledge table in its parent. An embedded item has no OKF identity,
-   standalone file, navigation or canonical graph relationship. When exact
+   standalone file, navigation or canonical graph relationship. A Repository
+   keeps only its own sources and links to promoted concepts; it does not copy
+   a child concept's Embedded Knowledge table or sources. When exact
    evidence proves a useful runtime direction, add an optional `Embedded Relations`
    table with `Source | Relation | Target | Evidence`: use `self`, one exact
    concept identity or one unique same-parent embedded name, and cite only the

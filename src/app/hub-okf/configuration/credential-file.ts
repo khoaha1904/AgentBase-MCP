@@ -102,7 +102,7 @@ export function loadGlobalHubToken(environment: NodeJS.ProcessEnv = process.env)
 }
 
 export function loadHubProfileToken(localHubId: string, environment: NodeJS.ProcessEnv = process.env): string | undefined {
-  return loadGlobalHubToken(environment) ?? loadExactHubProfileToken(localHubId, environment);
+  return loadExactHubProfileToken(localHubId, environment) ?? loadGlobalHubToken(environment);
 }
 
 /** Exact identity-bound credential. Use for every prospective Hub attachment. */

@@ -3,11 +3,12 @@ import fs from "node:fs";
 import process from "node:process";
 import { pathToFileURL } from "node:url";
 
+import { createHubIdentity, hubProfileId } from "./core/hub/index.ts";
 import { serveAgentBaseMcp } from "./app/agentbase-mcp/index.ts";
 import {
   executeHubCiCli, executeHubCli, tryCreateHubRuntimeActions,
-  loadExactHubProfileToken, loadGlobalHubToken, readPersistedHubConfiguration,
-  removeGlobalHubToken, writeGlobalHubToken, type HubToolActions,
+  loadExactHubProfileToken, loadGlobalHubToken, normalizeGitHubHubUrl, readPersistedHubConfiguration,
+  removeHubProfileToken, writeHubProfileToken, type HubToolActions,
   hubPublicationPolicy, publishConfiguredHubProposal,
 } from "./app/hub-okf/index.ts";
 
@@ -81,12 +82,15 @@ async function executePublicHubConnect(
   const values = publicFlags(args);
   const repositoryUrl = values["--url"], targetBranch = values["--branch"];
   if (!repositoryUrl || !targetBranch) throw new Error("Hub connect requires --url and --branch");
-  const previous = sharedToken(dependencies.environment);
+  const normalized = normalizeGitHubHubUrl(repositoryUrl);
+  const profileId = hubProfileId(createHubIdentity(normalized.repository, targetBranch, normalized.host));
+  const previousProfile = loadExactHubProfileToken(profileId, dependencies.environment);
+  const previous = previousProfile ?? sharedToken(dependencies.environment);
   const entered = await (dependencies.promptToken ?? defaultTokenPrompt)(previous);
   const token = entered.trim() || previous;
   if (!token) throw new Error("Hub connect requires a token; enter one in the masked prompt");
-  const changed = token !== previous || !loadGlobalHubToken(dependencies.environment);
-  if (changed) writeGlobalHubToken(token, dependencies.environment, { replace: true });
+  const changed = token !== previousProfile;
+  if (changed) writeHubProfileToken(profileId, token, dependencies.environment, { replace: true });
   try {
     const output = await actions.configure({ repositoryUrl, targetBranch });
     dependencies.writeOutput(`${JSON.stringify(output, null, 2)}\n`);
@@ -95,11 +99,11 @@ async function executePublicHubConnect(
     const message = error instanceof Error ? error.message : "Hub attachment failed";
     const emptyRemote = /remote has no branches/i.test(message);
     if (changed && !emptyRemote) {
-      if (previous) writeGlobalHubToken(previous, dependencies.environment, { replace: true });
-      else removeGlobalHubToken(dependencies.environment);
+      if (previousProfile) writeHubProfileToken(profileId, previousProfile, dependencies.environment, { replace: true });
+      else removeHubProfileToken(profileId, dependencies.environment);
     }
     if (emptyRemote) {
-      throw new Error(`${message}; the entered token was retained. Next step: preview and confirm bootstrap for this Hub, then retry connect`);
+      throw new Error(`${message}; the entered token was retained for this Hub profile. Next step: use the $agentbase-hub skill to preview and confirm bootstrap, then retry connect`);
     }
     throw error;
   }

@@ -556,7 +556,10 @@ export function createHubRuntimeActions(
       }
       const localHub = await admitPersistentLocalHub(configuration, undefined, { readOnly: true });
       if (localHub.activeHead !== session.baseCommit) throw new Error("Hub authoring base changed after Prepare");
-      return validateHubAuthoringSession(stateRoot, sessionId, configuration.localRoot);
+      const publishedTargets = [...loadOkfBundle(localHub.root).concepts.values()].map((concept) => ({
+        identity: concept.conceptId, path: concept.path, type: concept.type,
+      }));
+      return validateHubAuthoringSession(stateRoot, sessionId, configuration.localRoot, publishedTargets);
     },
     async finalize(sessionId, questions, removals, changeAccounting) {
       const configuration = configured(true);
