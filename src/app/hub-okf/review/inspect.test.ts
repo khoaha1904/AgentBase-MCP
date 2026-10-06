@@ -114,7 +114,7 @@ test("[AB-IMPACT-016] modified Refresh files appear once in Inspect and never in
       sourceRepositoryId: REPOSITORY_ID, evidenceDigest: `sha256:${"b".repeat(64)}`,
       schemaVersion: "7.0.0", selectedSchemas: ["Function"], treeDigest: computeOkfTreeDigest(bundleRoot),
       diffDigest: `sha256:${createHash("sha256").update(JSON.stringify(ordinary.entries)).digest("hex")}`,
-      localHubId: "c".repeat(24), createdAt: "2026-10-06T00:00:00Z" });
+      localHubId: "c".repeat(24) });
     const inspection = bindHubProposalInspection(ordinary, { baseRoot, proposedRoot: bundleRoot, proposal });
     assert.equal(inspection.counts.modified, 2);
     assert.equal(inspection.groups.updated.length, 2);
