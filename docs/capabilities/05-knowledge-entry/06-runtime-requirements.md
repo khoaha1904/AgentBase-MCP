@@ -523,6 +523,9 @@ follow its linked owner rather than loading unrelated sections.
   as provider-neutral `Resource` when independently operated/shared; an
   API/event/message contract is `Interface` only when its contract value also
   passes the standalone gates. Transport and contract are never silently merged.
+  Resource admits `part-of -> Domain` with owner-confirmed participation evidence;
+  cross-boundary promotion at a confirmed Domain home records that participation
+  without requiring `implemented-in` to the ingesting Repository.
 - **AB-SCHEMA-054** — The common AWS profile may classify Lambda, SQS, SNS,
   EventBridge, S3, DynamoDB and RDS using existing generic roles and technology
   metadata. EC2/VM remains hosting evidence unless an independently evidenced

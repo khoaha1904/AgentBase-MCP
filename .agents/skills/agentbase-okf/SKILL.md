@@ -28,7 +28,9 @@ skill.
 1. Read the proposal metadata and bounded repository evidence before authoring.
    When Prepare returns `homePlan`, preserve its exact home-qualified subject
    and skeleton paths; home is placement only, and only its participation
-   entries authorize Domain membership. When Prepare instead returns
+   entries authorize Domain membership. A cross-boundary Resource at a confirmed
+   Domain home gets an owner-evidenced participation entry from Prepare; preserve
+   that `part-of` edge. When Prepare instead returns
    `confirmedDomain`, treat its exact identity/title as compatibility owner
    guidance and preserve its generated Domain membership.
 2. Read prior concept bodies only at the exact `currentSource`, `subject`,
@@ -62,7 +64,9 @@ skill.
    lifecycle, failure/operational boundary, audience or important graph role.
    A new known standalone concept also needs an evidenced structural path
    allowed by its exact schema to a Repository or Domain. For a Resource, use
-   `implemented-in -> Repository`; Resource does not admit `declared-by` or
+   `part-of -> Domain` with confirmed participation when the owning repository
+   is elsewhere, or `implemented-in -> Repository` with declaration evidence;
+   Resource does not admit `declared-by` or
    Resource-to-Resource `depends-on`. Otherwise keep it embedded or limited.
    Do not turn every route, handler, function or infrastructure block into a
    concept merely because it is concrete.

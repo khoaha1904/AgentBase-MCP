@@ -1,4 +1,5 @@
 import {
+  agentBaseCandidateHome,
   agentBaseProfileConceptPath,
   conceptIdentityFromPath,
   getOkfConceptSchema,
@@ -67,7 +68,7 @@ export function resolveProfileInitialIngestPlan(input: Readonly<{
       schema: repositorySchema, matchedEvidence: [], missingEvidence: [], technology: {}, limitations: [],
     });
   }
-  const plan = input.homePlan
+  let plan = input.homePlan
     ? validateAgentBaseInitialIngestHomePlan(input.homePlan)
     : legacyConfirmedDomainHomePlan(input.confirmedDomain!, [repositoryCandidateId,
       ...selected.filter((item) => item.schema?.type === "System").map((item) => item.candidateId)]);
@@ -79,6 +80,18 @@ export function resolveProfileInitialIngestPlan(input: Readonly<{
       throw new Error(`home plan exception does not resolve to a materialized concept candidate: ${exception.candidateId}`);
     }
   }
+  const participations = [...plan.participations];
+  for (const recommendation of selected) {
+    const candidate = input.request.candidates.find((item) => item.id === recommendation.candidateId);
+    const home = agentBaseCandidateHome(plan, recommendation.candidateId);
+    if (recommendation.schema?.type !== "Resource" || candidate?.promotion?.basis !== "cross-boundary"
+      || home.kind !== "domain" || participations.some((entry) =>
+        entry.candidateId === candidate.id && entry.domain.identity === home.identity)) continue;
+    const { kind: _kind, ...domain } = home;
+    participations.push({ candidateId: candidate.id, domain });
+  }
+  plan = validateAgentBaseInitialIngestHomePlan({ ...plan, participations: participations.sort((left, right) =>
+    left.candidateId.localeCompare(right.candidateId) || left.domain.identity.localeCompare(right.domain.identity)) });
   for (const participation of plan.participations) {
     const recommendation = selectedByCandidate.get(participation.candidateId);
     if (!recommendation) {

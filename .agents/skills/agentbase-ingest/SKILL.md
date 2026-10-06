@@ -118,7 +118,9 @@ This workflow uses `preflight_hub_ingest`, `discover_repository`, `get_okf_autho
    home-qualified subject and skeleton paths returned by Prepare. The
    compatibility Domain retains the prior owner-evidenced Repository/System
    participation; an explicit plan creates `part-of` only from its
-   `participations` entries.
+   `participations` entries. For cross-boundary Resources, confirming a Domain
+   home also confirms participation there; Prepare records the owner-evidenced
+   `part-of` entry without claiming `implemented-in` to the ingesting repository.
    Run one bounded active-Hub identity match, then follow `agentbase-okf` inside
    the returned workspace. Enrich the returned OKF skeletons instead of
    rebuilding their frontmatter or navigation from memory. Prepare has already

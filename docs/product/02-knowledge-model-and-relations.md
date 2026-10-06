@@ -129,6 +129,10 @@ overview and candidate evidence: a Repository default plus concept exceptions.
 It shows matching Domains or `shared/` and waits for one user confirmation; it
 does not infer stewardship solely from a directory name or prompt once per
 file. The plan separately records any evidenced Domain-participation relations.
+For a Resource promoted on cross-boundary evidence, confirming a Domain home
+also confirms participation in that Domain through an owner-evidenced `part-of`
+relation. This does not identify its declaring or owning repository. A shared
+home still needs explicit participation.
 Later evidence may add participation without moving the document. Rehoming is
 an explicit path/identity migration that updates affected links and returns
 through normal review; it is never an incidental Refresh side effect.

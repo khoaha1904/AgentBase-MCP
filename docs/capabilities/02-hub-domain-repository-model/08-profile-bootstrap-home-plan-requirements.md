@@ -127,9 +127,11 @@ created at `domains/<slug>/index.md` with owner-guidance and source evidence.
   otherwise created with bounded owner-guidance and Repository evidence. Root
   and home indexes resolve every newly materialized concept directly.
 - **AB-HOME-008** — Physical home creates no semantic membership. Only explicit
-  plan participation creates an evidenced `part-of` relation. Compatibility
-  translation is the sole exception and reproduces the previous Repository and
-  selected-System relations explicitly.
+  plan participation creates an evidenced `part-of` relation. Prepare expands
+  a cross-boundary Resource's confirmed Domain home into an explicit persisted
+  participation entry. Compatibility translation also reproduces the previous
+  Repository and selected-System relations explicitly. Shared placement alone
+  adds no participation.
 - **AB-HOME-009** — The normalized home plan and actual home-qualified subject
   are part of session identity and persisted private session state. Exact rerun
   is idempotent; altered plan, Receipt, source or Hub base cannot reuse the

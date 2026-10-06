@@ -283,7 +283,9 @@ authorized old test-state disposal is complete without a migration adapter.
 - **AB-REFRESH-018** — Every newly authored known non-governance concept other
   than Domain or Repository has an evidenced structural path, using relations
   admitted by each source concept's exact schema, to a Repository or Domain.
-  In particular, Resource reaches Repository through `implemented-in`; its
+  Resource may reach Domain through owner-evidenced `part-of`, including
+  cross-boundary promotion at a confirmed Domain home, without claiming a
+  declaring repository; or reach Repository through `implemented-in`. Its
   schema does not admit `declared-by` or Resource-to-Resource `depends-on`. An
   unanchored candidate remains embedded or limited instead of becoming an
   isolated Hub node that ordinary graph/query/visualization projection can omit.

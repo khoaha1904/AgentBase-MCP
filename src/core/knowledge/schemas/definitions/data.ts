@@ -17,9 +17,9 @@ export const DATA_SCHEMAS: readonly OkfConceptSchema[] = [
     ["operated resource", "shared resource", "infrastructure resource", "data resource"],
     ["independent cross-boundary, ownership, lifecycle, failure, security or operational evidence"],
     ["# Purpose", "# Kind and Technology", "# Users", "# Operations", "# Evidence", "# Limitations"],
-    ["System", "Repository", "Component", "Function", "Interface", "Flow", "Resource"],
+    ["Domain", "System", "Repository", "Component", "Function", "Interface", "Flow", "Resource"],
     { relationshipGuidance: [
-      { kind: "part-of", targetTypes: ["System"], evidence: "system ownership evidence" },
+      { kind: "part-of", targetTypes: ["Domain", "System"], evidence: "owner-confirmed Domain participation or system ownership evidence" },
       { kind: "implemented-in", targetTypes: ["Repository"], evidence: "resource declaration or management source evidence" },
     ] },
   ),

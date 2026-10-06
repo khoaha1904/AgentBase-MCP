@@ -306,6 +306,10 @@ former `confirmed_domain` input may be interpreted as the Domain-default
 compatibility form only while it remains unambiguous; no missing shared choice
 is inferred.
 
+Prepare expands a confirmed Domain home into a persisted participation entry
+for a cross-boundary promoted Resource. Its `part-of` edge cites owner guidance;
+source ownership remains separate, and a shared home adds no Domain implicitly.
+
 ```text
 legacy Published commit
     -> read-only profile/layout report

@@ -6,7 +6,7 @@ import test from "node:test";
 
 import { createHubIdentity, hubProfileId } from "../../../core/hub/index.ts";
 import {
-  AGENTBASE_OKF_PROFILE_PATH, getOkfAuthoringGuidance, loadOkfBundle, parseConceptDocument,
+  AGENTBASE_OKF_PROFILE_PATH, buildHubContinuity, getOkfAuthoringGuidance, loadOkfBundle, parseConceptDocument,
   readRepositoryObservedSource, readRepositoryRefreshCoverage, renderAgentBaseOkfProfileDocument, validateOkfRelationships,
   type HubContinuityManifest, type InventoryReceipt,
 } from "../../../core/knowledge/index.ts";
@@ -355,6 +355,12 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
       item.summary.identity === "domains/vehicle-data/repositories/vehicle-events"));
     assert.deepEqual(second.continuity.domainConcepts.find((item) =>
       item.summary.identity === "domains/vehicle-data/knowledge/publisher")?.embeddedItems, ["vehicle-events"]);
+    const promoted = [...loadOkfBundle(second.bundleRoot).concepts.values()].find((concept) => concept.type === "Resource");
+    assert.ok(promoted);
+    assert.deepEqual(promoted.frontmatter.relationships, [{ kind: "part-of", target: "domains/vehicle-data",
+      evidence: ["owner-domain-vehicle-data"] }]);
+    assert.match(promoted.body, /\[Vehicle Data\]\(\.\.\/index\.md\)/);
+    assert.equal((await actions.validate(second.sessionId) as { valid: boolean }).valid, true);
     const secondFinalized = await actions.finalize(second.sessionId) as {
       proposal: { id: string }; inspection: { refreshSuggestions: { items: readonly { repositoryId: string;
         repositoryIdentity: string; parentIdentity: string; resourceIdentity: string; reason: string }[]; omitted: number } };
@@ -367,6 +373,12 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     assert.match(secondFinalized.inspection.refreshSuggestions.items[0]?.reason ?? "", /Name-only.*publishes-to\/writes-to/);
     const secondInspection = await actions.inspect(secondFinalized.proposal.id) as typeof secondFinalized;
     assert.deepEqual(secondInspection.inspection.refreshSuggestions, secondFinalized.inspection.refreshSuggestions);
+    const proposedRoot = path.join(stateRoot, "proposals", secondFinalized.proposal.id, "bundle");
+    const promotedContinuity = await buildHubContinuity({ commit: initialPublication.commit,
+      listMarkdownPaths: async () => loadOkfBundle(proposedRoot).files.filter((file) => file.endsWith(".md")),
+      readMarkdown: async (relative) => fs.readFileSync(path.join(proposedRoot, relative), "utf8"),
+    }, consumerPreflight.repository.repository.id, promoted.conceptId);
+    assert.deepEqual(promotedContinuity.subject?.domains, ["domains/vehicle-data"]);
     assert.equal(fs.readFileSync(path.join(stateRoot, "proposals", secondFinalized.proposal.id, "bundle",
       "domains/vehicle-data/knowledge/publisher.md"), "utf8"), fs.readFileSync(path.join(stateRoot, "proposals",
       secondFinalized.proposal.id, "base", "domains/vehicle-data/knowledge/publisher.md"), "utf8"),

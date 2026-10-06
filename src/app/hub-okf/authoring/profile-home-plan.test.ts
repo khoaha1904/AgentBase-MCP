@@ -120,6 +120,35 @@ test("[AB-HOME-004..008] Profile Initial Ingest keeps home separate from Domain 
   assert.match(fs.readFileSync(path.join(root, "index.md"), "utf8"), /domains\/fulfilment\//);
 });
 
+test("[AB-HOME-008][AB-SCHEMA-053] cross-boundary Resource receives participation from its confirmed Domain home", () => {
+  const candidate = { ...request.candidates[2]!, suggestedType: "Resource",
+    promotion: { basis: "cross-boundary" as const, evidenceIds: ["contract-doc"] } };
+  const resourceRequest = { ...request, candidates: [request.candidates[0]!, candidate] };
+  const resourceGuidance = { ...guidance, recommendations: [recommendation("repository", "Repository"), recommendation("contract", "Resource")] };
+  const plan = normalizeAgentBaseInitialIngestHomePlan({
+    default_home: { kind: "domain", identity: "domains/orders", title: "Orders" },
+    exceptions: [], participations: [],
+  });
+  const resolve = (homePlan: typeof plan, inputRequest = resourceRequest) => resolveProfileInitialIngestPlan({
+    subjectDirectory: "repositories/checkout", homePlan, request: inputRequest, guidance: resourceGuidance });
+  assert.deepEqual(resolve(plan).plan.participations.map((entry) => [entry.candidateId, entry.domain.identity]),
+    [["contract", "domains/orders"]]);
+  const exception = normalizeAgentBaseInitialIngestHomePlan({
+    default_home: { kind: "domain", identity: "domains/orders", title: "Orders" },
+    exceptions: [{ candidate_id: "contract", home: { kind: "domain", identity: "domains/fulfilment", title: "Fulfilment" } }],
+    participations: [],
+  });
+  assert.equal(resolve(exception).plan.participations[0]?.domain.identity, "domains/fulfilment");
+  assert.deepEqual(resolve(normalizeAgentBaseInitialIngestHomePlan({
+    default_home: { kind: "shared" }, exceptions: [], participations: [],
+  })).plan.participations, []);
+  const explicit = resolve(plan).plan;
+  assert.deepEqual(resolve(explicit).plan, explicit, "explicit participation is never duplicated");
+  assert.deepEqual(resolve(plan, { ...resourceRequest, candidates: [request.candidates[0]!, {
+    ...candidate, promotion: { basis: "operational", evidenceIds: ["contract-doc"] },
+  }] }).plan.participations, [], "other promotion bases keep home separate from participation");
+});
+
 test("[AB-HOME-004..005][AB-HOME-009] compatibility is explicit and invalid Receipt assignments fail before use", () => {
   const confirmedDomain = normalizeConfirmedDomain({ identity: "domains/orders", title: "Orders" });
   const compatibility = resolveProfileInitialIngestPlan({ subjectDirectory: "repositories/checkout", confirmedDomain,
