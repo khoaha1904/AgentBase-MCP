@@ -106,6 +106,8 @@ skill.
    exact frontmatter `type`; the canonical vocabulary is not permission to use
    every predicate on every type, and a display name or prose never changes the
    schema.
+   Every relationship in frontmatter needs a resolving Markdown link to its
+   target in the document body.
    Then run AgentBase final validation and diff. Repair only proposal files.
    Present warnings, limitations, and the complete diff.
 7. Stop before apply unless the maintainer explicitly authorizes applying that

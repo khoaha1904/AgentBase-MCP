@@ -148,7 +148,10 @@ This workflow uses `preflight_hub_ingest`, `discover_repository`, `get_okf_autho
    Do not retry ambiguous/unsupported recommendations or any internal,
    integrity, authority or transport failure.
 5. **Validate** — Run changed-set and final validation. Preserve prepared
-   `sources[].observed_revision`. Do not author any home `questions/`; Finalize
+   `sources[].observed_revision`.
+   Every relationship in frontmatter needs a resolving Markdown link to its
+   target in the document body.
+   Do not author any home `questions/`; Finalize
    renders Questions from the Receipt and updates the home navigation. Never
    create an AgentBase activity `log.md`. Make at most one repair
    from exact failures. If Finalize returns a Hub-base replacement session,
