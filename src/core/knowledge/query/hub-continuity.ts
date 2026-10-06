@@ -42,6 +42,7 @@ export type HubContinuityGap = Readonly<{
 }>;
 
 export type HubContinuityOptions = Readonly<{
+  domainIdentities?: readonly string[];
   conceptLimit?: number;
   neighborLimit?: number;
   edgeLimit?: number;
@@ -107,6 +108,7 @@ export async function buildHubContinuity(
   const subjectId = subjectIdentity(graph, subjectDirectory);
   const pathDomain = /^(domains\/[a-z0-9]+(?:-[a-z0-9]+)*)\//.exec(subjectDirectory)?.[1];
   const subjectDomains = [...new Set([
+    ...(options.domainIdentities ?? []).filter((identity) => graph.concepts.get(identity)?.document.type === "Domain"),
     ...(subjectId ? graph.domains.get(subjectId) ?? [] : []),
     ...(pathDomain && graph.concepts.has(pathDomain) ? [pathDomain] : []),
   ])];
@@ -120,8 +122,8 @@ export async function buildHubContinuity(
   const allNeighborIds = [...new Set(candidateEdges.flatMap((edge) => [edge.source, edge.target])
     .filter((identity) => !seeds.has(identity)))].sort();
   const neighborIds = allNeighborIds.slice(0, neighborLimit);
-  const allDomainIds = [...graph.concepts].filter(([identity, concept]) =>
-    !identity.startsWith("shared/") && subjectDomains.some((domain) => (graph.domains.get(identity) ?? []).includes(domain))
+  const allDomainIds = [...graph.concepts].filter(([identity]) =>
+    subjectDomains.some((domain) => ["home", "member", "repository-associated"].includes(graph.domainScopes.get(domain)?.get(identity) ?? ""))
       && !currentIds.includes(identity)).map(([identity]) => identity).sort();
   const domainIds = allDomainIds.slice(0, neighborLimit);
   const domainConcepts = domainIds.map((identity) => {

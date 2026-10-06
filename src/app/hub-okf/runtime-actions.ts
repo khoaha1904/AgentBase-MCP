@@ -449,12 +449,6 @@ export function createHubRuntimeActions(
           detail: `${question.property}: ${question.missingEvidence.join("; ") || "conflicting evidence"}`,
           updatedAt: question.createdAt,
         }));
-      let continuity = await buildActiveHubContinuity(localHub, sourceRepositoryId, subjectDirectory, { knownGaps });
-      const documentGaps = continuityDocumentGaps(localHub, continuity, snapshot.analysisRoot);
-      continuity = { ...continuity, knownGaps: [...knownGaps, ...documentGaps].slice(0, 64) };
-      const sourceChanges = input.mode === "refresh"
-        ? discoverRepositorySourceChanges(snapshot.analysisRoot, continuity.observedSource?.commit, source)
-        : undefined;
       const receipt = input.mode === "new" && input.discoveryReceiptId
         ? dependencies.discoveryReceiptResolver?.(input.discoveryReceiptId) : undefined;
       if (input.mode === "new" && !receipt) {
@@ -464,6 +458,27 @@ export function createHubRuntimeActions(
         || receipt.hubProfileId !== hubProfileId(localHub.hub) || receipt.publishedBase !== localHub.activeHead)) {
         throw new Error("discovery Receipt source or Hub authority no longer matches Prepare");
       }
+      const profilePlan = input.mode === "new" && profileAdmission.kind === "profile-1.0"
+        ? resolveProfileInitialIngestPlan({
+          subjectDirectory,
+          ...(input.homePlan ? { homePlan: input.homePlan } : {}),
+          ...(input.confirmedDomain ? { confirmedDomain: input.confirmedDomain } : {}),
+          request: receipt!.guidanceRequest,
+          guidance: receipt!.guidance,
+        }) : undefined;
+      let continuity = await buildActiveHubContinuity(localHub, sourceRepositoryId, subjectDirectory, {
+        knownGaps,
+        domainIdentities: profilePlan ? [
+          ...(profilePlan.plan.defaultHome.kind === "domain" ? [profilePlan.plan.defaultHome.identity] : []),
+          ...profilePlan.plan.exceptions.flatMap((entry) => entry.home.kind === "domain" ? [entry.home.identity] : []),
+          ...profilePlan.plan.participations.map((entry) => entry.domain.identity),
+        ] : input.confirmedDomain ? [input.confirmedDomain.identity] : [],
+      });
+      const documentGaps = continuityDocumentGaps(localHub, continuity, snapshot.analysisRoot);
+      continuity = { ...continuity, knownGaps: [...knownGaps, ...documentGaps].slice(0, 64) };
+      const sourceChanges = input.mode === "refresh"
+        ? discoverRepositorySourceChanges(snapshot.analysisRoot, continuity.observedSource?.commit, source)
+        : undefined;
       const signals = input.confirmedDomain ? [...(input.signals ?? []), "business domain"] : (input.signals ?? []);
       const guidance = receipt?.guidance ?? (input.guidanceRequest ? getOkfAuthoringGuidance(input.guidanceRequest) : undefined);
       const coverage = receipt ? { partial: receipt.coverage.limitations.length > 0,
@@ -483,14 +498,6 @@ export function createHubRuntimeActions(
       }
       if (input.mode === "new" && !selectedSchemas.includes("Repository")) selectedSchemas.unshift("Repository");
       if (input.confirmedDomain && !selectedSchemas.includes("Domain")) selectedSchemas.push("Domain");
-      const profilePlan = input.mode === "new" && profileAdmission.kind === "profile-1.0"
-        ? resolveProfileInitialIngestPlan({
-          subjectDirectory,
-          ...(input.homePlan ? { homePlan: input.homePlan } : {}),
-          ...(input.confirmedDomain ? { confirmedDomain: input.confirmedDomain } : {}),
-          request: receipt!.guidanceRequest,
-          guidance: receipt!.guidance,
-        }) : undefined;
       if (profilePlan && !selectedSchemas.includes("Domain") && (profilePlan.plan.defaultHome.kind === "domain"
         || profilePlan.plan.exceptions.some((entry) => entry.home.kind === "domain")
         || profilePlan.plan.participations.length > 0)) selectedSchemas.push("Domain");

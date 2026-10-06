@@ -8,7 +8,7 @@ import { createHubIdentity, hubProfileId } from "../../../core/hub/index.ts";
 import {
   AGENTBASE_OKF_PROFILE_PATH, getOkfAuthoringGuidance, loadOkfBundle, parseConceptDocument,
   readRepositoryObservedSource, readRepositoryRefreshCoverage, renderAgentBaseOkfProfileDocument, validateOkfRelationships,
-  type InventoryReceipt,
+  type HubContinuityManifest, type InventoryReceipt,
 } from "../../../core/knowledge/index.ts";
 import { runGit, type SourceSnapshot } from "../../../providers/github-hub/index.ts";
 import { createHubRuntimeActions } from "../runtime-actions.ts";
@@ -115,7 +115,7 @@ test("[AB-SCHEMA-057][AB-SCHEMA-060] one runtime keeps internal resources embedd
   }
 });
 
-test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-REFRESH-019..023][AB-USE-006] preparation renders one generic inspectable skeleton bundle and recoverable Refresh", async () => {
+test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-LOCAL-HUB-014][AB-REFRESH-019..023][AB-USE-006] preparation renders one generic inspectable skeleton bundle and recoverable Refresh", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-initial-ingest-"));
   const source = path.join(root, "vehicle-events");
   const environment = { HOME: root, XDG_CONFIG_HOME: path.join(root, "config"), XDG_DATA_HOME: path.join(root, "data") };
@@ -318,6 +318,38 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     assert.equal(finalized.inspection.coverage.partial, true);
     assert.deepEqual(finalized.inspection.coverage.limitations, ["runtime consumers were not present in this repository"]);
     const initialPublication = await publish(finalized.proposal.id, finalized.proposal.diffDigest);
+    // A second repository has no Published subject: its confirmed plan supplies continuity scope.
+    const consumer = path.join(root, "vehicle-consumer");
+    fs.mkdirSync(consumer);
+    fs.writeFileSync(path.join(consumer, "README.md"), "# Vehicle consumer\n\nReads vehicle events.\n");
+    await runGit({ args: ["init", "-b", "main"], cwd: consumer, operation: "initialize second repository" });
+    await runGit({ args: ["add", "."], cwd: consumer, operation: "stage second repository" });
+    await runGit({ args: ["-c", "user.name=AgentBase", "-c", "user.email=agentbase@localhost", "commit", "-m", "consumer fixture"],
+      cwd: consumer, operation: "commit second repository", commitTimestamp: "2026-08-22T01:00:00Z" });
+    const consumerPreflight = await actions.preflight(consumer) as typeof preflight;
+    const consumerRequest = {
+      resourceObservations: [],
+      candidates: [{ id: "repository", identityHint: "vehicle-consumer", identityBasis: "README", queryValue: "consumer repository",
+        evidenceIds: ["readme"], disposition: "concept" as const, suggestedType: "Repository" }],
+      semanticObservations: [{ id: "readme", candidateId: "repository", role: "documentation" as const,
+        signal: "repository", source: { path: "README.md", startLine: 1, endLine: 3 } }],
+    };
+    const consumerReceipt = createTestInventoryReceipt({ label: "vehicle-consumer",
+      source: { repositoryId: consumerPreflight.repository.repository.id,
+        remote: consumerPreflight.source_authority.remote, defaultBranch: consumerPreflight.source_authority.default_branch,
+        commit: consumerPreflight.source_authority.commit }, hubProfileId: localHubId,
+      publishedBase: initialPublication.commit, request: consumerRequest });
+    receipts.set(consumerReceipt.id, consumerReceipt);
+    const second = await actions.prepare({ mode: "new", sourceRepository: consumer,
+      subjectDirectory: "repositories/vehicle-consumer", discoveryReceiptId: consumerReceipt.id,
+      confirmedDomain: { identity: "domains/vehicle-data", title: "Vehicle Data",
+        evidenceResource: "agentbase://owner-guidance/domains/vehicle-data" },
+    }) as { continuity: HubContinuityManifest };
+    assert.equal(second.continuity.commit, initialPublication.commit);
+    assert.ok(second.continuity.domainConcepts.some((item) =>
+      item.summary.identity === "domains/vehicle-data/repositories/vehicle-events"));
+    assert.deepEqual(second.continuity.domainConcepts.find((item) =>
+      item.summary.identity === "domains/vehicle-data/knowledge/publisher")?.embeddedItems, ["vehicle-events"]);
     const correctionSubject = "domains/vehicle-data/repositories/vehicle-events.md";
     const beforeCorrection = await actions.read(correctionSubject) as { commit: string; excerpt: string };
     assert.doesNotMatch(JSON.stringify(beforeCorrection), /Refresh evidence confirms delivery ownership/);
