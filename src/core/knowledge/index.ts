@@ -77,6 +77,7 @@ export {
 } from "./query/hub-query-graph.ts";
 export {
   buildHubContinuity,
+  embeddedItemNames,
   type HubContinuityGap,
   type HubDomainConceptSummary,
   type HubContinuityManifest,

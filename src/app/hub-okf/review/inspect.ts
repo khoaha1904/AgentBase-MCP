@@ -11,6 +11,7 @@ import {
 } from "../../../core/knowledge/index.ts";
 import type { QuestionDeclaration } from "../authoring/questions.ts";
 import type { RefreshChangeAccounting } from "../authoring/refresh-change-accounting.ts";
+import { buildHubRefreshSuggestions, type HubRefreshSuggestions } from "./refresh-suggestions.ts";
 
 export type HubChangeEntry = Readonly<{
   path: string;
@@ -47,6 +48,7 @@ export type HubProposalInspection = Readonly<{
   }>;
   changeAccounting?: RefreshChangeAccounting;
   semanticImpact?: ProposalSemanticImpact;
+  refreshSuggestions?: HubRefreshSuggestions;
   groups: HubInspectionGroups;
   batch?: Readonly<{
     members: readonly Readonly<{ repositoryId: string; paths: readonly string[];
@@ -189,7 +191,11 @@ export function bindHubProposalInspection(
   if (!inspection.applicable || inspection.entries.some((entry) => !entry.allowed)) {
     throw new Error("an inapplicable proposal inspection cannot be finalized");
   }
-  return { ...inspection, semanticImpact: semanticImpact(inspection, options.baseRoot, options.proposedRoot, options.proposal) };
+  return {
+    ...inspection,
+    semanticImpact: semanticImpact(inspection, options.baseRoot, options.proposedRoot, options.proposal),
+    refreshSuggestions: buildHubRefreshSuggestions(options.baseRoot, options.proposedRoot, proposalRepositoryIds(options.proposal)),
+  };
 }
 
 export function readVerifiedHubProposalInspection(
@@ -207,5 +213,10 @@ export function readVerifiedHubProposalInspection(
   if (!isDeepStrictEqual(value.semanticImpact, expected)) {
     throw new Error("proposal semantic impact changed after finalization");
   }
-  return value;
+  const refreshSuggestions = buildHubRefreshSuggestions(path.join(proposalRoot, "base"),
+    path.join(proposalRoot, "bundle"), proposalRepositoryIds(proposal));
+  if (value.refreshSuggestions !== undefined && !isDeepStrictEqual(value.refreshSuggestions, refreshSuggestions)) {
+    throw new Error("proposal Refresh suggestions changed after finalization");
+  }
+  return { ...value, refreshSuggestions };
 }

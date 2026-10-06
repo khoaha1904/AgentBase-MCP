@@ -154,6 +154,10 @@ This workflow uses `preflight_hub_ingest`, `discover_repository`, `get_okf_autho
    from exact failures. If Finalize returns a Hub-base replacement session,
    continue from its new skeletons without rerunning source discovery. Inspect and present the complete proposal diff,
    Questions, limitations and partial-coverage status.
+   Show `inspection.refreshSuggestions` to the user, naming the source
+   Repository to Refresh for possible `publishes-to`/`writes-to` evidence.
+   Explain that a name match is only a candidate; do not edit another
+   repository's concepts or start its Refresh during this ingest.
 
 ## Stop rules
 

@@ -82,13 +82,13 @@ function navigationCandidates(relative: string): readonly string[] {
   return candidates;
 }
 
-function embeddedItemNames(body: string): readonly string[] {
+export function embeddedItemNames(body: string): readonly string[] {
   const section = body.match(/^# Embedded Knowledge[ \t]*\n([\s\S]*?)(?=^## Exact Evidence[ \t]*$|^# |(?![\s\S]))/m)?.[1] ?? "";
   return section.split(/\r?\n/).flatMap((line) => {
     const match = /^\|\s*([^|]+?)\s*\|/.exec(line);
     if (!match || /^name$/i.test(match[1]!.trim()) || /^-+$/.test(match[1]!.trim())) return [];
     return [match[1]!.trim().replaceAll("\\|", "|")];
-  }).slice(0, 16);
+  });
 }
 
 export async function buildHubContinuity(
@@ -128,7 +128,7 @@ export async function buildHubContinuity(
   const domainIds = allDomainIds.slice(0, neighborLimit);
   const domainConcepts = domainIds.map((identity) => {
     const concept = graph.concepts.get(identity)!;
-    return { summary: summarizeHubConcept(graph, identity), embeddedItems: embeddedItemNames(concept.document.body) };
+    return { summary: summarizeHubConcept(graph, identity), embeddedItems: embeddedItemNames(concept.document.body).slice(0, 16) };
   });
   const admittedIds = new Set([...seeds, ...neighborIds]);
   const admittedEdgeCandidates = candidateEdges.filter((edge) => admittedIds.has(edge.source) && admittedIds.has(edge.target));

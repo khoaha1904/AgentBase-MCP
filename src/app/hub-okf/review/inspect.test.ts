@@ -57,6 +57,10 @@ test("[AB-IMPACT-010][AB-IMPACT-012..017] Inspect and Accept reject changed sema
     const inspection = bindHubProposalInspection(ordinary, { baseRoot, proposedRoot: bundleRoot, proposal });
     fs.writeFileSync(path.join(proposalRoot, "inspection.json"), `${JSON.stringify(inspection, null, 2)}\n`);
     assert.deepEqual(readVerifiedHubProposalInspection(proposalRoot, proposal), inspection);
+    fs.writeFileSync(path.join(proposalRoot, "inspection.json"), JSON.stringify({ ...inspection,
+      refreshSuggestions: { items: [], omitted: 1 } }));
+    assert.throws(() => readVerifiedHubProposalInspection(proposalRoot, proposal), /Refresh suggestions changed/);
+    fs.writeFileSync(path.join(proposalRoot, "inspection.json"), JSON.stringify(inspection));
     const acceptedCommit = "d".repeat(40);
     fs.writeFileSync(path.join(proposalRoot, "accepted.json"), `${JSON.stringify({ id: proposal.id,
       mode: proposal.mode, sourceRepositoryId: REPOSITORY_ID, diffDigest, acceptedCommit })}\n`);

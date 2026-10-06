@@ -330,9 +330,14 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     const consumerRequest = {
       resourceObservations: [],
       candidates: [{ id: "repository", identityHint: "vehicle-consumer", identityBasis: "README", queryValue: "consumer repository",
-        evidenceIds: ["readme"], disposition: "concept" as const, suggestedType: "Repository" }],
+        evidenceIds: ["readme"], disposition: "concept" as const, suggestedType: "Repository" },
+      { id: "queue", identityHint: "vehicle-events", identityBasis: "documented queue name", queryValue: "shared event transport",
+        evidenceIds: ["shared-queue"], disposition: "concept" as const, suggestedType: "Resource",
+        promotion: { basis: "cross-boundary" as const, evidenceIds: ["shared-queue"] } }],
       semanticObservations: [{ id: "readme", candidateId: "repository", role: "documentation" as const,
-        signal: "repository", source: { path: "README.md", startLine: 1, endLine: 3 } }],
+        signal: "repository", source: { path: "README.md", startLine: 1, endLine: 3 } },
+      { id: "shared-queue", candidateId: "queue", role: "documentation" as const,
+        signal: "shared messaging resource crosses an ownership boundary", source: { path: "README.md", startLine: 3, endLine: 3 } }],
     };
     const consumerReceipt = createTestInventoryReceipt({ label: "vehicle-consumer",
       source: { repositoryId: consumerPreflight.repository.repository.id,
@@ -344,12 +349,28 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
       subjectDirectory: "repositories/vehicle-consumer", discoveryReceiptId: consumerReceipt.id,
       confirmedDomain: { identity: "domains/vehicle-data", title: "Vehicle Data",
         evidenceResource: "agentbase://owner-guidance/domains/vehicle-data" },
-    }) as { continuity: HubContinuityManifest };
+    }) as { continuity: HubContinuityManifest; sessionId: string; bundleRoot: string };
     assert.equal(second.continuity.commit, initialPublication.commit);
     assert.ok(second.continuity.domainConcepts.some((item) =>
       item.summary.identity === "domains/vehicle-data/repositories/vehicle-events"));
     assert.deepEqual(second.continuity.domainConcepts.find((item) =>
       item.summary.identity === "domains/vehicle-data/knowledge/publisher")?.embeddedItems, ["vehicle-events"]);
+    const secondFinalized = await actions.finalize(second.sessionId) as {
+      proposal: { id: string }; inspection: { refreshSuggestions: { items: readonly { repositoryId: string;
+        repositoryIdentity: string; parentIdentity: string; resourceIdentity: string; reason: string }[]; omitted: number } };
+    };
+    assert.equal(secondFinalized.inspection.refreshSuggestions.items.length, 1);
+    assert.equal(secondFinalized.inspection.refreshSuggestions.items[0]?.repositoryId, preflight.repository.repository.id);
+    assert.equal(secondFinalized.inspection.refreshSuggestions.items[0]?.repositoryIdentity,
+      "domains/vehicle-data/repositories/vehicle-events");
+    assert.equal(secondFinalized.inspection.refreshSuggestions.items[0]?.parentIdentity, "domains/vehicle-data/knowledge/publisher");
+    assert.match(secondFinalized.inspection.refreshSuggestions.items[0]?.reason ?? "", /Name-only.*publishes-to\/writes-to/);
+    const secondInspection = await actions.inspect(secondFinalized.proposal.id) as typeof secondFinalized;
+    assert.deepEqual(secondInspection.inspection.refreshSuggestions, secondFinalized.inspection.refreshSuggestions);
+    assert.equal(fs.readFileSync(path.join(stateRoot, "proposals", secondFinalized.proposal.id, "bundle",
+      "domains/vehicle-data/knowledge/publisher.md"), "utf8"), fs.readFileSync(path.join(stateRoot, "proposals",
+      secondFinalized.proposal.id, "base", "domains/vehicle-data/knowledge/publisher.md"), "utf8"),
+    "promoting a foreign embedded item must preserve its parent bytes");
     const correctionSubject = "domains/vehicle-data/repositories/vehicle-events.md";
     const beforeCorrection = await actions.read(correctionSubject) as { commit: string; excerpt: string };
     assert.doesNotMatch(JSON.stringify(beforeCorrection), /Refresh evidence confirms delivery ownership/);

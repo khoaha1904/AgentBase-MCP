@@ -121,6 +121,14 @@ meaning of affected semantic Domains.
   navigation impact and MUST NOT change the Domain concept's semantic digest.
   Optional external review notes never become concept/navigation impact.
 
+- **AB-IMPACT-020** — Finalize and Inspect retain the same bounded advisory
+  `refreshSuggestions` for new Resources matching existing foreign embedded
+  names, naming the source Repository and parent plus candidate inverse
+  predicates. They disclose name-only uncertainty and omissions, skip current
+  proposal repositories and existing inverse relations, and never edit foreign
+  concepts. Inspection rederives suggestions from retained bytes; verification
+  covers matching, nonmatches, existing inverse relations, bounds and tampering.
+
 ## Compatibility and recovery
 
 No Hub content or installed-state migration is required. New proposal producers

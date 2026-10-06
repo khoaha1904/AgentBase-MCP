@@ -28,6 +28,15 @@ change and decision metadata while file bytes remain in the ordered entry list;
 preserved files have no before/after content. Inspect exposes `proposal_digest`
 as the exact digest accepted by Publish.
 
+Finalize and Inspect also expose `refreshSuggestions` for newly promoted
+Resources whose title matches an embedded item in a retained base concept.
+Each candidate names the foreign source Repository and parent to Refresh for
+possible `publishes-to`/`writes-to` evidence. Matching ignores case and repeated
+whitespace only; it is not identity or ownership proof. Parents citing multiple
+repositories are left for agent investigation. Suggestions are deterministic,
+limited to 16 with an omitted count, and rechecked against retained bytes.
+They never modify another Repository's concepts or start Refresh.
+
 The deferred G5-C2 design adds no quality policy/packet/report, findings/probes,
 repair count or owner override to current inspection. Optional external AI
 review notes remain outside AgentBase state and the Hub.
