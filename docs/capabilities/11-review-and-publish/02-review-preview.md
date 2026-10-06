@@ -23,10 +23,19 @@ allowed state, reason when available, bounded before/after bytes and digest. A
 destructive entry must retain its correction/removal reason/evidence; preview
 does not infer the reason from the Git diff.
 
-Tool responses carry each inspection payload once. Grouped entries retain path,
+Finalize's CLI/MCP response contains only proposal ID, `proposal_digest`, change
+counts, Questions/limitations, coverage/accounting summaries and Refresh
+suggestions, plus source-head status when available. Recovery responses retain
+their replacement-session guidance. A no-change result needs no Inspect.
+The complete inspection is retained privately; Inspect is the only tool that
+returns detailed entries and semantic impact.
+
+Tool responses carry each inspection payload once. All grouped entries retain path,
 change and decision metadata while file bytes remain in the ordered entry list;
 preserved files have no before/after content. Inspect exposes `proposal_digest`
-as the exact digest accepted by Publish.
+as the exact digest accepted by Publish, also returned by Finalize. Modified
+entries retain full bounded before/after content once for exact review; a second
+diff representation is unnecessary. Legacy retained groups are compacted on read.
 
 Finalize and Inspect also expose `refreshSuggestions` for newly promoted
 Resources whose title matches an embedded item in a retained base concept.

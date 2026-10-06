@@ -501,7 +501,7 @@ export function finalizeHubAuthoringSession(
   terminalizeReceipt = true,
   changeAccounting: readonly RefreshChangeOutcome[] = [],
 ): Readonly<{ result: "no_change"; inspection: HubProposalInspection; observedSource: HubAuthoringSourceState & Readonly<{ observedAt: string }> }
-  | { proposal: AnyHubProposal; inspection: HubProposalInspection; observedSource: HubAuthoringSourceState & Readonly<{ observedAt: string }> }> {
+  | { proposal: AnyHubProposal; proposal_digest: string; inspection: HubProposalInspection; observedSource: HubAuthoringSourceState & Readonly<{ observedAt: string }> }> {
   const session = readHubAuthoringSession(stateRoot, sessionId, expectedCheckoutRoot);
   if ((session.finalizeFailures ?? 0) >= 2) {
     throw new Error("Initial Ingest is incomplete after its one repair attempt; start a new authoring session");
@@ -621,6 +621,7 @@ export function finalizeHubAuthoringSession(
         ...(refreshAccounting ? { changeAccounting: refreshAccounting } : {}),
       });
   const reviewed = { proposal: finalized.proposal,
+    proposal_digest: finalized.proposal.diffDigest,
     inspection: bindHubProposalInspection(contextualInspection, {
       baseRoot: session.baseRoot, proposedRoot: finalized.bundleRoot, proposal: finalized.proposal,
     }) };
