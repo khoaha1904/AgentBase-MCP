@@ -528,7 +528,7 @@ export function createHubRuntimeActions(
       const skeletons = input.mode === "new" && receipt
         ? materializeInitialIngestSessionSkeletons(stateRoot, session.id, localHub.root,
           repository.repository.repository)
-        : [];
+        : session.skeletons ?? [];
       return {
         sessionId: session.id,
         bundleRoot: session.bundleRoot,

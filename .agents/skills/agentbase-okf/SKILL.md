@@ -44,8 +44,11 @@ skill.
    not reconstruct frontmatter from memory. A skeleton produced from semantic
    `suggested` guidance keeps its visible role-review limitation until the
    proposal is reviewed; it is not exact truth. Preserve the prepared bounded
-   `Embedded Knowledge` table as searchable human-readable knowledge in its
-   parent. An embedded row has no OKF identity, standalone file, navigation or
+   `Embedded Knowledge` table only in the concept that owns its evidence;
+   a Repository links to promoted children and never copies their tables or
+   sources. Refresh may return a normalized Repository skeleton: preserve those
+   links and enrich it without restoring child tables. Repository-owned embedded
+   knowledge stays in the Repository. An embedded row has no OKF identity, standalone file, navigation or
    canonical graph relationship. An optional `Embedded Relations` table may
    describe a useful evidence-backed runtime direction using `self`, one exact
    concept identity or one unique same-parent embedded name. Use only

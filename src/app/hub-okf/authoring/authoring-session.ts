@@ -38,6 +38,7 @@ import {
 } from "./questions.ts";
 
 import { validateHubAuthoringBundle } from "./authoring-validation.ts";
+import { normalizeRefreshRepositoryLayout } from "./repository-layout.ts";
 import {
   receiptCoverage, receiptInspectionContext, restoreReceiptEmbeddedKnowledge,
   retainInitialDiscoveryDebt, validateReceiptMaterialization,
@@ -218,6 +219,7 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
   privateDirectory(path.dirname(root)); privateDirectory(root);
   copyCheckout(options.checkoutRoot, baseRoot);
   copyCheckout(options.checkoutRoot, bundleRoot);
+  const skeletons = options.mode === "refresh" ? normalizeRefreshRepositoryLayout(bundleRoot, options.sourceRepositoryId) : [];
   const session: HubAuthoringSession = {
     formatVersion: 1,
     id,
@@ -233,6 +235,7 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
     ...(homePlan ? { homePlan } : {}),
     signals: [...options.signals],
     selectedSchemas: [...options.selectedSchemas],
+    ...(skeletons.length ? { skeletons } : {}),
     ...(options.guidance ? { guidance: options.guidance } : {}),
     ...(options.coverage ? { coverage: options.coverage } : {}),
     ...(options.discoveryReceipt ? { discoveryReceipt: options.discoveryReceipt } : {}),
