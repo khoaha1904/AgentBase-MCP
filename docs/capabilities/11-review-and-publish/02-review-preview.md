@@ -46,6 +46,13 @@ repositories are left for agent investigation. Suggestions are deterministic,
 limited to 16 with an omitted count, and rechecked against retained bytes.
 They never modify another Repository's concepts or start Refresh.
 
+`coverage.partial` describes incomplete repository investigation; its limitations
+come from discovery or the explicit Coverage account. `changeAccounting.partial`
+describes incomplete source-delta enumeration (omitted paths or diff limitations),
+even when every returned changed path has an outcome. A complete delta does not
+clear investigation debt, so the booleans can differ. Finalize retains both
+summaries and Inspect retains the per-path outcomes.
+
 The deferred G5-C2 design adds no quality policy/packet/report, findings/probes,
 repair count or owner override to current inspection. Optional external AI
 review notes remain outside AgentBase state and the Hub.

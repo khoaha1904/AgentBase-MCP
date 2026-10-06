@@ -153,7 +153,8 @@ function continuityDocumentGaps(
     const refreshCoverage = readRepositoryRefreshCoverage(concept);
     if (refreshCoverage) gaps.push({
       kind: "limitation", subject: concept.conceptId,
-      detail: `Refresh coverage is partial after ${refreshCoverage.coveragePasses}/3 convergence passes; ${refreshCoverage.omittedChangedPaths} changed paths were omitted; ${refreshCoverage.limitations.join("; ") || "no additional limitation was recorded"}`,
+      detail: `Refresh coverage is partial after ${refreshCoverage.coveragePasses}/3 convergence passes; ${refreshCoverage.omittedChangedPaths} changed paths were omitted`,
+      details: refreshCoverage.limitations,
       updatedAt: refreshCoverage.observedAt,
     });
     if (/^# Limitations\s*$/m.test(concept.body)) gaps.push({
@@ -446,7 +447,8 @@ export function createHubRuntimeActions(
         .map((question) => ({
           kind: "question" as const,
           subject: question.subject,
-          detail: `${question.property}: ${question.missingEvidence.join("; ") || "conflicting evidence"}`,
+          detail: `${question.property}: missing or conflicting evidence`,
+          details: question.missingEvidence.length ? question.missingEvidence : ["conflicting evidence"],
           updatedAt: question.createdAt,
         }));
       const receipt = input.mode === "new" && input.discoveryReceiptId

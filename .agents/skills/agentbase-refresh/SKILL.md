@@ -118,6 +118,10 @@ This workflow uses `preflight_hub_ingest`, ordinary source read/search, optional
    use Finalize's compact `proposal_id` and `proposal_digest`, call
    `inspect_hub_okf_proposal` once for details, and present the complete
    grouped inspection. Stop before Publish.
+   `coverage.partial` concerns investigation scope; `changeAccounting.partial`
+   concerns the source delta. They may differ: accounting for every returned
+   changed path does not clear earlier discovery/coverage limitations. Read
+   each known gap's `details` list alongside its short `detail` summary.
 
 ## Recovery
 

@@ -38,6 +38,7 @@ export type HubContinuityGap = Readonly<{
   kind: "question" | "limitation" | "reference-warning";
   subject: string;
   detail: string;
+  details?: readonly string[];
   updatedAt?: string;
 }>;
 

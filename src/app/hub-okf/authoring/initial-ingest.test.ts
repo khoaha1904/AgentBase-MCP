@@ -395,9 +395,12 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
       signals: ["repository"],
     }) as { sessionId: string; bundleRoot: string; selectedSchemas: string[];
       source: { commit: string }; sourceChanges: { paths: string[] };
-      continuity: { knownGaps: readonly { detail: string }[] } };
+      continuity: { knownGaps: readonly { detail: string; details?: readonly string[] }[] } };
     assert.deepEqual(refresh.sourceChanges.paths, ["README.md"]);
-    assert.match(refresh.continuity.knownGaps.map((gap) => gap.detail).join("\n"), /runtime consumers were not present/);
+    const coverageGap = refresh.continuity.knownGaps.find((gap) => gap.details?.includes("runtime consumers were not present in this repository"));
+    assert.ok(coverageGap);
+    assert.deepEqual(coverageGap.details, ["runtime consumers were not present in this repository"]);
+    assert.doesNotMatch(coverageGap.detail, /runtime consumers were not present/);
     assert.deepEqual(refresh.selectedSchemas.sort(), ["Domain", "Flow", "Function", "Repository", "System"]);
     const repositoryPath = path.join(refresh.bundleRoot, "domains", "vehicle-data", "repositories", "vehicle-events.md");
     const initialDebt = readRepositoryRefreshCoverage(parseConceptDocument(correctionSubject, fs.readFileSync(repositoryPath, "utf8")));

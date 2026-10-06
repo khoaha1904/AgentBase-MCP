@@ -76,6 +76,9 @@ authorized old test-state disposal is complete without a migration adapter.
   replacing embedded rows duplicated from its source-backed child concepts
   with links. It returns the changed Repository as an editable skeleton;
   Repository-owned embedded rows, sources, identity and protected bytes remain.
+  Each continuity known gap has a short `detail`; multi-item missing evidence
+  and coverage limitations are returned as a `details` list rather than joined
+  into one long string.
 - **AB-LOCAL-HUB-015** — A new repository proposal may append navigation to an
   existing root/shared/home `index.md`, but every accepted protected line
   remains byte-exact and ordered. Compact category indexes are not authored.

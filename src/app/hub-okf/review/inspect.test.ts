@@ -11,6 +11,7 @@ import { acceptHubProposal } from "./test-support/accept.ts";
 import { renderPublicationReview } from "../publication/review-summary.ts";
 import {
   bindHubProposalInspection,
+  attachHubInspectionContext,
   inspectHubProposal,
   readVerifiedHubProposalInspection,
 } from "./inspect.ts";
@@ -142,6 +143,25 @@ test("[AB-IMPACT-016] modified Refresh files appear once in Inspect and never in
       groups: { ...inspection.groups, updated: inspection.entries } }));
     const legacy = await review.inspect(proposal.id) as { inspection: typeof inspection };
     assert.equal(JSON.stringify(legacy.inspection.groups).includes("content"), false);
+    const partial = attachHubInspectionContext(inspection, [], { partial: true, limitations: ["Consumers not investigated"] },
+      { changeAccounting: { outcomes: [], partial: false, omitted: 0, limitations: [] },
+        discovery: { sourceRevision: COMMIT, lanes: [], embeddedGroups: [], relationsAndFlows: [],
+          questions: ["question-fixture"], ignoredCounts: {}, ignoredReasons: [], limitations: ["Consumers not investigated"] } });
+    const partialResponse = await callHubOkfTool("finalize_hub_okf_proposal", { session_id: "fixture" }, {
+      finalize: async () => ({ ...finalized, inspection: partial }),
+    } as never);
+    const partialSummary = JSON.parse(partialResponse.content[0]!.type === "text" ? partialResponse.content[0]!.text : "{}");
+    assert.equal(partialSummary.coverage.partial, true);
+    assert.equal(partialSummary.changeAccounting.partial, false);
+    assert.deepEqual(partialSummary.questions, ["question-fixture"]);
+    assert.deepEqual(partialSummary.limitations, ["Consumers not investigated"]);
+    const noChange = await callHubOkfTool("finalize_hub_okf_proposal", { session_id: "fixture" }, {
+      finalize: async () => ({ result: "no_change", inspection: partial }),
+    } as never);
+    assert.doesNotMatch(JSON.stringify(noChange), /Evidence-backed|semanticImpact|proposal_id/);
+    const replacement = { result: "replacement_required", session_id: "replacement", skeletons: [{ path: "repositories/worker.md" }] };
+    const replaced = await callHubOkfTool("finalize_hub_okf_proposal", { session_id: "fixture" }, { finalize: async () => replacement } as never);
+    assert.deepEqual(JSON.parse(replaced.content[0]!.type === "text" ? replaced.content[0]!.text : "{}"), replacement);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
