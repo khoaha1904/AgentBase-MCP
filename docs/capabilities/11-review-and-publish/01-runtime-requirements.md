@@ -68,11 +68,10 @@ authorized old test-state disposal is complete without a migration adapter.
   current-source summaries, the logical subject when resolved, one-hop
   neighbors, existing concepts in the same Domain with bounded embedded-item
   names, and relevant navigation paths with explicit omitted counts. The
-  confirmed Initial-Ingest plan supplies Domain scope from its default home,
+  complete checkout remains lifecycle state and is not serialized as authoring
+  context. The confirmed Initial-Ingest plan supplies Domain scope from its default home,
   exception homes and participations even before the subject exists. Concepts
   physically homed in those Domains are included without requiring `part-of`.
-  complete checkout remains lifecycle state and is not serialized as authoring
-  context.
 - **AB-LOCAL-HUB-015** — A new repository proposal may append navigation to an
   existing root/shared/home `index.md`, but every accepted protected line
   remains byte-exact and ordered. Compact category indexes are not authored.
