@@ -1,65 +1,90 @@
-# Vòng 9 — 2026-10-06
+# Vòng 10 — 2026-10-06
 
 ## Prompt đã nhận
 
-Đã nhận đầy đủ prompt Vòng 9, kết thúc bằng `HẾT VÒNG 9`. Reviewer xác nhận
-Vòng 8 đạt `247/247`, validation có session và Repository skeleton đã đạt;
-chấp nhận chiều ngược đi qua Refresh của repository sở hữu evidence. Vòng này
-sửa Domain continuity trên đường Initial Ingest chính, thêm gợi ý Refresh và
-làm rõ yêu cầu Markdown link cho relationship.
+Đã nhận đầy đủ prompt Vòng 10, kết thúc bằng `HẾT VÒNG 10`. Reviewer xác nhận
+Vòng 9 đạt `248/248` trên macOS; Domain continuity, gợi ý Refresh và luồng
+Refresh repo sở hữu evidence đã chạy được trên Hub GHE tạm. Vòng này yêu cầu
+rút response Refresh, trả publication digest, chuẩn hóa Repository cũ, gắn
+Resource cross-boundary vào Domain đã xác nhận và làm rõ gap/coverage.
 
 ## Kết quả theo từng mục
 
 | Mục | Trạng thái | Kết quả và commit |
 | --- | --- | --- |
-| 1. Domain continuity | Làm xong | `91cc757`: giải quyết home plan đã xác nhận trước khi dựng continuity; lấy Domain từ default home, exception homes và participations. Dùng projection Domain có sẵn để bao gồm concept có physical home dù không có `part-of`, và concept tham gia Domain từ shared home. Test đi qua runtime thật: publish repo A vào Hub Git fixture, rồi Prepare repo B với `repositories/vehicle-consumer` và `confirmed_domain`; kết quả có Repository A, runtime A và tên queue embedded. `0702136` chỉnh câu trong contract cho rõ. |
-| 2. Gợi ý chiều ngược | Làm xong | `2a8f2bd`: Finalize/Inspect trả `inspection.refreshSuggestions` gồm `items` và `omitted`. Mỗi gợi ý chỉ rõ Repository ID/identity, parent identity, Resource identity và tên embedded để Refresh kiểm tra `publishes-to`/`writes-to`. Tối đa 16 gợi ý, thứ tự ổn định, bỏ repo đang trong proposal và trường hợp đã có chiều ngược. Skill ingest nhắc báo gợi ý và tính chưa xác minh cho người dùng. |
-| 3. Relationship cần link | Làm xong | `eb47e73`: skill ingest và OKF nói rõ mỗi relationship trong frontmatter cần link Markdown giải quyết được tới target trong nội dung. |
-| 4. Báo cáo, gate và rà diff | Làm xong | Báo cáo này là commit riêng `Update handoff report for round 9`; chỉ push `origin main` sau gate và kiểm tra báo cáo. Không chạm Hub thật. |
+| 1. Response file modified | Làm xong | `1581fd9`: CLI/MCP Finalize chỉ trả `proposal_id`, `proposal_digest`, counts, Questions/limitations, coverage/accounting summary, Refresh suggestions và source-head status nếu có. Inspection đầy đủ vẫn lưu private cho Inspect/Publish. Mọi `groups.*` chỉ có metadata; bytes chỉ ở `entries`. Inspect chuẩn hóa cả groups của inspection cũ khi đọc. Test giới hạn Finalize dưới 1.000 byte và Inspect dưới 24.000 byte trên fixture hai file modified; kiểm tra CLI/MCP cùng kết quả. `c7624b1` sửa fixture dùng đúng kiểu input proposal. |
+| 2. Finalize digest | Làm xong | `c540288`: thêm `proposal_digest` bằng đúng `proposal.diffDigest`; public summary dùng field này cùng `proposal_id`. Không đổi digest hay yêu cầu Publish. |
+| 3. Repository kiểu cũ | Làm xong | `3b9e2e6`: Refresh Prepare nhận diện các hàng Embedded Knowledge được chép nguyên từ concept con có cùng source repository, thay chúng bằng link và trả Repository đã sửa trong `skeletons`. Bảng chỉ chứa hàng chép được bỏ; bảng trộn giữ hàng riêng của Repository. Giữ prose riêng, sources, metadata, identity và bytes của concept con. Không sửa Repository human/verified hoặc có nguồn từ repo khác. Skill OKF nói rõ bảng nằm ở concept sở hữu evidence, Repository link tới con. |
+| 4. Resource cross-boundary | Làm xong | `f4415d8`: Resource schema cho phép `part-of → Domain`. Prepare mở rộng Domain home đã xác nhận của Resource promoted bằng cross-boundary thành participation có owner-guidance trong plan đã lưu; skeleton có edge và Markdown link, không cần `implemented-in` tới repo đang ingest. Test đường Prepare repo thứ hai kiểm tra relation, validate và continuity `domains`; test plan kiểm tra default/exception home, không duplicate, shared home và promotion khác. |
+| 5. Coverage và known gaps | Làm xong | `05f99cc`: ghi rõ coverage là phạm vi điều tra còn changeAccounting là tính đầy đủ của delta nguồn; hai cờ có thể khác nhau. `knownGaps` giữ danh sách object, mỗi object có `detail` ngắn và `details` là danh sách limitation/missing evidence. Finalize giữ cả hai summary, không lặp limitation đã trùng và vẫn trả các Question ID từ Receipt. |
+| 6. Báo cáo, gate, rà diff | Làm xong | Báo cáo là commit riêng `Update handoff report for round 10`. Chỉ push `origin main` sau gate. Không chạm Hub thật. |
+
+## Kích thước response
+
+Dùng cùng một fixture Refresh trên baseline Vòng 9 và source Vòng 10: hai file
+Function `publisher`/`consumer`, mỗi file khoảng 4KB, 120 dòng nội dung chung và
+một dòng thay đổi. Tạo byte inspection, proposal refresh và semantic impact
+bằng code thật; dùng action fixture để trả proposal đó qua `callHubOkfTool`.
+Đo UTF-8 byte của `JSON.stringify(response)` gồm MCP content envelope, không
+chỉ riêng nội dung file. Test lưu/read inspection bằng review action thật;
+fixture không gọi Hub hay provider thật.
+
+| Response | Trước | Sau |
+| --- | ---: | ---: |
+| Finalize | 41.406 byte | 453 byte |
+| Inspect | 41.348 byte | 22.592 byte |
+| Tổng hai lần gọi | 82.754 byte | 23.045 byte |
+
+Tổng giảm khoảng **72,2%**. Số đo là fixture này, không thay thế số 142KB của
+reviewer. Modified vẫn trả before/after đầy đủ đúng một lần trong Inspect,
+bounded và có digest/truncated; chưa đổi sang diff-only để reviewer có nguyên
+nội dung kiểm tra mà không cần thêm lần gọi hoặc một bộ tạo diff mới.
+Finalize không trả file bytes, semantic impact hay per-path accounting outcomes.
 
 ## Kiểm chứng
 
-- Node `v24.18.0`. `TMPDIR` trỏ tới symlink `link` của một thư mục fixture
-  riêng; test xác nhận đường dẫn thật khi cần.
-- `TMPDIR="$round9_tmp/link" npm run verify`: đạt toàn bộ gate, `248/248`,
-  fail `0`, skip `0`; Vòng 8 là `247/247`. Thêm một test cho gợi ý Refresh và
-  mở rộng test end-to-end/inspection đang có.
+- Node `v24.18.0`, `TMPDIR` qua symlink `link` trỏ tới thư mục thật `real`.
+- `TMPDIR="$round10_tmp/link" npm run verify`: đạt **251/251**, fail `0`,
+  skip `0`; baseline reviewer là `248/248`.
 - Contract, retired-code-graph, release-evidence, upstream-foundations,
   hub-validator, typecheck, depcruise, knip, gitleaks và `git diff --check` đạt.
-  Release evidence: `205/205` active requirements trên `64` test files;
+  Release evidence: `205/205` active requirements trên `65` test files;
   gitleaks báo `no leaks found`.
-- Test tập trung Prepare/continuity: `4/4`. Test Finalize/Inspect/gợi ý:
-  `5/5`, gồm so sánh gợi ý Finalize với Inspect và so sánh nguyên bytes parent
-  của repo A giữa retained base và proposed bundle.
-- Test gợi ý kiểm tra tên không khớp, Resource đã Published, repo đang được
-  xử lý, cả hai predicate ngược, tính ổn định và overflow `18 → 16 + 2`.
-  Inspection từ chối gợi ý bị sửa sau Finalize.
-- Sandbox chặn child-process của Git trong test/contract checker; đã chạy lại
-  gate với quyền thực thi cần thiết trên fixture cô lập. Không sửa guard.
-- Đã đọc thủ công toàn bộ diff sắp push so với `origin/main`, gồm code, test,
-  packaged skills, contract và báo cáo: không thấy token thật, hostname nội bộ,
-  URL Hub thật, email riêng tư, đường dẫn tuyệt đối trên máy hoặc tên dự án/
-  khách hàng/người. Tên repo/Domain là dữ liệu tổng quát giả lập; email trong
-  lệnh tạo commit fixture là email tác giả commit. Gitleaks bổ sung kiểm tra
-  secret, không thay thế rà thủ công.
-- Đã kiểm tra branch hiện tại là `main`, origin có đúng một đích push là
-  repository công khai này; không dùng remote hoặc branch khác.
+- Đã chạy `npm run build:hub-validator`; artifact hiện tại không cần đổi.
+- Test tập trung authoring/profile/layout/inspection đạt `11/11`; kiểm tra
+  cuối cho gap và compact summary đạt `6/6`.
+- Test compact response kiểm tra modified bytes không ở groups, digest, CLI/MCP,
+  inspection cũ, no-change và replacement-session không mất recovery guidance;
+  coverage partial nhưng delta complete vẫn giữ cả hai ý nghĩa và Question ID.
+- Test layout dùng Prepare session thật, kiểm tra trả skeleton, tính idempotent,
+  link, frontmatter giữ nguyên, mixed table/prose và bảo vệ human/verified bytes.
+- Test ingest hai repo kiểm tra Resource có owner-evidenced `part-of`, link tới
+  Domain, validation qua và continuity của Resource có Domain đúng.
+- Đã đọc thủ công toàn bộ diff sắp push so với `origin/main`, gồm source, tests,
+  packaged skills, Product/Architecture/Capability Contracts và báo cáo: không
+  thấy token thật, hostname nội bộ, URL Hub thật, email riêng tư, đường dẫn tuyệt
+  đối trên máy hoặc tên dự án/khách hàng/người. Tên và dữ liệu thêm vào là fixture
+  tổng quát; gitleaks bổ sung kiểm tra secret, không thay thế rà thủ công.
+- Branch hiện tại là `main`; origin có đúng một đích push là repository công
+  khai này. Không dùng remote/branch khác, không force-push.
 
 ## Chưa làm / chưa kiểm chứng được
 
-- Gợi ý chỉ đối chiếu tên Resource với tên embedded sau khi chuẩn hóa chữ
-  hoa/thường và khoảng trắng; đây là ứng viên, không chứng minh identity hay
-  ownership. Parent phải có provenance từ đúng một Repository có identity
-  trên retained base; parent nhiều nguồn Repository được để agent điều tra.
-  Không dò theo prose, ARN hoặc fuzzy name và không tự thêm relationship.
-- Giữ giới hạn continuity hiện có: mặc định tối đa 128 concept Domain, tối đa
-  16 tên embedded mỗi concept và omitted counts cho concept bị cắt.
-- Không chạy lại end-to-end trên macOS hoặc Hub GHE thật; các test dùng
-  repository Git dùng xong bỏ và publication remote local giả lập.
+- Không chạy Hub GHE thật hay macOS; mọi Hub/source/publication remote trong
+  test đều là fixture local dùng xong bỏ.
+- Chuẩn hóa Repository chỉ xử lý bảng chuẩn có hàng thực sự chép từ concept
+  con với provenance khớp. Không xóa nội dung riêng hoặc tự diễn giải prose tùy
+  biến. Giữ sources cũ để bảo toàn evidence; không thực hiện migration toàn Hub.
+- Resource đã Published từ trước không bị tự sửa khi ingest repo khác. Agent
+  có thể thêm participation có evidence qua Refresh bình thường; không tự
+  rehome và không suy luận repository sở hữu chỉ từ config/tên.
+- `shared/` không phải Domain; Resource homed ở shared vẫn cần participation
+  được xác nhận riêng. Các promotion basis khác giữ quy tắc home và participation
+  tách biệt như trước.
 
 ## Câu hỏi và phản biện cho reviewer
 
-Không có câu hỏi chặn. Gợi ý Refresh thực hiện cách đã được chấp nhận ở Vòng 8:
-repo B có thể promote Resource, còn quan hệ ngược cần evidence của repo A và
-một Refresh A riêng. Nếu chỉ trùng tên, agent phải kiểm tra nguồn trước khi
-thêm quan hệ; gợi ý không xác nhận rằng repo A thực sự sở hữu Resource đó.
+Không có câu hỏi chặn. Đã chọn before/after một lần trong Inspect thay vì
+thêm diff-only representation. Mọi file detail vẫn có thể được reviewer kiểm
+tra trước Publish; Finalize chỉ cung cấp identity/digest và summary để đi tới
+lần Inspect duy nhất.
