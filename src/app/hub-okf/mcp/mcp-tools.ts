@@ -213,7 +213,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "finalize_hub_okf_proposal",
-    description: "Validate and lock an authored Hub workspace into one immutable local proposal. Receipt-bound Init derives Questions from its frozen Inventory; Refresh Questions may reference only exact existing agentbase.observed_values.",
+    description: "Validate and lock an authored Hub workspace. Returns proposal_id, proposal_digest and a compact change/Question/limitation summary; call inspect_hub_okf_proposal once for details. Receipt-bound Init derives Questions from its frozen Inventory; Refresh Questions may reference only exact existing agentbase.observed_values.",
     inputSchema: {
       type: "object",
       properties: {

@@ -1,4 +1,5 @@
 import type { HubToolActions } from "./mcp/mcp-tools.ts";
+import { summarizeHubFinalization } from "./review/inspect.ts";
 
 type Writer = (value: string) => void;
 
@@ -54,7 +55,7 @@ export async function executeHubCli(
         subjectDirectory: required(values, "--subject"),
         signals: required(values, "--signals").split(",").map((value) => value.trim()).filter(Boolean),
       });
-    } else if (command === "finalize") output = await actions.finalize(required(values, "--session"));
+    } else if (command === "finalize") output = summarizeHubFinalization(await actions.finalize(required(values, "--session")));
     else if (command === "inspect") output = await actions.inspect(required(values, "--proposal"));
     else if (command === "search") {
       const limit = values["--limit"] === undefined ? undefined : Number(values["--limit"]);

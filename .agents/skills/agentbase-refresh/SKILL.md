@@ -115,7 +115,8 @@ This workflow uses `preflight_hub_ingest`, ordinary source read/search, optional
    resources. Corrections are ordinary edits; do not invent evidence to make a
    removal or materialized change outcome pass.
 7. If Finalize returns `no_change`, report it without calling inspection. Otherwise
-   call `inspect_hub_okf_proposal` for the returned proposal and present the complete
+   use Finalize's compact `proposal_id` and `proposal_digest`, call
+   `inspect_hub_okf_proposal` once for details, and present the complete
    grouped inspection. Stop before Publish.
 
 ## Recovery

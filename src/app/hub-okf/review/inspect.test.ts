@@ -15,6 +15,8 @@ import {
   readVerifiedHubProposalInspection,
 } from "./inspect.ts";
 import { callHubOkfTool } from "../mcp/mcp-tool-call.ts";
+import { executeHubCli } from "../cli.ts";
+import { createReviewActions } from "./review-actions.ts";
 import { writeHubProposalState } from "./proposal-state.ts";
 
 const COMMIT = "a".repeat(40);
@@ -93,6 +95,53 @@ test("[AB-IMPACT-010][AB-IMPACT-012..017] Inspect and Accept reject changed sema
     const legacy = { ...ordinary };
     fs.writeFileSync(path.join(proposalRoot, "inspection.json"), `${JSON.stringify(legacy, null, 2)}\n`);
     assert.throws(() => readVerifiedHubProposalInspection(proposalRoot, proposal), /regenerate the prepared proposal/);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test("[AB-IMPACT-016] modified Refresh files appear once in Inspect and never in Finalize summaries", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-refresh-response-"));
+  const baseRoot = path.join(root, "base"), bundleRoot = path.join(root, "bundle");
+  try {
+    for (const directory of [baseRoot, bundleRoot]) {
+      write(directory, "index.md", "---\nokf_version: '0.2'\n---\n# Hub\n");
+      for (const name of ["publisher", "consumer"]) write(directory, `components/${name}.md`,
+        `---\ntype: Function\ntitle: ${name}\ndescription: Event worker.\n---\n# Worker\n\n${"Evidence-backed operation details.\n".repeat(120)}\n${directory === baseRoot ? "Prior behavior." : "Updated behavior."}\n`);
+    }
+    const ordinary = inspectHubProposal(["publisher", "consumer"].map((name) => ({
+      path: `components/${name}.md`, change: "modified" as const, allowed: true,
+    })), { baseRoot, proposedRoot: bundleRoot });
+    const proposal = createHubProposal({ mode: "refresh", subject: "components/publisher", baseCommit: COMMIT,
+      sourceRepositoryId: REPOSITORY_ID, evidenceDigest: `sha256:${"b".repeat(64)}`,
+      schemaVersion: "7.0.0", selectedSchemas: ["Function"], treeDigest: computeOkfTreeDigest(bundleRoot),
+      diffDigest: `sha256:${createHash("sha256").update(JSON.stringify(ordinary.entries)).digest("hex")}`,
+      localHubId: "c".repeat(24), createdAt: "2026-10-06T00:00:00Z" });
+    const inspection = bindHubProposalInspection(ordinary, { baseRoot, proposedRoot: bundleRoot, proposal });
+    assert.equal(inspection.counts.modified, 2);
+    assert.equal(inspection.groups.updated.length, 2);
+    assert.equal(JSON.stringify(inspection.groups).includes("content"), false);
+    fs.writeFileSync(path.join(root, "inspection.json"), JSON.stringify(inspection));
+    writeHubProposalState(root, proposal);
+    const review = createReviewActions(root, () => root, async () => { throw new Error("Inspect needs no real Hub"); });
+    const finalized = { proposal, inspection, observedSource: { commit: COMMIT, dirty: false, dirtyDigest: null } };
+    const actions = { finalize: async () => finalized, inspect: review.inspect } as never;
+    const finalResponse = await callHubOkfTool("finalize_hub_okf_proposal", { session_id: `hub-session-${"a".repeat(24)}` }, actions);
+    const inspectResponse = await callHubOkfTool("inspect_hub_okf_proposal", { proposal_id: proposal.id }, actions);
+    const body = JSON.parse(finalResponse.content[0]!.type === "text" ? finalResponse.content[0]!.text : "{}");
+    assert.equal(body.proposal_id, proposal.id);
+    assert.equal(body.proposal_digest, proposal.diffDigest);
+    assert.equal(body.counts.modified, 2);
+    assert.deepEqual(body.refreshSuggestions, { items: [], omitted: 0 });
+    assert.equal(body.inspection, undefined);
+    assert.ok(Buffer.byteLength(JSON.stringify(finalResponse)) < 1_000);
+    assert.ok(Buffer.byteLength(JSON.stringify(inspectResponse)) < 24_000);
+    let cli = "";
+    assert.equal(await executeHubCli(["finalize", "--session", "fixture"], actions, (value) => { cli = value; }), 0);
+    assert.deepEqual(JSON.parse(cli), body);
+    // Older retained inspections can have bytes in groups; reading them must still compact the response.
+    fs.writeFileSync(path.join(root, "inspection.json"), JSON.stringify({ ...inspection,
+      groups: { ...inspection.groups, updated: inspection.entries } }));
+    const legacy = await review.inspect(proposal.id) as { inspection: typeof inspection };
+    assert.equal(JSON.stringify(legacy.inspection.groups).includes("content"), false);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 

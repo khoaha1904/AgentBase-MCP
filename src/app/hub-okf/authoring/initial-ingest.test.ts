@@ -402,7 +402,7 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
       inspection: {
         changeAccounting: { partial: boolean; omitted: number; limitations: string[];
           outcomes: readonly { path: string; outcome: string; reason: string }[] };
-        groups: { updated: readonly { path: string; after?: { content: string } }[] };
+        entries: readonly { path: string; after?: { content: string } }[];
       };
     };
     assert.deepEqual(refreshed.proposal.selectedSchemas, ["Domain", "Flow", "Function", "Repository", "System"]);
@@ -410,7 +410,7 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
       outcomes: [{ path: "README.md", outcome: "updated", reason: "Updates the Repository delivery-ownership overview." }],
       partial: false, omitted: 0, limitations: [],
     });
-    const updatedRepository = refreshed.inspection.groups.updated.find((entry) => entry.path === "domains/vehicle-data/repositories/vehicle-events.md");
+    const updatedRepository = refreshed.inspection.entries.find((entry) => entry.path === "domains/vehicle-data/repositories/vehicle-events.md");
     assert.ok(updatedRepository?.after);
     assert.deepEqual(readRepositoryRefreshCoverage(parseConceptDocument(updatedRepository.path, updatedRepository.after.content)), initialDebt,
       "a complete Delta must preserve the Published Initial-Ingest discovery debt");
@@ -442,8 +442,8 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     assert.equal(partial.sourceChanges.omitted, 1);
     const partialFinalized = await actions.finalize(partial.sessionId, [], [], partial.sourceChanges.paths.map((changedPath) => ({
       path: changedPath, outcome: "ignored" as const, reason: "Synthetic fixture file has no shared-knowledge effect.",
-    }))) as { proposal: { id: string; diffDigest: string }; inspection: { groups: { updated: readonly { path: string; after?: { content: string } }[] } } };
-    const partialRepository = partialFinalized.inspection.groups.updated.find((entry) =>
+    }))) as { proposal: { id: string; diffDigest: string }; inspection: { entries: readonly { path: string; after?: { content: string } }[] } };
+    const partialRepository = partialFinalized.inspection.entries.find((entry) =>
       entry.path === "domains/vehicle-data/repositories/vehicle-events.md");
     assert.ok(partialRepository?.after);
     const partialCoverage = readRepositoryRefreshCoverage(parseConceptDocument(partialRepository.path, partialRepository.after.content));
@@ -464,8 +464,8 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     assert.deepEqual(completeDelta.sourceChanges.paths, ["bulk/file-000.ts"]);
     const completeDeltaFinalized = await actions.finalize(completeDelta.sessionId, [], [], [{
       path: "bulk/file-000.ts", outcome: "ignored", reason: "Synthetic fixture file has no shared-knowledge effect.",
-    }]) as { proposal: { id: string; diffDigest: string }; inspection: { groups: { updated: readonly { path: string; after?: { content: string } }[] } } };
-    const completeDeltaRepository = completeDeltaFinalized.inspection.groups.updated.find((entry) =>
+    }]) as { proposal: { id: string; diffDigest: string }; inspection: { entries: readonly { path: string; after?: { content: string } }[] } };
+    const completeDeltaRepository = completeDeltaFinalized.inspection.entries.find((entry) =>
       entry.path === "domains/vehicle-data/repositories/vehicle-events.md");
     assert.ok(completeDeltaRepository?.after);
     assert.equal(readRepositoryRefreshCoverage(parseConceptDocument(
@@ -480,9 +480,9 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     assert.deepEqual(partialCoverageRefresh.sourceChanges.paths, []);
     const partialCoverageFinalized = await actions.finalize(partialCoverageRefresh.sessionId) as {
       proposal: { id: string; diffDigest: string };
-      inspection: { groups: { updated: readonly { path: string; after?: { content: string } }[] } };
+      inspection: { entries: readonly { path: string; after?: { content: string } }[] };
     };
-    const partialCoverageRepository = partialCoverageFinalized.inspection.groups.updated.find((entry) =>
+    const partialCoverageRepository = partialCoverageFinalized.inspection.entries.find((entry) =>
       entry.path === "domains/vehicle-data/repositories/vehicle-events.md");
     assert.ok(partialCoverageRepository?.after);
     const retainedCoverage = readRepositoryRefreshCoverage(parseConceptDocument(
@@ -505,9 +505,9 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     fs.appendFileSync(coverageRepositoryPath, "\nCoverage Refresh adds previously omitted recovery guidance.\n");
     const coverageFinalized = await actions.finalize(coverageRefresh.sessionId) as {
       proposal: { id: string; diffDigest: string };
-      inspection: { groups: { updated: readonly { path: string; after?: { content: string } }[] } };
+      inspection: { entries: readonly { path: string; after?: { content: string } }[] };
     };
-    const coverageRepository = coverageFinalized.inspection.groups.updated.find((entry) =>
+    const coverageRepository = coverageFinalized.inspection.entries.find((entry) =>
       entry.path === "domains/vehicle-data/repositories/vehicle-events.md");
     assert.ok(coverageRepository?.after);
     assert.match(coverageRepository.after.content, /previously omitted recovery guidance/);
@@ -525,9 +525,9 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     }) as { sessionId: string; sourceChanges: { paths: string[] } };
     assert.deepEqual(confirmingCoverage.sourceChanges.paths, []);
     const confirmedCoverage = await actions.finalize(confirmingCoverage.sessionId) as {
-      inspection: { groups: { updated: readonly { path: string; after?: { content: string } }[] } };
+      inspection: { entries: readonly { path: string; after?: { content: string } }[] };
     };
-    const confirmedRepository = confirmedCoverage.inspection.groups.updated.find((entry) =>
+    const confirmedRepository = confirmedCoverage.inspection.entries.find((entry) =>
       entry.path === "domains/vehicle-data/repositories/vehicle-events.md");
     assert.ok(confirmedRepository?.after);
     assert.equal(readRepositoryRefreshCoverage(parseConceptDocument(

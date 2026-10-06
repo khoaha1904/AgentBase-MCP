@@ -67,15 +67,11 @@ export type HubInspectionGroups = Readonly<{
   }>;
 }>;
 
-type HubGroupedChangeEntry = Omit<HubChangeEntry, "before" | "after"> & Partial<Pick<HubChangeEntry, "before" | "after">>;
+type HubGroupedChangeEntry = Omit<HubChangeEntry, "before" | "after">;
 
 function groupedEntry(entry: HubChangeEntry): HubGroupedChangeEntry {
-  // Added entries keep their path/change metadata in groups; file bytes live only in entries.
-  if (entry.change === "created" || entry.change === "preserved") {
-    const { before: _before, after: _after, ...summary } = entry;
-    return summary;
-  }
-  return entry;
+  const { before: _before, after: _after, ...summary } = entry;
+  return summary;
 }
 
 function groups(
@@ -218,5 +214,32 @@ export function readVerifiedHubProposalInspection(
   if (value.refreshSuggestions !== undefined && !isDeepStrictEqual(value.refreshSuggestions, refreshSuggestions)) {
     throw new Error("proposal Refresh suggestions changed after finalization");
   }
-  return { ...value, refreshSuggestions };
+  return { ...attachHubInspectionContext(value), refreshSuggestions };
+}
+
+// Lifecycle callers retain full inspection privately; CLI/MCP Finalize exposes only review routing.
+export function summarizeHubFinalization(value: unknown): unknown {
+  const finalized = value as Readonly<{
+    proposal?: AnyHubProposal;
+    result?: string;
+    inspection?: HubProposalInspection;
+    source_head?: unknown;
+  }>;
+  if (!finalized?.inspection) return value;
+  const inspection = finalized.inspection;
+  return {
+    ...(finalized.result ? { result: finalized.result } : {}),
+    ...(finalized.proposal ? { proposal_id: finalized.proposal.id, proposal_digest: finalized.proposal.diffDigest } : {}),
+    counts: inspection.counts,
+    questions: inspection.questions ?? [],
+    limitations: inspection.groups.questionsAndLimitations.limitations,
+    ...(inspection.coverage ? { coverage: inspection.coverage } : {}),
+    ...(inspection.changeAccounting ? { changeAccounting: {
+      partial: inspection.changeAccounting.partial,
+      omitted: inspection.changeAccounting.omitted,
+      limitations: inspection.changeAccounting.limitations,
+    } } : {}),
+    refreshSuggestions: inspection.refreshSuggestions ?? { items: [], omitted: 0 },
+    ...(finalized.source_head ? { source_head: finalized.source_head } : {}),
+  };
 }

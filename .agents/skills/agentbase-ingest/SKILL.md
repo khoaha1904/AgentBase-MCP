@@ -155,7 +155,9 @@ This workflow uses `preflight_hub_ingest`, `discover_repository`, `get_okf_autho
    renders Questions from the Receipt and updates the home navigation. Never
    create an AgentBase activity `log.md`. Make at most one repair
    from exact failures. If Finalize returns a Hub-base replacement session,
-   continue from its new skeletons without rerunning source discovery. Inspect and present the complete proposal diff,
+   continue from its new skeletons without rerunning source discovery. Finalize
+   returns a compact summary with `proposal_id` and `proposal_digest`; call
+   Inspect once for details and present the complete proposal diff,
    Questions, limitations and partial-coverage status.
    Show `inspection.refreshSuggestions` to the user, naming the source
    Repository to Refresh for possible `publishes-to`/`writes-to` evidence.

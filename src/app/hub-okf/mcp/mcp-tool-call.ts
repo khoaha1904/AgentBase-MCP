@@ -9,6 +9,7 @@ import type { QuestionDeclaration } from "../authoring/questions.ts";
 import type { HubRemovalDeclaration } from "../../../core/knowledge/index.ts";
 import type { EnrichmentAnswer, EnrichmentCandidateInput } from "../enrichment/index.ts";
 import { REFRESH_CHANGE_OUTCOME_KINDS, type RefreshChangeOutcome } from "../authoring/refresh-change-accounting.ts";
+import { summarizeHubFinalization } from "../review/inspect.ts";
 
 function result(value: unknown, isError = false): CallToolResult {
   return {
@@ -320,8 +321,8 @@ export async function callHubOkfTool(
       }));
     }
     if (name === "finalize_hub_okf_proposal") {
-      return result(await actions.finalize(required(args, "session_id"), questionDeclarations(args.questions),
-        removalDeclarations(args.removals), refreshChangeOutcomes(args.change_accounting)));
+      return result(summarizeHubFinalization(await actions.finalize(required(args, "session_id"), questionDeclarations(args.questions),
+        removalDeclarations(args.removals), refreshChangeOutcomes(args.change_accounting))));
     }
     if (name === "prepare_batch_hub_ingest") {
       return result(await actions.prepareBatch({
