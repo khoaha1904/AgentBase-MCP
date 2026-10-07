@@ -1,6 +1,6 @@
 # Installation requirements
 
-`./install.sh` prepares exact dependencies, installs released product skills and
+`node scripts/installation/install.mjs` prepares exact dependencies, installs released product skills and
 transactionally registers the current checkout as user-global stdio MCP in
 selected clients. Installation never selects/creates a Hub or asks for a token.
 
@@ -75,9 +75,9 @@ one provider credential across Hub profiles.
 ## Product skills
 
 - **AB-INSTALL-025** — Every interactively selected client receives exactly
-  thirteen released product skills named by `.agents/skills/README.md`: ten
+  twelve released product skills named by `.agents/skills/README.md`: ten
   public entry names including one Context compatibility entry and visualization, and
-  three internal supporting workflows.
+  two internal supporting workflows.
 - **AB-INSTALL-026** — A fixed allowlist is release authority; no skill outside
   the released product catalog is installed.
 - **AB-INSTALL-027** — Codex uses `$CODEX_HOME/skills` with
@@ -123,5 +123,5 @@ installer validation and setup as running it from the canonical checkout path.
   `/.nvm/versions/node/` identifies nvm even when `NVM_DIR` is absent from the
   child environment; an explicitly configured manager retains precedence.
   Validation stops before
-  dependencies, clients or Hub state are changed. README names Node, the internal
+  dependencies, clients or Hub state are changed. README names Node, the configured
   npm registry and Gitleaks as explicit verification prerequisites.

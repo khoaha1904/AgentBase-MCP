@@ -10,9 +10,10 @@
 - Hub has one read trust boundary, no Domain/field ACL.
 - Structured IaC supports Terraform/Terragrunt and bounded SAM/CloudFormation;
   unsupported resources and dynamic expressions remain limitations (section 04).
-- Query overlay, freshness marks in ordinary search/read, persisted freshness
-  reports and remote source reading are absent; snapshot age, local reporting
-  and scheduled CI exist. Remote source reading is first post-phase priority.
+- Query overlay, persisted freshness reports and remote source reading are
+  absent. Published search/read return the bounded
+  [freshness envelope](../08-live-references/08-freshness-envelope-requirements.md)
+  without a source probe; age alone is not freshness.
 - Without a configured remote Hub, Hub query/Ingest/Refresh/Draft operations are
   unavailable; schema guidance and bounded workspace Scan remain usable.
 - Review is structured text/diff; no generated HTML graph UI.

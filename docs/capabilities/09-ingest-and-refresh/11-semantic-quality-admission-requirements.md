@@ -1,150 +1,13 @@
-# 09.11 — Deferred semantic quality admission design
+# 09.11 — Deferred semantic quality admission
 
-> Status: Deferred and inactive. G5-C2 is not part of the current release,
-> Finalize admission or requirement-evidence gate. This design is retained for
-> future Product review only and may be activated only after observed ingest
-> defects justify its workflow cost and the owner explicitly reopens it.
->
-> Potential impact: Broad workflow change. It would reuse Discovery
-> Seed/Receipt, authoring sessions, deterministic validation, proposal inspection
-> and the existing one-repair principle. It adds no production model service,
-> Benchmark gate or Published report format.
+> Status: Deferred and inactive; not Finalize admission or release evidence.
 
-Product Contracts:
-[Repository understanding](../../product/01-repository-understanding.md) and
-[Knowledge lifecycle](../../product/03-knowledge-lifecycle.md).
-
-Architecture Contracts:
-[Ownership](../../architecture/ownership.md),
-[Dependencies](../../architecture/dependencies.md),
-[Flows](../../architecture/flows.md),
-[State and trust](../../architecture/state-and-trust.md), and
-[Runtime](../../architecture/runtime.md).
-
-## Current → target
-
-The implemented workflow accounts for important Discovery groups, validates
-evidence and OKF structure and permits one repair. A structurally valid proposal
-can still be shallow, omit a developer-important boundary, split knowledge into
-thin documents or retrieve poorly. The same authoring context is unlikely to
-notice all of its own omissions.
-
-If reactivated, G5-C2 would add deterministic semantic coverage/risk assessment and a
-conditional fresh-context AI critic while the bundle is editable. The critic is
-required by generic complexity/limitation signals, not by repository language,
-framework, provider or labels such as frontend/backend. It may request one
-repair and review the repaired digest once. Deterministic Finalize and human
-Accept/Publish remain the authority boundaries.
-
-## Quality sequence
-
-```text
-exact source + frozen Discovery Receipt + editable compact bundle
-    -> deterministic quality packet and review-risk decision
-    -> not-required(reason) | required AI critic
-    -> ready | repair-required | incomplete-source
-    -> at most one repair and one digest-bound re-review
-    -> deterministic validation and Finalize
-    -> Inspect -> Accept -> Publish
-```
-
-Every draft gets a quality packet. A versioned deterministic policy requires the
-critic when any of these Receipt/draft facts is present:
-
-- a priority discovery lane is limited, truncated or depends on high-signal
-  direct-source fallback;
-- more than one non-governance standalone boundary beyond the Repository/Domain
-  is proposed;
-- an Interface, Flow or cross-home/cross-repository relation is proposed;
-- the draft changes a standalone boundary, relation or Flow during Refresh;
-- the run is one member of a multi-repository Batch Initial Ingest; or
-- the owner explicitly requests review.
-
-The policy may evolve only as a versioned provider-neutral contract with focused
-fixtures. A low-risk run records `not-required` plus exact reasons. Model cost or
-availability cannot silently downgrade a required decision.
-
-## Reviewer packet and isolation
-
-The packet binds:
-
-- authoring mode, exact Hub base and source snapshot identity/revision;
-- Discovery Seed/Receipt identity and digest, coverage lanes, candidates,
-  disposition and explicit limitations/ignored reasons;
-- compact home plan, current Published contribution when Refreshing, full
-  editable changed documents and draft tree/digest;
-- bounded evidence locators/excerpts and source-fallback diagnostics; and
-- bounded draft-retrieval probes and their exact expected subject identities.
-
-The critic begins in a separate fresh context that receives the packet but not
-the author's private reasoning or transcript. It may use the same authorized
-exact source snapshot for bounded follow-up verification, but it
-cannot change source, expand repository/Hub/provider authority or inspect
-secrets. Model/provider/reasoning identity is recorded as execution evidence,
-not hard-coded product policy. A host unable to provide required isolation
-returns an unavailable/incomplete result rather than self-certifying.
-
-## Provider-neutral rubric
-
-The critic evaluates only obligations applicable to evidence it can establish:
-
-1. repository purpose and real deployment/ownership boundaries;
-2. principal capabilities and responsibilities;
-3. public interfaces, commands, events, schedules and triggers;
-4. important data stores and external dependencies/integrations;
-5. evidenced cross-boundary flows and failure/operation concerns;
-6. claim-to-source evidence quality and visible source limitations;
-7. Repository dossier usefulness and links to independently promoted knowledge;
-8. over-modeling, thin/duplicate documents and under-modeling;
-9. unresolved gaps represented as Questions/limitations rather than certainty;
-10. source-grounded developer questions retrieving the expected dossier or
-    concept from the bounded draft projection.
-
-Absence of an inapplicable lane is not a defect. There is no minimum document
-length, concept quota, generic completeness percentage or framework-specific
-endpoint/resource rule. The report explains concrete findings with evidence;
-it does not replace them with a single quality score.
-
-## Report, repair and override
-
-A submitted report has one strict version and binds the quality-packet digest,
-source/Receipt/base identities, exact draft digest, rubric/risk-policy versions,
-reviewer isolation/execution identity, bounded probe outcomes and bounded
-findings. Each finding has one category, `blocking` or `warning` severity,
-evidence references, affected document/candidate identities and one concise
-recommended disposition such as merge, embed, add evidence, promote, question
-or ignore-with-reason.
-
-The verdict is exactly `ready`, `repair-required` or `incomplete-source`.
-Unknown fields, stale digests, unsupported versions, missing evidence references
-or inconsistent verdict/severity fail report admission. Reviewer prose never
-becomes a claim merely because a model produced it.
-
-`repair-required` permits one authoring repair. Any byte change invalidates the
-prior report and requires one review of the new digest; there is no second
-automatic repair. A still-blocking or incomplete result stops the attempt. The
-owner may explicitly override exact remaining findings for the exact draft
-digest with a bounded reason. The override is visible in Inspect/PR and grants
-no exception to deterministic OKF, evidence, source or Profile validation.
-
-## State, Batch and Refresh
-
-Packets, complete reports, probes, repair history and overrides live in the
-existing owner-private session/proposal state. They are retained only while
-authoring, review, publication or recovery needs the proposal. Inspect and PR
-text may show a bounded digest-bound summary. No report, transcript, Inventory,
-score or activity `log.md` enters Published Hub content.
-
-Each Batch Initial Ingest member receives an isolated decision/report before
-composition. One member's review cannot cover another's source or findings, and
-the batch cannot Finalize until every member is ready, validly skipped or
-explicitly overridden. Refresh requires review only for the generic risk facts
-above; evidence/prose-only low-risk updates may record `not-required`.
-
-Reviewer timeout, crash, malformed output, stale source/base/draft or lost
-isolation changes no Hub bytes and leaves the attempt recoverable or Incomplete.
-Retry may reuse an exact packet/report only while every bound digest and policy
-version remains identical.
+The owner requires representative manual review before reopening an automatic
+critic. There is no packet/report, reviewer, override or private draft-query
+runtime. [Deferred scope](../12-version-scope/07-deferred-capabilities.md) owns
+activation; Product review must accept its cost and authority before coding.
+The retained inactive identifiers describe the former proposal, not obligations
+on the shipped workflow. Detailed speculative design remains in Git history.
 
 ## Deferred requirements (inactive)
 
@@ -210,13 +73,3 @@ packet/report, reviewer, repair, override or draft-query state.
   daemon, reviewer database, Benchmark execution or generalized usefulness
   claim. Deterministic fixtures and one full disposable-domain re-ingest are the
   release evidence.
-
-## Implementation and verification ownership
-
-If Product review reactivates this design, `app/hub-okf/authoring` would own
-packets, risk/admission, report validation and
-repair state; public `core/knowledge` entrypoints own reusable provider-neutral
-values and bounded bundle projection; released host skills own critic
-orchestration. Focused tests cover policy, schema, digest invalidation,
-isolation failure, repair/override, Batch and private-draft containment before
-the canonical repository/release gate and one owner-authorized domain re-ingest.

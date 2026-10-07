@@ -2,80 +2,48 @@
 
 ## Navigation
 
-- Only the root `index.md` carries OKF frontmatter. Profile Initial Ingest
-  Prepare preserves the Profile link and adds Domain Capsule entrypoints;
-  legacy Prepare adds a direct Domain or fallback Repository entrypoint.
-  Preserve prepared root, capsule and shared rows and never append one target
-  twice.
-- Create or update only the home indexes prepared for the exact skeletons.
-  Workflow-owned governance indexes remain under their exact renderer.
-- Keep one canonical concept file; root and concept links never copy it.
-- Root navigation grows with Profile/Domain Capsule entrypoints, or legacy
-  Domain/fallback entrypoints, not every entity.
-- A Domain concept links its Systems and critical Flows. A System concept links
-  the components, functions, interfaces, flows and independently useful
-  resources needed to understand that system.
-- When Domain evidence is absent, use bounded System and Repository indexes;
-  never invent a Domain merely to satisfy the layout.
-- Prefer domain-scoped Hub search for broad terms. An exact concept, resource or
-  repository identity is already sufficient scope. Ask the maintainer to choose
-  a Domain when search reports `scope_required`; use explicit global search only
-  when the maintainer wants cross-domain results.
-- Use bounded relationship traversal for impact and producer/consumer questions.
-  Traverse inbound edges through MCP rather than persisting inverse duplicates.
+Only root index.md carries OKF frontmatter. Preserve prepared Profile, Domain
+Capsule, shared and legacy Domain/fallback links; never repeat a target or copy
+its concept. Update only prepared home indexes. Governance indexes are rendered
+by their workflow. Domains link Systems/critical Flows; Systems link useful
+runtimes, contracts, Flows and independent Resources. Missing Domain evidence
+permits bounded System/Repository navigation, not an invented Domain.
+
+For broad queries prefer exact Domain scope; an exact concept/resource/repo is
+already scope. scope_required asks the maintainer to choose; explicit global
+search requires cross-domain intent. Published search/read and returned relation
+metadata support bounded producer/consumer questions. There is no traversal tool;
+never persist inverse duplicates to compensate.
 
 ## Boundaries
 
-- Create a Domain only from explicit business-boundary evidence or owner
-  guidance; never infer one from a repository or product name.
-- A new Domain may be navigation-first. Summarize only the scope contributed by
-  current evidence and let later repository ingest build it up; never invent a
-  full domain definition to make the first draft look complete.
-- Preserve the owner-guidance sources and Domain relations prepared from the
-  exact grouped plan. A physical home alone never authorizes a `part-of`
-  relation. Repository resources still support code/system claims; they do not
-  become evidence for the maintainer's business classification.
-- Create a System when cooperating entities deliver one recognizable
-  capability. A library or reusable module need not belong to a known system.
-- Keep independently deployed frontend and backend runtimes as separate
-  Components. Keep modules, routes, storage and provider resources inside the
-  runtime that owns them unless another owner/runtime or AIT decision needs an
-  independent contract or resource boundary.
-- Keep repository-specific purpose, source structure, build, test and entry
-  points in a Repository concept. Link to canonical entities instead of copying
-  their architecture or contracts.
-- Group related CRUD/HTTP operations into one Interface with a Markdown
-  operations table. Split another Interface only for an independent consumer,
-  owner, version, policy, SLA or lifecycle boundary.
-- Keep an implementation-only function or handler inside its component/API/flow.
-  Split a Function only for independent triggers, deployment, scaling,
-  permissions, failure or operational behavior. Provider/product belongs in
-  metadata and evidence, never in the schema type.
-- Usually keep one runtime's internal schedule, state and delivery sequence in
-  its useful parent. Create a standalone Flow when the behavior has independent
-  query or navigation value across evidenced concept identities. Endpoint
-  count is a review heuristic, not a schema-validity rule.
-- Treat an architecture node and a Markdown knowledge unit separately. EC2, VM
-  and physical-host evidence describes hosting; it never creates a Server
-  concept. Create a Component for an independently useful evidenced service,
-  worker or process on that host. If no workload boundary is known, keep the
-  host as embedded knowledge or a limitation.
-- SQS/SNS/event buses, tables, buckets and databases default to embedded
-  knowledge in the Function, Component or System that uses them. Promote one
-  to Interface only for an independently evidenced shared contract, or to
-  Resource for cross-boundary use or independently evidenced ownership,
-  lifecycle, failure, security or operational value. The guidance request must
-  name that promotion basis and cite candidate-owned semantic observations;
-  a declaration or `suggested_type` alone is insufficient.
-- Terraform/Terragrunt remains source-tool metadata. The label must match the
-  exact source path; provider resources reached through Terragrunt cite their
-  referenced Terraform module. When supported Terraform/Terragrunt exists for
-  retained runtime or infrastructure knowledge, prefer it as structured
-  evidence when readily available. Missing it is a visible coverage limitation,
-  not grounds to reject an otherwise truthful partial proposal. Source
-  declarations do not prove an account, region, ARN or deployed instance.
+- Domain needs business-boundary evidence or owner guidance, never a repo/product
+  name. New Domains can be navigation-first and describe only contributed scope.
+  Preserve exact grouped-plan guidance and participations. Home alone does not
+  authorize part-of; code evidence does not prove human business classification.
+- System represents a recognizable cooperative capability; libraries need not
+  belong to one. Independent frontend/backend/worker deployments remain separate
+  Components. Internal routes/modules/storage usually stay embedded.
+- Repository owns purpose, structure, build/test and entrypoints. Link canonical
+  children rather than copying architecture, sources or embedded tables.
+- Group related CRUD/HTTP operations in one Interface operations table. Split
+  only for independent consumer/owner/version/policy/SLA/lifecycle.
+- Function needs independent trigger/deployment/scaling/permissions/failure or
+  operations. Implementation-only handlers stay in the parent. Provider names
+  belong in metadata/evidence, not types.
+- Flow needs independent query/navigation value across admitted identities.
+  Internal schedule/state/delivery stays in its parent; endpoint count is a
+  heuristic, not a schema rule.
+- Hosts never become Server concepts. Promote an evidenced service/process as
+  Component; absent workload evidence leaves embedded hosting or a limitation.
+- Queues/topics/buses/tables/buckets/databases default to embedded. Interface
+  promotion requires an independent shared contract; Resource promotion requires
+  cross-boundary or ownership/lifecycle/failure/security/operational value.
+  Declare the basis and candidate-owned semantic observations. A declaration or
+  suggested_type is insufficient. Follow the exact schema's structural anchors.
+- Label Terraform/Terragrunt by exact source path. Cite referenced Terraform
+  modules, prefer readily available structured evidence and disclose omissions.
+  Declarations do not prove deployed account/region/ARN/instance.
 
-Unknown OKF types and extension fields are valid. Preserve their relationship
-predicates as unjudged extensions. New known AgentBase concepts use only the
-canonical vocabulary. Broken links are warnings, not permission to invent the
-missing concept.
+Unknown types/extensions remain valid and preserved as unjudged. New known
+concepts use the canonical vocabulary. Broken links warn; never invent targets.

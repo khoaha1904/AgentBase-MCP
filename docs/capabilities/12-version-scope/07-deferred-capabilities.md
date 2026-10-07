@@ -29,9 +29,9 @@ dependencies or alternative authorities.
 - Strong-identity concept merge/redirect and history migration.
 - Richer deterministic conflict presentation beyond the current
   `agentbase-query` host composition, only if real use shows it is insufficient.
-- Freshness marks in ordinary search/read and persisted freshness reports.
-  Local reporting and scheduled CI are implemented; query overlay is not an MVP
-  direction.
+- Persisted freshness reports. Ordinary Published search/read already exposes
+  the [freshness envelope](../08-live-references/08-freshness-envelope-requirements.md);
+  query overlay remains outside scope.
 - Richer graph review interactions beyond the bounded Published Hub view above,
   only if real use proves the first read-only view insufficient.
 - Azure/GCP profiles and additional released detectors.

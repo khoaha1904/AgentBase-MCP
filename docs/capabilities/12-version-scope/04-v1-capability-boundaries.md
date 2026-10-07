@@ -1,36 +1,26 @@
 # 12.04 — MVP capability boundary
 
-> Status: MVP boundary implemented and audited offline.
+> Status: Bounded source workflows implemented; release qualification is separate.
 
-## Required and implemented
+The [Product scope](../../product/00-scope-and-authority.md) owns outcomes and
+non-goals. Implemented source behavior includes optional Hub-free installation,
+bounded workspace Scan/discovery, exact-snapshot Ingest/Refresh, sequential Batch
+Initial Ingest and separately approved AWS/SQS Enrichment. Schemas are provider
+neutral; embedded knowledge promotes only at useful independent boundaries.
 
-- install/register MCP without forcing Hub setup;
-- public bounded `agentbase-scan` inventory and workflow suggestions;
-- one exact source snapshot with bounded source discovery;
-- Catalog 7 provider-neutral concepts with Terraform/Terragrunt evidence;
-- single-repository Initial Ingest and Refresh producing reviewable proposals;
-- Batch Initial Ingest with recoverable sequential checkpoints and one atomic proposal;
-- bounded AWS/SQS Domain Enrichment with read-only provider evidence;
-- isolated remote Hub profiles, Published-only query, structured inspection and
-  explicit Direct/PR Publish; no remote profile means schema guidance and Scan;
-- observed snapshots with provenance, age and no implicit source probe;
-- shared Hub Question documents and atomic exact-scope Maintainer Guidance;
-- rich deterministic PR summary, independent Init PRs, same-Repository stacks,
-  retry/reconciliation and synchronization;
-- no automatic Publish or merge.
-- one small public `abs` CLI surface (`status`, `hub connect`, `hub sync`);
-  lifecycle runners and OKF internals remain hidden skill/MCP/developer routes.
+Hub profiles are isolated peers. Query uses synchronized Published knowledge;
+private proposals provide material inspection before explicit Direct/PR Publish.
+Questions/Guidance retain exact scope, evidence and revision. There is no Accept,
+stacked publication, automatic Publish or merge. The bounded public abs CLI
+handles status/connect/sync; authoring belongs to skills/MCP.
 
-## Release gate
+## Verification and evaluation
 
-Implementation is audited against this converged boundary. Canonical offline
-verification and separately authorized model
-qualification are evidence gates; Batch Refresh, additional provider profiles,
-remote file reading and HTML review remain deferred. Ordinary Hub query is
-intentionally Published-only.
+npm run verify is canonical deterministic source evidence. Artifact/release
+qualification follows [Release CI](13-release-ci-requirements.md), not source-test
+success alone. The owner-approved local measurement script is defined by
+[qualification scope](03-benchmark-requirements.md); model answer evaluation
+remains external. There is no application model benchmark or graph provider.
 
-## Evaluation boundary
-
-Offline `npm run verify` remains canonical. The application contains no model
-benchmark or native-provider campaign. Historical evidence is retained outside
-the runtime; future evaluation needs a concrete owner question and scope.
+[Accepted limitations](05-accepted-limitations.md) and
+[deferred capabilities](07-deferred-capabilities.md) own unsupported boundaries.

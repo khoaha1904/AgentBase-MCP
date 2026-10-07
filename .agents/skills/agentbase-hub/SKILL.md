@@ -3,66 +3,40 @@ name: agentbase-hub
 description: Explicit-only AgentBase Hub control. Use only when the user names $agentbase-hub for lifecycle work or explicitly approves scoped Question handling or exact reviewed Publish from an active AgentBase workflow; never infer lifecycle work from an ordinary request.
 ---
 
-# AgentBase Hub control
+# Hub control
 
-Use `get_hub_status` first. It is read-only; report its partial local, credential,
-remote, PR and recovery states without exposing machine paths or credentials.
+Start with `get_hub_status`; report profile, Published/Draft/recovery/PR state
+without credentials or machine paths. Invoke only the requested action.
+Query handoff grants exact Question preparation only; changed scope needs renewed
+agreement. Cancellation preserves work. Publish always needs separate approval.
 
-A Query repair handoff authorizes only its agreed Question preparation, not
-connection, switching, migration, Sync or Publish. Revalidate the Hub and exact
-Question revision; retain the user's answer and maintainer confirmation. Changed
-scope needs renewed agreement. Cancellation preserves private work. Publication
-always requires the separate exact-result confirmation below.
+- Connect with `configure_hub` only for the supplied credential-free repo URL and
+  exact branch. Owner terminal flow: abs hub connect --url URL --branch BRANCH;
+  masked token entry stays in the terminal, never chat/MCP. Empty input reuses
+  the stored token. Same flow handles GitHub/GHE; API URL derives from host.
+  Profiles are peers, one active; switching never copies/merges knowledge.
+- Exactly empty remote: `preview_hub_bootstrap`, then explicitly approved
+  `bootstrap_hub` once for README/root/shared/Profile, without CI or knowledge.
+  A retained profile token allows this skill to continue after empty-remote connect.
+  Non-empty support changes use `preview_hub_initialization` then
+  `initialize_hub` with exact base/digest; preserve existing support files.
+- `synchronize_hub_okf` requires an explicit request; status never pulls.
+  recovery-required uses `recover_hub_okf` for the selected transaction first.
+- Explicit legacy migration uses `prepare_hub_profile_migration`; show report,
+  owner-confirmed homes and exact moves, then `finalize_hub_profile_migration_proposal`.
+  Never migrate during installation or infer placement.
+- Question work uses `list_hub_questions`, shows evidence/revision, and calls
+  `answer_hub_question` only with selected human answer and explicit human:*
+  maintainer. Inspect the proposal before sharing.
+- `inspect_hub_okf_proposal` supplies hunks, semantic impact, removals, Questions
+  and limitations. Read private full files/include_content when needed. Confirm
+  exact proposal_id/proposal_digest and active publication.policy, then
+  `publish_hub_okf_proposal` with that publication_mode. Policy selection via
+  abs hub policy --mode direct|pr alone is not publication approval.
+  Direct succeeds only at remote published/local recognized. PR in-review is
+  not Published; show URL, never merge. Uncertain retry is owner-requested with
+  the same id/digest/mode; changed base/content or closed PR needs new review.
 
-Lifecycle tools are `get_hub_status`, `configure_hub`, `preview_hub_bootstrap`,
-`bootstrap_hub`, `preview_hub_initialization`, `initialize_hub`,
-`prepare_hub_profile_migration`, `finalize_hub_profile_migration_proposal`,
-`list_hub_questions`, `answer_hub_question`, `inspect_hub_okf_proposal`,
-`publish_hub_okf_proposal`, `synchronize_hub_okf` and `recover_hub_okf`. Invoke
-only the action explicitly requested after status establishes its preconditions.
-
-- An unconfigured installation is valid; schema guidance and workspace Scan remain available. Hub
-  query, Ingest, Refresh and OKF Draft work wait until a remote Hub is active.
-- Connect an existing remote only after the user supplies its credential-free
-  HTTPS repository URL and exact target branch. The owner-facing terminal flow
-  is one command: `abs hub connect --url https://HOST/OWNER/REPOSITORY.git
-  --branch BRANCH`. The command asks for a token in a masked terminal prompt;
-  an empty prompt reuses the existing shared owner-private token. Never request
-  or pass a token through chat or an MCP tool.
-- The legacy masked token helper and `okf hub configure` route are internal
-  compatibility paths only; do not present them as the normal user workflow.
-- GitHub.com and GitHub Enterprise Server use the same connect flow. Do not add
-  an API URL: MCP derives it from the repository host.
-- One Hub profile is active. Connecting a different host/repository/branch
-  switches profiles; never copy, merge, search or publish knowledge across them.
-- Synchronize only when the user explicitly requests it. Status never pulls.
-- If status returns `recovery-required`, show the bounded transaction IDs and
-  call `recover_hub_okf` with the chosen `transaction_id` before retrying sync.
-- Inspect the prepared proposal and show repository scope, important changed
-  boundaries/relations, removals, Questions and limitations. Obtain one explicit
-  Publish confirmation for the exact `proposal_id`, `proposal_digest` and
-  active `publication.policy` from status. Call `publish_hub_okf_proposal` with
-  that `publication_mode`; there is no separate Accept or Local Draft step.
-  The operator may select per-Hub policy with `abs hub policy --mode direct|pr`;
-  changing policy alone never authorizes publication.
-- Direct success is `remote: published` plus `local: recognized`. PR success is
-  `remote: in-review`, not Published; show its URL and never merge it. Retry an
-  uncertain result only when requested using the same ID/digest/mode. Changed
-  base, content or a closed PR requires a new review, not an automatic retry.
-- For an explicit legacy Profile migration request, Prepare first and show its
-  report plus private `bundle_root`. Never infer homes or moves. The owner or
-  authoring agent edits that full-tree workspace, then Finalize receives every
-  exact `from_path` to `to_path` move. Inspect, then obtain explicit Publish
-  confirmation; never silently migrate knowledge while installing the app.
-- For an exactly empty remote Hub, preview then bootstrap the complete README,
-  root index and CI baseline directly once. Bootstrap has no mode choice and
-  never includes pending knowledge; later knowledge changes follow Hub policy.
-- For an explicit Question-review request, call `list_hub_questions` with the
-  requested status/bound. Show the relevant evidence and exact revision. Call
-  `answer_hub_question` only with the user's selected answer and explicit
-  `human:*` maintainer identity, then inspect the returned proposal. Stop before
-  Publish unless the user explicitly confirms sharing that exact result.
-
-For ordinary Ingest, Refresh, Batch or Domain Enrichment, hand off to the
-corresponding product skill after Hub status is usable. For ordinary read-only
-questions, hand off to `agentbase-query`; do not turn them into lifecycle work.
+No Hub is valid for schemas/Scan; other Hub workflows wait for a remote profile.
+Route ordinary reading to Query and authoring to its public skill. No separate
+Accept/stacked draft step, token helper onboarding or implicit lifecycle action.

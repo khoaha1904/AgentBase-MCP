@@ -1,66 +1,45 @@
 # Concept authoring rules
 
-The catalog exposes reusable **Concept Schema** definitions. Initial Ingest may
-create Repository, Domain, System, Component, Function, Interface, Flow and
-Resource concepts; Entity and Metric are enrichment-only. Authoring creates
-evidence-backed **Concept Instance** documents such as Vehicle Inventory or
-Click-through Rate. One schema
-may yield many instances, but each instance declares exactly one concrete
-`type`; never merge competing schemas onto one document.
+Use one non-reserved Markdown file and one concrete released `type` per Concept
+Instance. Initial Ingest permits Repository, Domain, System, Component, Function,
+Interface, Flow and Resource; Entity/Metric require Enrichment.
 
-For every new or modified AgentBase concept:
+## Frontmatter and evidence
 
-- use one non-reserved `.md` file per concept and a descriptive `type`;
-- set `status: draft`;
-- set `generated.by` to the current `agentbase/<version>` producer and
-  `generated.at` to the meaningful content-change time;
-- omit `verified`; never impersonate a human or process verifier;
-- preserve unknown frontmatter values when modifying an owned draft;
-- attach important knowledge to `sources` entries from current repository evidence;
-- use stable source IDs and matching Markdown footnotes for attributed knowledge;
-- represent a useful, non-sensitive configuration or implementation scalar under
-  `agentbase.observed_values` with exact `subject`, semantic `property`, evidence
-  `role`, scalar `value` and matching `source_id`; omit generated `id`, source state
-  and the rendered Observed values table because Finalize owns them;
-- describe every stored scalar as an observation, never as timeless or current;
-- omit secrets, bulky payloads, compound structures and values that are not useful
-  to a human reader; keep only the ordinary source reference for those facts;
-- encode source code as
-  `repository://<repository-id>/<encoded-relative-path>#L<start>-L<end>`;
-- never expose checkout roots, provider cache paths, secrets, credentials, or
-  raw graph storage;
-- relate concepts with normal bundle-relative Markdown links;
-- persist only canonical relationship directions: `part-of`, `provides`,
-  `consumes`, `depends-on`, `triggered-by`, `publishes-to`, `reads-from`,
-  `writes-to`, `implemented-in`, `declared-by`, `deployed-as` and `runs-on`; MCP derives
-  inbound navigation, so never add a duplicate inverse edge;
-- give every relationship a non-empty `evidence` list resolving to stable
-  `sources[].id` values;
-- give every Business Flow ordered `flow_steps` with exact source and target
-  concept identities, canonical action, sync/async mode and source evidence;
-  both endpoints must exist in the changed concept set or supplied target
-  summaries; embedded knowledge and free text are never Flow endpoints, and
-  must not be promoted merely to complete a Flow;
-- use the exact prepared compact Profile path below one physical home:
-  `domains/<slug>/` or `shared/`; the Domain concept/navigation is
-  `domains/<slug>/index.md`, Repository dossiers use `repositories/`, Questions
-  use `questions/`, and every other standalone concept uses `knowledge/`;
-- treat home as stewardship and default navigation, not semantic
-  participation; express Domain participation, containment and implementation
-  through evidenced structured relationships plus resolving Markdown links;
-- never duplicate a component, interface, flow or resource beneath both a
-  system and repository tree.
+- New/changed AgentBase drafts use `status: draft`, current agentbase/<version>
+  producer and meaningful content-change time. Omit verified; preserve unknown
+  fields and never impersonate a verifier.
+- Cite exact current repository evidence in sources, with stable IDs and matching
+  body footnotes. Encode repository://<id>/<relative-path>#L<start>-L<end>;
+  never expose checkout/cache roots, secrets or raw graph storage.
+- Useful safe scalars may use agentbase.observed_values with exact subject,
+  property, role, value and source_id. Finalize owns generated IDs, source state
+  and rendered tables. Observations are snapshots, not current truth; bulky,
+  sensitive or compound values retain ordinary references only.
+- Every canonical relationship needs resolving source-ID evidence and a Markdown
+  body link to its exact target. Use part-of, provides, consumes, depends-on,
+  triggered-by, publishes-to, reads-from, writes-to, implemented-in, declared-by,
+  deployed-as or runs-on. Never persist duplicate inverse edges.
+- Business Flows need ordered flow_steps with exact admitted endpoints, canonical
+  action, sync/async mode and sources. Embedded/free-text items are not endpoints;
+  do not promote them merely to complete a Flow.
 
-Embedded knowledge is not a Concept Instance. Preserve its prepared bounded
-Markdown table in the parent with display name, concise role, provider-neutral
-kind, technology and exact evidence references. It receives no identity, file, navigation
-or canonical relationship. An optional `Embedded Relations` table may retain
-an evidence-backed presentation relation among `self`, an exact admitted
-concept identity and unique same-parent embedded names. Its bounded relations
-are `provides`, `consumes`, `depends-on`, `triggered-by`, `publishes-to`,
-`reads-from`, `writes-to`, `monitors` and `redrives-to`; every row cites source
-IDs owned by the parent. Do not split SQS/SNS/event buses, tables, buckets, databases
-or compute hosts into files merely because their declarations are concrete.
-The same rule applies to internal frontend/backend modules and routes. Separate
-the frontend and backend themselves when deployment, runtime, ownership,
-security, compatibility or failure behavior is independent.
+## Placement and embedded knowledge
+
+Use prepared paths: Domain domains/<slug>/index.md; Repository repositories/;
+other standalone concepts knowledge/; Questions questions/. One physical home
+is domains/<slug>/ or shared/. Home is stewardship/navigation; evidenced
+relationships express membership/implementation. Never duplicate a concept in
+System and Repository trees.
+
+Embedded Knowledge stays in its evidence-owning parent with name, concise role,
+provider-neutral kind, technology and exact references. It has no identity,
+file, navigation or canonical edge. Repository links to promoted children and
+keeps only its own sources, without copying their tables.
+
+Optional Embedded Relations connect self, exact admitted concepts or unique
+same-parent embedded names. Use provides, consumes, depends-on, triggered-by,
+publishes-to, reads-from, writes-to, monitors or redrives-to, citing parent-owned
+source IDs. Concrete queues, tables, buckets, hosts, modules or routes alone do
+not justify files. Independent deployment/runtime/ownership/security/failure
+boundaries do; see [boundaries](navigation-and-boundaries.md).
