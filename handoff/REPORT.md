@@ -186,13 +186,58 @@ Fixture URL credential là giả dưới example.invalid, không lấy config m�
 
 ## Phần D3 — Rút gọn skill và docs
 
-Chưa làm; làm cuối, không chạm `presentation/`.
+Làm xong; commit `167f134`. Sửa shim npm Windows theo log CI trong commit
+`b03a8a4`. Gate **258/258 → 258/258**, Node `v24.18.0`, TMPDIR qua symlink;
+fail/skip 0. Không sửa test/guard để rút gọn docs, không chạm `presentation/`.
+
+| Phạm vi, đếm từ theo whitespace | Trước D3 | Sau D3 |
+| --- | ---: | ---: |
+| 12 entrypoint SKILL.md | 7.483 | 4.229 |
+| Toàn bộ 19 Markdown trong skills | 10.012 | 6.168 |
+| Toàn bộ 144 Markdown trong docs | 98.590 | 91.499 |
+
+- Rút gọn Ingest, Refresh, OKF, Query và Hub; gộp prose trùng trong hai reference
+  OKF. Giữ exact source/home confirmations, explicit-only entry, protected bytes,
+  attribution, body links, Seed/Receipt, một input correction và một content
+  repair, resume/restart, authority failure và separate Publish/provider approval.
+  Các skill nhỏ còn lại được giữ vì đã ngắn, có trách nhiệm riêng.
+- Các baseline/impact cũ giờ nêu boundary hiện tại và link requirement owner.
+  Gộp design Query/batch vào summary + normative links; bỏ speculative critic
+  design nhưng giữ toàn bộ inactive AB-QUALITY IDs và owner-reopening boundary.
+  Sửa mô tả cũ về Accept/stacked publication, freshness, số skill 13/3 thành
+  12/2 và hướng dẫn traversal qua tool không tồn tại. Không bỏ unique normative
+  requirements để chạy theo số từ; AGENTS/README giữ nguyên trong D3.
+- 12/12 skill validator qua; product skill guard 3/3 qua. Đã rà confirmation/stop
+  rules so với bản trước, toàn bộ link đích và link vào heading đã đổi đều tồn tại.
+  Lần gate đầu bắt line wrapping của freshness và blank EOF; đã sửa nội dung,
+  không sửa guard; gate cuối đạt hoàn toàn.
+
+Bộ đo chạy lại sau D3: F1 **8/8**, F2 **2/2**, public **3/6**, precision 1 ở cả
+ba dataset, không có link thừa. So với trước D3 không đổi. F2 API/queue A/table X
+vẫn rank 4/3/1, hit@1 tổng 0,5 và hit@5 = 1. listTools vẫn **31.061 byte**, 36
+tool; responses Preflight/Discover/Schemas/Prepare/Validate/Finalize/Inspect vẫn
+**1.117 / 1.983 / 3.634 / 3.039 / 627 / 1.159 / 10.005 byte**. Seed và retrieval
+không đổi; tokens chỉ ước lượng bytes/4. Corpus giữ SHAs/spec của C.
+
+Đã rà diff sắp push so origin/main: không thấy token thật, host/URL Hub nội bộ,
+email riêng tư, đường dẫn máy thật hoặc tên dự án/khách hàng/người. Gitleaks và
+whitespace check đạt. Chỉ push đúng origin main, không force-push.
+
+### CI phần E và sửa tiếp
+
+CI trên commit báo cáo E: Linux verify **qua**; macOS Node 24.20.0 installer,
+258 tests và real stdio smoke **qua**. Windows dừng ngay installer vì npm chính
+thức dùng SET NPM_CLI_JS với %~dp0, khác shim fixture ban đầu; chưa chạy tests.
+Đã sửa parser để chọn duy nhất adjacent npm-cli.js, kiểm file thật, giữ argument
+bytes và không evaluate cmd/prefix script. Test phủ cả shim npm global và bundled,
+CRLF và npm-prefix.js không bị chọn nhầm. Sau push cần CI xác nhận Windows;
+không coi sửa parser local là đã qualified toàn nền tảng.
 
 ## Kiểm chứng và rà diff
 
 - Node `v24.18.0`, `TMPDIR` qua symlink. Test tập trung 6/6.
-- `npm run verify`: trước **253/253**, sau **254/254**, fail/skip 0.
-  Contract, retired graph, release evidence (209/209 trên 67 test files),
+- `npm run verify`: đầu vòng **253/253**, checkpoint cuối **258/258**, fail/skip 0.
+  Contract, retired graph, release evidence (209/209 trên 69 test files),
   upstream, Hub validator, typecheck, depcruise, knip, gitleaks và diff check
   đều đạt. Skill validator đạt.
 - Đã đọc toàn bộ diff code/test/contract/skill và báo cáo so với `origin/main`:
@@ -200,14 +245,14 @@ Chưa làm; làm cuối, không chạm `presentation/`.
   dẫn tuyệt đối trên máy hoặc tên dự án/khách hàng/người. File paths trong
   response là dữ liệu runtime private, không có path máy thật được hardcode.
 - Chỉ push `origin main` tới đúng repository public đã được chủ repo cho phép;
-  commit báo cáo `Update handoff report for round 12 (2)`. Không force-push.
+  báo cáo riêng theo từng checkpoint; mới nhất `Update handoff report for round 12 (D3)`. Không force-push.
 
 ## Chưa làm / chưa kiểm chứng được
 
-D3 còn lại; đây là checkpoint từng phần, tiếp tục trong phiên.
-D2 còn mục tiêu ~18 KB: hiện 31.061 byte.
-Windows native private ACL và release lifecycle chưa qualified; đợi CI
-Windows/macOS mới thêm ở E, không coi Node invocation là bằng chứng đầy đủ.
+D3 đã hoàn tất. D2 còn mục tiêu ~18 KB: hiện 31.061 byte; giữ đủ 36 tool và
+mọi constraint. Windows native private ACL/long paths/release lifecycle chưa
+qualified; CI Windows đang cần chạy lại bản sửa npm shim. macOS source CI đã qua.
+Không coi Node invocation hoặc Linux test là bằng chứng Windows đầy đủ.
 
 ## Câu hỏi và phản biện
 
@@ -223,3 +268,6 @@ Không ghép config bên ngoài, deploy order, external CI hoặc dynamic SSM pa
 D2: tổng schema raw bỏ description vẫn 21.532 byte, chưa tính protocol dialect,
 tool names và safety annotations. Chọn tự chứa mỗi tool và giữ tất cả guard;
 chưa đạt 18 KB, không xoá tham số hoặc constraint để chạy theo số đo.
+
+D3 chọn rút prose trùng và lịch sử đã nằm trong Git; giữ contract có nghĩa riêng
+và các điểm dừng workflow thay vì đặt một quota buộc xoá requirement.
