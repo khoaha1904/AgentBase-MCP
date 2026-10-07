@@ -70,8 +70,61 @@ Initial Ingest and Refresh investigate only the authorized repository:
 - no interaction evidence: do not create a relation candidate from inference.
 
 Unrelated Local Drafts are outside matching scope. Batch Ingest remains multiple
-isolated sequential Ingest runs. It does not reconcile member candidates or
-silently become Domain Enrichment.
+isolated sequential Ingest runs. Its source-name suggestions are authoring
+context only and do not reconcile member knowledge or become Domain Enrichment.
+
+## Deterministic source-name suggestions
+
+Owner-approved source-only comparison covers common conventions, not every
+repository. It reuses the census selector (256 files/64 KiB each, 4096 visited
+entries per repo); `.properties`, `.tfvars`, XML and Groovy are eligible standard
+config/source formats. Secret, cache, minified, test, docs and fixture paths
+remain excluded. Unsupported dynamic config, external config services, deploy
+order and external CI are explicit limitations.
+General XML eligibility does not broaden launch or URL census patterns: only
+the existing web-descriptor/POM classifiers emit their established signals.
+
+- **AB-NAME-001** — Compare 2..32 unique local Git roots read-only; use selected
+  census files and disclose sampled/oversized/observation bounds. No network,
+  provider credential, model call, Hub mutation or new MCP tool.
+- **AB-NAME-002** — Extract definition/use evidence with repo, relative path and
+  line for common AWS resource/data names, function/module naming inputs, ARN/
+  resource URLs, Maven/Gradle coordinates, scoped npm packages, class-level
+  RequestMapping and base URLs. Git module references retain repository/module
+  identity and bounded version-drift counts; they never expose credentials.
+- **AB-NAME-003** — Resolve simple var inputs/defaults/tfvars, same-module locals,
+  function environment reads and Spring Value/properties through at most two
+  indirections, retaining evidence across the chain. Keep multiple configured
+  values; do not evaluate HCL functions/merges/ternaries or runtime expressions.
+- **AB-NAME-004** — Normalize case, camel/separator spelling, standard environment
+  tokens, interpolation and ARN/URL resource names. Remove standard AWS
+  region/account suffixes from bucket identity hints. Generic/short/high-frequency
+  names are excluded; name matching is always candidate evidence.
+- **AB-NAME-005** — Unique cross-repo definition/use matches retain mechanism,
+  evidence at both ends, suggested predicate and exact/normalized confidence.
+  Unresolved interpolation may yield partial matches only as Questions, never
+  actionable suggestions. Duplicate definitions, referenced-not-defined names
+  and module-version-drift remain separate bounded diagnostics.
+- **AB-NAME-006** — Compare with exact synced Published concepts/relationships,
+  never Local Draft. Keep existing/new status in the private full result; return
+  only new suggestions (top 50), Questions and explicit omitted/truncated counts.
+  Batch Prepare retains its full private report in the batch session; opt-in
+  `scan_workspace_repositories` uses `match_names: true` and private scan state.
+- **AB-NAME-007** — Agent verifies endpoint/interaction evidence and user scope
+  before authoring normal relationships with sources at both ends and resolving
+  body links. No inverse foreign-repository mutation; Refresh the evidence owner
+  separately. A report is context, never Published identity or review authority.
+- **AB-NAME-008** — Offline qualification uses this same matcher and product
+  search, retaining an explicit empty baseline option. Generated F1/F2 assert
+  deterministic arithmetic/evidence, not quality admission thresholds. Public
+  corpus runs stay outside verify and retain fixed commits in operator temp
+  storage; report counts, limits and precision/recall without source content.
+
+Distinctive config literals can be returned as low-confidence Questions by an
+explicit library option; they are disabled by default because a repeated literal
+does not identify a definition/use direction. No private endpoint convention is
+encoded. Shared names above 8 repos (or 75% of a workspace larger than 8) are
+suppressed; callers can inspect source directly for these common modules.
 
 ## Candidate contract
 

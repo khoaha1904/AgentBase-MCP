@@ -21,6 +21,7 @@ import { AwsCliAdapter, AWS_SQS_PROFILE, AWS_STS_PROFILE } from "../../providers
 import { hubProfileId, type AdmittedLocalHubState } from "../../core/hub/index.ts";
 import {
   discoverRepositorySourceChanges, discoverRepositorySourceState, resolveRepositorySourceRoot,
+  matchRepositoryNames,
 } from "../repository-source/index.ts";
 import {
   beginHubAuthoringSession, finalizeHubAuthoringSession, materializeInitialIngestSessionSkeletons,
@@ -39,10 +40,12 @@ import {
   buildActiveHubContinuity,
   inspectInitialIngestHubContext,
   readPublishedRepositoryInventory,
+  readPublishedHubGraph,
   readPublishedHubConcept,
   projectPublishedHubDomain,
   searchPublishedHub,
 } from "./query/query.ts";
+import { comparePublishedNameLinks, retainNameSuggestions } from "./query/name-suggestions.ts";
 import { prepareDiagramPacket } from "./visualization/diagram-packet.ts";
 import { buildStaticDomainSite } from "./visualization/domain-site.ts";
 import { agentBaseStorage, copyLegacyDirectory } from "../local-storage/index.ts";
@@ -361,16 +364,30 @@ export function createHubRuntimeActions(
     },
     async previewBootstrap(repositoryUrl, targetBranch) { return previewHubBootstrap(repositoryUrl, targetBranch, environment); },
     async bootstrap(repositoryUrl, targetBranch) { return executeHubBootstrap(repositoryUrl, targetBranch, environment); },
-    async scan(workspaceRoot) {
+    async scan(workspaceRoot, matchNames) {
       const configuration = current();
-      if (configuration.kind !== "remote") return scanWorkspaceRepositories({ workspaceRoot });
+      if (configuration.kind !== "remote") {
+        const scan = scanWorkspaceRepositories({ workspaceRoot });
+        if (!matchNames || scan.repositories.length < 2) return scan;
+        const unique = [...new Map(scan.repositories.map((item) => [item.repositoryId, item])).values()];
+        if (unique.length < 2) return { ...scan, limitations: [...scan.limitations, "Source-name matching needs at least two distinct Repository identities"] };
+        const repos = unique.map((item) => ({ id: item.repositoryId, repositoryId: item.repositoryId, root: item.path, remotes: item.identityHints.remotes }));
+        return { ...scan, nameSuggestions: retainNameSuggestions(path.join(stateRoot, "workspace-scans"),
+          comparePublishedNameLinks(repos, matchRepositoryNames(repos))) };
+      }
       const localHub = await admitPersistentLocalHub(configuration, undefined, { readOnly: true });
       const [published, pending] = await Promise.all([
         readPublishedRepositoryInventory(localHub),
         listPendingHubProposals(localHub),
       ]);
-      return scanWorkspaceRepositories({ workspaceRoot, published, pending,
+      const scan = scanWorkspaceRepositories({ workspaceRoot, published, pending,
         inReviewProposalIds: readInReviewProposalIds(stateRoot) });
+      if (!matchNames || scan.repositories.length < 2) return scan;
+      const unique = [...new Map(scan.repositories.map((item) => [item.repositoryId, item])).values()];
+      if (unique.length < 2) return { ...scan, limitations: [...scan.limitations, "Source-name matching needs at least two distinct Repository identities"] };
+      const repos = unique.map((item) => ({ id: item.repositoryId, repositoryId: item.repositoryId, root: item.path, remotes: item.identityHints.remotes }));
+      return { ...scan, nameSuggestions: retainNameSuggestions(path.join(stateRoot, "workspace-scans"),
+        comparePublishedNameLinks(repos, matchRepositoryNames(repos), await readPublishedHubGraph(localHub))) };
     },
     async preflight(sourceRepository) {
       if (!path.isAbsolute(sourceRepository) || !fs.statSync(sourceRepository).isDirectory()) {
@@ -661,7 +678,10 @@ export function createHubRuntimeActions(
       }
       const manifest = prepareBatchIngest({ stateRoot, baseCommit: localHub.activeHead,
         domain: input.proposedDomain, members, createdAt: new Date().toISOString() });
-      return { manifest, matrix: manifest.members.map((member) => ({ memberId: member.id,
+      const repos = manifest.members.map((member) => ({ id: member.repositoryId, repositoryId: member.repositoryId, root: member.analysisRoot, remotes: [member.sourceAuthority.remote] }));
+      const nameSuggestions = retainNameSuggestions(path.join(stateRoot, "batch-ingests", manifest.id),
+        comparePublishedNameLinks(repos, matchRepositoryNames(repos), await readPublishedHubGraph(localHub)));
+      return { manifest, nameSuggestions, matrix: manifest.members.map((member) => ({ memberId: member.id,
         repositoryId: member.repositoryId, displayName: member.displayName, identityStatus: member.identityStatus,
         proposedDomain: manifest.domain, documentPaths: member.documentPaths, warnings: member.warnings,
         sourceAuthority: member.sourceAuthority, analysisSourceRepository: member.analysisRoot })) };

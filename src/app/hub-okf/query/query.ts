@@ -75,6 +75,10 @@ function publishedReader(localHub: AdmittedLocalHubState, git: HubQueryGit): Hub
   return reader(localHub, localHub.remoteBase, git);
 }
 
+export function readPublishedHubGraph(localHub: AdmittedLocalHubState, git: HubQueryGit = runGit) {
+  return loadHubGraph(publishedReader(localHub, git), 256 * 1024);
+}
+
 export function searchPublishedHub(
   localHub: AdmittedLocalHubState,
   query: string,

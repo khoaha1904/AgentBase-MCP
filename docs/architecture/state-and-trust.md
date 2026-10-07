@@ -51,6 +51,12 @@ The pointer is routing state only: the selected session is read through normal
 path, source, base and authority admission. Inspect response projections do not
 replace retained inspection or alter publication integrity verification.
 
+Source-name matching reports live in owner-private batch session or workspace
+scan state. They contain bounded relative evidence and candidate/Question hints,
+never source bytes or credentials. Exact Published graph reads only classify
+already-recorded relationships; reports cannot mutate Hub state or grant provider
+access. The default Workspace Scan remains metadata-only.
+
 Refresh coverage debt is not a second freshness database or run history. It is
 a bounded extension of the canonical Repository metadata containing only
 partial status, omitted count, current-campaign pass count, limitations and

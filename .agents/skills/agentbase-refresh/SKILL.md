@@ -5,6 +5,13 @@ description: Explicit-only AgentBase Update knowledge. Use only when the user na
 
 # Update knowledge
 
+For an explicitly approved multi-repo workspace, opt into
+`scan_workspace_repositories` with `match_names: true`. Use new `nameSuggestions`
+only for the selected Refresh scope, verifying evidence at both ends. Partial
+names/duplicate definitions remain Questions; read `fullReport` if truncated.
+Keep relationship sources and target Markdown links. Refresh the foreign evidence
+owner separately for reverse edges; do not silently edit its concepts.
+
 Produce either `no_change`, one reviewable partial/complete private proposal, or an
 Incomplete result. Never publish, synchronize, clone another
 repository, or invoke provider CLI from this workflow.

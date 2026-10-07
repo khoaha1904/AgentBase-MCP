@@ -5,6 +5,12 @@ description: Explicit-only AgentBase batch ingest. Use only when the user names 
 
 # Batch Initial Ingest
 
+Prepare's `nameSuggestions` compares the authorized member snapshots. Verify its
+new links against both evidence chains before authoring relationships with source
+citations and resolving Markdown links. Duplicate definitions and partial names
+remain Questions. Matching never changes member confirmation, source/base guards
+or publication scope; read the private `fullReport` if the top-50 list truncates.
+
 Build one sparse review unit without mixing repository evidence.
 
 Use only `prepare_batch_hub_ingest`, `confirm_batch_hub_ingest`,

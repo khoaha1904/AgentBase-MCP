@@ -15,9 +15,12 @@ tests stay beside their behavior owner.
 
 ## Source-only discovery ownership
 
-`app/agentbase-mcp` owns deterministic census, safe input admission, Seed/Receipt
-lifecycle and MCP composition. `app/repository-source` owns Git source identity
-and change accounting. `core/knowledge/schemas` owns source-format detection and
+`app/agentbase-mcp` owns census signal grouping, safe input admission, Seed/Receipt
+lifecycle and MCP composition. `app/repository-source` owns the shared bounded
+census file selector, Git source identity, change accounting and deterministic
+source-name suggestions. `app/hub-okf` compares suggestions with Published
+relationships and retains full private reports for batch/opt-in scan responses.
+`core/knowledge/schemas` owns source-format detection and
 provider-neutral mappings. The host agent owns exact source investigation.
 No graph provider, native artifact, fake provider or benchmark runner owner
 remains. Discovery expansion reuses the armed source, never an index.

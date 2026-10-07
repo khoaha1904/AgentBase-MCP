@@ -510,7 +510,8 @@ test("[AB-DISC-011][AB-DISC-015] commented, unrelated and fixture-only launch de
   const seed = await captureCensus(root);
   assert.equal(seed.groups.some((group) => group.lane === "runtime-entrypoint"), false);
   assert.equal(seed.lanes.find((lane) => lane.lane === "runtime-entrypoint")?.status, "limited");
-  assert.equal(seed.capture.census?.eligibleFiles, Object.keys(files).length - 1);
+  assert.equal(seed.capture.census?.eligibleFiles, Object.keys(files).length);
+  assert.equal(seed.groups.some((group) => group.sources.some((source) => source.path === "config/unrelated.xml")), false);
 });
 
 test("[AB-DISC-002][AB-DISC-015] WAR descriptors and Dockerfile launch commands survive a large Java source census", async (t) => {

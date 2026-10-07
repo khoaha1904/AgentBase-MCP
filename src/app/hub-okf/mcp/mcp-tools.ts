@@ -108,10 +108,10 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "scan_workspace_repositories",
-    description: "Inventory up to 32 Git roots under one explicit workspace and compare lightweight Git metadata with the synchronized Published Hub without reading source or creating proposals.",
+    description: "Inventory up to 32 Git roots against synced Published metadata. match_names opts into bounded source-name suggestions; never creates proposals or calls providers.",
     inputSchema: {
       type: "object",
-      properties: { workspace_root: { type: "string", minLength: 1 } },
+      properties: { workspace_root: { type: "string", minLength: 1 }, match_names: { type: "boolean" } },
       required: ["workspace_root"], additionalProperties: false,
     },
   },

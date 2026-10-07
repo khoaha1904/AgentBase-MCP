@@ -455,9 +455,12 @@ test("[AB-HUB-SETUP-001..017][AB-BATCH-006][AB-BATCH-016][AB-HUB-CI-001..007][AB
     const preparedBatch = await batchActions.prepareBatch({ sourceRepositories: batchRepositories, proposedDomain: domain }) as {
       manifest: { id: string; revision: number; members: readonly { id: string; repositoryId: string }[] };
       matrix: readonly { documentPaths: readonly string[] }[];
+      nameSuggestions: { links: readonly unknown[]; fullReport: string };
     };
     assert.equal(preparedBatch.manifest.members.length, 3);
     assert.equal(preparedBatch.matrix.every((row) => row.documentPaths.includes("README.md")), true);
+    assert.ok(Array.isArray(preparedBatch.nameSuggestions.links));
+    assert.ok(fs.existsSync(preparedBatch.nameSuggestions.fullReport));
     await assert.rejects(batchActions.confirmBatch({ manifestId: preparedBatch.manifest.id,
       manifestRevision: preparedBatch.manifest.revision, assessments: preparedBatch.manifest.members.map((member) => ({
         memberId: member.id, decision: "match", evidencePath: "missing.md",

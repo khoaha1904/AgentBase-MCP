@@ -241,7 +241,8 @@ export async function callHubOkfTool(
       return result(await actions.preflight(required(args, "source_repository")));
     }
     if (name === "scan_workspace_repositories") {
-      return result(await actions.scan(required(args, "workspace_root")));
+      if (args.match_names !== undefined && typeof args.match_names !== "boolean") throw new Error("match_names must be boolean");
+      return result(await actions.scan(required(args, "workspace_root"), args.match_names as boolean | undefined));
     }
     if (name === "prepare_hub_profile_migration") return result(await actions.prepareMigration());
     if (name === "finalize_hub_profile_migration_proposal") {

@@ -1,5 +1,11 @@
 # 09.10 — Workspace scan and workflow routing
 
+`match_names: true` explicitly opts into the bounded source-only comparison in
+[Relation discovery](../06-cross-repository-relations/01-relation-discovery.md#deterministic-source-name-suggestions).
+It reads the selected local census files, returns at most 50 new suggestions
+and retains a full private report. It creates no proposal/relationship and adds
+no network or provider access. Omit the option for metadata-only scan.
+
 > Status: The MVP contract is implemented.
 
 ## Purpose

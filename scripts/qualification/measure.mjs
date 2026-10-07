@@ -10,8 +10,8 @@ import {
   resolveRepositoryIdentity, searchHubConceptsWithFreshness,
 } from "../../src/core/knowledge/index.ts";
 import { createHubIdentity } from "../../src/core/hub/index.ts";
-import { discoverRepositorySourceState } from "../../src/app/repository-source/index.ts";
-import { admitPersistentLocalHub, readPersistedHubConfiguration } from "../../src/app/hub-okf/index.ts";
+import { discoverRepositorySourceState, matchRepositoryNames } from "../../src/app/repository-source/index.ts";
+import { admitPersistentLocalHub, comparePublishedNameLinks, readPersistedHubConfiguration } from "../../src/app/hub-okf/index.ts";
 import { runGit } from "../../src/providers/github-hub/index.ts";
 import { DiscoverySession } from "../../src/app/agentbase-mcp/discovery-session.ts";
 import { measureFixtureCosts } from "./measure-costs.mjs";
@@ -114,7 +114,7 @@ export function linkMetrics(expected, candidates) {
     extra: [...found].filter(([key]) => !wanted.has(key)).map(([, link]) => link) };
 }
 
-export async function measureQualification(specFile, { matchLinks } = {}) {
+export async function measureQualification(specFile, { matchLinks, baseline = false } = {}) {
   const spec = readSpec(specFile), temporary = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-measure-")));
   try {
     const reader = await hubReader(spec.hub), graph = await loadHubGraph(reader, 256 * 1024);
@@ -126,9 +126,10 @@ export async function measureQualification(specFile, { matchLinks } = {}) {
       const source = discoverRepositorySourceState(repo.root);
       const resolution = resolveRepositoryIdentity({ displayName: source.displayName, ...source.identityHints }, records);
       requireInput(resolution.kind !== "ambiguous");
-      return { ...repo, source, repositoryId: resolution.repository.id };
+      return { ...repo, source, repositoryId: resolution.repository.id, remotes: source.identityHints.remotes };
     });
-    const candidates = matchLinks ? await matchLinks(repos, graph) : [];
+    const nameMatches = baseline || matchLinks ? undefined : comparePublishedNameLinks(repos, matchRepositoryNames(repos), graph);
+    const candidates = matchLinks ? await matchLinks(repos, graph) : nameMatches?.links ?? [];
     const retrieval = [];
     for (const question of spec.questions) {
       const response = await searchHubConceptsWithFreshness(reader, question.text,
@@ -164,10 +165,15 @@ export async function measureQualification(specFile, { matchLinks } = {}) {
         selected_files: seed.capture.census?.selectedFiles ?? 0, limitations: seed.capture.limitations.length };
     });
     const targets = retrieval.flatMap((item) => item.expected);
-    return { version: 1, mode: "offline-deterministic", link_mode: matchLinks ? "source-matcher" : "empty-baseline",
+    return { version: 1, mode: "offline-deterministic", link_mode: baseline ? "empty-baseline" : "source-matcher",
       links: linkMetrics(spec.links, candidates), retrieval: { questions: retrieval, omitted_documents: graph.omissions.length,
         targets: targets.length, hit_at_1: targets.length ? targets.filter((target) => target.hit_at_1).length / targets.length : null,
         hit_at_5: targets.length ? targets.filter((target) => target.hit_at_5).length / targets.length : null },
+      ...(nameMatches ? { matching: { published: nameMatches.links.filter((link) => link.published).length,
+        questions: nameMatches.questions.slice(0, 50), referenced_not_defined: nameMatches.referencedNotDefined.slice(0, 50),
+        counts: { questions: nameMatches.questions.length, referenced_not_defined: nameMatches.referencedNotDefined.length },
+        omitted: { questions: Math.max(0, nameMatches.questions.length - 50), referenced_not_defined: Math.max(0, nameMatches.referencedNotDefined.length - 50) },
+        module_version_drift: nameMatches.moduleVersionDrift, limitations: nameMatches.limitations } } : {}),
       costs: { token_estimate: "UTF-8 JSON bytes / 4; not model tokenization", seeds,
         ...await measureFixtureCosts(path.join(temporary, "cost-fixture")) } };
   } finally { fs.rmSync(temporary, { recursive: true, force: true }); }
@@ -183,8 +189,10 @@ export function measurementTable(result) {
 
 export async function main(args = process.argv.slice(2)) {
   try {
+    const baseline = args.includes("--baseline");
+    args = args.filter((value) => value !== "--baseline");
     requireInput(args.length === 1 || args.length === 3 && args[1] === "--output");
-    const result = await measureQualification(args[0]), serialized = `${JSON.stringify(result, null, 2)}\n`;
+    const result = await measureQualification(args[0], { baseline }), serialized = `${JSON.stringify(result, null, 2)}\n`;
     if (args[1] === "--output") {
       const output = path.resolve(args[2]);
       requireInput(!fs.existsSync(output) || !fs.lstatSync(output).isSymbolicLink());

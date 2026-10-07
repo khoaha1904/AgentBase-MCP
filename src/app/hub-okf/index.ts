@@ -105,6 +105,7 @@ export {
   type WorkspaceScanResult,
 } from "./query/workspace-scan.ts";
 export { listPendingHubProposals, selectPendingPrefix, type PendingHubProposal } from "./review/pending.ts";
+export { comparePublishedNameLinks } from "./query/name-suggestions.ts";
 export {
   synchronizeLocalHub,
   type HubSynchronizationReceipt,

@@ -6,6 +6,7 @@ import test from "node:test";
 import { execFileSync } from "node:child_process";
 
 import { loadOkfBundle, searchHubConceptsWithFreshness } from "../../src/core/knowledge/index.ts";
+import { matchRepositoryNames } from "../../src/app/repository-source/index.ts";
 import { byteCost, linkMetrics, measureQualification, measurementTable, readSpec } from "./measure.mjs";
 import { createF1, createF2 } from "./measure-fixtures.mjs";
 import { createHubIdentity, hubProfileId } from "../../src/core/hub/index.ts";
@@ -21,7 +22,7 @@ test("[AB-MEASURE-001..004] offline specs measure fixture links, product retriev
     extraInput.questions[0].expected[0].source_contents = "Sourcecontentsentinel";
     fs.writeFileSync(f2, JSON.stringify(extraInput));
     for (const [label, specFile, expectedLinks, repoCount] of [["F1", f1, 8, 5], ["F2", f2, 2, 2]]) {
-      const result = await measureQualification(specFile);
+      const result = await measureQualification(specFile, { baseline: true });
       assert.equal(result.link_mode, "empty-baseline");
       assert.equal(result.links.expected, expectedLinks);
       assert.equal(result.links.matched, 0);
@@ -29,6 +30,20 @@ test("[AB-MEASURE-001..004] offline specs measure fixture links, product retriev
       assert.equal(result.links.precision, null);
       assert.equal(result.links.missing.length, expectedLinks);
       assert.deepEqual(result.links.extra, []);
+      const specForNames = readSpec(specFile), names = matchRepositoryNames(specForNames.repos);
+      const metrics = linkMetrics(specForNames.links, names.links);
+      assert.equal(metrics.matched, expectedLinks);
+      assert.deepEqual(metrics.missing, []);
+      assert.deepEqual(metrics.extra, []);
+      for (const link of names.links) {
+        assert.ok(link.evidence.definition.length && link.evidence.usage.length);
+        assert.ok(link.evidence.usage.every((item) => item.line > 0 && !path.isAbsolute(item.path)));
+      }
+      if (label === "F1") {
+        assert.equal(names.moduleVersionDrift.modules, 1);
+        assert.ok(names.questions.some((item) => item.reason === "duplicate-definition"));
+        assert.ok(names.referencedNotDefined.some((item) => item.name === "fleet-old-dead-letter"));
+      }
       assert.equal(result.costs.list_tools.count, 36);
       assert.equal(result.costs.seeds.length, repoCount);
       assert.deepEqual(Object.keys(result.costs.ingest), ["preflight", "discover", "schemas", "prepare", "validate", "finalize", "inspect"]);
@@ -58,6 +73,7 @@ test("[AB-MEASURE-001..004] offline specs measure fixture links, product retriev
         execFileSync(process.execPath, ["scripts/qualification/measure.mjs", specFile, "--output", output],
           { cwd: path.resolve(import.meta.dirname, "../.."), stdio: "pipe" });
         assert.equal(JSON.parse(fs.readFileSync(output, "utf8")).version, 1);
+        assert.equal(JSON.parse(fs.readFileSync(output, "utf8")).links.matched, expectedLinks);
         assert.equal(fs.readFileSync(output, "utf8").includes(root), false);
       }
     }

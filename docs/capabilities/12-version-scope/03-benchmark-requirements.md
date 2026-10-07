@@ -19,7 +19,7 @@ question and a separately approved bounded campaign, without a runtime service.
 ## Offline deterministic measurement
 
 The owner approves `node scripts/qualification/measure.mjs <spec.json>
-[--output <result.json>]`. This source-only script belongs beside existing
+[--output <result.json>] [--baseline]`. This source-only script belongs beside existing
 qualification utilities, never under the retired `scripts/benchmark` path.
 It needs no model, network or credential and is excluded from release bundles.
 
@@ -32,8 +32,8 @@ the script explicitly searches globally. Output paths are caller-controlled.
 Keep private specs/results outside this public repository.
 
 - **AB-MEASURE-001** — Validate bounded inputs and return link recall/precision,
-  missing and extra identities. Before the source matcher exists, report an
-  explicit empty-candidate baseline. Do not derive candidates from the answers.
+  missing and extra identities using the source-name matcher. `--baseline`
+  retains an explicit empty-candidate baseline. Do not derive candidates from the answers.
 - **AB-MEASURE-002** — Invoke the same search implementation as `search_hub_okf`,
   with no alternate ranking. Record each expected concept/source rank, top-five
   concept IDs, target hit@1/hit@5 and question hits (all expectations must hit).
@@ -59,3 +59,10 @@ qualification. F2 retains the conditional empty-input cause and its two queue
 and table branches in concise source-backed concepts. Real-model answer
 assessment and optional public corpus downloads are separate operator work,
 never part of `npm run verify`.
+
+`node scripts/qualification/fetch-public-corpus.mjs <new-temp-directory>` downloads
+the owner-selected public repositories at fixed commits, with sparse Serverless
+Patterns checkout and separate disposable Git roots. This network-only utility
+is not used by measurement, runtime, release bundles or verify. Its private
+`corpus.json` records pins and roots; the operator reads those sources and authors
+an independent spec, recording any deliberate temporary name adaptations.

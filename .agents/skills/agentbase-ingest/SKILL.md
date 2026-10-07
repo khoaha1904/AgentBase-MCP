@@ -5,6 +5,14 @@ description: Explicit-only AgentBase Add repository. Use only when the user name
 
 # Add repository
 
+When approved Batch Prepare or opt-in workspace scan returns `nameSuggestions`,
+use only its new links for the confirmed repository scope. Check evidence at both
+ends in exact authorized source; names are hints, not identity or interaction
+proof. Keep duplicate definitions/partial interpolation as Questions. Author
+normal source-backed relationships and target body links only after confirmation;
+never modify a foreign repository to add the reverse edge. Read `fullReport` when
+the bounded list is truncated and report remaining limitations.
+
 Create one reviewable proposal from bounded source evidence. The user supplies
 the repository, not an authoring prompt. Stop before Publish.
 

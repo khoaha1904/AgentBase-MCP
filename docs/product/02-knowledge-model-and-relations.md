@@ -226,6 +226,13 @@ owner-declared durable Hub is never reset by this permission.
 
 ## Failure and recovery
 
+Batch preparation and explicitly opted-in Workspace Scan may compare bounded
+local source names across 2..32 selected repositories. These deterministic
+matches are suggestions with evidence, not identity proof or automatic Hub
+relations. Published relationships suppress already-recorded suggestions;
+ambiguous definitions and unresolved interpolation remain Questions. Ordinary
+scan keeps its metadata-only behavior. No provider/model/network access is added.
+
 - Ambiguous Domain or repository lineage requires user confirmation.
 - Ambiguous physical home requires user confirmation; it is not resolved from
   a repository or folder name alone.
