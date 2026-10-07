@@ -20,6 +20,13 @@ test("[AB-INSTALL-045..046] configured HTTPS registries and Windows npm shims pr
   const args = ["ci", "--registry=https://registry.example.invalid/team?x=1&y=2", "--replace-registry-host=always"];
   const invocation = commandInvocation(findCommand("npm", { PATH: root }, "win32"), args, "win32");
   assert.deepEqual(invocation, { command: process.execPath, args: [script, ...args] });
+  fs.writeFileSync(path.join(root, "npm.cmd"), [
+    '@ECHO OFF',
+    'SET "NPM_PREFIX_JS=%~dp0\\node_modules\\npm\\bin\\npm-prefix.js"',
+    'SET "NPM_CLI_JS=%~dp0\\node_modules\\npm\\bin\\npm-cli.js"',
+    '"%NODE_EXE%" "%NPM_CLI_JS%" %*',
+  ].join("\r\n") + "\r\n");
+  assert.deepEqual(commandInvocation(findCommand("npm", { PATH: root }, "win32"), args, "win32"), invocation);
   fs.writeFileSync(path.join(root, "bad.cmd"), "echo arbitrary\r\n");
   assert.throws(() => commandInvocation(path.join(root, "bad.cmd"), [], "win32"), /Unsupported/);
   let output = "", installed;

@@ -21,7 +21,12 @@ export function commandInvocation(file, args, platform = process.platform) {
   const bytes = fs.readFileSync(file, "utf8");
   if (/^#!.*\bnode(?:\r?\n|$)/.test(bytes)) return { command: process.execPath, args: [file, ...args] };
   // Standard npm shims expose the adjacent JS entrypoint. Never evaluate .cmd text.
-  const scripts = [...new Set([...bytes.matchAll(/"%dp0%[\\/]([^"\r\n]+\.(?:m?js|cjs))"/gi)].map((match) => match[1]))];
+  const directScripts = [...bytes.matchAll(/"%dp0%[\\/]([^"\r\n]+\.(?:m?js|cjs))"/gi)].map((match) => match[1]);
+  // Node's bundled npm shim assigns its entrypoint rather than invoking it literally.
+  const npmScripts = /"%NODE_EXE%"\s+"%NPM_CLI_JS%"\s+%\*/i.test(bytes)
+    ? [...bytes.matchAll(/^SET "NPM_CLI_JS=%~dp0[\\/](node_modules[\\/]npm[\\/]bin[\\/]npm-cli\.js)"\r?$/gmi)].map((match) => match[1])
+    : [];
+  const scripts = [...new Set([...directScripts, ...npmScripts])];
   if (scripts.length !== 1) throw new Error("Unsupported Windows command shim; use a native or standard npm client install");
   const script = path.resolve(path.dirname(file), ...scripts[0].split(/[\\/]/));
   if (!fs.statSync(script).isFile()) throw new Error("Windows command entrypoint is unavailable");
