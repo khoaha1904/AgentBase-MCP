@@ -70,6 +70,10 @@ All application-owned model benchmark runners and native-provider qualification
 campaigns are retired. Focused deterministic product, discovery, lifecycle and
 release tests remain mandatory. Historical AgentBase-Benchmark data stays in its
 own repository; it is not a runtime dependency or an active release promise.
+The owner permits offline deterministic qualification from a private local JSON
+spec: source-name link accounting, the product's Published search and response
+byte estimates. It invokes no model, network or provider, adds no MCP tool and
+ships outside the runtime release. Model answer grading remains external.
 No new parser/index/graph replacement, model runner or compatibility proxy is
 introduced. The Node range and qualified release platforms retain their current
 bounds; removal alone does not qualify additional hosts.

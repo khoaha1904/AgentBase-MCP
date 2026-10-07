@@ -21,6 +21,10 @@ and change accounting. `core/knowledge/schemas` owns source-format detection and
 provider-neutral mappings. The host agent owns exact source investigation.
 No graph provider, native artifact, fake provider or benchmark runner owner
 remains. Discovery expansion reuses the armed source, never an index.
+`scripts/qualification/` owns offline deterministic measurements over local
+specs and generated fixtures, using the product search and tool adapters.
+It is excluded from runtime/release ownership and cannot sync or mutate an
+operator Hub. Model answer evaluation remains external.
 
 SAM and Terraform reuse provider-neutral roles without a generic plugin system,
 new cloud execution adapter or new Hub schema. Exact same-source references and
