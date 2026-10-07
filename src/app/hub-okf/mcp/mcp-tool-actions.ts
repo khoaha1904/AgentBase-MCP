@@ -33,7 +33,7 @@ export type HubToolActions = Readonly<{
     coverage?: Readonly<{ partial: boolean; limitations: readonly string[] }>;
     discoveryReceiptId?: string;
   }>): Promise<unknown>;
-  validate(sessionId: string): Promise<unknown>;
+  validate(sessionId: string, referencedIdentities?: readonly string[]): Promise<unknown>;
   finalize(sessionId: string, questions?: readonly QuestionDeclaration[], removals?: readonly HubRemovalDeclaration[],
     changeAccounting?: readonly RefreshChangeOutcome[]): Promise<unknown>;
   prepareBatch(input: Readonly<{ sourceRepositories: readonly string[]; proposedDomain: BatchDomain }>): Promise<unknown>;

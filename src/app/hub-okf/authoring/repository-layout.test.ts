@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { loadOkfBundle, renderConceptDocument } from "../../../core/knowledge/index.ts";
-import { beginHubAuthoringSession } from "./authoring-session.ts";
+import { beginHubAuthoringSession, readHubAuthoringSession } from "./authoring-session.ts";
 import { normalizeRefreshRepositoryLayout } from "./repository-layout.ts";
 
 const REPOSITORY = "repository-worker-aaaaaaaaaaaa";
@@ -31,6 +31,14 @@ test("[AB-LOCAL-HUB-014] Refresh prepares a linked Repository from legacy copied
       evidenceDigest: `sha256:${"d".repeat(64)}`, subjectDirectory: "repositories/worker",
       signals: ["repository"], selectedSchemas: ["Repository", "Function"], createdAt: "2026-10-06T00:00:00Z" });
     assert.deepEqual(session.skeletons, [{ identity: "repositories/worker", path: "repositories/worker.md", type: "Repository" }]);
+    assert.deepEqual(readHubAuthoringSession(path.join(root, "state"), session.id, hub).skeletons, session.skeletons);
+    const statePath = path.join(session.root, "session.json");
+    const persisted = fs.readFileSync(statePath, "utf8");
+    fs.writeFileSync(statePath, JSON.stringify({ ...session, mode: "new", refreshScope: undefined }));
+    assert.throws(() => readHubAuthoringSession(path.join(root, "state"), session.id, hub), /skeleton state is invalid/);
+    fs.writeFileSync(statePath, JSON.stringify({ ...session, skeletons: [{ identity: "repositories/worker", path: "worker.txt", type: "Repository" }] }));
+    assert.throws(() => readHubAuthoringSession(path.join(root, "state"), session.id, hub), /skeleton state is invalid/);
+    fs.writeFileSync(statePath, persisted);
     const normalized = loadOkfBundle(session.bundleRoot).concepts.get("repositories/worker")!;
     assert.doesNotMatch(normalized.body, /Embedded Knowledge|Exact Evidence|Input transport/);
     assert.match(normalized.body, /\[Worker runtime\]\(\.\.\/components\/worker\.md\)/);

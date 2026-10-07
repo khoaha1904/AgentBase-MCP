@@ -555,7 +555,7 @@ export function createHubRuntimeActions(
         ] } : {}),
       };
     },
-    async validate(sessionId) {
+    async validate(sessionId, referencedIdentities) {
       const configuration = configured();
       const session = readHubAuthoringSession(stateRoot, sessionId, configuration.localRoot);
       const source = discoverRepositorySourceState(session.sourceRepositoryRoot);
@@ -568,7 +568,7 @@ export function createHubRuntimeActions(
       const publishedTargets = [...loadOkfBundle(localHub.root).concepts.values()].map((concept) => ({
         identity: concept.conceptId, path: concept.path, type: concept.type,
       }));
-      return validateHubAuthoringSession(stateRoot, sessionId, configuration.localRoot, publishedTargets);
+      return validateHubAuthoringSession(stateRoot, sessionId, configuration.localRoot, publishedTargets, referencedIdentities);
     },
     async finalize(sessionId, questions, removals, changeAccounting) {
       const configuration = configured(true);

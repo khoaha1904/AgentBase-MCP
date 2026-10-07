@@ -391,7 +391,7 @@ function validateBundle(entries: readonly SuppliedConcept[], targets: readonly O
 export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record<string, unknown>>,
   dependencies: Readonly<{
     discovery?: DiscoverySession;
-    validateAuthoringSession?: (sessionId: string) => Promise<unknown>;
+    validateAuthoringSession?: (sessionId: string, referencedIdentities?: readonly string[]) => Promise<unknown>;
   }> = {}): CallToolResult | Promise<CallToolResult> {
   try {
     if (name === "list_okf_schemas") return result({
@@ -462,7 +462,17 @@ export function callOkfSchemaTool(name: OkfSchemaToolName, args: Readonly<Record
     if (!dependencies.validateAuthoringSession) {
       return result({ error: "session-bound authoring validation is unavailable" }, true);
     }
-    return dependencies.validateAuthoringSession(args.session_id).then((sessionValidation) => {
+    const references = supplied.entries.flatMap((entry) => {
+      const concept = parseConceptDocument(entry.path, entry.content);
+      const relationships = Array.isArray(concept.frontmatter.relationships) ? concept.frontmatter.relationships : [];
+      const steps = Array.isArray(concept.frontmatter.flow_steps) ? concept.frontmatter.flow_steps : [];
+      return [...relationships.flatMap((value) => value && typeof value === "object" && !Array.isArray(value)
+        ? [(value as Record<string, unknown>).target] : []),
+      ...steps.flatMap((value) => value && typeof value === "object" && !Array.isArray(value)
+        ? [(value as Record<string, unknown>).source, (value as Record<string, unknown>).target] : [])]
+        .filter((value): value is string => typeof value === "string");
+    });
+    return dependencies.validateAuthoringSession(args.session_id, [...new Set(references)]).then((sessionValidation) => {
       const sessionTargets = sessionValidation && typeof sessionValidation === "object"
         && Array.isArray((sessionValidation as Record<string, unknown>).targets)
         ? (sessionValidation as Record<string, unknown>).targets as OkfRelationshipTarget[] : [];

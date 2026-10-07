@@ -65,7 +65,7 @@ export function createAgentBaseMcpServer(options: Readonly<{
       async (argumentsValue): Promise<CallToolResult> => callOkfSchemaTool(
         tool.name as OkfSchemaToolName,
         argumentsValue as Record<string, unknown>,
-        { discovery, validateAuthoringSession: (sessionId) => hubActions.validate(sessionId) },
+        { discovery, validateAuthoringSession: (sessionId, references) => hubActions.validate(sessionId, references) },
       ));
   }
   if (enabled(DISCOVERY_TOOL.name, "discovery")) {

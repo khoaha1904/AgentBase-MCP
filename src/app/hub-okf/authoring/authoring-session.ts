@@ -294,7 +294,8 @@ export function readHubAuthoringSession(
     || (!value.hub && !/^[a-f0-9]{24}$/.test(value.localHubId ?? ""))) {
     throw new Error("Hub authoring session state is invalid");
   }
-  if (value.skeletons && (value.mode !== "new" || !value.discoveryReceipt
+  if (value.skeletons && ((value.mode !== "refresh" && (value.mode !== "new" || !value.discoveryReceipt))
+    || !Array.isArray(value.skeletons)
     || value.skeletons.some((skeleton) => !skeleton.identity || !skeleton.path.endsWith(".md") || !skeleton.type))) {
     throw new Error("Hub authoring skeleton state is invalid");
   }
@@ -346,11 +347,12 @@ export function validateHubAuthoringSession(
   sessionId: string,
   expectedCheckoutRoot: string,
   publishedTargets: readonly OkfRelationshipTarget[] = [],
+  suppliedReferences: readonly string[] = [],
 ): Readonly<{ valid: true; sessionId: string; mode: "new" | "refresh"; targets: readonly OkfRelationshipTarget[] }> {
   const session = readHubAuthoringSession(stateRoot, sessionId, expectedCheckoutRoot);
   validateHubAuthoringBundle(session, session.bundleRoot);
   const bundle = loadOkfBundle(session.bundleRoot, { requireAgentBaseRootIndex: true });
-  const references = new Set<string>();
+  const references = new Set<string>(suppliedReferences);
   for (const concept of bundle.concepts.values()) {
     const relationships = concept.frontmatter.relationships;
     if (Array.isArray(relationships)) for (const value of relationships) {

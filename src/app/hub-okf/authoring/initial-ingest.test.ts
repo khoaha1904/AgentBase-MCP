@@ -7,7 +7,7 @@ import test from "node:test";
 import { createHubIdentity, hubProfileId } from "../../../core/hub/index.ts";
 import {
   AGENTBASE_OKF_PROFILE_PATH, buildHubContinuity, getOkfAuthoringGuidance, loadOkfBundle, parseConceptDocument,
-  readRepositoryObservedSource, readRepositoryRefreshCoverage, renderAgentBaseOkfProfileDocument, validateOkfRelationships,
+  readRepositoryObservedSource, readRepositoryRefreshCoverage, renderAgentBaseOkfProfileDocument, renderConceptDocument, validateOkfRelationships,
   type HubContinuityManifest, type InventoryReceipt,
 } from "../../../core/knowledge/index.ts";
 import { runGit, type SourceSnapshot } from "../../../providers/github-hub/index.ts";
@@ -19,6 +19,9 @@ import { readPersistedHubConfiguration, replacePersistedHubConfiguration } from 
 import { createLocalHub } from "../workspace/setup.ts";
 import { createTestInventoryReceipt } from "../test-support.ts";
 import { writeInitialIngestSkeletons } from "./initial-ingest-skeleton.ts";
+import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
+import { createAgentBaseMcpServer } from "../../agentbase-mcp/index.ts";
+import { callHubOkfTool } from "../mcp/mcp-tool-call.ts";
 
 async function enableProfileHub(root: string): Promise<void> {
   fs.mkdirSync(path.join(root, "shared"), { recursive: true });
@@ -115,7 +118,7 @@ test("[AB-SCHEMA-057][AB-SCHEMA-060] one runtime keeps internal resources embedd
   }
 });
 
-test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-LOCAL-HUB-014][AB-REFRESH-019..023][AB-USE-006] preparation renders one generic inspectable skeleton bundle and recoverable Refresh", async () => {
+test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-LOCAL-HUB-014][AB-REFRESH-017..023][AB-USE-006] preparation renders one generic inspectable skeleton bundle and recoverable Refresh", async (context) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-initial-ingest-"));
   const source = path.join(root, "vehicle-events");
   const environment = { HOME: root, XDG_CONFIG_HOME: path.join(root, "config"), XDG_DATA_HOME: path.join(root, "data") };
@@ -309,6 +312,16 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
       /domains\/vehicle-data\/knowledge\/publisher\.md: source span exceeds main\.tf \(6 lines\)/);
     fs.writeFileSync(publisherPath, validPublisher);
 
+    // Retain an older generated Repository layout to exercise normalization after publication.
+    const legacyRepository = skeletonBundle.concepts.get("domains/vehicle-data/repositories/vehicle-events")!;
+    const legacyChild = skeletonBundle.concepts.get("domains/vehicle-data/knowledge/publisher")!;
+    const copiedSection = legacyChild.body.match(/^# Embedded Knowledge[\s\S]*?(?=^# |(?![\s\S]))/m)![0];
+    fs.writeFileSync(path.join(prepared.bundleRoot, legacyRepository.path), renderConceptDocument({
+      ...legacyRepository, body: `${legacyRepository.body}\n${copiedSection}`,
+      frontmatter: { ...legacyRepository.frontmatter,
+        sources: [...legacyRepository.frontmatter.sources as [], ...legacyChild.frontmatter.sources as []] },
+    }));
+
     const finalized = await actions.finalize(prepared.sessionId) as {
       proposal: { id: string; phase: string; selectedSchemas: string[]; diffDigest: string };
       inspection: { applicable: boolean; coverage: { partial: boolean; limitations: string[] } };
@@ -365,12 +378,13 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
       proposal: { id: string }; inspection: { refreshSuggestions: { items: readonly { repositoryId: string;
         repositoryIdentity: string; parentIdentity: string; resourceIdentity: string; reason: string }[]; omitted: number } };
     };
-    assert.equal(secondFinalized.inspection.refreshSuggestions.items.length, 1);
-    assert.equal(secondFinalized.inspection.refreshSuggestions.items[0]?.repositoryId, preflight.repository.repository.id);
-    assert.equal(secondFinalized.inspection.refreshSuggestions.items[0]?.repositoryIdentity,
+    assert.equal(secondFinalized.inspection.refreshSuggestions.items.length, 2, "legacy copied rows also suggest their Repository owner");
+    const publisherSuggestion = secondFinalized.inspection.refreshSuggestions.items.find((item) =>
+      item.parentIdentity === "domains/vehicle-data/knowledge/publisher");
+    assert.equal(publisherSuggestion?.repositoryId, preflight.repository.repository.id);
+    assert.equal(publisherSuggestion?.repositoryIdentity,
       "domains/vehicle-data/repositories/vehicle-events");
-    assert.equal(secondFinalized.inspection.refreshSuggestions.items[0]?.parentIdentity, "domains/vehicle-data/knowledge/publisher");
-    assert.match(secondFinalized.inspection.refreshSuggestions.items[0]?.reason ?? "", /Name-only.*publishes-to\/writes-to/);
+    assert.match(publisherSuggestion?.reason ?? "", /Name-only.*publishes-to\/writes-to/);
     const secondInspection = await actions.inspect(secondFinalized.proposal.id) as typeof secondFinalized;
     assert.deepEqual(secondInspection.inspection.refreshSuggestions, secondFinalized.inspection.refreshSuggestions);
     const proposedRoot = path.join(stateRoot, "proposals", secondFinalized.proposal.id, "bundle");
@@ -383,6 +397,58 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
       "domains/vehicle-data/knowledge/publisher.md"), "utf8"), fs.readFileSync(path.join(stateRoot, "proposals",
       secondFinalized.proposal.id, "base", "domains/vehicle-data/knowledge/publisher.md"), "utf8"),
     "promoting a foreign embedded item must preserve its parent bytes");
+    const secondProposal = secondFinalized as unknown as { proposal: { id: string; diffDigest: string } };
+    await publish(secondProposal.proposal.id, secondProposal.proposal.diffDigest);
+    const normalizedRefresh = await actions.prepare({ mode: "refresh", refreshScope: "coverage",
+      sourceRepository: source, subjectDirectory: "repositories/vehicle-events", signals: ["repository"],
+      coverage: { partial: true, limitations: ["runtime consumers were not present in this repository"] },
+    }) as { sessionId: string; bundleRoot: string; skeletons: readonly { path: string }[];
+      sourceChanges: { paths: readonly string[] } };
+    assert.deepEqual(normalizedRefresh.sourceChanges.paths, []);
+    assert.deepEqual(normalizedRefresh.skeletons.map((item) => item.path), [legacyRepository.path]);
+    const linkedRepository = fs.readFileSync(path.join(normalizedRefresh.bundleRoot, legacyRepository.path), "utf8");
+    assert.doesNotMatch(linkedRepository, /# Embedded Knowledge/);
+    const refreshedPublisher = loadOkfBundle(normalizedRefresh.bundleRoot).concepts.get(legacyChild.conceptId)!;
+    const resourceLink = path.posix.relative(path.posix.dirname(refreshedPublisher.path), promoted.path);
+    const changedPublisher = renderConceptDocument({ ...refreshedPublisher,
+      frontmatter: { ...refreshedPublisher.frontmatter, relationships: [
+        ...(refreshedPublisher.frontmatter.relationships ?? []) as [],
+        { kind: "publishes-to", target: promoted.conceptId, evidence: ["queue"] },
+      ] }, body: `${refreshedPublisher.body}\nPublishes to [shared events](${resourceLink}).\n` });
+    // Validate before saving: targets must be derived from the submitted changes, not only bundle bytes.
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    const mcp = createAgentBaseMcpServer({ hubActions: actions, hubStateRoot: stateRoot });
+    const client = new Client({ name: "refresh-session-fixture", version: "0.0.0" });
+    await mcp.connect(serverTransport);
+    await client.connect(clientTransport);
+    const validatedRefresh = await client.callTool({ name: "validate_okf_changes", arguments: {
+      session_id: normalizedRefresh.sessionId, targets: [], changes: [
+        { identity: legacyRepository.conceptId, path: legacyRepository.path, content: linkedRepository },
+        { identity: refreshedPublisher.conceptId, path: refreshedPublisher.path, content: changedPublisher },
+      ],
+    } });
+    await client.close();
+    await mcp.close();
+    assert.equal(validatedRefresh.isError, undefined, JSON.stringify(validatedRefresh));
+    const validatedBody = JSON.parse(validatedRefresh.content[0]!.type === "text" ? validatedRefresh.content[0]!.text : "{}");
+    assert.equal(validatedBody.valid, true);
+    assert.ok(validatedBody.sessionValidation.targets.some((target: { identity: string }) => target.identity === promoted.conceptId));
+    assert.ok(validatedBody.sessionValidation.targets.some((target: { identity: string }) => target.identity === "domains/vehicle-data"));
+    fs.writeFileSync(path.join(normalizedRefresh.bundleRoot, refreshedPublisher.path), changedPublisher);
+    const refreshFinalize = await callHubOkfTool("finalize_hub_okf_proposal", { session_id: normalizedRefresh.sessionId }, actions);
+    assert.equal(refreshFinalize.isError, undefined, JSON.stringify(refreshFinalize));
+    const refreshSummary = JSON.parse(refreshFinalize.content[0]!.type === "text" ? refreshFinalize.content[0]!.text : "{}");
+    assert.ok(refreshSummary.proposal_digest);
+    const refreshInspect = await callHubOkfTool("inspect_hub_okf_proposal", { proposal_id: refreshSummary.proposal_id }, actions);
+    assert.equal(refreshInspect.isError, undefined, JSON.stringify(refreshInspect));
+    const refreshDetails = JSON.parse(refreshInspect.content[0]!.type === "text" ? refreshInspect.content[0]!.text : "{}");
+    assert.ok(refreshDetails.inspection.entries.some((entry: { path: string; change: string }) =>
+      entry.path === refreshedPublisher.path && entry.change === "modified"));
+    const responseBytes = { finalize: Buffer.byteLength(JSON.stringify(refreshFinalize)), inspect: Buffer.byteLength(JSON.stringify(refreshInspect)) };
+    context.diagnostic(`Normalized Refresh response bytes: ${JSON.stringify(responseBytes)}`);
+    assert.ok(responseBytes.finalize < 2_000);
+    assert.ok(responseBytes.inspect < 32_000);
+    fs.rmSync(path.join(stateRoot, "proposals", refreshSummary.proposal_id), { recursive: true, force: true });
     const correctionSubject = "domains/vehicle-data/repositories/vehicle-events.md";
     const beforeCorrection = await actions.read(correctionSubject) as { commit: string; excerpt: string };
     assert.doesNotMatch(JSON.stringify(beforeCorrection), /Refresh evidence confirms delivery ownership/);
@@ -437,7 +503,7 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     assert.equal(privateCorrectionRead.commit, beforeCorrection.commit);
     assert.equal(privateCorrectionRead.excerpt, beforeCorrection.excerpt);
     assert.equal((await runGit({ args: ["rev-parse", "refs/heads/main"], cwd: remote,
-      operation: "verify private correction did not publish" })).stdout.trim(), initialPublication.commit);
+      operation: "verify private correction did not publish" })).stdout.trim(), beforeCorrection.commit);
     assert.match(updatedRepository.after.content, /Refresh evidence confirms delivery ownership/);
     await publish(refreshed.proposal.id, refreshed.proposal.diffDigest);
     assert.match(JSON.stringify(await actions.read(correctionSubject)), /Refresh evidence confirms delivery ownership/);

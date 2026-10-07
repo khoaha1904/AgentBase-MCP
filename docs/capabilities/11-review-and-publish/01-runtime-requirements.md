@@ -76,6 +76,8 @@ authorized old test-state disposal is complete without a migration adapter.
   replacing embedded rows duplicated from its source-backed child concepts
   with links. It returns the changed Repository as an editable skeleton;
   Repository-owned embedded rows, sources, identity and protected bytes remain.
+  Persisted Refresh sessions accept these skeletons under the same skeleton
+  shape, source and Hub-base checks; only Initial Ingest requires a Receipt.
   Each continuity known gap has a short `detail`; multi-item missing evidence
   and coverage limitations are returned as a `details` list rather than joined
   into one long string.
@@ -279,10 +281,11 @@ authorized old test-state disposal is complete without a migration adapter.
   rejects repository source identities reused across changed observed revisions
   while the editable workspace is still repairable; Finalize retains the same
   invariant as the authoritative lock boundary. Session-bound validation adds
-  prepared Initial Ingest skeleton summaries and referenced Published concept
+  prepared Init/Refresh skeleton summaries and referenced Published concept
   summaries to relationship targets, excluding concepts in the changed set, so
   an agent does not need to echo concepts created by Prepare or existing Domain
-  targets.
+  or foreign Resource targets. References include the supplied changed documents
+  even before those bytes are saved in the editable bundle.
 - **AB-REFRESH-018** — Every newly authored known non-governance concept other
   than Domain or Repository has an evidenced structural path, using relations
   admitted by each source concept's exact schema, to a Repository or Domain.
