@@ -45,6 +45,12 @@ paths and never enters normalized evidence. Mutations use atomic state and exact
 ownership. Failure preserves the previous admitted state and returns visible
 recovery rather than silently changing authority.
 
+Refresh restart retains old authoring sessions and atomically selects a fresh
+session for the same preparation identity through an owner-private pointer.
+The pointer is routing state only: the selected session is read through normal
+path, source, base and authority admission. Inspect response projections do not
+replace retained inspection or alter publication integrity verification.
+
 Refresh coverage debt is not a second freshness database or run history. It is
 a bounded extension of the canonical Repository metadata containing only
 partial status, omitted count, current-campaign pass count, limitations and

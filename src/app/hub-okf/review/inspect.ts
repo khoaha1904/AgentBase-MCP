@@ -12,6 +12,7 @@ import {
 import type { QuestionDeclaration } from "../authoring/questions.ts";
 import type { RefreshChangeAccounting } from "../authoring/refresh-change-accounting.ts";
 import { buildHubRefreshSuggestions, type HubRefreshSuggestions } from "./refresh-suggestions.ts";
+import { contextualDiff } from "./context-diff.ts";
 
 export type HubChangeEntry = Readonly<{
   path: string;
@@ -215,6 +216,29 @@ export function readVerifiedHubProposalInspection(
     throw new Error("proposal Refresh suggestions changed after finalization");
   }
   return { ...attachHubInspectionContext(value), refreshSuggestions };
+}
+
+export function projectHubProposalInspection(inspection: HubProposalInspection, proposalRoot: string, includeContent = false): unknown {
+  if (includeContent) return inspection;
+  return {
+    ...inspection,
+    entries: inspection.entries.map(({ before, after, ...entry }) => {
+      const metadata = (side: "base" | "bundle", content: HubInspectedContent | undefined) => content ? {
+        digest: content.digest,
+        bytes: fs.statSync(path.join(proposalRoot, side, entry.path)).size,
+        file: path.join(proposalRoot, side, entry.path),
+      } : undefined;
+      return {
+        ...entry,
+        ...(before ? { before: metadata("base", before) } : {}),
+        ...(after ? { after: metadata("bundle", after) } : {}),
+        ...(before || after ? { diff: {
+          ...contextualDiff(before?.content ?? "", after?.content ?? ""),
+          ...(before?.truncated || after?.truncated ? { truncated: true } : {}),
+        } } : {}),
+      };
+    }),
+  };
 }
 
 // Lifecycle callers retain full inspection privately; CLI/MCP Finalize exposes only review routing.

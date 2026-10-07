@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -86,6 +86,7 @@ export type HubAuthoringSourceState = Readonly<{
 export type BeginHubAuthoringOptions = Readonly<{
   stateRoot: string;
   mode: "new" | "refresh";
+  restart?: boolean;
   refreshScope?: RefreshScope;
   hub?: HubIdentity;
   localHubId?: string;
@@ -155,7 +156,8 @@ export function markInventoryReceiptFinalized(
   writeReceiptTerminal(stateRoot, receipt, proposalId);
 }
 
-export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): HubAuthoringSession {
+export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): HubAuthoringSession & Readonly<{ resumed: boolean }> {
+  if (options.restart && options.mode !== "refresh") throw new Error("restart is supported only for Refresh");
   if (options.discoveryReceipt) {
     validateInventoryReceipt(options.discoveryReceipt);
     options = { ...options, coverage: receiptCoverage(options.discoveryReceipt) };
@@ -196,7 +198,16 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
     options.evidenceDigest, options.subjectDirectory, options.confirmedDomain?.identity ?? "",
     options.confirmedDomain?.title ?? "", options.discoveryReceipt?.id ?? "",
     JSON.stringify(homePlan ?? null), JSON.stringify(options.sourceChanges ?? null)].join("\0");
-  const id = `hub-session-${createHash("sha256").update(seed).digest("hex").slice(0, 24)}`;
+  const originalId = `hub-session-${createHash("sha256").update(seed).digest("hex").slice(0, 24)}`;
+  const selection = path.join(path.resolve(options.stateRoot), "session-selections", `${originalId}.json`);
+  let id = originalId;
+  if (options.restart) id = `hub-session-${createHash("sha256").update(`${seed}\0${randomUUID()}`).digest("hex").slice(0, 24)}`;
+  else if (fs.existsSync(selection)) {
+    if (fs.lstatSync(selection).isSymbolicLink() || fs.statSync(selection).size > 256) throw new Error("Hub session selection is invalid");
+    const selected = JSON.parse(fs.readFileSync(selection, "utf8")) as { sessionId?: unknown };
+    if (typeof selected.sessionId !== "string" || !/^hub-session-[a-f0-9]{24}$/.test(selected.sessionId)) throw new Error("Hub session selection is invalid");
+    id = selected.sessionId;
+  }
   const root = path.join(path.resolve(options.stateRoot), "sessions", id);
   if (fs.existsSync(root)) {
     if (!fs.existsSync(path.join(root, "session.json"))) fs.rmSync(root, { recursive: true, force: true });
@@ -212,7 +223,7 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
       && JSON.stringify(existing.sourceChanges) === JSON.stringify(options.sourceChanges)
       && JSON.stringify(existing.sourceState) === JSON.stringify(options.sourceState);
       if (!matches) throw new Error("matching Hub authoring session exists with different authority");
-      return existing;
+      return { ...existing, resumed: true };
     }
   }
   const baseRoot = path.join(root, "base"), bundleRoot = path.join(root, "bundle");
@@ -249,7 +260,38 @@ export function beginHubAuthoringSession(options: BeginHubAuthoringOptions): Hub
     createdAt: options.createdAt,
   };
   writeSession(session);
-  return session;
+  if (options.restart) {
+    privateDirectory(path.dirname(selection));
+    const temporary = `${selection}.${randomUUID()}.tmp`;
+    fs.writeFileSync(temporary, JSON.stringify({ sessionId: id }), { mode: 0o600, flag: "wx" });
+    fs.renameSync(temporary, selection);
+  }
+  return { ...session, resumed: false };
+}
+
+export function hubAuthoringWorkspaceChanges(session: HubAuthoringSession): Readonly<{
+  entries: readonly Readonly<{ path: string; change: "created" | "modified" | "deleted" }>[]; omitted: number;
+}> {
+  const files = (root: string) => {
+    const result = new Map<string, Buffer>();
+    const walk = (directory: string) => {
+      for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+        const absolute = path.join(directory, entry.name);
+        if (entry.isSymbolicLink()) throw new Error("Hub workspace cannot cross a symlink");
+        if (entry.isDirectory()) walk(absolute);
+        else if (entry.isFile()) result.set(path.relative(root, absolute).split(path.sep).join("/"),
+          createHash("sha256").update(fs.readFileSync(absolute)).digest());
+      }
+    };
+    walk(root); return result;
+  };
+  const base = files(session.baseRoot), bundle = files(session.bundleRoot);
+  const entries = [...new Set([...base.keys(), ...bundle.keys()])].sort().flatMap((relative) => {
+    const before = base.get(relative), after = bundle.get(relative);
+    return before && after && before.equals(after) ? [] : [{ path: relative,
+      change: !before ? "created" as const : !after ? "deleted" as const : "modified" as const }];
+  });
+  return { entries: entries.slice(0, 128), omitted: Math.max(0, entries.length - 128) };
 }
 
 export function readHubAuthoringSession(

@@ -134,7 +134,20 @@ test("[AB-IMPACT-016] modified Refresh files appear once in Inspect and never in
     assert.deepEqual(body.refreshSuggestions, { items: [], omitted: 0 });
     assert.equal(body.inspection, undefined);
     assert.ok(Buffer.byteLength(JSON.stringify(finalResponse)) < 1_000);
-    assert.ok(Buffer.byteLength(JSON.stringify(inspectResponse)) < 24_000);
+    assert.ok(Buffer.byteLength(JSON.stringify(inspectResponse)) < 8_000);
+    const compact = JSON.parse(inspectResponse.content[0]!.type === "text" ? inspectResponse.content[0]!.text : "{}");
+    assert.equal(compact.proposal_digest, proposal.diffDigest);
+    assert.deepEqual(compact.inspection.semanticImpact, inspection.semanticImpact);
+    for (const entry of compact.inspection.entries) {
+      assert.equal(entry.before.content, undefined);
+      assert.equal(entry.before.bytes, fs.statSync(entry.before.file).size);
+      assert.match(entry.diff.text, /-Prior behavior\.[\s\S]*\+Updated behavior\./);
+      assert.equal(entry.diff.truncated, false);
+    }
+    const complete = await callHubOkfTool("inspect_hub_okf_proposal", { proposal_id: proposal.id, include_content: true }, actions);
+    const completeBody = JSON.parse(complete.content[0]!.type === "text" ? complete.content[0]!.text : "{}");
+    assert.deepEqual(completeBody.inspection, inspection);
+    assert.ok(Buffer.byteLength(JSON.stringify(inspectResponse)) < Buffer.byteLength(JSON.stringify(complete)) / 2);
     let cli = "";
     assert.equal(await executeHubCli(["finalize", "--session", "fixture"], actions, (value) => { cli = value; }), 0);
     assert.deepEqual(JSON.parse(cli), body);

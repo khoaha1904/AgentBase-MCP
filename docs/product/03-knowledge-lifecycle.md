@@ -42,6 +42,10 @@ The user may revise, save for later or discard a prepared change. Saving is
 resumable work, not acceptance into a second canonical knowledge layer. The
 workspace, validation, exact-content binding and recoverable publication receipt
 remain implementation responsibilities. Ordinary query never reads it.
+Prepare makes resumed edits and their creation time visible. An explicit Refresh
+restart creates a fresh workspace while preserving the prior work. Inspect
+defaults to compact contextual diffs with access to complete private file bytes;
+publication still binds the exact verified proposal and semantic impact.
 
 ### Review meaning
 

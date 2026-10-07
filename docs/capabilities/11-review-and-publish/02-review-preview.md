@@ -19,7 +19,7 @@ Preview groups `Added`, `Updated`, `Removed` and `Questions/Limitations`. Initia
 Ingest also shows Repository/Domain/revision, five-lane coverage, embedded groups,
 relations/Flows and ignored counts/reasons; raw Seed/Inventory/graph data does
 not enter review or the pull request. Each entry retains its path, change kind,
-allowed state, reason when available, bounded before/after bytes and digest. A
+allowed state, reason when available, contextual diff, byte sizes and digest. A
 destructive entry must retain its correction/removal reason/evidence; preview
 does not infer the reason from the Git diff.
 
@@ -34,8 +34,12 @@ Tool responses carry each inspection payload once. All grouped entries retain pa
 change and decision metadata while file bytes remain in the ordered entry list;
 preserved files have no before/after content. Inspect exposes `proposal_digest`
 as the exact digest accepted by Publish, also returned by Finalize. Modified
-entries retain full bounded before/after content once for exact review; a second
-diff representation is unnecessary. Legacy retained groups are compacted on read.
+entries return bounded unified hunks with three context lines by default, plus
+before/after digests, byte sizes and private file paths. Truncation is explicit;
+complete bytes remain available in the private proposal. `include_content: true`
+returns the bounded before/after content instead of hunks. Verification always
+uses retained full inspection and exact trees, independent of this response view.
+Legacy retained groups are compacted on read.
 
 Finalize and Inspect also expose `refreshSuggestions` for newly promoted
 Resources whose title matches an embedded item in a retained base concept.

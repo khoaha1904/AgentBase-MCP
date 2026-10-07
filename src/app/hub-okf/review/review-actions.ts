@@ -7,7 +7,7 @@ import {
   readHubProposalState,
   releaseHubMutationLock,
 } from "./proposal-state.ts";
-import { readVerifiedHubProposalInspection } from "./inspect.ts";
+import { projectHubProposalInspection, readVerifiedHubProposalInspection } from "./inspect.ts";
 import { listHubQuestions, readHubQuestion } from "../authoring/questions.ts";
 
 type ReviewActions = Pick<HubToolActions, "inspect" | "listQuestions" | "answerQuestion">;
@@ -18,13 +18,13 @@ export function createReviewActions(
   admit: () => Promise<AdmittedLocalHubState>,
 ): ReviewActions {
   return {
-    async inspect(proposalId) {
+    async inspect(proposalId, includeContent) {
       const root = proposalRoot(proposalId);
       const proposal = readHubProposalState(root);
       return {
         proposal,
         proposal_digest: proposal.diffDigest,
-        inspection: readVerifiedHubProposalInspection(root, proposal),
+        inspection: projectHubProposalInspection(readVerifiedHubProposalInspection(root, proposal), root, includeContent),
       };
     },
     async listQuestions(options) {

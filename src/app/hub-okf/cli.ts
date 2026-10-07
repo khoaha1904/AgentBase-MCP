@@ -51,12 +51,18 @@ export async function executeHubCli(
       }
       output = await actions.prepare({
         mode,
+        ...(values["--restart"] === undefined ? {} : { restart: values["--restart"] === "true" ? true
+          : values["--restart"] === "false" ? false : (() => { throw new Error("--restart must be true or false"); })() }),
         sourceRepository: required(values, "--repo"),
         subjectDirectory: required(values, "--subject"),
         signals: required(values, "--signals").split(",").map((value) => value.trim()).filter(Boolean),
       });
     } else if (command === "finalize") output = summarizeHubFinalization(await actions.finalize(required(values, "--session")));
-    else if (command === "inspect") output = await actions.inspect(required(values, "--proposal"));
+    else if (command === "inspect") {
+      const includeContent = values["--include-content"];
+      if (includeContent !== undefined && includeContent !== "true" && includeContent !== "false") throw new Error("--include-content must be true or false");
+      output = await actions.inspect(required(values, "--proposal"), includeContent === "true");
+    }
     else if (command === "search") {
       const limit = values["--limit"] === undefined ? undefined : Number(values["--limit"]);
       const global = values["--global"];

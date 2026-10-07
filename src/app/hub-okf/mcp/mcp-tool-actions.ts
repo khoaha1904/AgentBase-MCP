@@ -24,6 +24,7 @@ export type HubToolActions = Readonly<{
   prepare(input: Readonly<{
     mode: "new" | "refresh";
     refreshScope?: "delta" | "coverage";
+    restart?: boolean;
     sourceRepository: string;
     subjectDirectory: string;
     confirmedDomain?: ConfirmedDomain;
@@ -60,7 +61,7 @@ export type HubToolActions = Readonly<{
   finalizeEnrichment(input: Readonly<{
     manifestId: string; manifestRevision: number; answers: readonly EnrichmentAnswer[];
   }>): Promise<unknown>;
-  inspect(proposalId: string): Promise<unknown>;
+  inspect(proposalId: string, includeContent?: boolean): Promise<unknown>;
   search(query: string, options?: HubSearchOptions): Promise<unknown>;
   read(relativePath: string): Promise<unknown>;
   visualize(input: Readonly<{

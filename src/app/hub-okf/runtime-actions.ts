@@ -25,6 +25,7 @@ import {
 import {
   beginHubAuthoringSession, finalizeHubAuthoringSession, materializeInitialIngestSessionSkeletons,
   readHubAuthoringSession, validateHubAuthoringSession,
+  hubAuthoringWorkspaceChanges,
 } from "./authoring/authoring-session.ts";
 import { resolveProfileInitialIngestPlan, resolveProfileRefreshSubject } from "./authoring/profile-home-plan.ts";
 import { listHubQuestions } from "./authoring/questions.ts";
@@ -507,6 +508,7 @@ export function createHubRuntimeActions(
       const session = beginHubAuthoringSession({
         stateRoot,
         mode: input.mode,
+        ...(input.restart === undefined ? {} : { restart: input.restart }),
         ...(input.mode === "refresh" ? { refreshScope: input.refreshScope ?? "delta" } : {}),
         hub: localHub.hub,
         baseCommit: localHub.activeHead,
@@ -533,6 +535,10 @@ export function createHubRuntimeActions(
         : session.skeletons ?? [];
       return {
         sessionId: session.id,
+        resumed: session.resumed,
+        createdAt: session.createdAt,
+        workspaceChanges: hubAuthoringWorkspaceChanges(session),
+        ...(input.mode === "refresh" ? { restartGuidance: "Repeat prepare_hub_okf with the same inputs and restart: true to create a fresh session; previous edits remain in their original bundle." } : {}),
         bundleRoot: session.bundleRoot,
         baseCommit: session.baseCommit,
         selectedSchemas: session.selectedSchemas,

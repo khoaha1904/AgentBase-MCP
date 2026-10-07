@@ -402,7 +402,7 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     const normalizedRefresh = await actions.prepare({ mode: "refresh", refreshScope: "coverage",
       sourceRepository: source, subjectDirectory: "repositories/vehicle-events", signals: ["repository"],
       coverage: { partial: true, limitations: ["runtime consumers were not present in this repository"] },
-    }) as { sessionId: string; bundleRoot: string; skeletons: readonly { path: string }[];
+    }) as { sessionId: string; bundleRoot: string; createdAt: string; resumed: boolean; skeletons: readonly { path: string }[];
       sourceChanges: { paths: readonly string[] } };
     assert.deepEqual(normalizedRefresh.sourceChanges.paths, []);
     assert.deepEqual(normalizedRefresh.skeletons.map((item) => item.path), [legacyRepository.path]);
@@ -435,6 +435,23 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     assert.ok(validatedBody.sessionValidation.targets.some((target: { identity: string }) => target.identity === promoted.conceptId));
     assert.ok(validatedBody.sessionValidation.targets.some((target: { identity: string }) => target.identity === "domains/vehicle-data"));
     fs.writeFileSync(path.join(normalizedRefresh.bundleRoot, refreshedPublisher.path), changedPublisher);
+    const refreshInput = { mode: "refresh" as const, refreshScope: "coverage" as const,
+      sourceRepository: source, subjectDirectory: "repositories/vehicle-events", signals: ["repository"],
+      coverage: { partial: true, limitations: ["runtime consumers were not present in this repository"] } };
+    const resumed = await actions.prepare(refreshInput) as { sessionId: string; resumed: boolean; createdAt: string;
+      workspaceChanges: { entries: { path: string }[] }; restartGuidance: string };
+    assert.equal(normalizedRefresh.resumed, false);
+    assert.equal(resumed.resumed, true);
+    assert.equal(resumed.sessionId, normalizedRefresh.sessionId);
+    assert.equal(resumed.createdAt, normalizedRefresh.createdAt);
+    assert.ok(resumed.workspaceChanges.entries.some((entry) => entry.path === refreshedPublisher.path));
+    assert.match(resumed.restartGuidance, /restart: true/);
+    const restarted = await actions.prepare({ ...refreshInput, restart: true }) as { sessionId: string; resumed: boolean; bundleRoot: string };
+    assert.equal(restarted.resumed, false);
+    assert.notEqual(restarted.sessionId, normalizedRefresh.sessionId);
+    assert.equal(fs.readFileSync(path.join(normalizedRefresh.bundleRoot, refreshedPublisher.path), "utf8"), changedPublisher);
+    assert.equal(fs.readFileSync(path.join(restarted.bundleRoot, refreshedPublisher.path), "utf8"), renderConceptDocument(refreshedPublisher));
+    assert.equal((await actions.prepare(refreshInput) as { sessionId: string; resumed: boolean }).sessionId, restarted.sessionId);
     const refreshFinalize = await callHubOkfTool("finalize_hub_okf_proposal", { session_id: normalizedRefresh.sessionId }, actions);
     assert.equal(refreshFinalize.isError, undefined, JSON.stringify(refreshFinalize));
     const refreshSummary = JSON.parse(refreshFinalize.content[0]!.type === "text" ? refreshFinalize.content[0]!.text : "{}");
@@ -445,9 +462,10 @@ test("[AB-INGEST-004..006][AB-INGEST-008][AB-INGEST-011][AB-INGEST-013..015][AB-
     assert.ok(refreshDetails.inspection.entries.some((entry: { path: string; change: string }) =>
       entry.path === refreshedPublisher.path && entry.change === "modified"));
     const responseBytes = { finalize: Buffer.byteLength(JSON.stringify(refreshFinalize)), inspect: Buffer.byteLength(JSON.stringify(refreshInspect)) };
-    context.diagnostic(`Normalized Refresh response bytes: ${JSON.stringify(responseBytes)}`);
+    const fullInspect = await callHubOkfTool("inspect_hub_okf_proposal", { proposal_id: refreshSummary.proposal_id, include_content: true }, actions);
+    context.diagnostic(`Normalized Refresh response bytes: ${JSON.stringify(responseBytes)}; full Inspect: ${Buffer.byteLength(JSON.stringify(fullInspect))}`);
     assert.ok(responseBytes.finalize < 2_000);
-    assert.ok(responseBytes.inspect < 32_000);
+    assert.ok(responseBytes.inspect < 11_000);
     fs.rmSync(path.join(stateRoot, "proposals", refreshSummary.proposal_id), { recursive: true, force: true });
     const correctionSubject = "domains/vehicle-data/repositories/vehicle-events.md";
     const beforeCorrection = await actions.read(correctionSubject) as { commit: string; excerpt: string };

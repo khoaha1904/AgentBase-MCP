@@ -306,6 +306,8 @@ export async function callHubOkfTool(
       }
       return result(await actions.prepare({
         mode,
+        ...(args.restart === undefined ? {} : { restart: typeof args.restart === "boolean" ? args.restart
+          : (() => { throw new Error("restart must be boolean"); })() }),
         ...(mode === "refresh" && refreshScope !== undefined
           ? { refreshScope: refreshScope as "delta" | "coverage" } : {}),
         sourceRepository: required(args, "source_repository"),
@@ -481,7 +483,10 @@ export async function callHubOkfTool(
     if (name === "synchronize_hub_okf") return result(await actions.synchronize());
     if (name === "recover_hub_okf") return result(await actions.recover(required(args, "transaction_id")));
     const proposalId = required(args, "proposal_id");
-    if (name === "inspect_hub_okf_proposal") return result(await actions.inspect(proposalId));
+    if (name === "inspect_hub_okf_proposal") {
+      if (args.include_content !== undefined && typeof args.include_content !== "boolean") throw new Error("include_content must be boolean");
+      return result(await actions.inspect(proposalId, args.include_content as boolean | undefined));
+    }
     throw new Error(`unsupported Hub action: ${name}`);
   } catch (error) {
     return result({ error: error instanceof Error ? error.message : "Hub action failed" }, true);

@@ -206,6 +206,7 @@ export const HUB_OKF_TOOLS = [
             limitations: { type: "array", maxItems: 64, items: { type: "string", minLength: 1, maxLength: 512 } },
           }, required: ["partial", "limitations"], additionalProperties: false,
         },
+        restart: { type: "boolean", description: "Refresh only: start a fresh session and preserve previous edits." },
       },
       required: ["mode", "source_repository", "subject_directory"],
       additionalProperties: false,
@@ -367,10 +368,10 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "inspect_hub_okf_proposal",
-    description: "Inspect one immutable local Hub proposal with its bounded byte diff and exact semantic impact.",
+    description: "Inspect an immutable proposal: contextual hunks, byte sizes, private full-file paths and verified semantic impact. include_content returns bounded full content instead.",
     inputSchema: {
       type: "object",
-      properties: { proposal_id: { type: "string", minLength: 1 } },
+      properties: { proposal_id: { type: "string", minLength: 1 }, include_content: { type: "boolean" } },
       required: ["proposal_id"], additionalProperties: false,
     },
   },

@@ -78,6 +78,9 @@ authorized old test-state disposal is complete without a migration adapter.
   Repository-owned embedded rows, sources, identity and protected bytes remain.
   Persisted Refresh sessions accept these skeletons under the same skeleton
   shape, source and Hub-base checks; only Initial Ingest requires a Receipt.
+  Prepare discloses resumed state, session creation time and at most 128 bundle
+  changes from its frozen base with an omitted count. Explicit Refresh restart
+  preserves old edits in their session and selects a fresh private session.
   Each continuity known gap has a short `detail`; multi-item missing evidence
   and coverage limitations are returned as a `details` list rather than joined
   into one long string.

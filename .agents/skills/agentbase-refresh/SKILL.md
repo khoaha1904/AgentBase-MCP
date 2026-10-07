@@ -57,6 +57,10 @@ This workflow uses `preflight_hub_ingest`, ordinary source read/search, optional
    send every file. Then call Prepare with `refresh_scope: coverage` and one
    truthful `coverage` account. `partial` is true exactly when bounded source or lane limitations remain. Treat returned active local `main`, source
    snapshot, continuity, known gaps and omitted counts as the baseline.
+   Check `resumed`, `createdAt` and `workspaceChanges` before editing. A resumed
+   bundle may contain earlier work and retains its original observation time;
+   report those edits. If the user wants a fresh start, repeat Prepare with
+   `restart: true`; retain the old session and use the new returned bundle.
 3. For Delta, investigate in order: exact changed source, known Questions/
    limitations/broken or aging references, then one small discovery pass. For
    Coverage, reconcile the broad findings from step 2 with exact changed source
@@ -118,6 +122,9 @@ This workflow uses `preflight_hub_ingest`, ordinary source read/search, optional
    use Finalize's compact `proposal_id` and `proposal_digest`, call
    `inspect_hub_okf_proposal` once for details, and present the complete
    grouped inspection. Stop before Publish.
+   Inspect defaults to contextual hunks with sizes and private full-file paths.
+   Read those files or request `include_content: true` if the bounded diff is
+   truncated or more context is needed before review.
    `coverage.partial` concerns investigation scope; `changeAccounting.partial`
    concerns the source delta. They may differ: accounting for every returned
    changed path does not clear earlier discovery/coverage limitations. Read

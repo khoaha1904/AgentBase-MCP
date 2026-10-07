@@ -4,6 +4,14 @@
 
 ## Default Refresh focus
 
+Prepare reports `resumed`, `createdAt` and a bounded `workspaceChanges` list
+relative to its frozen Hub base. Reusing a session preserves its original
+observation time and edits. To start again, repeat Prepare with `restart: true`;
+this creates a fresh session from the current admitted base, retains the old
+workspace and makes subsequent matching Prepare calls resume the fresh session.
+Restart is Refresh-only and grants no publication or extra repair budget to the
+old session. Normal source/base/authority checks still apply.
+
 Refresh neither scans the full repository nor looks only at changed files:
 
 1. **Changed:** source paths/symbols changed since the observed revision;
