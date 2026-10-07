@@ -153,8 +153,8 @@ host/URL nội bộ, email riêng tư, absolute path máy hay tên riêng; gitle
 
 ## Phần E — Windows và npm registry
 
-Commit `304bda0`. Registry và command portability làm xong; Windows native qualification chưa xong,
-đợi CI và xử lý permission portability. Gate **257/257 → 258/258**, Node 24 với
+Commit `304bda0`. Registry và command portability làm xong; Windows native qualification bị chặn ở CI,
+cần xử lý permission/Git portability và release-test assumptions. Gate **257/257 → 258/258**, Node 24 với
 TMPDIR symlink; focused 14/14. Installer non-interactive thực chạy npm public
 trong bản copy/home tạm: thành công; không đăng ký client hay chạm Hub thật.
 Smoke MCP stdio thực trên Linux: đủ 36 tool.
@@ -230,8 +230,32 @@ CI trên commit báo cáo E: Linux verify **qua**; macOS Node 24.20.0 installer,
 thức dùng SET NPM_CLI_JS với %~dp0, khác shim fixture ban đầu; chưa chạy tests.
 Đã sửa parser để chọn duy nhất adjacent npm-cli.js, kiểm file thật, giữ argument
 bytes và không evaluate cmd/prefix script. Test phủ cả shim npm global và bundled,
-CRLF và npm-prefix.js không bị chọn nhầm. Sau push cần CI xác nhận Windows;
-không coi sửa parser local là đã qualified toàn nền tảng.
+CRLF và npm-prefix.js không bị chọn nhầm. CI đã xác nhận shim/installer và real stdio smoke trên Windows **qua**.
+
+Run `37668881723` trên commit `30ff441`: Linux gate **qua**, macOS Node 24.20.0
+installer + **258/258** tests + stdio **qua**. Windows Node 24.20.0 installer +
+stdio **qua**, nhưng npm test **202/258**, **56 fail**, không skip. Phân nhóm theo
+lỗi chính trong log: 27 private permissions, 22 executable/PATH Git, 5 release
+target, 2 platform path assumptions. Không commit log thô hoặc đường dẫn runner.
+
+Audit xác định các điểm còn chặn Windows:
+- Runtime Git hiện ghim executable POSIX và môi trường PATH/null/hook paths;
+  askpass là shell script. Không đổi thành ambient PATH lookup để vượt test,
+  vì guard hiện tại cố ý tránh executable/config injection.
+- Credential/config, machine storage, recovery và mutation lock kiểm chính xác
+  POSIX 0700/0600 + ownership. Node chmod trên Windows không chứng minh ACL
+  owner-private. Cần native ACL tương đương ở cả write và admission, không bỏ
+  mode check riêng cho Windows hoặc mock guard để cho tests qua.
+- Release contract vẫn chỉ nhận linux-x64/darwin-arm64. Năm test release gặp
+  unsupported target/target identity; Windows source installation không tự
+  cấp quyền thêm Windows release target hay bỏ qualification requirements.
+- Hai lỗi còn lại là checkout entrypoint identity và canonical path/short-name
+  normalization. Không hạ path identity check xuống so chuỗi mơ hồ.
+
+Do gate Windows thực sự chưa qua, **E chỉ hoàn tất registry, command shim,
+installer preparation và source stdio smoke**. Chưa đủ bằng chứng cho interactive
+registration/Hub workflows trên Windows. Các phần độc lập 2/C/D1/D3 đã làm và push;
+không tuyên bố Windows đã qualified hoặc nới guard để đổi màu CI.
 
 ## Kiểm chứng và rà diff
 
@@ -250,9 +274,11 @@ không coi sửa parser local là đã qualified toàn nền tảng.
 ## Chưa làm / chưa kiểm chứng được
 
 D3 đã hoàn tất. D2 còn mục tiêu ~18 KB: hiện 31.061 byte; giữ đủ 36 tool và
-mọi constraint. Windows native private ACL/long paths/release lifecycle chưa
-qualified; CI Windows đang cần chạy lại bản sửa npm shim. macOS source CI đã qua.
-Không coi Node invocation hoặc Linux test là bằng chứng Windows đầy đủ.
+mọi constraint. Windows gate thực sự bị chặn: 202/258, 56 fail thuộc private ACL, Git POSIX paths,
+release target và path identity. Registry/installer/stdio trên Windows đã qua;
+interactive client registration, Hub workflows/long paths/release lifecycle chưa
+qualified. macOS source CI đã qua. Mọi phần độc lập đã qua gate và push; không
+coi stdio listTools hoặc Linux test là bằng chứng Windows đầy đủ.
 
 ## Câu hỏi và phản biện
 
@@ -271,3 +297,8 @@ chưa đạt 18 KB, không xoá tham số hoặc constraint để chạy theo s�
 
 D3 chọn rút prose trùng và lịch sử đã nằm trong Git; giữ contract có nghĩa riêng
 và các điểm dừng workflow thay vì đặt một quota buộc xoá requirement.
+
+E giữ boundary source installation khác release target: không bật win32-x64 hoặc
+bỏ permission/identity checks. Bước tiếp để đạt toàn bộ E là native Windows ACL
+và trusted Git invocation có kiểm chứng, rồi qualification các workflow thực;
+đây còn là việc chưa hoàn tất, không phải kết quả đã đạt của vòng này.
