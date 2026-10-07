@@ -140,7 +140,8 @@ function embeddedSources(
 function document(relative: string, type: string, frontmatter: OkfFrontmatter, body: string): string {
   const concept: ConceptDocument = {
     conceptId: conceptIdentityFromPath(relative), path: relative, type, status: "draft",
-    frontmatter, verified: [], body: `${body.trim()}\n`,
+    frontmatter, verified: [], body: `${body.trim()}${["Repository", "Resource"].includes(type)
+      ? "\n\n<!-- Keep about 60 body lines: role, runtime/entrypoint, triggers/interfaces, linked inputs/outputs and stores, flow-changing conditions, failures/retry/DLQ and operations. Details belong in sources or linked children. -->" : ""}\n`,
   };
   return renderConceptDocument(concept);
 }

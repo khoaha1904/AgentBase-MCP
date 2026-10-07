@@ -7389,7 +7389,8 @@ function defineSchema(type, purpose, directoryHint, specificity, selectWhen, evi
     relationshipGuidance: options.relationshipGuidance ?? [],
     ...options.flowStepGuidance ? { flowStepGuidance: options.flowStepGuidance } : {},
     optionalEnrichment: options.optionalEnrichment ?? [],
-    limitationGuidance: limitations
+    limitationGuidance: limitations,
+    ...["Repository", "Resource"].includes(type) ? { contentGuidance: "Write about 60 body lines: role (1-2 sentences), runtime/entrypoint, triggers/interfaces, linked inputs/outputs and stores, flow-changing conditions, failures/retry/DLQ and operations. Keep function/class details in sources; split longer knowledge into linked children without copying. Each frontmatter relationship needs a resolving Markdown body link." } : {}
   };
 }
 

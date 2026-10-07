@@ -13,6 +13,24 @@ import { createHubIdentity } from "../../core/hub/index.ts";
 import { createAgentBaseMcpServer } from "./server.ts";
 import { DISCOVERY_TOOL } from "./discovery-tool.ts";
 import { callOkfSchemaTool, OKF_SCHEMA_TOOLS } from "./okf-schema-tools.ts";
+import { modernToolInputSchema } from "./protocol-policy.ts";
+
+test("[AB-MCPMOD-004][AB-SURFACE-001] compact wire schemas preserve every input constraint", () => {
+  const strip = (value: unknown): unknown => Array.isArray(value) ? value.map(strip)
+    : value && typeof value === "object" ? Object.fromEntries(Object.entries(value)
+      .filter(([key]) => !["description", "$schema", "$defs"].includes(key)).map(([key, item]) => [key, strip(item)])) : value;
+  for (const tool of [...HUB_OKF_TOOLS, ...OKF_SCHEMA_TOOLS, DISCOVERY_TOOL]) {
+    const wire = modernToolInputSchema(tool.inputSchema);
+    const expand = (value: unknown): unknown => {
+      if (Array.isArray(value)) return value.map(expand);
+      if (!value || typeof value !== "object") return value;
+      const node = value as Record<string, unknown>;
+      if (typeof node.$ref === "string") return expand((wire.$defs as Record<string, unknown>)[node.$ref.split("/").at(-1)!]);
+      return Object.fromEntries(Object.entries(node).filter(([key]) => key !== "$defs").map(([key, item]) => [key, expand(item)]));
+    };
+    assert.deepEqual(strip(expand(wire)), strip(tool.inputSchema), tool.name);
+  }
+});
 
 function repository(prefix: string): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
@@ -145,13 +163,12 @@ test("[AB-DISC-007][AB-SCHEMA-049][AB-INGEST-003][AB-HOME-012][AB-PROFILE-LIFECY
     assert.deepEqual(Object.keys(configureTool?.inputSchema.properties ?? {}).sort(), ["repository_url", "target_branch"]);
     const prepareTool = tools.tools.find((tool) => tool.name === "prepare_hub_okf");
     const finalizeTool = tools.tools.find((tool) => tool.name === "finalize_hub_okf_proposal");
-    assert.match(prepareTool?.description ?? "", /changed paths, observed source state and known gaps/);
-    assert.match(JSON.stringify(prepareTool?.inputSchema), /New Initial Ingest requires repositories\/<slug>/);
+    assert.match(prepareTool?.description ?? "", /source changes, gaps and resume state/);
+    assert.equal(typeof (prepareTool?.inputSchema.properties?.subject_directory as Record<string, unknown>)?.pattern, "string");
     assert.ok("home_plan" in ((prepareTool?.inputSchema.properties ?? {}) as Record<string, unknown>));
     assert.match(JSON.stringify((prepareTool?.inputSchema.properties ?? {}).home_plan), /default_home.*exceptions.*participations/);
     assert.deepEqual((prepareTool?.inputSchema.properties ?? {}).refresh_scope,
-      { type: "string", enum: ["delta", "coverage"],
-        description: "Refresh-only scope. Delta is backward-compatible default; coverage is explicit broad bounded recovery and requires coverage." });
+      { type: "string", enum: ["delta", "coverage"] });
     assert.ok("removals" in ((finalizeTool?.inputSchema.properties ?? {}) as Record<string, unknown>));
     assert.ok("change_accounting" in ((finalizeTool?.inputSchema.properties ?? {}) as Record<string, unknown>));
     assert.match(JSON.stringify(finalizeTool?.inputSchema), /updated.*new.*embedded.*question.*ignored/);

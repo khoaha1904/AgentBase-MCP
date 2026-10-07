@@ -5,6 +5,11 @@ description: Explicit-only AgentBase Update knowledge. Use only when the user na
 
 # Update knowledge
 
+Write Repository/Resource pages as compact wiring knowledge: role, runtime and
+entrypoint, triggers/interfaces, linked inputs/outputs and stores, flow-changing
+conditions, errors/retry/DLQ and operations. Aim for about 60 body lines; keep
+function/class details in sources and link longer child concepts without copying.
+
 For an explicitly approved multi-repo workspace, opt into
 `scan_workspace_repositories` with `match_names: true`. Use new `nameSuggestions`
 only for the selected Refresh scope, verifying evidence at both ends. Partial

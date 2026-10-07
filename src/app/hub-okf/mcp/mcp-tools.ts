@@ -58,12 +58,12 @@ const ENRICHMENT_CANDIDATE_SCHEMA = {
 export const HUB_OKF_TOOLS = [
   {
     name: "get_hub_status",
-    description: "Report whether AgentBase-MCP has no Hub or one active remote Hub profile.",
+    description: "Read active Hub profile and recovery status.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
     name: "configure_hub",
-    description: "Attach an existing non-empty AgentBase-Hub using its credential-free repository URL and exact target branch.",
+    description: "Connect an existing non-empty Hub at the exact branch.",
     inputSchema: {
       type: "object",
       properties: {
@@ -75,7 +75,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "preview_hub_bootstrap",
-    description: "Preview the exact support baseline commit for one-time direct initialization of an empty Hub repository.",
+    description: "Preview support files for an empty Hub.",
     inputSchema: {
       type: "object",
       properties: {
@@ -87,7 +87,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "bootstrap_hub",
-    description: "Write README and root/index baseline files directly once to an explicitly supplied empty Hub; CI is added later through reviewed initialization and knowledge remains pending for later pull requests.",
+    description: "Initialize an empty Hub once; knowledge remains pending for review.",
     inputSchema: {
       type: "object",
       properties: {
@@ -99,7 +99,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "preflight_hub_ingest",
-    description: "Resolve one local checkout against canonical Hub Repository identities and list bounded Domain summaries without creating a proposal.",
+    description: "Resolve Repository identity and Domain choices; authorize exact source.",
     inputSchema: {
       type: "object",
       properties: { source_repository: { type: "string", minLength: 1 } },
@@ -108,7 +108,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "scan_workspace_repositories",
-    description: "Inventory up to 32 Git roots against synced Published metadata. match_names opts into bounded source-name suggestions; never creates proposals or calls providers.",
+    description: "Inventory Git roots; match_names adds local link hints.",
     inputSchema: {
       type: "object",
       properties: { workspace_root: { type: "string", minLength: 1 }, match_names: { type: "boolean" } },
@@ -117,12 +117,12 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "prepare_hub_profile_migration",
-    description: "Report an exact legacy Published Hub and create a private editable full-tree workspace. Never infers homes or mutates Hub knowledge.",
+    description: "Prepare a private legacy-to-Profile workspace.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
     name: "finalize_hub_profile_migration_proposal",
-    description: "Validate an explicitly authored legacy-to-Profile 1.0 workspace and exact file moves into one immutable reviewed migration proposal.",
+    description: "Validate exact migration moves and lock a proposal.",
     inputSchema: { type: "object", properties: {
       session_id: { type: "string", pattern: "^profile-migration-[a-f0-9]{24}$" },
       moves: { type: "array", maxItems: 4096, items: { type: "object", properties: {
@@ -133,7 +133,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "prepare_hub_okf",
-    description: "Prepare a local new or refresh AgentBase Hub OKF proposal without publishing. New Initial Ingest consumes one frozen discovery receipt. Refresh returns bounded changed paths, observed source state and known gaps; delta is default and explicit coverage binds a broad bounded coverage account. Preserve generated sources, relationships, repository identity metadata and navigation while enriching returned skeletons.",
+    description: "Prepare new/Refresh workspace; returns source changes, gaps and resume state.",
     inputSchema: {
       type: "object",
       properties: {
@@ -214,7 +214,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "finalize_hub_okf_proposal",
-    description: "Validate and lock an authored Hub workspace. Returns proposal_id, proposal_digest and a compact change/Question/limitation summary; call inspect_hub_okf_proposal once for details. Receipt-bound Init derives Questions from its frozen Inventory; Refresh Questions may reference only exact existing agentbase.observed_values.",
+    description: "Validate and lock workspace; return digest/summary, then Inspect.",
     inputSchema: {
       type: "object",
       properties: {
@@ -264,7 +264,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "prepare_batch_hub_ingest",
-    description: "Preflight 2-32 explicit local repositories against one proposed Domain without authoring knowledge.",
+    description: "Preflight 2-32 repos and suggest source-name links.",
     inputSchema: { type: "object", properties: {
       source_repositories: { type: "array", minItems: 2, maxItems: 32, items: { type: "string", minLength: 1 } },
       proposed_domain: { type: "object", properties: {
@@ -275,7 +275,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "confirm_batch_hub_ingest",
-    description: "Confirm every exact preflight member and lock one sequential Batch Initial Ingest manifest.",
+    description: "Confirm every member and lock a sequential batch.",
     inputSchema: { type: "object", properties: {
       manifest_id: { type: "string", pattern: "^batch-ingest-[a-f0-9]{24}$" },
       manifest_revision: { type: "integer", minimum: 1 },
@@ -288,7 +288,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "record_batch_hub_ingest_member",
-    description: "Finalize one exact receipt-bound Initial Ingest session into its private batch checkpoint, retaining member source, Seed, Receipt and coverage identity.",
+    description: "Lock one receipt-bound member checkpoint.",
     inputSchema: { type: "object", properties: {
       manifest_id: { type: "string", pattern: "^batch-ingest-[a-f0-9]{24}$" },
       manifest_revision: { type: "integer", minimum: 1 },
@@ -298,7 +298,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "retry_batch_hub_ingest_member",
-    description: "Make exactly one failed batch member eligible for a new explicit Initial Ingest attempt.",
+    description: "Retry one failed batch member explicitly.",
     inputSchema: { type: "object", properties: {
       manifest_id: { type: "string", pattern: "^batch-ingest-[a-f0-9]{24}$" }, manifest_revision: { type: "integer", minimum: 1 },
       member_id: { type: "string", pattern: "^batch-member-[a-f0-9]{24}$" },
@@ -306,7 +306,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "revise_batch_hub_ingest_membership",
-    description: "Create a new immutable batch revision from a complete replacement member set.",
+    description: "Replace the full member set in a new revision.",
     inputSchema: { type: "object", properties: {
       manifest_id: { type: "string", pattern: "^batch-ingest-[a-f0-9]{24}$" }, manifest_revision: { type: "integer", minimum: 1 },
       member_ids: { type: "array", minItems: 2, maxItems: 32, items: { type: "string", pattern: "^batch-member-[a-f0-9]{24}$" } },
@@ -314,14 +314,14 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "finalize_batch_hub_ingest_proposal",
-    description: "Compose every completed current member into one immutable atomic Batch Initial Ingest proposal.",
+    description: "Lock one atomic proposal from completed members.",
     inputSchema: { type: "object", properties: {
       manifest_id: { type: "string", pattern: "^batch-ingest-[a-f0-9]{24}$" }, manifest_revision: { type: "integer", minimum: 1 },
     }, required: ["manifest_id", "manifest_revision"], additionalProperties: false },
   },
   {
     name: "prepare_domain_enrichment",
-    description: "Lock a Published-only Domain/multi-Repository enrichment manifest without calling AWS or mutating Hub knowledge.",
+    description: "Lock Published-only scope; no provider calls.",
     inputSchema: { type: "object", properties: {
       domain_id: { type: "string", pattern: "^domains/[a-z0-9]+(?:-[a-z0-9]+)*$" },
       repository_ids: { type: "array", minItems: 1, maxItems: 32, items: { type: "string", minLength: 1 } },
@@ -332,7 +332,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "revise_domain_enrichment_membership",
-    description: "Create the next immutable enrichment manifest revision from a complete replacement Repository/candidate set.",
+    description: "Replace enrichment scope in a new revision.",
     inputSchema: { type: "object", properties: {
       manifest_id: { type: "string", pattern: "^enrichment-[a-f0-9]{24}$" },
       manifest_revision: { type: "integer", minimum: 1 },
@@ -342,7 +342,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "run_domain_enrichment",
-    description: "After explicit AWS CLI session confirmation, verify exact manifest candidates sequentially with released read-only calls.",
+    description: "Verify exact candidates after AWS session confirmation.",
     inputSchema: { type: "object", properties: {
       manifest_id: { type: "string", pattern: "^enrichment-[a-f0-9]{24}$" },
       manifest_revision: { type: "integer", minimum: 1 },
@@ -352,7 +352,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "finalize_domain_enrichment_proposal",
-    description: "Create one reviewable enrichment proposal from trusted terminal outcomes; never Accept or Publish it.",
+    description: "Prepare enrichment proposal from terminal outcomes.",
     inputSchema: { type: "object", properties: {
       manifest_id: { type: "string", pattern: "^enrichment-[a-f0-9]{24}$" },
       manifest_revision: { type: "integer", minimum: 1 },
@@ -368,7 +368,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "inspect_hub_okf_proposal",
-    description: "Inspect an immutable proposal: contextual hunks, byte sizes, private full-file paths and verified semantic impact. include_content returns bounded full content instead.",
+    description: "Review verified hunks/impact; include_content opts into full bytes.",
     inputSchema: {
       type: "object",
       properties: { proposal_id: { type: "string", minLength: 1 }, include_content: { type: "boolean" } },
@@ -377,7 +377,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "publish_hub_okf_proposal",
-    description: "Publish one exact reviewed proposal under the confirmed Hub policy: direct commit or PR. Requires explicit sharing confirmation; never accepts a separate Local Draft or merges a PR.",
+    description: "Publish exact reviewed digest in confirmed direct/PR mode.",
     inputSchema: {
       type: "object",
       properties: {
@@ -391,7 +391,7 @@ export const HUB_OKF_TOOLS = [
   ...HUB_OKF_QUERY_TOOLS,
   {
     name: "read_hub_okf_concept",
-    description: "Read one exact Markdown path from the synchronized Published AgentBase-Hub commit with warning-only freshness metadata.",
+    description: "Read exact Published Markdown with freshness warnings.",
     inputSchema: {
       type: "object",
       properties: { path: { type: "string", minLength: 1, maxLength: 512 } },
@@ -400,7 +400,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "prepare_hub_visualization",
-    description: "Prepare a bounded truthful diagram packet or explicitly build one static offline 2D Domain site from an exact synchronized Published Hub commit. Never reads Local Draft or publishes the artifact.",
+    description: "Prepare Published diagram or offline Domain site.",
     inputSchema: {
       type: "object",
       properties: {
@@ -419,12 +419,12 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "preview_hub_initialization",
-    description: "Preview missing README and CI support files against exact remote Hub main without replaying knowledge drafts.",
+    description: "Preview missing Hub README/CI against remote main.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
     name: "initialize_hub",
-    description: "Create or recover one reviewed Hub support-baseline pull request; preserve existing README and current CI.",
+    description: "Create/recover reviewed support-files PR.",
     inputSchema: { type: "object", properties: {
       expected_base: { type: "string", pattern: "^[a-f0-9]{40}$" },
       expected_initialization_digest: { type: "string", pattern: "^sha256:[a-f0-9]{64}$" },
@@ -432,7 +432,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "list_hub_questions",
-    description: "List shared governed Question documents from the exact accepted Hub view.",
+    description: "List governed Questions at the exact accepted view.",
     inputSchema: {
       type: "object", properties: {
         status: { type: "string", enum: ["open", "resolved", "needs-review"] },
@@ -442,7 +442,7 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "answer_hub_question",
-    description: "Prepare one atomic proposal containing attributed Maintainer Guidance and the exact Question transition.",
+    description: "Prepare attributed guidance and exact Question transition.",
     inputSchema: {
       type: "object", properties: {
         question_id: { type: "string", pattern: "^question-[a-f0-9]{24}$" },
@@ -454,12 +454,12 @@ export const HUB_OKF_TOOLS = [
   },
   {
     name: "synchronize_hub_okf",
-    description: "Fetch the configured remote target and transactionally replay remaining accepted local proposals.",
+    description: "Fetch target and transactionally replay accepted proposals.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
     name: "recover_hub_okf",
-    description: "Recover one exact interrupted Hub transaction without resetting accepted commits.",
+    description: "Recover one interrupted transaction; preserve accepted commits.",
     inputSchema: {
       type: "object",
       properties: { transaction_id: { type: "string", minLength: 1 } },

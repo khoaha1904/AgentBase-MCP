@@ -5,7 +5,7 @@ import { controlledDiscovery } from "./tool-policy.ts";
 
 export const DISCOVERY_TOOL = {
   name: "discover_repository",
-  description: "Collect bounded source signals for the exact Initial Ingest repository armed by preflight_hub_ingest. Returns a five-lane Discovery Seed with source paths and visible census limitations. This performs no indexing or symbol/call-path analysis. Expanded discovery requires the current standard Seed, explicit user confirmation and a concrete coverage reason before its Inventory Receipt is frozen.",
+  description: "Read bounded signals from the preflight snapshot; expanded requires confirmation.",
   inputSchema: {
     type: "object",
     properties: {

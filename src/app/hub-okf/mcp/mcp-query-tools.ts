@@ -1,7 +1,7 @@
 export const HUB_OKF_QUERY_TOOLS = [
   {
     name: "search_hub_okf",
-    description: "Search bounded knowledge at the exact synchronized Published AgentBase-Hub commit with warning-only freshness metadata.",
+    description: "Search synchronized Published knowledge with freshness warnings.",
     inputSchema: {
       type: "object",
       properties: {

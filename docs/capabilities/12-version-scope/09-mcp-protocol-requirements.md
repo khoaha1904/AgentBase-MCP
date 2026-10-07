@@ -86,6 +86,13 @@ system boundary between business tools and protocol adapters.
 
 ## Acceptance evidence
 
+Tool descriptions are concise routing hints. Detailed authoring guidance belongs
+in schema responses and workflow skills. Wire schemas may factor identical
+subschemas through local `$defs`/`$ref`; each tool remains self-contained, with
+unchanged fields, required keys, enum/pattern/bounds and rejection behavior.
+The full thirty-six-tool catalog remains advertised. Deterministic qualification
+measures listTools bytes; a byte target does not authorize dropping constraints.
+
 Focused protocol-policy, stdio and HTTP tests verify both eras, sessionless
 modern discovery/listing, legacy initialization, JSON Schema declarations,
 cache hints, trusted policy composition and unchanged business tool behavior.

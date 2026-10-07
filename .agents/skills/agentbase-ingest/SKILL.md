@@ -5,6 +5,11 @@ description: Explicit-only AgentBase Add repository. Use only when the user name
 
 # Add repository
 
+Write Repository/Resource pages as compact wiring knowledge: role, runtime and
+entrypoint, triggers/interfaces, linked inputs/outputs and stores, flow-changing
+conditions, errors/retry/DLQ and operations. Aim for about 60 body lines; keep
+function/class details in sources and link longer child concepts without copying.
+
 When approved Batch Prepare or opt-in workspace scan returns `nameSuggestions`,
 use only its new links for the confirmed repository scope. Check evidence at both
 ends in exact authorized source; names are hints, not identity or interaction

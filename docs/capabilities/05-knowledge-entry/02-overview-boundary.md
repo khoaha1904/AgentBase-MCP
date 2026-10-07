@@ -22,6 +22,16 @@
 
 ## Enforcement
 
+### Wiring pages
+
+Repository and Resource pages describe role (one or two sentences), runtime and
+entrypoint, triggers/interfaces, linked inputs/outputs and stores, flow-changing
+conditions, failures/retry/DLQ and operational constraints. Keep implementation
+details in source references. Aim for at most about 60 body lines; split longer
+independently useful knowledge into linked children without copying it back.
+This is authoring guidance, not an admission limit. Schema responses and prepared
+skeletons carry it; every frontmatter relationship needs a resolving body link.
+
 The authoring skill, schema guidance and current changed-set validation enforce
 this boundary; MCP does not need a second ontology/parser to guess every source
 detail.

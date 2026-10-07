@@ -66,12 +66,12 @@ const targetSummarySchema = {
 export const OKF_SCHEMA_TOOLS = [
   {
     name: "list_okf_schemas",
-    description: "List the versioned AgentBase concept schema catalog layered on Google OKF v0.2.",
+    description: "List released OKF concept schemas.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
     name: "get_okf_schema",
-    description: "Read one AgentBase concept schema by its exact OKF type.",
+    description: "Read one exact concept-type schema.",
     inputSchema: {
       type: "object", properties: { type: { type: "string", minLength: 1 } },
       required: ["type"], additionalProperties: false,
@@ -79,7 +79,7 @@ export const OKF_SCHEMA_TOOLS = [
   },
   {
     name: "get_okf_authoring_schemas",
-    description: "Map bounded source-backed candidates and observations to provider-neutral OKF schema guidance in one advisory call. An exact supported structured resource mapping takes precedence over incidental semantic role words. Use a separate System candidate only when source evidence shows a recognizable capability plus cooperating entities; never rename a Repository or Service. candidate_id preserves an observation's primary attribution, while standalone concepts may share known observations. Embedded candidates may cite only their own observations.",
+    description: "Map evidenced candidates to schemas; Initial Ingest freezes Seed inventory.",
     inputSchema: {
       type: "object",
       properties: {
@@ -165,7 +165,7 @@ export const OKF_SCHEMA_TOOLS = [
   },
   {
     name: "validate_okf_changes",
-    description: "Validate changed concept documents only, excluding navigation index files, against bounded unchanged concept target summaries. Optionally bind the prepared authoring session so source revision and structural reachability defects are caught before Finalize. Apply relationship guidance from the exact frontmatter type; a display name or prose never changes the schema. Identity is the OKF-root-relative Markdown path without .md; targets are not changed concepts.",
+    description: "Validate changed concepts/links; session_id adds prepared/Published targets.",
     inputSchema: {
       type: "object",
       properties: {
