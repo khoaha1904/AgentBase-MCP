@@ -153,7 +153,36 @@ host/URL nội bộ, email riêng tư, absolute path máy hay tên riêng; gitle
 
 ## Phần E — Windows và npm registry
 
-Chưa làm.
+Commit `304bda0`. Registry và command portability làm xong; Windows native qualification chưa xong,
+đợi CI và xử lý permission portability. Gate **257/257 → 258/258**, Node 24 với
+TMPDIR symlink; focused 14/14. Installer non-interactive thực chạy npm public
+trong bản copy/home tạm: thành công; không đăng ký client hay chạm Hub thật.
+Smoke MCP stdio thực trên Linux: đủ 36 tool.
+
+- Dùng npm registry đã cấu hình từ env hoặc npm config; giữ HTTPS và
+  replace-registry-host=always. Strict opt-in AGENTBASE_REQUIRE_PRIVATE_REGISTRY=1
+  tái dùng public deny-list; output chỉ hostname, bỏ npm stderr để tránh leak.
+- Windows tìm exe/cmd, chạy standard npm JS shim qua Node, không shell/evaluate
+  cmd text. Giữ nguyên argument bytes, kể cả &, path có dấu cách và CRLF shim;
+  shim không hỗ trợ thì fail. Client identity kiểm cả shim và JS target.
+  Home fallback USERPROFILE; skill copy/rollback và registration guard giữ nguyên.
+- Helper được đưa vào release control allowlist, đóng dependency closure; gate
+  đã bắt lỗi thiếu helper trước khi sửa. Không mở rộng release target IDs.
+- Thêm matrix windows-latest/macos-latest: installer public, npm test, real MCP
+  stdio listTools trên home fixture. Job Linux giữ nguyên bytes.
+- Audit: path dùng Node path/realpath; symlink/conflict checks giữ nguyên. CRLF
+  picker đã xử lý và shim test phủ CRLF. Atomic rename còn fail-closed khi bị
+  khoá, không xoá đích để cưỡng ép; retry cần đóng app giữ file rồi chạy lại.
+  Long path chưa kiểm trên Windows, dùng checkout ngắn. install.sh là wrapper
+  POSIX tùy chọn; Node entrypoint không cần Bash. POSIX 0700/0600 guards trong
+  state/credentials/recovery và Bash release launcher cần tương đương ACL native
+  trước khi tuyên bố Windows chạy được; không bypass guard để pass CI.
+
+Số đo E không đổi so D: F1 8/8 precision 1, F2 2/2 precision 1, public 3/6
+precision 1. listTools 31.061 byte; responses 1.117/1.983/3.634/3.039/627/1.159/
+10.005 byte theo thứ tự bộ đo. Seed/retrieval không đổi; token là bytes/4.
+Đã rà toàn bộ diff/report, không có thông tin riêng; gitleaks/diff check đạt.
+Fixture URL credential là giả dưới example.invalid, không lấy config máy thật.
 
 ## Phần D3 — Rút gọn skill và docs
 
@@ -175,9 +204,10 @@ Chưa làm; làm cuối, không chạm `presentation/`.
 
 ## Chưa làm / chưa kiểm chứng được
 
-E và D3 còn lại; đây là checkpoint từng phần, tiếp tục trong phiên.
+D3 còn lại; đây là checkpoint từng phần, tiếp tục trong phiên.
 D2 còn mục tiêu ~18 KB: hiện 31.061 byte.
-Chưa có evidence CI Windows/macOS cho Vòng 12.
+Windows native private ACL và release lifecycle chưa qualified; đợi CI
+Windows/macOS mới thêm ở E, không coi Node invocation là bằng chứng đầy đủ.
 
 ## Câu hỏi và phản biện
 
