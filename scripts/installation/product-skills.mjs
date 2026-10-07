@@ -52,10 +52,11 @@ function exists(target) {
 }
 
 export function productSkillRoot(client, environment) {
-  if (!environment.HOME) throw new ProductSkillInstallError("HOME_UNAVAILABLE", client, "HOME is unavailable");
+  const home = environment.HOME || environment.USERPROFILE;
+  if (!home) throw new ProductSkillInstallError("HOME_UNAVAILABLE", client, "HOME is unavailable");
   return client === "codex"
-    ? path.join(environment.CODEX_HOME || path.join(environment.HOME, ".codex"), "skills")
-    : path.join(environment.HOME, ".claude", "skills");
+    ? path.join(environment.CODEX_HOME || path.join(home, ".codex"), "skills")
+    : path.join(home, ".claude", "skills");
 }
 
 export function productSkillDirectoryDigest(root, client) {

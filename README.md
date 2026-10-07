@@ -15,7 +15,9 @@ Prerequisites:
 
 - Node.js `>=24.12 <25`; `.nvmrc` recommends `24.20.0`. Select it with your
   version manager before running the installer, for example `nvm install && nvm use`.
-- A configured company HTTPS npm registry. Public npm registry fallback is rejected.
+- A configured HTTPS npm registry. On company machines check `npm config get
+  registry` points to the internal registry; optionally set
+  `AGENTBASE_REQUIRE_PRIVATE_REGISTRY=1`. External machines may use public npm.
 - Gitleaks `8.30.1` on `PATH` to run `npm run verify`; verification does not
   install or silently skip the secret scanner.
 
@@ -32,8 +34,11 @@ The checkout installer can also be invoked directly with Node, without Bash:
 node scripts/installation/install.mjs
 ```
 
-This uses the same Node-version, internal-registry and dependency checks.
-Direct invocation does not qualify Windows or additional release targets; see
+This uses npm's configured HTTPS registry and keeps `--replace-registry-host=always`.
+It prints only the registry hostname. Windows npm/client shims execute through
+Node without Bash. Windows/macOS source verification jobs run tests and a real
+MCP stdio smoke; qualification is pending their results and private-permission
+portability. See
 [Platform limits](docs/capabilities/12-version-scope/05-accepted-limitations.md#platform-and-node-compatibility).
 
 Interactive checkout installation selects Codex, Claude Code or both, registers

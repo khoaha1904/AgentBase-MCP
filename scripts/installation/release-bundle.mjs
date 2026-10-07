@@ -12,6 +12,7 @@ const METADATA_FILES = new Set(["release-manifest.json", "sbom.cdx.json", "SHA25
 export const AGENTBASE_OKF_RELEASE_PROFILE = "agentbase-okf@1.0";
 export const RELEASE_CONTROL_FILES = Object.freeze([
   "client-registration.mjs",
+  "command.mjs",
   "product-skills.mjs",
   "release-bundle.mjs",
   "release-control.mjs",

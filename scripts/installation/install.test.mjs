@@ -4,7 +4,32 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { runInstaller } from "./install.mjs";
+import { configuredRegistry, runInstaller } from "./install.mjs";
+import { commandInvocation, findCommand } from "./command.mjs";
+
+test("[AB-INSTALL-045..046] configured HTTPS registries and Windows npm shims preserve argument bytes", async (t) => {
+  assert.equal(configuredRegistry("https://registry.npmjs.org/"), "https://registry.npmjs.org/");
+  assert.throws(() => configuredRegistry("http://registry.npmjs.org/"), /HTTPS/);
+  assert.throws(() => configuredRegistry("https://registry.npmjs.org/", true), /internal npm registry/);
+  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "agentbase-command-")));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const script = path.join(root, "node_modules", "npm", "bin", "npm-cli.js");
+  fs.mkdirSync(path.dirname(script), { recursive: true });
+  fs.writeFileSync(script, "// fixture\n");
+  fs.writeFileSync(path.join(root, "npm.cmd"), '@ECHO off\r\n"%dp0%\\node_modules\\npm\\bin\\npm-cli.js" %*\r\n');
+  const args = ["ci", "--registry=https://registry.example.invalid/team?x=1&y=2", "--replace-registry-host=always"];
+  const invocation = commandInvocation(findCommand("npm", { PATH: root }, "win32"), args, "win32");
+  assert.deepEqual(invocation, { command: process.execPath, args: [script, ...args] });
+  fs.writeFileSync(path.join(root, "bad.cmd"), "echo arbitrary\r\n");
+  assert.throws(() => commandInvocation(path.join(root, "bad.cmd"), [], "win32"), /Unsupported/);
+  let output = "", installed;
+  await runInstaller({ args: [], input: { isTTY: false }, output: { write: (text) => { output += text; } },
+    environment: {}, runRegistryResolution: async () => "https://fixture:fakepass@registry.example.invalid/team/",
+    runDependencyInstall: async (registry) => { installed = registry; } });
+  assert.match(output, /npm registry: registry.example.invalid/);
+  assert.doesNotMatch(output, /fakepass|fixture:|\/team/);
+  assert.equal(installed, "https://fixture:fakepass@registry.example.invalid/team/");
+});
 
 const remedies = [
   ["fnm", { FNM_MULTISHELL_PATH: "configured" }, "fnm install 24.20.0 && fnm use 24.20.0"],

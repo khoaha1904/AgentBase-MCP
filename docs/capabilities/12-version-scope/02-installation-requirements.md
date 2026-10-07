@@ -100,6 +100,18 @@ activation or parser build. Retired provider-only requirements AB-INSTALL-032
 through AB-INSTALL-036 are no longer release obligations. Source/runtime bounds
 are owned by [Repository discovery](../01-repository-reading/05-runtime-requirements.md).
 
+- **AB-INSTALL-045** — Use npm's configured HTTPS registry, including public npm.
+  `AGENTBASE_REQUIRE_PRIVATE_REGISTRY=1` opts into rejecting known public registries.
+  Keep `--replace-registry-host=always`; print only the registry hostname. Company
+  machines check `npm config get registry` points to their internal registry;
+  external machines may use public npm. Never print npm configuration or stderr.
+- **AB-INSTALL-046** — Direct Node installation is the cross-platform entrypoint.
+  Windows uses Node to execute npm/client JavaScript shims, without a shell. Home
+  resolution accepts USERPROFILE. Existing identity, symlink, recovery and private
+  permission checks remain mandatory; a platform is not qualified by removing them.
+  Windows/macOS CI runs all tests and a real stdio listTools smoke. Linux gate
+  remains unchanged; passing source CI is separate from release qualification.
+
 Checkout installation resolves its invoked entrypoint through the real path.
 Running `./install.sh` from a symbolic-link checkout path executes the same
 installer validation and setup as running it from the canonical checkout path.

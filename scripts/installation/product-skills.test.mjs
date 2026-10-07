@@ -200,8 +200,9 @@ test("[AB-INSTALL-025..031][AB-QUESTION-006][AB-FRESH-010][AB-USE-001..005] inst
   }), /Node >=24\.12 <25/);
   assert.equal(registryChecked, false);
   await assert.rejects(runInstaller({
-    args: [], input: { isTTY: false }, output: { isTTY: false, write() {} }, environment: environment(),
+    args: [], input: { isTTY: false }, output: { isTTY: false, write() {} },
     runRegistryResolution: async () => "https://registry.npmjs.org/",
+    environment: { ...environment(), AGENTBASE_REQUIRE_PRIVATE_REGISTRY: "1" },
   }), /internal npm registry/);
   await assert.rejects(runInstaller({
     args: ["--replace-token"], input: { isTTY: false }, output: { isTTY: false, write() {} },

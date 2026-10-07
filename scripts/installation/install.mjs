@@ -5,6 +5,7 @@ import { spawn } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
 import { registerClients } from "./client-registration.mjs";
+import { commandInvocation, findCommand } from "./command.mjs";
 import { installProductSkills, PRODUCT_SKILL_NAMES, rollbackProductSkills } from "./product-skills.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
@@ -170,12 +171,12 @@ function assertNodeVersion(version, environment, nodeExecutable) {
   }
 }
 
-function privateRegistry(value) {
+export function configuredRegistry(value, requirePrivate = false) {
   let registry;
   try { registry = new URL(value); }
   catch { throw new Error("npm registry configuration is not a valid URL"); }
   if (registry.protocol !== "https:") throw new Error("npm registry must use HTTPS");
-  if (["registry.npmjs.org", "npmjs.org", "registry.yarnpkg.com", "npm.pkg.github.com"].includes(registry.hostname)) {
+  if (requirePrivate && ["registry.npmjs.org", "npmjs.org", "registry.yarnpkg.com", "npm.pkg.github.com"].includes(registry.hostname.replace(/\.$/, ""))) {
     throw new Error("AgentBase enterprise installation requires a configured internal npm registry");
   }
   return registry.href;
@@ -185,22 +186,24 @@ function resolveRegistry(environment) {
   const configured = environment.npm_config_registry || environment.NPM_CONFIG_REGISTRY;
   if (configured) return Promise.resolve(configured);
   return new Promise((resolve, reject) => {
-    const child = spawn("npm", ["config", "get", "registry"], {
+    const invocation = commandInvocation(findCommand("npm", environment), ["config", "get", "registry"]);
+    const child = spawn(invocation.command, invocation.args, {
       cwd: repositoryRoot, env: { ...environment }, stdio: ["ignore", "pipe", "pipe"], shell: false,
     });
-    const stdout = [], stderr = [];
+    const stdout = [];
     child.stdout.on("data", (chunk) => stdout.push(chunk));
-    child.stderr.on("data", (chunk) => stderr.push(chunk));
+    child.stderr.resume();
     child.once("error", () => reject(new Error("npm registry configuration could not be read")));
     child.once("exit", (code) => code === 0
       ? resolve(Buffer.concat(stdout).toString("utf8").trim())
-      : reject(new Error(`npm registry configuration failed: ${Buffer.concat(stderr).toString("utf8").trim()}`)));
+      : reject(new Error("npm registry configuration failed")));
   });
 }
 
 function installDependencies(registry, environment = process.env) {
   return new Promise((resolve, reject) => {
-    const child = spawn("npm", ["ci", "--no-fund", "--no-audit", `--registry=${registry}`, "--replace-registry-host=always"], {
+    const invocation = commandInvocation(findCommand("npm", environment), ["ci", "--no-fund", "--no-audit", `--registry=${registry}`, "--replace-registry-host=always"]);
+    const child = spawn(invocation.command, invocation.args, {
       cwd: repositoryRoot,
       env: { ...environment, npm_config_registry: registry, npm_config_replace_registry_host: "always" },
       stdio: ["ignore", "ignore", "ignore"], shell: false,
@@ -250,7 +253,8 @@ export async function runInstaller(options = {}) {
   const runProductSkillRollback = options.runProductSkillRollback ?? rollbackProductSkills;
   parseArgs(args);
   assertNodeVersion(options.nodeVersion ?? process.versions.node, environment, options.execPath ?? process.execPath);
-  const registry = privateRegistry(await runRegistryResolution(environment));
+  const registry = configuredRegistry(await runRegistryResolution(environment), environment.AGENTBASE_REQUIRE_PRIVATE_REGISTRY === "1");
+  output.write(`npm registry: ${new URL(registry).hostname}\n`);
   await runDependencyInstall(registry, environment);
   verifyVisualizationRuntime();
   const interactive = Boolean(input.isTTY && output.isTTY && typeof input.setRawMode === "function");
@@ -301,7 +305,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(fs.realpathSync(process
   } catch (error) {
     const message = error instanceof Error ? error.message : "unknown error";
     if (error instanceof InstallerCancelled) process.stderr.write("\nSetup cancelled. No new client registration was kept.\n");
-    else process.stderr.write(`\n✗ Setup could not finish\n  Reason  ${message}\n  Run ./install.sh again after correcting the issue.\n`);
+    else process.stderr.write(`\n✗ Setup could not finish\n  Reason  ${message}\n  Run node scripts/installation/install.mjs again after correcting the issue.\n`);
     process.exitCode = 1;
   }
 }

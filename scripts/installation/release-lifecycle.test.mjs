@@ -24,6 +24,7 @@ function fixture(t) {
     fs.writeFileSync(path.join(releaseRoot, "src", "cli.ts"), `process.stdout.write(${JSON.stringify(`${id}\n`)});\n`);
     for (const name of [
       "client-registration.mjs",
+      "command.mjs",
       "product-skills.mjs",
       "release-bundle.mjs",
       "release-control.mjs",

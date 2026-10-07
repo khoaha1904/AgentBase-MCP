@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFile as execFileCallback } from "node:child_process";
 import { promisify } from "node:util";
+import { commandInvocation, findCommand } from "./command.mjs";
 
 const execFile = promisify(execFileCallback);
 const CLIENT_IDS = new Set(["codex", "claude-code"]);
@@ -19,7 +20,7 @@ function exists(target) {
 }
 
 function recoveryRoot(environment) {
-  return path.join(environment.XDG_CONFIG_HOME || path.join(environment.HOME, ".config"), "agentbase-mcp", "registration");
+  return path.join(environment.XDG_CONFIG_HOME || path.join(environment.HOME || environment.USERPROFILE, ".config"), "agentbase-mcp", "registration");
 }
 const receiptFile = (environment) => path.join(recoveryRoot(environment), "install-registration.json");
 
@@ -71,17 +72,16 @@ function loadReceipt(environment) {
 }
 
 function executable(name, environment, client) {
-  for (const directory of String(environment.PATH ?? "").split(path.delimiter)) {
-    if (!directory) continue;
-    const candidate = path.resolve(directory, name);
-    try { fs.accessSync(candidate, fs.constants.X_OK); return fs.realpathSync(candidate); } catch {}
-  }
+  try { return findCommand(name, environment); } catch {}
   throw new RegistrationError("CLIENT_UNAVAILABLE", client, `${client} is not available`);
 }
 
 function executableIdentity(file) {
   const stat = fs.statSync(file);
-  return `${file}:${stat.dev}:${stat.ino}:${stat.size}:${stat.mtimeMs}`;
+  const identity = `${file}:${stat.dev}:${stat.ino}:${stat.size}:${stat.mtimeMs}`;
+  if (process.platform !== "win32" || /\.exe$/i.test(file)) return identity;
+  const script = commandInvocation(file, []).args[0], target = fs.statSync(script);
+  return `${identity}:${script}:${target.dev}:${target.ino}:${target.size}:${target.mtimeMs}`;
 }
 
 export function expectedClientEntry(repositoryRoot, nodeExecutable = process.execPath) {
@@ -141,13 +141,14 @@ export function isRecognizedCheckoutClientEntry(entry) {
 
 function clientConfig(client, environment) {
   return client === "codex"
-    ? path.join(environment.CODEX_HOME || path.join(environment.HOME, ".codex"), "config.toml")
-    : path.join(environment.HOME, ".claude.json");
+    ? path.join(environment.CODEX_HOME || path.join(environment.HOME || environment.USERPROFILE, ".codex"), "config.toml")
+    : path.join(environment.HOME || environment.USERPROFILE, ".claude.json");
 }
 
 async function invoke(descriptor, args, environment, missingAllowed = false) {
   try {
-    const value = await execFile(descriptor.executable, args, { env: environment, timeout: 15_000, maxBuffer: 262_144, encoding: "utf8" });
+    const invocation = commandInvocation(descriptor.executable, args);
+    const value = await execFile(invocation.command, invocation.args, { env: environment, timeout: 15_000, maxBuffer: 262_144, encoding: "utf8" });
     return { ok: true, stdout: value.stdout };
   } catch (error) {
     if (missingAllowed) return { ok: false, stdout: String(error.stdout ?? "") };

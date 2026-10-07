@@ -36,8 +36,11 @@ passing other tests does not authorize changing `engines` or those guards.
 The checkout installer has a direct `node scripts/installation/install.mjs`
 entrypoint, so its Bash wrapper is optional. Released installers and stable
 launchers still use Bash, and the lifecycle uses filesystem links and POSIX
-permissions. Windows npm/client executable resolution also needs qualification;
-direct Node invocation alone does not prove a working Windows installation.
+permissions. Checkout npm/client JavaScript shims now execute with Node on
+Windows, and HOME may fall back to USERPROFILE. Windows/macOS source CI runs
+the full tests and real stdio smoke; native Windows private-permission handling
+and released lifecycle remain unqualified. Direct invocation alone is not
+evidence of qualification, and POSIX permission guards are not bypassed.
 
 Before adding macOS Intel or Windows, qualify the target through all four
 release owners together, provide an appropriate released installer/launcher,
