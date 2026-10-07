@@ -125,7 +125,31 @@ Tên/SHA public trong bảng do chủ repo yêu cầu. Gitleaks và diff check �
 
 ## Phần D1/D2 — Luật nội dung và tool schema
 
-Chưa làm.
+D1 làm xong; D2 giảm bytes nhưng **chưa đạt mục tiêu ~18 KB**. Commit `26fb48a`.
+Gate **256/256 → 257/257**, Node 24/TMPDIR symlink; test focused 5/5 và skill
+validator đạt. Validator artifact được regenerate từ source, không sửa guard.
+
+- Repository/Resource có contentGuidance trong schema response và comment ngắn
+  trong skeleton: role, runtime/entrypoint, triggers/interfaces, linked IO/store,
+  điều kiện đổi luồng dữ liệu, lỗi/retry/DLQ và operations. Gợi ý khoảng 60 body
+  lines; chi tiết qua sources/concept con, không nhân bản. Skills ingest/Refresh
+  cùng quy tắc; F2 đã viết gọn và nêu điều kiện actual không rỗng.
+- Rút mô tả tool, bỏ prose description khỏi wire input schema; giữ bản nguồn
+  và guidance trong schema response/skills. Local $defs/$ref chia sẻ subschema
+  giống nhau trong cùng tool. Test khai triển mọi schema chứng minh constraint
+  giữ nguyên; official MCP client calls qua, vẫn đủ 36 tool/tham số/annotations.
+
+| Bộ đo trên cùng fixture | Trước D | Sau D |
+| --- | ---: | ---: |
+| listTools bytes | 39.194 | 31.061 |
+| Schemas bytes | 3.256 | 3.634 |
+| Inspect cost fixture bytes | 9.775 | 10.005 |
+
+Preflight/Discover/Prepare/Validate/Finalize không đổi: 1.117/1.983/3.039/627/1.159
+byte ngoài gate; guidance thêm 230 byte vào skeleton nên Inspect tạo file tăng.
+F1 8/8 precision 1, F2 2/2 precision 1, public 3/6 precision 1; Seed và retrieval
+không đổi. Mọi token estimate vẫn bytes/4. Rà diff và report: không lọt token,
+host/URL nội bộ, email riêng tư, absolute path máy hay tên riêng; gitleaks đạt.
 
 ## Phần E — Windows và npm registry
 
@@ -151,7 +175,8 @@ Chưa làm; làm cuối, không chạm `presentation/`.
 
 ## Chưa làm / chưa kiểm chứng được
 
-D1/D2, E và D3 còn lại; đây là checkpoint từng phần, tiếp tục trong phiên.
+E và D3 còn lại; đây là checkpoint từng phần, tiếp tục trong phiên.
+D2 còn mục tiêu ~18 KB: hiện 31.061 byte.
 Chưa có evidence CI Windows/macOS cho Vòng 12.
 
 ## Câu hỏi và phản biện
@@ -164,3 +189,7 @@ này không Publish hoặc thay đổi Hub. Không có câu hỏi chặn mục 2
 C chọn matcher gợi ý có bound, không HCL evaluator hoặc suy identity từ tên.
 Module git so theo repo/module/ref; Maven artifact khác tên repo vẫn dùng tọa độ.
 Không ghép config bên ngoài, deploy order, external CI hoặc dynamic SSM path.
+
+D2: tổng schema raw bỏ description vẫn 21.532 byte, chưa tính protocol dialect,
+tool names và safety annotations. Chọn tự chứa mỗi tool và giữ tất cả guard;
+chưa đạt 18 KB, không xoá tham số hoặc constraint để chạy theo số đo.
